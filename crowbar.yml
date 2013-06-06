@@ -31,7 +31,7 @@ crowbar:
 locale_additions:
   en:
     barclamp:
-      test:
+      updater:
         edit_attributes: 
           attributes: Attributes
           zypper_method: Zypper update method
