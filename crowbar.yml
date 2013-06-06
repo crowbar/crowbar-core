@@ -34,7 +34,7 @@ locale_additions:
       updater:
         edit_attributes: 
           attributes: Attributes
-          zypper_method: Zypper update method
+          zypper_method: Use zypper
           zypper_patch_include_reboot: Include patches that need reboots (Kernel)
         edit_deployment: 
           deployment: Deployment
