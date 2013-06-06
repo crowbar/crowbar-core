@@ -16,7 +16,7 @@ case node.platform
 when "suse"
   zypper_params = []
   case node[:updater][:zypper][:method]
-  when :patch
+  when "patch"
     if node[:updater][:zypper][:patch][:include_reboot_patches] 
       zypper_params << "--non-interactive-include-reboot-patches"
     elsif
