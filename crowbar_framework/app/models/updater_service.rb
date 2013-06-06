@@ -26,8 +26,10 @@ class UpdaterService < ServiceObject
     @logger.debug("updater create_proposal: leaving base part")
 
     nodes = NodeObject.all
+    # Don't include the admin node by default, you never know...
     nodes.delete_if { |n| n.nil? or n.admin? }
 
+    # Only consider nodes in 'ready' state for package updates
     base["deployment"]["updater"]["elements"] = {
       "update" => nodes.select { |x| x.status == "ready" }.map { |x| x.name }
     }

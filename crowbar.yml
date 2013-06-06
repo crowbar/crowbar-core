@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Author: RobHirschfeld
-#
+# Author: Sascha Peilicke
 
 barclamp:
   name: updater
@@ -35,5 +34,7 @@ locale_additions:
       test:
         edit_attributes: 
           attributes: Attributes
+          zypper_method: Zypper update method
+          zypper_patch_include_reboot: Include patches that need reboots (Kernel)
         edit_deployment: 
           deployment: Deployment

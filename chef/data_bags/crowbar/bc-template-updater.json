@@ -3,9 +3,11 @@
   "description": "System package updater",
   "attributes": {
     "updater": {
-      "method": "patch",
-      "patch": {
-        "include_reboot_patches": false
+      "zypper": {
+        "method": "patch",
+        "patch": {
+          "include_reboot_patches": false
+        }
       }
     }
   },
@@ -17,7 +19,7 @@
         [ "update" ]
       ],
       "config": {
-        "environment": "update-config-base",
+        "environment": "updater-config-base",
         "mode": "full",
         "transitions": false,
         "transition_list": []

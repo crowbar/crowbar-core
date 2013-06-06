@@ -1,0 +1,26 @@
+%input#proposal_attributes{:type => "hidden", :name => "proposal_attributes", :value => @proposal.raw_data['attributes'][@proposal.barclamp].to_json}
+%p
+  %label{:for => "proposal_attributes"}= t('.attributes')
+  = link_to "Raw", proposal_barclamp_path(:id => @proposal.name, :controller => @proposal.barclamp, :dep_raw => @dep_raw, :attr_raw => true), :style => "float: right;"
+  %div.container
+    %p
+      %label{ :for => :zypper_method }= t('.zypper_method')
+      = select_tag :zypper_method, options_for_select([['patch', 'patch'], ['update','update'], ['dist-upgrade', 'dist-upgrade']], @proposal.raw_data['attributes'][@proposal.barclamp]['zypper']['method']), :onchange => "update_value('zypper/method', 'zypper_method', 'string')"
+
+    %div{ :id => :zypper_patch_div }
+      %p
+        %label{ :for => :zypper_patch_include_reboot }= t('.zypper_patch_include_reboot')
+        = select_tag :zypper_patch_include_reboot, options_for_select([['true', 'true'], ['false','false']], @proposal.raw_data['attributes'][@proposal.barclamp][:zypper][:patch][:include_reboot_patches].to_s), :onchange => "update_value('zypper/patch/include_reboot_patches', 'zypper_patch_include_reboot', 'boolean')"
+
+
+:javascript
+  function toggle_protocol() {
+    if ($('#zypper_method option:selected').attr('value') == 'patch') {
+      $('#zypper_patch_div').show();
+    } else {
+      $('#zypper_patch_div').hide();
+    }
+  };
+
+  $(document).ready(function () { toggle_protocol(); });
+  $('#zypper_method').change(toggle_protocol);

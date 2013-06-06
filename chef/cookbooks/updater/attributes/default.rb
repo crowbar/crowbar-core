@@ -15,5 +15,4 @@
 #
 
 default[:updater][:zypper][:method] = "patch"
-
 default[:updater][:zypper][:patch][:include_reboot_patches] = false
