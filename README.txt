@@ -10,7 +10,7 @@ A Barclamp is a module component that implements functionality for Crowbar.  Cor
 * This functonality of this barclamp DOES NOT stand alone, the Crowbar Framework is required *
 
 
-About this Barclamp: SUSE Manager
+About this Barclamp: SUSE Manager Client
 -------------------------------
 
 This barclamp can be used to register nodes to SUSE Manager.

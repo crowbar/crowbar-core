@@ -5,4 +5,4 @@ description      "Registers SUSE Manager clients"
 long_description ""
 version          "0.0.1"
 
-recipe "suse-manager", "Registers SUSE Manager clients"
+recipe "suse-manager-client", "Registers SUSE Manager clients"

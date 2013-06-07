@@ -16,8 +16,8 @@
 #
 
 barclamp:
-  name: suse_manager
-  display: SUSE Manager node
+  name: suse_manager_client
+  display: SUSE Manager Client node
   version: 0
   member:
     - crowbar
@@ -31,7 +31,7 @@ crowbar:
 locale_additions:
   en:
     barclamp:
-      suse_manager:
+      suse_manager_client:
         edit_attributes: 
           attributes: Attributes
           manager_server: SUSE Manager server hostname

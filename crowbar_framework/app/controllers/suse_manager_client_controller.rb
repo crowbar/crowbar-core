@@ -13,9 +13,9 @@
 # limitations under the License. 
 # 
 
-class SuseManagerController < BarclampController
+class SuseManagerClientController < BarclampController
   def initialize
-    @service_object = SuseManagerService.new logger
+    @service_object = SuseManagerClientService.new logger
   end
 end
 

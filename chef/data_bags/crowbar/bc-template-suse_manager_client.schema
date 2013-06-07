@@ -2,13 +2,13 @@
   "type": "map",
   "required": true,
   "mapping": {
-    "id": { "type": "str", "required": true, "pattern": "/^bc-suse_manager-|^bc-template-suse_manager$/" },
+    "id": { "type": "str", "required": true, "pattern": "/^bc-suse_manager_client-|^bc-template-suse_manager_client$/" },
     "description": { "type": "str", "required": true },
     "attributes": {
       "type": "map",
       "required": true,
       "mapping": {
-        "suse_manager": {
+        "suse_manager_client": {
           "type": "map",
           "required": true,
           "mapping": {
@@ -23,7 +23,7 @@
       "type": "map",
       "required": true,
       "mapping": {
-        "suse_manager": {
+        "suse_manager_client": {
           "type": "map",
           "required": true,
           "mapping": {

@@ -13,17 +13,17 @@
 # limitations under the License. 
 # 
 
-class SuseManagerService < ServiceObject
+class SuseManagerClientService < ServiceObject
 
   def initialize(thelogger)
-    @bc_name = "suse_manager"
+    @bc_name = "suse_manager_client"
     @logger = thelogger
   end
 
   def create_proposal
-    @logger.debug("SUSE Manager create_proposal: entering")
+    @logger.debug("SUSE Manager Client create_proposal: entering")
     base = super
-    @logger.debug("SUSE Manager create_proposal: exiting")
+    @logger.debug("SUSE Manager Client create_proposal: exiting")
     base
   end
 

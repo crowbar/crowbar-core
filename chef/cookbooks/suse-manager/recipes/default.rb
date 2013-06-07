@@ -13,9 +13,9 @@
 # limitations under the License.
 #
 
-manager_server = node[:suse_manager][:manager_server]
-activation_key = node[:suse_manager][:activation_key]
-ssl_fingerprint = node[:suse_manager][:ssl_fingerprint]
+manager_server = node[:suse_manager_client][:manager_server]
+activation_key = node[:suse_manager_client][:activation_key]
+ssl_fingerprint = node[:suse_manager_client][:ssl_fingerprint]
 
 package "https://#{manager_server}/pub/bootstrap/sm-client-tools.rpm"
 
