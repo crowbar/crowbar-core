@@ -31,11 +31,33 @@ class UpdaterService < ServiceObject
 
     # Only consider nodes in 'ready' state for package updates
     base["deployment"]["updater"]["elements"] = {
-      "update" => nodes.select { |x| x.status == "ready" }.map { |x| x.name }
+      "updater" => nodes.select { |x| x.status == "ready" }.map { |x| x.name }
     }
 
     @logger.debug("updater create_proposal: exiting")
     base
+  end
+
+  def apply_role_post_chef_call(old_role, role, all_nodes)
+    @logger.debug("Updater apply_role_post_chef_call: entering #{all_nodes.inspect}")
+
+    # Remove "updater-config-default" role from every node's "crowbar-$FQDN" role
+    # so that the recipes won't be run again (i.e. one-shot).
+    role_names = ["updater-config-default", "updater"]
+    nodes = NodeObject.find("roles:updater-config-default")
+    nodes.each do |node|
+      node_role_name = "crowbar-#{node.name.gsub('.', '_')}"
+      node_role = RoleObject.find_role_by_name(node_role_name)
+      role_names.each do |rn|
+        node_role.run_list.run_list_items.delete "role[#{rn}]"
+      end
+    end
+
+    # Also remove the global role "updater-config-default" to deactivate the
+    # proposal instance.
+    role = RoleObject.find_role_by_name(role_names.first)
+    role.destroy
+    @logger.debug("Updater apply_role_post_chef_call: leaving")
   end
 
 end
