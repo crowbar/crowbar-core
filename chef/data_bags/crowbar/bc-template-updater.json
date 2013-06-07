@@ -15,6 +15,9 @@
     "updater": {
       "crowbar-revision": 0,
       "elements": {},
+      "element_states": {
+        "update": [ "ready" ]
+      },
       "element_order": [
         [ "update" ]
       ],
