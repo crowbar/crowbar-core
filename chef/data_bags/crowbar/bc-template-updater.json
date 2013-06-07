@@ -16,10 +16,10 @@
       "crowbar-revision": 0,
       "elements": {},
       "element_states": {
-        "update": [ "ready" ]
+        "updater": [ "readying", "ready", "applying" ]
       },
       "element_order": [
-        [ "update" ]
+        [ "updater" ]
       ],
       "config": {
         "environment": "updater-config-base",
