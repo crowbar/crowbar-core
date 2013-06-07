@@ -1,0 +1,16 @@
+
+%input#proposal_attributes{:type => "hidden", :name => "proposal_attributes", :value => @proposal.raw_data['attributes'][@proposal.barclamp].to_json}
+%p
+  %label{:for => "proposal_attributes"}= t('.attributes')
+  = link_to t('raw'), proposal_barclamp_path(:id => @proposal.name, :controller => @proposal.barclamp, :dep_raw => @dep_raw, :attr_raw => true), :style => "float: right;"
+  %div.container
+    %p
+      %label{ :for => :activation_key}= t('.activation_key')
+      %input#activation_key{:type => "text", :name => "activation_key", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["activation_key"], :onchange => "update_value('activation_key', 'activation_key', 'string')"}
+    %p
+      %label{ :for => :manager_server}= t('.manager_server')
+      %input#manager_server{:type => "text", :name => "manager_server", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["manager_server"], :onchange => "update_value('manager_server', 'manager_server', 'string')"}
+      %em= t('.manager_server_hint')
+    %p
+      %label{ :for => :ssl_fingerprint}= t('.ssl_fingerprint')
+      %input#ssl_fingerprint{:type => "text", :name => "ssl_fingerprint", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["ssl_fingerprint"], :onchange => "update_value('ssl_fingerprint', 'ssl_fingerprint', 'string')"}

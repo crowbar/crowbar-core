@@ -1,0 +1,31 @@
+{
+  "id": "bc-template-suse_manager",
+  "description": "Register systems as SUSE Manager clients",
+  "attributes": {
+    "suse_manager": {
+      "activation_key": "",
+      "manager_server": "",
+      "ssl_fingerprint": ""
+    }
+  },
+  "deployment": {
+    "suse_manager": {
+      "crowbar-revision": 0,
+      "element_states": {
+        "suse-manager": [ "readying", "ready", "applying" ]
+      },
+      "elements": {},
+      "element_order": [
+        [ "suse-manager" ]
+      ],
+      "config": {
+        "environment": "suse_manager-base-config",
+        "mode": "full",
+        "transitions": false,
+        "transition_list": [
+        ]
+      }
+    }
+  }
+}
+
