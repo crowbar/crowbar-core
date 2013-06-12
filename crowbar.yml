@@ -37,7 +37,5 @@ locale_additions:
           manager_server: SUSE Manager server hostname
           manager_server_hint: e.g. susemgr.example.com
           activation_key: Activation Key
-          ssl_fingerprint: SSL Fingerprint
-          ssl_fingerprint_hint: SUSE Manager's server SSL Certificate fingerprint
         edit_deployment: 
           deployment: Deployment

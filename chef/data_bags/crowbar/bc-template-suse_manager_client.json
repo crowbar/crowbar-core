@@ -4,8 +4,7 @@
   "attributes": {
     "suse_manager_client": {
       "activation_key": "",
-      "manager_server": "",
-      "ssl_fingerprint": ""
+      "manager_server": ""
     }
   },
   "deployment": {

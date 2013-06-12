@@ -13,8 +13,7 @@
           "required": true,
           "mapping": {
             "activation_key": { "type": "str", "required": true },
-            "manager_server": { "type": "str", "required": true },
-            "ssl_fingerprint": { "type": "str", "required": true }
+            "manager_server": { "type": "str", "required": true }
           }
         }
       }
