@@ -33,28 +33,4 @@ when "suse"
     action :run
   end
 
-  execute "touch ~/YEAH!" do
-    action :run
-  end
-
 end
-
-node[:updater][:done] = true
-
-
-# ruby_block "remove one-shot recipe #{recipe}" do
-#   block do
-#     # Crowbar doesn't use the node's run_list but a special (unique per-node) role's run_list:
-#     #node.run_list.remove("recipe[updater]") if node.run_list.include?("recipe[updater]")
-#     node_role_name = "crowbar-#{node.name.gsub('.', '_')}"
-#     node_role = search(:role, "*:*").each do |role|
-#       break role if role.name == node_role_name
-#     end
-#     node_role.run_list.each do |i|
-#       node_role.run_list.run_list_items.delete() if i.name == "updater"
-#     end
-#     node_role.save
-#     Chef::Log.info("One-Shot recipe #{recipe} executed and removed from run_list #{node_role_name}")
-#   end
-#   action :create
-# end
