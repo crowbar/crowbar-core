@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-case node.platform
+case node[:platform]
 when "suse"
   zypper_params = ["--non-interactive"]
   if not node[:updater][:zypper][:gpg_checks]
@@ -32,5 +32,4 @@ when "suse"
   execute "zypper #{zypper_params.join(' ')} #{node[:updater][:zypper][:method]}" do
     action :run
   end
-
 end
