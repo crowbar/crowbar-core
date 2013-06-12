@@ -16,6 +16,9 @@
 case node.platform
 when "suse"
   zypper_params = ["--non-interactive"]
+  if not node[:updater][:zypper][:gpg_checks]
+    zypper_params << "--no-gpg-checks"
+  end
 
   case node[:updater][:zypper][:method]
   when "patch"

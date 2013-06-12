@@ -35,6 +35,7 @@ locale_additions:
         edit_attributes: 
           attributes: Attributes
           zypper_method: Use zypper
+          zypper_gpg_checks: Enable GPG checks
           zypper_patch_include_reboot: Include patches that need reboots (Kernel)
         edit_deployment: 
           deployment: Deployment
