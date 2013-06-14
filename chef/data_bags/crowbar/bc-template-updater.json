@@ -9,7 +9,8 @@
         "patch": {
           "include_reboot_patches": false
         }
-      }
+      },
+      "one_shot_run": false
     }
   },
   "deployment": {

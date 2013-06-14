@@ -22,7 +22,8 @@
                   }
                 }
               }
-            }
+            },
+            "one_shot_run": { "type": "bool" }
           }
         }
       }

@@ -21,9 +21,9 @@ class UpdaterService < ServiceObject
   end
 
   def create_proposal
-    @logger.debug("updater create_proposal: entering")
+    @logger.debug("Updater create_proposal: entering")
     base = super
-    @logger.debug("updater create_proposal: leaving base part")
+    @logger.debug("Updater create_proposal: leaving base part")
 
     nodes = NodeObject.all
     # Don't include the admin node by default, you never know...
@@ -38,26 +38,28 @@ class UpdaterService < ServiceObject
     base
   end
 
-  def apply_role_post_chef_call(old_role, role, all_nodes)
+  def apply_role_pre_chef_call(old_role, role, all_nodes)
     @logger.debug("Updater apply_role_post_chef_call: entering #{all_nodes.inspect}")
-
-    # Remove "updater-config-default" role from every node's "crowbar-$FQDN" role
-    # so that the recipes won't be run again (i.e. one-shot).
-    role_names = ["updater-config-default", "updater"]
-    nodes = NodeObject.find("roles:updater-config-default")
-    nodes.each do |node|
-      node_role_name = "crowbar-#{node.name.gsub('.', '_')}"
-      node_role = RoleObject.find_role_by_name(node_role_name)
-      role_names.each do |rn|
-        node_role.run_list.run_list_items.delete "role[#{rn}]"
-      end
+    # Remove [:updater][:one_shot_run] flag from node
+    all_nodes.each do |n|
+      node = NodeObject.find_node_by_name n
+      node[:updater][:one_shot_run] = false
+      @logger.debug("Updater apply_role_post_chef_call: delete [:updater][:one_shot_run] for #{node.name} (#{node[:updater].inspect}")
+      node.save
     end
+   ## Rather work directly on Chef::Node objects to avoid Crowbar's deep_merge stuff
+   #ChefObject.query_chef.search("node")[0].each do |node|
+   #  if node.has_key?(:updater) && node[:updater].has_key?(:one_shot_run)
+   #    node[:updater][:one_shot_run] = false
+   #    @logger.debug("Updater apply_role_post_chef_call: delete [:updater][:one_shot_run] for #{node.name} (#{node[:updater].inspect}")
+   #    node.save
+   #  end
+   #end
+    @logger.debug("Updater apply_role_post_chef_call: exiting")
+  end
 
-    # Also remove the global role "updater-config-default" to deactivate the
-    # proposal instance.
-    role = RoleObject.find_role_by_name(role_names.first)
-    role.destroy
-    @logger.debug("Updater apply_role_post_chef_call: leaving")
+  def oneshot?
+    true
   end
 
 end

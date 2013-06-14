@@ -12,24 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+if !node[:updater].has_key?(:one_shot_run) || !node[:updater][:one_shot_run]
 
-case node[:platform]
-when "suse"
-  zypper_params = ["--non-interactive"]
-  if not node[:updater][:zypper][:gpg_checks]
-    zypper_params << "--no-gpg-checks"
-  end
+  case node[:platform]
+  when "suse"
+    zypper_params = ["--non-interactive"]
+    if not node[:updater][:zypper][:gpg_checks]
+      zypper_params << "--no-gpg-checks"
+    end
 
-  case node[:updater][:zypper][:method]
-  when "patch"
-    if node[:updater][:zypper][:patch][:include_reboot_patches] 
-      zypper_params << "--non-interactive-include-reboot-patches"
+    case node[:updater][:zypper][:method]
+    when "patch"
+      if node[:updater][:zypper][:patch][:include_reboot_patches]
+        zypper_params << "--non-interactive-include-reboot-patches"
+      end
+    end
+
+    # Butt-ugly, enhance Chef::Provider::Package::Zypper later on...
+    Chef::Log.info("Executing zypper #{node[:updater][:zypper][:method]}")
+    execute "zypper #{zypper_params.join(' ')} #{node[:updater][:zypper][:method]}" do
+      action :run
     end
   end
 
-  # Butt-ugly, enhance Chef::Provider::Package::Zypper later on...
-  Chef::Log.info("Executing zypper #{node[:updater][:zypper][:method]}")
-  execute "zypper #{zypper_params.join(' ')} #{node[:updater][:zypper][:method]}" do
-    action :run
-  end
+  node[:updater][:one_shot_run] = true
+  node.save
 end
