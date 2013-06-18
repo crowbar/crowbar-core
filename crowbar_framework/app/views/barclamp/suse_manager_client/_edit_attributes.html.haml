@@ -7,6 +7,7 @@
     %p
       %label{ :for => :activation_key}= t('.activation_key')
       %input#activation_key{:type => "text", :name => "activation_key", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["activation_key"], :onchange => "update_value('activation_key', 'activation_key', 'string')"}
+      %em= t('.activation_key_hint')
     %p
       %label{ :for => :manager_server}= t('.manager_server')
       %input#manager_server{:type => "text", :name => "manager_server", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["manager_server"], :onchange => "update_value('manager_server', 'manager_server', 'string')"}
