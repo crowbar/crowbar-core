@@ -37,5 +37,6 @@ locale_additions:
           manager_server: SUSE Manager server hostname
           manager_server_hint: e.g. susemgr.example.com
           activation_key: Activation Key
+          activation_key_hint: e.g. 1-00112233445566778899aabbccddeeff
         edit_deployment: 
           deployment: Deployment
