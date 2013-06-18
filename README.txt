@@ -21,7 +21,7 @@ Install SUSE Manager Server.
 
 Inside SUSE Manager, create an activation key. The activation key will be used in the barclamp's WebUI.
 
-Download the `https://your-manager-server.example.com/pub/https://cloud-sm/pub/rhn-org-trusted-ssl-cert-*-*.noarch.rpm` file (check the version number) as `chef/cookbooks/suse-manager-client/files/default/ssl-cert.rpm` (in this barclamp's directory tree).
+Download the `https://your-manager-server.example.com/pub/rhn-org-trusted-ssl-cert-*-*.noarch.rpm` file (check the version number) as `chef/cookbooks/suse-manager-client/files/default/ssl-cert.rpm` (in this barclamp's directory tree).
 
 Now apply the barclamp from Crowbar's WebUI on selected nodes.
 
