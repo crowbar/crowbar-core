@@ -28,7 +28,7 @@ class SuseManagerClientService < ServiceObject
   end
 
   def self.allow_multiple_proposals?
-    true
+    false
   end
 
 end
