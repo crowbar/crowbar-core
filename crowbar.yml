@@ -17,7 +17,7 @@
 
 barclamp:
   name: suse_manager_client
-  display: SUSE Manager Client node
+  display: SUSE Manager Client
   version: 0
   member:
     - crowbar
