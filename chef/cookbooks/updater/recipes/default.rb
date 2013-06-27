@@ -16,6 +16,9 @@ require 'mixlib/shellout/exceptions'
 
 if !node[:updater].has_key?(:one_shot_run) || !node[:updater][:one_shot_run]
 
+  node[:updater][:one_shot_run] = true
+  node.save
+
   case node[:platform]
   when "suse"
     zypper_params = ["--non-interactive"]
@@ -70,8 +73,5 @@ if !node[:updater].has_key?(:one_shot_run) || !node[:updater][:one_shot_run]
     end # ruby_block
 
   end # case
-
-  node[:updater][:one_shot_run] = true
-  node.save
 
 end # if
