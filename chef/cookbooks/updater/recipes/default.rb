@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+require 'mixlib/shellout/exceptions'
+
 if !node[:updater].has_key?(:one_shot_run) || !node[:updater][:one_shot_run]
 
   case node[:platform]
@@ -28,13 +30,48 @@ if !node[:updater].has_key?(:one_shot_run) || !node[:updater][:one_shot_run]
       end
     end
 
+    zypper_command = "zypper #{zypper_params.join(' ')} #{node[:updater][:zypper][:method]}"
+
     # Butt-ugly, enhance Chef::Provider::Package::Zypper later on...
-    Chef::Log.info("Executing zypper #{node[:updater][:zypper][:method]}")
-    execute "zypper #{zypper_params.join(' ')} #{node[:updater][:zypper][:method]}" do
-      action :run
-    end
-  end
+    ruby_block "running \"#{zypper_command}\"" do
+      block do
+        count = 0
+
+        while true do
+          count += 1
+
+          %x{#{zypper_command}}
+          exitstatus = $?.exitstatus
+
+          case exitstatus
+          when 0, 100, 101, 104, 105
+            # ZYPPER_EXIT_OK
+            # ZYPPER_EXIT_INF_SEC_UPDATE_NEEDED
+            # ZYPPER_EXIT_INF_UPDATE_NEEDED
+            # ZYPPER_EXIT_INF_CAP_NOT_FOUND
+            # ZYPPER_EXIT_ON_SIGNAL
+            break
+          when 102
+            # ZYPPER_EXIT_INF_REBOOT_NEEDED
+            %x{reboot}
+            break
+          when 103
+            # ZYPPER_EXIT_INF_RESTART_NEEDED
+            if count > 5
+              break
+            end
+            next
+          else
+            raise Mixlib::Shellout::ShelloutCommandFailed("\"#{zypper_command}\" returned #{exitstatus}")
+          end # case
+        end # while
+
+      end # block
+    end # ruby_block
+
+  end # case
 
   node[:updater][:one_shot_run] = true
   node.save
-end
+
+end # if
