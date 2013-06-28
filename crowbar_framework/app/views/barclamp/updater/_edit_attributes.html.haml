@@ -30,5 +30,13 @@
     }
   };
 
-  $(document).ready(function () { toggle_method(); });
+  function toggle_include_reboot() {
+    var include_reboot = $('#zypper_patch_include_reboot option:selected').attr('value') == 'true';
+    var method_patch = ($('#zypper_method option:selected').attr('value') == 'patch');
+    $('#zypper_do_reboot').disabled = include_reboot && method_patch;
+  };
+
+  $(document).ready(function () { toggle_method(); toggle_include_reboot(); });
+
   $('#zypper_method').change(toggle_method);
+  $('#zypper_patch_include_reboot').change(toggle_include_reboot);
