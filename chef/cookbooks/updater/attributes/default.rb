@@ -15,6 +15,7 @@
 #
 
 default[:updater][:need_reboot] = false
+default[:updater][:need_reboot_time] = 0
 default[:updater][:do_reboot] = false
 
 default[:updater][:zypper][:method] = "patch"

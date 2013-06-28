@@ -63,6 +63,7 @@ if !node[:updater].has_key?(:one_shot_run) || !node[:updater][:one_shot_run]
             else
               Chef::Log.info("Marking node as needing a reboot.")
               node[:updater][:need_reboot] = true
+              node[:updater][:need_reboot_time] = Time.now.to_i
               node.save
             end
             break
@@ -84,12 +85,15 @@ if !node[:updater].has_key?(:one_shot_run) || !node[:updater][:one_shot_run]
 
   # handle case where there is a reboot needed from a previous run
   if node[:updater][:zypper][:do_reboot] and node[:updater][:need_reboot]
-    # we use a ruby_block to execute in the second phase of chef run
-    ruby_block "rebooting node due to previous update" do
-      block do
-        node[:updater][:need_reboot] = false
-        node.save
-        %x{reboot}
+    # only reboot if there was no boot since that time
+    if node[:uptime_seconds] > Time.now.to_i - node[:updater][:need_reboot_time]
+      # we use a ruby_block to execute in the second phase of chef run
+      ruby_block "rebooting node due to previous update" do
+        block do
+          node[:updater][:need_reboot] = false
+          node.save
+          %x{reboot}
+        end
       end
     end
   end
