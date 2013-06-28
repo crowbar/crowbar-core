@@ -14,7 +14,7 @@
               "type": "map", "required": true,
               "mapping": {
                 "method": { "type": "str", "required": true },
-                "gpg_checks": { "type": "bool" },
+                "gpg_checks": { "type": "bool", "required": true },
                 "do_reboot": { "type": "bool", "required": true },
                 "patch": {
                   "type": "map", "required": true,
