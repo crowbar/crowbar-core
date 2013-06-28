@@ -8,10 +8,6 @@
       = select_tag :zypper_method, options_for_select([['patch', 'patch'], ['update','update'], ['dist-upgrade', 'dist-upgrade']], @proposal.raw_data['attributes'][@proposal.barclamp]['zypper']['method']), :onchange => "update_value('zypper/method', 'zypper_method', 'string')"
 
     %p
-      %label{ :for => :zypper_do_reboot }= t('.zypper_do_reboot')
-      = select_tag :zypper_do_reboot, options_for_select([['true', 'true'], ['false','false']], @proposal.raw_data['attributes'][@proposal.barclamp]['zypper']['do_reboot'].to_s), :onchange => "update_value('zypper/do_reboot', 'zypper_do_reboot', 'boolean')"
-
-    %p
       %label{ :for => :zypper_gpg_checks }= t('.zypper_gpg_checks')
       = select_tag :zypper_gpg_checks, options_for_select([['true', 'true'], ['false','false']], @proposal.raw_data['attributes'][@proposal.barclamp]['zypper']['gpg_checks'].to_s), :onchange => "update_value('zypper/gpg_checks', 'zypper_gpg_checks', 'boolean')"
 
@@ -19,6 +15,10 @@
       %p
         %label{ :for => :zypper_patch_include_reboot }= t('.zypper_patch_include_reboot')
         = select_tag :zypper_patch_include_reboot, options_for_select([['true', 'true'], ['false','false']], @proposal.raw_data['attributes'][@proposal.barclamp][:zypper][:patch][:include_reboot_patches].to_s), :onchange => "update_value('zypper/patch/include_reboot_patches', 'zypper_patch_include_reboot', 'boolean')"
+
+    %p
+      %label{ :for => :do_reboot }= t('.do_reboot')
+      = select_tag :do_reboot, options_for_select([['true', 'true'], ['false','false']], @proposal.raw_data['attributes'][@proposal.barclamp]['do_reboot'].to_s), :onchange => "update_value('do_reboot', 'do_reboot', 'boolean')"
 
 
 :javascript
@@ -33,7 +33,7 @@
   function toggle_include_reboot() {
     var include_reboot = $('#zypper_patch_include_reboot option:selected').attr('value') == 'true';
     var method_patch = ($('#zypper_method option:selected').attr('value') == 'patch');
-    $('#zypper_do_reboot').disabled = include_reboot && method_patch;
+    $('#do_reboot').disabled = include_reboot && method_patch;
   };
 
   $(document).ready(function () { toggle_method(); toggle_include_reboot(); });

@@ -3,9 +3,9 @@
   "description": "System package updater",
   "attributes": {
     "updater": {
+      "do_reboot": false,
       "zypper": {
         "method": "patch",
-        "do_reboot": false,
         "gpg_checks": true,
         "patch": {
           "include_reboot_patches": false

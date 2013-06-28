@@ -14,7 +14,9 @@
 # limitations under the License.
 #
 
+default[:updater][:need_reboot] = false
+default[:updater][:do_reboot] = false
+
 default[:updater][:zypper][:method] = "patch"
-default[:updater][:zypper][:do_reboot] = false
 default[:updater][:zypper][:gpg_checks] = true
 default[:updater][:zypper][:patch][:include_reboot_patches] = false
