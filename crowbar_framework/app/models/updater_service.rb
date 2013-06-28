@@ -43,9 +43,11 @@ class UpdaterService < ServiceObject
     # Remove [:updater][:one_shot_run] flag from node
     all_nodes.each do |n|
       node = NodeObject.find_node_by_name n
-      node[:updater][:one_shot_run] = false
-      @logger.debug("Updater apply_role_post_chef_call: delete [:updater][:one_shot_run] for #{node.name} (#{node[:updater].inspect}")
-      node.save
+      unless node[:updater].nil?
+        node[:updater][:one_shot_run] = false
+        @logger.debug("Updater apply_role_post_chef_call: delete [:updater][:one_shot_run] for #{node.name} (#{node[:updater].inspect}")
+        node.save
+      end
     end
    ## Rather work directly on Chef::Node objects to avoid Crowbar's deep_merge stuff
    #ChefObject.query_chef.search("node")[0].each do |node|
