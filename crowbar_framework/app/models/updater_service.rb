@@ -29,9 +29,9 @@ class UpdaterService < ServiceObject
     # Don't include the admin node by default, you never know...
     nodes.delete_if { |n| n.nil? or n.admin? }
 
-    # Only consider nodes in 'ready' state for package updates
+    # Ignore nodes that are being discovered
     base["deployment"]["updater"]["elements"] = {
-      "updater" => nodes.select { |x| x.status == "ready" }.map { |x| x.name }
+      "updater" => nodes.select { |x| not ["discovering", "discovered"].include?(x.status) }.map { |x| x.name }
     }
 
     @logger.debug("updater create_proposal: exiting")
