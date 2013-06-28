@@ -56,7 +56,9 @@ if !node[:updater].has_key?(:one_shot_run) || !node[:updater][:one_shot_run]
             break
           when 102
             # ZYPPER_EXIT_INF_REBOOT_NEEDED
-            %x{reboot}
+            if node[:updater][:zypper][:do_reboot]
+              %x{reboot}
+            end
             break
           when 103
             # ZYPPER_EXIT_INF_RESTART_NEEDED

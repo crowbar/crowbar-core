@@ -5,6 +5,7 @@
     "updater": {
       "zypper": {
         "method": "patch",
+        "do_reboot": false,
         "gpg_checks": true,
         "patch": {
           "include_reboot_patches": false

@@ -8,6 +8,10 @@
       = select_tag :zypper_method, options_for_select([['patch', 'patch'], ['update','update'], ['dist-upgrade', 'dist-upgrade']], @proposal.raw_data['attributes'][@proposal.barclamp]['zypper']['method']), :onchange => "update_value('zypper/method', 'zypper_method', 'string')"
 
     %p
+      %label{ :for => :zypper_do_reboot }= t('.zypper_do_reboot')
+      = select_tag :zypper_do_reboot, options_for_select([['true', 'true'], ['false','false']], @proposal.raw_data['attributes'][@proposal.barclamp]['zypper']['do_reboot'].to_s), :onchange => "update_value('zypper/do_reboot', 'zypper_do_reboot', 'boolean')"
+
+    %p
       %label{ :for => :zypper_gpg_checks }= t('.zypper_gpg_checks')
       = select_tag :zypper_gpg_checks, options_for_select([['true', 'true'], ['false','false']], @proposal.raw_data['attributes'][@proposal.barclamp]['zypper']['gpg_checks'].to_s), :onchange => "update_value('zypper/gpg_checks', 'zypper_gpg_checks', 'boolean')"
 
