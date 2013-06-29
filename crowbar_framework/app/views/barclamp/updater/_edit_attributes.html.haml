@@ -28,20 +28,8 @@
     } else {
       $('#zypper_patch_div').hide();
     }
-    toggle_include_reboot();
   };
 
-  function toggle_include_reboot() {
-    var not_include_reboot = $('#zypper_patch_include_reboot option:selected').attr('value') == 'false';
-    var method_patch = ($('#zypper_method option:selected').attr('value') == 'patch');
-    if (not_include_reboot && method_patch) {
-       $('#do_reboot').attr("disabled", true);
-    } else {
-       $('#do_reboot').removeAttr("disabled");
-    }
-  };
-
-  $(document).ready(function () { toggle_method(); toggle_include_reboot(); });
+  $(document).ready(function () { toggle_method(); });
 
   $('#zypper_method').change(toggle_method);
-  $('#zypper_patch_include_reboot').change(toggle_include_reboot);
