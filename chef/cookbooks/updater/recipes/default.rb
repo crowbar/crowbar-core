@@ -34,6 +34,9 @@ if !node[:updater].has_key?(:one_shot_run) || !node[:updater][:one_shot_run]
     end
 
     zypper_command = "zypper #{zypper_params.join(' ')} #{node[:updater][:zypper][:method]}"
+    if node[:updater][:zypper][:licenses_agree]
+      zypper_command += " --auto-agree-with-licenses"
+    end
 
     # Butt-ugly, enhance Chef::Provider::Package::Zypper later on...
     ruby_block "running \"#{zypper_command}\"" do

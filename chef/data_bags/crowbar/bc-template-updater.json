@@ -7,6 +7,7 @@
       "zypper": {
         "method": "patch",
         "gpg_checks": true,
+        "licenses_agree": false,
         "patch": {
           "include_reboot_patches": false
         }

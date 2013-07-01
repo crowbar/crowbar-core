@@ -36,6 +36,7 @@ locale_additions:
           attributes: Attributes
           zypper_method: Use zypper
           zypper_gpg_checks: Enable GPG checks
+          zypper_licenses_agree: Automatically agree with licenses
           zypper_patch_include_reboot: Include patches that need reboots (Kernel)
           do_reboot: Reboot nodes if needed
         edit_deployment: 

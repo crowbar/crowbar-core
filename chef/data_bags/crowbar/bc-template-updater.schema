@@ -16,6 +16,7 @@
               "mapping": {
                 "method": { "type": "str", "required": true },
                 "gpg_checks": { "type": "bool", "required": true },
+                "licenses_agree": { "type": "bool", "required": true },
                 "patch": {
                   "type": "map", "required": true,
                   "mapping": {
