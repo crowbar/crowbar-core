@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require 'mixlib/shellout/exceptions'
-
 if !node[:updater].has_key?(:one_shot_run) || !node[:updater][:one_shot_run]
 
   node[:updater][:one_shot_run] = true
@@ -77,7 +75,9 @@ if !node[:updater].has_key?(:one_shot_run) || !node[:updater][:one_shot_run]
             end
             next
           else
-            raise Mixlib::Shellout::ShelloutCommandFailed("\"#{zypper_command}\" returned #{exitstatus}")
+            message = "\"#{zypper_command}\" returned #{exitstatus}"
+            Chef::Log.fatal(message)
+            raise message
           end # case
         end # while
 
