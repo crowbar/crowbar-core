@@ -70,8 +70,10 @@ if !node[:updater].has_key?(:one_shot_run) || !node[:updater][:one_shot_run]
             break
           when 103
             # ZYPPER_EXIT_INF_RESTART_NEEDED
-            if count > 5
-              break
+            if count >= 5
+              message = "Ran \"#{zypper_command}\" more than five times, and it still requires more runs."
+              Chef::Log.fatal(message)
+              raise message
             end
             next
           else
