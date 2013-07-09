@@ -1,0 +1,22 @@
+
+%input#proposal_attributes{:type => "hidden", :name => "proposal_attributes", :value => @proposal.raw_data['attributes'][@proposal.barclamp].to_json}
+%p
+  %label{:for => "proposal_attributes"}= t('.attributes')
+  = link_to t('raw'), proposal_barclamp_path(:id => @proposal.name, :controller => @proposal.barclamp, :dep_raw => @dep_raw, :attr_raw => true), :style => "float: right;"
+  %div.container
+    %p
+      %label{ :for => :nfs_server }= t('.nfs_server')
+      %input#nfs_server{:type => "text", :name => "nfs_server", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["nfs_server"], :onchange => "update_value('nfs_server', 'nfs_server', 'string')"}
+    %p
+      %label{ :for => :export }= t('.export')
+      %input#export{:type => "text", :name => "export", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["export"], :onchange => "update_value('export', 'export', 'string')"}
+    %p
+      %label{ :for => :mount_path }= t('.mount_path')
+      %input#mount_path{:type => "text", :name => "mount_path", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["mount_path"], :onchange => "update_value('mount_path', 'mount_path', 'string')"}
+    %p
+      // we use a list here so that if the user uses a space to separate options,
+      // this will automatically work. If a comma is used, then that will work (even
+      // though it won't get split)
+      %label{ :for => :mount_options_list }= t('.mount_options_list')
+      %input#mount_options_list{:type => "text", :name => "mount_options_list", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["mount_options"].join(','), :onchange => "update_value('mount_options', 'mount_options_list', 'array-string')"}
+      %em= t('.mount_options_list_hint')

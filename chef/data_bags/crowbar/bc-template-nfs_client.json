@@ -1,0 +1,32 @@
+{
+  "id": "bc-template-nfs_client",
+  "description": "Setup of NFS mounts",
+  "attributes": {
+    "nfs_client": {
+      "nfs_server": "",
+      "export": "",
+      "mount_path": "",
+      "mount_options": []
+    }
+  },
+  "deployment": {
+    "nfs_client": {
+      "crowbar-revision": 0,
+      "element_states": {
+        "nfs-client": [ "readying", "ready", "applying" ]
+      },
+      "elements": {},
+      "element_order": [
+        [ "nfs-client" ]
+      ],
+      "config": {
+        "environment": "nfs_client-base-config",
+        "mode": "full",
+        "transitions": false,
+        "transition_list": [
+        ]
+      }
+    }
+  }
+}
+
