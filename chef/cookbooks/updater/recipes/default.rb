@@ -46,6 +46,7 @@ if !node[:updater].has_key?(:one_shot_run) || !node[:updater][:one_shot_run]
 
           %x{#{zypper_command}}
           exitstatus = $?.exitstatus
+          Chef::Log.info("\"#{zypper_command}\" exited with #{exitstatus}.")
 
           case exitstatus
           when 0, 100, 101, 104, 105
