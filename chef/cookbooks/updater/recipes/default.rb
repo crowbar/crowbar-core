@@ -58,7 +58,7 @@ if !node[:updater].has_key?(:one_shot_run) || !node[:updater][:one_shot_run]
             break
           when 102
             # ZYPPER_EXIT_INF_REBOOT_NEEDED
-            if node[:updater][:zypper][:do_reboot]
+            if node[:updater][:do_reboot]
               Chef::Log.info("Will reboot node at the end of chef run.")
               node.run_state[:reboot] = true
               node[:updater][:need_reboot] = false
@@ -91,7 +91,7 @@ if !node[:updater].has_key?(:one_shot_run) || !node[:updater][:one_shot_run]
   end # case
 
   # handle case where there is a reboot needed from a previous run
-  if node[:updater][:zypper][:do_reboot] and node[:updater][:need_reboot]
+  if node[:updater][:do_reboot] and node[:updater][:need_reboot]
     # only reboot if there was no boot since that time
     if node[:uptime_seconds] > Time.now.to_i - node[:updater][:need_reboot_time]
       Chef::Log.info("Will reboot node at the end of chef run.")
