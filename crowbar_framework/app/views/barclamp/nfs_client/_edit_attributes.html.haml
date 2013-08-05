@@ -1,22 +1,115 @@
-
 %input#proposal_attributes{:type => "hidden", :name => "proposal_attributes", :value => @proposal.raw_data['attributes'][@proposal.barclamp].to_json}
 %p
-  %label{:for => "proposal_attributes"}= t('.attributes')
+  %label{:class => "h3", :for => "proposal_attributes"}= t('.attributes')
   = link_to t('raw'), proposal_barclamp_path(:id => @proposal.name, :controller => @proposal.barclamp, :dep_raw => @dep_raw, :attr_raw => true), :style => "float: right;"
   %div.container
+    %label.h3#new_mount= t('.new_mount')
     %p
-      %label{ :for => :nfs_server }= t('.nfs_server')
-      %input#nfs_server{:type => "text", :name => "nfs_server", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["nfs_server"], :onchange => "update_value('nfs_server', 'nfs_server', 'string')"}
+      %label{ :for => :new_name }= t('.name')
+      %input#new_name{:type => "text", :name => "new_name"}
     %p
-      %label{ :for => :export }= t('.export')
-      %input#export{:type => "text", :name => "export", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["export"], :onchange => "update_value('export', 'export', 'string')"}
+      %label{ :for => :new_nfs_server }= t('.nfs_server')
+      %input#new_nfs_server{:type => "text", :name => "new_nfs_server"}
     %p
-      %label{ :for => :mount_path }= t('.mount_path')
-      %input#mount_path{:type => "text", :name => "mount_path", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["mount_path"], :onchange => "update_value('mount_path', 'mount_path', 'string')"}
+      %label{ :for => :new_export }= t('.export')
+      %input#new_export{:type => "text", :name => "new_export"}
     %p
-      // we use a list here so that if the user uses a space to separate options,
-      // this will automatically work. If a comma is used, then that will work (even
-      // though it won't get split)
-      %label{ :for => :mount_options_list }= t('.mount_options_list')
-      %input#mount_options_list{:type => "text", :name => "mount_options_list", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["mount_options"].join(','), :onchange => "update_value('mount_options', 'mount_options_list', 'array-string')"}
+      %label{ :for => :new_mount_path }= t('.mount_path')
+      %input#new_mount_path{:type => "text", :name => "new_mount_path"}
+    %p
+      %label{ :for => :new_mount_options_list }= t('.mount_options_list')
+      %input#new_mount_options_list{:type => "text", :name => "new_mount_options_list"}
       %em= t('.mount_options_list_hint')
+    %button{ :type => 'button', :onclick => "javascript:add_mount();" }= t('.add')
+    %em#error_empty= t('.error_empty')
+    %em#error_duplicate= t('.error_duplicate')
+
+:javascript
+  function render_mount(r_name, r_nfs_server, r_export, r_mount_path, r_options) {
+    $.get('/nfs_client/render_mount',
+          { name: r_name, nfs_server: r_nfs_server, nfs_export: r_export, mount_path: r_mount_path, options: r_options })
+    .done(function(data){
+      $(data).insertBefore($("label#new_mount"));
+    });
+  }
+
+  function delete_mount(name) {
+    var input = document.getElementById('proposal_attributes');
+    var json = JSON.parse(input.value);
+    if ("exports" in json) {
+      var exports = json["exports"];
+      if (name in exports) {
+        delete exports[name];
+        input.value = JSON.stringify(json);
+      }
+    }
+    $('div#div_' + name).remove()
+  }
+
+  function add_mount() {
+    var name = $('input#new_name').val();
+    var nfs_server = $('input#new_nfs_server').val();
+    var nfs_export = $('input#new_export').val();
+    var mount_path = $('input#new_mount_path').val();
+    var mount_options_list = $('input#new_mount_options_list').val();
+
+    if (name == "" || nfs_server == "" || nfs_export == "" || mount_path == "") {
+      $('#error_empty').show();
+      $('#error_duplicate').hide();
+      return;
+    }
+
+    var input = document.getElementById('proposal_attributes');
+    var json = JSON.parse(input.value);
+    if (!("exports" in json)) return;
+
+    if (name in json["exports"]) {
+      $('#error_empty').hide();
+      $('#error_duplicate').show();
+      return;
+    }
+
+    $('#error_empty').hide();
+    $('#error_duplicate').hide();
+
+    update_value_direct("exports/" + name + "/nfs_server", nfs_server, 'string');
+    update_value_direct("exports/" + name + "/export", nfs_export, 'string');
+    update_value_direct("exports/" + name + "/mount_path", mount_path, 'string');
+    update_value_direct("exports/" + name + "/mount_options", mount_options_list, 'array-string');
+
+    render_mount(name, nfs_server, nfs_export, mount_path, options);
+
+    $('input#new_name').val("");
+    $('input#new_nfs_server').val("");
+    $('input#new_export').val("");
+    $('input#new_mount_path').val("");
+    $('input#new_mount_options_list').val("");
+  }
+
+  $(document).ready(function () {
+    $('#error_empty').hide();
+    $('#error_duplicate').hide();
+
+    var input = document.getElementById('proposal_attributes');
+    var json = JSON.parse(input.value);
+
+    if ("exports" in json) {
+      var exports = json["exports"]
+      var sorted_keys = Object.keys(exports).sort()
+      sorted_keys.forEach(function(k) {
+        // use hasOwnProperty to filter out keys from the Object.prototype
+        if (exports.hasOwnProperty(k)) {
+          this_mount = exports[k]
+          if (!("nfs_server" in this_mount)) return;
+          if (!("export" in this_mount)) return;
+          if (!("mount_path" in this_mount)) return;
+          if ("mount_options" in this_mount)
+            options = this_mount["mount_options"].join(",");
+          else
+            options = "";
+
+          render_mount(k, this_mount["nfs_server"], this_mount["export"], this_mount["mount_path"], options);
+        }
+      });
+    }
+  });

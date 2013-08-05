@@ -17,5 +17,29 @@ class NfsClientController < BarclampController
   def initialize
     @service_object = NfsClientService.new logger
   end
-end
 
+  def render_mount
+    puts params.inspect
+    @mount_name = params[:name]
+    @mount_nfs_server = params[:nfs_server]
+    @mount_export = params[:nfs_export]
+    @mount_path = params[:mount_path]
+    @mount_options = params[:options]
+
+    if (@mount_name.nil? || @mount_name.empty? ||
+        @mount_nfs_server.nil? || @mount_nfs_server.empty? ||
+        @mount_export.nil? || @mount_export.empty? ||
+        @mount_path.nil? || @mount_path.empty?)
+      render :text=>"Invalid parameters", :status => 400
+      return
+    end
+
+    if @mount_options.nil?
+      @mount_options = ""
+    end
+
+    respond_to do |format|
+      format.html { render :partial => 'barclamp/nfs_client/edit_mount' }
+    end
+  end
+end
