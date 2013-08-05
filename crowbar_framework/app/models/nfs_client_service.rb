@@ -47,6 +47,11 @@ class NfsClientService < ServiceObject
       export = data["export"]
       nfs_mount = "#{nfs_server}:#{export}"
 
+      if nfs_server.empty? || export.empty?
+        errors << "NFS mount \"#{name}\" has an empty NFS server or export."
+      elsif mount_path.empty?
+        errors << "NFS mount \"#{nfs_mount}\" has an empty mount path."
+      end
       if nfs_mounts.has_key?(nfs_mount)
         error = "NFS mount \"#{nfs_mount}\" is defined multiple times."
         errors << error unless errors.include?(error)
@@ -56,8 +61,8 @@ class NfsClientService < ServiceObject
         errors << error unless errors.include?(error)
       end
 
-      nfs_mounts[nfs_mount] = [mount_path]
-      mount_paths[mount_path] = nfs_mount
+      nfs_mounts[nfs_mount] = name
+      mount_paths[mount_path] = name
     end
 
     ### Do not allow elements of this proposal to be in another proposal, since
