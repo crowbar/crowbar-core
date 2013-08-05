@@ -3,10 +3,7 @@
   "description": "Setup of NFS mounts",
   "attributes": {
     "nfs_client": {
-      "nfs_server": "",
-      "export": "",
-      "mount_path": "",
-      "mount_options": []
+      "exports": { }
     }
   },
   "deployment": {
