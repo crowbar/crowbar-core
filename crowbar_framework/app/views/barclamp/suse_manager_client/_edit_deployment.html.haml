@@ -5,7 +5,12 @@
 :javascript
   $(document).ready(function(){
     var constraints = { 
-            "suse-manager-client": { "unique": false, "count": -1 } };
+        "suse-manager-client": {
+            "unique": false,
+            "count": -1,
+            "admin": true
+        }
+    };
     node_selector($('#drag_drop'), constraints);
   });
 
