@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-## 
-#Author: the1drewharris 
+#
+# Original author: the1drewharris 
 # 
 
 class UCS < ActiveResource::Base

@@ -1,5 +1,5 @@
 # 
-#Author: the1drewharris 
+# Original author: the1drewharris 
 # 
 # Things that still should be done:
 # apply Suse cloud admin css to views
