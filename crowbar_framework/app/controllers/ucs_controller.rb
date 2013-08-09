@@ -2,8 +2,8 @@
 # Original author: the1drewharris 
 # 
 # Things that still should be done:
-# apply Suse cloud admin css to views
-# encrypt the password in xml document
+# - apply SUSE Cloud admin CSS to views
+# - encrypt the password in xml document
 
 require "net/http"
 require "uri"
