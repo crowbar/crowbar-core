@@ -5,11 +5,12 @@
 # apply Suse cloud admin css to views
 # encrypt the password in xml document
 
+require "net/http"
+require "uri"
+require "rexml/document"
+require "cgi"
+
 class UcsController < ApplicationController
-  require "net/http"
-  require "uri"
-  require "rexml/document"
-  require "cgi"
   $cloudXMLpath = "cloud.xml"
   #show the login form
   def index
