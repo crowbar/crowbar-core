@@ -11,7 +11,8 @@ require "rexml/document"
 require "cgi"
 
 class CiscoUcsController < ApplicationController
-  $cloudXMLpath = "cloud.xml"
+  CLOUD_XML_PATH = "cloud.xml"
+
   #show the login form
   def index
     @myCloudXML = check4CloudXML()
@@ -155,13 +156,12 @@ class CiscoUcsController < ApplicationController
     return ucsDoc
   end
 
-  def check4CloudXML(fileName=$cloudXMLpath)
-    myCloudXML=File.exist?(fileName)
-    return myCloudXML
+  def check4CloudXML
+    File.exist?(CLOUD_XML_PATH)
   end
 
-  def readCloudXML(fileName=$cloudXMLpath)
-    cloudFile = File.new(fileName)
+  def readCloudXML
+    cloudFile = File.new(CLOUD_XML_PATH)
     thisCloud = Hash.new()
     cloudDoc = REXML::Document.new cloudFile
     cloudDoc.elements.each('ucs/cloud') do |element|
@@ -175,9 +175,10 @@ class CiscoUcsController < ApplicationController
   def createCloudXML(thisURL, myName, myPassword)
     @myCloudXML = check4CloudXML()
     if @myCloudXML == true
-      File.delete( $cloudXMLpath )
+      File.delete( CLOUD_XML_PATH )
     end
-    File.open( $cloudXMLpath, "w" ) do |the_file|
+
+    File.open( CLOUD_XML_PATH, "w" ) do |the_file|
       the_file.puts "<ucs><cloud url='#{thisURL}' name='#{myName}' mypass='#{myPassword}' /></ucs>"
     end
   end
