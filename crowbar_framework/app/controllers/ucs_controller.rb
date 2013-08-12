@@ -10,7 +10,7 @@ require "uri"
 require "rexml/document"
 require "cgi"
 
-class UcsController < ApplicationController
+class CiscoUcsController < ApplicationController
   $cloudXMLpath = "cloud.xml"
   #show the login form
   def index
