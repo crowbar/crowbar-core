@@ -114,7 +114,8 @@ class CiscoUcsController < ApplicationController
     #notice = 'Your update has been applied.'
     redirect_to :action => :edit, :id => "computePhysical"
   end
-  
+
+  private
   def sendXML(thisURL=session[:myURL], xmlString="")
      uri = URI.parse(thisURL)
      #this code worked fine with the simulator, but caused issues in production
