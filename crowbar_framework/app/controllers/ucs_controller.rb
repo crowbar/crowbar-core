@@ -169,6 +169,7 @@ class CiscoUcsController < ApplicationController
       thisCloud[:myName] = element.attributes["name"]
       thisCloud[:myPassword] = element.attributes["mypass"]
     end
+    cloudFile.close
     return thisCloud
   end
 
