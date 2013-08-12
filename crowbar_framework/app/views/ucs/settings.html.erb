@@ -16,10 +16,18 @@
 # Original author: Drew Harris
 #
 <% end %>
+
 <h1>UCS Login Settings</h1>
-<% form_tag(:action => "login") do %>
-	<label for="thisURL">URL</label><input id="thisURL" type="text" name="thisURL" value="<%= @asIsURL %>" />
-	<label for="myName">Name</label><input id="myName" type="text" name="myName" value="<%= @asIsName %>" />
-	<label for="myPassword">Password</label><input id="myPassword" type="password" name="myPassword" value="<%= @asIsPass %>" />
-	<input type="submit" name="Submit" value="Login" />
+
+<% form_tag(ucs_login_path) do %>
+    <label for="ucs_url">URL</label>
+    <input id="ucs_url" type="text" name="ucs_url" value="<%= @ucs_url %>" />
+
+    <label for="username">Name</label>
+    <input id="username" type="text" name="username" value="<%= @username %>" />
+
+    <label for="password">Password</label>
+    <input id="password" type="password" name="password" value="<%= @password %>" />
+
+    <input type="submit" name="Submit" value="Login" />
 <% end %>

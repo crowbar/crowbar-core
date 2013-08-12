@@ -10,45 +10,53 @@ require "uri"
 require "rexml/document"
 require "cgi"
 
-class CiscoUcsController < ApplicationController
-  CLOUD_XML_PATH = "cloud.xml"
+class UcsController < ApplicationController
+  CREDENTIALS_XML_PATH = '/etc/crowbar/cisco-ucs/credentials.xml'
+  DEFAULT_EDIT_CLASS_ID = "computePhysical"
 
-  #show the login form
-  def index
-    @myCloudXML = check4CloudXML()
-    if @myCloudXML == false
-      session[:needCloudXML] = true
+  before_filter :authenticate, :only => [ :edit, :update ]
+  #before_filter :authenticate, :except => [ :settings, :login ]
+
+  # Render the login page, where the URL, username, and password can
+  # be changed.
+  def settings
+    if have_credentials?
+      read_credentials
     else
-      if params[:updateLogin] == "1"
-        session[:needCloudXML] = true
-        thisCloud = readCloudXML()
-        @asIsURL = thisCloud[:myURL]
-        @asIsName = thisCloud[:myName]
-        @asIsPass = thisCloud[:myPassword]
-      else
-        thisCloud = readCloudXML()
-        session[:needCloudXML] = false
-        login(thisCloud[:myURL], thisCloud[:myName], thisCloud[:myPassword])
-      end
+      @ucs_url  = @username = @password = ""
     end
   end
 
-  #do the action of logging in and getting our cookie
-  #the id we are passing to show can be changed as indicated in the notes for edit
-  def login(thisURL=params[:thisURL], myName=params[:myName], myPassword=params[:myPassword])
-    session[:myURL] = thisURL
-    session[:myCookie] = aaaLogin(thisURL, myName, myPassword)
-    if session[:needCloudXML] == true
-      createCloudXML(thisURL, myName, myPassword)
-    end
-    redirect_to :action => :edit, :id => "computePhysical"
+  # Store the provided credentials, then attempt to log in and get our
+  # session cookie.  The id we are passing to the #show action can be
+  # changed as indicated in the notes for #edit.
+  def login
+    # Persist the credentials even before we know they're right, because
+    # if the user got them wrong, it's nicer to make them edit the incorrect
+    # settings than have to type them all out from scratch.
+    logger.info("writing %s %s %s" % [ params[:ucs_url], params[:username], params[:password] ])
+    write_credentials(params[:ucs_url], params[:username], params[:password])
+    logger.info("wrote")
+    read_credentials
+
+    cookie = aaaLogin(@ucs_url, @username, @password)
+    # ucs_login will issue a redirect if authentication failed.
+    return unless cookie
+
+    # Login succeeded
+    session[:ucs_cookie] = cookie
+    redirect_to :action => :edit
   end
 
-  #the classID can be changed here to be computeBlade to only show blade servers, or lsServer for policies, or  computeBlade or computeRackUnit for servers not in a equipmentChassis, or computePhysical for a list of all phyical servers
-  def edit(thisURL=session[:myURL], myCookie=session[:myCookie], classID=params[:id])
-    @serverPolicies = configResolveClass(thisURL, myCookie, "lsServer")
+  # params[:id] can be:
+  #   - computeBlade to only show blade servers
+  #   - lsServer for policies
+  #   - computeRackUnit for servers not in a equipmentChassis
+  #   - computePhysical for a list of all physical servers
+  def edit
+    @serverPolicies = configResolveClass("lsServer")
     @serverPolicies.elements.each('configResolveClass/outConfigs/#{myClass}') do |element|
-      #check policies for matches to "hardcoded" named values
+      # check policies for matches to "hardcoded" named values
       case element.attributes["name"]
       when "susecloudstorage"
         @storage = true
@@ -56,19 +64,14 @@ class CiscoUcsController < ApplicationController
         @compute = true
       end
     end
-    @ucsDoc = configResolveClass(thisURL, myCookie, classID)
-    @rackUnits = configResolveClass(thisURL, myCookie, "computeRackUnit")
-    @chassisUnits = configResolveClass(thisURL, myCookie, "equipmentChassis")
-    @logoutDoc = aaaLogout(session[:myURL], session[:myCookie])
-    session[:active] = false
+    @ucsDoc = configResolveClass(params[:id] || DEFAULT_EDIT_CLASS_ID)
+    @rackUnits = configResolveClass("computeRackUnit")
+    @chassisUnits = configResolveClass("equipmentChassis")
   end
 
-  #this will perform the update action and SHOULD redirect to edit once complete
-  def update(thisURL=session[:myURL], myCookie=session[:myCookie], classID=params[:id])
-    if session[:active] == false
-      session[:myCookie] = aaaLogin(thisURL, session[:myName], session[:myPassword])
-    end
-    ucsDoc = configResolveClass(thisURL, myCookie, classID)
+  # This will perform the update action and should redirect to edit once complete.
+  def update
+    ucsDoc = configResolveClass(params[:id])
     case params[:updateAction]
     when "compute"
       action_xml = "susecloudcompute"
@@ -81,21 +84,36 @@ class CiscoUcsController < ApplicationController
     when "reboot"
       action_xml = "cycle-immediate"
     else
-      #nothing to do but send back to edit
+      # nothing to do but send back to edit
       render edit
     end
-    @updateDoc = "<configConfMos inHierarchical='false' cookie='#{myCookie}'><inConfigs>"
+
+    @updateDoc = "<configConfMos inHierarchical='false' cookie='#{@cookie}'><inConfigs>"
     @action_xml = action_xml
-    #add xml elements for each selected server
+    # add xml elements for each selected server
     if action_xml == "susecloudcompute" || action_xml == "susecloudstorage"
       ucsDoc.elements.each('configResolveClass/outConfigs/#{myClass}') do |element|
         if params[element.attributes["dn"]] == "1"
-          @instantiateNTemplate = sendXML(session[:myURL], "<lsInstantiateNTemplate cookie='#{myCookie}' dn='org-root/ls-#{action_xml}' inTargetOrg='org-root' inServerNamePrefixOrEmpty='sc' inNumberOf='1' inHierarchical='false'> </lsInstantiateNTemplate>")
+          @instantiateNTemplate = sendXML(<<-EOXML)
+            <lsInstantiateNTemplate
+                cookie='#{@cookie}'
+                dn='org-root/ls-#{action_xml}'
+                inTargetOrg='org-root'
+                inServerNamePrefixOrEmpty='sc'
+                inNumberOf='1'
+                inHierarchical='false'>
+            </lsInstantiateNTemplate>
+          EOXML
           @instantiateNTemplate.elements.each('lsInstantiateNTemplate/outConfigs/lsServer') do |currentPolicy|
             @currentPolicyName = currentPolicy.attributes['dn']
             @currentPolicyXML = currentPolicy
           end
-          @updateDoc = @updateDoc + "<pair key='#{@currentPolicyName}/pn'><lsBinding pnDn='#{element.attributes["dn"]}'></lsBinding></pair>"
+          @updateDoc = @updateDoc + <<-EOXML
+            <pair key='#{@currentPolicyName}/pn'>
+              <lsBinding pnDn='#{element.attributes["dn"]}'>
+              </lsBinding>
+            </pair>"
+          EOXML
         end
       end
     else
@@ -103,84 +121,123 @@ class CiscoUcsController < ApplicationController
       ucsDoc.elements.each('configResolveClass/outConfigs/#{myClass}') do |element|
         #check_box_tag(element.attributes["dn"])
         if params[element.attributes["dn"]] == "1"
-          @updateDoc = @updateDoc + "<pair key='#{element.attributes["dn"]}'><#{element.name} adminPower='#{action_xml}' dn='#{element.attributes["dn"]}'></#{element.name}></pair>"
+          @updateDoc = @updateDoc + <<-EOXML
+            <pair key='#{element.attributes["dn"]}'>
+              <#{element.name} adminPower='#{action_xml}' dn='#{element.attributes["dn"]}'>
+              </#{element.name}>
+            </pair>
+          EOXML
         end
       end
     end
     @updateDoc = @updateDoc + "</inConfigs></configConfMos>"
-    @serverResponseDoc = sendXML(thisURL, @updateDoc)
-    #notice = 'Your update has been applied.'
-    redirect_to :action => :edit, :id => "computePhysical"
+    @serverResponseDoc = sendXML(@updateDoc)
+    # notice = 'Your update has been applied.'
+    redirect_to :action => :edit
   end
 
   private
-  def sendXML(thisURL=session[:myURL], xmlString="")
-    uri = URI.parse(thisURL)
-    #this code worked fine with the simulator, but caused issues in production
-    #this if for checking that the URL gives us a response before we send
-    #begin
-    # checkResponse = Net::HTTP.get_response(uri)
-    # checkResponse.code == "200"
-    #rescue
-    #end
+
+  def sendXML(xmlString = "")
+    uri = URI.parse(@ucs_url)
     http = Net::HTTP.new(uri.host, uri.port)
     request = Net::HTTP::Post.new(uri.request_uri)
     request.body = xmlString
-    xmlRequest = http.request(request)
-    requestDoc = REXML::Document.new(xmlRequest.body)
-    return requestDoc
+
+    begin
+      response = http.request(request)
+    rescue StandardError
+      return nil
+    end
+
+    return nil unless response.is_a? Net::HTTPSuccess
+    return REXML::Document.new(response.body)
   end
 
-  def aaaLogin(thisURL, myName, myPassword)
-    loginDoc = sendXML(thisURL, "<aaaLogin inName='#{myName}' inPassword='#{myPassword}'></aaaLogin>")
-    # set a variable for the value of the Cookie we got back from the web service (outCookie)
-    myCookie = loginDoc.root.attributes['outCookie']
-    #Insert error handling in case a cookie is not defined here
-    session[:myCookie] = myCookie
-    session[:myName] = myName
-    session[:myPassword] = myPassword
-    session[:active] = true
-    return myCookie
+  def aaaLogin(ucs_url, username, password)
+    logger.info("aaaLogin(%s, %s, %s)" % [ucs_url, username, password])
+    if ucs_url.blank?
+      redirect_to ucs_settings_path, :notice => "You must provide a login URL."
+      return nil
+    elsif username.blank?
+      redirect_to ucs_settings_path, :notice => "You must provide a login name."
+      return nil
+    elsif password.blank?
+      redirect_to ucs_settings_path, :notice => "You must provide a login password."
+      return nil
+    end
+
+    begin
+      loginDoc = sendXML("<aaaLogin inName='#{username}' inPassword='#{password}'></aaaLogin>")
+    rescue SocketError => e
+      redirect_to ucs_settings_path, :notice => "Failed to connect to UCS"
+      return nil
+    rescue StandardError => e
+      redirect_to ucs_settings_path, :notice => "Login failed (#{e.message})"
+      return nil
+    end
+
+    ucs_cookie = cookie_from_response(loginDoc)
+    unless ucs_cookie
+      # FIXME: improve cookie validation
+      redirect_to ucs_settings_path, :notice => "Login failed to obtain session cookie from Cisco UCS"
+      return nil
+    end
+
+    return ucs_cookie
   end
 
-  def aaaLogout(thisURL=session[:myURL], myCookie=session[:myCookie])
-    #We disabled the logout code due to problems experienced in the real world environment.
-    #logoutDoc = sendXML(thisURL, "<aaaLogout inCookie='#{myCookie}'/>")
+  def cookie_from_response(response)
+    response ? root.attributes['outCookie'] : nil
+  end
+
+  def aaaLogout
+    # We disabled the logout code due to problems experienced in the real world environment.
+    #logoutDoc = sendXML("<aaaLogout inCookie='#{@cookie}'/>")
     logoutDoc = 'true'
     #session[:active] = false
     return logoutDoc
   end
 
-  def configResolveClass(thisURL, myCookie, classID)
-    ucsDoc = sendXML(thisURL, "<configResolveClass cookie='#{myCookie}' classId='#{classID}'></configResolveClass>")
+  def configResolveClass(classID)
+    ucsDoc = sendXML("<configResolveClass cookie='#{@cookie}' classId='#{classID}'></configResolveClass>")
     return ucsDoc
   end
 
-  def check4CloudXML
-    File.exist?(CLOUD_XML_PATH)
-  end
-
-  def readCloudXML
-    cloudFile = File.new(CLOUD_XML_PATH)
-    thisCloud = Hash.new()
-    cloudDoc = REXML::Document.new cloudFile
-    cloudDoc.elements.each('ucs/cloud') do |element|
-      thisCloud[:myURL] = element.attributes["url"]
-      thisCloud[:myName] = element.attributes["name"]
-      thisCloud[:myPassword] = element.attributes["mypass"]
-    end
-    cloudFile.close
-    return thisCloud
-  end
-
-  def createCloudXML(thisURL, myName, myPassword)
-    @myCloudXML = check4CloudXML()
-    if @myCloudXML == true
-      File.delete( CLOUD_XML_PATH )
+  def authenticate
+    unless have_credentials?
+      redirect_to ucs_settings_path, :notice => t('barclamp.cisco_ucs.login.provide_creds')
+      return
     end
 
-    File.open( CLOUD_XML_PATH, "w" ) do |the_file|
-      the_file.puts "<ucs><cloud url='#{thisURL}' name='#{myName}' mypass='#{myPassword}' /></ucs>"
+    unless session[:ucs_cookie]
+      redirect_to ucs_settings_path, :notice => t('barclamp.cisco_ucs.login.please_login')
+      return
+    end
+
+    @cookie = session[:ucs_cookie] # syntactic sugar
+    read_credentials
+  end
+
+  def have_credentials?
+    File.exist?(CREDENTIALS_XML_PATH)
+  end
+
+  def read_credentials
+    File.open(CREDENTIALS_XML_PATH) do |file|
+      cloudDoc = REXML::Document.new(file)
+      cloudDoc.elements.each('ucs/cloud') do |element|
+        @ucs_url  = element.attributes["url"]
+        @username = element.attributes["username"]
+        @password = element.attributes["password"]
+        logger.info("read as: %s %s %s" % [@ucs_url, @username, @password])
+      end
+    end
+  end
+
+  def write_credentials(ucs_url, username, password)
+    File.open( CREDENTIALS_XML_PATH, "w" ) do |file|
+      file.puts "<ucs><cloud url='#{ucs_url}' username='#{username}' password='#{password}' /></ucs>"
     end
   end
 end

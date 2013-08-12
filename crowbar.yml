@@ -32,14 +32,19 @@ crowbar:
 
 nav:
   primary:
-    - [ ucs, ucs_login_path ]
+    - [ ucs, ucs_edit_path ]
   ucs:
-    ucs_servers_dash: ucs_login_path
-    ucs_updateLogin: '"/ucs?updateLogin=1"'
-    
+    ucs_servers_dash: ucs_edit_path
+    ucs_updateLogin: ucs_settings_path
+
 locale_additions:
   en:
     nav:
       ucs: UCS
       ucs_servers_dash: Dashboard
       ucs_updateLogin: Settings
+    barclamp:
+      cisco_ucs:
+        login:
+          provide_creds: Please provide UCS login credentials.
+          please_login: No active UCS session; please login.

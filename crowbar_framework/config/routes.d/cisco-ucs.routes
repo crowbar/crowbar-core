@@ -15,13 +15,8 @@
 # Author: RobHirschfeld 
 # 
 
-map.resources :ucs
-map.ucs_login 'ucs/login', :controller => 'ucs', :action => 'login'
-map.ucs_update 'ucs/:id', :controller => 'ucs', :action => 'update', :conditions => { :method => :post}
-
-# When it becomes time to port this to Rails 3 (or 4), the syntax will
-# need to be changed to something like:
-#
-# resources :ucs
-# match 'ucs/login' => "ucs#login"
-# match 'ucs/:id' => 'ucs#update', :via => :post
+map.ucs_login    'ucs/login',    :controller => 'ucs', :action => 'login'
+map.ucs_settings 'ucs/settings', :controller => 'ucs', :action => 'settings'
+map.ucs_edit     'ucs/edit/:id', :controller => 'ucs', :action => 'edit'
+map.ucs_update   'ucs/update',   :controller => 'ucs', :action => 'update',
+                                 :condition => { :method => :post }
