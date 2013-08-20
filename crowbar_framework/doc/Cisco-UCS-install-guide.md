@@ -18,8 +18,16 @@ profiles at the root level.  They are `susecloud-compute` and
 ### `susecloudstorage`
 
 There are 3 types of available storage: `swift`, `nova`, and `ceph`.
+
+### UCS administrator account
+
 A user account must be created with administrative rights in the Cisco
-UCS Manager to be used the the UCS plugin.
+UCS Manager, and the barclamp will use the credentials of that
+account.
+
+The account must have access to the `susecloud` templates and be able
+to create service profiles in the root and associate them with
+physical hardware.
 
 ## Configuration
 
@@ -28,9 +36,8 @@ UCS Manager to be used the the UCS plugin.
 * Click the UCS tab.  The settings screen will be opened where the
   following information needs to be entered.
     * URL - this should have the form of: http://ucsmanagerhost/nuova
-    * Username & Password - credentials configured in the UCS Manager
-      that have access to the `susecloud` templates and are able to create
-      service profiles in the root and associate them with physical hardware.
+    * Username & Password - credentials from the administrator account
+      described above.
 
 ## Usage
 
