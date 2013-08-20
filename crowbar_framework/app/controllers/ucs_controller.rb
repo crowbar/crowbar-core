@@ -34,9 +34,7 @@ class UcsController < ApplicationController
     # Persist the credentials even before we know they're right, because
     # if the user got them wrong, it's nicer to make them edit the incorrect
     # settings than have to type them all out from scratch.
-    logger.info("writing %s %s %s" % [ params[:ucs_url], params[:username], params[:password] ])
     write_credentials(params[:ucs_url], params[:username], params[:password])
-    logger.info("wrote")
     read_credentials
 
     cookie = aaaLogin(@ucs_url, @username, @password)
@@ -155,7 +153,6 @@ class UcsController < ApplicationController
   end
 
   def aaaLogin(ucs_url, username, password)
-    logger.info("aaaLogin(%s, %s, %s)" % [ucs_url, username, password])
     if ucs_url.blank?
       redirect_to ucs_settings_path, :notice => "You must provide a login URL."
       return nil
@@ -230,7 +227,6 @@ class UcsController < ApplicationController
         @ucs_url  = element.attributes["url"]
         @username = element.attributes["username"]
         @password = element.attributes["password"]
-        logger.info("read as: %s %s %s" % [@ucs_url, @username, @password])
       end
     end
   end
