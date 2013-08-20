@@ -37,12 +37,15 @@ class UcsController < ApplicationController
     write_credentials(params[:ucs_url], params[:username], params[:password])
     read_credentials
 
+    logger.debug "Cisco UCS: about to aaaLogin"
     cookie = aaaLogin(@ucs_url, @username, @password)
+    logger.debug "Cisco UCS: cookie returned from aaaLogin: " + cookie.inspect
     # ucs_login will issue a redirect if authentication failed.
     return unless cookie
 
     # Login succeeded
     session[:ucs_cookie] = cookie
+    logger.debug "Cisco UCS: set cookie in session"
     redirect_to :action => :edit
   end
 
@@ -154,23 +157,32 @@ class UcsController < ApplicationController
 
   def aaaLogin(ucs_url, username, password)
     if ucs_url.blank?
+      logger.debug "Cisco UCS: missing login URL"
       redirect_to ucs_settings_path, :notice => "You must provide a login URL."
       return nil
     elsif username.blank?
+      logger.debug "Cisco UCS: missing login name"
       redirect_to ucs_settings_path, :notice => "You must provide a login name."
       return nil
     elsif password.blank?
+      logger.debug "Cisco UCS: missing login password"
       redirect_to ucs_settings_path, :notice => "You must provide a login password."
       return nil
     end
 
+    logger.debug "Cisco UCS: credentials all present"
+
     begin
       loginDoc = sendXML("<aaaLogin inName='#{username}' inPassword='#{password}'></aaaLogin>")
     rescue SocketError => e
+      logger.warn "Cisco UCS: SocketError during aaaLogin #{e}"
       redirect_to ucs_settings_path, :notice => "Failed to connect to UCS"
       return nil
     rescue StandardError => e
-      redirect_to ucs_settings_path, :notice => "Login failed (#{e.message})"
+      logger.warn "Cisco UCS: StandardError during aaaLogin: #{e}"
+      message = e.message.slice(0, 80)
+      message += '...' if e.message.size > 80
+      redirect_to ucs_settings_path, :notice => "Login failed (#{message})"
       return nil
     end
 
