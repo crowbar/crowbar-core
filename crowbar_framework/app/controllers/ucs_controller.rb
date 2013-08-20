@@ -197,7 +197,7 @@ class UcsController < ApplicationController
   end
 
   def cookie_from_response(response)
-    response ? root.attributes['outCookie'] : nil
+    response ? response.root.attributes['outCookie'] : nil
   end
 
   def aaaLogout
