@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-In Cisco’s UCS Manager, it will be necessary to create 2 server
+In Cisco’s UCS Manager, it will be necessary to create 2 service
 profiles at the root level.  They are `susecloud-compute` and
 `susecloud-storage`.  These names are case sensitive.
 
