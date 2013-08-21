@@ -83,9 +83,21 @@ class UcsController < ApplicationController
     return unless cookie
 
     # Login succeeded
-    session[:ucs_cookie] = cookie
-    logger.debug "Cisco UCS: set cookie in session"
+    set_ucs_session_cookie(cookie)
     redirect_to :action => :edit
+  end
+
+  def logout
+    unless logged_in?
+      redirect_to ucs_settings_path, :notice => 'Already logged out from UCS.'
+      return
+    end
+
+    read_credentials # need API endpoint
+    logoutDoc = sendXML("<aaaLogout inCookie='#{ucs_session_cookie}'/>")
+    logger.debug "UCS logout: " + logoutDoc.root.inspect
+    set_ucs_session_cookie(nil)
+    redirect_to ucs_settings_path, :notice => 'Logged out from UCS.'
   end
 
   # params[:id] can be:
@@ -128,7 +140,7 @@ class UcsController < ApplicationController
       render edit
     end
 
-    @updateDoc = "<configConfMos inHierarchical='false' cookie='#{@cookie}'><inConfigs>"
+    @updateDoc = "<configConfMos inHierarchical='false' cookie='#{ucs_session_cookie}'><inConfigs>"
     @action_xml = action_xml
     # add xml elements for each selected server
     if action_xml == "susecloudcompute" || action_xml == "susecloudstorage"
@@ -136,7 +148,7 @@ class UcsController < ApplicationController
         if params[element.attributes["dn"]] == "1"
           @instantiateNTemplate = sendXML(<<-EOXML)
             <lsInstantiateNTemplate
-                cookie='#{@cookie}'
+                cookie='#{ucs_session_cookie}'
                 dn='org-root/ls-#{action_xml}'
                 inTargetOrg='org-root'
                 inServerNamePrefixOrEmpty='sc'
@@ -177,6 +189,26 @@ class UcsController < ApplicationController
   end
 
   private
+
+  def ucs_session_cookie
+    session[:ucs_cookie]
+  end
+
+  def set_ucs_session_cookie(cookie)
+    session[:ucs_cookie] = cookie
+    logger.debug "Cisco UCS: set session cookie to #{cookie}"
+  end
+
+  helper_method :logged_in?, :readonly
+
+  def logged_in?
+    !! ucs_session_cookie
+  end
+
+  # Login fields should be read-only if logged in
+  def readonly
+    logged_in? ? 'readonly' : ''
+  end
 
   # Use this to protect error messages which are intended to go in the
   # flash from causing a ActionDispatch::Cookies::CookieOverflow error
@@ -250,16 +282,8 @@ class UcsController < ApplicationController
     response ? response.root.attributes['outCookie'] : nil
   end
 
-  def aaaLogout
-    # We disabled the logout code due to problems experienced in the real world environment.
-    #logoutDoc = sendXML("<aaaLogout inCookie='#{@cookie}'/>")
-    logoutDoc = 'true'
-    #session[:active] = false
-    return logoutDoc
-  end
-
   def configResolveClass(classID)
-    ucsDoc = sendXML("<configResolveClass cookie='#{@cookie}' classId='#{classID}'></configResolveClass>")
+    ucsDoc = sendXML("<configResolveClass cookie='#{ucs_session_cookie}' classId='#{classID}'></configResolveClass>")
     return ucsDoc
   end
 
@@ -269,12 +293,11 @@ class UcsController < ApplicationController
       return
     end
 
-    unless session[:ucs_cookie]
+    unless logged_in?
       redirect_to ucs_settings_path, :notice => t('barclamp.cisco_ucs.login.please_login')
       return
     end
 
-    @cookie = session[:ucs_cookie] # syntactic sugar
     read_credentials
   end
 

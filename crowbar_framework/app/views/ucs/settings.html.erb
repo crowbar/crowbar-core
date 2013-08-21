@@ -19,15 +19,31 @@
 
 <h1>UCS Login Settings</h1>
 
-<% form_tag(ucs_login_path) do %>
-    <label for="ucs_url">URL</label>
-    <input id="ucs_url" type="text" name="ucs_url" value="<%= @ucs_url %>" />
+<% form_tag(logged_in? ? ucs_logout_path : ucs_login_path) do %>
+    <label>
+        API URL <br />
+        <input type="text" name="ucs_url" value="<%= @ucs_url %>" <%= readonly %> />
+    </label>
 
-    <label for="username">Name</label>
-    <input id="username" type="text" name="username" value="<%= @username %>" />
+    <label>
+        Username <br />
+        <input type="text" name="username" value="<%= @username %>" <%= readonly %> />
+    </label>
 
-    <label for="password">Password</label>
-    <input id="password" type="password" name="password" value="<%= @password %>" />
+    <label>
+        Password <br />
+        <input type="password" name="password" value="<%= @password %>" <%= readonly %> />
+    </label>
 
-    <input type="submit" name="Submit" value="Login" />
+    <br />
+
+  <% if logged_in? %>
+    <p>
+        There is a UCS login session currently active. Please log out
+        before changing any settings.
+    </p>
+    <input type="submit" name="logout" value="Logout" />
+  <% else %>
+    <input type="submit" name="login" value="Login" />
+  <% end %>
 <% end %>
