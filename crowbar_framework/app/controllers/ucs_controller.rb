@@ -143,7 +143,8 @@ class UcsController < ApplicationController
 
   # This will perform the update action and should redirect to edit once complete.
   def update
-    ucsDoc = configResolveClass(params[:id])
+    @updateDoc = ''
+
     case params[:updateAction]
     when "compute"
       action_xml = COMPUTE_SERVICE_PROFILE
@@ -161,16 +162,18 @@ class UcsController < ApplicationController
       return
     end
 
-    @updateDoc = "<configConfMos inHierarchical='false' cookie='#{ucs_session_cookie}'><inConfigs>"
-    @action_xml = action_xml
-    # add xml elements for each selected server
+    ucsDoc = configResolveClass(params[:id])
     if action_xml == COMPUTE_SERVICE_PROFILE || action_xml == STORAGE_SERVICE_PROFILE
       instantiate_service_profile(ucsDoc, action_xml)
     else
-      # should run for up, down, reboot
       send_power_commands(ucsDoc, action_xml)
     end
-    @updateDoc = @updateDoc + "</inConfigs></configConfMos>"
+
+    @updateDoc = \
+      "<configConfMos inHierarchical='false' cookie='#{ucs_session_cookie}'><inConfigs>" +
+      @updateDoc +
+      "</inConfigs></configConfMos>"
+
     @serverResponseDoc = sendXML(@updateDoc)
     redirect_to ucs_edit_path, :notice => 'Your update has been applied.'
   end
