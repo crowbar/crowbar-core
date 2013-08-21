@@ -20,6 +20,7 @@ barclamp:
   display: Cisco UCS
   description: Integration with Cisco Unified Computing System platform
   version: 0
+  user_managed: false
   member:
     - crowbar
 
