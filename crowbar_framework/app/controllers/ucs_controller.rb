@@ -147,15 +147,15 @@ class UcsController < ApplicationController
 
     case params[:updateAction]
     when "compute"
-      action_xml = COMPUTE_SERVICE_PROFILE
+      action = COMPUTE_SERVICE_PROFILE
     when "storage"
-      action_xml = STORAGE_SERVICE_PROFILE
+      action = STORAGE_SERVICE_PROFILE
     when "up"
-      action_xml = "admin-up"
+      action = "admin-up"
     when "down"
-      action_xml = "admin-down"
+      action = "admin-down"
     when "reboot"
-      action_xml = "cycle-immediate"
+      action = "cycle-immediate"
     else
       # nothing to do but send back to edit
       redirect_to ucs_edit_path
@@ -163,10 +163,10 @@ class UcsController < ApplicationController
     end
 
     ucsDoc = configResolveClass(params[:id])
-    if action_xml == COMPUTE_SERVICE_PROFILE || action_xml == STORAGE_SERVICE_PROFILE
-      instantiate_service_profile(ucsDoc, action_xml)
+    if action == COMPUTE_SERVICE_PROFILE || action == STORAGE_SERVICE_PROFILE
+      instantiate_service_profile(ucsDoc, action)
     else
-      send_power_commands(ucsDoc, action_xml)
+      send_power_commands(ucsDoc, action)
     end
 
     @updateDoc = \
@@ -180,13 +180,13 @@ class UcsController < ApplicationController
 
   private
 
-  def instantiate_service_profile(ucsDoc, action_xml)
+  def instantiate_service_profile(ucsDoc, action)
     ucsDoc.elements.each('configResolveClass/outConfigs/#{myClass}') do |element|
       if params[element.attributes["dn"]] == "1"
         @instantiateNTemplate = sendXML(<<-EOXML)
           <lsInstantiateNTemplate
               cookie='#{ucs_session_cookie}'
-              dn='org-root/ls-#{action_xml}'
+              dn='org-root/ls-#{action}'
               inTargetOrg='org-root'
               inServerNamePrefixOrEmpty='sc'
               inNumberOf='1'
@@ -207,13 +207,13 @@ class UcsController < ApplicationController
     end
   end
 
-  def send_power_commands(ucsDoc, action_xml)
+  def send_power_commands(ucsDoc, action)
     ucsDoc.elements.each('configResolveClass/outConfigs/#{myClass}') do |element|
       #check_box_tag(element.attributes["dn"])
       if params[element.attributes["dn"]] == "1"
         @updateDoc = @updateDoc + <<-EOXML
           <pair key='#{element.attributes["dn"]}'>
-            <#{element.name} adminPower='#{action_xml}' dn='#{element.attributes["dn"]}'>
+            <#{element.name} adminPower='#{action}' dn='#{element.attributes["dn"]}'>
             </#{element.name}>
           </pair>
         EOXML
