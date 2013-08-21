@@ -124,7 +124,7 @@ class UcsController < ApplicationController
     #   http://192.168.124.26/docs/MO-lsServer.html#type
     @serverPolicies = configResolveClass("lsServer")
 
-    @serverPolicies.elements.each('configResolveClass/outConfigs/#{myClass}') do |element|
+    @serverPolicies.elements.each('configResolveClass/outConfigs/*') do |element|
       # filter out service profile instances, as per above
       next unless element.attributes["type"] =~ /template/
 
@@ -181,7 +181,7 @@ class UcsController < ApplicationController
   private
 
   def instantiate_service_profile(ucsDoc, action)
-    ucsDoc.elements.each('configResolveClass/outConfigs/#{myClass}') do |element|
+    ucsDoc.elements.each('configResolveClass/outConfigs/*') do |element|
       if params[element.attributes["dn"]] == "1"
         @instantiateNTemplate = sendXML(<<-EOXML)
           <lsInstantiateNTemplate
@@ -208,7 +208,7 @@ class UcsController < ApplicationController
   end
 
   def send_power_commands(ucsDoc, action)
-    ucsDoc.elements.each('configResolveClass/outConfigs/#{myClass}') do |element|
+    ucsDoc.elements.each('configResolveClass/outConfigs/*') do |element|
       #check_box_tag(element.attributes["dn"])
       if params[element.attributes["dn"]] == "1"
         @updateDoc = @updateDoc + <<-EOXML
