@@ -122,9 +122,9 @@ class UcsController < ApplicationController
     # "Classes" then "ls:Server", and scrolling down to the "type"
     # attribute which references the "ls:Type" class, e.g.:
     #   http://192.168.124.26/docs/MO-lsServer.html#type
-    @serverPolicies = configResolveClass("lsServer")
+    serverInstances = configResolveClass("lsServer")
 
-    @serverPolicies.elements.each('configResolveClass/outConfigs/*') do |element|
+    serverInstances.elements.each('configResolveClass/outConfigs/*') do |element|
       # filter out service profile instances, as per above
       next unless element.attributes["type"] =~ /template/
 
