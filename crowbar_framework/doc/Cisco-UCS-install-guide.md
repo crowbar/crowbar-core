@@ -1,23 +1,34 @@
 # Cisco UCS integration barclamp
 
+## Functionality
+
+This barclamp communicates with a Cisco UCS Manager instance via its
+XML-based API server, and can perform the following functions:
+
+* Instantiate UCS service profiles for SUSE Cloud compute and
+  storage nodes from predefined UCS service profile templates.
+* Reboot and power up/down nodes
+
 ## Prerequisites
 
-In Cisco’s UCS Manager, it will be necessary to create 2 service
-profiles at the root level.  They are `suse-cloud-compute` and
-`suse-cloud-storage`.  These names are case sensitive.
+In Cisco’s UCS Manager, it is necessary to create two service profile
+templates called `suse-cloud-compute` and `suse-cloud-storage`.  These
+names are case sensitive.
 
-### `suse-cloud-compute`
+### `suse-cloud-compute` service profile template
 
-* To be used for preparing systems as compute nodes for SUSE Cloud
-* Minimum Requirements
-    * 20GB Storage
-    * 8GB RAM
-    * 1 NIC
-    * Processor supporting AMD-V or Intel-VT
+This service profile template is to be used for preparing systems as
+SUSE Cloud compute nodes.  Minimum requirements:
 
-### `suse-cloud-storage`
+* 20GB storage
+* 8GB RAM
+* 1 NIC
+* Processor supporting AMD-V or Intel-VT
 
-There are 3 types of available storage: `swift`, `nova`, and `ceph`.
+### `suse-cloud-storage` service profile template
+
+This service profile template is to be used for preparing systems as
+SUSE Cloud storage nodes.
 
 ### UCS administrator account
 
@@ -25,9 +36,9 @@ A user account must be created with administrative rights in the Cisco
 UCS Manager, and the barclamp will use the credentials of that
 account.
 
-The account must have access to the `suse-cloud` templates and be able
-to create service profiles in the root and associate them with
-physical hardware.
+The account must have access to the above service profile templates,
+and have authorization to create service profiles and associate them
+with physical hardware.
 
 ## Configuration
 
