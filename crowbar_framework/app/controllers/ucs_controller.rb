@@ -102,7 +102,8 @@ class UcsController < ApplicationController
   end
 
   def edit
-    # N.B. the ls:Server class encapsulates:
+    # N.B. the ls:Server class (in which 'ls' stands for
+    # logical server) encapsulates:
     #
     #   - service profiles
     #   - service profile initial templates
@@ -114,6 +115,7 @@ class UcsController < ApplicationController
     # web UI, clicking on the API Model Documentation, selecting
     # "Classes" then "ls:Server", and scrolling down to the "type"
     # attribute which references the "ls:Type" class, e.g.:
+    #
     #   http://192.168.124.26/docs/MO-lsServer.html#type
     serverInstances = configResolveClass("lsServer")
 
