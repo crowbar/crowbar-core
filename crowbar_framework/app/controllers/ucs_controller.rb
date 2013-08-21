@@ -109,8 +109,25 @@ class UcsController < ApplicationController
   #   - computeRackUnit for servers not in a equipmentChassis
   #   - computePhysical for a list of all physical servers
   def edit
+    # N.B. the ls:Server class encapsulates:
+    #
+    #   - service profiles
+    #   - service profile initial templates
+    #   - service profile initial templates
+    #
+    # rather than what one might intuitively expect, which is for
+    # service profile templates to have a separate class to service
+    # profile instances.  This can be seen by visiting the Cisco UCS
+    # web UI, clicking on the API Model Documentation, selecting
+    # "Classes" then "ls:Server", and scrolling down to the "type"
+    # attribute which references the "ls:Type" class, e.g.:
+    #   http://192.168.124.26/docs/MO-lsServer.html#type
     @serverPolicies = configResolveClass("lsServer")
+
     @serverPolicies.elements.each('configResolveClass/outConfigs/#{myClass}') do |element|
+      # filter out service profile instances, as per above
+      next unless element.attributes["type"] =~ /template/
+
       # check policies for matches to "hardcoded" named values
       case element.attributes["name"]
       when STORAGE_SERVICE_PROFILE
