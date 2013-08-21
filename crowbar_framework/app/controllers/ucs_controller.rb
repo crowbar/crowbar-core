@@ -10,12 +10,51 @@ require "uri"
 require "rexml/document"
 require "cgi"
 
+class XMLAPIRequestError < StandardError
+  def initialize(exception); @exception = exception end
+  def message;               @exception.message     end
+  alias_method :to_s, :message
+end
+
+class XMLAPIResponseFailure < StandardError
+  attr_reader :response
+
+  def initialize(xml_response)
+    @response = xml_response
+  end
+
+  def message
+    "%d %s" % [ @response.code, @response.message ]
+  end
+
+  alias_method :to_s, :message
+end
+
 class UcsController < ApplicationController
   CREDENTIALS_XML_PATH = '/etc/crowbar/cisco-ucs/credentials.xml'
   DEFAULT_EDIT_CLASS_ID = "computePhysical"
 
   before_filter :authenticate, :only => [ :edit, :update ]
   #before_filter :authenticate, :except => [ :settings, :login ]
+
+  def handle_exception(exception, log_message, ui_message)
+    logger.warn "Cisco UCS: #{log_message}: #{exception}"
+    redirect_to :back, :notice => (ui_message % truncate(exception.to_s))
+  end
+
+  rescue_from SocketError, XMLAPIRequestError do |e|
+    handle_exception(e, e, "Failed to connect to UCS API server (%s)")
+  end
+
+  rescue_from XMLAPIResponseFailure do |e|
+    handle_exception(e, "HTTP request to XML API failed",
+                     "Error receiving response from UCS API server (%s)")
+  end
+
+  rescue_from REXML::ParseException do |e|
+    handle_exception("failed to parse response from XML API",
+                     "Received invalid response from UCS API server (%s)")
+  end
 
   # Render the login page, where the URL, username, and password can
   # be changed.
@@ -139,26 +178,42 @@ class UcsController < ApplicationController
 
   private
 
+  # Use this to protect error messages which are intended to go in the
+  # flash from causing a ActionDispatch::Cookies::CookieOverflow error
+  # (the session cookie has a limit of 4k) or making the web UI look
+  # ugly.
+  def truncate(message)
+    return message if message.size < 80
+    message.slice(0, 80) + '...'
+  end
+
   def sendXML(xmlString = "")
     uri = URI.parse(@ucs_url)
     http = Net::HTTP.new(uri.host, uri.port)
-    request = Net::HTTP::Post.new(uri.request_uri)
-    request.body = xmlString
+    api_request = Net::HTTP::Post.new(uri.request_uri)
+    api_request.body = xmlString
 
     begin
-      response = http.request(request)
-    rescue StandardError
-      return nil
+      api_response = http.request(api_request)
+    rescue StandardError => e
+      raise XMLAPIRequestError, e
     end
 
-    return nil unless response.is_a? Net::HTTPSuccess
-    return REXML::Document.new(response.body)
+    unless api_response.is_a? Net::HTTPSuccess
+      raise XMLAPIResponseFailure, api_response
+    end
+
+    return REXML::Document.new(api_response.body)
   end
 
   def aaaLogin(ucs_url, username, password)
     if ucs_url.blank?
       logger.debug "Cisco UCS: missing login URL"
       redirect_to ucs_settings_path, :notice => "You must provide a login URL."
+      return nil
+    elsif ! ucs_url.end_with? '/nuova'
+      logger.debug "Cisco UCS: login URL didn't have the correct '/nuova' ending"
+      redirect_to ucs_settings_path, :notice => "Login URL should end in '/nuova'."
       return nil
     elsif username.blank?
       logger.debug "Cisco UCS: missing login name"
@@ -174,15 +229,10 @@ class UcsController < ApplicationController
 
     begin
       loginDoc = sendXML("<aaaLogin inName='#{username}' inPassword='#{password}'></aaaLogin>")
-    rescue SocketError => e
-      logger.warn "Cisco UCS: SocketError during aaaLogin #{e}"
-      redirect_to ucs_settings_path, :notice => "Failed to connect to UCS"
-      return nil
-    rescue StandardError => e
-      logger.warn "Cisco UCS: StandardError during aaaLogin: #{e}"
-      message = e.message.slice(0, 80)
-      message += '...' if e.message.size > 80
-      redirect_to ucs_settings_path, :notice => "Login failed (#{message})"
+    rescue REXML::ParseException => e
+      logger.warn "Cisco UCS: REXML parse failure during aaaLogin: #{e}"
+      message = "Failed to parse response from UCS API server; did your API URL end in '/nuova'?"
+      redirect_to ucs_settings_path, :notice => message
       return nil
     end
 
