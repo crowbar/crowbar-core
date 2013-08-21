@@ -132,8 +132,10 @@ class UcsController < ApplicationController
       case element.attributes["name"]
       when STORAGE_SERVICE_PROFILE
         @storage = true
+        logger.debug "Cisco UCS: found ls:Server instance named #{STORAGE_SERVICE_PROFILE}"
       when COMPUTE_SERVICE_PROFILE
         @compute = true
+        logger.debug "Cisco UCS: found ls:Server instance named #{COMPUTE_SERVICE_PROFILE}"
       end
     end
     @ucsDoc = configResolveClass(params[:id] || DEFAULT_EDIT_CLASS_ID)
@@ -157,7 +159,7 @@ class UcsController < ApplicationController
     when "reboot"
       action = "cycle-immediate"
     else
-      # nothing to do but send back to edit
+      logger.warn "Cisco UCS: update request had invalid action #{params[:updateAction]}"
       redirect_to ucs_edit_path
       return
     end
@@ -181,6 +183,8 @@ class UcsController < ApplicationController
   private
 
   def instantiate_service_profile(ucsDoc, action)
+    logger.debug "Cisco UCS: will instantiate from #{action} template"
+
     ucsDoc.elements.each('configResolveClass/outConfigs/*') do |element|
       if params[element.attributes["dn"]] == "1"
         @instantiateNTemplate = sendXML(<<-EOXML)
@@ -208,6 +212,8 @@ class UcsController < ApplicationController
   end
 
   def send_power_commands(ucsDoc, action)
+    logger.debug "Cisco UCS: will send #{action} command"
+
     ucsDoc.elements.each('configResolveClass/outConfigs/*') do |element|
       #check_box_tag(element.attributes["dn"])
       if params[element.attributes["dn"]] == "1"
