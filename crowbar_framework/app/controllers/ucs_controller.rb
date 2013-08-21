@@ -140,58 +140,66 @@ class UcsController < ApplicationController
       action_xml = "cycle-immediate"
     else
       # nothing to do but send back to edit
-      render edit
+      redirect_to ucs_edit_path
+      return
     end
 
     @updateDoc = "<configConfMos inHierarchical='false' cookie='#{ucs_session_cookie}'><inConfigs>"
     @action_xml = action_xml
     # add xml elements for each selected server
     if action_xml == COMPUTE_SERVICE_PROFILE || action_xml == STORAGE_SERVICE_PROFILE
-      ucsDoc.elements.each('configResolveClass/outConfigs/#{myClass}') do |element|
-        if params[element.attributes["dn"]] == "1"
-          @instantiateNTemplate = sendXML(<<-EOXML)
-            <lsInstantiateNTemplate
-                cookie='#{ucs_session_cookie}'
-                dn='org-root/ls-#{action_xml}'
-                inTargetOrg='org-root'
-                inServerNamePrefixOrEmpty='sc'
-                inNumberOf='1'
-                inHierarchical='false'>
-            </lsInstantiateNTemplate>
-          EOXML
-          @instantiateNTemplate.elements.each('lsInstantiateNTemplate/outConfigs/lsServer') do |currentPolicy|
-            @currentPolicyName = currentPolicy.attributes['dn']
-            @currentPolicyXML = currentPolicy
-          end
-          @updateDoc = @updateDoc + <<-EOXML
-            <pair key='#{@currentPolicyName}/pn'>
-              <lsBinding pnDn='#{element.attributes["dn"]}'>
-              </lsBinding>
-            </pair>"
-          EOXML
-        end
-      end
+      instantiate_service_profile(ucsDoc, action_xml)
     else
       # should run for up, down, reboot
-      ucsDoc.elements.each('configResolveClass/outConfigs/#{myClass}') do |element|
-        #check_box_tag(element.attributes["dn"])
-        if params[element.attributes["dn"]] == "1"
-          @updateDoc = @updateDoc + <<-EOXML
-            <pair key='#{element.attributes["dn"]}'>
-              <#{element.name} adminPower='#{action_xml}' dn='#{element.attributes["dn"]}'>
-              </#{element.name}>
-            </pair>
-          EOXML
-        end
-      end
+      send_power_commands(ucsDoc, action_xml)
     end
     @updateDoc = @updateDoc + "</inConfigs></configConfMos>"
     @serverResponseDoc = sendXML(@updateDoc)
-    # notice = 'Your update has been applied.'
-    redirect_to :action => :edit
+    redirect_to ucs_edit_path, :notice => 'Your update has been applied.'
   end
 
   private
+
+  def instantiate_service_profile(ucsDoc, action_xml)
+    ucsDoc.elements.each('configResolveClass/outConfigs/#{myClass}') do |element|
+      if params[element.attributes["dn"]] == "1"
+        @instantiateNTemplate = sendXML(<<-EOXML)
+          <lsInstantiateNTemplate
+              cookie='#{ucs_session_cookie}'
+              dn='org-root/ls-#{action_xml}'
+              inTargetOrg='org-root'
+              inServerNamePrefixOrEmpty='sc'
+              inNumberOf='1'
+              inHierarchical='false'>
+          </lsInstantiateNTemplate>
+        EOXML
+        @instantiateNTemplate.elements.each('lsInstantiateNTemplate/outConfigs/lsServer') do |currentPolicy|
+          @currentPolicyName = currentPolicy.attributes['dn']
+          @currentPolicyXML = currentPolicy
+        end
+        @updateDoc = @updateDoc + <<-EOXML
+          <pair key='#{@currentPolicyName}/pn'>
+            <lsBinding pnDn='#{element.attributes["dn"]}'>
+            </lsBinding>
+          </pair>"
+        EOXML
+      end
+    end
+  end
+
+  def send_power_commands(ucsDoc, action_xml)
+    ucsDoc.elements.each('configResolveClass/outConfigs/#{myClass}') do |element|
+      #check_box_tag(element.attributes["dn"])
+      if params[element.attributes["dn"]] == "1"
+        @updateDoc = @updateDoc + <<-EOXML
+          <pair key='#{element.attributes["dn"]}'>
+            <#{element.name} adminPower='#{action_xml}' dn='#{element.attributes["dn"]}'>
+            </#{element.name}>
+          </pair>
+        EOXML
+      end
+    end
+  end
 
   def ucs_session_cookie
     session[:ucs_cookie]
