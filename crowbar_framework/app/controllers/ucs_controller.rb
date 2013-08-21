@@ -32,6 +32,9 @@ end
 
 class UcsController < ApplicationController
   CREDENTIALS_XML_PATH = '/etc/crowbar/cisco-ucs/credentials.xml'
+  COMPUTE_SERVICE_PROFILE = 'suse-cloud-compute'
+  STORAGE_SERVICE_PROFILE = 'suse-cloud-storage'
+
   DEFAULT_EDIT_CLASS_ID = "computePhysical"
 
   before_filter :authenticate, :only => [ :edit, :update ]
@@ -110,9 +113,9 @@ class UcsController < ApplicationController
     @serverPolicies.elements.each('configResolveClass/outConfigs/#{myClass}') do |element|
       # check policies for matches to "hardcoded" named values
       case element.attributes["name"]
-      when "susecloudstorage"
+      when STORAGE_SERVICE_PROFILE
         @storage = true
-      when "susecloudcompute"
+      when COMPUTE_SERVICE_PROFILE
         @compute = true
       end
     end
@@ -126,9 +129,9 @@ class UcsController < ApplicationController
     ucsDoc = configResolveClass(params[:id])
     case params[:updateAction]
     when "compute"
-      action_xml = "susecloudcompute"
+      action_xml = COMPUTE_SERVICE_PROFILE
     when "storage"
-      action_xml = "susecloudstorage"
+      action_xml = STORAGE_SERVICE_PROFILE
     when "up"
       action_xml = "admin-up"
     when "down"
@@ -143,7 +146,7 @@ class UcsController < ApplicationController
     @updateDoc = "<configConfMos inHierarchical='false' cookie='#{ucs_session_cookie}'><inConfigs>"
     @action_xml = action_xml
     # add xml elements for each selected server
-    if action_xml == "susecloudcompute" || action_xml == "susecloudstorage"
+    if action_xml == COMPUTE_SERVICE_PROFILE || action_xml == STORAGE_SERVICE_PROFILE
       ucsDoc.elements.each('configResolveClass/outConfigs/#{myClass}') do |element|
         if params[element.attributes["dn"]] == "1"
           @instantiateNTemplate = sendXML(<<-EOXML)

@@ -3,10 +3,10 @@
 ## Prerequisites
 
 In Cisco’s UCS Manager, it will be necessary to create 2 service
-profiles at the root level.  They are `susecloud-compute` and
-`susecloud-storage`.  These names are case sensitive.
+profiles at the root level.  They are `suse-cloud-compute` and
+`suse-cloud-storage`.  These names are case sensitive.
 
-### `susecloudcompute`
+### `suse-cloud-compute`
 
 * To be used for preparing systems as compute nodes for SUSE Cloud
 * Minimum Requirements
@@ -15,7 +15,7 @@ profiles at the root level.  They are `susecloud-compute` and
     * 1 NIC
     * Processor supporting AMD-V or Intel-VT
 
-### `susecloudstorage`
+### `suse-cloud-storage`
 
 There are 3 types of available storage: `swift`, `nova`, and `ceph`.
 
@@ -25,7 +25,7 @@ A user account must be created with administrative rights in the Cisco
 UCS Manager, and the barclamp will use the credentials of that
 account.
 
-The account must have access to the `susecloud` templates and be able
+The account must have access to the `suse-cloud` templates and be able
 to create service profiles in the root and associate them with
 physical hardware.
 
