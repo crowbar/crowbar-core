@@ -35,8 +35,6 @@ class UcsController < ApplicationController
   COMPUTE_SERVICE_PROFILE = 'suse-cloud-compute'
   STORAGE_SERVICE_PROFILE = 'suse-cloud-storage'
 
-  DEFAULT_EDIT_CLASS_ID = "computePhysical"
-
   before_filter :authenticate, :only => [ :edit, :update ]
   #before_filter :authenticate, :except => [ :settings, :login ]
 
@@ -103,11 +101,6 @@ class UcsController < ApplicationController
     redirect_to ucs_settings_path, :notice => 'Logged out from UCS.'
   end
 
-  # params[:id] can be:
-  #   - computeBlade to only show blade servers
-  #   - lsServer for policies
-  #   - computeRackUnit for servers not in a equipmentChassis
-  #   - computePhysical for a list of all physical servers
   def edit
     # N.B. the ls:Server class encapsulates:
     #
@@ -138,7 +131,7 @@ class UcsController < ApplicationController
         logger.debug "Cisco UCS: found ls:Server instance named #{COMPUTE_SERVICE_PROFILE}"
       end
     end
-    @ucsDoc = configResolveClass(params[:id] || DEFAULT_EDIT_CLASS_ID)
+    @ucsDoc = configResolveClass("computePhysical")
     @rackUnits = configResolveClass("computeRackUnit")
     @chassisUnits = configResolveClass("equipmentChassis")
   end

@@ -18,6 +18,6 @@
 map.ucs_login    'ucs/login',    :controller => 'ucs', :action => 'login'
 map.ucs_logout   'ucs/logout',   :controller => 'ucs', :action => 'logout'
 map.ucs_settings 'ucs/settings', :controller => 'ucs', :action => 'settings'
-map.ucs_edit     'ucs/edit/:id', :controller => 'ucs', :action => 'edit'
+map.ucs_edit     'ucs/edit',     :controller => 'ucs', :action => 'edit'
 map.ucs_update   'ucs/update',   :controller => 'ucs', :action => 'update',
                                  :condition => { :method => :post }
