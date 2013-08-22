@@ -182,7 +182,7 @@ class UcsController < ApplicationController
       @updateDoc +
       "</inConfigs></configConfMos>"
 
-    @serverResponseDoc = sendXML(@updateDoc)
+    serverResponseDoc = sendXML(@updateDoc)
     redirect_to ucs_edit_path, :notice => 'Your update has been applied.'
   end
 
