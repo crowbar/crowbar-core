@@ -117,9 +117,10 @@ class UcsController < ApplicationController
     # attribute which references the "ls:Type" class, e.g.:
     #
     #   http://192.168.124.26/docs/MO-lsServer.html#type
-    serverInstances = configResolveClass("lsServer")
-
-    serverInstances.elements.each('configResolveClass/outConfigs/*') do |element|
+    #
+    # ls:Server inherits from compute:Logical (c.f. compute:Physical
+    # below)
+    get_class_instances("lsServer").each do |element|
       # filter out service profile instances, as per above
       next unless element.attributes["type"] =~ /template/
 
@@ -133,9 +134,15 @@ class UcsController < ApplicationController
         logger.debug "Cisco UCS: found ls:Server instance named #{COMPUTE_SERVICE_PROFILE}"
       end
     end
-    @ucsDoc = configResolveClass("computePhysical")
-    @rackUnits = configResolveClass("computeRackUnit")
-    @chassisUnits = configResolveClass("equipmentChassis")
+
+    # compute:Physical is a superclass containing compute:RackUnit and compute:Blade,
+    # so we can get instances of both in a single API call:
+    @computePhysical = configResolveClass("computePhysical").elements
+    @rackUnits    = @computePhysical.to_a('configResolveClass/outConfigs/computeRackUnit')
+    @blades       = @computePhysical.to_a('configResolveClass/outConfigs/computeBlade')
+
+    # equipment:Chassis is in a different part of the class hierarchy
+    @chassisUnits = get_class_instances('equipmentChassis')
   end
 
   # This will perform the update action and should redirect to edit once complete.
@@ -159,11 +166,10 @@ class UcsController < ApplicationController
       return
     end
 
-    ucsDoc = configResolveClass(params[:id])
     if action == COMPUTE_SERVICE_PROFILE || action == STORAGE_SERVICE_PROFILE
-      instantiate_service_profile(ucsDoc, action)
+      instantiate_service_profile(action)
     else
-      send_power_commands(ucsDoc, action)
+      send_power_commands(action)
     end
 
     @updateDoc = \
@@ -177,10 +183,10 @@ class UcsController < ApplicationController
 
   private
 
-  def instantiate_service_profile(ucsDoc, action)
+  def instantiate_service_profile(action)
     logger.debug "Cisco UCS: will instantiate from #{action} template"
 
-    ucsDoc.elements.each('configResolveClass/outConfigs/*') do |element|
+    get_class_instances('computePhysical').each do |element|
       if params[element.attributes["dn"]] == "1"
         @instantiateNTemplate = sendXML(<<-EOXML)
           <lsInstantiateNTemplate
@@ -206,10 +212,11 @@ class UcsController < ApplicationController
     end
   end
 
-  def send_power_commands(ucsDoc, action)
+  def send_power_commands(action)
     logger.debug "Cisco UCS: will send #{action} command"
 
-    ucsDoc.elements.each('configResolveClass/outConfigs/*') do |element|
+    phys = get_class_instances('computePhysical')
+    phys.each do |element|
       #check_box_tag(element.attributes["dn"])
       if params[element.attributes["dn"]] == "1"
         @updateDoc = @updateDoc + <<-EOXML
@@ -314,9 +321,14 @@ class UcsController < ApplicationController
     response ? response.root.attributes['outCookie'] : nil
   end
 
-  def configResolveClass(classID)
-    ucsDoc = sendXML("<configResolveClass cookie='#{ucs_session_cookie}' classId='#{classID}'></configResolveClass>")
+  def configResolveClass(classId)
+    ucsDoc = sendXML("<configResolveClass cookie='#{ucs_session_cookie}' classId='#{classId}'></configResolveClass>")
     return ucsDoc
+  end
+
+  def get_class_instances(classId)
+    root = configResolveClass(classId)
+    root.elements.to_a("configResolveClass/outConfigs/*")
   end
 
   def authenticate

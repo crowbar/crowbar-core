@@ -1,4 +1,4 @@
-<% @rackUnits.elements.each('configResolveClass/outConfigs/computeRackUnit') do |rackUnit| %>
+<% @rackUnits.each do |rackUnit| %>
 <li><%= check_box_tag(rackUnit.attributes["dn"]) %>
 	 DN: <%= rackUnit.attributes["dn"] %>
 	<ul>

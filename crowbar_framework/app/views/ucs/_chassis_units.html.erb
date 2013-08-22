@@ -1,4 +1,4 @@
-<% @chassisUnits.elements.each('configResolveClass/outConfigs/equipmentChassis') do |chassis| %>
+<% @chassisUnits.each do |chassis| %>
 <li>
     <a class='toggle with_label' href='#'
        id='chassis_<%= chassis.attributes["id"] %>_toggle'
@@ -6,7 +6,7 @@
         DN: <%= chassis.attributes["dn"] %>
     </a>
     <ul id="chassis_<%= chassis.attributes["id"] %>_details" class="even" style="display: none;">
-  <% @ucsDoc.elements.each('configResolveClass/outConfigs/computeBlade') do |blade| %>
+  <% @blades.each do |blade| %>
     <% if blade.attributes["chassisId"] == chassis.attributes["id"]%>
         <li>
             <%= check_box_tag(blade.attributes["dn"]) %>
