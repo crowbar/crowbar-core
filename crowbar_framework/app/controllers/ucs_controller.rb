@@ -161,15 +161,20 @@ class UcsController < ApplicationController
     when "reboot"
       action = "cycle-immediate"
     else
-      logger.warn "Cisco UCS: update request had invalid action #{params[:updateAction]}"
-      redirect_to ucs_edit_path
+      logger.warn "Cisco UCS: update request had invalid action '#{params[:updateAction]}'"
+      redirect_to ucs_edit_path, :notice => 'You must choose an action.'
       return
     end
 
     if action == COMPUTE_SERVICE_PROFILE || action == STORAGE_SERVICE_PROFILE
-      instantiate_service_profile(action)
+      match_count = instantiate_service_profile(action)
     else
-      send_power_commands(action)
+      match_count = send_power_commands(action)
+    end
+
+    if match_count == 0
+      redirect_to ucs_edit_path, :notice => 'You must select at least one node.'
+      return nil
     end
 
     @updateDoc = \
@@ -200,8 +205,10 @@ class UcsController < ApplicationController
   def instantiate_service_profile(action)
     logger.debug "Cisco UCS: will instantiate from #{action} template"
 
+    match_count = 0
     get_class_instances('computePhysical').each do |element|
       if params[element.attributes["dn"]] == "1"
+        match_count += 1
         @instantiateNTemplate = sendXML(<<-EOXML)
           <lsInstantiateNTemplate
               cookie='#{ucs_session_cookie}'
@@ -224,15 +231,18 @@ class UcsController < ApplicationController
         EOXML
       end
     end
+
+    match_count
   end
 
   def send_power_commands(action)
     logger.debug "Cisco UCS: will send #{action} command"
 
-    phys = get_class_instances('computePhysical')
-    phys.each do |element|
-      #check_box_tag(element.attributes["dn"])
+    match_count = 0
+
+    get_class_instances('computePhysical').each do |element|
       if params[element.attributes["dn"]] == "1"
+        match_count += 1
         @updateDoc = @updateDoc + <<-EOXML
           <pair key='#{element.attributes["dn"]}'>
             <#{element.name} adminPower='#{action}' dn='#{element.attributes["dn"]}'>
@@ -241,6 +251,8 @@ class UcsController < ApplicationController
         EOXML
       end
     end
+
+    match_count
   end
 
   def ucs_session_cookie
