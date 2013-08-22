@@ -183,6 +183,15 @@ class UcsController < ApplicationController
 
   private
 
+  @@xml_formatter = REXML::Formatters::Pretty.new
+  @@xml_formatter.compact = true
+
+  def pp_element(element)
+    out = ''
+    @@xml_formatter.write(element, out)
+    out
+  end
+
   def instantiate_service_profile(action)
     logger.debug "Cisco UCS: will instantiate from #{action} template"
 
