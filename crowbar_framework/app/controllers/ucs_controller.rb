@@ -186,6 +186,11 @@ class UcsController < ApplicationController
   @@xml_formatter = REXML::Formatters::Pretty.new
   @@xml_formatter.compact = true
 
+  def pp_xml(xml)
+    doc = REXML::Document.new(xml)
+    pp_element(doc.root)
+  end
+
   def pp_element(element)
     out = ''
     @@xml_formatter.write(element, out)
