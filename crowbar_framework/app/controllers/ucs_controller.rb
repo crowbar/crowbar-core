@@ -53,7 +53,7 @@ class UcsController < ApplicationController
   end
 
   rescue_from REXML::ParseException do |e|
-    handle_exception("failed to parse response from XML API",
+    handle_exception(e, "failed to parse response from XML API",
                      "Received invalid response from UCS API server (%s)")
   end
 
