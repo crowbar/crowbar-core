@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and 
 # limitations under the License. 
 # 
-# Author: RobHirschfeld 
-# 
 
 map.ucs_login    'ucs/login',    :controller => 'ucs', :action => 'login'
 map.ucs_logout   'ucs/logout',   :controller => 'ucs', :action => 'logout'
