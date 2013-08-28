@@ -7,13 +7,15 @@ XML-based API server, and can perform the following functions:
 
 * Instantiate UCS service profiles for SUSE Cloud compute and
   storage nodes from predefined UCS service profile templates.
-* Reboot and power up/down nodes
+* Reboot and power up/down nodes.
 
 ## Prerequisites
 
-In Cisco’s UCS Manager, it is necessary to create two service profile
-templates called `suse-cloud-compute` and `suse-cloud-storage`.  These
-names are case sensitive.
+*   A Cisco UCS Manager server, or the UCS Platform Emulator
+    (see below).
+*   In Cisco’s UCS Manager, it is necessary to create two service
+    profile templates called `suse-cloud-compute` and
+    `suse-cloud-storage`.  These names are case sensitive.
 
 ### `suse-cloud-compute` service profile template
 
@@ -61,3 +63,20 @@ with physical hardware.
 ## Troubleshooting
 
 All troubleshooting should be done within the Cisco UCS Manager interface.
+
+## Testing with the UCS Platform Emulator
+
+The UCS Platform Emulator can be [downloaded from Cisco's
+website](http://developer.cisco.com/web/unifiedcomputing/ucsemulatordownload)
+after registering for a free account.  This barclamp has been tested
+with version 2.1(2aPE1) of the emulator.  However at the time of
+writing, the emulator does not honour power commands, so do not expect
+this functionality to work.
+
+The Emulator was designed to run as a VMware virtual machine.
+However, it has been shown to work fine as an `x86_64` VM running
+under KVM on openSUSE 12.3, with `.vmdk` file as a separate disk
+device, and 3 `pcnet` virtual interfaces configured on the same
+network as the Crowbar admin node.  In the same directory as this
+file, there is a `cisco-ucs.xml` libvirt VM definition file which can
+be imported into your hypervisor via `virsh create`.
