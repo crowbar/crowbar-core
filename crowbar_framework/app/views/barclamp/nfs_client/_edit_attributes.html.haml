@@ -80,7 +80,7 @@
     update_value_direct("exports/" + name + "/mount_path", mount_path, 'string');
     update_value_direct("exports/" + name + "/mount_options", mount_options_list, 'array-string');
 
-    render_mount(name, nfs_server, nfs_export, mount_path, options);
+    render_mount(name, nfs_server, nfs_export, mount_path, mount_options_list);
 
     $('input#new_name').val("");
     $('input#new_nfs_server').val("");
