@@ -1,19 +1,21 @@
 %div{ :id => "div_#{@mount_name}", :name => "div_#{@mount_name}" }
-  %label.h3= @mount_name
-  %button{ :type => 'button', :onclick => "javascript:delete_mount('#{@mount_name}');" }= t('.remove')
-  %p
-    %label{ :for => "nfs_server_#{@mount_name}" }= t('.nfs_server')
-    %input{ :type => "text", :id => "nfs_server_#{@mount_name}", :name => "nfs_server_#{@mount_name}", :value => @mount_nfs_server, :onchange => "update_value('exports/#{@mount_name}/nfs_server', 'nfs_server_#{@mount_name}', 'string')"}
-  %p
-    %label{ :for => "export_#{@mount_name}" }= t('.export')
-    %input{ :type => "text", :id => "export_#{@mount_name}", :name => "export_#{@mount_name}", :value => @mount_export, :onchange => "update_value('exports/#{@mount_name}/export', 'export_#{@mount_name}', 'string')"}
-  %p
-    %label{ :for => "mount_path_#{@mount_name}" }= t('.mount_path')
-    %input{ :type => "text", :id => "mount_path_#{@mount_name}", :name => "mount_path_#{@mount_name}", :value => @mount_path, :onchange => "update_value('exports/#{@mount_name}/mount_path', 'mount_path_#{@mount_name}', 'string')"}
-  %p
-    -# we use a list here so that if the user uses a space to separate options,
-    -# this will automatically work. If a comma is used, then that will work (even
-    -# though it won't get split here but in the cookbook)
-    %label{ :for => "mount_options_list_#{@mount_name}" }= t('.mount_options_list')
-    %input{ :type => "text", :id => "mount_options_list_#{@mount_name}", :name => "mount_options_list_#{@mount_name}", :value => @mount_options, :onchange => "update_value('exports/#{@mount_name}/mount_options', 'mount_options_list_#{@mount_name}', 'array-string')"}
-    %em= t('.mount_options_list_hint')
+  %label.section-header#new_mount{ :for => "div_#{@mount_name}_internal" }= @mount_name
+  %div.section{ :id => "div_#{@mount_name}_internal" }
+    %p
+      %label{ :for => "nfs_server_#{@mount_name}" }= t('.nfs_server')
+      %input{ :type => "text", :id => "nfs_server_#{@mount_name}", :name => "nfs_server_#{@mount_name}", :value => @mount_nfs_server, :onchange => "update_value('exports/#{@mount_name}/nfs_server', 'nfs_server_#{@mount_name}', 'string')"}
+    %p
+      %label{ :for => "export_#{@mount_name}" }= t('.export')
+      %input{ :type => "text", :id => "export_#{@mount_name}", :name => "export_#{@mount_name}", :value => @mount_export, :onchange => "update_value('exports/#{@mount_name}/export', 'export_#{@mount_name}', 'string')"}
+    %p
+      %label{ :for => "mount_path_#{@mount_name}" }= t('.mount_path')
+      %input{ :type => "text", :id => "mount_path_#{@mount_name}", :name => "mount_path_#{@mount_name}", :value => @mount_path, :onchange => "update_value('exports/#{@mount_name}/mount_path', 'mount_path_#{@mount_name}', 'string')"}
+    %p
+      -# we use a list here so that if the user uses a space to separate options,
+      -# this will automatically work. If a comma is used, then that will work (even
+      -# though it won't get split here but in the cookbook)
+      %label{ :for => "mount_options_list_#{@mount_name}" }= t('.mount_options_list')
+      %input{ :type => "text", :id => "mount_options_list_#{@mount_name}", :name => "mount_options_list_#{@mount_name}", :value => @mount_options, :onchange => "update_value('exports/#{@mount_name}/mount_options', 'mount_options_list_#{@mount_name}', 'array-string')"}
+      %em= t('.mount_options_list_hint')
+    %button{ :type => 'button', :onclick => "javascript:delete_mount('#{@mount_name}');" }= t('.remove')
+    %p

@@ -1,9 +1,12 @@
 %input#proposal_attributes{:type => "hidden", :name => "proposal_attributes", :value => @proposal.raw_data['attributes'][@proposal.barclamp].to_json}
-%p
-  %label{:class => "h3", :for => "proposal_attributes"}= t('.attributes')
-  = link_to t('raw'), proposal_barclamp_path(:id => @proposal.name, :controller => @proposal.barclamp, :dep_raw => @dep_raw, :attr_raw => true), :style => "float: right;"
-  %div.container
-    %label.h3#new_mount= t('.new_mount')
+%h3.page-header
+  = t('.attributes')
+  = link_to t('raw'), proposal_barclamp_path(:id => @proposal.name, :controller => @proposal.barclamp, :dep_raw => @dep_raw, :attr_raw => true), :class => "pull-right"
+.page-header-bottom
+
+%div
+  %label.section-header#new_mount{ :for => :new_mount_div }= t('.new_mount')
+  %div.section{ :id => :new_mount_div }
     %p
       %label{ :for => :new_name }= t('.name')
       %input#new_name{:type => "text", :name => "new_name"}
@@ -23,13 +26,15 @@
     %button{ :type => 'button', :onclick => "javascript:add_mount();" }= t('.add')
     %em#error_empty= t('.error_empty')
     %em#error_duplicate= t('.error_duplicate')
+    %p
+  %div#insert_here
 
 :javascript
   function render_mount(r_name, r_nfs_server, r_export, r_mount_path, r_options) {
     $.get('/nfs_client/render_mount',
           { name: r_name, nfs_server: r_nfs_server, nfs_export: r_export, mount_path: r_mount_path, options: r_options })
     .done(function(data){
-      $(data).insertBefore($("label#new_mount"));
+      $(data).insertAfter($("div#insert_here"));
     });
   }
 
@@ -77,7 +82,7 @@
     update_value_direct("exports/" + name + "/mount_path", mount_path, 'string');
     update_value_direct("exports/" + name + "/mount_options", mount_options_list, 'array-string');
 
-    render_mount(name, nfs_server, nfs_export, mount_path, options);
+    render_mount(name, nfs_server, nfs_export, mount_path, mount_options_list);
 
     $('input#new_name').val("");
     $('input#new_nfs_server').val("");
