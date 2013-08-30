@@ -1,9 +1,12 @@
 %input#proposal_attributes{:type => "hidden", :name => "proposal_attributes", :value => @proposal.raw_data['attributes'][@proposal.barclamp].to_json}
-%p
-  %label{:class => "h3", :for => "proposal_attributes"}= t('.attributes')
-  = link_to t('raw'), proposal_barclamp_path(:id => @proposal.name, :controller => @proposal.barclamp, :dep_raw => @dep_raw, :attr_raw => true), :style => "float: right;"
-  %div.container
-    %label.h3#new_mount= t('.new_mount')
+%h3.page-header
+  = t('.attributes')
+  = link_to t('raw'), proposal_barclamp_path(:id => @proposal.name, :controller => @proposal.barclamp, :dep_raw => @dep_raw, :attr_raw => true), :class => "pull-right"
+.page-header-bottom
+
+%div
+  %label.section-header#new_mount{ :for => :new_mount_div }= t('.new_mount')
+  %div.section{ :id => :new_mount_div }
     %p
       %label{ :for => :new_name }= t('.name')
       %input#new_name{:type => "text", :name => "new_name"}
