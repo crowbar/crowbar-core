@@ -1,7 +1,6 @@
 %div{ :id => "div_#{@mount_name}", :name => "div_#{@mount_name}" }
   %label.section-header#new_mount{ :for => "div_#{@mount_name}_internal" }= @mount_name
   %div.section{ :id => "div_#{@mount_name}_internal" }
-    %button{ :type => 'button', :onclick => "javascript:delete_mount('#{@mount_name}');" }= t('.remove')
     %p
       %label{ :for => "nfs_server_#{@mount_name}" }= t('.nfs_server')
       %input{ :type => "text", :id => "nfs_server_#{@mount_name}", :name => "nfs_server_#{@mount_name}", :value => @mount_nfs_server, :onchange => "update_value('exports/#{@mount_name}/nfs_server', 'nfs_server_#{@mount_name}', 'string')"}
@@ -18,3 +17,5 @@
       %label{ :for => "mount_options_list_#{@mount_name}" }= t('.mount_options_list')
       %input{ :type => "text", :id => "mount_options_list_#{@mount_name}", :name => "mount_options_list_#{@mount_name}", :value => @mount_options, :onchange => "update_value('exports/#{@mount_name}/mount_options', 'mount_options_list_#{@mount_name}', 'array-string')"}
       %em= t('.mount_options_list_hint')
+    %button{ :type => 'button', :onclick => "javascript:delete_mount('#{@mount_name}');" }= t('.remove')
+    %p
