@@ -26,13 +26,15 @@
     %button{ :type => 'button', :onclick => "javascript:add_mount();" }= t('.add')
     %em#error_empty= t('.error_empty')
     %em#error_duplicate= t('.error_duplicate')
+    %p
+  %div#insert_here
 
 :javascript
   function render_mount(r_name, r_nfs_server, r_export, r_mount_path, r_options) {
     $.get('/nfs_client/render_mount',
           { name: r_name, nfs_server: r_nfs_server, nfs_export: r_export, mount_path: r_mount_path, options: r_options })
     .done(function(data){
-      $(data).insertBefore($("label#new_mount"));
+      $(data).insertAfter($("div#insert_here"));
     });
   }
 
