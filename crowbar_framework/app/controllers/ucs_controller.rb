@@ -109,9 +109,13 @@ class UcsController < ApplicationController
       return
     end
 
-    read_credentials # need API endpoint
-    logoutDoc = sendXML("<aaaLogout inCookie='#{ucs_session_cookie}'/>")
-    logger.debug "UCS logout: " + logoutDoc.root.inspect
+    if have_credentials?
+      read_credentials # need API endpoint
+      logoutDoc = sendXML("<aaaLogout inCookie='#{ucs_session_cookie}'/>")
+      logger.debug "Cisco UCS: logout: " + logoutDoc.root.inspect
+    else
+      logger.warn "Cisco UCS: logging out without credentials"
+    end
     set_ucs_session_cookie(nil)
     redirect_to ucs_settings_path, :notice => 'Logged out from UCS.'
   end
@@ -158,6 +162,9 @@ class UcsController < ApplicationController
 
     # equipment:Chassis is in a different part of the class hierarchy
     @chassisUnits = get_class_instances('equipmentChassis')
+
+    @storage_service_profile = STORAGE_SERVICE_PROFILE
+    @compute_service_profile = COMPUTE_SERVICE_PROFILE
   end
 
   # This will perform the update action and should redirect to edit once complete.
