@@ -1,4 +1,11 @@
 <ul>
+  <% unless @compute %>
+  <li>No UCS service profile named '<%= @compute_service_profile %>' found.</li>
+  <% end %>
+
+  <% unless @storage %>
+  <li>No UCS service profile named '<%= @storage_service_profile %>' found.</li>
+  <% end %>
 
   <% if @compute == true %>
   <li style="display: inline-block; margin: 0 12px 0 0;">

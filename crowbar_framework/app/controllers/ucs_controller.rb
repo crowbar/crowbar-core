@@ -162,6 +162,9 @@ class UcsController < ApplicationController
 
     # equipment:Chassis is in a different part of the class hierarchy
     @chassisUnits = get_class_instances('equipmentChassis')
+
+    @storage_service_profile = STORAGE_SERVICE_PROFILE
+    @compute_service_profile = COMPUTE_SERVICE_PROFILE
   end
 
   # This will perform the update action and should redirect to edit once complete.
