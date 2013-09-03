@@ -344,6 +344,19 @@ class UcsController < ApplicationController
       return nil
     end
 
+    valid_uri = false
+    begin
+      uri = URI.parse(ucs_url)
+      valid_uri = uri.kind_of?(URI::HTTP)
+    rescue URI::InvalidURIError
+      # pass
+    end
+    unless valid_uri
+      logger.debug "Cisco UCS: login URL is not a HTTP/HTTPS URL"
+      redirect_to ucs_settings_path, :notice => "Login URL should be a HTTP/HTTPS URL."
+      return nil
+    end
+
     logger.debug "Cisco UCS: credentials all present"
 
     begin
