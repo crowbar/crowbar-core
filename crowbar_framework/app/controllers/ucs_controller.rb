@@ -109,9 +109,13 @@ class UcsController < ApplicationController
       return
     end
 
-    read_credentials # need API endpoint
-    logoutDoc = sendXML("<aaaLogout inCookie='#{ucs_session_cookie}'/>")
-    logger.debug "UCS logout: " + logoutDoc.root.inspect
+    if have_credentials?
+      read_credentials # need API endpoint
+      logoutDoc = sendXML("<aaaLogout inCookie='#{ucs_session_cookie}'/>")
+      logger.debug "Cisco UCS: logout: " + logoutDoc.root.inspect
+    else
+      logger.warn "Cisco UCS: logging out without credentials"
+    end
     set_ucs_session_cookie(nil)
     redirect_to ucs_settings_path, :notice => 'Logged out from UCS.'
   end
