@@ -30,20 +30,13 @@ crowbar:
   navigation_order: -1
 
 nav:
-  primary:
-    - [ ucs, ucs_edit_path ]
-  ucs:
-    - [ ucs_dashboard, ucs_edit_path     ]
-    - [ ucs_settings,  ucs_settings_path ]
-    - [ ucs_logout,    ucs_logout_path   ]
+  utils:
+    ucs_dashboard: ucs_edit_path
 
 locale_additions:
   en:
     nav:
-      ucs: UCS
-      ucs_dashboard: Dashboard
-      ucs_settings:  Settings
-      ucs_logout:    Logout
+      ucs_dashboard: Cisco UCS
     barclamp:
       cisco_ucs:
         login:

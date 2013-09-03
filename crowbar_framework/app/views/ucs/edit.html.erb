@@ -17,9 +17,21 @@
 #
 <% end %>
 
+<script type="text/javascript">
+    jQuery(document).ready(function($) {
+        $('form input[type="submit"][formaction]').click(function() {
+            var action = $(this).attr('formaction');
+            console.log("action: " + action);
+            $(this).closest('form').attr('action', action).submit();
+        });
+    });
+</script>
+
 <% form_tag(:action => "update") do %>
 
     <input type="submit" name="Submit" value="Apply" />
+    <input type="submit" name="settings" value="Settings"
+           formmethod="get" formaction="<%= ucs_settings_path %>" />
 
     <%= render 'action_buttons' %>
 
@@ -29,5 +41,7 @@
     </ul>
 
     <input type="submit" name="Submit" value="Apply" />
+    <input type="submit" name="settings" value="Settings"
+           formmethod="get" formaction="<%= ucs_settings_path %>" />
 
 <% end %>
