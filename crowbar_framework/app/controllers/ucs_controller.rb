@@ -356,6 +356,11 @@ class UcsController < ApplicationController
       redirect_to ucs_settings_path, :notice => "Login URL should be a HTTP/HTTPS URL."
       return nil
     end
+    unless uri.host
+      logger.debug "Cisco UCS: login URL does not have a valid hostname"
+      redirect_to ucs_settings_path, :notice => "Login URL should have a valid hostname."
+      return nil
+    end
 
     logger.debug "Cisco UCS: credentials all present"
 
