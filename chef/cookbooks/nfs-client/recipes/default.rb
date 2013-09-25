@@ -23,7 +23,8 @@ comment_option = 'comment="managed-by-crowbar-barclamp-nfs-client"'
 ### Prepare data about NFS mounts we'll handle
 
 node[:nfs_client][:exports].each do |name, data|
-  mount_path = data[:mount_path]
+  # remove trailing slashes, as remounting fails when there are some
+  mount_path = data[:mount_path].sub(/\/+$/, '')
   nfs_server = data[:nfs_server]
   export = data[:export]
   raw_options = data[:mount_options]
