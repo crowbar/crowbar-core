@@ -2,23 +2,14 @@ en:
   barclamp:
     nfs_client:
       edit_attributes:
-        attributes: Attributes
-        new_mount: New NFS mount
-        add: Add
         name: Name
         nfs_server: NFS Server
-        export: Export on server
-        mount_path: Mount path
-        mount_options_list: Mount options
-        mount_options_list_hint: The "nofail" option will automatically be added.
-        error_empty: Name, NFS server, export and mount path must not be empty.
-        error_duplicate: There is already a NFS mount with this name.
-      edit_mount:
+        export: Export
+        mount_path: Path
+        mount_options: Mount options
+        add: Add
         remove: Remove
-        nfs_server: NFS Server
-        export: Export on server
-        mount_path: Mount path
-        mount_options_list: Mount options
-        mount_options_list_hint: The "nofail" option will automatically be added.
-      edit_deployment:
-        deployment: Deployment
+        error_invalid: No field (except options) can be empty!
+        error_duplicate: There is already a NFS mount with this name!
+        no_mounts: Currently there are no mounts available
+        options_hint: The "nofail" option will automatically be added to the options
