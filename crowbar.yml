@@ -32,13 +32,3 @@ crowbar:
 nav:
   utils:
     ucs_dashboard: ucs_edit_path
-
-locale_additions:
-  en:
-    nav:
-      ucs_dashboard: Cisco UCS
-    barclamp:
-      cisco_ucs:
-        login:
-          provide_creds: Please provide UCS login credentials.
-          please_login: No active UCS session; please login.
