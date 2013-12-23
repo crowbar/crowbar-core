@@ -28,16 +28,3 @@ crowbar:
   run_order: 55
   chef_order: 55
   proposal_schema_version: 2
-
-locale_additions:
-  en:
-    barclamp:
-      suse_manager_client:
-        edit_attributes: 
-          attributes: Attributes
-          manager_server: SUSE Manager server hostname
-          manager_server_hint: e.g. susemgr.example.com
-          activation_key: Activation Key
-          activation_key_hint: e.g. 1-00112233445566778899aabbccddeeff
-        edit_deployment: 
-          deployment: Deployment
