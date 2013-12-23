@@ -1,13 +1,12 @@
-%input#proposal_attributes{:type => "hidden", :name => "proposal_attributes", :value => @proposal.raw_data['attributes'][@proposal.barclamp].to_json}
-%h3.page-header
-  = t('.attributes')
-  = link_to t('raw'), proposal_barclamp_path(:id => @proposal.name, :controller => @proposal.barclamp, :dep_raw => @dep_raw, :attr_raw => true), :class => "pull-right"
-%br
-%p
-  %label{ :for => :activation_key}= t('.activation_key')
-  %input#activation_key{:type => "text", :name => "activation_key", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["activation_key"], :onchange => "update_value('activation_key', 'activation_key', 'string')"}
-  %em= t('.activation_key_hint')
-%p
-  %label{ :for => :manager_server}= t('.manager_server')
-  %input#manager_server{:type => "text", :name => "manager_server", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["manager_server"], :onchange => "update_value('manager_server', 'manager_server', 'string')"}
-  %em= t('.manager_server_hint')
+= attributes_for @proposal do
+  .panel-sub
+    = header @dep_raw, true
+
+  .panel-body
+    = string_field :activation_key
+    %span.help-block
+      = t(".activation_key_hint")
+
+    = string_field :manager_server
+    %span.help-block
+      = t(".manager_server_hint")
