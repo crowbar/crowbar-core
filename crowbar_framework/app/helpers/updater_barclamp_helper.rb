@@ -12,34 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Author: Sascha Peilicke
 # Author: SUSE LINUX Products GmbH
 #
 
-barclamp:
-  name: updater
-  display: Updater
-  description: System Package Updater
-  version: 0
-  member:
-    - crowbar
+module UpdaterBarclampHelper
+  def updater_role_contraints
+    {
+      "updater" => {
+        "unique" => false,
+        "count" => -1,
+        "admin" => true
+      }
+    }
+  end
 
-crowbar:
-  layout: 1
-  order: 99
-  run_order: 99
-  chef_order: 99
-  proposal_schema_version: 2
-
-locale_additions:
-  en:
-    barclamp:
-      updater:
-        edit_attributes: 
-          zypper:
-            method: Use zypper
-            gpg_checks: Enable GPG checks
-            licenses_agree: Automatically agree with licenses
-            patch:
-              include_reboot_patches: Include patches that need reboots (Kernel)
-          do_reboot: Reboot nodes if needed
+  def zypper_methods_for_updater(selected)
+    options_for_select(
+      [
+        ["patch",  "patch"], 
+        ["update", "update"], 
+        ["dist-upgrade", "dist-upgrade"]
+      ],
+      selected.to_s
+    )
+  end
+end
