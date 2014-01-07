@@ -3,8 +3,6 @@
     = header @dep_raw, true
 
   .panel-body
-    .empty.alert.alert-info
-      = t(".options_hint")
 
     %table.table.table-middle{ "data-dynamic" => "#mount-entries", "data-namespace" => "exports", "data-optional" => "mount_options", "data-invalid" => t(".error_invalid"), "data-duplicate" => t(".error_duplicate") }
       %thead
@@ -37,6 +35,9 @@
             = text_field_tag "mount[mount_options]", "", :placeholder => t(".mount_options"), :class => "form-control", "data-name" => "mount_options", "data-type" => "array-string"
           %td
             = link_to t(".add"), "#", :class => "btn btn-default btn-block", "data-add" => true
+
+    .alert.alert-warning
+      = t(".options_hint")
 
 %script#mount-entries{ :type => "text/x-handlebars-template" }
   {{#each entries}}
