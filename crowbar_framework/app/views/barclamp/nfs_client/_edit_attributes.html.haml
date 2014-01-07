@@ -1,120 +1,62 @@
-%input#proposal_attributes{:type => "hidden", :name => "proposal_attributes", :value => @proposal.raw_data['attributes'][@proposal.barclamp].to_json}
-%h3.page-header
-  = t('.attributes')
-  = link_to t('raw'), proposal_barclamp_path(:id => @proposal.name, :controller => @proposal.barclamp, :dep_raw => @dep_raw, :attr_raw => true), :class => "pull-right"
-.page-header-bottom
+= attributes_for @proposal do
+  .panel-sub
+    = header @dep_raw, true
 
-%div
-  %label.section-header#new_mount{ :for => :new_mount_div }= t('.new_mount')
-  %div.section{ :id => :new_mount_div }
-    %p
-      %label{ :for => :new_name }= t('.name')
-      %input#new_name{:type => "text", :name => "new_name"}
-    %p
-      %label{ :for => :new_nfs_server }= t('.nfs_server')
-      %input#new_nfs_server{:type => "text", :name => "new_nfs_server"}
-    %p
-      %label{ :for => :new_export }= t('.export')
-      %input#new_export{:type => "text", :name => "new_export"}
-    %p
-      %label{ :for => :new_mount_path }= t('.mount_path')
-      %input#new_mount_path{:type => "text", :name => "new_mount_path"}
-    %p
-      %label{ :for => :new_mount_options_list }= t('.mount_options_list')
-      %input#new_mount_options_list{:type => "text", :name => "new_mount_options_list"}
-      %em= t('.mount_options_list_hint')
-    %button{ :type => 'button', :onclick => "javascript:add_mount();" }= t('.add')
-    %em#error_empty= t('.error_empty')
-    %em#error_duplicate= t('.error_duplicate')
-    %p
-  %div#insert_here
+  .panel-body
 
-:javascript
-  function render_mount(r_name, r_nfs_server, r_export, r_mount_path, r_options) {
-    $.get('/nfs_client/render_mount',
-          { name: r_name, nfs_server: r_nfs_server, nfs_export: r_export, mount_path: r_mount_path, options: r_options })
-    .done(function(data){
-      $(data).insertAfter($("div#insert_here"));
-    });
-  }
+    %table.table.table-middle{ "data-dynamic" => "#mount-entries", "data-namespace" => "exports", "data-optional" => "mount_options", "data-invalid" => t(".error_invalid"), "data-duplicate" => t(".error_duplicate") }
+      %thead
+        %tr
+          %th.col-sm-3
+            = t(".name")
+          %th.col-sm-2
+            = t(".nfs_server")
+          %th.col-sm-2
+            = t(".export")
+          %th.col-sm-2
+            = t(".mount_path")
+          %th.col-sm-2
+            = t(".mount_options")
+          %th.col-sm-1
 
-  function delete_mount(name) {
-    var input = document.getElementById('proposal_attributes');
-    var json = JSON.parse(input.value);
-    if ("exports" in json) {
-      var exports = json["exports"];
-      if (name in exports) {
-        delete exports[name];
-        input.value = JSON.stringify(json);
-      }
-    }
-    $('div#div_' + name).remove()
-  }
+      %tbody
 
-  function add_mount() {
-    var name = $('input#new_name').val();
-    var nfs_server = $('input#new_nfs_server').val();
-    var nfs_export = $('input#new_export').val();
-    var mount_path = $('input#new_mount_path').val();
-    var mount_options_list = $('input#new_mount_options_list').val();
+      %tfoot
+        %tr
+          %td
+            = text_field_tag "mount[name]", "", :placeholder => t(".name"), :class => "form-control", "data-name" => "name", "data-type" => "string"
+          %td
+            = text_field_tag "mount[nfs_server]", "", :placeholder => t(".nfs_server"), :class => "form-control", "data-name" => "nfs_server", "data-type" => "string"
+          %td
+            = text_field_tag "mount[export]", "", :placeholder => t(".export"), :class => "form-control", "data-name" => "export", "data-type" => "string"
+          %td
+            = text_field_tag "mount[mount_path]", "", :placeholder => t(".mount_path"), :class => "form-control", "data-name" => "mount_path", "data-type" => "string"
+          %td
+            = text_field_tag "mount[mount_options]", "", :placeholder => t(".mount_options"), :class => "form-control", "data-name" => "mount_options", "data-type" => "array-string"
+          %td
+            = link_to t(".add"), "#", :class => "btn btn-default btn-block", "data-add" => true
 
-    if (name == "" || nfs_server == "" || nfs_export == "" || mount_path == "") {
-      $('#error_empty').show();
-      $('#error_duplicate').hide();
-      return;
-    }
+    .alert.alert-warning
+      = t(".options_hint")
 
-    var input = document.getElementById('proposal_attributes');
-    var json = JSON.parse(input.value);
-    if (!("exports" in json)) return;
-
-    if (name in json["exports"]) {
-      $('#error_empty').hide();
-      $('#error_duplicate').show();
-      return;
-    }
-
-    $('#error_empty').hide();
-    $('#error_duplicate').hide();
-
-    update_value_direct("exports/" + name + "/nfs_server", nfs_server, 'string');
-    update_value_direct("exports/" + name + "/export", nfs_export, 'string');
-    update_value_direct("exports/" + name + "/mount_path", mount_path, 'string');
-    update_value_direct("exports/" + name + "/mount_options", mount_options_list, 'array-string');
-
-    render_mount(name, nfs_server, nfs_export, mount_path, mount_options_list);
-
-    $('input#new_name').val("");
-    $('input#new_nfs_server').val("");
-    $('input#new_export').val("");
-    $('input#new_mount_path').val("");
-    $('input#new_mount_options_list').val("");
-  }
-
-  $(document).ready(function () {
-    $('#error_empty').hide();
-    $('#error_duplicate').hide();
-
-    var input = document.getElementById('proposal_attributes');
-    var json = JSON.parse(input.value);
-
-    if ("exports" in json) {
-      var exports = json["exports"]
-      var sorted_keys = Object.keys(exports).sort()
-      sorted_keys.forEach(function(k) {
-        // use hasOwnProperty to filter out keys from the Object.prototype
-        if (exports.hasOwnProperty(k)) {
-          this_mount = exports[k]
-          if (!("nfs_server" in this_mount)) return;
-          if (!("export" in this_mount)) return;
-          if (!("mount_path" in this_mount)) return;
-          if ("mount_options" in this_mount)
-            options = this_mount["mount_options"].join(",");
-          else
-            options = "";
-
-          render_mount(k, this_mount["nfs_server"], this_mount["export"], this_mount["mount_path"], options);
-        }
-      });
-    }
-  });
+%script#mount-entries{ :type => "text/x-handlebars-template" }
+  {{#each entries}}
+  %tr.edit
+    %td
+      = text_field_tag "mount[name]", "{{name}}", :placeholder => t(".name"), :class => "form-control", :disabled => "disabled"
+    %td
+      = text_field_tag "mount[nfs_server]", "{{nfs_server}}", :placeholder => t(".nfs_server"), :class => "form-control", "data-update" => "exports/{{name}}/nfs_server", "data-name" => "nfs_server", "data-type" => "string"
+    %td
+      = text_field_tag "mount[export]", "{{export}}", :placeholder => t(".export"), :class => "form-control", "data-update" => "exports/{{name}}/export", "data-name" => "export", "data-type" => "string"
+    %td
+      = text_field_tag "mount[mount_path]", "{{mount_path}}", :placeholder => t(".mount_path"), :class => "form-control", "data-update" => "exports/{{name}}/mount_path", "data-name" => "mount_path", "data-type" => "string"
+    %td
+      = text_field_tag "mount[mount_options]", "{{mount_options}}", :placeholder => t(".mount_options"), :class => "form-control", "data-update" => "exports/{{name}}/mount_options", "data-name" => "mount_options", "data-type" => "array-string"
+    %td
+      = link_to t(".remove"), "#", :class => "btn btn-default btn-block", "data-remove" => "{{name}}"
+  {{else}}
+  %tr
+    %td{ :colspan => 6 }
+      .empty.alert.alert-info.text-center
+        = t(".no_mounts")
+  {{/each}}
