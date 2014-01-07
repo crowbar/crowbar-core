@@ -45,13 +45,13 @@
     %td
       = text_field_tag "mount[name]", "{{name}}", :placeholder => t(".name"), :class => "form-control", :disabled => "disabled"
     %td
-      = text_field_tag "mount[nfs_server]", "{{nfs_server}}", :placeholder => t(".nfs_server"), :class => "form-control", "data-update" => "exports/{{name}}/nfs_server", "data-type" => "string"
+      = text_field_tag "mount[nfs_server]", "{{nfs_server}}", :placeholder => t(".nfs_server"), :class => "form-control", "data-update" => "exports/{{name}}/nfs_server", "data-name" => "nfs_server", "data-type" => "string"
     %td
-      = text_field_tag "mount[export]", "{{export}}", :placeholder => t(".export"), :class => "form-control", "data-update" => "exports/{{name}}/export", "data-type" => "string"
+      = text_field_tag "mount[export]", "{{export}}", :placeholder => t(".export"), :class => "form-control", "data-update" => "exports/{{name}}/export", "data-name" => "export", "data-type" => "string"
     %td
-      = text_field_tag "mount[mount_path]", "{{mount_path}}", :placeholder => t(".mount_path"), :class => "form-control", "data-update" => "exports/{{name}}/mount_path", "data-type" => "string"
+      = text_field_tag "mount[mount_path]", "{{mount_path}}", :placeholder => t(".mount_path"), :class => "form-control", "data-update" => "exports/{{name}}/mount_path", "data-name" => "mount_path", "data-type" => "string"
     %td
-      = text_field_tag "mount[mount_options]", "{{mount_options}}", :placeholder => t(".mount_options"), :class => "form-control", "data-update" => "exports/{{name}}/mount_options", "data-type" => "array-string"
+      = text_field_tag "mount[mount_options]", "{{mount_options}}", :placeholder => t(".mount_options"), :class => "form-control", "data-update" => "exports/{{name}}/mount_options", "data-name" => "mount_options", "data-type" => "array-string"
     %td
       = link_to t(".remove"), "#", :class => "btn btn-default btn-block", "data-remove" => "{{name}}"
   {{else}}
