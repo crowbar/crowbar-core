@@ -1,0 +1,44 @@
+- @rackUnits.each do |rackUnit|
+  .panel-heading
+    %h2.panel-title
+      = check_box_tag(rackUnit.attributes["dn"])
+      DN:
+      = rackUnit.attributes["dn"]
+
+  .panel-body
+    .col-md-4.col-xs-6
+      %dl.dl-horizontal
+        %dt
+          = t("ucs.edit.profile")
+        %dd
+          - if rackUnit.attributes["assignedToDn"].empty?
+            &mdash;
+          - else
+            = rackUnit.attributes["assignedToDn"]
+        %dt
+          = t("ucs.edit.label")
+        %dd
+          - if rackUnit.attributes["usrLbl"].empty?
+            &mdash;
+          - else
+            = rackUnit.attributes["usrLbl"]
+        %dt
+          = t("ucs.edit.model")
+        %dd
+          = rackUnit.attributes["model"]
+        %dt
+          = t("ucs.edit.memory")
+        %dd
+          = number_to_human_size(rackUnit.attributes["availableMemory"].to_i * 1024 * 1024)
+          \/
+          = number_to_human_size(rackUnit.attributes["totalMemory"].to_i * 1024 * 1024)
+        %dt
+          = t("ucs.edit.cpus")
+        %dd
+          = rackUnit.attributes["numOfCpus"]
+          \/
+          = rackUnit.attributes["numOfCores"]
+        %dt
+          = t("ucs.edit.interfaces")
+        %dd
+          = rackUnit.attributes["numOfEthHostIfs"]

@@ -1,0 +1,55 @@
+- @chassisUnits.each do |chassis|
+  .panel-heading
+    .pull-right
+      = icon_tag "collapse-down"
+
+    %h2.panel-title
+      %a{ :href => "##{chassis.attributes["dn"].parameterize}", "data-toggle" => "collapse", "data-parent" => "#accordion" }
+        DN:
+        = chassis.attributes["dn"]
+
+  .panel-body.panel-collapse.collapse{ :id => chassis.attributes["dn"].parameterize }
+    - @blades.each do |blade|
+      - if blade.attributes["chassisId"] == chassis.attributes["id"]
+        .col-md-4.col-xs-6
+          %h3.panel-title
+            = check_box_tag(blade.attributes["dn"])
+            DN:
+            = blade.attributes["dn"]
+
+          %dl.dl-horizontal
+            %dt
+              = t("ucs.edit.profile")
+            %dd
+              - if blade.attributes["assignedToDn"].empty?
+                &mdash;
+              - else
+                = blade.attributes["assignedToDn"]
+            %dt
+              = t("ucs.edit.label")
+            %dd
+              - if blade.attributes["usrLbl"].empty?
+                &mdash;
+              - else
+                = blade.attributes["usrLbl"]
+            %dt
+              = t("ucs.edit.model")
+            %dd
+              = blade.attributes["model"]
+
+            %dt
+              = t("ucs.edit.memory")
+            %dd
+              = number_to_human_size(blade.attributes["availableMemory"].to_i * 1024 * 1024)
+              \/
+              = number_to_human_size(blade.attributes["totalMemory"].to_i * 1024 * 1024)
+            %dt
+              = t("ucs.edit.cpus")
+            %dd
+              = blade.attributes["numOfCpus"]
+              \/
+              = blade.attributes["numOfCores"]
+            %dt
+              = t("ucs.edit.interfaces")
+            %dd
+              = blade.attributes["numOfEthHostIfs"]

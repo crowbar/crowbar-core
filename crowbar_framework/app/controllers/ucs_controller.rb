@@ -286,15 +286,10 @@ class UcsController < ApplicationController
     logger.debug "Cisco UCS: set session cookie to #{cookie}"
   end
 
-  helper_method :logged_in?, :readonly
+  helper_method :logged_in?
 
   def logged_in?
     !! ucs_session_cookie
-  end
-
-  # Login fields should be read-only if logged in
-  def readonly
-    logged_in? ? 'readonly' : ''
   end
 
   # Use this to protect error messages which are intended to go in the
@@ -328,19 +323,19 @@ class UcsController < ApplicationController
   def aaaLogin(ucs_url, username, password)
     if ucs_url.blank?
       logger.debug "Cisco UCS: missing login URL"
-      redirect_to ucs_settings_path, :notice => "You must provide a login URL."
+      redirect_to ucs_settings_path, :alert => "You must provide a login URL"
       return nil
     elsif ! ucs_url.end_with? '/nuova'
       logger.debug "Cisco UCS: login URL didn't have the correct '/nuova' ending"
-      redirect_to ucs_settings_path, :notice => "Login URL should end in '/nuova'."
+      redirect_to ucs_settings_path, :alert => "Login URL should end in '/nuova'"
       return nil
     elsif username.blank?
       logger.debug "Cisco UCS: missing login name"
-      redirect_to ucs_settings_path, :notice => "You must provide a login name."
+      redirect_to ucs_settings_path, :alert => "You must provide a login name"
       return nil
     elsif password.blank?
       logger.debug "Cisco UCS: missing login password"
-      redirect_to ucs_settings_path, :notice => "You must provide a login password."
+      redirect_to ucs_settings_path, :alert => "You must provide a login password"
       return nil
     end
 
@@ -353,12 +348,12 @@ class UcsController < ApplicationController
     end
     unless valid_uri
       logger.debug "Cisco UCS: login URL is not a HTTP/HTTPS URL"
-      redirect_to ucs_settings_path, :notice => "Login URL should be a HTTP/HTTPS URL."
+      redirect_to ucs_settings_path, :alert => "Login URL should be a HTTP/HTTPS URL"
       return nil
     end
     unless uri.host
       logger.debug "Cisco UCS: login URL does not have a valid hostname"
-      redirect_to ucs_settings_path, :notice => "Login URL should have a valid hostname."
+      redirect_to ucs_settings_path, :alert => "Login URL should have a valid hostname"
       return nil
     end
 
@@ -399,12 +394,12 @@ class UcsController < ApplicationController
 
   def authenticate
     unless have_credentials?
-      redirect_to ucs_settings_path, :notice => t('barclamp.cisco_ucs.login.provide_creds')
+      redirect_to ucs_settings_path, :notice => t('barclamp.ucs.login.provide_creds')
       return
     end
 
     unless logged_in?
-      redirect_to ucs_settings_path, :notice => t('barclamp.cisco_ucs.login.please_login')
+      redirect_to ucs_settings_path, :notice => t('barclamp.ucs.login.please_login')
       return
     end
 
