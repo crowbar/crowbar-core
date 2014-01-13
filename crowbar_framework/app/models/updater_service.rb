@@ -16,8 +16,8 @@
 class UpdaterService < ServiceObject
 
   def initialize(thelogger)
+    super(thelogger)
     @bc_name = "updater"
-    @logger = thelogger
   end
 
   def create_proposal
