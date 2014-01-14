@@ -16,8 +16,8 @@
 class SuseManagerClientService < ServiceObject
 
   def initialize(thelogger)
+    super(thelogger)
     @bc_name = "suse_manager_client"
-    @logger = thelogger
   end
 
   def create_proposal
