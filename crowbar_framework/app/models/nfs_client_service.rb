@@ -16,8 +16,8 @@
 class NfsClientService < ServiceObject
 
   def initialize(thelogger)
+    super(thelogger)
     @bc_name = "nfs_client"
-    @logger = thelogger
   end
 
   def create_proposal
