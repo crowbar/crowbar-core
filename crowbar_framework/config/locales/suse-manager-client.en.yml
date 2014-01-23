@@ -3,6 +3,6 @@ en:
     suse_manager_client:
       edit_attributes:
         manager_server: SUSE Manager server hostname
-        manager_server_hint: For example susemgr.example.com
+        manager_server_hint: For example susemgr.example.com. You can set a record within the %{link}.
         activation_key: Activation Key
         activation_key_hint: For example 1-00112233445566778899aabbccddeeff
