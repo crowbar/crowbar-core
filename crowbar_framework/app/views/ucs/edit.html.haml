@@ -1,0 +1,48 @@
+.row
+  .col-xs-12
+    %h1.page-header
+      = t(".title")
+
+      .btn-group.pull-right
+        = link_to t(".settings"), ucs_settings_path, :class => "btn btn-default"
+
+- form_tag(ucs_update_path) do
+  .panel.panel-default#accordion
+    = render "chassis"
+    = render "rack"
+
+    .panel-footer.text-right
+      - if @compute == true
+        %label.radio-inline
+          = radio_button_tag :updateAction, "compute"
+          = t(".compute_node")
+      - else
+        %label.radio-inline{ :title => t(".missing_profile", :profile => @compute_service_profile) }
+          = radio_button_tag :updateAction, "compute", false, :disabled => true
+          = t(".compute_node")
+
+      - if @storage == true
+        %label.radio-inline
+          = radio_button_tag :updateAction, "storage"
+          = t(".storage_node")
+      - else
+        %label.radio-inline{ :title => t(".missing_profile", :profile => @storage_service_profile) }
+          = radio_button_tag :updateAction, "storage", false, :disabled => true
+          = t(".storage_node")
+
+      %label.radio-inline
+        = radio_button_tag(:updateAction, "reboot")
+        = t(".reboot")
+
+      %label.radio-inline
+        = radio_button_tag(:updateAction, "up")
+        = t(".powerup")
+
+      %label.radio-inline
+        = radio_button_tag(:updateAction, "down")
+        = t(".powerdown")
+
+      &nbsp;
+
+      .btn-group
+        %input.btn.btn-default{ :type => "submit", :name => "submit", :value => t(".apply") }

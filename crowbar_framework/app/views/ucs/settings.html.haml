@@ -1,0 +1,37 @@
+.row
+  .col-xs-12
+    %h1.page-header
+      = t(".title")
+
+      - if logged_in?
+        .btn-group.pull-right
+          = link_to t(".edit"), ucs_edit_path, :class => "btn btn-default"
+
+- form_tag logged_in? ? ucs_logout_path : ucs_login_path, :role => "form" do
+  .panel.panel-default
+    .panel-body
+      - if logged_in?
+        .alert.alert-info
+          = t(".needs_logout")
+
+      .form-group
+        %label{ :for => :ucs_url }
+          = t(".ucs_url")
+        = text_field_tag :ucs_url, @ucs_url, :class => "form-control", :disabled => logged_in? ? "disabled" : nil
+
+      .form-group
+        %label{ :for => :username }
+          = t(".username")
+        = text_field_tag :username, @username, :class => "form-control", :disabled => logged_in? ? "disabled" : nil
+
+      .form-group
+        %label{ :for => :password }
+          = t(".password")
+        = password_field_tag :password, @password, :class => "form-control", :disabled => logged_in? ? "disabled" : nil
+
+    .panel-footer.text-right
+      .btn-group
+        - if logged_in?
+          %input.btn.btn-default{ :type => "submit", :name => "logout", :value => t(".logout") }
+        - else
+          %input.btn.btn-default{ :type => "submit", :name => "login", :value => t(".login") }
