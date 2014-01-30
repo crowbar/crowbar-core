@@ -67,12 +67,12 @@ class NfsClientService < ServiceObject
 
     ### Do not allow elements of this proposal to be in another proposal, since
     ### the configuration cannot be shared.
-    elements = proposal["deployment"]["nfs_client"]["elements"]["nfs-client"]
+    elements = proposal["deployment"]["nfs_client"]["elements"]["nfs-client"] rescue []
 
     proposals_raw.each do |p|
       next if p["id"] == proposal["id"]
 
-      p["deployment"]["nfs_client"]["elements"]["nfs-client"].each do |e|
+      (p["deployment"]["nfs_client"]["elements"]["nfs-client"] || []).each do |e|
         if elements.include?(e)
           p_name = p["id"].gsub("bc-#{@bc_name}-", "")
           errors << "Nodes cannot be part of multiple NFS client proposals, but #{e} is already part of proposal \"#{p_name}\"."
