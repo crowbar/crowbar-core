@@ -20,6 +20,20 @@ class SuseManagerClientService < ServiceObject
     @bc_name = "suse_manager_client"
   end
 
+  class << self
+    def role_constraints
+      @role_constraints ||= begin
+        {
+          "suse-manager-client" => {
+            "unique" => false,
+            "count" => -1,
+            "admin" => true
+          }
+        }
+      end
+    end
+  end
+
   def create_proposal
     @logger.debug("SUSE Manager Client create_proposal: entering")
     base = super
