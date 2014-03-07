@@ -18,12 +18,4 @@
 #
 
 module NfsClientBarclampHelper
-  def nfs_client_role_contraints
-    {
-      "nfs-client" => {
-        "unique" => false,
-        "count" => -1
-      }
-    }
-  end
 end

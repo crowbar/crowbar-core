@@ -20,6 +20,19 @@ class NfsClientService < ServiceObject
     @bc_name = "nfs_client"
   end
 
+  class << self
+    def role_constraints
+      @role_constraints ||= begin
+        {
+          "nfs-client" => {
+            "unique" => false,
+            "count" => -1
+          }
+        }
+      end
+    end
+  end
+
   def create_proposal
     @logger.debug("NFS_client create_proposal: entering")
     base = super
