@@ -16,13 +16,4 @@
 #
 
 module SuseManagerClientBarclampHelper
-  def suse_manager_client_role_contraints
-    {
-      "suse-manager-client" => {
-        "unique" => false,
-        "count" => -1,
-        "admin" => true
-      }
-    }
-  end
 end
