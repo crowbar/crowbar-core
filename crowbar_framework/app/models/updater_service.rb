@@ -21,6 +21,20 @@ class UpdaterService < ServiceObject
     @bc_name = "updater"
   end
 
+  class << self
+    def role_constraints
+      @role_constraints ||= begin
+        {
+          "updater" => {
+            "unique" => false,
+            "count" => -1,
+            "admin" => true
+          }
+        }
+      end
+    end
+  end
+
   def create_proposal
     @logger.debug("Updater create_proposal: entering")
     base = super

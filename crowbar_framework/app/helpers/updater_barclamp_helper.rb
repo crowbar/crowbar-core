@@ -16,16 +16,6 @@
 #
 
 module UpdaterBarclampHelper
-  def updater_role_contraints
-    {
-      "updater" => {
-        "unique" => false,
-        "count" => -1,
-        "admin" => true
-      }
-    }
-  end
-
   def zypper_methods_for_updater(selected)
     options_for_select(
       [
