@@ -22,15 +22,13 @@ class SuseManagerClientService < ServiceObject
 
   class << self
     def role_constraints
-      @role_constraints ||= begin
-        {
-          "suse-manager-client" => {
-            "unique" => false,
-            "count" => -1,
-            "admin" => true
-          }
+      {
+        "suse-manager-client" => {
+          "unique" => false,
+          "count" => -1,
+          "admin" => true
         }
-      end
+      }
     end
   end
 
