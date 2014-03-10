@@ -23,15 +23,13 @@ class UpdaterService < ServiceObject
 
   class << self
     def role_constraints
-      @role_constraints ||= begin
-        {
-          "updater" => {
-            "unique" => false,
-            "count" => -1,
-            "admin" => true
-          }
+      {
+        "updater" => {
+          "unique" => false,
+          "count" => -1,
+          "admin" => true
         }
-      end
+      }
     end
   end
 
