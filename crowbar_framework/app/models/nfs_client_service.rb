@@ -22,14 +22,12 @@ class NfsClientService < ServiceObject
 
   class << self
     def role_constraints
-      @role_constraints ||= begin
-        {
-          "nfs-client" => {
-            "unique" => false,
-            "count" => -1
-          }
+      {
+        "nfs-client" => {
+          "unique" => false,
+          "count" => -1
         }
-      end
+      }
     end
   end
 
