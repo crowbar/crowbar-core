@@ -1,4 +1,5 @@
-# Copyright 2013, SUSE LINUX Products GmbH
+#
+# Copyright 2013-2014, SUSE LINUX Products GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,18 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Author: SUSE LINUX Products GmbH
-#
 
-module UpdaterBarclampHelper
-  def zypper_methods_for_updater(selected)
-    options_for_select(
-      [
-        ["patch",  "patch"], 
-        ["update", "update"], 
-        ["dist-upgrade", "dist-upgrade"]
-      ],
-      selected.to_s
-    )
+module Barclamp
+  module UpdaterHelper
+    def zypper_methods_for_updater(selected)
+      options_for_select(
+        [
+          ["patch", "patch"], 
+          ["update", "update"], 
+          ["dist-upgrade", "dist-upgrade"]
+        ],
+        selected.to_s
+      )
+    end
   end
 end
