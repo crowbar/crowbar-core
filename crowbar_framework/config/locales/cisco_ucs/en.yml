@@ -1,0 +1,51 @@
+#
+# Copyright 2011-2013, Dell
+# Copyright 2013-2014, SUSE LINUX Products GmbH
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+en:
+  nav:
+    ucs_dashboard: 'Cisco UCS'
+  ucs:
+    settings:
+      title: 'UCS Login Settings'
+      ucs_url: 'API URL'
+      username: 'Username'
+      password: 'Password'
+      login: 'Login'
+      logout: 'Logout'
+      edit: 'Listing'
+      needs_logout: 'There is a UCS login session currently active. Please log out before changing any settings.'
+    edit:
+      title: 'Cisco UCS'
+      settings: 'Settings'
+      profile: 'Profile'
+      label: 'Label'
+      model: 'Model'
+      memory: 'Memory'
+      cpus: 'CPUs'
+      interfaces: 'Interfaces'
+      compute_node: 'Set as Computenode'
+      storage_node: 'Set as Storagenode'
+      reboot: 'Reboot'
+      powerup: 'Powerup'
+      powerdown: 'Powerdown'
+      apply: 'Apply'
+      missing_profile: 'No UCS service profile named %{profile} found'
+  barclamp:
+    ucs:
+      login:
+        provide_creds: 'Please provide UCS login credentials.'
+        please_login: 'No active UCS session; please login.'
