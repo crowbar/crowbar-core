@@ -16,7 +16,10 @@
 #
 
 class UpdaterController < BarclampController
-  def initialize
+
+  protected
+
+  def initialize_service
     @service_object = UpdaterService.new logger
   end
 end
