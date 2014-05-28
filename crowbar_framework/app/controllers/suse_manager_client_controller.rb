@@ -14,7 +14,10 @@
 # 
 
 class SuseManagerClientController < BarclampController
-  def initialize
+
+  protected
+
+  def initialize_service
     @service_object = SuseManagerClientService.new logger
   end
 end
