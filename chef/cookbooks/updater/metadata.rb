@@ -1,7 +1,4 @@
 #
-# Cookbook Name:: updater
-# Attributes:: default
-#
 # Copyright 2013-2014, SUSE LINUX Products GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,11 +14,11 @@
 # limitations under the License.
 #
 
-default[:updater][:need_reboot] = false
-default[:updater][:need_reboot_time] = 0
-default[:updater][:do_reboot] = false
+maintainer "Crowbar Project"
+maintainer_email "crowbar@dell.com"
+license "Apache 2.0"
+description "System Package Updater"
+long_description ""
+version "0.0.1"
 
-default[:updater][:zypper][:method] = "patch"
-default[:updater][:zypper][:gpg_checks] = true
-default[:updater][:zypper][:licenses_agree] = true
-default[:updater][:zypper][:patch][:include_reboot_patches] = false
+recipe "updater", "System Package Updater"
