@@ -10,6 +10,7 @@
   "deployment": {
     "suse_manager_client": {
       "crowbar-revision": 0,
+      "crowbar-applied": false,
       "element_states": {
         "suse-manager-client": [ "readying", "ready", "applying" ]
       },
