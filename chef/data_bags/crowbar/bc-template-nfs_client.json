@@ -9,6 +9,7 @@
   "deployment": {
     "nfs_client": {
       "crowbar-revision": 0,
+      "crowbar-applied": false,
       "element_states": {
         "nfs-client": [ "readying", "ready", "applying" ]
       },
