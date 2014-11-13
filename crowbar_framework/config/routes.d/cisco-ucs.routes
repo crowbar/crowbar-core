@@ -15,9 +15,8 @@
 # limitations under the License.
 #
 
-map.ucs_login    'ucs/login',    :controller => 'ucs', :action => 'login'
-map.ucs_logout   'ucs/logout',   :controller => 'ucs', :action => 'logout'
-map.ucs_settings 'ucs/settings', :controller => 'ucs', :action => 'settings'
-map.ucs_edit     'ucs/edit',     :controller => 'ucs', :action => 'edit'
-map.ucs_update   'ucs/update',   :controller => 'ucs', :action => 'update',
-                                 :condition => { :method => :post }
+get 'ucs/settings' => 'ucs#settings', as: 'ucs_settings'
+get 'ucs/edit' => 'ucs#edit', as: 'ucs_edit'
+get 'ucs/logout' => 'ucs#logout', as: 'ucs_logout'
+post 'ucs/login' => 'ucs#login', as: 'ucs_login'
+post 'ucs/update' => 'ucs#update' as: 'ucs_update'
