@@ -29,8 +29,10 @@ crowbar:
   order: 20
   run_order: 20
   chef_order: 20
-  navigation_order: -1
+  proposal_schema_version: 3
 
 nav:
   utils:
-    ucs_dashboard: ucs_edit_path
+    ucs:
+      order: 90
+      route: 'ucs_edit_path'
