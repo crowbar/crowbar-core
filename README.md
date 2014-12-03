@@ -15,13 +15,16 @@ system for specific applications.
 About this barclamp
 -------------------
 
+[![Build Status](https://travis-ci.org/crowbar/barclamp-suse-manager-client.svg?branch=master)](https://travis-ci.org/crowbar/barclamp-suse-manager-client)
+
 Information for this barclamp is maintained on the [Crowbar Framework Wiki](https://github.com/crowbar/crowbar/wiki)
 
-Steps to setup:
+Steps to setup
+--------------
 
 * Install SUSE Manager Server
 * Inside SUSE Manager, create an activation key. The activation key will be used in the barclamp's WebUI.
-* Download the `https://your-manager-server.example.com/pub/rhn-org-trusted-ssl-cert-*-*.noarch.rpm` file (check the 
+* Download the `https://your-manager-server.example.com/pub/rhn-org-trusted-ssl-cert-*-*.noarch.rpm` file (check the
   version number) as `chef/cookbooks/suse-manager-client/files/default/ssl-cert.rpm` (in this barclamp's directory tree).
 * Reinstalling the barclamp might be required in order for crowbar to take notice of the new file. Do this with:
   `/opt/dell/bin/barclamp_install.rb --rpm suse-manager-client`
