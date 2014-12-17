@@ -18,5 +18,5 @@
 get 'ucs/settings' => 'ucs#settings', as: 'ucs_settings'
 get 'ucs/edit' => 'ucs#edit', as: 'ucs_edit'
 get 'ucs/logout' => 'ucs#logout', as: 'ucs_logout'
-post 'ucs/login' => 'ucs#login', as: 'ucs_login'
+get 'ucs/login' => 'ucs#login', as: 'ucs_login'
 post 'ucs/update' => 'ucs#update', as: 'ucs_update'
