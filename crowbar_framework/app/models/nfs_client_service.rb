@@ -26,7 +26,10 @@ class NfsClientService < ServiceObject
       {
         "nfs-client" => {
           "unique" => false,
-          "count" => -1
+          "count" => -1,
+          "exclude_platform" => {
+            "windows" => "/.*/"
+          }
         }
       }
     end
