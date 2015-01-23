@@ -26,7 +26,10 @@ class UpdaterService < ServiceObject
         "updater" => {
           "unique" => false,
           "count" => -1,
-          "admin" => true
+          "admin" => true,
+          "exclude_platform" => {
+            "windows" => "/.*/"
+          }
         }
       }
     end
