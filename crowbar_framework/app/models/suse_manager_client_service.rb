@@ -27,7 +27,12 @@ class SuseManagerClientService < ServiceObject
         "suse-manager-client" => {
           "unique" => false,
           "count" => -1,
-          "admin" => true
+          "admin" => true,
+          "exclude_platform" => {
+            "windows" => "/.*/",
+            "ubuntu" => "/.*/",
+            "debian" => "/.*/"
+          }
         }
       }
     end
