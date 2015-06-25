@@ -34,6 +34,15 @@ Steps to setup
   `/opt/dell/bin/barclamp_install.rb --rpm suse-manager-client`
 * Now apply the barclamp from Crowbar's WebUI on selected nodes.
 
+Contact
+-------
+
+To get in contact with the developers you have multiple options, all of them are listed below:
+
+* [Google Mailinglist](https://groups.google.com/forum/#!forum/crowbar)
+* [Gitter Chat](https://gitter.im/crowbar)
+* [Freenode Webchat](http://webchat.freenode.net/?channels=%23crowbar)
+
 Legals
 ------
 
