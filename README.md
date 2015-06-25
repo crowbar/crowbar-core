@@ -19,6 +19,7 @@ About this barclamp
 [![Code Climate](https://codeclimate.com/github/crowbar/barclamp-nfs_client/badges/gpa.svg)](https://codeclimate.com/github/crowbar/barclamp-nfs_client)
 [![Test Coverage](https://codeclimate.com/github/crowbar/barclamp-nfs_client/badges/coverage.svg)](https://codeclimate.com/github/crowbar/barclamp-nfs_client)
 [![Dependency Status](https://gemnasium.com/crowbar/barclamp-nfs_client.svg)](https://gemnasium.com/crowbar/barclamp-nfs_client)
+[![Join the chat at https://gitter.im/crowbar](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/crowbar)
 
 Information for this barclamp is maintained on the [Crowbar Framework Wiki](https://github.com/crowbar/crowbar/wiki)
 
