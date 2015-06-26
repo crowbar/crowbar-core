@@ -20,7 +20,7 @@ About this barclamp
 [![Code Climate](https://codeclimate.com/github/crowbar/barclamp-suse-manager-client/badges/gpa.svg)](https://codeclimate.com/github/crowbar/barclamp-suse-manager-client)
 [![Test Coverage](https://codeclimate.com/github/crowbar/barclamp-suse-manager-client/badges/coverage.svg)](https://codeclimate.com/github/crowbar/barclamp-suse-manager-client)
 [![Dependency Status](https://gemnasium.com/crowbar/barclamp-suse-manager-client.svg)](https://gemnasium.com/crowbar/barclamp-suse-manager-client)
-[![Join the chat at https://gitter.im/crowbar](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/crowbar)
+[![Join the chat at https://gitter.im/crowbar/crowbar](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/crowbar/crowbar)
 
 Information for this barclamp is maintained on the [Crowbar Framework Wiki](https://github.com/crowbar/crowbar/wiki)
 
@@ -41,7 +41,7 @@ Contact
 To get in contact with the developers you have multiple options, all of them are listed below:
 
 * [Google Mailinglist](https://groups.google.com/forum/#!forum/crowbar)
-* [Gitter Chat](https://gitter.im/crowbar)
+* [Gitter Chat](https://gitter.im/crowbar/crowbar)
 * [Freenode Webchat](http://webchat.freenode.net/?channels=%23crowbar)
 
 Legals
