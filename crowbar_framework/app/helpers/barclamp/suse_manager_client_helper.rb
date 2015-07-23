@@ -16,5 +16,16 @@
 
 module Barclamp
   module SuseManagerClientHelper
+    def suse_manager_client_url
+      "https://your-manager-server.example.com/pub/rhn-org-trusted-ssl-cert-*-*.noarch.rpm"
+    end
+
+    def suse_manager_client_rpm
+      "/opt/dell/chef/cookbooks/suse-manager-client/files/default/ssl-cert.rpm"
+    end
+
+    def suse_manager_client_install
+      "/opt/dell/bin/barclamp_install.rb --rpm suse-manager-client"
+    end
   end
 end

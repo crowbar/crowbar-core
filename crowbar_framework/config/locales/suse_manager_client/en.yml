@@ -22,3 +22,10 @@ en:
         manager_server_hint: 'For example susemgr.example.com. You can set a record within the %{link}.'
         activation_key: 'Activation Key'
         activation_key_hint: 'For example 1-00112233445566778899aabbccddeeff'
+
+        manual_steps: |
+          Manual steps are required in order to use this barclamp. After
+          installing the SUSE Manager Server, download
+          <strong>%{manager_url}</strong> and place the file at
+          <strong>%{rpm_path}</strong>. To finish the setup, execute
+          <strong>%{install_command}</strong> on the Administration Server.
