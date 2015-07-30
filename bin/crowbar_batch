@@ -329,6 +329,7 @@ def merge_attributes(new_json, barclamp, proposal)
   }
 
   prevent_password_lockout(attrs) if barclamp == 'crowbar'
+
   # In easy_diff 0.0.4, #easy_merge! fails to handle merging of Arrays
   # of Hashes, so we used Chef::Mixin::DeepMerge.deep_merge! instead.
   # A solution for this issue has since been provided:
