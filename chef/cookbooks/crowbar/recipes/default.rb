@@ -277,14 +277,16 @@ template "/opt/dell/crowbar_framework/rainbows.cfg" do
   owner "crowbar"
   group "crowbar"
   mode "0644"
-  variables(web_host: "0.0.0.0",
-            web_port: node["crowbar"]["web_port"] || 3000,
-            user: "crowbar",
-            concurrency_model: "EventMachine",
-            group: "crowbar",
-            logdir: logdir,
-            logname: "production",
-            app_location: "/opt/dell/crowbar_framework")
+  variables(
+    web_host: "127.0.0.1",
+    web_port: node["crowbar"]["web_port"] || 3000,
+    user: "crowbar",
+    concurrency_model: "EventMachine",
+    group: "crowbar",
+    logdir: logdir,
+    logname: "production",
+    app_location: "/opt/dell/crowbar_framework"
+  )
 end
 
 if node[:platform] != "suse"
@@ -381,6 +383,27 @@ else
   service "crowbar" do
     action :enable
   end
+end
+
+include_recipe "apache2"
+include_recipe "apache2::mod_proxy"
+include_recipe "apache2::mod_proxy_balancer"
+include_recipe "apache2::mod_proxy_http"
+include_recipe "apache2::mod_rewrite"
+include_recipe "apache2::mod_slotmem_shm"
+include_recipe "apache2::mod_socache_shmcb"
+
+template "#{node[:apache][:dir]}/vhosts.d/crowbar.conf" do
+  source "apache.conf.erb"
+  mode 0644
+
+  variables(
+    port: node["crowbar"]["web_port"] || 3000,
+    logfile: "/var/log/apache2/crowbar-access_log",
+    errorlog: "/var/log/apache2/crowbar-error_log"
+  )
+
+  notifies :reload, resources(service: "apache2")
 end
 
 # The below code swiped from:
