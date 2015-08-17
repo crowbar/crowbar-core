@@ -2,7 +2,7 @@
 # Primarily used for generating SSL certificate(s).
 # Extend with other OpenLDAP related tasks as required.
 
-require 'tempfile'
+require "tempfile"
 
 COMPANY_NAME = "Company"
 SSL_COUNTRY_NAME = "US"

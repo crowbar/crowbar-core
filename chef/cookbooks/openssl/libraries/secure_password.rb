@@ -18,16 +18,16 @@
 # limitations under the License.
 #
 
-require 'openssl'
+require "openssl"
 
 module Opscode
   module OpenSSL
     module Password
       def secure_password
         pw = String.new
-        
+
         while pw.length < 20
-          pw << ::OpenSSL::Random.random_bytes(1).gsub(/\W/, '')
+          pw << ::OpenSSL::Random.random_bytes(1).gsub(/\W/, "")
         end
 
         pw

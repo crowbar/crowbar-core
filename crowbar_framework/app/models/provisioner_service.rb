@@ -16,7 +16,6 @@
 #
 
 class ProvisionerService < ServiceObject
-
   def initialize(thelogger)
     super(thelogger)
     @bc_name = "provisioner"
@@ -101,7 +100,7 @@ class ProvisionerService < ServiceObject
 
         # Get the server IP address
         server_ip = nil
-        [ "provisioner-server" ].each do |element|
+        ["provisioner-server"].each do |element|
           tnodes = role.override_attributes["provisioner"]["elements"][element]
           next if tnodes.nil? or tnodes.empty?
           tnodes.each do |n|
@@ -176,8 +175,7 @@ class ProvisionerService < ServiceObject
       system("sudo -i /opt/dell/bin/single_chef_client.sh")
     end
     @logger.debug("Provisioner transition: exiting for #{name} for #{state}")
-    [200, { :name => name } ]
+    [200, { name: name }]
   end
-
 end
 

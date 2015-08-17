@@ -16,7 +16,7 @@
 
 class Chef
   class Recipe
-    def search_env_filtered(type, query="*:*", sort='X_CHEF_id_CHEF_X asc',
+    def search_env_filtered(type, query="*:*", sort="X_CHEF_id_CHEF_X asc",
                             start=0, rows=100, &block)
       # All cookbooks encode the barclamp name as the role name prefix, thus we can
       # simply grab it from the query (e.g. BC 'keystone' for role 'keystone-server'):

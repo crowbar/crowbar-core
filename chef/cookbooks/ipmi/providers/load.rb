@@ -17,7 +17,7 @@ action :run do
   name = new_resource.name
   settle_time = new_resource.settle_time
 
-  unless ::File.exists?("/sys/module/ipmi_devintf") 
+  unless ::File.exists?("/sys/module/ipmi_devintf")
     bash "install-devintf" do
       code "/sbin/modprobe ipmi_devintf"
       not_if { ::File.exists?("/sys/module/ipmi_devintf") }

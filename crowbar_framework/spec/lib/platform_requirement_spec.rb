@@ -1,4 +1,4 @@
-require 'spec_helper'
+require "spec_helper"
 
 describe PlatformRequirement do
   it "works when specified as regexp" do

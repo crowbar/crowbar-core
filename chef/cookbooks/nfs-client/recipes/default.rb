@@ -27,7 +27,7 @@ comment_option = 'comment="managed-by-crowbar-barclamp-nfs-client"'
 
 node[:nfs_client][:exports].each do |name, data|
   # remove trailing slashes, as remounting fails when there are some
-  mount_path = data[:mount_path].sub(/\/+$/, '')
+  mount_path = data[:mount_path].sub(/\/+$/, "")
   nfs_server = data[:nfs_server]
   export = data[:export]
   raw_options = data[:mount_options]
@@ -40,7 +40,7 @@ node[:nfs_client][:exports].each do |name, data|
   ## Rework options
   options = []
   raw_options.each do |option|
-    split_options = option.split(',')
+    split_options = option.split(",")
     options.concat(split_options)
   end
 
@@ -64,7 +64,6 @@ node[:nfs_client][:exports].each do |name, data|
   mount_paths[mount_path] = nfs_mount
 end
 
-
 ### Check the existing state
 
 # Ideally, we'd use something from chef, but it seems there's nothing to list
@@ -82,7 +81,7 @@ end
     options = $4
 
     owned_by_barclamp = false
-    if options.start_with?(comment_option) or options.include?(',' + comment_option)
+    if options.start_with?(comment_option) or options.include?("," + comment_option)
       owned_by_barclamp = true
     end
 
@@ -127,12 +126,11 @@ end
     ## now we only have mounts that are still part of our configuration
 
     # see if we need to remount instead of mount
-    if fstype != "nfs" || nfs_mounts[device][1].join(',') != options
+    if fstype != "nfs" || nfs_mounts[device][1].join(",") != options
       need_remount << device
     end
   end
 end
-
 
 ### Do the real work
 
@@ -145,8 +143,8 @@ nfs_mounts.each do |nfs_mount, data|
       raise "Mount path \"#{mount_path}\" already exists, but is not a directory!"
     else
       directory mount_path do
-        owner 'root'
-        group 'root'
+        owner "root"
+        group "root"
         mode 0755
         action :create
         recursive true

@@ -13,12 +13,12 @@
 # limitations under the License.
 #
 
-require 'rubygems'
-require 'socket'
-require 'cstruct'
-require 'etc'
-require 'pathname'
-require 'ohai/log'
+require "rubygems"
+require "socket"
+require "cstruct"
+require "etc"
+require "pathname"
+require "ohai/log"
 
 provides "crowbar_ohai"
 
@@ -35,17 +35,17 @@ class EthtoolCmd < CStruct
   uint32 :supported
   uint32 :advertising
   uint16 :speed
-  uint8  :duplex
-  uint8  :port
-  uint8  :phy_address
-  uint8  :transceiver
-  uint8  :autoneg
-  uint8  :mdio_support
+  uint8 :duplex
+  uint8 :port
+  uint8 :phy_address
+  uint8 :transceiver
+  uint8 :autoneg
+  uint8 :mdio_support
   uint32 :maxtxpkt
   uint32 :maxrxpkt
   uint16 :speed_hi
-  uint8  :eth_tp_mdix
-  uint8  :reserved2
+  uint8 :eth_tp_mdix
+  uint8 :reserved2
   uint32 :lp_advertising
   uint32 :reserved_a0
   uint32 :reserved_a1
@@ -99,14 +99,14 @@ def get_supported_speeds(interface)
     speeds
   rescue Exception => e
     puts "Failed to get ioctl for speed: #{e.message}"
-    speeds = [ "1g", "0g" ]
+    speeds = ["1g", "0g"]
   end
 end
 
 #
 # true for up
 # false for down
-# 
+#
 def get_link_status(interface)
   begin
     ecmd = EthtoolValue.new
@@ -131,10 +131,10 @@ crowbar_ohai[:switch_config] = Mash.new unless crowbar_ohai[:switch_config]
 
 # Packet captures are cached from previous runs; however this requires the
 # use of predictable pathnames.  To prevent this becoming a security risk,
-# we create a dedicated directory in rubygem-ohai (mode 0750, root/root). 
+# we create a dedicated directory in rubygem-ohai (mode 0750, root/root).
 
 # See https://bugzilla.novell.com/show_bug.cgi?id=774967
-@tcpdump_dir = '/var/run/ohai'
+@tcpdump_dir = "/var/run/ohai"
 
 me = Etc.getpwuid(Process.uid).name
 unless File.owned? @tcpdump_dir
@@ -172,7 +172,7 @@ Dir.foreach("/sys/class/net") do |entry|
   crowbar_ohai[:detected] = Mash.new unless crowbar_ohai[:detected]
   crowbar_ohai[:detected][:network] = Mash.new unless crowbar_ohai[:detected][:network]
   speeds = get_supported_speeds(entry)
-  crowbar_ohai[:detected][:network][entry] = { :path => spath, :speeds => speeds }
+  crowbar_ohai[:detected][:network][entry] = { path: spath, speeds: speeds }
 
   logical_name = entry
   networks << logical_name
@@ -201,7 +201,7 @@ networks.each do |network|
   sw_port = -1
   sw_port_name = nil
 
-  line = IO.readlines(tcpdump_out).grep(/Subtype Interface Name/).join ''
+  line = IO.readlines(tcpdump_out).grep(/Subtype Interface Name/).join ""
   Ohai::Log.debug("subtype intf name line: #{line}")
   if line =~ %r!(\d+)/\d+/(\d+)!
     sw_unit, sw_port = $1, $2
@@ -219,7 +219,7 @@ networks.each do |network|
 
   sw_name = -1
   # Using mac for now, but should change to something else later.
-  line = IO.readlines(tcpdump_out).grep(/Subtype MAC address/).join ''
+  line = IO.readlines(tcpdump_out).grep(/Subtype MAC address/).join ""
   Ohai::Log.debug("subtype MAC line: #{line}")
   if line =~ /: (.*) \(oui/
     sw_name = $1

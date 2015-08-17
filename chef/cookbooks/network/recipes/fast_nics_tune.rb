@@ -18,12 +18,12 @@ return if  node[:platform] == "windows"
 # check if there are any 1g/10g interfaces detected.
 detected = Barclamp::Inventory.get_detected_intfs(node)
 log "detected interfaces: #{detected.inspect}"
-tuning_location='/etc/sysctl.d/20-10gbe.conf'
-tune = detected.any?{ |intf_name, intf| intf[:speeds].join.index('g') }
+tuning_location="/etc/sysctl.d/20-10gbe.conf"
+tune = detected.any?{ |intf_name, intf| intf[:speeds].join.index("g") }
 
 begin
   log "Applying 10gbe system tuning values" do
-    level    :info
+    level :info
   end
 
   # Make sure we have an /etc/sysctl.d path on Redhat 6.2
@@ -32,15 +32,15 @@ begin
   end
 
   template "sysctl-10gbe" do
-    path    tuning_location
-    source  "sysctl_10gbe.conf.erb"
-    mode    "0644"
+    path tuning_location
+    source "sysctl_10gbe.conf.erb"
+    mode "0644"
   end
 
   # if we just created or modified the params, reload things
   bash "reload sysctl" do
     code "/sbin/sysctl -e -p #{tuning_location}"
     action :nothing
-    subscribes :run, resources(:template=> "sysctl-10gbe"), :delayed
+    subscribes :run, resources(template: "sysctl-10gbe"), :delayed
   end
 end if tune

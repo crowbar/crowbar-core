@@ -60,7 +60,7 @@ module Crowbar
             dequeue_proposal_no_lock(bc, inst)
           end
 
-          return [ delay, pre_cached_nodes ]
+          return [delay, pre_cached_nodes]
         end
 
         # Delay not empty, we're missing some nodes.
@@ -84,7 +84,7 @@ module Crowbar
       prop["deployment"][bc]["crowbar-queued"] = true
       prop.save
       logger.debug("queue proposal: exit #{inst} #{bc}")
-      [ delay, pre_cached_nodes ]
+      [delay, pre_cached_nodes]
     end
 
     # Locking wrapper around dequeue_proposal_no_lock
@@ -108,7 +108,7 @@ module Crowbar
         file_lock.release(f)
       end
       logger.debug("dequeue proposal: exit #{inst} #{bc}")
-      return dequeued ? [200, {}] : [400, '']
+      return dequeued ? [200, {}] : [400, ""]
     end
 
     #
@@ -225,7 +225,6 @@ module Crowbar
         depprop && !depprop_queued && depprop_deployed
       end
     end
-
 
     def file_lock
       FileLock
@@ -360,10 +359,8 @@ module Crowbar
         file_lock.release(f)
       end
 
-      [ delay, pre_cached_nodes ]
+      [delay, pre_cached_nodes]
     end
-
-
 
     # Assumes the BA-LOCK is held
     def elements_not_ready(nodes, pre_cached_nodes = {})
@@ -374,10 +371,9 @@ module Crowbar
         next if node.nil?
 
         pre_cached_nodes[n] = node
-        delay << n if node.crowbar['state'] != "ready" and !delay.include?(n)
+        delay << n if node.crowbar["state"] != "ready" and !delay.include?(n)
       end
-      [ delay, pre_cached_nodes ]
+      [delay, pre_cached_nodes]
     end
-
   end
 end

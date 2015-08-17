@@ -51,7 +51,7 @@ class SupportController < ApplicationController
 
     respond_to do |format|
       format.html
-      format.json { render :json => @export.to_json }
+      format.json { render json: @export.to_json }
     end
   end
 
@@ -60,9 +60,9 @@ class SupportController < ApplicationController
 
     begin
       file.unlink
-      flash[:notice] = t("support.index.delete_succeeded", :file => file.basename)
+      flash[:notice] = t("support.index.delete_succeeded", file: file.basename)
     rescue
-      flash[:alert] = t("support.index.delete_failed", :file => file.basename)
+      flash[:alert] = t("support.index.delete_failed", file: file.basename)
     end
 
     redirect_to utils_url
@@ -93,9 +93,9 @@ class SupportController < ApplicationController
       end
 
       Process.detach(pid)
-      redirect_to utils_url(:waiting => true, :file => filename) and return
+      redirect_to utils_url(waiting: true, file: filename) and return
     rescue StandardError => e
-      flash[:alert] = t("support.export.fail", :error => e.message)
+      flash[:alert] = t("support.export.fail", error: e.message)
     end
 
     redirect_to utils_url
@@ -122,9 +122,9 @@ class SupportController < ApplicationController
       end
 
       Process.detach(pid)
-      redirect_to utils_url(:waiting => true, :file => filename) and return
+      redirect_to utils_url(waiting: true, file: filename) and return
     rescue StandardError => e
-      flash[:alert] = I18n.t("support.export.fail", :error => e.message)
+      flash[:alert] = I18n.t("support.export.fail", error: e.message)
     end
 
     redirect_to utils_url
@@ -141,11 +141,11 @@ class SupportController < ApplicationController
       render
     elsif params[:id].eql? "in_process"
       %x[sudo bluepill crowbar-webserver restart] unless Rails.env.development?
-      render :json => true
+      render json: true
     elsif params[:id].eql? Crowbar::Application::SERVER_PID
-      render :json => false
+      render json: false
     elsif !params[:id].eql? Crowbar::Application::SERVER_PID
-      render :json => true
+      render json: true
     else
       render
     end
@@ -155,15 +155,15 @@ class SupportController < ApplicationController
 
   def default_export_hash
     Utils::ExtendedHash.new({
-      :waiting => params[:waiting] == "true" || params[:format] == "json",
-      :counter => 0,
-      :current => params["file"].to_s.gsub("-DOT-", "."),
-      :files => {
-        :logs => [],
-        :chef => [],
-        :other => [],
-        :support_configs => [],
-        :bc_import => []
+      waiting: params[:waiting] == "true" || params[:format] == "json",
+      counter: 0,
+      current: params["file"].to_s.gsub("-DOT-", "."),
+      files: {
+        logs: [],
+        chef: [],
+        other: [],
+        support_configs: [],
+        bc_import: []
       }
     })
   end

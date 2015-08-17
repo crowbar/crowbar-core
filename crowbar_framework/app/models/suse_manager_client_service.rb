@@ -15,7 +15,6 @@
 #
 
 class SuseManagerClientService < ServiceObject
-
   def initialize(thelogger)
     super(thelogger)
     @bc_name = "suse_manager_client"
@@ -48,6 +47,5 @@ class SuseManagerClientService < ServiceObject
   def self.allow_multiple_proposals?
     false
   end
-
 end
 

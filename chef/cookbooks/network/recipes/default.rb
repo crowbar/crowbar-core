@@ -34,7 +34,7 @@ when "centos","redhat"
   end
 end
 
-require 'fileutils'
+require "fileutils"
 
 if node[:platform] == "ubuntu"
   if ::File.exists?("/etc/init/network-interface.conf")
@@ -74,7 +74,7 @@ if %w(suse).include? node.platform
     EOF
     only_if "lsmod | grep -q '^bridge '"
     action :nothing
-    subscribes :run, resources(:cookbook_file => "modprobe-bridge.conf"), :delayed
+    subscribes :run, resources(cookbook_file: "modprobe-bridge.conf"), :delayed
   end
 end
 
@@ -143,11 +143,11 @@ node["crowbar"]["network"].keys.sort{|a,b|
   conduit = network["conduit"]
   base_ifs = conduit_map[conduit]["if_list"]
   # Error out if we were handed an invalid conduit mapping.
-  unless base_ifs.all?{|i|i.is_a?(String) && ::Nic.exists?(i)}
+  unless base_ifs.all?{ |i|i.is_a?(String) && ::Nic.exists?(i) }
     raise ::ArgumentError.new("Conduit mapping \"#{conduit}\" for network \"#{name}\" is not sane: #{base_ifs.inspect}")
   end
-  base_ifs = base_ifs.map{|i| ::Nic.new(i)}
-  Chef::Log.info("Using base interfaces #{base_ifs.map{|i|i.name}.inspect} for network #{name}")
+  base_ifs = base_ifs.map{ |i| ::Nic.new(i) }
+  Chef::Log.info("Using base interfaces #{base_ifs.map{ |i|i.name }.inspect} for network #{name}")
   base_ifs.each do |i|
     ifs[i.name] ||= Hash.new
     ifs[i.name]["addresses"] ||= Array.new
@@ -171,8 +171,8 @@ node["crowbar"]["network"].keys.sort{|a,b|
       Chef::Log.info("Using bond #{bond.name} for network #{name}")
       bond.mode = team_mode if bond.mode != team_mode
     else
-      existing_bond_names = Nic.nics.select{|i| Nic::bond?(i)}.map{|i| i.name}
-      bond_names = (0..existing_bond_names.length).to_a.map{|i| "bond#{i}"}
+      existing_bond_names = Nic.nics.select{ |i| Nic::bond?(i) }.map{ |i| i.name }
+      bond_names = (0..existing_bond_names.length).to_a.map{ |i| "bond#{i}" }
       new_bond_name = (bond_names - existing_bond_names).first
 
       bond = Nic::Bond.create(new_bond_name, team_mode)
@@ -268,7 +268,7 @@ node["crowbar"]["network"].keys.sort{|a,b|
     if network["router_pref"] && (network["router_pref"].to_i < route_pref)
       Chef::Log.info("#{name}: Will use #{network["router"]} as our default route")
       route_pref = network["router_pref"].to_i
-      default_route = {:nic => our_iface.name, :gateway => network["router"]}
+      default_route = {nic: our_iface.name, gateway: network["router"]}
     end
   end
 end
@@ -334,14 +334,14 @@ Nic.nics.each do |nic|
 
   if !enslaved
     nic.up
-    Chef::Log.info("#{nic.name}: current addresses: #{nic.addresses.map{|a|a.to_s}.sort.inspect}") unless nic.addresses.empty?
-    Chef::Log.info("#{nic.name}: required addresses: #{iface["addresses"].map{|a|a.to_s}.sort.inspect}") unless iface["addresses"].empty?
+    Chef::Log.info("#{nic.name}: current addresses: #{nic.addresses.map{ |a|a.to_s }.sort.inspect}") unless nic.addresses.empty?
+    Chef::Log.info("#{nic.name}: required addresses: #{iface["addresses"].map{ |a|a.to_s }.sort.inspect}") unless iface["addresses"].empty?
     # Ditch old addresses, add new ones.
-    old_iface["addresses"].reject{|i|iface["addresses"].member?(i)}.each do |addr|
+    old_iface["addresses"].reject{ |i|iface["addresses"].member?(i) }.each do |addr|
       Chef::Log.info("#{nic.name}: Removing #{addr.to_s}")
       nic.remove_address addr
     end if old_iface
-    iface["addresses"].reject{|i|nic.addresses.member?(i)}.each do |addr|
+    iface["addresses"].reject{ |i|nic.addresses.member?(i) }.each do |addr|
       Chef::Log.info("#{nic.name}: Adding #{addr.to_s}")
       nic.add_address addr
     end
@@ -385,7 +385,7 @@ node.set["crowbar_wall"] ||= Mash.new
 node.set["crowbar_wall"]["network"] ||= Mash.new
 saved_ifs = Mash.new
 ifs.each {|k,v|
-  addrs = v["addresses"].map{|a|a.to_s}.sort
+  addrs = v["addresses"].map{ |a|a.to_s }.sort
   saved_ifs[k]=v
   saved_ifs[k]["addresses"] = addrs
 }
@@ -407,7 +407,7 @@ when "debian","ubuntu"
     source "interfaces.erb"
     owner "root"
     group "root"
-    variables({ :interfaces => ifs })
+    variables({ interfaces: ifs })
   end
 when "centos","redhat"
   # add redhat-specific code here
@@ -418,8 +418,8 @@ when "centos","redhat"
       owner "root"
       group "root"
       variables({
-                  :interfaces => ifs, # the array of config values
-                  :nic => nic # the live object representing the current nic.
+                  interfaces: ifs, # the array of config values
+                  nic: nic # the live object representing the current nic.
                 })
     end
   end
@@ -435,17 +435,17 @@ when "suse"
     template "/etc/sysconfig/network/ifcfg-#{nic.name}" do
       source "suse-cfg.erb"
       variables({
-        :ethtool_options => ethtool_options,
-        :interfaces => ifs,
-        :nic => nic
+        ethtool_options: ethtool_options,
+        interfaces: ifs,
+        nic: nic
       })
     end
     if ifs[nic.name]["gateway"]
       template "/etc/sysconfig/network/ifroute-#{nic.name}" do
         source "suse-route.erb"
         variables({
-                    :interfaces => ifs,
-                    :nic => nic
+                    interfaces: ifs,
+                    nic: nic
                   })
       end
     else
@@ -453,6 +453,5 @@ when "suse"
         action :delete
       end
     end
-
   end
 end

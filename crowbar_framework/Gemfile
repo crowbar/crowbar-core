@@ -40,19 +40,19 @@ gem "ohai", "~> 6.24.2"
 gem "chef", "~> 10.32.2"
 
 gem "mixlib-shellout", "~> 1.4.0",
-  require: "mixlib/shellout"
+    require: "mixlib/shellout"
 
 gem "activerecord-session_store", "~> 0.1.0",
-  require: "activerecord/session_store"
+    require: "activerecord/session_store"
 
 gem "mime-types", "~> 1.25.1",
-  require: "mime/types"
+    require: "mime/types"
 
 gem "dotenv-deployment", "~> 0.2.0",
-  require: false
+    require: false
 
 gem "rack-mini-profiler", "~> 0.9.1",
-  require: false
+    require: false
 
 group :development, :test do
   gem "brakeman", "~> 2.6.3"

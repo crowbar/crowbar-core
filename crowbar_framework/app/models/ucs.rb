@@ -16,6 +16,5 @@
 #
 
 class UCS < ActiveResource::Base
-   attr_accessor :url  
-   
+   attr_accessor :url
 end

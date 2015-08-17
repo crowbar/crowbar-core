@@ -26,7 +26,6 @@ gem_package "activesupport" do
   action :install
 end
 
-
 gem_package "bluepill" do
   version node["bluepill"]["version"] if node["bluepill"]["version"]
   action :install
@@ -51,11 +50,11 @@ file node["bluepill"]["logfile"] do
   action :create_if_missing
 end
 
-ENV['PATH'].split(':').each do |p|
+ENV["PATH"].split(":").each do |p|
   bp=File.join(p,"bluepill")
   next unless system("which #{bp}")
   node.set["bluepill"]["bin"]=bp
   break
 end
 
-include_recipe "bluepill::rsyslog" if node['bluepill']['use_rsyslog']
+include_recipe "bluepill::rsyslog" if node["bluepill"]["use_rsyslog"]

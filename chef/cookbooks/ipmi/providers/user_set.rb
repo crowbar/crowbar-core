@@ -22,11 +22,11 @@ action :run do
     # some assumptions on ID here!
     username == "root" ? user_id = "2" : user_id = "3"
     user_commands = [
-      [ "name", "ipmitool user set name #{user_id} #{username}" ],
-      [ "password", "ipmitool user set password #{user_id} #{password}" ],
-      [ "privs", "ipmitool user priv #{user_id} 4 #{node["crowbar_wall"]["ipmi"]["channel"]}" ],
-      [ "channel", "ipmitool channel setaccess #{node["crowbar_wall"]["ipmi"]["channel"]} #{user_id} callin=on link=on ipmi=on privilege=4" ],
-      [ "enable", "ipmitool user enable #{user_id}" ]
+      ["name", "ipmitool user set name #{user_id} #{username}"],
+      ["password", "ipmitool user set password #{user_id} #{password}"],
+      ["privs", "ipmitool user priv #{user_id} 4 #{node["crowbar_wall"]["ipmi"]["channel"]}"],
+      ["channel", "ipmitool channel setaccess #{node["crowbar_wall"]["ipmi"]["channel"]} #{user_id} callin=on link=on ipmi=on privilege=4"],
+      ["enable", "ipmitool user enable #{user_id}"]
     ]
     user_commands.each do |param|
       item = param[0]
@@ -38,7 +38,7 @@ action :run do
 #{command}
 EOH
         ignore_failure true
-      end 
+      end
       bash "bmc user settle time #{item}" do
         code "sleep #{settle_time}"
       end
@@ -48,7 +48,7 @@ EOH
     node["crowbar_wall"]["status"]["ipmi"]["user_set"] = true
   else
     node["crowbar_wall"]["status"]["ipmi"]["messages"] << "Unsupported product found #{node[:dmi][:system][:product_name]} - skipping IPMI:User" unless node.nil?
-  end  
+  end
   node.save
 end
 

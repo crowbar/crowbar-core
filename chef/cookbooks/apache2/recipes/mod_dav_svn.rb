@@ -1,6 +1,6 @@
 #
 # Cookbook Name:: apache2
-# Recipe:: dav_svn 
+# Recipe:: dav_svn
 #
 # Copyright 2008-2009, Opscode, Inc.
 #

@@ -58,7 +58,7 @@ module TagHelper
     content_tag(
       :div,
       text,
-      :class => "badge #{clazz}".strip
+      class: "badge #{clazz}".strip
     )
   end
 end

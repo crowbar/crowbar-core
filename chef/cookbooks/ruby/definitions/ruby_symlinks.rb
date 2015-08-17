@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-define :ruby_symlinks, :action => :create, :force => false, :path => '/usr/bin' do
+define :ruby_symlinks, action: :create, force: false, path: "/usr/bin" do
   rv = params[:name].to_s
   rv = rv.slice(0..2).delete(".") if node[:platform] == "gentoo"
 

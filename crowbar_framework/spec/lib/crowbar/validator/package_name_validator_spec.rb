@@ -1,4 +1,4 @@
-require 'spec_helper'
+require "spec_helper"
 
 describe Crowbar::Validator::PackageNameValidator do
   it "allows valid package names" do
@@ -15,7 +15,7 @@ describe Crowbar::Validator::PackageNameValidator do
       "version_OP>bar",
       "version_OP=baz",
       "all._at+-0nce<=V-e+r.s_1on"
-    ] 
+    ]
     valid_names.each do |package_name|
       expect(Crowbar::Validator::PackageNameValidator.new.validate(package_name)).to be_truthy
     end
@@ -35,7 +35,7 @@ describe Crowbar::Validator::PackageNameValidator do
       "broken_version_OP=<4",
       "broken_version_OP==5",
       "broken>version_OP>6",
-      "broken<version_OP<7",
+      "broken<version_OP<7"
     ]
     invalid_names.each do |package_name|
       expect(Crowbar::Validator::PackageNameValidator.new.validate(package_name)).to be_falsey

@@ -40,6 +40,6 @@ template "/etc/rsyslog.d/99-crowbar-client.conf" do
   group "root"
   mode 0644
   source "rsyslog.client.erb"
-  variables(:servers => servers)
+  variables(servers: servers)
   notifies :restart, "service[rsyslog]"
 end

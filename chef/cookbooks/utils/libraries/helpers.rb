@@ -41,11 +41,11 @@ module CrowbarHelper
       # Specify default as the configured public name
       public_name = CrowbarPacemakerHelper.cluster_haproxy_vpublic_name(node)
       public_fqdn = "public.#{cluster_vhostname}.#{node[:domain]}"
-      public_net_db = Chef::DataBagItem.load('crowbar', 'public_network').raw_data
+      public_net_db = Chef::DataBagItem.load("crowbar", "public_network").raw_data
       public_ip = public_net_db["allocated_by_name"]["#{cluster_vhostname}.#{node[:domain]}"]["address"]
     else
       public_name = node[:crowbar][:public_name]
-      public_fqdn = 'public.'+node[:fqdn]
+      public_fqdn = "public."+node[:fqdn]
       public_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "public").address
     end
 
@@ -70,7 +70,7 @@ module CrowbarHelper
   end
 
   def self.in_sledgehammer?(node)
-    states = [ "ready", "readying", "recovering", "applying" ]
+    states = ["ready", "readying", "recovering", "applying"]
     not states.include?(node[:state])
   end
 end

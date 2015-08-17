@@ -95,7 +95,7 @@ template "/root/.ssh/authorized_keys" do
   mode "0644"
   action :create
   source "authorized_keys.erb"
-  variables(:keys => node["crowbar"]["ssh"]["access_keys"])
+  variables(keys: node["crowbar"]["ssh"]["access_keys"])
 end
 
 template "/etc/sudo.conf" do
@@ -121,7 +121,7 @@ if node.roles.include? "crowbar"
     mode "0644"
     action :create
     source "authorized_keys.erb"
-    variables(:keys => node["crowbar"]["ssh"]["access_keys"])
+    variables(keys: node["crowbar"]["ssh"]["access_keys"])
   end
 end
 
@@ -151,7 +151,7 @@ if node[:provisioner][:coredump]
   bash "reload core-dump-sysctl" do
     code "/sbin/sysctl -e -q -p #{sysctl_core_dump_file}"
     action :nothing
-    subscribes :run, resources(:cookbook_file=> sysctl_core_dump_file), :delayed
+    subscribes :run, resources(cookbook_file: sysctl_core_dump_file), :delayed
   end
   bash "Enable core dumps" do
     code "ulimit -c unlimited"
@@ -172,7 +172,7 @@ if node[:provisioner][:coredump]
     else
       # Permanent core dumping (no reboot needed)
       bash "Enable permanent core dumps (/etc/systemd/system.conf)" do
-        code 'sed -i s/^#*DefaultLimitCORE=.*/DefaultLimitCORE=infinity/ /etc/systemd/system.conf'
+        code "sed -i s/^#*DefaultLimitCORE=.*/DefaultLimitCORE=infinity/ /etc/systemd/system.conf"
         not_if "grep -q '^DefaultLimitCORE=infinity' /etc/systemd/system.conf"
       end
     end
@@ -194,7 +194,7 @@ else
       end
     else
       bash "Disable permanent core dumps (/etc/sysconfig/ulimit)" do
-        code 'sed -i s/^DefaultLimitCORE=.*/#DefaultLimitCORE=/ /etc/systemd/system.conf'
+        code "sed -i s/^DefaultLimitCORE=.*/#DefaultLimitCORE=/ /etc/systemd/system.conf"
         not_if "grep -q '^#DefaultLimitCORE=' /etc/systemd/system.conf"
       end
     end
@@ -225,10 +225,10 @@ if node["platform"] == "suse" && !node.roles.include?("provisioner-server")
     owner "root"
     group "root"
     source "crowbar_join.suse.sh.erb"
-    variables(:admin_ip => admin_ip,
-              :web_port => web_port,
-              :ntp_servers_ips => ntp_servers_ips,
-              :target_platform_version => node["platform_version"] )
+    variables(admin_ip: admin_ip,
+              web_port: web_port,
+              ntp_servers_ips: ntp_servers_ips,
+              target_platform_version: node["platform_version"] )
   end
 
   if node["platform_version"].to_f < 12.0
@@ -249,7 +249,7 @@ if node["platform"] == "suse" && !node.roles.include?("provisioner-server")
     bash "insserv crowbar_join service" do
       code "insserv crowbar_join"
       action :nothing
-      subscribes :run, resources(:cookbook_file=> "/etc/init.d/crowbar_join"), :delayed
+      subscribes :run, resources(cookbook_file: "/etc/init.d/crowbar_join"), :delayed
     end
   else
     # Use a systemd .service file on SLE12
@@ -273,8 +273,8 @@ if node["platform"] == "suse" && !node.roles.include?("provisioner-server")
     bash "reload systemd after crowbar_join update" do
       code "systemctl daemon-reload"
       action :nothing
-      subscribes :run, resources(:cookbook_file=> "/etc/systemd/system/crowbar_notify_shutdown.service"), :immediately
-      subscribes :run, resources(:cookbook_file=> "/etc/systemd/system/crowbar_join.service"), :immediately
+      subscribes :run, resources(cookbook_file: "/etc/systemd/system/crowbar_notify_shutdown.service"), :immediately
+      subscribes :run, resources(cookbook_file: "/etc/systemd/system/crowbar_join.service"), :immediately
     end
 
     link "/usr/sbin/rccrowbar_join" do
@@ -346,7 +346,7 @@ end
     mode "0644"
 
     variables(
-      :prompt_from_template => proc { |user, cwd|
+      prompt_from_template: proc { |user, cwd|
         node["provisioner"]["shell_prompt"].to_s \
           .gsub("USER", user) \
           .gsub("CWD", cwd) \
@@ -356,7 +356,7 @@ end
           .gsub("FQDN", node["fqdn"])
       },
 
-      :zsh_prompt_from_template => proc {
+      zsh_prompt_from_template: proc {
         node["provisioner"]["shell_prompt"].to_s \
           .gsub("USER", "%{\\e[0;31m%}%n%{\\e[0m%}") \
           .gsub("CWD", "%{\\e[0;35m%}%~%{\\e[0m%}") \
@@ -366,7 +366,7 @@ end
           .gsub("FQDN", "%{\\e[0;35m%}#{node["fqdn"]}%{\\e[0m%}")
       },
 
-      :bash_prompt_from_template => proc {
+      bash_prompt_from_template: proc {
         node["provisioner"]["shell_prompt"].to_s \
           .gsub("USER", "\\[\\e[01;31m\\]\\u\\[\\e[0m\\]") \
           .gsub("CWD", "\\[\\e[01;31m\\]\\w\\[\\e[0m\\]") \

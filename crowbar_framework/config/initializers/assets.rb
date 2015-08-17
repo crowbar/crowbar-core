@@ -16,7 +16,7 @@
 #
 
 Rails.application.config.tap do |config|
-  config.assets.version = '1.0'
+  config.assets.version = "1.0"
 
   config.assets.precompile = [
     /application\.(css|js)$/,

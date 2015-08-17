@@ -1,6 +1,6 @@
 #
 # Cookbook Name:: apache2
-# Recipe:: python 
+# Recipe:: python
 #
 # Copyright 2008-2009, Opscode, Inc.
 #
@@ -25,7 +25,7 @@ case node[:platform]
   when "centos", "redhat", "fedora"
     package "mod_python" do
       action :install
-      notifies :run, resources(:execute => "generate-module-list"), :immediately
+      notifies :run, resources(execute: "generate-module-list"), :immediately
     end
 end
 

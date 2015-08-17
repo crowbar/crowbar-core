@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-require 'spec_helper'
+require "spec_helper"
 
 describe RemoteNode do
   context "reboot_done?" do

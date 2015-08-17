@@ -28,7 +28,6 @@ def get_switch_config(switch_config, switch_name)
   a_switch_config
 end
 
-
 def setup_interface(switch_config, a_node, conduit, switch_name, interface_id )
 
     a_switch_config = get_switch_config(switch_config, switch_name)
@@ -108,7 +107,6 @@ directory "/opt/dell/switch" do
 end
 
 switch_config.each do |switch_name, a_switch_config|
-
   # For testing on a virtual admin node
   switch_name = "virtual" if switch_name == -1
 
@@ -120,10 +118,10 @@ switch_config.each do |switch_name, a_switch_config|
     group "root"
     source "switch_config.erb"
     variables(
-      :admin_node_ip => admin_ip,
-      :unique_vlans => a_switch_config["unique_vlans"],
-      :lags => a_switch_config["lags"],
-      :interfaces => a_switch_config["interfaces"]
+      admin_node_ip: admin_ip,
+      unique_vlans: a_switch_config["unique_vlans"],
+      lags: a_switch_config["lags"],
+      interfaces: a_switch_config["interfaces"]
     )
   end
 end

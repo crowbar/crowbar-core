@@ -78,11 +78,11 @@ class NtpService < ServiceObject
       end
 
       @logger.debug("NTP transition: leaving from discovered state for #{name} for #{state}")
-      return [200, { :name => name } ] if result
+      return [200, { name: name }] if result
       return [400, "Failed to add role to node"] unless result
     end
 
     @logger.debug("NTP transition: leaving for #{name} for #{state}")
-    [200, { :name => name } ]
+    [200, { name: name }]
   end
 end

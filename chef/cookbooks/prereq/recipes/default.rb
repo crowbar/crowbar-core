@@ -12,10 +12,9 @@ path = "/gemsite/"
 path = "" if web_port == 3001
 
 platform = node[:platform]
- 
 
 t = template "/etc/gemrc" do
-    variables(:admin_ip => address, :web_port => web_port, :path => path)
+    variables(admin_ip: address, web_port: web_port, path: path)
     mode "0644"
 end
 t.run_action(:create_if_missing)
@@ -31,7 +30,7 @@ gems.each do |gem|
     options "--source #{gem_repo}"
   end
   g.run_action(:install);
-end  
+end
 
 case platform
  when "centos", "redhat"
@@ -44,10 +43,9 @@ case platform
   end
 end
 
-
-Gem.clear_paths 
-require 'libxml'
-require 'xmlsimple'
-require 'wsman'
+Gem.clear_paths
+require "libxml"
+require "xmlsimple"
+require "wsman"
 
 

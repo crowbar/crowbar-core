@@ -46,13 +46,13 @@ node.set["crowbar_wall"]["status"]["ipmi"] = {} unless node["crowbar_wall"]["sta
 node.save
 
 if node[:platform] == "windows"
-    node.set["crowbar_wall"]["status"]["ipmi"]["messages"] = [ "Unsupported platform - turning off ipmi for this node" ]
+    node.set["crowbar_wall"]["status"]["ipmi"]["messages"] = ["Unsupported platform - turning off ipmi for this node"]
     node.set[:ipmi][:bmc_enable] = false
     node.save
     return
 elsif node[:ipmi][:bmc_enable]
   if unsupported.member?(node[:dmi][:system][:product_name])
-    node.set["crowbar_wall"]["status"]["ipmi"]["messages"] = [ "Unsupported platform: #{node[:dmi][:system][:product_name]} - turning off ipmi for this node" ]
+    node.set["crowbar_wall"]["status"]["ipmi"]["messages"] = ["Unsupported platform: #{node[:dmi][:system][:product_name]} - turning off ipmi for this node"]
     node.set[:ipmi][:bmc_enable] = false
     node.save
     return
@@ -77,7 +77,7 @@ elsif node[:ipmi][:bmc_enable]
       end
 
       if node["crowbar_wall"]["ipmi"]["channel"].nil?
-        node.set["crowbar_wall"]["status"]["ipmi"]["messages"] = [ "Could not find IPMI lan channel: #{node[:dmi][:system][:product_name]} - turning off ipmi for this node" ]
+        node.set["crowbar_wall"]["status"]["ipmi"]["messages"] = ["Could not find IPMI lan channel: #{node[:dmi][:system][:product_name]} - turning off ipmi for this node"]
         node.set[:ipmi][:bmc_enable] = false
       else
         ipmiprint = %x{ipmitool lan print #{node["crowbar_wall"]["ipmi"]["channel"]}}
@@ -93,7 +93,7 @@ elsif node[:ipmi][:bmc_enable]
           end
           node.set["crowbar_wall"]["ipmi"]["mode"] = %x{ipmitool delloem lan get}.strip
         else
-          node.set["crowbar_wall"]["status"]["ipmi"]["messages"] = [ "Could not get IPMI lan info: #{node[:dmi][:system][:product_name]} - turning off ipmi for this node" ]
+          node.set["crowbar_wall"]["status"]["ipmi"]["messages"] = ["Could not get IPMI lan info: #{node[:dmi][:system][:product_name]} - turning off ipmi for this node"]
           node.set[:ipmi][:bmc_enable] = false
         end
       end

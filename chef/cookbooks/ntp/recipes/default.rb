@@ -74,11 +74,11 @@ else
     group "root"
     mode 0644
     source "ntp.conf.erb"
-    variables(:ntp_servers => ntp_servers,
-            :admin_interface => admin_interface,
-            :is_server => is_server,
-            :fudgevalue => 10,
-            :driftfile => driftfile)
+    variables(ntp_servers: ntp_servers,
+            admin_interface: admin_interface,
+            is_server: is_server,
+            fudgevalue: 10,
+            driftfile: driftfile)
     notifies :restart, "service[ntp]"
   end
 
@@ -93,10 +93,10 @@ else
   service "ntp" do
     service_name "ntpd" if node[:platform] =~ /^(centos|redhat)$/
     service_name "ntpd" if node[:platform] == "suse" && node[:platform_version].to_f >= 12.0
-    supports :restart => true, :status => true, :reload => true
+    supports restart: true, status: true, reload: true
     running true
     enabled true
-    action [ :enable, :start ]
+    action [:enable, :start]
   end
 end
 

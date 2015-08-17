@@ -29,7 +29,7 @@ module BarclampLibrary
       def self.get_network_by_type(node, type)
         unless node[:crowbar][:network].nil?
           [type, "admin"].uniq.each do |usage|
-            if found = node[:crowbar][:network].find {|net, data| data[:usage] == usage}
+            if found = node[:crowbar][:network].find { |net, data| data[:usage] == usage }
               net, data = found
               intf, interface_list, tm = Barclamp::Inventory.lookup_interface_info(node, data["conduit"])
               return Network.new(net, data, intf, interface_list)
@@ -53,7 +53,7 @@ module BarclampLibrary
         bus_order.each do |b|
           # When there is no '.' in the busid from the bus_order assume
           # that we are using the old method of matching busids
-          if b.include?('.')
+          if b.include?(".")
             path_used = path
           else
             path_used = path_old
@@ -140,7 +140,7 @@ module BarclampLibrary
         count_map = {}
         sorted_ifs.each do |intf|
           speeds = if_list[intf]["speeds"]
-          speeds = ['1g'] unless speeds   #legacy object support
+          speeds = ["1g"] unless speeds   #legacy object support
           speeds.each do |speed|
             count = count_map[speed] || 1
             if_remap["#{speed}#{count}"] = intf
@@ -182,11 +182,11 @@ module BarclampLibrary
           found = if_map["#{speeds[x]}#{if_cnt}"] unless found
         }
         case m[1]
-          when '+'
+          when "+"
             (desired..speeds.length).each(&filter)
-          when '-'
+          when "-"
             desired.downto(0,&filter)
-          when '?'
+          when "?"
             (desired..speeds.length).each(&filter)
             desired.downto(0,&filter) unless found
           else
@@ -251,7 +251,7 @@ module BarclampLibrary
         end
 
         def self.all(node)
-          node[:block_device].keys.map{|d|Disk.new(node,d)}
+          node[:block_device].keys.map{ |d|Disk.new(node,d) }
         end
 
         def self.unclaimed(node, include_mounted=false)
@@ -333,7 +333,7 @@ module BarclampLibrary
             rescue Errno::ENOENT
               # FIXME: Decide what to do with missing links in the long term
               #
-              # Stoney had a bug that caused disks to be claimed twice for the 
+              # Stoney had a bug that caused disks to be claimed twice for the
               # same owner (especially of the "LVM_DRBD" owner) but under two
               # differnt names. One of those names doesn't persist reboots and
               # to workaround that bug we just ignore missing links here in the
@@ -405,11 +405,11 @@ module BarclampLibrary
             # now select the best candidate
             # Should be matching the code in provisioner/recipes/bootdisk.rb
             unless candidates.empty?
-              match = candidates.find{|b|b =~ /^scsi-[a-zA-Z]/} ||
-                candidates.find{|b|b =~ /^scsi-[^1]/} ||
-                candidates.find{|b|b =~ /^scsi-/} ||
-                candidates.find{|b|b =~ /^ata-/} ||
-                candidates.find{|b|b =~ /^cciss-/} ||
+              match = candidates.find{ |b|b =~ /^scsi-[a-zA-Z]/ } ||
+                candidates.find{ |b|b =~ /^scsi-[^1]/ } ||
+                candidates.find{ |b|b =~ /^scsi-/ } ||
+                candidates.find{ |b|b =~ /^ata-/ } ||
+                candidates.find{ |b|b =~ /^cciss-/ } ||
                 candidates.first
 
               unless match.empty?
@@ -484,9 +484,7 @@ module BarclampLibrary
           end
           -1
         end
-
       end
-
     end
   end
 end

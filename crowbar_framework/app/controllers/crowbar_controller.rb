@@ -16,7 +16,6 @@
 #
 
 class CrowbarController < BarclampController
-
   protected
 
   def initialize_service

@@ -58,7 +58,7 @@ module Dsl
                 :small,
                 proposal_raw_button(proposal, raw_options)
               ),
-              :class => "pull-right"
+              class: "pull-right"
             )
           ].join("\n").html_safe
         )

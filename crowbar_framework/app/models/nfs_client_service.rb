@@ -15,7 +15,6 @@
 #
 
 class NfsClientService < ServiceObject
-
   def initialize(thelogger)
     super(thelogger)
     @bc_name = "nfs_client"
@@ -99,5 +98,4 @@ class NfsClientService < ServiceObject
       raise Chef::Exceptions::ValidationFailed.new(errors.join("\n"))
     end
   end
-
 end

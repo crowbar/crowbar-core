@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-require 'singleton'
+require "singleton"
 
 class BarclampCatalog
   include Singleton
@@ -27,7 +27,7 @@ class BarclampCatalog
   attr_reader :categories, :catalog
 
   def initialize
-    @catalog    = YAML.load_file(Rails.root.join('config', 'catalog.yml'))
+    @catalog    = YAML.load_file(Rails.root.join("config", "catalog.yml"))
     @categories = build_categories
   end
 
@@ -36,7 +36,7 @@ class BarclampCatalog
   end
 
   def barclamps
-    catalog['barclamps']
+    catalog["barclamps"]
   end
 
   def chef_order(barclamp)
@@ -52,7 +52,7 @@ class BarclampCatalog
   end
 
   def members(barclamp)
-    barclamps[barclamp].nil? ? [] : barclamps[barclamp]['members']
+    barclamps[barclamp].nil? ? [] : barclamps[barclamp]["members"]
   end
 
   def category(barclamp)

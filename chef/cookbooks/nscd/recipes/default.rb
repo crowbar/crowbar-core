@@ -21,11 +21,11 @@ package "nscd" do
 end
 
 service "nscd" do
-  supports :restart => true, :status => true
+  supports restart: true, status: true
   action [:enable, :start]
 end
 
-%w{ passwd group }.each do |cmd| 
+%w{ passwd group }.each do |cmd|
   execute "nscd-clear-#{cmd}" do
     command "/usr/sbin/nscd -i #{cmd}"
     action :nothing

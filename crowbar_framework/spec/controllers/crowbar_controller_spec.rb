@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-require 'spec_helper'
+require "spec_helper"
 
 describe CrowbarController do
   render_views
@@ -27,7 +27,7 @@ describe CrowbarController do
 
   describe "GET index" do
     it "renders list of active roles as json" do
-      get :index, :format => "json"
+      get :index, format: "json"
       response.should be_success
       json = JSON.parse(response.body)
       json.should == assigns(:service_object).list_active.last
@@ -42,7 +42,7 @@ describe CrowbarController do
     end
 
     it "returns list of barclamp names as json" do
-      get :barclamp_index, :format => "json"
+      get :barclamp_index, format: "json"
       response.should be_success
       json = JSON.parse(response.body)
       json.should include("crowbar")
@@ -66,39 +66,39 @@ describe CrowbarController do
 
   describe "POST transition" do
     it "does not allow invalid states" do
-      post :transition, :barclamp => "crowbar", :id => "default", :state => "foobarz", :name => "testing"
+      post :transition, barclamp: "crowbar", id: "default", state: "foobarz", name: "testing"
       response.should be_bad_request
     end
 
     it "does not allow upcased states" do
-      post :transition, :barclamp => "crowbar", :id => "default", :state => "Discovering", :name => "testing"
+      post :transition, barclamp: "crowbar", id: "default", state: "Discovering", name: "testing"
       response.should be_bad_request
     end
 
     it "transitions the node into desired state" do
       RoleObject.stubs(:find_roles_by_search).returns([])
-      post :transition, :barclamp => "crowbar", :id => "default", :state => "discovering", :name => "testing"
+      post :transition, barclamp: "crowbar", id: "default", state: "discovering", name: "testing"
       response.should be_success
     end
 
     it "returns plain text message if transitioning fails" do
       CrowbarService.any_instance.stubs(:transition).returns([500, "error"])
-      post :transition, :barclamp => "crowbar", :id => "default", :state => "discovering", :name => "testing"
+      post :transition, barclamp: "crowbar", id: "default", state: "discovering", name: "testing"
       response.should be_server_error
       response.body.should == "error"
     end
 
     it "returns node as a hash on success when passed a name" do
-      CrowbarService.any_instance.stubs(:transition).returns([200, { :name => "testing" } ])
-      post :transition, :barclamp => "crowbar", :id => "default", :state => "discovering", :name => "testing"
+      CrowbarService.any_instance.stubs(:transition).returns([200, { name: "testing" }])
+      post :transition, barclamp: "crowbar", id: "default", state: "discovering", name: "testing"
       response.should be_success
       json = JSON.parse(response.body)
       json["name"].should == "testing.crowbar.com"
     end
 
     it "returns node as a hash on success when passed a node (backward compatibility)" do
-      CrowbarService.any_instance.stubs(:transition).returns([200, NodeObject.find_node_by_name("testing").to_hash ])
-      post :transition, :barclamp => "crowbar", :id => "default", :state => "discovering", :name => "testing"
+      CrowbarService.any_instance.stubs(:transition).returns([200, NodeObject.find_node_by_name("testing").to_hash])
+      post :transition, barclamp: "crowbar", id: "default", state: "discovering", name: "testing"
       response.should be_success
       json = JSON.parse(response.body)
       json["name"].should == "testing.crowbar.com"
@@ -109,13 +109,13 @@ describe CrowbarController do
     describe "format json" do
       it "returns plain text message if show fails" do
         CrowbarService.any_instance.stubs(:show_active).returns([500, "Error"])
-        post :show, :id => "default", :format => "json"
+        post :show, id: "default", format: "json"
         response.should be_server_error
         response.body.should == "Error"
       end
 
       it "returns a json describing the instance" do
-        get :show, :id => "default", :format => "json"
+        get :show, id: "default", format: "json"
         response.should be_success
         json = JSON.parse(response.body)
         json["deployment"].should_not be_nil
@@ -124,14 +124,14 @@ describe CrowbarController do
 
     describe "format html" do
       it "is successful" do
-        get :show, :id => "default"
+        get :show, id: "default"
         response.should be_success
       end
 
       it "redirects to propsal path on failure" do
         CrowbarService.any_instance.stubs(:show_active).returns([500, "Error"])
-        get :show, :id => "default"
-        response.should redirect_to(proposal_barclamp_path(:controller => "crowbar", :id => "default"))
+        get :show, id: "default"
+        response.should redirect_to(proposal_barclamp_path(controller: "crowbar", id: "default"))
       end
     end
   end
@@ -162,7 +162,7 @@ describe CrowbarController do
     end
 
     it "returns a json with list of assignable nodes for an element" do
-      get :element_info, :id => "crowbar"
+      get :element_info, id: "crowbar"
       response.should be_success
       json = JSON.parse(response.body)
       nodes = ["admin.crowbar.com", "testing.crowbar.com"]
@@ -184,7 +184,7 @@ describe CrowbarController do
     end
 
     it "returns a list of proposals for a given instance" do
-      get :proposals, :format => "json"
+      get :proposals, format: "json"
       json = JSON.parse(response.body)
       response.should be_success
       json.should == ["default"]
@@ -198,30 +198,30 @@ describe CrowbarController do
 
     it "deletes and deactivates the instance" do
       CrowbarService.any_instance.expects(:destroy_active).with("default").once
-      delete :delete, :name => "default"
+      delete :delete, name: "default"
     end
 
     it "sets appropriate flash message" do
       CrowbarService.any_instance.stubs(:destroy_active).returns([200, "Yay!"])
-      delete :delete, :name => "default"
-      flash[:notice].should == I18n.t('proposal.actions.delete_success')
+      delete :delete, name: "default"
+      flash[:notice].should == I18n.t("proposal.actions.delete_success")
     end
 
     it "redirects to barclamp module on success" do
-      delete :delete, :name => "default"
-      response.should redirect_to(barclamp_modules_path(:id => "crowbar"))
+      delete :delete, name: "default"
+      response.should redirect_to(barclamp_modules_path(id: "crowbar"))
     end
 
     it "returns 500 on failure for json" do
       CrowbarService.any_instance.stubs(:destroy_active).returns([500, "Error"])
-      delete :delete, :name => "default", :format => "json"
+      delete :delete, name: "default", format: "json"
       response.should be_server_error
       response.body.should == "Error"
     end
 
     it "sets flash on failure for html" do
       CrowbarService.any_instance.stubs(:destroy_active).returns([500, "Error"])
-      delete :delete, :name => "default"
+      delete :delete, name: "default"
       response.should be_redirect
       flash[:alert].should_not be_nil
     end
@@ -239,7 +239,7 @@ describe CrowbarController do
     end
 
     it "validates a proposal" do
-      put :proposal_create, :name => "nonexistent"
+      put :proposal_create, name: "nonexistent"
     end
   end
 
@@ -255,7 +255,7 @@ describe CrowbarController do
       let(:proposal) { Proposal.where(barclamp: "crowbar", name: "default").first_or_create!(barclamp: "crowbar", name: "default") }
 
       it "validates a proposal" do
-        post :proposal_commit, :id => proposal.name
+        post :proposal_commit, id: proposal.name
       end
     end
 
@@ -267,7 +267,7 @@ describe CrowbarController do
       end
 
       it "validates a proposal from the UI" do
-        put :proposal_update, :name => "default", :barclamp => "crowbar", :submit => I18n.t('barclamp.proposal_show.save_proposal'), :proposal_attributes => "{}", :proposal_deployment => "{}"
+        put :proposal_update, name: "default", barclamp: "crowbar", submit: I18n.t("barclamp.proposal_show.save_proposal"), proposal_attributes: "{}", proposal_deployment: "{}"
       end
     end
   end

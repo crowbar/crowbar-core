@@ -1,4 +1,4 @@
-require 'chef/mixin/shell_out'
+require "chef/mixin/shell_out"
 
 module BluepillTestHelpers
   include Chef::Mixin::ShellOut

@@ -178,7 +178,7 @@ class Hash
       self[k.to_s] = v
 
       v.stringify_keys! if v.is_a?(Hash)
-      v.each{|p| p.stringify_keys! if p.is_a?(Hash)} if v.is_a?(Array)
+      v.each{ |p| p.stringify_keys! if p.is_a?(Hash) } if v.is_a?(Array)
     end
 
     self

@@ -34,7 +34,7 @@ template "/etc/ldap.conf" do
   mode 0644
   owner "root"
   group "root"
-end    
+end
 
 template "/etc/ldap/ldap.conf" do
   source "ldap-ldap.conf.erb"
@@ -48,8 +48,8 @@ cookbook_file "/etc/nsswitch.conf" do
   mode 0644
   owner "root"
   group "root"
-  notifies :restart, resources(:service => "nscd"), :immediately
-  notifies :run, resources(:execute => [ "nscd-clear-passwd", "nscd-clear-group" ]), :immediately
+  notifies :restart, resources(service: "nscd"), :immediately
+  notifies :run, resources(execute: ["nscd-clear-passwd", "nscd-clear-group"]), :immediately
 end
 
 %w{ account auth password session }.each do |pam|
@@ -58,7 +58,7 @@ end
     mode 0644
     owner "root"
     group "root"
-    notifies :restart, resources(:service => "ssh"), :delayed
+    notifies :restart, resources(service: "ssh"), :delayed
   end
 end
 

@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 
-## utility to check if a lan parameter needs to be set 
+## utility to check if a lan parameter needs to be set
 ## (if it's current value is different than desired one).
 def check_ipmi_lan_value(header, desired)
   c_awk = "awk -F: '/^#{header}[ \\t]*:/ { print $2 }'"
@@ -30,7 +30,7 @@ action :run do
 
   if ::File.exists?("/sys/module/ipmi_devintf")
     unless check_ipmi_lan_value(name, value)
-      # Set BMC LAN parameters 
+      # Set BMC LAN parameters
       ruby_block "bmc-set-lan-#{name}" do
         block do
           %x{#{command}}
@@ -49,6 +49,6 @@ action :run do
     end
   else
     node["crowbar_wall"]["status"]["ipmi"]["messages"] << "Unsupported product found #{node[:dmi][:system][:product_name]} - skipping IPMI:#{name}" unless node.nil?
-  end  
+  end
   node.save
 end

@@ -17,8 +17,7 @@
 # limitations under the License.
 #
 
-define :web_app, :template => "web_app.conf.erb" do
-  
+define :web_app, template: "web_app.conf.erb" do
   application_name = params[:name]
 
   include_recipe "apache2"
@@ -41,11 +40,11 @@ define :web_app, :template => "web_app.conf.erb" do
       cookbook params[:cookbook]
     end
     variables(
-      :application_name => application_name,
-      :params => params
+      application_name: application_name,
+      params: params
     )
     if ::File.exists?(vhost_conf)
-      notifies :reload, resources(:service => "apache2"), :delayed
+      notifies :reload, resources(service: "apache2"), :delayed
     end
   end
 

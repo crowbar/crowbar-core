@@ -20,9 +20,9 @@
 include_recipe "rsyslog"
 
 template "/etc/rsyslog.d/bluepill.conf" do
-  owner  "root"
-  group  "root"
-  mode   0644
+  owner "root"
+  group "root"
+  mode 0644
   source "bluepill_rsyslog.conf.erb"
   notifies :restart, "service[rsyslog]"
 end

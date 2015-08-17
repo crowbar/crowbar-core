@@ -16,22 +16,21 @@
 # limitations under the License.
 #
 
-require 'rubygems'
-require 'json'
-require 'getoptlong'
+require "rubygems"
+require "json"
+require "getoptlong"
 
-MAGIC_DOT = '@@ESCAPED_DOT@@'
+MAGIC_DOT = "@@ESCAPED_DOT@@"
 
 #
 # Parsing options can be added by adding to this list before calling opt_parse
 #
 @options = [
-    [ [ '--help', '-h', GetoptLong::NO_ARGUMENT ], "--help or -h - help" ],
-    [ [ '--attribute', '-a', GetoptLong::REQUIRED_ARGUMENT ], "--attribute <attribute> or -a <attribute>  - Name of hash object to return.  Use . as sub-hash delimiter" ]
+    [["--help", "-h", GetoptLong::NO_ARGUMENT], "--help or -h - help"],
+    [["--attribute", "-a", GetoptLong::REQUIRED_ARGUMENT], "--attribute <attribute> or -a <attribute>  - Name of hash object to return.  Use . as sub-hash delimiter"]
 ]
 
 @attributes = []
-
 
 def usage (rc)
   puts "Usage: parse_node_data [options] [filename]"
@@ -45,19 +44,18 @@ def help
   usage 0
 end
 
-
 ### Start MAIN ###
 
 def opt_parse()
   sub_options = @options.map { |x| x[0] }
-  lsub_options = @options.map { |x| [ x[0][0], x[2] ] }
+  lsub_options = @options.map { |x| [x[0][0], x[2]] }
   opts = GetoptLong.new(*sub_options)
 
   opts.each do |opt, arg|
     case opt
-      when '--help'
+      when "--help"
         usage 0
-      when '--attribute'
+      when "--attribute"
         @attributes << arg
       else
         usage -1
@@ -85,8 +83,8 @@ def main()
       # Protect already escaped periods from being interpreted as
       # element delimiters.  Notice that the 1st parameter to gsub is
       # a String not a Regexp.
-      fields = attr.gsub('\.', MAGIC_DOT).split('.')
-      fields.each { |x| data = data[x.gsub(MAGIC_DOT, '.')] unless data.nil? }
+      fields = attr.gsub('\.', MAGIC_DOT).split(".")
+      fields.each { |x| data = data[x.gsub(MAGIC_DOT, ".")] unless data.nil? }
 
       puts "#{attr}=#{data}"
     end

@@ -16,7 +16,6 @@
 #
 
 class DnsService < ServiceObject
-
   def initialize(thelogger)
     super(thelogger)
     @bc_name = "dns"
@@ -83,14 +82,14 @@ class DnsService < ServiceObject
       @logger.debug("DNS transition: adding #{name} to dns-client role")
       result = add_role_to_instance_and_node("dns", inst, name, db, role, "dns-client")
 
-      a = [200, { :name => name } ] if result
+      a = [200, { name: name }] if result
       a = [400, "Failed to add role to node"] unless result
       @logger.debug("DNS transition: leaving for #{name} for #{state}: discovered")
       return a
     end
 
     @logger.debug("DNS transition: leaving for #{name} for #{state}")
-    [200, { :name => name } ]
+    [200, { name: name }]
   end
 
   def apply_role_pre_chef_call(old_role, role, all_nodes)
@@ -100,7 +99,7 @@ class DnsService < ServiceObject
     tnodes = role.override_attributes["dns"]["elements"]["dns-server"]
 
     if !tnodes.blank?
-      nodes = tnodes.map {|n| NodeObject.find_node_by_name n}
+      nodes = tnodes.map { |n| NodeObject.find_node_by_name n }
       # electing master dns-server
       master = nil
       admin = nil
@@ -120,7 +119,7 @@ class DnsService < ServiceObject
         end
       end
 
-      slave_ips = nodes.map {|n| n[:crowbar][:network][:admin][:address]}
+      slave_ips = nodes.map { |n| n[:crowbar][:network][:admin][:address] }
       slave_ips.delete(master[:crowbar][:network][:admin][:address])
       slave_nodes = tnodes.dup
       slave_nodes.delete(master.name)
@@ -136,5 +135,4 @@ class DnsService < ServiceObject
 
     @logger.debug("DNS apply_role_pre_chef_call: leaving")
   end
-
 end

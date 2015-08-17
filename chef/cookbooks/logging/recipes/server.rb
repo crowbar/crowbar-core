@@ -38,7 +38,7 @@ template "/etc/rsyslog.d/10-crowbar-server.conf" do
   group "root"
   mode 0644
   source "rsyslog.server.erb"
-  variables(:external_servers => external_servers, :rsyslog_version => rsyslog_version)
+  variables(external_servers: external_servers, rsyslog_version: rsyslog_version)
   notifies :restart, "service[rsyslog]"
 end
 

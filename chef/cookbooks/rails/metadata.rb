@@ -1,9 +1,9 @@
-maintainer        "Opscode, Inc."
-maintainer_email  "cookbooks@opscode.com"
-license           "Apache 2.0"
-description       "Installs rails"
-long_description  IO.read(File.join(File.dirname(__FILE__), 'README.rdoc'))
-version           "0.9.2"
+maintainer "Opscode, Inc."
+maintainer_email "cookbooks@opscode.com"
+license "Apache 2.0"
+description "Installs rails"
+long_description IO.read(File.join(File.dirname(__FILE__), "README.rdoc"))
+version "0.9.2"
 
 recipe "rails", "Installs rails gems"
 
@@ -16,22 +16,22 @@ end
 end
 
 attribute "rails",
-  :display_name => "Rails",
-  :description => "Hash of Rails attributes",
-  :type => "hash"
+          display_name: "Rails",
+          description: "Hash of Rails attributes",
+          type: "hash"
 
 attribute "rails/version",
-  :display_name => "Rails Version",
-  :description => "Specify the version of Rails to install",
-  :default => "false"
+          display_name: "Rails Version",
+          description: "Specify the version of Rails to install",
+          default: "false"
 
 attribute "rails/environment",
-  :display_name => "Rails Environment",
-  :description => "Specify the environment to use for Rails",
-  :default => "production"
+          display_name: "Rails Environment",
+          description: "Specify the environment to use for Rails",
+          default: "production"
 
 attribute "rails/max_pool_size",
-  :display_name => "Rails Max Pool Size",
-  :description => "Specify the MaxPoolSize in the Apache vhost",
-  :default => "4"
+          display_name: "Rails Max Pool Size",
+          description: "Specify the MaxPoolSize in the Apache vhost",
+          default: "4"
 

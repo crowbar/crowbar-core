@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-require 'spec_helper'
+require "spec_helper"
 
 describe NodeObject do
   describe "finders" do
@@ -28,7 +28,7 @@ describe NodeObject do
         :find_node_by_alias,
         :find_node_by_public_name,
         :find_node_by_name,
-        :find_node_by_name_or_alias,
+        :find_node_by_name_or_alias
       ].each do |method|
         it "responds to #{method}" do
           NodeObject.should respond_to(method)

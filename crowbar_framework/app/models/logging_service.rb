@@ -16,7 +16,6 @@
 #
 
 class LoggingService < ServiceObject
-
   def initialize(thelogger)
     super(thelogger)
     @bc_name = "logging"
@@ -79,14 +78,13 @@ class LoggingService < ServiceObject
       end
 
       @logger.debug("Logging transition: leaving from discovered state for #{name} for #{state}")
-      a = [200, { :name => name } ] if result
+      a = [200, { name: name }] if result
       a = [400, "Failed to add logging role to node"] unless result
       return a
     end
 
     @logger.debug("Logging transition: leaving for #{name} for #{state}")
-    [200, { :name => name } ]
+    [200, { name: name }]
   end
-
 end
 

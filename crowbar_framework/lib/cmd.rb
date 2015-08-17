@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-require 'open3'
+require "open3"
 
 class Cmd
   def self.run(params)

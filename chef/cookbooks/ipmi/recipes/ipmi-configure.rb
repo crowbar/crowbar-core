@@ -50,11 +50,11 @@ if node["crowbar_wall"]["status"]["ipmi"]["user_set"].nil?
   node.save
 end
 
-unsupported = [ "KVM", "Bochs", "VMWare Virtual Platform", "VMware Virtual Platform", "VirtualBox" ]
+unsupported = ["KVM", "Bochs", "VMWare Virtual Platform", "VMware Virtual Platform", "VirtualBox"]
 
 if node[:ipmi][:bmc_enable]
   if unsupported.member?(node[:dmi][:system][:product_name])
-    node.set["crowbar_wall"]["status"]["ipmi"]["messages"] = [ "Unsupported platform: #{node[:dmi][:system][:product_name]} - turning off ipmi for this node" ]
+    node.set["crowbar_wall"]["status"]["ipmi"]["messages"] = ["Unsupported platform: #{node[:dmi][:system][:product_name]} - turning off ipmi for this node"]
     node.set[:ipmi][:bmc_enable] = false
     node.save
     return
@@ -71,20 +71,20 @@ if node[:ipmi][:bmc_enable]
       end
     end
   end
-  
+
   unless node[:platform] == "windows" or node["crowbar_wall"]["status"]["ipmi"]["address_set"]
     if use_dhcp
       ### lan parameters to check and set. The loop that follows iterates over this array.
       # [0] = name in "print" output, [1] command to issue, [2] desired value.
       lan_params = [
-        [ "IP Address Source" ,"ipmitool lan set #{node["crowbar_wall"]["ipmi"]["channel"]} ipsrc dhcp", "DHCP Address", 60 ]
+        ["IP Address Source" ,"ipmitool lan set #{node["crowbar_wall"]["ipmi"]["channel"]} ipsrc dhcp", "DHCP Address", 60]
       ]
 
-      lan_params.each do |param| 
+      lan_params.each do |param|
         ipmi_lan_set "#{param[0]}" do
           command param[1]
-          value param[2]  
-          settle_time param[3]  
+          value param[2]
+          settle_time param[3]
           action :run
         end
       end
@@ -95,19 +95,19 @@ if node[:ipmi][:bmc_enable]
       ### lan parameters to check and set. The loop that follows iterates over this array.
       # [0] = name in "print" output, [1] command to issue, [2] desired value.
       lan_params = [
-        [ "IP Address Source" ,"ipmitool lan set #{node["crowbar_wall"]["ipmi"]["channel"]} ipsrc static", "Static Address", 10 ] ,
-        [ "IP Address" ,"ipmitool lan set #{node["crowbar_wall"]["ipmi"]["channel"]} ipaddr #{bmc_address}", bmc_address, 1 ] ,
-        [ "Subnet Mask" , "ipmitool lan set #{node["crowbar_wall"]["ipmi"]["channel"]} netmask #{bmc_netmask}", bmc_netmask, 1 ] ,
-        [ "Default VLAN", "ipmitool lan set #{node["crowbar_wall"]["ipmi"]["channel"]} vlan id #{bmc_vlan}", bmc_vlan, 10 ]
+        ["IP Address Source" ,"ipmitool lan set #{node["crowbar_wall"]["ipmi"]["channel"]} ipsrc static", "Static Address", 10] ,
+        ["IP Address" ,"ipmitool lan set #{node["crowbar_wall"]["ipmi"]["channel"]} ipaddr #{bmc_address}", bmc_address, 1] ,
+        ["Subnet Mask" , "ipmitool lan set #{node["crowbar_wall"]["ipmi"]["channel"]} netmask #{bmc_netmask}", bmc_netmask, 1] ,
+        ["Default VLAN", "ipmitool lan set #{node["crowbar_wall"]["ipmi"]["channel"]} vlan id #{bmc_vlan}", bmc_vlan, 10]
       ]
 
-      lan_params << [ "Default Gateway IP", "ipmitool lan set #{node["crowbar_wall"]["ipmi"]["channel"]} defgw ipaddr #{bmc_router}", bmc_router, 1 ] unless bmc_router.nil? || bmc_router.empty?
+      lan_params << ["Default Gateway IP", "ipmitool lan set #{node["crowbar_wall"]["ipmi"]["channel"]} defgw ipaddr #{bmc_router}", bmc_router, 1] unless bmc_router.nil? || bmc_router.empty?
 
-      lan_params.each do |param| 
+      lan_params.each do |param|
         ipmi_lan_set "#{param[0]}" do
           command param[1]
-          value param[2]  
-          settle_time param[3]  
+          value param[2]
+          settle_time param[3]
           action :run
         end
       end

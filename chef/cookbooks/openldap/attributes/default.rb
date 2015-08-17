@@ -28,7 +28,7 @@ case platform
 when "redhat","centos"
   set[:openldap][:dir]        = "/etc/openldap"
   set[:openldap][:run_dir]    = "/var/run/openldap"
-  set[:openldap][:module_dir] = "/usr/lib64/openldap"  
+  set[:openldap][:module_dir] = "/usr/lib64/openldap"
 when "debian","ubuntu"
   set[:openldap][:dir]        = "/etc/ldap"
   set[:openldap][:run_dir]    = "/var/run/slapd"
@@ -46,7 +46,7 @@ openldap[:cafile]  = "#{openldap[:ssl_dir]}/ca.crt"
 openldap[:slapd_type] = nil
 
 if openldap[:slapd_type] == "slave"
-  master = search(:nodes, 'openldap_slapd_type:master') 
+  master = search(:nodes, "openldap_slapd_type:master")
   default[:openldap][:slapd_master] = master
   default[:openldap][:slapd_replpw] = nil
   default[:openldap][:slapd_rid]    = 102

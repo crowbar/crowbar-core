@@ -54,7 +54,7 @@ module RemoteNode
   def self.chef_clients_running?(host_or_ip)
     ssh_cmd = self.ssh_cmd_base(host_or_ip)
     ssh_cmd << "'if test -f /var/chef/cache/chef-client-running.pid; then flock -n /var/chef/cache/chef-client-running.pid true; fi'"
-    ssh_cmd = ssh_cmd.map{|x| x.chomp}.join(" ")
+    ssh_cmd = ssh_cmd.map{ |x| x.chomp }.join(" ")
     res = `#{ssh_cmd}`
     case $?.exitstatus
     when 0
@@ -89,7 +89,7 @@ module RemoteNode
     if self.node_redhat?(host)
       'runlevel | grep "N 3"'
     else
-      'last | head -n1 | grep -vq down'
+      "last | head -n1 | grep -vq down"
     end
   end
 
@@ -127,7 +127,7 @@ module RemoteNode
 
     ssh_cmd = self.ssh_cmd_base(host_or_ip)
     ssh_cmd << "'echo $(($(date +%s) - $(cat /proc/uptime|cut -d \" \" -f 1|cut -d \".\" -f 1)))'"
-    ssh_cmd = ssh_cmd.map{|x| x.chomp}.join(" ")
+    ssh_cmd = ssh_cmd.map{ |x| x.chomp }.join(" ")
     retval = `#{ssh_cmd}`.split(" ")[0].to_i
     if $?.exitstatus != 0
       msg = "ssh-cmd '#{ssh_cmd}' to get datetime not successful"

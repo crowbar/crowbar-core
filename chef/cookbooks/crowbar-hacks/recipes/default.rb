@@ -16,7 +16,7 @@
 # This recipe is a placeholder for misc. hacks we want to do on every node,
 # but that do not really belong with any specific barclamp.
 
-states = [ "ready", "readying", "recovering", "applying" ]
+states = ["ready", "readying", "recovering", "applying"]
 if states.include?(node[:state])
   if node["platform"] != "suse" and node["platform"] != "windows"
     # Don't waste time with mlocate or updatedb
@@ -31,8 +31,8 @@ if states.include?(node[:state])
       owner "root"
       group "root"
       mode "0644"
-      variables(:logfiles => "/var/log/chef/client.log",
-                :postrotate => "bluepill chef-client restart")
+      variables(logfiles: "/var/log/chef/client.log",
+                postrotate: "bluepill chef-client restart")
     end
 
     # Set up some basic log rotation
@@ -41,24 +41,24 @@ if states.include?(node[:state])
       owner "root"
       group "root"
       mode "0644"
-      variables(:logfiles => "/var/log/crowbar/*.log /var/log/crowbar/*.out /var/log/crowbar/chef-client/*.log",
-                  :action => "create 644 crowbar crowbar",
-                :postrotate => "/usr/bin/killall -USR1 rainbows")
+      variables(logfiles: "/var/log/crowbar/*.log /var/log/crowbar/*.out /var/log/crowbar/chef-client/*.log",
+                  action: "create 644 crowbar crowbar",
+                postrotate: "/usr/bin/killall -USR1 rainbows")
     end if node[:recipes].include?("crowbar")
     template "/etc/logrotate.d/node-logs" do
       source "logrotate.erb"
       owner "root"
       group "root"
       mode "0644"
-      variables(:logfiles => "/var/log/nodes/*.log /var/log/nodes/.log",
-                :postrotate => "/usr/bin/killall -HUP rsyslogd")
+      variables(logfiles: "/var/log/nodes/*.log /var/log/nodes/.log",
+                postrotate: "/usr/bin/killall -HUP rsyslogd")
     end if node[:recipes].include?("logging::server")
     template "/etc/logrotate.d/client-join-logs" do
       source "logrotate.erb"
       owner "root"
       group "root"
       mode "0644"
-      variables(:logfiles => ["/var/log/crowbar/crowbar_join/*"])
+      variables(logfiles: ["/var/log/crowbar/crowbar_join/*"])
     end unless node[:recipes].include?("crowbar")
   end
   # Note: Hacks that are needed on SUSE platforms as well too come here

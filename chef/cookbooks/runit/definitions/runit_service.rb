@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-define :runit_service, :directory => nil, :only_if => false, :finish_script => false, :control => [], :run_restart => true, :active_directory => nil, :owner => "root", :group => "root", :template_name => nil, :start_command => "start", :stop_command => "stop", :restart_command => "restart", :status_command => "status", :options => Hash.new, :env => Hash.new do
+define :runit_service, directory: nil, only_if: false, finish_script: false, control: [], run_restart: true, active_directory: nil, owner: "root", group: "root", template_name: nil, start_command: "start", stop_command: "stop", restart_command: "restart", status_command: "status", options: Hash.new, env: Hash.new do
   include_recipe "runit"
 
   params[:directory] ||= node[:runit][:sv_dir]
@@ -26,7 +26,7 @@ define :runit_service, :directory => nil, :only_if => false, :finish_script => f
 
   sv_dir_name = "#{params[:directory]}/#{params[:name]}"
   service_dir_name = "#{params[:active_directory]}/#{params[:name]}"
-  params[:options].merge!(:env_dir => "#{sv_dir_name}/env") unless params[:env].empty?
+  params[:options].merge!(env_dir: "#{sv_dir_name}/env") unless params[:env].empty?
 
   directory sv_dir_name do
     owner params[:owner]
@@ -56,7 +56,7 @@ define :runit_service, :directory => nil, :only_if => false, :finish_script => f
     source "sv-#{params[:template_name]}-run.erb"
     cookbook params[:cookbook] if params[:cookbook]
     if params[:options].respond_to?(:has_key?)
-      variables :options => params[:options]
+      variables options: params[:options]
     end
   end
 
@@ -67,7 +67,7 @@ define :runit_service, :directory => nil, :only_if => false, :finish_script => f
     source "sv-#{params[:template_name]}-log-run.erb"
     cookbook params[:cookbook] if params[:cookbook]
     if params[:options].respond_to?(:has_key?)
-      variables :options => params[:options]
+      variables options: params[:options]
     end
   end
 
@@ -92,7 +92,7 @@ define :runit_service, :directory => nil, :only_if => false, :finish_script => f
       source "sv-#{params[:template_name]}-finish.erb"
       cookbook params[:cookbook] if params[:cookbook]
       if params[:options].respond_to?(:has_key?)
-        variables :options => params[:options]
+        variables options: params[:options]
       end
     end
   end
@@ -113,7 +113,7 @@ define :runit_service, :directory => nil, :only_if => false, :finish_script => f
         source "sv-#{params[:template_name]}-control-#{signal}.erb"
         cookbook params[:cookbook] if params[:cookbook]
         if params[:options].respond_to?(:has_key?)
-          variables :options => params[:options]
+          variables options: params[:options]
         end
       end
     end
@@ -134,7 +134,7 @@ define :runit_service, :directory => nil, :only_if => false, :finish_script => f
   ruby_block "supervise_#{params[:name]}_sleep" do
     block do
       Chef::Log.debug("Waiting until named pipe #{sv_dir_name}/supervise/ok exists.")
-      (1..10).each {|i| sleep 1 unless ::FileTest.pipe?("#{sv_dir_name}/supervise/ok") }
+      (1..10).each { |i| sleep 1 unless ::FileTest.pipe?("#{sv_dir_name}/supervise/ok") }
     end
     not_if { FileTest.pipe?("#{sv_dir_name}/supervise/ok") }
   end
@@ -145,15 +145,14 @@ define :runit_service, :directory => nil, :only_if => false, :finish_script => f
       control_cmd = "#{node[:runit][:chpst_bin]} -u #{params[:owner]} #{control_cmd}"
     end
     provider Chef::Provider::Service::Init
-    supports :restart => true, :status => true
+    supports restart: true, status: true
     start_command "#{control_cmd} #{params[:start_command]} #{service_dir_name}"
     stop_command "#{control_cmd} #{params[:stop_command]} #{service_dir_name}"
     restart_command "#{control_cmd} #{params[:restart_command]} #{service_dir_name}"
     status_command "#{control_cmd} #{params[:status_command]} #{service_dir_name}"
     if params[:run_restart]
-      subscribes :restart, resources(:template => "#{sv_dir_name}/run"), :delayed
+      subscribes :restart, resources(template: "#{sv_dir_name}/run"), :delayed
     end
     action :nothing
   end
-
 end

@@ -32,10 +32,10 @@ module FormHelper
       [
         # These roles have to stay in sync
         # with machines role command
-        [t(".no_role"), "no_role"], 
-        [t(".controller"), "controller"], 
-        [t(".compute"), "compute"], 
-        [t(".network"), "network"], 
+        [t(".no_role"), "no_role"],
+        [t(".controller"), "controller"],
+        [t(".compute"), "compute"],
+        [t(".network"), "network"],
         [t(".storage"), "storage"]
       ],
       selected.to_s
@@ -107,10 +107,10 @@ module FormHelper
   def render_instance_selector(bc, name, label, field, proposal)
     return unless ServiceObject.get_service(bc).allow_multiple_proposals?
 
-    render :partial => "barclamp/instance_selector", :locals => {
-      :field => field,
-      :label => label,
-      :select_tag => instance_selector_select(bc, name, field, proposal)
+    render partial: "barclamp/instance_selector", locals: {
+      field: field,
+      label: label,
+      select_tag: instance_selector_select(bc, name, field, proposal)
     }
   end
 
@@ -139,7 +139,7 @@ module FormHelper
 
     if h.nil?
       h = [
-        [t(item, :scope => scope), item]
+        [t(item, scope: scope), item]
       ]
     else
       index = h.index do |x|
@@ -148,7 +148,7 @@ module FormHelper
 
       if index.nil?
         label = if item == ChefObject::NOT_SET or item.nil? or item.empty?
-          t(ChefObject::NOT_SET, :scope => scope)
+          t(ChefObject::NOT_SET, scope: scope)
         else
           item.humanize
         end

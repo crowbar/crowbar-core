@@ -18,7 +18,7 @@
 namespace :crowbar do
   desc "Run schema migration on proposals"
   task :schema_migrate, [:barclamps] => :environment do |t, args|
-    args.with_defaults(:barclamps => "all")
+    args.with_defaults(barclamps: "all")
     barclamps = args[:barclamps].split(" ")
 
     require "schema_migration"

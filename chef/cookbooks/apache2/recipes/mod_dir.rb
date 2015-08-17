@@ -1,6 +1,6 @@
 #
 # Cookbook Name:: apache2
-# Recipe:: dir 
+# Recipe:: dir
 #
 # Copyright 2008-2009, Opscode, Inc.
 #
@@ -17,6 +17,6 @@
 # limitations under the License.
 #
 
-apache_module "dir" do 
+apache_module "dir" do
   conf true
 end

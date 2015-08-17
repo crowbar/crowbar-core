@@ -1,6 +1,6 @@
 #
 # Cookbook Name:: apache2
-# Recipe:: ssl 
+# Recipe:: ssl
 #
 # Copyright 2008-2009, Opscode, Inc.
 #
@@ -20,12 +20,12 @@
 if platform?("centos", "redhat", "fedora")
   package "mod_ssl" do
     action :install
-    notifies :run, resources(:execute => "generate-module-list"), :immediately
+    notifies :run, resources(execute: "generate-module-list"), :immediately
   end
 
   file "#{node[:apache][:dir]}/conf.d/ssl.conf" do
     action :delete
-    backup false 
+    backup false
   end
 end
 
@@ -39,8 +39,8 @@ end
 unless node[:apache][:listen_ports].include?("443")
   # override the resource defined in default.rb; we don't want to create the
   # resource again, otherwise we will write the file twice
-  resource = resources(:template => "#{node[:apache][:dir]}/ports.conf")
-  resource.variables({:apache_listen_ports => [node[:apache][:listen_ports], "443"].flatten})
+  resource = resources(template: "#{node[:apache][:dir]}/ports.conf")
+  resource.variables({apache_listen_ports: [node[:apache][:listen_ports], "443"].flatten})
 end
 
 apache_module "ssl" do

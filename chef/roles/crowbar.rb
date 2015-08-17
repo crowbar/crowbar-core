@@ -6,8 +6,8 @@ run_list(
          "recipe[crowbar]"
 )
 default_attributes(
-  :crowbar => { :admin_node => true },
-  :rails => { :max_pool_size => 256, :environment => "production" },
+  crowbar: { admin_node: true },
+  rails: { max_pool_size: 256, environment: "production" }
 )
 override_attributes()
 

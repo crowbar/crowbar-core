@@ -1,9 +1,9 @@
 def upgrade ta, td, a, d
-  a['packages'] ||= {}
+  a["packages"] ||= {}
   return a, d
 end
 
 def downgrade ta, td, a, d
-  a.delete('packages')
+  a.delete("packages")
   return a, d
 end

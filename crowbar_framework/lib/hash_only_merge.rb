@@ -15,7 +15,6 @@
 # limitations under the License.
 #
 
-
 # Copied from https://github.com/opscode/chef/blob/master/lib/chef/mixin/deep_merge.rb
 # The hash_only_merge API is only available starting with Chef 11.
 module HashOnlyMerge

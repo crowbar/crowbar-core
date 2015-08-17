@@ -49,7 +49,7 @@ module SchemaMigration
       # Note: we don't want to commit the proposal we just migrated, because it
       # might have other uncommitted changes that are not wanted.
 
-      role_name = prop['id'].gsub("bc-#{bc_name}-", "#{bc_name}-config-")
+      role_name = prop["id"].gsub("bc-#{bc_name}-", "#{bc_name}-config-")
       role = RoleObject.find_role_by_name(role_name)
 
       unless role.nil?
@@ -75,7 +75,7 @@ module SchemaMigration
     return all_scripts unless File.directory?(migrate_dir)
 
     Dir.entries(migrate_dir).sort.each do |file|
-      next if ['.', '..'].include?(file)
+      next if [".", ".."].include?(file)
       next if File.directory?(File.join(migrate_dir, file))
       all_scripts << file
     end
@@ -133,12 +133,12 @@ module SchemaMigration
     attributes ||= Mash.new
     deployment ||= Mash.new
 
-    current_schema_revision = deployment['schema-revision']
+    current_schema_revision = deployment["schema-revision"]
     if current_schema_revision.nil?
       current_schema_revision = 0
     end
 
-    schema_revision = template['deployment'][bc_name]['schema-revision']
+    schema_revision = template["deployment"][bc_name]["schema-revision"]
     if schema_revision.nil?
       schema_revision = 0
     end
@@ -153,20 +153,20 @@ module SchemaMigration
       # we only pass attributes and deployment to not encourage direct access
       # to the proposal
       begin
-        attributes, deployment = run_script(script, is_upgrade, template['attributes'][bc_name], template['deployment'][bc_name], attributes, deployment)
+        attributes, deployment = run_script(script, is_upgrade, template["attributes"][bc_name], template["deployment"][bc_name], attributes, deployment)
       rescue StandardError => e
         raise "error while executing migration script #{script}:\n#{e.message}"
       end
     end
 
-    deployment['schema-revision'] = schema_revision
+    deployment["schema-revision"] = schema_revision
 
     return attributes, deployment
   end
 
   def self.migrate_proposal(bc_name, validator, template, all_scripts, proposal)
-    attributes = proposal['attributes'][bc_name]
-    deployment = proposal['deployment'][bc_name]
+    attributes = proposal["attributes"][bc_name]
+    deployment = proposal["deployment"][bc_name]
 
     begin
       (attributes, deployment) = migrate_object(bc_name, template, all_scripts, attributes, deployment)
@@ -176,12 +176,12 @@ module SchemaMigration
 
     return if attributes.nil? || deployment.nil?
 
-    proposal['attributes'][bc_name] = attributes
-    proposal['deployment'][bc_name] = deployment
+    proposal["attributes"][bc_name] = attributes
+    proposal["deployment"][bc_name] = deployment
 
     errors = validator.validate(proposal.raw_data)
     unless errors.empty?
-      error_lines = errors.map {|e| e.message}
+      error_lines = errors.map { |e| e.message }
       error_lines.unshift "Failed to validate migrated proposal #{proposal.name} for #{bc_name}:"
       raise error_lines.join("\n")
     end

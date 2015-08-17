@@ -17,20 +17,20 @@
 
 class CreateSessions < ActiveRecord::Migration
   def self.up
-    create_table :sessions, :force => true do |t|
-      t.string :session_id, :null => false
-      t.text :data, :null => true
+    create_table :sessions, force: true do |t|
+      t.string :session_id, null: false
+      t.text :data, null: true
 
       t.timestamps
     end
 
-    add_index :sessions, [:session_id], :name => "sessions_on_session_id"
-    add_index :sessions, [:updated_at], :name => "sessions_on_updated_at"
+    add_index :sessions, [:session_id], name: "sessions_on_session_id"
+    add_index :sessions, [:updated_at], name: "sessions_on_updated_at"
   end
 
   def self.down
-    remove_index :sessions, :name => "sessions_on_updated_at"
-    remove_index :sessions, :name => "sessions_on_session_id"
+    remove_index :sessions, name: "sessions_on_updated_at"
+    remove_index :sessions, name: "sessions_on_session_id"
 
     drop_table :sessions
   end

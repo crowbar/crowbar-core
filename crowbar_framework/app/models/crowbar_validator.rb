@@ -15,11 +15,10 @@
 # limitations under the License.
 #
 
-require 'kwalify'
-require 'uri'
+require "kwalify"
+require "uri"
 
 class CrowbarValidator < Kwalify::Validator
-
    def initialize(schema_filename)
       super(Kwalify::Yaml.load_file(schema_filename))
    end
@@ -27,7 +26,7 @@ class CrowbarValidator < Kwalify::Validator
    ## hook method called by Validator#validate()
    def validate_hook(value, rule, path, errors)
       case rule.name
-      when 'DiskURL'
+      when "DiskURL"
          begin
            arr = URI.split(value)
            if arr[0] != "disk"
@@ -46,7 +45,7 @@ class CrowbarValidator < Kwalify::Validator
            msg = "Should be a valid URI: #{value}"
            errors << Kwalify::ValidationError.new(msg, path)
          end
-      when 'FQDN'
+      when "FQDN"
          subregex = /[a-zA-Z0-9\-]{1,63}/
          endregex = /[\-]\z/
          startregex = /\A[\-]/
@@ -84,13 +83,13 @@ class CrowbarValidator < Kwalify::Validator
              errors << Kwalify::ValidationError.new(msg, path)
            end
         end
-      when 'Email'
+      when "Email"
          regex = /\A([\w\!\#$\%\&\'\*\+\-\/\=\?\^\`{\|\}\~]+\.)*[\w\!\#$\%\&\'\*\+\-\/\=\?\^\`{\|\}\~]+@((((([a-z0-9]{1}[a-z0-9\-]{0,62}[a-z0-9]{1})|[a-z])\.)+[a-z]{2,6})|(\d{1,3}\.){3}\d{1,3}(\:\d{1,5})?)\z/
          if value[regex].nil?
            msg = "Should be an Email Address: #{value}"
            errors << Kwalify::ValidationError.new(msg, path)
          end
-      when 'DomainName'
+      when "DomainName"
          # http://tools.ietf.org/html/rfc1034#section-3.5
          label = /[a-z]([a-z0-9\-]{0,61}[a-z0-9])?/i
          regex = /\A#{label}(\.#{label})*\z/
@@ -98,13 +97,13 @@ class CrowbarValidator < Kwalify::Validator
            msg = "Should be a Domain Name: #{value}"
            errors << Kwalify::ValidationError.new(msg, path)
          end
-      when 'IpAddress'
+      when "IpAddress"
          regex = /\A(?:25[0-5]|(?:2[0-4]|1\d|[1-9])?\d)(?:\.(?:25[0-5]|(?:2[0-4]|1\d|[1-9])?\d)){3}\z/
          if value[regex].nil?
            msg = "Should be an IP Address: #{value}"
            errors << Kwalify::ValidationError.new(msg, path)
          end
-      when 'IpAddressMap'
+      when "IpAddressMap"
          regex = /\A(?:25[0-5]|(?:2[0-4]|1\d|[1-9])?\d)(?:\.(?:25[0-5]|(?:2[0-4]|1\d|[1-9])?\d)){3}\z/
          value.each_key do |key|
            if key[regex].nil?

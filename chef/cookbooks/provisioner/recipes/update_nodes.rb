@@ -25,7 +25,7 @@ dhcp_hosts_dir = node["provisioner"]["dhcp_hosts"]
 
 nodes = search(:node, "*:*")
 if not nodes.nil? and not nodes.empty?
-  nodes.map{|n|Node.load(n.name)}.each do |mnode|
+  nodes.map{ |n|Node.load(n.name) }.each do |mnode|
     next if mnode[:state].nil?
 
     new_group = states[mnode[:state]]
@@ -187,14 +187,14 @@ if not nodes.nil? and not nodes.empty?
             owner "root"
             group "root"
             source "net_seed.erb"
-            variables(:install_name => os,
-                      :cc_use_local_security => node[:provisioner][:use_local_security],
-                      :cc_install_web_port => web_port,
-                      :boot_device => (mnode[:crowbar_wall][:boot_device] rescue nil),
-                      :cc_built_admin_node_ip => admin_ip,
-                      :timezone => timezone,
-                      :node_name => mnode[:fqdn],
-                      :install_path => "#{os}/install")
+            variables(install_name: os,
+                      cc_use_local_security: node[:provisioner][:use_local_security],
+                      cc_install_web_port: web_port,
+                      boot_device: (mnode[:crowbar_wall][:boot_device] rescue nil),
+                      cc_built_admin_node_ip: admin_ip,
+                      timezone: timezone,
+                      node_name: mnode[:fqdn],
+                      install_path: "#{os}/install")
           end
 
         when os =~ /^(redhat|centos)/
@@ -205,15 +205,15 @@ if not nodes.nil? and not nodes.empty?
             owner "root"
             group "root"
             variables(
-                      :admin_node_ip => admin_ip,
-                      :web_port => web_port,
-                      :node_name => mnode[:fqdn],
-                      :boot_device => (mnode[:crowbar_wall][:boot_device] rescue nil),
-                      :repos => node[:provisioner][:repositories][os],
-                      :uefi => mnode[:uefi],
-                      :admin_web => install_url,
-                      :timezone => timezone,
-                      :crowbar_join => "#{os_url}/crowbar_join.sh")
+                      admin_node_ip: admin_ip,
+                      web_port: web_port,
+                      node_name: mnode[:fqdn],
+                      boot_device: (mnode[:crowbar_wall][:boot_device] rescue nil),
+                      repos: node[:provisioner][:repositories][os],
+                      uefi: mnode[:uefi],
+                      admin_web: install_url,
+                      timezone: timezone,
+                      crowbar_join: "#{os_url}/crowbar_join.sh")
           end
 
         when os =~ /^(open)?suse/
@@ -240,22 +240,22 @@ if not nodes.nil? and not nodes.empty?
             owner "root"
             group "root"
             variables(
-                      :admin_node_ip => admin_ip,
-                      :web_port => web_port,
-                      :packages => packages,
-                      :repos => repos,
-                      :rootpw_hash => node[:provisioner][:root_password_hash] || "",
-                      :timezone => timezone,
-                      :boot_device => (mnode[:crowbar_wall][:boot_device] rescue nil),
-                      :raid_type => (mnode[:crowbar_wall][:raid_type] || "single"),
-                      :raid_disks => (mnode[:crowbar_wall][:raid_disks] || []),
-                      :node_ip => mnode[:crowbar][:network][:admin][:address],
-                      :node_fqdn => mnode[:fqdn],
-                      :node_hostname => mnode[:hostname],
-                      :target_platform_version => target_platform_version,
-                      :is_ses => node[:provisioner][:suse] &&
+                      admin_node_ip: admin_ip,
+                      web_port: web_port,
+                      packages: packages,
+                      repos: repos,
+                      rootpw_hash: node[:provisioner][:root_password_hash] || "",
+                      timezone: timezone,
+                      boot_device: (mnode[:crowbar_wall][:boot_device] rescue nil),
+                      raid_type: (mnode[:crowbar_wall][:raid_type] || "single"),
+                      raid_disks: (mnode[:crowbar_wall][:raid_disks] || []),
+                      node_ip: mnode[:crowbar][:network][:admin][:address],
+                      node_fqdn: mnode[:fqdn],
+                      node_hostname: mnode[:hostname],
+                      target_platform_version: target_platform_version,
+                      is_ses: node[:provisioner][:suse] &&
                         !node[:provisioner][:suse][:cloud_available] && node[:provisioner][:suse][:storage_available],
-                      :crowbar_join => "#{os_url}/crowbar_join.sh")
+                      crowbar_join: "#{os_url}/crowbar_join.sh")
           end
 
         when os =~ /^(hyperv|windows)/
@@ -278,14 +278,14 @@ if not nodes.nil? and not nodes.empty?
             owner "root"
             group "root"
             source "unattended.xml.erb"
-            variables(:license_key => mnode[:license_key] || "",
-                      :os_name => os,
-                      :image_name => image_name,
-                      :admin_ip => admin_ip,
-                      :admin_name => node[:hostname],
-                      :crowbar_key => crowbar_key,
-                      :admin_password => node[:provisioner][:windows][:admin_password],
-                      :domain_name => node[:dns].nil? ? node[:domain] : (node[:dns][:domain] || node[:domain]))
+            variables(license_key: mnode[:license_key] || "",
+                      os_name: os,
+                      image_name: image_name,
+                      admin_ip: admin_ip,
+                      admin_name: node[:hostname],
+                      crowbar_key: crowbar_key,
+                      admin_password: node[:provisioner][:windows][:admin_password],
+                      domain_name: node[:dns].nil? ? node[:domain] : (node[:dns][:domain] || node[:domain]))
           end
 
           link windows_tftp_file do
@@ -301,32 +301,32 @@ if not nodes.nil? and not nodes.empty?
           raise RangeError.new("Do not know how to handle #{os} in update_nodes.rb!")
         end
 
-        [{:file => pxefile, :src => "default.erb"},
-         {:file => uefifile, :src => "default.elilo.erb"}].each do |t|
+        [{file: pxefile, src: "default.erb"},
+         {file: uefifile, src: "default.elilo.erb"}].each do |t|
           template t[:file] do
             mode 0644
             owner "root"
             group "root"
             source t[:src]
-            variables(:append_line => append.join(' '),
-                      :install_name => node[:provisioner][:available_oses][os][:install_name],
-                      :initrd => node[:provisioner][:available_oses][os][:initrd],
-                      :kernel => node[:provisioner][:available_oses][os][:kernel])
+            variables(append_line: append.join(" "),
+                      install_name: node[:provisioner][:available_oses][os][:install_name],
+                      initrd: node[:provisioner][:available_oses][os][:initrd],
+                      kernel: node[:provisioner][:available_oses][os][:kernel])
           end unless t[:file].nil?
         end
 
       else
-        [{:file => pxefile, :src => "default.erb"},
-         {:file => uefifile, :src => "default.elilo.erb"}].each do |t|
+        [{file: pxefile, src: "default.erb"},
+         {file: uefifile, src: "default.elilo.erb"}].each do |t|
           template t[:file] do
             mode 0644
             owner "root"
             group "root"
             source t[:src]
-            variables(:append_line => "#{node[:provisioner][:sledgehammer_append_line]} crowbar.hostname=#{mnode[:fqdn]} crowbar.state=#{new_group}",
-                      :install_name => new_group,
-                      :initrd => "initrd0.img",
-                      :kernel => "vmlinuz0")
+            variables(append_line: "#{node[:provisioner][:sledgehammer_append_line]} crowbar.hostname=#{mnode[:fqdn]} crowbar.state=#{new_group}",
+                      install_name: new_group,
+                      initrd: "initrd0.img",
+                      kernel: "vmlinuz0")
           end unless t[:file].nil?
         end
       end

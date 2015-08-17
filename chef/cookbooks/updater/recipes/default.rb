@@ -89,7 +89,6 @@ if !node[:updater].has_key?(:one_shot_run) || !node[:updater][:one_shot_run]
             raise message
           end # case
         end # while
-
       end # block
     end # ruby_block
 

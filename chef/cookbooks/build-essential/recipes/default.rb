@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-case node['platform']
+case node["platform"]
 when "ubuntu","debian"
   %w{build-essential binutils-doc}.each do |pkg|
     package pkg do

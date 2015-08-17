@@ -37,13 +37,13 @@ module NodesHelper
     [].tap do |result|
       result.push content_tag(
         :strong,
-        t("total", :count => values.sum, :scope => "nodes.index.status_pie")
+        t("total", count: values.sum, scope: "nodes.index.status_pie")
       )
 
-      result.push t("ready", :count => values[0], :scope => "nodes.index.status_pie") if values[0] > 0
-      result.push t("unknown", :count => values[1], :scope => "nodes.index.status_pie") if values[1] > 0
-      result.push t("unready", :count => values[2], :scope => "nodes.index.status_pie") if values[2] > 0
-      result.push t("pending", :count => values[3], :scope => "nodes.index.status_pie") if values[3] > 0
+      result.push t("ready", count: values[0], scope: "nodes.index.status_pie") if values[0] > 0
+      result.push t("unknown", count: values[1], scope: "nodes.index.status_pie") if values[1] > 0
+      result.push t("unready", count: values[2], scope: "nodes.index.status_pie") if values[2] > 0
+      result.push t("pending", count: values[3], scope: "nodes.index.status_pie") if values[3] > 0
     end.join(tag(:br))
   end
 
@@ -78,7 +78,7 @@ module NodesHelper
 
   def node_links_for(value)
     node_list_for(value).map do |name, node|
-      link_to node[:alias], node_path(node[:handle]), :title => node[:title]
+      link_to node[:alias], node_path(node[:handle]), title: node[:title]
     end
   end
 
@@ -89,14 +89,14 @@ module NodesHelper
       {}.tap do |nodes|
         NodeObject.all.each do |node|
           nodes[node.name] = {
-            :handle => node.handle,
-            :alias => node.alias,
-            :title => node.description(false, true),
-            :admin => node.admin?,
-            :group => node.group,
-            :platform => node[:platform],
-            :platform_version => node[:platform_version],
-            :cluster => false
+            handle: node.handle,
+            alias: node.alias,
+            title: node.description(false, true),
+            admin: node.admin?,
+            group: node.group,
+            platform: node[:platform],
+            platform_version: node[:platform_version],
+            cluster: false
           } if node.group == group or group.nil?
         end
       end.sort_by{ |k, v| v[:alias] }
@@ -139,7 +139,7 @@ module NodesHelper
           else
             value_for(nil, t("model.attributes.node.license_key_not_set"))
           end
-          
+
           result.push [
             t("model.attributes.node.license_key"),
             value
@@ -160,7 +160,7 @@ module NodesHelper
           t("model.attributes.node.state"),
           content_tag(
             :span,
-            t(@node.state, :scope => :state, :default => @node.state.titlecase),
+            t(@node.state, scope: :state, default: @node.state.titlecase),
             "data-node-state" => @node.handle
           )
         ]
@@ -173,7 +173,7 @@ module NodesHelper
       raid_data = if crowbar_options[:show].include?(:raid)
         content_tag(
           :em,
-          t(@node.raid_set, :scope => "raid")
+          t(@node.raid_set, scope: "raid")
         )
       else
         nil
@@ -204,7 +204,7 @@ module NodesHelper
           unless crowbar_options[:show].include?(:raid) or @node.raid_type == "single"
             result.push [
               t("model.attributes.node.raid_type"),
-              value_for(t(@node.raid_type, :scope => "nodes.form.raid_types"), t("unknown"))
+              value_for(t(@node.raid_type, scope: "nodes.form.raid_types"), t("unknown"))
             ]
 
             result.push [
@@ -264,7 +264,7 @@ module NodesHelper
 
         result.push [
           switch_title,
-          link_to(switch_label, switch_path(:node => @node.handle))
+          link_to(switch_label, switch_path(node: @node.handle))
         ]
       end
     end
@@ -328,7 +328,7 @@ module NodesHelper
       entries.push content_tag(
         :li,
         t(".no_entry"),
-        :class => "empty"
+        class: "empty"
       )
     end
 
@@ -390,7 +390,7 @@ module NodesHelper
             proposal.display_name
           end
 
-          route = proposal_barclamp_path(:controller => proposal.barclamp, :id => proposal.name)
+          route = proposal_barclamp_path(controller: proposal.barclamp, id: proposal.name)
 
           listing[proposal.category] ||= []
           listing[proposal.category].push link_to(display_name, route)
@@ -402,7 +402,7 @@ module NodesHelper
       list_result = content_tag(
         :li,
         t(".no_entry"),
-        :class => "empty"
+        class: "empty"
       )
     else
       list_result = [].tap do |result|
@@ -431,7 +431,7 @@ module NodesHelper
     content_tag(
       :ul,
       list_result,
-      :class => "barclamps"
+      class: "barclamps"
     )
   end
 
@@ -470,8 +470,8 @@ module NodesHelper
             listing[object.category].push role.titleize
           else
             route = proposal_barclamp_path(
-              :controller => proposal.barclamp,
-              :id => proposal.name
+              controller: proposal.barclamp,
+              id: proposal.name
             )
 
             listing[proposal.category] ||= []
@@ -485,7 +485,7 @@ module NodesHelper
       list_result = content_tag(
         :li,
         t(".no_entry"),
-        :class => "empty"
+        class: "empty"
       )
     else
       list_result = [].tap do |result|
@@ -514,7 +514,7 @@ module NodesHelper
     content_tag(
       :ul,
       list_result,
-      :class => "roles"
+      class: "roles"
     )
   end
 
@@ -539,7 +539,7 @@ module NodesHelper
             link_to(
               name,
               link,
-              :target => "_blank"
+              target: "_blank"
             )
           )
         end
@@ -550,7 +550,7 @@ module NodesHelper
       link_list.push content_tag(
         :li,
         t(".no_entry"),
-        :class => "empty"
+        class: "empty"
       )
     end
 

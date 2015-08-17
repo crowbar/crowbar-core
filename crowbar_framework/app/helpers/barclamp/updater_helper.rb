@@ -19,8 +19,8 @@ module Barclamp
     def zypper_methods_for_updater(selected)
       options_for_select(
         [
-          ["patch", "patch"], 
-          ["update", "update"], 
+          ["patch", "patch"],
+          ["update", "update"],
           ["dist-upgrade", "dist-upgrade"]
         ],
         selected.to_s

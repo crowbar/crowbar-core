@@ -168,7 +168,7 @@ class CrowbarService < ServiceObject
     end
 
     @logger.debug("Crowbar transition leaving: #{name} to #{state}")
-    [200, { :name => name } ]
+    [200, { name: name }]
   end
 
   def create_proposal
@@ -263,7 +263,7 @@ class CrowbarService < ServiceObject
     tmp = {}
     bcs.each { |bc_name,instances|
       order = BarclampCatalog.run_order(bc_name)
-      tmp[bc_name] = {:order =>order, :instances =>instances}
+      tmp[bc_name] = {order: order, instances: instances}
     }
     #sort by the order value (x,y are an array with the value of
     #the hash entry
@@ -277,7 +277,7 @@ class CrowbarService < ServiceObject
     proposals = Proposal.where(barclamp: "crowbar")
     raise "Can't find any crowbar proposal" if proposals.nil? or proposals[0].nil?
     # populate options from attributes/crowbar/*-settings
-    options = { :raid=>{}, :bios=>{}, :show=>[] }
+    options = { raid: {}, bios: {}, show: [] }
     unless proposals[0]["attributes"].nil? or proposals[0]["attributes"]["crowbar"].nil?
       options[:raid] = proposals[0]["attributes"]["crowbar"]["raid-settings"]
       options[:bios] = proposals[0]["attributes"]["crowbar"]["bios-settings"]

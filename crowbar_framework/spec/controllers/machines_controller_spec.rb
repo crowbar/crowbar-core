@@ -28,13 +28,13 @@ describe MachinesController do
     end
 
     it "is successful" do
-      get :index, :format => "json"
+      get :index, format: "json"
       expect(response).to have_http_status(:ok)
     end
 
     context "with some nodes" do
       it "renders json" do
-        get :index, :format => "json"
+        get :index, format: "json"
         expect(JSON.parse(response.body)).to be_a(Hash)
       end
 
@@ -47,7 +47,7 @@ describe MachinesController do
       end
 
       it "contains name keys" do
-        get :index, :format => "json"
+        get :index, format: "json"
         json = JSON.parse(response.body)
         node = json["nodes"].first
 
@@ -55,7 +55,7 @@ describe MachinesController do
       end
 
       it "contains alias keys" do
-        get :index, :format => "json"
+        get :index, format: "json"
         json = JSON.parse(response.body)
         node = json["nodes"].first
 
@@ -69,12 +69,12 @@ describe MachinesController do
       end
 
       it "renders json" do
-        get :index, :format => "json"
+        get :index, format: "json"
         expect(JSON.parse(response.body)).to be_a(Hash)
       end
 
       it "results in empty nodes hash" do
-        get :index, :format => "json"
+        get :index, format: "json"
         json = JSON.parse(response.body)
 
         expect(json["nodes"]).to be_a(Array)
@@ -85,25 +85,25 @@ describe MachinesController do
 
   describe "GET show" do
     it "is successful" do
-      get :show, :name => "testing", :format => "json"
+      get :show, name: "testing", format: "json"
       expect(response).to have_http_status(:ok)
     end
 
     it "renders json" do
-      get :show, :name => "testing", :format => "json"
+      get :show, name: "testing", format: "json"
       expect(JSON.parse(response.body)).to be_a(Hash)
     end
 
     context "for existent node" do
       it "fetches with name" do
-        get :show, :name => "testing", :format => "json"
+        get :show, name: "testing", format: "json"
         json = JSON.parse(response.body)
 
         expect(json["name"]).to eq("testing.crowbar.com")
       end
 
       it "works with fqdn" do
-        get :show, :name => "testing.crowbar.com", :format => "json"
+        get :show, name: "testing.crowbar.com", format: "json"
         json = JSON.parse(response.body)
 
         expect(json["name"]).to eq("testing.crowbar.com")
@@ -112,7 +112,7 @@ describe MachinesController do
 
     context "for non-existent node" do
       it "renders 404" do
-        get :show, :name => "nonexistent", :format => "json"
+        get :show, name: "nonexistent", format: "json"
         expect(response).to have_http_status(:not_found)
       end
     end
@@ -224,7 +224,7 @@ describe MachinesController do
 
       context "for non-existent node" do
         it "renders 404" do
-          post action, :name => "nonexistent", :format => "json"
+          post action, name: "nonexistent", format: "json"
           expect(response).to have_http_status(:not_found)
         end
 

@@ -16,7 +16,6 @@
 #
 
 class DeployerController < BarclampController
-
   protected
 
   def initialize_service

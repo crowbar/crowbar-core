@@ -22,8 +22,8 @@ describe ServiceObject do
   let(:proposal) { Proposal.where(barclamp: "crowbar", name:"default").first_or_create(barclamp: "crowbar", name: "default") }
   let(:proposal_elements) {
     [
-      ["crowbar", ["admin"]            ],
-      ["dns",     ["admin", "testing"] ],
+      ["crowbar", ["admin"]],
+      ["dns",     ["admin", "testing"]]
     ]}
 
   describe "service object" do
@@ -68,8 +68,8 @@ describe ServiceObject do
 
     it "leaves empty validation errors" do
       prop = proposal
-      prop.raw_data['attributes']['crowbar'].delete('barclamps')
-      prop.raw_data['attributes']['crowbar'].delete('run_order')
+      prop.raw_data["attributes"]["crowbar"].delete("barclamps")
+      prop.raw_data["attributes"]["crowbar"].delete("run_order")
 
       service_object.validate_proposal(prop.raw_data)
       service_object.instance_variable_get(:@validation_errors).should be_empty
@@ -133,7 +133,7 @@ describe ServiceObject do
 
         dns_service.stubs(:role_constraints).returns({
           "dns-server" => { "conflicts_with" => ["dns-client", "hawk-server"], "admin" => true },
-          "dns-client" => { "conflicts_with" => ["dns-server", "hawk-server"], "admin" => true },
+          "dns-client" => { "conflicts_with" => ["dns-server", "hawk-server"], "admin" => true }
         })
 
         dns_service.validate_proposal_constraints(dns_proposal)

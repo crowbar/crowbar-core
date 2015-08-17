@@ -13,7 +13,6 @@
 # limitations under the License.
 #
 
-
 def lock(new_resource)
   filename = "/tmp/#{new_resource.file.gsub("/","_")}.lock"
   f = ::File.new(filename, ::File::RDWR|::File::CREAT, 0644)
@@ -33,7 +32,6 @@ def unlock(f)
   f.flock(::File::LOCK_UN)
   f.close
 end
-
 
 ####
 #  add and remove lines to a file
@@ -77,7 +75,7 @@ def add_and_filter(file, add, filter_re)
   if need_to_remove
     lines << "#{add}\n" if need_to_add
     need_to_add = false
-    open(file, "w+") {|f| f.write lines.join("") }
+    open(file, "w+") { |f| f.write lines.join("") }
   end
   open(file, "a") {|f|
     f.write "#{add}\n"
@@ -89,15 +87,14 @@ ensure
   unlock(lock) unless lock.nil?
 end
 
-
 action :add do
   updated = add_and_filter(@new_resource.file,
-			   @new_resource.name, @new_resource.regexp_exclude)
+			                        @new_resource.name, @new_resource.regexp_exclude)
   @new_resource.updated_by_last_action(true) if updated
 end
 
 action :remove do
   updated = add_and_filter(@new_resource.file,nil,
-			   "^#{@new_resource.name}$")
+			                        "^#{@new_resource.name}$")
   @new_resource.updated_by_last_action(true) if updated
 end

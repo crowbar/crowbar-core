@@ -29,7 +29,7 @@ unless ARGV.any? { |a| a =~ /^gems/ }
       end
 
       Cucumber::Rake::Task.new(
-        { :wip => "test:prepare" },
+        { wip: "test:prepare" },
         "Run features that are being worked on"
       ) do |t|
         t.fork = true
@@ -37,7 +37,7 @@ unless ARGV.any? { |a| a =~ /^gems/ }
       end
 
       Cucumber::Rake::Task.new(
-        { :rerun => "test:prepare" },
+        { rerun: "test:prepare" },
         "Record failing features and run only them if any exist"
       ) do |t|
         t.fork = true

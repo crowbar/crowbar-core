@@ -54,18 +54,18 @@ when "debian","ubuntu", "gentoo"
         "8.10" => :run,
         "8.04" => :run },
       "gentoo" => { "default" => :run }
-    ), resources(:execute => "start-runsvdir"), :immediately
+    ), resources(execute: "start-runsvdir"), :immediately
     notifies value_for_platform(
       "debian" => { "squeeze/sid" => :run, "default" => :nothing },
       "default" => :nothing
-    ), resources(:execute => "runit-hup-init"), :immediately
+    ), resources(execute: "runit-hup-init"), :immediately
   end
 
   if node[:platform] =~ /ubuntu/i && node[:platform_version].to_f <= 8.04
     cookbook_file "/etc/event.d/runsvdir" do
       source "runsvdir"
       mode 0644
-      notifies :run, resources(:execute => "start-runsvdir"), :immediately
+      notifies :run, resources(execute: "start-runsvdir"), :immediately
       only_if do ::File.directory?("/etc/event.d") end
     end
   end

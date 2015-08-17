@@ -22,7 +22,7 @@ class LoggingController < BarclampController
     pid = fork do
       system("sudo -i /opt/dell/bin/gather_logs.sh #{@file}")
     end
-    Process.detach(pid) # reap child process automatically; don't leave running    
+    Process.detach(pid) # reap child process automatically; don't leave running
     redirect_to "/utils?waiting=true&file=#{@file.gsub(/\./,'-DOT-')}"
   end
 

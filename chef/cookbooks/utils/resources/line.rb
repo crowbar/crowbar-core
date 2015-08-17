@@ -15,9 +15,9 @@
 
 actions :add, :remove
 
-attribute :name, :kind_of => String, :name_attribute => true
-attribute :file, :kind_of => String
-attribute :regexp_exclude, :kind_of => String
+attribute :name, kind_of: String, name_attribute: true
+attribute :file, kind_of: String
+attribute :regexp_exclude, kind_of: String
 
 
- 
+

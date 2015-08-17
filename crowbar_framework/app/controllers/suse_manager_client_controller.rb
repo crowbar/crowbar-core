@@ -15,7 +15,6 @@
 #
 
 class SuseManagerClientController < BarclampController
-
   protected
 
   def initialize_service

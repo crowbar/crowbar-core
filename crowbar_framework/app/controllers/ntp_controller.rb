@@ -16,7 +16,6 @@
 #
 
 class NtpController < BarclampController
-
   protected
 
   def initialize_service

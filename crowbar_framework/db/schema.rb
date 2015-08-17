@@ -12,7 +12,6 @@
 # It's strongly recommended that you check this file into your version control system.
 
 ActiveRecord::Schema.define(version: 20150806114015) do
-
   create_table "proposal_queues", force: true do |t|
     t.string "barclamp"
     t.string "name"
@@ -28,13 +27,12 @@ ActiveRecord::Schema.define(version: 20150806114015) do
   add_index "proposals", ["barclamp", "name"], name: "index_proposals_on_barclamp_and_name", unique: true
 
   create_table "sessions", force: true do |t|
-    t.string   "session_id", null: false
-    t.text     "data"
+    t.string "session_id", null: false
+    t.text "data"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
 
   add_index "sessions", ["session_id"], name: "sessions_on_session_id"
   add_index "sessions", ["updated_at"], name: "sessions_on_updated_at"
-
 end

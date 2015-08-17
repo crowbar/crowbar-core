@@ -4,10 +4,10 @@ if File.exists? "/sys/firmware/efi"
   result = Mash.new.tap do |result|
     result[:entries] = {}
     result[:boot] = {
-      :order => [],
-      :current => nil,
-      :next => nil,
-      :last_mac => nil
+      order: [],
+      current: nil,
+      next: nil,
+      last_mac: nil
     }
 
     IO.popen("efibootmgr -v") do |p|
@@ -29,9 +29,9 @@ if File.exists? "/sys/firmware/efi"
           title, device = val.split("\t")
 
           result[:entries][current] = {
-            :title => title,
-            :device => device,
-            :active => key[-1, 1] == "*"
+            title: title,
+            device: device,
+            active: key[-1, 1] == "*"
           }
         else
           next
@@ -47,7 +47,7 @@ if File.exists? "/sys/firmware/efi"
       result[:boot][:last_mac] = [].tap do |tmp|
         6.times do |i|
           tmp.push mac[(i * 2), 2]
-        end   
+        end
       end.join(":")
     end
   end

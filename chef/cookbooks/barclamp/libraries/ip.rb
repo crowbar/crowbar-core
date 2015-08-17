@@ -117,7 +117,7 @@ class IP
   end
 
   def addr
-    to_s.split('/')[0]
+    to_s.split("/")[0]
   end
 
   # Get the network address for this address.
@@ -177,7 +177,7 @@ class IP
     # We explicitly only care about CIDR compatible netmasks,
     # and will die horribly if someone wants to use a holey subnet.
     def self.netmask_to_subnet(mask)
-      bits = mask.split('.').inject(0){|acc,i| acc = (acc << 8) + i.to_i}
+      bits = mask.split(".").inject(0){ |acc,i| acc = (acc << 8) + i.to_i }
       res = 32
       while bits[0] == 0
         res-=1
@@ -194,15 +194,15 @@ class IP
 
     # Parse a string into an IP4 address or die trying
     def self.parse_address(a)
-      addr,subnet = a.split('/',2)
+      addr,subnet = a.split("/",2)
       if addr.kind_of?(String) && (addr =~ MATCH_RE)
-        addr = addr.split('.').map do |i|
+        addr = addr.split(".").map do |i|
           i = i.to_i
           if i >= 256
             raise RangeError.new("#{i} is too big for an IP4 address!")
           end
           i
-        end.inject(0){|acc,i| acc = (acc << 8) + i}
+        end.inject(0){ |acc,i| acc = (acc << 8) + i }
       else
         raise ArgumentError.new("#{addr} is not a valid IP4 address!")
       end
@@ -230,7 +230,7 @@ class IP
         res << (bits & PART_MASK)
         bits >>= BITS_PER_PART
       end
-      res.reverse.join('.')
+      res.reverse.join(".")
     end
 
     # Set our new subnet based on the passed netmask
@@ -263,29 +263,29 @@ class IP
     # Parse an IPv6 address or die trying.
     # Parsing an IP6 address is fun due to its canonical representation.
     def self.parse_address(a)
-      addr,subnet = a.split('/',2)
+      addr,subnet = a.split("/",2)
       unless addr.kind_of?(String) && (addr =~ /^[0-9a-f:]+$/) &&
-          (! addr.include?(':::')) && addr.length >= 2
+          (! addr.include?(":::")) && addr.length >= 2
         raise ArgumentError.new("#{addr} is not a valid IP6 address")
       end
-      if addr.include?('::')
+      if addr.include?("::")
         # Handle some degenerate cases first
-        addr = "0" + addr if addr[0..1] == '::'
-        addr << "0" if addr[-2..-1] == '::'
+        addr = "0" + addr if addr[0..1] == "::"
+        addr << "0" if addr[-2..-1] == "::"
         # By now, addr must at least equal '0::0'
-        addr = addr.split('::')
+        addr = addr.split("::")
         unless addr.length == 2 # only one '::' allowed!
           raise ArgumentError.new("Only one :: allowed in an IP6 address!")
         end
-        addr[0] = addr[0].split(':')
-        addr[2] = addr[1].split(':')
+        addr[0] = addr[0].split(":")
+        addr[2] = addr[1].split(":")
         unless (addr[0].length + addr[2].length) <= PARTS
           raise ArgumentError.new("#{addr} has too many parts!")
         end
         addr[1] = Array.new((PARTS - (addr[0].length + addr[2].length)),"0")
         addr.flatten!
       else
-        addr = addr.split(':')
+        addr = addr.split(":")
       end
       unless addr.length == PARTS # An IP6 address has 8 elements
         raise RangeError.new("#{addr} is incorrectly formatted.")
@@ -300,7 +300,7 @@ class IP
         else
           i
         end
-      end.inject(0){|acc,i| acc = (acc << BITS_PER_PART) + i}
+      end.inject(0){ |acc,i| acc = (acc << BITS_PER_PART) + i }
       [addr, subnet]
     end
 
@@ -321,11 +321,11 @@ class IP
         end
       end
       len = runs.length - 1
-      return a.map{|i| '%x' % i}.join(':') if len == -1
+      return a.map{ |i| "%x" % i }.join(":") if len == -1
       f,l = runs[len]
-      res = a[0...f].map{|i| '%x' % i}.join(':') + '::'
+      res = a[0...f].map{ |i| "%x" % i }.join(":") + "::"
       unless a[7].zero?
-        res += a[l..7].map{|i| '%x' % i}.join(':')
+        res += a[l..7].map{ |i| "%x" % i }.join(":")
       end
       res
     end
@@ -342,10 +342,10 @@ class IP
       bits = @address
       res = []
       32.times do
-        res << '%x' % (bits & 15)
+        res << "%x" % (bits & 15)
         bits >>= 4
       end
-      res.join('.') + ".ip6.arpa."
+      res.join(".") + ".ip6.arpa."
     end
   end
 end

@@ -25,7 +25,7 @@ packages = case node[:platform]
   else
     %w{openssh-client openssh-server}
   end
-  
+
 packages.each do |pkg|
   package pkg
 end
@@ -38,18 +38,18 @@ service "ssh" do
     service_name "ssh"
   end
   supports value_for_platform(
-    "debian" => { "default" => [ :restart, :reload, :status ] },
+    "debian" => { "default" => [:restart, :reload, :status] },
     "ubuntu" => {
-      "8.04" => [ :restart, :reload ],
-      "default" => [ :restart, :reload, :status ]
+      "8.04" => [:restart, :reload],
+      "default" => [:restart, :reload, :status]
     },
-    "centos" => { "default" => [ :restart, :reload, :status ] },
-    "redhat" => { "default" => [ :restart, :reload, :status ] },
-    "fedora" => { "default" => [ :restart, :reload, :status ] },
-    "scientific" => { "default" => [ :restart, :reload, :status ] },
-    "arch" => { "default" => [ :restart ] },
-    "default" => { "default" => [:restart, :reload ] }
+    "centos" => { "default" => [:restart, :reload, :status] },
+    "redhat" => { "default" => [:restart, :reload, :status] },
+    "fedora" => { "default" => [:restart, :reload, :status] },
+    "scientific" => { "default" => [:restart, :reload, :status] },
+    "arch" => { "default" => [:restart] },
+    "default" => { "default" => [:restart, :reload] }
   )
-  action [ :enable, :start ]
+  action [:enable, :start]
 end
 

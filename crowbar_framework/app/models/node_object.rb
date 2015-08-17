@@ -15,8 +15,8 @@
 # limitations under the License.
 #
 
-require 'chef/mixin/deep_merge'
-require 'timeout'
+require "chef/mixin/deep_merge"
+require "timeout"
 
 class NodeObject < ChefObject
   self.chef_type = "node"
@@ -58,7 +58,7 @@ class NodeObject < ChefObject
     elsif nodes.length == 0
       nil
     else
-      raise "#{I18n.t('multiple_node_alias', :scope => 'model.node')}: #{nodes.join(',')}"
+      raise "#{I18n.t('multiple_node_alias', scope: 'model.node')}: #{nodes.join(',')}"
     end
   end
 
@@ -92,8 +92,8 @@ class NodeObject < ChefObject
         #  - last Hyper-V, and just before that Windows
         platform_order = {"windows" => 90, "hyperv" => 100}
         availables_oses.uniq.sort {|x, y|
-          platform_x, version_x = x.split('-')
-          platform_y, version_y = y.split('-')
+          platform_x, version_x = x.split("-")
+          platform_y, version_y = y.split("-")
           platform_order_x = platform_order[platform_x] || 1
           platform_order_y = platform_order[platform_y] || 1
 
@@ -133,7 +133,7 @@ class NodeObject < ChefObject
     elsif nodes.length == 0
       nil
     else
-      raise "#{I18n.t('multiple_node_public_name', :scope => 'model.node')}: #{nodes.join(',')}"
+      raise "#{I18n.t('multiple_node_public_name', scope: 'model.node')}: #{nodes.join(',')}"
     end
   end
 
@@ -293,15 +293,15 @@ class NodeObject < ChefObject
 
   def shortname
     Rails.logger.warn("shortname is depricated!  Please change this call to use handle or alias")
-    name.split('.')[0]
+    name.split(".")[0]
   end
 
   def name
-    @node.nil? ? 'unknown' : @node.name
+    @node.nil? ? "unknown" : @node.name
   end
 
   def handle
-    begin name.split('.')[0] rescue name end
+    begin name.split(".")[0] rescue name end
   end
 
   def update_and_validate(key, value, unique_check = true)
@@ -312,13 +312,13 @@ class NodeObject < ChefObject
   end
 
   def alias(suggest=false)
-    if display_set? 'alias'
-      display['alias']
+    if display_set? "alias"
+      display["alias"]
     else
       # FIXME: This code is duplicated in crowbar_machines' #aliases method.
       # If you change this, currently you need to update that too.
-      fallback = name.split('.')[0]
-      fallback = default_loader['alias'] || fallback if suggest and !display_set? 'alias'
+      fallback = name.split(".")[0]
+      fallback = default_loader["alias"] || fallback if suggest and !display_set? "alias"
       fallback
     end
   end
@@ -328,7 +328,7 @@ class NodeObject < ChefObject
 
     update_and_validate(
       :alias,
-      value.strip.sub(/\s/, '-'),
+      value.strip.sub(/\s/, "-"),
       true
     )
   end
@@ -336,7 +336,7 @@ class NodeObject < ChefObject
   def force_alias=(value)
     update_and_validate(
       :alias,
-      value.strip.sub(/\s/, '-'),
+      value.strip.sub(/\s/, "-"),
       false
     )
   end
@@ -349,7 +349,7 @@ class NodeObject < ChefObject
 
     if value.length>63 || value.length+ChefObject.cloud_domain.length>254
       Rails.logger.warn "Alias #{value}.#{ChefObject.cloud_domain} FQDN not saved because it exceeded the 63 character length limit or it's length (#{value.length}) will cause the total DNS max of 255 to be exeeded."
-      raise "#{I18n.t('too_long_dns_alias', :scope => 'model.node')}: #{value}.#{ChefObject.cloud_domain}"
+      raise "#{I18n.t('too_long_dns_alias', scope: 'model.node')}: #{value}.#{ChefObject.cloud_domain}"
     end
 
     if unique_check
@@ -357,7 +357,7 @@ class NodeObject < ChefObject
 
       if node and node.handle != handle
         Rails.logger.warn "Alias #{value} not saved because #{node.name} already has the same alias."
-        raise I18n.t('duplicate_alias', :scope => 'model.node') + ": " + node.name
+        raise I18n.t("duplicate_alias", scope: "model.node") + ": " + node.name
       end
     end
 
@@ -376,7 +376,7 @@ class NodeObject < ChefObject
     if !crowbar["crowbar"].nil? && !crowbar["crowbar"]["public_name"].nil? && !crowbar["crowbar"]["public_name"].empty?
       crowbar["crowbar"]["public_name"]
     elsif suggest
-      default_loader['public_name']
+      default_loader["public_name"]
     else
       nil
     end
@@ -387,7 +387,7 @@ class NodeObject < ChefObject
 
     update_and_validate(
       :public_name,
-      value.strip.sub(/\s/, '-'),
+      value.strip.sub(/\s/, "-"),
       true
     )
   end
@@ -395,7 +395,7 @@ class NodeObject < ChefObject
   def force_public_name=(value)
     update_and_validate(
       :public_name,
-      value.strip.sub(/\s/, '-'),
+      value.strip.sub(/\s/, "-"),
       false
     )
   end
@@ -404,12 +404,12 @@ class NodeObject < ChefObject
     unless value.to_s.empty?
       if !(value =~ /^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$/)
         Rails.logger.warn "Public name #{value} not saved because it did not conform to valid DNS hostnames"
-        raise "#{I18n.t('invalid_dns_public_name', :scope => 'model.node')}: #{value}"
+        raise "#{I18n.t('invalid_dns_public_name', scope: 'model.node')}: #{value}"
       end
 
       if value.length > 255
         Rails.logger.warn "Public name #{value} not saved because it exceeded the 255 character length limit"
-        raise "#{I18n.t('too_long_dns_public_name', :scope => 'model.node')}: #{value}"
+        raise "#{I18n.t('too_long_dns_public_name', scope: 'model.node')}: #{value}"
       end
 
       if unique_check
@@ -417,7 +417,7 @@ class NodeObject < ChefObject
 
         if node and !node.handle == handle
           Rails.logger.warn "Public name #{value} not saved because #{node.name} already has the same public name."
-          raise I18n.t('duplicate_public_name', :scope => 'model.node') + ": " + node.name
+          raise I18n.t("duplicate_public_name", scope: "model.node") + ": " + node.name
         end
       end
     end
@@ -432,10 +432,10 @@ class NodeObject < ChefObject
   end
 
   def description(suggest=false, use_name=false)
-    d = if display_set? 'description'
-      display['description']
+    d = if display_set? "description"
+      display["description"]
     elsif suggest
-      default_loader['description']
+      default_loader["description"]
     else
       nil
     end
@@ -467,16 +467,16 @@ class NodeObject < ChefObject
   end
 
   def ready?
-    state === 'ready'
+    state === "ready"
   end
 
   def state
-    return 'unknown' if (@node.nil? or @role.nil?)
-    if self.crowbar['state'] === 'ready' and @node['ohai_time']
-      since_last = Time.now.to_i-@node['ohai_time'].to_i
-      return 'noupdate' if since_last > 1200 # or 20 mins
+    return "unknown" if (@node.nil? or @role.nil?)
+    if self.crowbar["state"] === "ready" and @node["ohai_time"]
+      since_last = Time.now.to_i-@node["ohai_time"].to_i
+      return "noupdate" if since_last > 1200 # or 20 mins
     end
-    return self.crowbar['state'] || 'unknown'
+    return self.crowbar["state"] || "unknown"
   end
 
   def ip
@@ -550,11 +550,11 @@ class NodeObject < ChefObject
   end
 
   def memory
-    @node['memory']['total'] rescue nil
+    @node["memory"]["total"] rescue nil
   end
 
   def cpu
-    @node['cpu']['0']['model_name'].squeeze(" ").strip rescue nil
+    @node["cpu"]["0"]["model_name"].squeeze(" ").strip rescue nil
   end
 
   def uptime
@@ -590,7 +590,7 @@ class NodeObject < ChefObject
   end
 
   def virtual?
-    virtual = [ "KVM", "VMware Virtual Platform", "VMWare Virtual Platform", "VirtualBox", "Bochs" ]
+    virtual = ["KVM", "VMware Virtual Platform", "VMWare Virtual Platform", "VirtualBox", "Bochs"]
     virtual.include? hardware
   end
 
@@ -643,7 +643,7 @@ class NodeObject < ChefObject
   end
 
   def add_to_run_list(rolename, priority, states = nil)
-    states = [ "all" ] unless states
+    states = ["all"] unless states
     crowbar["run_list_map"] = {} if crowbar["run_list_map"].nil?
     val = { "states" => states, "priority" => priority }
     crowbar["run_list_map"][rolename] = val
@@ -651,12 +651,12 @@ class NodeObject < ChefObject
     Rails.logger.debug("current state is #{self.crowbar['state']}")
 
     # only rebuild the run_list if it effects the current state.
-    self.rebuild_run_list if states.include?("all") or states.include?(self.crowbar['state'])
+    self.rebuild_run_list if states.include?("all") or states.include?(self.crowbar["state"])
   end
 
   def delete_from_run_list(rolename)
     crowbar["run_list_map"] = {} if crowbar["run_list_map"].nil?
-    crowbar["run_list_map"][rolename] = { "states" => [ "all" ], "priority" => -1001 } unless crowbar["run_list_map"].nil?
+    crowbar["run_list_map"][rolename] = { "states" => ["all"], "priority" => -1001 } unless crowbar["run_list_map"].nil?
     crowbar_run_list.run_list_items.delete "role[#{rolename}]"
   end
 
@@ -664,7 +664,7 @@ class NodeObject < ChefObject
     crowbar["run_list_map"] = {} if crowbar["run_list_map"].nil?
 
     # Cull by state
-    map = crowbar["run_list_map"].select { |k,v| v["states"].include?("all") or v["states"].include?(self.crowbar['state']) }
+    map = crowbar["run_list_map"].select { |k,v| v["states"].include?("all") or v["states"].include?(self.crowbar["state"]) }
     # Ruby 1.8 vs. 1.9 compatibility. Select returns Hash in 1.9 instead of
     # an array, so map it back to [key, val] pairs.
     map = map.to_a if map.is_a?(Hash)
@@ -713,7 +713,7 @@ class NodeObject < ChefObject
   end
 
   def roles
-    @node['roles'].nil? ? nil : @node['roles'].sort
+    @node["roles"].nil? ? nil : @node["roles"].sort
   end
 
   def increment_crowbar_revision!
@@ -821,7 +821,7 @@ class NodeObject < ChefObject
     bus_order.each do |b|
       # When there is no '.' in the busid from the bus_order assume
       # that we are using the old method of matching busids
-      if b.include?('.')
+      if b.include?(".")
         path_used = path
       else
         path_used = path_old
@@ -895,7 +895,7 @@ class NodeObject < ChefObject
     count_map = {}
     sorted_ifs.each do |intf|
       speeds = map[intf]["speeds"]
-      speeds = ['1g'] unless speeds   #legacy object support
+      speeds = ["1g"] unless speeds   #legacy object support
       speeds.each do |speed|
         count = count_map[speed] || 1
         if_remap["#{speed}#{count}"] = intf
@@ -937,11 +937,11 @@ class NodeObject < ChefObject
       found = if_map["#{speeds[x]}#{if_cnt}"] unless found
     }
     case m[1]
-      when '+'
+      when "+"
         (desired..speeds.length).each(&filter)
-      when '-'
+      when "-"
         desired.downto(0,&filter)
-      when '?'
+      when "?"
         (desired..speeds.length).each(&filter)
         desired.downto(0,&filter) unless found
       else
@@ -999,16 +999,16 @@ class NodeObject < ChefObject
 
   # Switch config is actually a node set property from customer ohai.  It is really on the node and not the role
   def switch_name
-    switch_find_info('name')
+    switch_find_info("name")
   end
 
   # for stacked switches, unit is set while name is the same
   def switch_unit
-    switch_find_info('unit')
+    switch_find_info("unit")
   end
 
   def switch_port
-    switch_find_info('port')
+    switch_find_info("port")
   end
 
   # DRY version of the switch name/unit/port code
@@ -1020,7 +1020,7 @@ class NodeObject < ChefObject
         # try next interface in case this is one is missing data
         next if [switch_config_intf["switch_name"], switch_config_intf["switch_unit"], switch_config_intf["switch_port"]].include? -1
         info = switch_config_intf["switch_"+type]
-        res = info.to_s.gsub(':', '-')
+        res = info.to_s.gsub(":", "-")
         break  # if we got this far then we are done
       end
     rescue
@@ -1046,10 +1046,10 @@ class NodeObject < ChefObject
 
   # logical grouping for node to align with other nodes
   def group(suggest=false)
-    g = if display_set? 'group'
-      display['group']
+    g = if display_set? "group"
+      display["group"]
     elsif suggest
-      default_loader['group']
+      default_loader["group"]
     else
       nil
     end
@@ -1075,8 +1075,8 @@ class NodeObject < ChefObject
   end
 
   def hardware
-    return I18n.t('unknown') if @node[:dmi].nil?
-    return I18n.t('unknown') if @node[:dmi][:system].nil?
+    return I18n.t("unknown") if @node[:dmi].nil?
+    return I18n.t("unknown") if @node[:dmi][:system].nil?
     return @node[:dmi][:system][:product_name]
   end
 
@@ -1175,7 +1175,6 @@ class NodeObject < ChefObject
       [400, I18n.t("unknown_cmd", scope: "error", cmd: cmd)]
     end
   end
-
 
   def bmc_cmd(cmd)
     if bmc_address.nil? || get_bmc_user.nil? || get_bmc_password.nil? ||
@@ -1430,7 +1429,7 @@ class NodeObject < ChefObject
     # device is i.e. "sda", "vda", ...
     # linkname is i.e. "/dev/disk/by-path/pci-0000:00:04.0-virtio-pci-virtio1"
     return true if File.join("", "dev", device) == linkname
-    lookup_and_name = linkname.gsub(/^\/dev\/disk\//, '').split(File::SEPARATOR, 2)
+    lookup_and_name = linkname.gsub(/^\/dev\/disk\//, "").split(File::SEPARATOR, 2)
     linked_devs = @node[:block_device][device][:disks][lookup_and_name[0]] rescue []
     linked_devs.include?(lookup_and_name[1]) rescue false
   end
@@ -1543,20 +1542,20 @@ class NodeObject < ChefObject
   end
 
   def default_loader
-    f = File.join 'db','node_description.yml'
+    f = File.join "db","node_description.yml"
     begin
       if File.exist? f
         default = {}
         nodes = YAML::load_file f
         unless nodes.nil?
-          node = name.split('.')[0]
+          node = name.split(".")[0]
           # get values from default file
-          nodes['default'].each { |key, value| default[key] = value } unless nodes['default'].nil?
+          nodes["default"].each { |key, value| default[key] = value } unless nodes["default"].nil?
           nodes[node].each { |key, value| default[key] = value } unless nodes[node].nil?
           nodes[asset_tag].each { |key, value| default[key] = value } unless nodes[asset_tag].nil?
           # some date replacement
-          default['description'] = default['description'].gsub(/DATE/,I18n::l(Time.now)) unless default['description'].nil?
-          default['alias'] = default['alias'].gsub(/NODE/,node) unless default['alias'].nil?
+          default["description"] = default["description"].gsub(/DATE/,I18n::l(Time.now)) unless default["description"].nil?
+          default["alias"] = default["alias"].gsub(/NODE/,node) unless default["alias"].nil?
         end
         return default
       end

@@ -36,7 +36,7 @@ ruby_block "Find the fallback boot device" do
         # Not a symlink?  Not interested.
         next unless File.symlink?(File.join(basedir, path))
         # Symlink does not point at a disk?  Also not interested.
-        dev = File.readlink("#{basedir}/#{path}").split('/')[-1]
+        dev = File.readlink("#{basedir}/#{path}").split("/")[-1]
         # Prefer devices in a specific order
         next if (deviceignore and path.include?(deviceignore))
         disk_by_path = "disk/by-path/#{path}"
@@ -61,7 +61,7 @@ ruby_block "Find the fallback boot device" do
     if hardware !~ /VirtualBox/i && File.exists?(basedir)
       bootdisks = ::Dir.entries(basedir).sort.select do |m|
         f = File.join(basedir, m)
-        File.symlink?(f) && (File.readlink(f).split('/')[-1] == dev)
+        File.symlink?(f) && (File.readlink(f).split("/")[-1] == dev)
       end
       unless bootdisks.empty?
         # SLE11 SP3 generates so-called "MSFT compatibility links"
@@ -69,11 +69,11 @@ ruby_block "Find the fallback boot device" do
         # reusable than the normal links.
         # Note: this find construct should match the code in
         # barclamp/libraries/barclamp_library.rb (from deployer)
-        bootdisk = bootdisks.find{|b|b =~ /^scsi-[a-zA-Z]/} ||
-          bootdisks.find{|b|b =~ /^scsi-[^1]/} ||
-          bootdisks.find{|b|b =~ /^scsi-/} ||
-          bootdisks.find{|b|b =~ /^ata-/} ||
-          bootdisks.find{|b|b =~ /^cciss-/} ||
+        bootdisk = bootdisks.find{ |b|b =~ /^scsi-[a-zA-Z]/ } ||
+          bootdisks.find{ |b|b =~ /^scsi-[^1]/ } ||
+          bootdisks.find{ |b|b =~ /^scsi-/ } ||
+          bootdisks.find{ |b|b =~ /^ata-/ } ||
+          bootdisks.find{ |b|b =~ /^cciss-/ } ||
           bootdisks.first
         node[:crowbar_wall][:boot_device] = "disk/by-id/#{bootdisk}"
       end

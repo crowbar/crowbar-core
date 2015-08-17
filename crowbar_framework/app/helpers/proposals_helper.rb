@@ -18,7 +18,7 @@
 module ProposalsHelper
   def create_proposal_form_for(proposal, &block)
     url = create_proposal_barclamp_path(
-      :controller => proposal
+      controller: proposal
     )
 
     html = {
@@ -30,13 +30,13 @@ module ProposalsHelper
       "data-blockui" => t(".blockui_message")
     }
 
-    form_for :proposal, :url => url, :html => html, &block
+    form_for :proposal, url: url, html: html, &block
   end
 
   def update_proposal_form_for(proposal, &block)
     url = update_proposal_barclamp_path(
-      :id => proposal.name,
-      :controller => proposal.barclamp
+      id: proposal.name,
+      controller: proposal.barclamp
     )
 
     html = {
@@ -48,7 +48,7 @@ module ProposalsHelper
       "data-blockui" => t(".blockui_message")
     }
 
-    form_for :proposal, :url => url, :html => html, &block
+    form_for :proposal, url: url, html: html, &block
   end
 
   def deactivate_proposal_button(proposal)
@@ -115,26 +115,26 @@ module ProposalsHelper
 
   def proposal_raw_button(proposal, options = {})
     parameters = {
-      :id => proposal.name,
-      :controller => proposal.barclamp
+      id: proposal.name,
+      controller: proposal.barclamp
     }.merge options
 
     parameters.delete(:attr_raw) if parameters[:attr_raw] == false
     parameters.delete(:dep_raw) if parameters[:dep_raw] == false
 
-    link_to t('raw'), proposal_barclamp_path(parameters), :class => "rawview"
+    link_to t("raw"), proposal_barclamp_path(parameters), class: "rawview"
   end
 
   def proposal_custom_button(proposal, options = {})
     parameters = {
-      :id => proposal.name,
-      :controller => proposal.barclamp
+      id: proposal.name,
+      controller: proposal.barclamp
     }.merge options
 
     parameters.delete(:attr_raw) if parameters[:attr_raw] == false
     parameters.delete(:dep_raw) if parameters[:dep_raw] == false
 
-    link_to t('custom'), proposal_barclamp_path(parameters), :class => "customview"
+    link_to t("custom"), proposal_barclamp_path(parameters), class: "customview"
   end
 
   def attributes_for(proposal, &block)
@@ -156,12 +156,12 @@ module ProposalsHelper
 
     unless proposal.nil?
       link_to(
-        t("proposal.actions.link", :name => proposal.display_name),
+        t("proposal.actions.link", name: proposal.display_name),
         url_for_proposal(barclamp),
-        :class => "proposal #{barclamp}"
+        class: "proposal #{barclamp}"
       )
     else
-      t("proposal.actions.link", :name => display_name_for(barclamp))
+      t("proposal.actions.link", name: display_name_for(barclamp))
     end
   end
 
@@ -170,9 +170,9 @@ module ProposalsHelper
 
     unless proposal.nil?
       url_for(
-        :controller => proposal.barclamp,
-        :action => "proposal_show",
-        :id => proposal.name
+        controller: proposal.barclamp,
+        action: "proposal_show",
+        id: proposal.name
       )
     else
       ""
@@ -181,12 +181,12 @@ module ProposalsHelper
 
   def link_to_proposal_with_name(barclamp, proposal)
     if proposal.nil?
-      t("proposal.actions.link", :name => display_name_for(barclamp))
+      t("proposal.actions.link", name: display_name_for(barclamp))
     else
       link_to(
-        t("proposal.actions.link", :name => proposal),
+        t("proposal.actions.link", name: proposal),
         url_for_proposal_with_name(barclamp, proposal),
-        :class => "proposal #{barclamp}"
+        class: "proposal #{barclamp}"
       )
     end
   end
@@ -196,9 +196,9 @@ module ProposalsHelper
       ""
     else
       url_for(
-        :controller => barclamp,
-        :action => "proposal_show",
-        :id => proposal
+        controller: barclamp,
+        action: "proposal_show",
+        id: proposal
       )
     end
   end

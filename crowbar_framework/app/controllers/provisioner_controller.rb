@@ -16,7 +16,6 @@
 #
 
 class ProvisionerController < BarclampController
-
   protected
 
   def initialize_service

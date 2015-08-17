@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 # With deferred transaction mode, used by ActiveRecord by default, we were
 # getting SQLite3::BusyException when two processess attempted to do an update
 # to IPMI proposal at the same time. Using immediate transaction mode
@@ -25,7 +24,7 @@ module ActiveRecord
   module ConnectionAdapters
     class SQLite3Adapter < AbstractAdapter
       def begin_db_transaction
-        log('begin transaction',nil) { @connection.transaction(:immediate) }
+        log("begin transaction",nil) { @connection.transaction(:immediate) }
       end
     end
   end

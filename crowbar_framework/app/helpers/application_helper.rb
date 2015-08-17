@@ -130,14 +130,14 @@ module ApplicationHelper
       output.push content_tag(
         :span,
         branding_config[:page_title],
-        :class => "title"
+        class: "title"
       )
 
       unless branding_config[:page_slogan].empty?
         output.push content_tag(
           :span,
           branding_config[:page_slogan],
-          :class => "slogan"
+          class: "slogan"
         )
       end
     end.join("\n").html_safe
@@ -148,7 +148,7 @@ module ApplicationHelper
     [].tap do |output|
       output.push tag(
         :meta,
-        :charset => "utf-8"
+        charset: "utf-8"
       )
 
       output.push tag(
@@ -159,21 +159,21 @@ module ApplicationHelper
 
       output.push tag(
         :meta,
-        :name => "viewport",
-        :content => "width=device-width, initial-scale=1.0"
+        name: "viewport",
+        content: "width=device-width, initial-scale=1.0"
       )
 
       if protect_against_forgery?
         output.push tag(
           :meta,
-          :name => "csrf-param",
-          :content => Rack::Utils.escape_html(request_forgery_protection_token)
+          name: "csrf-param",
+          content: Rack::Utils.escape_html(request_forgery_protection_token)
         )
 
         output.push tag(
           :meta,
-          :name => "csrf-token",
-          :content => Rack::Utils.escape_html(form_authenticity_token)
+          name: "csrf-token",
+          content: Rack::Utils.escape_html(form_authenticity_token)
         )
       end
     end.join("\n").html_safe
@@ -217,7 +217,7 @@ module ApplicationHelper
       content_tag(
         :span,
         "&mdash;".html_safe,
-        :class => "empty"
+        class: "empty"
       )
     else
       value.html_safe
@@ -235,7 +235,7 @@ module ApplicationHelper
       content_tag(
         :span,
         fallback.html_safe,
-        :class => "empty"
+        class: "empty"
       )
     else
       value.html_safe

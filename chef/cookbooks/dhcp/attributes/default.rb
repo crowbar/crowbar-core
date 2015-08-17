@@ -1,5 +1,5 @@
 
-default[:dhcp][:interfaces] = [ "eth0" ]
+default[:dhcp][:interfaces] = ["eth0"]
 default[:dhcp][:options] = [
     "ddns-update-style none",
     "allow booting",

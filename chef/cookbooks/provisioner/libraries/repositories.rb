@@ -194,7 +194,7 @@ class Provisioner
           # JSON due to the dynamic nature of the default value.
           repo_names.each do |name|
             repos[name] = repos_from_attrs.fetch(name, Mash.new)
-            repos[name][:url] ||= default_repos_url + '/' + name
+            repos[name][:url] ||= default_repos_url + "/" + name
           end
 
           # optional repos
@@ -206,7 +206,7 @@ class Provisioner
               if provisioner_server_node[:provisioner][:suse][optionalrepo[1]]
                 suse_optional_repos(version, optionalrepo[0]).each do |name|
                   repos[name] = repos_from_attrs.fetch(name, Mash.new)
-                  repos[name][:url] ||= default_repos_url + '/' + name
+                  repos[name][:url] ||= default_repos_url + "/" + name
                 end
               end
             end

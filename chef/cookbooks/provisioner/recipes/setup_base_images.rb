@@ -23,7 +23,7 @@ admin_broadcast = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "a
 domain_name = node[:dns].nil? ? node[:domain] : (node[:dns][:domain] || node[:domain])
 web_port = node[:provisioner][:web_port]
 provisioner_web="http://#{admin_ip}:#{web_port}"
-append_line = ''
+append_line = ""
 
 tftproot = node[:provisioner][:root]
 
@@ -37,7 +37,6 @@ else
   crowbar_key = ""
 end
 
-
 # FIXME: What is the purpose of this, really? If pxecfg_default does not exist
 # the root= parameters will not get appended to the kernel commandline. (Luckily
 # we don't need those with the SLES base sledgehammer)
@@ -45,9 +44,9 @@ end
 # Probably this pxecfg_default check can go a way and we can just unconditionally
 # append the root= parameters?
 if File.exists? pxecfg_default
-  append_line = IO.readlines(pxecfg_default).detect{|l| /APPEND/i =~ l}
+  append_line = IO.readlines(pxecfg_default).detect{ |l| /APPEND/i =~ l }
   if append_line
-    append_line = append_line.strip.gsub(/(^APPEND |initrd=[^ ]+|console=[^ ]+|rhgb|quiet|crowbar\.[^ ]+)/i,'').strip
+    append_line = append_line.strip.gsub(/(^APPEND |initrd=[^ ]+|console=[^ ]+|rhgb|quiet|crowbar\.[^ ]+)/i,"").strip
   elsif node[:platform] != "suse"
     append_line = "root=/sledgehammer.iso rootfstype=iso9660 rootflags=loop"
   end
@@ -60,9 +59,8 @@ end
 if crowbar_key != ""
   append_line += " crowbar.install.key=#{crowbar_key}"
 end
-append_line = append_line.split.join(' ')
+append_line = append_line.split.join(" ")
 node.set[:provisioner][:sledgehammer_append_line] = append_line
-
 
 directory "#{tftproot}/discovery" do
   mode 0755
@@ -94,10 +92,10 @@ template pxecfg_default do
   owner "root"
   group "root"
   source "default.erb"
-  variables(:append_line => "#{append_line} crowbar.state=discovery",
-            :install_name => "discovery",
-            :initrd => "initrd0.img",
-            :kernel => "vmlinuz0")
+  variables(append_line: "#{append_line} crowbar.state=discovery",
+            install_name: "discovery",
+            initrd: "initrd0.img",
+            kernel: "vmlinuz0")
 end
 
 # UEFI config
@@ -135,11 +133,11 @@ else
       owner "root"
       group "root"
       source "grub.conf.erb"
-      variables(:append_line => "#{append_line} crowbar.state=discovery",
-                :install_name => "Crowbar Discovery Image",
-                :admin_ip => admin_ip,
-                :initrd => "initrd0.img",
-                :kernel => "vmlinuz0")
+      variables(append_line: "#{append_line} crowbar.state=discovery",
+                install_name: "Crowbar Discovery Image",
+                admin_ip: admin_ip,
+                initrd: "initrd0.img",
+                kernel: "vmlinuz0")
     end
 
     bash "Build UEFI netboot loader with grub" do
@@ -157,13 +155,12 @@ if use_elilo
     owner "root"
     group "root"
     source "default.elilo.erb"
-    variables(:append_line => "#{append_line} crowbar.state=discovery",
-              :install_name => "discovery",
-              :initrd => "initrd0.img",
-              :kernel => "vmlinuz0")
+    variables(append_line: "#{append_line} crowbar.state=discovery",
+              install_name: "discovery",
+              initrd: "initrd0.img",
+              kernel: "vmlinuz0")
   end
 end
-
 
 if node[:platform] == "suse"
 
@@ -172,17 +169,16 @@ if node[:platform] == "suse"
   template "#{node[:apache][:dir]}/vhosts.d/provisioner.conf" do
     source "base-apache.conf.erb"
     mode 0644
-    variables(:docroot => tftproot,
-              :port => web_port,
-              :logfile => "/var/log/apache2/provisioner-access_log",
-              :errorlog => "/var/log/apache2/provisioner-error_log")
-    notifies :reload, resources(:service => "apache2")
+    variables(docroot: tftproot,
+              port: web_port,
+              logfile: "/var/log/apache2/provisioner-access_log",
+              errorlog: "/var/log/apache2/provisioner-error_log")
+    notifies :reload, resources(service: "apache2")
   end
 
 else
 
   include_recipe "bluepill"
-
 
   case node.platform
   when "ubuntu","debian"
@@ -207,10 +203,10 @@ else
 
   template "/etc/nginx/provisioner.conf" do
     source "base-nginx.conf.erb"
-    variables(:docroot => tftproot,
-              :port => web_port,
-              :logfile => "/var/log/provisioner-webserver.log",
-              :pidfile => "/var/run/provisioner-webserver.pid")
+    variables(docroot: tftproot,
+              port: web_port,
+              logfile: "/var/log/provisioner-webserver.log",
+              pidfile: "/var/run/provisioner-webserver.pid")
   end
 
 file "/var/run/provisioner-webserver.pid" do
@@ -279,19 +275,19 @@ if node[:platform] == "suse"
     running node[:provisioner][:enable_pxe] ? true : false
     enabled node[:provisioner][:enable_pxe] ? true : false
     action node[:provisioner][:enable_pxe] ? ["enable", "start"] : ["disable", "stop"]
-    supports :reload => true
-    subscribes :reload, resources(:service => "tftp"), :immediately
+    supports reload: true
+    subscribes :reload, resources(service: "tftp"), :immediately
   end
 
   template "/etc/xinetd.d/tftp" do
     source "tftp.erb"
-    variables( :tftproot => tftproot )
-    notifies :reload, resources(:service => "xinetd")
+    variables( tftproot: tftproot )
+    notifies :reload, resources(service: "xinetd")
   end
 else
   template "/etc/bluepill/tftpd.pill" do
     source "tftpd.pill.erb"
-    variables( :tftproot => tftproot )
+    variables( tftproot: tftproot )
   end
 
   bluepill_service "tftpd" do
@@ -316,7 +312,7 @@ unless default_os = node[:provisioner][:default_os]
   node.save
 end
 
-unless node[:provisioner][:supported_oses].keys.select{|os| /^(hyperv|windows)/ =~ os}.empty?
+unless node[:provisioner][:supported_oses].keys.select{ |os| /^(hyperv|windows)/ =~ os }.empty?
   common_dir="#{tftproot}/windows-common"
   extra_dir="#{common_dir}/extra"
 
@@ -352,8 +348,8 @@ unless node[:provisioner][:supported_oses].keys.select{|os| /^(hyperv|windows)/ 
     group "root"
     mode "0644"
     source "set_state.ps1.erb"
-    variables(:crowbar_key => crowbar_key,
-              :admin_ip => admin_ip)
+    variables(crowbar_key: crowbar_key,
+              admin_ip: admin_ip)
   end
 
   # Also copy the required files to install chef-client and communicate with Crowbar
@@ -402,7 +398,6 @@ node.set[:provisioner][:repositories] = Mash.new
 node.set[:provisioner][:available_oses] = Mash.new
 
 node[:provisioner][:supported_oses].each do |os,params|
-
   web_path = "#{provisioner_web}/#{os}"
   admin_web="#{web_path}/install"
   crowbar_repo_web="#{web_path}/crowbar-extra"
@@ -468,10 +463,10 @@ node[:provisioner][:supported_oses].each do |os,params|
       owner "root"
       group "root"
       source "crowbar_join.suse.sh.erb"
-      variables(:admin_ip => admin_ip,
-                :web_port => web_port,
-                :ntp_servers_ips => ntp_servers_ips,
-                :target_platform_version => target_platform_version)
+      variables(admin_ip: admin_ip,
+                web_port: web_port,
+                ntp_servers_ips: ntp_servers_ips,
+                target_platform_version: target_platform_version)
     end
 
     Provisioner::Repositories.inspect_repos(node)
@@ -484,16 +479,16 @@ node[:provisioner][:supported_oses].each do |os,params|
       owner "root"
       group "root"
       source "crowbar_register.erb"
-      variables(:admin_ip => admin_ip,
-                :admin_broadcast => admin_broadcast,
-                :web_port => web_port,
-                :ntp_servers_ips => ntp_servers_ips,
-                :os => os,
-                :crowbar_key => crowbar_key,
-                :domain => domain_name,
-                :repos => repos,
-                :packages => packages,
-                :target_platform_version => target_platform_version)
+      variables(admin_ip: admin_ip,
+                admin_broadcast: admin_broadcast,
+                web_port: web_port,
+                ntp_servers_ips: ntp_servers_ips,
+                os: os,
+                crowbar_key: crowbar_key,
+                domain: domain_name,
+                repos: repos,
+                packages: packages,
+                target_platform_version: target_platform_version)
     end
 
     missing_files = ! File.exists?("#{os_dir}/install/boot/x86_64/common")
@@ -512,29 +507,28 @@ node[:provisioner][:supported_oses].each do |os,params|
       owner "root"
       group "root"
       source "crowbar_join.redhat.sh.erb"
-      variables(:admin_web => admin_web,
-                :os_codename => os_codename,
-                :crowbar_repo_web => crowbar_repo_web,
-                :admin_ip => admin_ip,
-                :provisioner_web => provisioner_web,
-                :web_path => web_path)
+      variables(admin_web: admin_web,
+                os_codename: os_codename,
+                crowbar_repo_web: crowbar_repo_web,
+                admin_ip: admin_ip,
+                provisioner_web: provisioner_web,
+                web_path: web_path)
     end
 
   when /^ubuntu/ =~ os
     node.set[:provisioner][:repositories][os]["base"] = { "http://#{admin_ip}:#{web_port}/#{os}/install" => true }
     # Default files needed for Ubuntu.
 
-
     template "#{os_dir}/net-post-install.sh" do
       mode 0644
       owner "root"
       group "root"
-      variables(:admin_web => admin_web,
-                :os_codename => os_codename,
-                :repos => node[:provisioner][:repositories][os],
-                :admin_ip => admin_ip,
-                :provisioner_web => provisioner_web,
-                :web_path => web_path)
+      variables(admin_web: admin_web,
+                os_codename: os_codename,
+                repos: node[:provisioner][:repositories][os],
+                admin_ip: admin_ip,
+                provisioner_web: provisioner_web,
+                web_path: web_path)
     end
 
     template "#{os_dir}/crowbar_join.sh" do
@@ -542,12 +536,12 @@ node[:provisioner][:supported_oses].each do |os,params|
       owner "root"
       group "root"
       source "crowbar_join.ubuntu.sh.erb"
-      variables(:admin_web => admin_web,
-                :os_codename => os_codename,
-                :crowbar_repo_web => crowbar_repo_web,
-                :admin_ip => admin_ip,
-                :provisioner_web => provisioner_web,
-                :web_path => web_path)
+      variables(admin_web: admin_web,
+                os_codename: os_codename,
+                crowbar_repo_web: crowbar_repo_web,
+                admin_ip: admin_ip,
+                provisioner_web: provisioner_web,
+                web_path: web_path)
     end
 
   when /^(hyperv|windows)/ =~ os
@@ -556,8 +550,8 @@ node[:provisioner][:supported_oses].each do |os,params|
       owner "root"
       group "root"
       source "build_winpe_os.ps1.erb"
-      variables(:os => os,
-                :admin_ip => admin_ip)
+      variables(os: os,
+                admin_ip: admin_ip)
     end
 
     directory "#{os_dir}" do

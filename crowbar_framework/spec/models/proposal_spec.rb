@@ -1,11 +1,11 @@
-require 'spec_helper'
+require "spec_helper"
 
 describe Proposal do
   before do
     Proposal.any_instance.stubs(:update_corresponding_proposal_object).returns(true)
   end
 
-  let(:proposal) { Proposal.new(:barclamp => "crowbar", :name => "default")}
+  let(:proposal) { Proposal.new(barclamp: "crowbar", name: "default") }
 
   it "updates the proposal id before save" do
     proposal.save
@@ -18,7 +18,7 @@ describe Proposal do
     }.to raise_error(ArgumentError)
 
     expect {
-      Proposal.new(:name => "default")
+      Proposal.new(name: "default")
     }.to raise_error(ArgumentError)
   end
 
@@ -29,7 +29,7 @@ describe Proposal do
 
     it "raises an error if the barclamp template does not exist" do
       expect {
-        Proposal.new(:barclamp => "nonexistent_barclamp")
+        Proposal.new(barclamp: "nonexistent_barclamp")
       }.to raise_error(Proposal::TemplateMissing)
     end
   end
@@ -71,7 +71,7 @@ describe Proposal do
     end
 
     it "a template cannot be saved" do
-      prop = Proposal.new(:barclamp => "crowbar")
+      prop = Proposal.new(barclamp: "crowbar")
       expect(prop.name).to eq("template")
       expect(prop.save).to eq(false)
     end
@@ -79,8 +79,8 @@ describe Proposal do
     it "name and barclamp combination is unique" do
       proposal = nil
       begin
-        proposal = Proposal.create!(:barclamp => "crowbar", :name => "default", :properties => { :foo => :bar })
-        another  = Proposal.new(:barclamp => "crowbar", :name => "default", :properties => {:foo => :bar})
+        proposal = Proposal.create!(barclamp: "crowbar", name: "default", properties: { foo: :bar })
+        another  = Proposal.new(barclamp: "crowbar", name: "default", properties: {foo: :bar})
 
         expect(another).to_not be_valid
         expect(another.errors[:name]).to_not be_empty

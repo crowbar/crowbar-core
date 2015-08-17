@@ -15,7 +15,6 @@
 #
 
 class UpdaterController < BarclampController
-
   protected
 
   def initialize_service

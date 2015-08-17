@@ -18,7 +18,7 @@
 # limitations under the License.
 #
 
-define :ruby_packages, :action => :install do
+define :ruby_packages, action: :install do
   rv = params[:name].to_s
   raise "A Ruby version such as 1.8, 1.9 or 1.9.1 must be given" if rv.empty?
 
@@ -36,7 +36,7 @@ define :ruby_packages, :action => :install do
 
   when "gentoo"
     rv = rv.slice(0..2)
-    target = "ruby" + rv.delete('.')
+    target = "ruby" + rv.delete(".")
 
     [
       # ruby-ssl is before ruby to ensure that ruby is initially

@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-require 'spec_helper'
+require "spec_helper"
 
 describe SupportController do
   render_views
@@ -28,10 +28,10 @@ describe SupportController do
 
     it "is successful notifying about new export" do
       @controller.stubs(:default_export_hash).returns(Utils::ExtendedHash.new({
-        :waiting => false,
-        :counter => 1,
-        :current => "foo.tar.gz",
-        :files => { :chef => ["foo.tar.gz"], :logs => [], :other => [], :support_configs => [], :bc_import => [] }
+        waiting: false,
+        counter: 1,
+        current: "foo.tar.gz",
+        files: { chef: ["foo.tar.gz"], logs: [], other: [], support_configs: [], bc_import: [] }
       }))
 
       get :index
@@ -59,7 +59,7 @@ describe SupportController do
 
         get :export_chef
         flash[:alert].should be_nil
-        response.should redirect_to(utils_url(:waiting => true, :file => filename))
+        response.should redirect_to(utils_url(waiting: true, file: filename))
 
         Dir.glob(Rails.root.join("db", "*.json")).count.should_not == 0
       ensure

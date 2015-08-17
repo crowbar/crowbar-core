@@ -38,23 +38,23 @@ class XMLAPIResponseFailure < StandardError
   end
 
   def message
-    "%d %s" % [ @response.code, @response.message ]
+    "%d %s" % [@response.code, @response.message]
   end
 
   alias_method :to_s, :message
 end
 
 class UcsController < ApplicationController
-  CREDENTIALS_XML_PATH = '/etc/crowbar/cisco-ucs/credentials.xml'
-  COMPUTE_SERVICE_PROFILE = 'suse-cloud-compute'
-  STORAGE_SERVICE_PROFILE = 'suse-cloud-storage'
+  CREDENTIALS_XML_PATH = "/etc/crowbar/cisco-ucs/credentials.xml"
+  COMPUTE_SERVICE_PROFILE = "suse-cloud-compute"
+  STORAGE_SERVICE_PROFILE = "suse-cloud-storage"
 
-  before_filter :authenticate, :only => [ :edit, :update ]
+  before_filter :authenticate, only: [:edit, :update]
   #before_filter :authenticate, :except => [ :settings, :login ]
 
   def handle_exception(exception, log_message, ui_message)
     logger.warn "Cisco UCS: #{log_message}: #{exception}"
-    redirect_to :back, :notice => (ui_message % truncate(exception.to_s))
+    redirect_to :back, notice: (ui_message % truncate(exception.to_s))
   end
 
   rescue_from SocketError, XMLAPIRequestError do |e|
@@ -99,12 +99,12 @@ class UcsController < ApplicationController
 
     # Login succeeded
     set_ucs_session_cookie(cookie)
-    redirect_to :action => :edit
+    redirect_to action: :edit
   end
 
   def logout
     unless logged_in?
-      redirect_to ucs_settings_path, :notice => 'Already logged out from UCS.'
+      redirect_to ucs_settings_path, notice: "Already logged out from UCS."
       return
     end
 
@@ -116,7 +116,7 @@ class UcsController < ApplicationController
       logger.warn "Cisco UCS: logging out without credentials"
     end
     set_ucs_session_cookie(nil)
-    redirect_to ucs_settings_path, :notice => 'Logged out from UCS.'
+    redirect_to ucs_settings_path, notice: "Logged out from UCS."
   end
 
   def edit
@@ -156,11 +156,11 @@ class UcsController < ApplicationController
     # compute:Physical is a superclass containing compute:RackUnit and compute:Blade,
     # so we can get instances of both in a single API call:
     @computePhysical = configResolveClass("computePhysical").elements
-    @rackUnits    = @computePhysical.to_a('configResolveClass/outConfigs/computeRackUnit')
-    @blades       = @computePhysical.to_a('configResolveClass/outConfigs/computeBlade')
+    @rackUnits    = @computePhysical.to_a("configResolveClass/outConfigs/computeRackUnit")
+    @blades       = @computePhysical.to_a("configResolveClass/outConfigs/computeBlade")
 
     # equipment:Chassis is in a different part of the class hierarchy
-    @chassisUnits = get_class_instances('equipmentChassis')
+    @chassisUnits = get_class_instances("equipmentChassis")
 
     @storage_service_profile = STORAGE_SERVICE_PROFILE
     @compute_service_profile = COMPUTE_SERVICE_PROFILE
@@ -168,7 +168,7 @@ class UcsController < ApplicationController
 
   # This will perform the update action and should redirect to edit once complete.
   def update
-    @updateDoc = ''
+    @updateDoc = ""
 
     case params[:updateAction]
     when "compute"
@@ -183,7 +183,7 @@ class UcsController < ApplicationController
       action = "cycle-immediate"
     else
       logger.warn "Cisco UCS: update request had invalid action '#{params[:updateAction]}'"
-      redirect_to ucs_edit_path, :notice => 'You must choose an action.'
+      redirect_to ucs_edit_path, notice: "You must choose an action."
       return
     end
 
@@ -194,7 +194,7 @@ class UcsController < ApplicationController
     end
 
     if match_count == 0
-      redirect_to ucs_edit_path, :notice => 'You must select at least one node.'
+      redirect_to ucs_edit_path, notice: "You must select at least one node."
       return nil
     end
 
@@ -204,7 +204,7 @@ class UcsController < ApplicationController
       "</inConfigs></configConfMos>"
 
     serverResponseDoc = sendXML(@updateDoc)
-    redirect_to ucs_edit_path, :notice => 'Your update has been applied.'
+    redirect_to ucs_edit_path, notice: "Your update has been applied."
   end
 
   private
@@ -218,7 +218,7 @@ class UcsController < ApplicationController
   end
 
   def pp_element(element)
-    out = ''
+    out = ""
     @@xml_formatter.write(element, out)
     out
   end
@@ -227,7 +227,7 @@ class UcsController < ApplicationController
     logger.debug "Cisco UCS: will instantiate from #{action} template"
 
     match_count = 0
-    get_class_instances('computePhysical').each do |element|
+    get_class_instances("computePhysical").each do |element|
       if params[element.attributes["dn"]] == "1"
         match_count += 1
         @instantiateNTemplate = sendXML(<<-EOXML)
@@ -240,8 +240,8 @@ class UcsController < ApplicationController
               inHierarchical='false'>
           </lsInstantiateNTemplate>
         EOXML
-        @instantiateNTemplate.elements.each('lsInstantiateNTemplate/outConfigs/lsServer') do |currentPolicy|
-          @currentPolicyName = currentPolicy.attributes['dn']
+        @instantiateNTemplate.elements.each("lsInstantiateNTemplate/outConfigs/lsServer") do |currentPolicy|
+          @currentPolicyName = currentPolicy.attributes["dn"]
           @currentPolicyXML = currentPolicy
         end
         @updateDoc = @updateDoc + <<-EOXML
@@ -261,7 +261,7 @@ class UcsController < ApplicationController
 
     match_count = 0
 
-    get_class_instances('computePhysical').each do |element|
+    get_class_instances("computePhysical").each do |element|
       if params[element.attributes["dn"]] == "1"
         match_count += 1
         @updateDoc = @updateDoc + <<-EOXML
@@ -297,7 +297,7 @@ class UcsController < ApplicationController
   # ugly.
   def truncate(message)
     return message if message.size < 80
-    message.slice(0, 80) + '...'
+    message.slice(0, 80) + "..."
   end
 
   def sendXML(xmlString = "")
@@ -322,19 +322,19 @@ class UcsController < ApplicationController
   def aaaLogin(ucs_url, username, password)
     if ucs_url.blank?
       logger.debug "Cisco UCS: missing login URL"
-      redirect_to ucs_settings_path, :alert => "You must provide a login URL"
+      redirect_to ucs_settings_path, alert: "You must provide a login URL"
       return nil
-    elsif ! ucs_url.end_with? '/nuova'
+    elsif ! ucs_url.end_with? "/nuova"
       logger.debug "Cisco UCS: login URL didn't have the correct '/nuova' ending"
-      redirect_to ucs_settings_path, :alert => "Login URL should end in '/nuova'"
+      redirect_to ucs_settings_path, alert: "Login URL should end in '/nuova'"
       return nil
     elsif username.blank?
       logger.debug "Cisco UCS: missing login name"
-      redirect_to ucs_settings_path, :alert => "You must provide a login name"
+      redirect_to ucs_settings_path, alert: "You must provide a login name"
       return nil
     elsif password.blank?
       logger.debug "Cisco UCS: missing login password"
-      redirect_to ucs_settings_path, :alert => "You must provide a login password"
+      redirect_to ucs_settings_path, alert: "You must provide a login password"
       return nil
     end
 
@@ -347,12 +347,12 @@ class UcsController < ApplicationController
     end
     unless valid_uri
       logger.debug "Cisco UCS: login URL is not a HTTP/HTTPS URL"
-      redirect_to ucs_settings_path, :alert => "Login URL should be a HTTP/HTTPS URL"
+      redirect_to ucs_settings_path, alert: "Login URL should be a HTTP/HTTPS URL"
       return nil
     end
     unless uri.host
       logger.debug "Cisco UCS: login URL does not have a valid hostname"
-      redirect_to ucs_settings_path, :alert => "Login URL should have a valid hostname"
+      redirect_to ucs_settings_path, alert: "Login URL should have a valid hostname"
       return nil
     end
 
@@ -363,14 +363,14 @@ class UcsController < ApplicationController
     rescue REXML::ParseException => e
       logger.warn "Cisco UCS: REXML parse failure during aaaLogin: #{e}"
       message = "Failed to parse response from UCS API server; did your API URL end in '/nuova'?"
-      redirect_to ucs_settings_path, :notice => message
+      redirect_to ucs_settings_path, notice: message
       return nil
     end
 
     ucs_cookie = cookie_from_response(loginDoc)
     unless ucs_cookie
       # FIXME: improve cookie validation
-      redirect_to ucs_settings_path, :notice => "Login failed to obtain session cookie from Cisco UCS"
+      redirect_to ucs_settings_path, notice: "Login failed to obtain session cookie from Cisco UCS"
       return nil
     end
 
@@ -378,7 +378,7 @@ class UcsController < ApplicationController
   end
 
   def cookie_from_response(response)
-    response ? response.root.attributes['outCookie'] : nil
+    response ? response.root.attributes["outCookie"] : nil
   end
 
   def configResolveClass(classId)
@@ -393,12 +393,12 @@ class UcsController < ApplicationController
 
   def authenticate
     unless have_credentials?
-      redirect_to ucs_settings_path, :notice => t('barclamp.ucs.login.provide_creds')
+      redirect_to ucs_settings_path, notice: t("barclamp.ucs.login.provide_creds")
       return
     end
 
     unless logged_in?
-      redirect_to ucs_settings_path, :notice => t('barclamp.ucs.login.please_login')
+      redirect_to ucs_settings_path, notice: t("barclamp.ucs.login.please_login")
       return
     end
 
@@ -412,7 +412,7 @@ class UcsController < ApplicationController
   def read_credentials
     File.open(CREDENTIALS_XML_PATH) do |file|
       cloudDoc = REXML::Document.new(file)
-      cloudDoc.elements.each('ucs/cloud') do |element|
+      cloudDoc.elements.each("ucs/cloud") do |element|
         @ucs_url  = element.attributes["url"]
         @username = element.attributes["username"]
         @password = element.attributes["password"]

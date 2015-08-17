@@ -16,14 +16,14 @@
 # limitations under the License.
 #
 
-require 'rubygems'
-require 'kwalify'
-require 'uri'
+require "rubygems"
+require "kwalify"
+require "uri"
 
-VALIDATOR_PRIMARY = '/opt/dell/crowbar_framework/app/models/crowbar_validator.rb'
-VALIDATOR_BACKUP = '/opt/dell/barclamps/crowbar/crowbar_framework/app/models/crowbar_validator.rb'
+VALIDATOR_PRIMARY = "/opt/dell/crowbar_framework/app/models/crowbar_validator.rb"
+VALIDATOR_BACKUP = "/opt/dell/barclamps/crowbar/crowbar_framework/app/models/crowbar_validator.rb"
 
-require '/opt/dell/crowbar_framework/app/models/crowbar_validator.rb' #(File.exist? VALIDATOR_PRIMARY ? VALIDATOR_PRIMARY : VALIDATOR_BACKUP)
+require "/opt/dell/crowbar_framework/app/models/crowbar_validator.rb" #(File.exist? VALIDATOR_PRIMARY ? VALIDATOR_PRIMARY : VALIDATOR_BACKUP)
 
 def validate(schema_filename, config_filename)
   ## validate schema definition
@@ -46,7 +46,7 @@ def validate(schema_filename, config_filename)
 
   ## show errors
   for e in parser.errors
-    rc = -2 if rc == 0 
+    rc = -2 if rc == 0
     puts "#{config_filename}: #{e.linenum}:#{e.column} [#{e.path}] #{e.message}"
   end if parser.errors && !parser.errors.empty?
 

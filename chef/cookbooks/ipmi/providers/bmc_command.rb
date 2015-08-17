@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 
-## utility to check if a lan parameter needs to be set 
+## utility to check if a lan parameter needs to be set
 ## (if it's current value is different than desired one).
 def check_bmc_value(test, desired)
   current = %x{#{test}}
@@ -49,7 +49,7 @@ action :run do
     end
   else
     node["crowbar_wall"]["status"]["ipmi"]["messages"] << "Unsupported product found #{node[:dmi][:system][:product_name]} - skipping IPMI:#{name}" unless node.nil?
-  end  
+  end
   node.save
 end
 

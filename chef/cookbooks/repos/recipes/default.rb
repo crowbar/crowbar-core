@@ -39,13 +39,13 @@ if provisioner and !CrowbarHelper.in_sledgehammer?(node)
       case repo
       when "base"
         template "/etc/apt/sources.list.d/00-base.list" do
-          variables(:urls => urls)
+          variables(urls: urls)
           notifies :create, "file[/tmp/.repo_update]", :immediately
         end
       else
         template "/etc/apt/sources.list.d/10-barclamp-#{repo}.list" do
           source "10-crowbar-extra.list.erb"
-          variables(:urls => urls)
+          variables(urls: urls)
           notifies :create, "file[/tmp/.repo_update]", :immediately
         end
       end
@@ -57,7 +57,7 @@ if provisioner and !CrowbarHelper.in_sledgehammer?(node)
     end
     package "rubygems"
   when "redhat","centos"
-    maj,min = node[:platform_version].split('.',2)
+    maj,min = node[:platform_version].split(".",2)
     repositories = Range.new(0,min.to_i).to_a.reverse.map{|v|
       provisioner["provisioner"]["repositories"]["#{node[:platform]}-#{maj}.#{v}"] rescue nil
     }.compact.first
@@ -68,7 +68,7 @@ if provisioner and !CrowbarHelper.in_sledgehammer?(node)
     repositories.each do |repo,urls|
       template "/etc/yum.repos.d/crowbar-#{repo}.repo" do
         source "crowbar-xtras.repo.erb"
-        variables(:repo => repo, :urls => urls)
+        variables(repo: repo, urls: urls)
         notifies :create, "file[/tmp/.repo_update]", :immediately
       end
     end
@@ -81,7 +81,7 @@ if provisioner and !CrowbarHelper.in_sledgehammer?(node)
 
   if node["platform"] != "suse" and node["platform"] != "windows"
     template "/etc/gemrc" do
-      variables(:admin_ip => address, :web_port => web_port)
+      variables(admin_ip: address, web_port: web_port)
       mode "0644"
     end
   end

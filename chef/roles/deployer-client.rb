@@ -6,7 +6,7 @@ run_list(
          "recipe[repos]",
          "recipe[crowbar-hacks]",
          "recipe[ohai]",
-         "recipe[kernel-panic]" 
+         "recipe[kernel-panic]"
 )
 default_attributes()
 override_attributes()

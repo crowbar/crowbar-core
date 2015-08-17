@@ -16,12 +16,12 @@
 # limitations under the License.
 #
 
-require 'rubygems'
-require 'net/http'
-require 'net/http/digest_auth'
-require 'uri'
-require 'json'
-require 'getoptlong'
+require "rubygems"
+require "net/http"
+require "net/http/digest_auth"
+require "uri"
+require "json"
+require "getoptlong"
 
 @debug = false
 @hostname = ENV["CROWBAR_IP"]
@@ -35,27 +35,26 @@ require 'getoptlong'
 @allow_zero_args = false
 @timeout = 500
 @barclamp="machines"
-@crowbar_key_file = '/etc/crowbar.install.key'
+@crowbar_key_file = "/etc/crowbar.install.key"
 @noready = false
 
 #
 # Parsing options can be added by adding to this list before calling opt_parse
-# 
+#
 @options = [
-    [ [ '--help', '-h', GetoptLong::NO_ARGUMENT ], "--help or -h - help" ],
-    [ [ '--username', '-U', GetoptLong::REQUIRED_ARGUMENT ], "--username <username> or -U <username>  - specifies the username to use" ],
-    [ [ '--password', '-P', GetoptLong::REQUIRED_ARGUMENT ], "--password <password> or -P <password>  - specifies the password to use" ],
-    [ [ '--hostname', '-n', GetoptLong::REQUIRED_ARGUMENT ], "--hostname <name or ip> or -n <name or ip>  - specifies the destination server" ],
-    [ [ '--port', '-p', GetoptLong::REQUIRED_ARGUMENT ], "--port <port> or -p <port> - specifies the destination server port" ],
-    [ [ '--debug', '-d', GetoptLong::NO_ARGUMENT ], "--debug or -d - turns on debugging information" ],
-    [ [ '--timeout', GetoptLong::REQUIRED_ARGUMENT ], "--timeout <seconds> - timeout in seconds for read http reads" ],
-    [ [ '--no-ready', GetoptLong::NO_ARGUMENT ], "--no-ready - ignore ready nodes" ]
+    [["--help", "-h", GetoptLong::NO_ARGUMENT], "--help or -h - help"],
+    [["--username", "-U", GetoptLong::REQUIRED_ARGUMENT], "--username <username> or -U <username>  - specifies the username to use"],
+    [["--password", "-P", GetoptLong::REQUIRED_ARGUMENT], "--password <password> or -P <password>  - specifies the password to use"],
+    [["--hostname", "-n", GetoptLong::REQUIRED_ARGUMENT], "--hostname <name or ip> or -n <name or ip>  - specifies the destination server"],
+    [["--port", "-p", GetoptLong::REQUIRED_ARGUMENT], "--port <port> or -p <port> - specifies the destination server port"],
+    [["--debug", "-d", GetoptLong::NO_ARGUMENT], "--debug or -d - turns on debugging information"],
+    [["--timeout", GetoptLong::REQUIRED_ARGUMENT], "--timeout <seconds> - timeout in seconds for read http reads"],
+    [["--no-ready", GetoptLong::NO_ARGUMENT], "--no-ready - ignore ready nodes"]
 ]
 
 @commands = {
-  "status" => [ "status", "status - show status of nodes" ],
+  "status" => ["status", "status - show status of nodes"]
 }
-
 
 def print_commands(cmds, spacer = "  ")
   cmds.each do |key, command|
@@ -123,7 +122,7 @@ def authenticate(req, uri, data = nil)
   end
 
   res
-end  
+end
 
 def get_json(path)
   uri = URI.parse("http://#{@hostname}:#{@port}/nodes#{path}")
@@ -134,7 +133,7 @@ def get_json(path)
   puts "DEBUG: (g) return code: #{res.code}" if @debug
   puts "DEBUG: (g) return body: #{res.body}" if @debug
 
-  return [res.body, res.code.to_i ] if res.code.to_i != 200
+  return [res.body, res.code.to_i] if res.code.to_i != 200
 
   struct = JSON.parse(res.body)
 
@@ -152,11 +151,11 @@ def status()
       status = struct[0]["nodes"][n]["status"]
       string += "#{n}   #{status}\n" unless @noready and status == "Ready"
     end
-    [ "#{string}", 0 ]
+    ["#{string}", 0]
   elsif struct[1] == 404
-    [ "No current configuration for status", 1 ]
+    ["No current configuration for status", 1]
   else
-    [ "Failed to talk to service show: #{struct[1]}: #{struct[0]}", 1 ]
+    ["Failed to talk to service show: #{struct[1]}: #{struct[0]}", 1]
   end
 end
 
@@ -175,30 +174,30 @@ def opt_parse()
   end
 
   sub_options = @options.map { |x| x[0] }
-  lsub_options = @options.map { |x| [ x[0][0], x[2] ] }
+  lsub_options = @options.map { |x| [x[0][0], x[2]] }
   opts = GetoptLong.new(*sub_options)
 
   opts.each do |opt, arg|
     case opt
-      when '--help'
+      when "--help"
         usage 0
-      when '--debug'
+      when "--debug"
         @debug = true
-      when '--no-ready'
+      when "--no-ready"
         @noready = true
-      when '--hostname'
+      when "--hostname"
         @hostname = arg
-      when '--username'
+      when "--username"
         @username = arg
-      when '--password'
+      when "--password"
         @password = arg
-      when '--port'
+      when "--port"
         @port = arg.to_i
-      when '--data'
+      when "--data"
         @data = arg
-      when '--timeout'
+      when "--timeout"
         @timeout = arg
-      when '--file'
+      when "--file"
         data = File.read(arg)
       else
         found = false

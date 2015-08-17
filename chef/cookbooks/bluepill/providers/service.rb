@@ -18,35 +18,35 @@
 # limitations under the License.
 #
 
-require 'chef/mixin/shell_out'
-require 'chef/mixin/language'
+require "chef/mixin/shell_out"
+require "chef/mixin/language"
 
 include Chef::Mixin::ShellOut
 
 action :enable do
-  config_file = ::File.join(node['bluepill']['conf_dir'],
+  config_file = ::File.join(node["bluepill"]["conf_dir"],
                             "#{new_resource.service_name}.pill")
   unless @current_resource.enabled
     link "#{node['bluepill']['init_dir']}/#{new_resource.service_name}" do
-      to node['bluepill']['bin']
+      to node["bluepill"]["bin"]
       only_if { ::File.exists?(config_file) }
     end
-    case node['platform_family']
+    case node["platform_family"]
     when "rhel", "fedora", "freebsd"
       template "#{node['bluepill']['init_dir']}/bluepill-#{new_resource.service_name}" do
         source "bluepill_init.#{node['platform_family']}.erb"
         cookbook "bluepill"
         owner "root"
-        group node['bluepill']['group']
+        group node["bluepill"]["group"]
         mode "0755"
         variables(
-                  :service_name => new_resource.service_name,
-                  :config_file => config_file
+                  service_name: new_resource.service_name,
+                  config_file: config_file
                   )
       end
 
       service "bluepill-#{new_resource.service_name}" do
-        action [ :enable ]
+        action [:enable]
       end
     end
     new_resource.updated_by_last_action(true)

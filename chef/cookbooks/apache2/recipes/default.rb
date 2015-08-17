@@ -54,14 +54,14 @@ service "apache2" do
     service_name "httpd"
   end
   supports value_for_platform(
-    "debian" => { "4.0" => [ :restart, :reload ], "default" => [ :restart, :reload, :status ] },
-    "ubuntu" => { "default" => [ :restart, :reload, :status ] },
-    "centos" => { "default" => [ :restart, :reload, :status ] },
-    "redhat" => { "default" => [ :restart, :reload, :status ] },
-    "fedora" => { "default" => [ :restart, :reload, :status ] },
-    "suse" => { "default" => [ :restart, :reload, :status ] },
-    "arch" => { "default" => [ :restart, :reload, :status ] },
-    "default" => { "default" => [:restart, :reload ] }
+    "debian" => { "4.0" => [:restart, :reload], "default" => [:restart, :reload, :status] },
+    "ubuntu" => { "default" => [:restart, :reload, :status] },
+    "centos" => { "default" => [:restart, :reload, :status] },
+    "redhat" => { "default" => [:restart, :reload, :status] },
+    "fedora" => { "default" => [:restart, :reload, :status] },
+    "suse" => { "default" => [:restart, :reload, :status] },
+    "arch" => { "default" => [:restart, :reload, :status] },
+    "default" => { "default" => [:restart, :reload] }
   )
   action :enable
 end
@@ -71,7 +71,7 @@ if platform?("centos", "redhat", "fedora", "arch")
     mode 0755
     action :create
   end
-  
+
   cookbook_file "/usr/local/bin/apache2_module_conf_generate.pl" do
     source "apache2_module_conf_generate.pl"
     mode 0755
@@ -87,24 +87,24 @@ if platform?("centos", "redhat", "fedora", "arch")
       action :create
     end
   end
-    
+
   execute "generate-module-list" do
-    if node[:kernel][:machine] == "x86_64" 
+    if node[:kernel][:machine] == "x86_64"
       libdir = value_for_platform("arch" => { "default" => "lib" }, "default" => "lib64")
-    else 
+    else
       libdir = "lib"
     end
     command "/usr/local/bin/apache2_module_conf_generate.pl /usr/#{libdir}/httpd/modules /etc/httpd/mods-available"
     action :run
   end
-  
+
   %w{a2ensite a2dissite a2enmod a2dismod}.each do |modscript|
     template "/usr/sbin/#{modscript}" do
       source "#{modscript}.erb"
       mode 0755
       owner "root"
       group "root"
-    end  
+    end
   end
 
   # installed by default on centos/rhel, remove in favour of mods-enabled
@@ -116,7 +116,7 @@ if platform?("centos", "redhat", "fedora", "arch")
     action :delete
     backup false
   end
-  
+
   # welcome page moved to the default-site.rb temlate
   file "#{node[:apache][:dir]}/conf.d/welcome.conf" do
     action :delete
@@ -158,7 +158,7 @@ if node.platform != "suse"
     owner "root"
     group "root"
     mode 0644
-    notifies :reload, resources(:service => "apache2")
+    notifies :reload, resources(service: "apache2")
   end
 
   template "security" do
@@ -168,7 +168,7 @@ if node.platform != "suse"
     group "root"
     mode 0644
     backup false
-    notifies :reload, resources(:service => "apache2")
+    notifies :reload, resources(service: "apache2")
   end
 
   template "charset" do
@@ -178,7 +178,7 @@ if node.platform != "suse"
     group "root"
     mode 0644
     backup false
-    notifies :reload, resources(:service => "apache2")
+    notifies :reload, resources(service: "apache2")
   end
 
   template "#{node[:apache][:dir]}/sites-available/default" do
@@ -186,7 +186,7 @@ if node.platform != "suse"
     owner "root"
     group "root"
     mode 0644
-    notifies :reload, resources(:service => "apache2")
+    notifies :reload, resources(service: "apache2")
   end
 end
 
@@ -195,9 +195,9 @@ template "#{node[:apache][:dir]}/ports.conf" do
   source "ports.conf.erb"
   group "root"
   owner "root"
-  variables :apache_listen_ports => node[:apache][:listen_ports]
+  variables apache_listen_ports: node[:apache][:listen_ports]
   mode 0644
-  notifies :reload, resources(:service => "apache2")
+  notifies :reload, resources(service: "apache2")
 end
 
 # leave the default module list untouched for now on SUSE

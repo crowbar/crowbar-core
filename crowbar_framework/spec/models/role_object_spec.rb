@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-require 'spec_helper'
+require "spec_helper"
 
 describe RoleObject do
   describe "finders" do
@@ -24,7 +24,7 @@ describe RoleObject do
         :all,
         :find_roles_by_name,
         :find_roles_by_search,
-        :find_role_by_name,
+        :find_role_by_name
       ].each do |method|
         it "responds to #{method}" do
           RoleObject.should respond_to(method)

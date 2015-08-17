@@ -14,7 +14,7 @@
 #
 
 include_recipe "utils"
-require 'ipaddr'
+require "ipaddr"
 
 package "bind9" do
   case node[:platform]
@@ -33,9 +33,9 @@ end
 
 binduser, bindgroup = case node[:platform]
   when "ubuntu","debian"
-    [ "bind", "bind" ]
+    ["bind", "bind"]
   when "centos","redhat","suse"
-    [ "named", "named" ]
+    ["named", "named"]
 end
 
 directory "/etc/bind"
@@ -53,13 +53,13 @@ node.set[:dns][:zone_files]=Array.new
 
 def populate_soa(zone, old_zone = nil)
   defaults = {
-    :admin => "support.#{node[:fqdn]}.",
-    :ttl => "1h",
-    :serial => Time.now.to_i,
-    :slave_refresh => "12h",
-    :slave_retry => "180",
-    :slave_expire => "8w",
-    :negative_cache => "300"
+    admin: "support.#{node[:fqdn]}.",
+    ttl: "1h",
+    serial: Time.now.to_i,
+    slave_refresh: "12h",
+    slave_retry: "180",
+    slave_expire: "8w",
+    negative_cache: "300"
   }
 
   defaults.keys.each do |k|
@@ -81,7 +81,7 @@ def make_zone(zone)
     owner "root"
     group "root"
     notifies :reload, "service[bind9]"
-    variables(:zone => zone)
+    variables(zone: zone)
     only_if { node[:dns][:master] }
   end
   zonefile_entries << zone[:domain]
@@ -115,7 +115,7 @@ def make_zone(zone)
         owner "root"
         group "root"
         notifies :reload, "service[bind9]"
-        variables(:zone => rev_zone)
+        variables(zone: rev_zone)
         only_if { node[:dns][:master] }
       end
       zonefile_entries << rev_domain
@@ -135,8 +135,8 @@ def make_zone(zone)
     owner "root"
     group "root"
     notifies :reload, "service[bind9]"
-    variables(:zonefile_entries => zonefile_entries,
-              :master_ip => master_ip)
+    variables(zonefile_entries: zonefile_entries,
+              master_ip: master_ip)
   end
   node.set[:dns][:zone_files] << "/etc/bind/zone.#{zone[:domain]}"
 end
@@ -185,7 +185,7 @@ nodes.each do |n|
     base_name = n[:fqdn].chomp(".#{node[:dns][:domain]}")
     alias_name = cname unless base_name == cname
     unless network.name == "admin"
-      net_name = network.name.gsub('_','-')
+      net_name = network.name.gsub("_","-")
       base_name = "#{net_name}.#{base_name}"
       alias_name = "#{net_name}.#{alias_name}" if alias_name
     end
@@ -199,7 +199,7 @@ end
 search(:crowbar, "id:*_network").each do |network|
   #this is not network, or at least there is no nodes
   next unless network.has_key?("allocated_by_name")
-  net_name=network[:id].gsub(/_network$/, '').gsub('_','-')
+  net_name=network[:id].gsub(/_network$/, "").gsub("_","-")
   network[:allocated_by_name].each_key do |host|
     if search(:node, "fqdn:#{host}").size > 0 or not host.match(/.#{node[:dns][:domain]}$/)
       #this is node in crowbar terms or it not belong to our domain, so lets skip it
@@ -235,14 +235,14 @@ when "redhat","centos"
     source "redhat-sysconfig-named.erb"
     mode 0644
     owner "root"
-    variables :options => { "OPTIONS" => "-c /etc/bind/named.conf" }
+    variables options: { "OPTIONS" => "-c /etc/bind/named.conf" }
   end
 when "suse"
   template "/etc/sysconfig/named" do
     source "suse-sysconfig-named.erb"
     mode 0644
     owner "root"
-    variables :options => { "NAMED_ARGS" => "-c /etc/bind/named.conf" }
+    variables options: { "NAMED_ARGS" => "-c /etc/bind/named.conf" }
   end
 end
 
@@ -251,7 +251,7 @@ service "bind9" do
   when "centos","redhat","suse"
     service_name "named"
   end
-  supports :restart => true, :status => true, :reload => true
+  supports restart: true, status: true, reload: true
   running true
   enabled true
   action :enable
@@ -271,7 +271,7 @@ files.each do |file|
     mode 0644
     owner "root"
     group bindgroup
-    variables(:master_ip => master_ip)
+    variables(master_ip: master_ip)
     notifies :reload, "service[bind9]"
   end
 end
@@ -296,13 +296,13 @@ template "/etc/bind/named.conf.crowbar" do
   mode 0644
   owner "root"
   group bindgroup
-  variables(:zonefiles => node[:dns][:zone_files])
+  variables(zonefiles: node[:dns][:zone_files])
   notifies :reload, "service[bind9]"
 end
 
 if node[:dns][:master]
   allow_transfer = node[:dns][:allow_transfer].to_a + node[:dns][:slave_ips].to_a
-  allow_transfer = allow_transfer.uniq.sort.compact.delete_if {|n| n.empty? }
+  allow_transfer = allow_transfer.uniq.sort.compact.delete_if { |n| n.empty? }
 else
   allow_transfer = []
 end
@@ -316,9 +316,9 @@ template "/etc/bind/named.conf" do
   mode 0644
   owner "root"
   group bindgroup
-  variables(:forwarders => node[:dns][:forwarders],
-            :allow_transfer => allow_transfer,
-            :ipaddress => admin_addr)
+  variables(forwarders: node[:dns][:forwarders],
+            allow_transfer: allow_transfer,
+            ipaddress: admin_addr)
   notifies :restart, "service[bind9]", :immediately
 end
 

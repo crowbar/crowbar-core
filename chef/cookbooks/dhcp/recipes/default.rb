@@ -60,11 +60,10 @@ EOH
 end
 
 # This needs to be evaled.
-intfs = [ Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").interface ]
+intfs = [Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").interface]
 address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
 
 d_opts = node[:dhcp][:options]
-
 
 case node[:platform]
 when "ubuntu","debian"
@@ -75,7 +74,7 @@ when "ubuntu","debian"
       group "root"
       mode 0644
       source "dhcpd.conf.erb"
-      variables(:options => d_opts)
+      variables(options: d_opts)
       notifies :restart, "service[dhcp3-server]"
     end
     template "/etc/default/isc-dhcp-server" do
@@ -83,7 +82,7 @@ when "ubuntu","debian"
       group "root"
       mode 0644
       source "dhcp3-server.erb"
-      variables(:interfaces => intfs)
+      variables(interfaces: intfs)
       notifies :restart, "service[dhcp3-server]"
     end
   else
@@ -92,7 +91,7 @@ when "ubuntu","debian"
       group "root"
       mode 0644
       source "dhcpd.conf.erb"
-      variables(:options => d_opts)
+      variables(options: d_opts)
       notifies :restart, "service[dhcp3-server]"
     end
     template "/etc/default/dhcp3-server" do
@@ -100,7 +99,7 @@ when "ubuntu","debian"
       group "root"
       mode 0644
       source "dhcp3-server.erb"
-      variables(:interfaces => intfs)
+      variables(interfaces: intfs)
       notifies :restart, "service[dhcp3-server]"
     end
   end
@@ -118,7 +117,7 @@ when "redhat","centos"
     group "root"
     mode 0644
     source "dhcpd.conf.erb"
-    variables(:options => d_opts)
+    variables(options: d_opts)
     notifies :restart, "service[dhcp3-server]"
   end
 
@@ -127,7 +126,7 @@ when "redhat","centos"
     group "root"
     mode 0644
     source "redhat-sysconfig-dhcpd.erb"
-    variables(:interfaces => intfs)
+    variables(interfaces: intfs)
     notifies :restart, "service[dhcp3-server]"
   end
 
@@ -137,7 +136,7 @@ when "suse"
     group "root"
     mode 0644
     source "dhcpd.conf.erb"
-    variables(:options => d_opts)
+    variables(options: d_opts)
     notifies :restart, "service[dhcp3-server]"
   end
 
@@ -146,7 +145,7 @@ when "suse"
     group "root"
     mode 0644
     source "suse-sysconfig-dhcpd.erb"
-    variables(:interfaces => intfs)
+    variables(interfaces: intfs)
     notifies :restart, "service[dhcp3-server]"
   end
 end
@@ -154,7 +153,7 @@ end
 service "dhcp3-server" do
   case node[:platform]
   when "redhat", "centos", "suse"
-    service_name "dhcpd" 
+    service_name "dhcpd"
   when "ubuntu"
     case node[:lsb][:codename]
     when "maverick"
@@ -163,7 +162,7 @@ service "dhcp3-server" do
       service_name "isc-dhcp-server"
     end
   end
-  supports :restart => true, :status => true, :reload => true
+  supports restart: true, status: true, reload: true
   action node[:provisioner][:enable_pxe] ? "enable" : ["disable", "stop"]
 end
 

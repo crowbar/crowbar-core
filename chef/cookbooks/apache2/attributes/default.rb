@@ -17,26 +17,25 @@
 # limitations under the License.
 #
 
-if node['platform'] == 'ubuntu' && node['platform_version'].to_f >= 13.10
-  default['apache']['version'] = '2.4'
-elsif node['platform'] == 'debian' && node['platform_version'].to_f >= 8.0
-  default['apache']['version'] = '2.4'
-elsif node['platform'] == 'redhat' && node['platform_version'].to_f >= 7.0
-  default['apache']['version'] = '2.4'
-elsif node['platform'] == 'centos' && node['platform_version'].to_f >= 7.0
-  default['apache']['version'] = '2.4'
-elsif node['platform'] == 'fedora' && node['platform_version'].to_f >= 18
-  default['apache']['version'] = '2.4'
-elsif node['platform'] == 'opensuse' && node['platform_version'].to_f >= 13.1
-  default['apache']['version'] = '2.4'
-elsif node['platform'] == 'suse' && node['platform_version'].to_f >= 12
-  default['apache']['version'] = '2.4'
-elsif node['platform'] == 'freebsd' && node['platform_version'].to_f >= 10.0
-  default['apache']['version'] = '2.4'
+if node["platform"] == "ubuntu" && node["platform_version"].to_f >= 13.10
+  default["apache"]["version"] = "2.4"
+elsif node["platform"] == "debian" && node["platform_version"].to_f >= 8.0
+  default["apache"]["version"] = "2.4"
+elsif node["platform"] == "redhat" && node["platform_version"].to_f >= 7.0
+  default["apache"]["version"] = "2.4"
+elsif node["platform"] == "centos" && node["platform_version"].to_f >= 7.0
+  default["apache"]["version"] = "2.4"
+elsif node["platform"] == "fedora" && node["platform_version"].to_f >= 18
+  default["apache"]["version"] = "2.4"
+elsif node["platform"] == "opensuse" && node["platform_version"].to_f >= 13.1
+  default["apache"]["version"] = "2.4"
+elsif node["platform"] == "suse" && node["platform_version"].to_f >= 12
+  default["apache"]["version"] = "2.4"
+elsif node["platform"] == "freebsd" && node["platform_version"].to_f >= 10.0
+  default["apache"]["version"] = "2.4"
 else
-  default['apache']['version'] = '2.2'
+  default["apache"]["version"] = "2.2"
 end
-
 
 # Where the various parts of apache are
 case platform
@@ -88,7 +87,7 @@ end
 ###
 
 # General settings
-default[:apache][:listen_ports] = [ "80","443" ]
+default[:apache][:listen_ports] = ["80","443"]
 default[:apache][:contact] = "ops@example.com"
 default[:apache][:timeout] = 300
 default[:apache][:keepalive] = "On"

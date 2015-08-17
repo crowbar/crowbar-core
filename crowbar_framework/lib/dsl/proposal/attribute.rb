@@ -197,7 +197,7 @@ module Dsl
                 :small,
                 proposal_raw_button(proposal, raw_options)
               ),
-              :class => "pull-right"
+              class: "pull-right"
             )
           ].join("\n").html_safe
         )
@@ -253,7 +253,7 @@ module Dsl
 
             defaults.merge({
               "data-change" => changer(type_cast),
-              "id"          => sanitize_to_id(attribute_name),
+              "id"          => sanitize_to_id(attribute_name)
             }).merge(options)
           ]
 
@@ -268,13 +268,13 @@ module Dsl
         content_tag(
           :div,
           yield,
-          { :class => "form-group" }.merge(options || {})
+          { class: "form-group" }.merge(options || {})
         )
       end
 
       def defaults
         {
-          :class => "form-control",
+          class: "form-control"
         }
       end
 
@@ -289,7 +289,7 @@ module Dsl
         content_tag(
           :label,
           t(translation_key.join(".")),
-          :for => sanitize_to_id(attribute_name)
+          for: sanitize_to_id(attribute_name)
         )
       end
 

@@ -16,7 +16,6 @@
 #
 
 class NetworkService < ServiceObject
-
   def initialize(thelogger)
     super(thelogger)
     @bc_name = "network"
@@ -99,7 +98,6 @@ class NetworkService < ServiceObject
         end
       end
 
-
       # Let's search for an empty one.
       while !found do
         if db["allocated"][address.to_s].nil?
@@ -110,7 +108,6 @@ class NetworkService < ServiceObject
         address = IPAddr.new(net_info["subnet"]) | index
         break if address == stop_address
       end
-
 
       if found
         net_info["address"] = address.to_s
@@ -283,7 +280,7 @@ class NetworkService < ServiceObject
 
       db = Proposal.where(barclamp: "network", name: inst).first
       role = RoleObject.find_role_by_name "network-config-#{inst}"
-      if NodeObject.find_node_by_name(name).try(:[], 'crowbar').try(:[], 'admin_node')
+      if NodeObject.find_node_by_name(name).try(:[], "crowbar").try(:[], "admin_node")
         @logger.info("Admin node transitioning to discovered state.  Adding switch_config role.")
         result = add_role_to_instance_and_node("network", inst, name, db, role, "switch_config")
       end
@@ -292,7 +289,7 @@ class NetworkService < ServiceObject
       result = add_role_to_instance_and_node("network", inst, name, db, role, "network")
 
       @logger.debug("Network transition: Exiting #{name} for #{state} discovered path")
-      return [200, { :name => name } ] if result
+      return [200, { name: name }] if result
       return [400, "Failed to add role to node"] unless result
     end
 
@@ -305,12 +302,12 @@ class NetworkService < ServiceObject
       nets.each do |net|
         next if net == "admin"
         ret, msg = self.deallocate_ip(inst, net, name)
-        return [ ret, msg ] if ret != 200
+        return [ret, msg] if ret != 200
       end
     end
 
     @logger.debug("Network transition: Exiting #{name} for #{state}")
-    [200, { :name => name }]
+    [200, { name: name }]
   end
 
   def enable_interface(bc_instance, network, name)
@@ -352,7 +349,6 @@ class NetworkService < ServiceObject
     [200, net_info]
   end
 
-
   def build_net_info(network, name, db = nil)
     unless db
       db = Chef::DataBag.load("crowbar/#{network}_network") rescue nil
@@ -366,5 +362,4 @@ class NetworkService < ServiceObject
     net_info["node"] = name
     net_info
   end
-
 end

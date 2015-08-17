@@ -1,2 +1,2 @@
 default[:dns][:domain] = domain
-default[:dns][:nameservers] = [ ]
+default[:dns][:nameservers] = []

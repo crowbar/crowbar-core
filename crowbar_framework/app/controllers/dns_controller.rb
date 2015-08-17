@@ -16,7 +16,6 @@
 #
 
 class DnsController < BarclampController
-
   protected
 
   def initialize_service

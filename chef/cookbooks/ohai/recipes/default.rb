@@ -23,8 +23,8 @@ Chef::Log.info("ohai plugins will be at: #{node.ohai.plugin_path}")
 # Make secure execution location for ohai
 unless node[:platform] == "windows"
   d = directory "/var/run/ohai" do
-    owner 'root'
-    group 'root'
+    owner "root"
+    group "root"
     mode 0700
     recursive true
     action :nothing
@@ -34,8 +34,8 @@ end
 
 d = directory node.ohai.plugin_path do
   unless node[:platform] == "windows"
-    owner 'root'
-    group 'root'
+    owner "root"
+    group "root"
     mode 0755
   end
   recursive true
@@ -44,10 +44,10 @@ end
 d.run_action(:create)
 
 rd = remote_directory node.ohai.plugin_path do
-  source 'plugins'
+  source "plugins"
   unless node[:platform] == "windows"
-    owner 'root'
-    group 'root'
+    owner "root"
+    group "root"
     mode 0755
   end
   action :nothing
@@ -70,7 +70,7 @@ unless node[:platform] == "windows"
     package(pkg).run_action(:install)
 
     begin
-      require 'cstruct'
+      require "cstruct"
     rescue LoadError
       # After installation of the gem, we have a new path for the new gem, so
       # we need to reset the paths if we can't load cstruct

@@ -28,11 +28,11 @@ SimpleNavigation::Configuration.run do |navigation|
     level1.item :nodes, t("nav.nodes.title"), root_path do |level2|
       level2.item :dashboard, t("nav.nodes.dashboard"), dashboard_path
       level2.item :batch, t("nav.nodes.batch"), nodes_list_path
-      level2.item :families, t("nav.nodes.families"), nodes_families_path, :if => proc { Rails.env.development? }
+      level2.item :families, t("nav.nodes.families"), nodes_families_path, if: proc { Rails.env.development? }
     end
     level1.item :barclamps, t("nav.barclamps.title"), barclamp_modules_path do |level2|
       level2.item :all, t("nav.barclamps.all"), barclamp_modules_path
-      level2.item :crowbar, t("nav.barclamps.crowbar"), index_barclamp_path(:controller => "crowbar")
+      level2.item :crowbar, t("nav.barclamps.crowbar"), index_barclamp_path(controller: "crowbar")
       level2.item :queue, t("nav.barclamps.queue"), deployment_queue_path
     end
     level1.item :utils, t("nav.utils.title"), utils_path do |level2|

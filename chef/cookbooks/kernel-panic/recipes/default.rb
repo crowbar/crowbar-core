@@ -16,13 +16,13 @@ unless node[:platform] == "windows"
     template "sysctl-reboot-on-panic.conf" do
       path "/etc/sysctl.d/80-reboot-on-panic.conf"
       mode "0644"
-      variables ( { :timeout => timeout } )
+      variables ( { timeout: timeout } )
     end
 
     bash "reload reboot-on-panic-sysctl" do
       code "/sbin/sysctl -e -q -p /etc/sysctl.d/80-reboot-on-panic.conf"
       action :nothing
-      subscribes :run, resources(:template=> "sysctl-reboot-on-panic.conf"), :delayed
+      subscribes :run, resources(template: "sysctl-reboot-on-panic.conf"), :delayed
     end
   else
     bash "Stop rebooting on panic" do

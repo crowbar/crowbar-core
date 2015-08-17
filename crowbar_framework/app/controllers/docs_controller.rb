@@ -53,9 +53,9 @@ class DocsController < ApplicationController
     flash[:alert] = I18n.t("docs.show.topic_missing")
     redirect_to docs_url
   end
-  
+
   protected
-  
+
   def docs_index
     Rails.root.join(
       "config",
@@ -100,7 +100,7 @@ class DocsController < ApplicationController
         rescue
           next
         end
-        
+
         next if content["root"].nil?
 
         topic = content["root"]

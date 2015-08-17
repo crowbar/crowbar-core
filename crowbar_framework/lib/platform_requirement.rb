@@ -56,7 +56,7 @@ class PlatformRequirement
   end
 
   def is_regexp?
-    required_version.start_with?('/') && required_version.end_with?('/')
+    required_version.start_with?("/") && required_version.end_with?("/")
   end
 end
 

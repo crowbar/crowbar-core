@@ -20,7 +20,7 @@ case node[:platform]
 when "redhat","centos"
   # Disable syslogd in favor of rsyslog on redhat.
   service "syslog" do
-    action [ :stop, :disable]
+    action [:stop, :disable]
   end
 when "suse"
   ruby_block "edit sysconfig syslog" do
@@ -37,8 +37,8 @@ end
 service "rsyslog" do
   provider Chef::Provider::Service::Upstart if node[:platform] == "ubuntu"
   service_name "syslog" if node[:platform] == "suse" && node[:platform_version].to_f < 12.0
-  supports :restart => true, :status => true, :reload => true
+  supports restart: true, status: true, reload: true
   running true
   enabled true
-  action [ :enable, :start ]
+  action [:enable, :start]
 end

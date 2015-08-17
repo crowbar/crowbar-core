@@ -1,6 +1,6 @@
 #
 # Cookbook Name:: apache2
-# Recipe:: fcgid 
+# Recipe:: fcgid
 #
 # Copyright 2008-2009, Opscode, Inc.
 #
@@ -21,12 +21,12 @@ if platform?("debian", "ubuntu")
   package "libapache2-mod-fcgid"
 elsif platform?("centos", "redhat", "fedora", "arch")
   package "mod_fcgid" do
-    notifies :run, resources(:execute => "generate-module-list"), :immediately
+    notifies :run, resources(execute: "generate-module-list"), :immediately
   end
 
   file "#{node[:apache][:dir]}/conf.d/fcgid.conf" do
     action :delete
-    backup false 
+    backup false
   end
 elsif platform?("suse")
   apache_lib_path = node[:architecture] == "i386" ? "/usr/lib/httpd" : "/usr/lib64/httpd"

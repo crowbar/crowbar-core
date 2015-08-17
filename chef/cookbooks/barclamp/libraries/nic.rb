@@ -25,7 +25,7 @@ class ::Nic
   # Basic initialization routine for subclasses of Nic.
   def initialize(nic)
     @nic = nic.dup.freeze
-    @nicdir = BASEDIRS.map{|d|::File.join(d,nic)}.find do |i|
+    @nicdir = BASEDIRS.map{ |d|::File.join(d,nic) }.find do |i|
       ::File.directory?(i)
     end
     raise RuntimeError.new("Cannot find sysfs dir for #{nic}") unless @nicdir
@@ -47,7 +47,7 @@ class ::Nic
   def self.__nics
     res = []
     ::Dir.entries("/sys/class/net").each do |d|
-      next if d == '.' or d == '..'
+      next if d == "." or d == ".."
       next unless ::File.directory?("/sys/class/net/#{d}")
       res << Nic.new(d)
     end
@@ -65,17 +65,17 @@ class ::Nic
       res[len] ||= Array.new
       res[len] << nic
     end
-    res.compact.map{|r| r.sort}.flatten
+    res.compact.map{ |r| r.sort }.flatten
   end
 
   def self.refresh_all
-    @@interfaces.each_value{|n|n.refresh}
+    @@interfaces.each_value{ |n|n.refresh }
   end
 
   # Some class functions for determining what kind of nic
   # we are looking at.
   def self.exists?(nic)
-    nic.kind_of?(::Nic) or BASEDIRS.any?{|d|::File.exists?("#{d}/#{nic}")}
+    nic.kind_of?(::Nic) or BASEDIRS.any?{ |d|::File.exists?("#{d}/#{nic}") }
   end
 
   def self.coerce(nic)
@@ -124,9 +124,9 @@ class ::Nic
     @dependents = nil
     ::IO.popen("ip -o addr show dev #{@nic}") do |f|
       f.each do |line|
-        parts = line.gsub('\\','').split
+        parts = line.gsub('\\',"").split
         next unless parts[2] =~ /^inet/
-        next if parts[5] == 'link'
+        next if parts[5] == "link"
         addr = IP.coerce(parts[3])
         @addresses << addr
       end
@@ -213,12 +213,12 @@ class ::Nic
 
   # Set rx offloading for an interface
   def rx_offloading=(on)
-    run_ethtool("-K", @nic, "rx", on ? 'on' : 'off')
+    run_ethtool("-K", @nic, "rx", on ? "on" : "off")
   end
 
   # Set tx offloading for an interface
   def tx_offloading=(on)
-    run_ethtool("-K", @nic, "tx", on ? 'on' : 'off')
+    run_ethtool("-K", @nic, "tx", on ? "on" : "off")
   end
 
   def flags
@@ -354,7 +354,7 @@ class ::Nic
     victim.refresh
     new_routes = (victim.routes - routes)
     new_addrs = victim.addresses
-    return [ [], [] ] if new_routes.empty? && new_addrs.empty?
+    return [[], []] if new_routes.empty? && new_addrs.empty?
     victim.flush
     new_addrs.each do |addr| add_address(addr) end
     new_routes.each do |route| run_ip("route add #{route} dev #{@nic}") end
@@ -374,13 +374,13 @@ class ::Nic
   # Return the bond we are enslaved to, or nil if we are not in a bond.
   def bond_master
     return nil unless File.exists?("#{@nicdir}/master")
-    Nic.new(File.readlink("#{@nicdir}/master").split('/')[-1])
+    Nic.new(File.readlink("#{@nicdir}/master").split("/")[-1])
   end
 
   # Return the bridge we are enslaved to, or nil if we are not in a bridge.
   def bridge_master
     return nil unless File.exists?("#{@nicdir}/brport/bridge")
-    Nic.new(File.readlink("#{@nicdir}/brport/bridge").split('/')[-1])
+    Nic.new(File.readlink("#{@nicdir}/brport/bridge").split("/")[-1])
   end
 
   # Return the ovs virtual switch we are enslaved to, or nil if we are not
@@ -411,7 +411,7 @@ class ::Nic
 
   # Figure out all the interfaces we depend on.
   def dependents
-    return @dependents.map{|d|Nic.new(d)} if @dependents
+    return @dependents.map{ |d|Nic.new(d) } if @dependents
     res = self.parents
     res.dup.each do |d|
       res = res + d.dependents
@@ -420,7 +420,7 @@ class ::Nic
     slaves.each do |s|
       res = res + s.dependents
     end
-    @dependents = res.map{|d|d.name}
+    @dependents = res.map{ |d|d.name }
     res
   end
 
@@ -462,7 +462,7 @@ class ::Nic
   # If you want to create a new interface, call one of the
   # create methods on a subclass.
   def self.new(nic)
-    logstr=''
+    logstr=""
     if nic.is_a?(::Nic)
       return nic
     elsif o = @@interfaces[nic]
@@ -494,7 +494,7 @@ class ::Nic
   # Base class for a bond.
   # We handle all bond manipulation via sysfs for maximum flexibility.
   class ::Nic::Bond < ::Nic
-    MASTER='/sys/class/net/bonding_masters'
+    MASTER="/sys/class/net/bonding_masters"
 
     private
     def self.kill_bond(nic)
@@ -537,7 +537,7 @@ class ::Nic
     end
 
     def slaves
-      sysfs("bonding/slaves").split.map{|i| ::Nic.new(i)}
+      sysfs("bonding/slaves").split.map{ |i| ::Nic.new(i) }
     end
 
     def add_slave(slave)
@@ -592,13 +592,13 @@ class ::Nic
     end
 
     def down
-      slaves.each{|s|s.down}
+      slaves.each{ |s|s.down }
       super
     end
 
     def up
       super
-      slaves.each{|s|s.up}
+      slaves.each{ |s|s.up }
       self
     end
 
@@ -642,7 +642,7 @@ class ::Nic
         # Skip them.
         File.symlink?(link) &&
           File.exists?(File.expand_path(File.readlink(link), "#{@nicdir}/brif"))
-      end.map{|i| ::Nic.new(i)}
+      end.map{ |i| ::Nic.new(i) }
     end
 
     def add_slave(slave)
@@ -692,7 +692,7 @@ class ::Nic
     end
 
     def up
-      slaves.each{|s|s.up}
+      slaves.each{ |s|s.up }
       super
     end
 
@@ -740,7 +740,7 @@ class ::Nic
           ports << port if ::File.directory?("/sys/class/net/#{port}")
         end
       end
-      ports.map{|i| ::Nic.new(i)}
+      ports.map{ |i| ::Nic.new(i) }
     end
 
     def remove_slave(slave)
@@ -758,7 +758,7 @@ class ::Nic
   class ::Nic::Vlan < ::Nic
     def vlan
       ::IO.readlines("/proc/net/vlan/config").each do |line|
-        line = line.split('|')
+        line = line.split("|")
         next unless line[0].strip == @nic
         return line[1].strip.to_i
       end
@@ -766,7 +766,7 @@ class ::Nic
 
     def parent
       ::IO.readlines("/proc/net/vlan/config").each do |line|
-        line = line.split('|')
+        line = line.split("|")
         next unless line[0].strip == @nic
         return line[2].strip
       end
@@ -779,7 +779,7 @@ class ::Nic
     end
 
     def up
-      parents.each{|p|p.up}
+      parents.each{ |p|p.up }
       super
     end
 

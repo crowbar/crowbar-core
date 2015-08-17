@@ -44,21 +44,21 @@ require "easy_diff"
 require "chef/mixin/deep_merge"
 require "pp"
 
-ALIAS_TEMPLATE = '@@%s@@'
+ALIAS_TEMPLATE = "@@%s@@"
 
-INDENT = '   '
+INDENT = "   "
 
 @barclamp = "batch"
 
 @options.delete_if { |x| %w(--data --file).include? x[0][0] }
 @options += [
   [
-    [ "--include", "-i", GetoptLong::OPTIONAL_ARGUMENT ],
+    ["--include", "-i", GetoptLong::OPTIONAL_ARGUMENT],
     "-i, --include <barclamp[.proposal]> - Only process the given proposal(s)",
     lambda { |opt, arg|
-      if arg.include?('.')
-        bc = arg.split('.')[0]
-        (@include_barclamps ||= {})[bc ] = true
+      if arg.include?(".")
+        bc = arg.split(".")[0]
+        (@include_barclamps ||= {})[bc] = true
         (@include_proposals ||= {})[arg] = true
       else
         (@include_barclamps ||= {})[arg] = true
@@ -66,10 +66,10 @@ INDENT = '   '
     }
   ],
   [
-    [ "--exclude", "-e", GetoptLong::OPTIONAL_ARGUMENT ],
+    ["--exclude", "-e", GetoptLong::OPTIONAL_ARGUMENT],
     "-e, --exclude <barclamp[.proposal]> - Only process the given proposal(s)",
     lambda { |opt, arg|
-      if arg.include?('.')
+      if arg.include?(".")
         (@exclude_proposals ||= {})[arg] = true
       else
         (@exclude_barclamps ||= {})[arg] = true
@@ -79,9 +79,9 @@ INDENT = '   '
 ]
 
 @commands = {
-  "help" => [ "help", "help - This page for further help" ],
-  "build" => [ "build ARGV.shift", "build <YAML spec> - Create/edit/commit proposals defined via YAML" ],
-  "export" => [ "export ARGV", "export <barclamp> [<barclamp> ...] - export barclamps as YAML" ],
+  "help" => ["help", "help - This page for further help"],
+  "build" => ["build ARGV.shift", "build <YAML spec> - Create/edit/commit proposals defined via YAML"],
+  "export" => ["export ARGV", "export <barclamp> [<barclamp> ...] - export barclamps as YAML"]
 }
 
 def build(input_file)
@@ -137,7 +137,7 @@ end
 # and Crowbar aliases.  This will be used to substitute strings
 # like '@@controller2@@' within the YAML input file.
 def get_aliases
-  body, status = with_barclamp('machines') do
+  body, status = with_barclamp("machines") do
     get_json("/")
   end
 
@@ -151,7 +151,7 @@ def get_aliases
   body["nodes"].each do |node|
     fqdn  = node["name"]
     aliaz = node["alias"]
-    nodename = fqdn.split('.').first
+    nodename = fqdn.split(".").first
     if aliaz != nodename
       host_by_alias[aliaz] = fqdn
       alias_by_host[fqdn] = aliaz
@@ -171,15 +171,15 @@ end
 
 def build_proposal(proposal)
   barclamp = proposal["barclamp"]
-  name     = proposal["name"] || 'default'
-  fullname = "%s.%s" % [ barclamp, name ]
+  name     = proposal["name"] || "default"
+  fullname = "%s.%s" % [barclamp, name]
 
   return if @include_barclamps && ! @include_barclamps[barclamp]
   return if @exclude_barclamps &&   @exclude_barclamps[barclamp]
   return if @include_proposals && ! @include_proposals[fullname]
   return if @exclude_proposals &&   @exclude_proposals[fullname]
 
-  time = Time.now.strftime '%T'
+  time = Time.now.strftime "%T"
   puts "[#{time}] #{barclamp} barclamp, '#{name}' proposal:"
 
   ensure_proposal_exists(barclamp, name)
@@ -231,7 +231,7 @@ def modify_proposal(barclamp, name, proposal)
   old_json = get_proposal_json(barclamp, name)
   new_json = old_json.easy_clone
 
-  if proposal.has_key? 'deployment'
+  if proposal.has_key? "deployment"
     # For now, if the YAML specifies any assignment of roles to
     # elements, we require it to explicitly assign *all* roles.  Maybe
     # later we can allow harnessing of the intended role feature.
@@ -300,12 +300,12 @@ def wipe_attributes(new_json, barclamp, proposal)
 end
 
 def wipe_attribute(new_json, barclamp, attribute)
-  protect = '@PROTECT_QUOTED_DOTS@'
+  protect = "@PROTECT_QUOTED_DOTS@"
   # Ruby 1.8.7 doesn't support /(?<!\\)\./
   segments = attribute.
     gsub('\.', protect).
-    split('.').
-    map { |x| x.gsub(protect, '.') }
+    split(".").
+    map { |x| x.gsub(protect, ".") }
   to_delete = segments.pop
   ptr = new_json["attributes"][barclamp]
   for segment in segments
@@ -325,7 +325,7 @@ def merge_attributes(new_json, barclamp, proposal)
     },
     "deployment" => {
       barclamp => proposal["deployment"]
-    },
+    }
   }
 
   # easy_merge! seems to have problems with Arrays of Hashes :-/
@@ -381,9 +381,9 @@ def wait_for_proposal(barclamp, name)
     end
 
     case state
-    when 'ready'
+    when "ready"
       break
-    when 'failed'
+    when "failed"
       puts
       abort "Failed to apply #{barclamp} proposal '#{name}':\n" +
         JSON.pretty_generate(json)
@@ -399,13 +399,13 @@ def wait_for_proposal(barclamp, name)
 end
 
 def err_to_browser(html)
-  tmp = Tempfile.new([ 'crowbar_autobuild-err-', '.html' ])
+  tmp = Tempfile.new(["crowbar_autobuild-err-", ".html"])
   # Ruby 1.8.7 sucks!  Avoid automatic cleanup of temporary file.
   tmp_path = tmp.path
   tmp.close!
-  File.new(tmp_path, 'w').write(html)
+  File.new(tmp_path, "w").write(html)
 
-  Open3.popen3('w3m -T text/html') do |stdin, stdout, stderr|
+  Open3.popen3("w3m -T text/html") do |stdin, stdout, stderr|
     stdin.write(html)
     stdin.close
     while line = stdout.gets
@@ -426,15 +426,15 @@ def export(barclamps)
   alias_by_host = get_aliases[1]
 
   if barclamps.empty?
-    out, code = with_barclamp('modules') { get_json('') }
+    out, code = with_barclamp("modules") { get_json("") }
     if code != 200
       abort "Failed to receive list of barclamps: #{code}: #{out}"
     end
-    barclamps = out.sort_by { |x| x[1]['order'] }.map { |x| x[0] }
+    barclamps = out.sort_by { |x| x[1]["order"] }.map { |x| x[0] }
   end
 
-  puts '---'
-  puts 'proposals:'
+  puts "---"
+  puts "proposals:"
 
   barclamps.each do |barclamp|
     next if @include_barclamps && ! @include_barclamps[barclamp]
@@ -470,7 +470,7 @@ def export_barclamp(barclamp, alias_by_host)
   end
 
   proposals.each do |proposal|
-    fullname = "%s.%s" % [ barclamp, proposal ]
+    fullname = "%s.%s" % [barclamp, proposal]
     next if @include_proposals && ! @include_proposals[fullname]
     next if @exclude_proposals &&   @exclude_proposals[fullname]
 
@@ -498,7 +498,7 @@ def squash(hash)
   hash.map do |k,v|
     case v
     when Hash
-      squash(v).map { |i| k + '.' + i }
+      squash(v).map { |i| k + "." + i }
     else
       k
     end
@@ -509,25 +509,25 @@ def export_proposal(barclamp, template, proposal, alias_by_host)
   json = get_proposal_json(barclamp, proposal)
 
   puts "- barclamp: #{barclamp}"
-  puts "  name: #{proposal}" unless proposal == 'default'
+  puts "  name: #{proposal}" unless proposal == "default"
 
   removed_attrs, added_attrs = \
-    template['attributes'][barclamp].easy_diff json['attributes'][barclamp]
+    template["attributes"][barclamp].easy_diff json["attributes"][barclamp]
 
   to_wipe = squash(removed_attrs) - squash(added_attrs)
   unless to_wipe.empty?
-    puts '  wipe_attributes:'
-    puts batch_to_yaml(to_wipe).gsub(/^/, '    ')
+    puts "  wipe_attributes:"
+    puts batch_to_yaml(to_wipe).gsub(/^/, "    ")
   end
 
   if added_attrs.empty?
-    puts '  attributes:'
+    puts "  attributes:"
   else
-    attrs = { 'attributes' => added_attrs }
-    puts batch_to_yaml(attrs).gsub(/^/, '  ')
+    attrs = { "attributes" => added_attrs }
+    puts batch_to_yaml(attrs).gsub(/^/, "  ")
   end
 
-  elements = json['deployment'][barclamp]['elements']
+  elements = json["deployment"][barclamp]["elements"]
   elements.each do |role, nodes|
     nodes.each_with_index do |node, i|
       if alias_by_host.include? node
@@ -537,15 +537,15 @@ def export_proposal(barclamp, template, proposal, alias_by_host)
   end
 
   deployment = {
-    'deployment' => {
-      'elements' => elements
+    "deployment" => {
+      "elements" => elements
     }
   }
-  puts batch_to_yaml(deployment).gsub(/^/, '  ')
+  puts batch_to_yaml(deployment).gsub(/^/, "  ")
 end
 
 def batch_to_yaml(data)
-  data.to_yaml.sub('---', '').strip
+  data.to_yaml.sub("---", "").strip
 end
 
 def print_yaml(data)

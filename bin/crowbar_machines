@@ -33,7 +33,7 @@ require "utils/extended_hash"
 @allow_zero_args = false
 @timeout = 500
 @barclamp = "machines"
-@crowbar_key_file = '/etc/crowbar.install.key'
+@crowbar_key_file = "/etc/crowbar.install.key"
 
 @hostname = "127.0.0.1" unless @hostname
 @port = 3000 unless @port
@@ -44,34 +44,34 @@ require "utils/extended_hash"
 }
 
 @options = [
-  [ [ "--help", "-h", GetoptLong::NO_ARGUMENT ], "--help or -h - This page for further help" ],
-  [ [ "--debug", "-d", GetoptLong::NO_ARGUMENT ], "--debug or -d - Turns on debugging information" ],
-  [ [ "--username", "-U", GetoptLong::REQUIRED_ARGUMENT ], "--username <username> or -U <username>  - Specifies the username to use" ],
-  [ [ "--password", "-P", GetoptLong::REQUIRED_ARGUMENT ], "--password <password> or -P <password>  - Specifies the password to use" ],
-  [ [ "--hostname", "-n", GetoptLong::REQUIRED_ARGUMENT ], "--hostname <name or ip> or -n <name or ip>  - Specifies the destination server" ],
-  [ [ "--port", "-p", GetoptLong::REQUIRED_ARGUMENT ], "--port <port> or -p <port> - Specifies the destination server port" ],
-  [ [ "--timeout", "-t", GetoptLong::REQUIRED_ARGUMENT ], "--timeout <seconds> or -t <seconds> - Timeout in seconds for read HTTP requests" ]
+  [["--help", "-h", GetoptLong::NO_ARGUMENT], "--help or -h - This page for further help"],
+  [["--debug", "-d", GetoptLong::NO_ARGUMENT], "--debug or -d - Turns on debugging information"],
+  [["--username", "-U", GetoptLong::REQUIRED_ARGUMENT], "--username <username> or -U <username>  - Specifies the username to use"],
+  [["--password", "-P", GetoptLong::REQUIRED_ARGUMENT], "--password <password> or -P <password>  - Specifies the password to use"],
+  [["--hostname", "-n", GetoptLong::REQUIRED_ARGUMENT], "--hostname <name or ip> or -n <name or ip>  - Specifies the destination server"],
+  [["--port", "-p", GetoptLong::REQUIRED_ARGUMENT], "--port <port> or -p <port> - Specifies the destination server port"],
+  [["--timeout", "-t", GetoptLong::REQUIRED_ARGUMENT], "--timeout <seconds> or -t <seconds> - Timeout in seconds for read HTTP requests"]
 ]
 
 @commands = {
-  "help" => [ "help", "help - This page for further help" ],
-  "list" => [ "list", "list - Show a list of current node handles" ],
-  "aliases" => [ "aliases", "aliases - Show a list of current node aliases" ],
-  "show" => [ "show ARGV.shift, ARGV.shift", "show <name or alias> [arg] - Show a specific config" ],
-  "delete" => [ "delete ARGV.shift", "delete <name or alias> - Delete a node" ],
-  "reboot" => [ "action \"reboot\", ARGV.shift", "reboot <name or alias> - Reboot a node" ],
-  "shutdown" => [ "action \"shutdown\", ARGV.shift", "shutdown <name or alias> - Shutdown a node" ],
-  "poweron" => [ "action \"poweron\", ARGV.shift", "poweron <name or alias> - Poweron a node" ],
-  "powercycle" => [ "action \"powercycle\", ARGV.shift", "powercycle <name or alias> - Power cycle a node" ],
-  "poweroff" => [ "action \"poweroff\", ARGV.shift", "poweroff <name or alias> - Power off a node" ],
-  "identify" => [ "action \"identify\", ARGV.shift", "identify <name or alias> - Identify a node" ],
-  "allocate" => [ "action \"allocate\", ARGV.shift", "allocate <name or alias> - Allocate a node" ],
-  "reset" => [ "action \"reset\", ARGV.shift", "reset <name or alias> - Reset a node" ],
-  "reinstall" => [ "action \"reinstall\", ARGV.shift", "reinstall <name or alias> - Reinstall a node" ],
-  "update" => [ "action \"update\", ARGV.shift", "update <name or alias> - Hardware update a node" ],
-  "rename" => [ "rename ARGV.shift, ARGV.shift", "rename <name or alias> <new_alias> - Rename a node alias" ],
-  "role" => [ "role ARGV.shift, ARGV.shift", "role <name or alias> <intended role> - Assign an intended role" ],
-  "api_help" => [ "api_help", "api_help - Crowbar API help for this barclamp" ]
+  "help" => ["help", "help - This page for further help"],
+  "list" => ["list", "list - Show a list of current node handles"],
+  "aliases" => ["aliases", "aliases - Show a list of current node aliases"],
+  "show" => ["show ARGV.shift, ARGV.shift", "show <name or alias> [arg] - Show a specific config"],
+  "delete" => ["delete ARGV.shift", "delete <name or alias> - Delete a node"],
+  "reboot" => ["action \"reboot\", ARGV.shift", "reboot <name or alias> - Reboot a node"],
+  "shutdown" => ["action \"shutdown\", ARGV.shift", "shutdown <name or alias> - Shutdown a node"],
+  "poweron" => ["action \"poweron\", ARGV.shift", "poweron <name or alias> - Poweron a node"],
+  "powercycle" => ["action \"powercycle\", ARGV.shift", "powercycle <name or alias> - Power cycle a node"],
+  "poweroff" => ["action \"poweroff\", ARGV.shift", "poweroff <name or alias> - Power off a node"],
+  "identify" => ["action \"identify\", ARGV.shift", "identify <name or alias> - Identify a node"],
+  "allocate" => ["action \"allocate\", ARGV.shift", "allocate <name or alias> - Allocate a node"],
+  "reset" => ["action \"reset\", ARGV.shift", "reset <name or alias> - Reset a node"],
+  "reinstall" => ["action \"reinstall\", ARGV.shift", "reinstall <name or alias> - Reinstall a node"],
+  "update" => ["action \"update\", ARGV.shift", "update <name or alias> - Hardware update a node"],
+  "rename" => ["rename ARGV.shift, ARGV.shift", "rename <name or alias> <new_alias> - Rename a node alias"],
+  "role" => ["role ARGV.shift, ARGV.shift", "role <name or alias> <intended role> - Assign an intended role"],
+  "api_help" => ["api_help", "api_help - Crowbar API help for this barclamp"]
 }
 
 def print_commands(cmds, spacer = "  ")
@@ -251,11 +251,11 @@ def aliases
       aliases = body.nodes.map { |node|
         # FIXME: This code is a duplicate of the fallback value in
         # NodeObject#alias.
-        hostname = node.name.split('.')[0]
-        node.alias == hostname ? '-' : node.alias
+        hostname = node.name.split(".")[0]
+        node.alias == hostname ? "-" : node.alias
       }
       col_1 = aliases.dup
-      col_1.push 'Alias' if $stdout.isatty # see below
+      col_1.push "Alias" if $stdout.isatty # see below
       col_width = col_1.map(&:length).max
       format = "%-#{col_width}s  %s"
       output = aliases.zip(names).map { |aliaz, name|
@@ -266,8 +266,8 @@ def aliases
       # human-readable in the interactive case.
       if $stdout.isatty
         width = output.map(&:length).max
-        output.unshift('-' * width)
-        output.unshift(format % ['Alias', 'Name'])
+        output.unshift("-" * width)
+        output.unshift(format % ["Alias", "Name"])
       end
 
       result(output.join("\n"), 0)
@@ -352,7 +352,7 @@ def rename(name, update)
   usage(-1) if name.nil? or name.empty?
   usage(-1) if update.nil? or update.empty?
 
-  action("rename", name, { :alias => update})
+  action("rename", name, { alias: update})
 end
 
 def role(name, update)
@@ -372,7 +372,7 @@ def role(name, update)
     exit 1
   end
 
-  action("role", name, { :role => update})
+  action("role", name, { role: update})
 end
 
 def api_help
@@ -407,7 +407,7 @@ def opt_parse
   end
 
   sub_options = @options.map { |x| x[0] }
-  lsub_options = @options.map { |x| [ x[0][0], x[2] ] }
+  lsub_options = @options.map { |x| [x[0][0], x[2]] }
   opts = GetoptLong.new(*sub_options)
 
   opts.each do |opt, arg|

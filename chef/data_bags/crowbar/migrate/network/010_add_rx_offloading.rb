@@ -8,7 +8,6 @@ def upgrade ta, td, a, d
   return a, d
 end
 
-
 def downgrade ta, td, a, d
   unless ta.has_key? "enable_tx_offloading"
     a.delete "enable_tx_offloading"

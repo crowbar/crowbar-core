@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-require 'spec_helper'
+require "spec_helper"
 
 describe ChefObject do
   let(:chef_object) { ChefObject }

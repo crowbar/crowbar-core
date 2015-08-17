@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-require 'ostruct'
+require "ostruct"
 
 class RoleObject < ChefObject
   self.chef_type = "role"
@@ -92,18 +92,18 @@ class RoleObject < ChefObject
           cluster_roles_nodes = cluster.proposal_nodes(nodes)
 
           obj = OpenStruct.new(
-            :cluster => true,
-            :nodes   => cluster_roles_nodes.map { |role, nodes| nodes }.flatten.uniq,
-            :node    => nil,
-            :name    => ServiceObject.cluster_name(node_name)
+            cluster: true,
+            nodes: cluster_roles_nodes.map { |role, nodes| nodes }.flatten.uniq,
+            node: nil,
+            name: ServiceObject.cluster_name(node_name)
           )
         else
           node = nodes.find { |n| n.name == node_name }
           obj  = !node ? nil : OpenStruct.new(
-            :cluster => false,
-            :nodes   => [node],
-            :node    => node,
-            :name    => node.name
+            cluster: false,
+            nodes: [node],
+            node: node,
+            name: node.name
           )
         end
         assigned_nodes.push(obj) if obj
@@ -113,7 +113,7 @@ class RoleObject < ChefObject
   end
 
   def core_role?
-    core_barclamps = BarclampCatalog.members('crowbar').keys
+    core_barclamps = BarclampCatalog.members("crowbar").keys
     core_barclamps.any? { |core_barclamp| core_barclamp == barclamp }
   end
 

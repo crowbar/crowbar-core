@@ -28,9 +28,9 @@ module BarclampsHelper
 
   def display_led_for(state, property, path = false)
     options = {
-      :class => "led #{state}",
-      :id => property,
-      :title => t(state.to_s, :scope => "proposal.status")
+      class: "led #{state}",
+      id: property,
+      title: t(state.to_s, scope: "proposal.status")
     }
 
     options["data-ledupdate"] = path if path
@@ -55,87 +55,87 @@ module BarclampsHelper
   end
 
   def show_barclamp_button(barclamp, inst, options = {})
-    link_to t(".show"), "/crowbar/#{barclamp}/1.0/#{inst}", { :class => "btn btn-default show" }.merge(options)
+    link_to t(".show"), "/crowbar/#{barclamp}/1.0/#{inst}", { class: "btn btn-default show" }.merge(options)
   end
 
   def edit_barclamp_button(barclamp, inst, options = {})
-    link_to t(".edit"), "/crowbar/#{barclamp}/1.0/proposals/#{inst}", { :class => "btn btn-default edit" }.merge(options)
+    link_to t(".edit"), "/crowbar/#{barclamp}/1.0/proposals/#{inst}", { class: "btn btn-default edit" }.merge(options)
   end
 
   def cancel_barclamp_button(barclamp)
-    link_to t("cancel"), barclamp_modules_path(:id => barclamp), :class => "btn btn-default cancel"
+    link_to t("cancel"), barclamp_modules_path(id: barclamp), class: "btn btn-default cancel"
   end
 
   def render_barclamp_show_attributes(barclamp)
     if show_raw_attributes?
-      render :partial => "barclamp/show_attributes_raw"
+      render partial: "barclamp/show_attributes_raw"
     else
-      render :partial => "barclamp/#{barclamp}/show_attributes"
+      render partial: "barclamp/#{barclamp}/show_attributes"
     end
   rescue ::ActionView::MissingTemplate
-    render :partial => "barclamp/show_attributes_raw"
+    render partial: "barclamp/show_attributes_raw"
   end
 
   def render_barclamp_show_deployment(barclamp)
     if show_raw_deployment?
-      render :partial => "barclamp/show_deployment_raw"
+      render partial: "barclamp/show_deployment_raw"
     else
-      render :partial => "barclamp/#{barclamp}/show_deployment"
+      render partial: "barclamp/#{barclamp}/show_deployment"
     end
   rescue ::ActionView::MissingTemplate
-    render :partial => "barclamp/show_deployment_raw"
+    render partial: "barclamp/show_deployment_raw"
   end
 
   def render_barclamp_edit_attributes(proposal)
     if show_raw_attributes?
-      render :partial => 'barclamp/edit_attributes_raw'
+      render partial: "barclamp/edit_attributes_raw"
     else
       if Rails.root.join("app", "views", "barclamp", proposal.barclamp, "_edit_attributes.html.haml").file?
-        render :partial => "barclamp/#{proposal.barclamp}/edit_attributes"
+        render partial: "barclamp/#{proposal.barclamp}/edit_attributes"
       else
         # Currently this view does not exist, but should be the
         # fallback way to show a generic form or message
-        render :partial => "barclamp/general/edit_attributes"
+        render partial: "barclamp/general/edit_attributes"
       end
     end
   rescue ::ActionView::MissingTemplate
-    render :partial => "barclamp/edit_attributes_raw"
+    render partial: "barclamp/edit_attributes_raw"
   rescue ::StandardError => e
     puts "Attribute Exception #{e.class}: #{e.message}"
     puts e.backtrace.join("\n")
 
     raise e if Rails.env.development?
-    render :partial => "barclamp/edit_attributes_raw"
+    render partial: "barclamp/edit_attributes_raw"
   rescue ::SyntaxError => e
     raise e
   end
 
   def render_barclamp_edit_deployment(proposal)
     if show_raw_deployment?
-      render :partial => 'barclamp/edit_deployment_raw'
+      render partial: "barclamp/edit_deployment_raw"
     else
       if Rails.root.join("app", "views", "barclamp", proposal.barclamp, "_edit_deployment.html.haml").file?
-        render :partial => "barclamp/#{proposal.barclamp}/edit_deployment"
+        render partial: "barclamp/#{proposal.barclamp}/edit_deployment"
       else
-        render :partial => "barclamp/general/edit_deployment"
+        render partial: "barclamp/general/edit_deployment"
       end
     end
   rescue ::ActionView::MissingTemplate
-    render :partial => "barclamp/edit_deployment_raw"
+    render partial: "barclamp/edit_deployment_raw"
   rescue ::StandardError => e
     puts "Deployment Exception #{e.class}: #{e.message}"
     puts e.backtrace.join("\n")
 
     raise e if Rails.env.development?
-    render :partial => "barclamp/edit_deployment_raw"
+    render partial: "barclamp/edit_deployment_raw"
   rescue ::SyntaxError => e
     raise e
   end
 
   def render_barclamp_index(barclamp)
-    render :partial => "barclamp/#{barclamp}/index"
+    render partial: "barclamp/#{barclamp}/index"
   rescue ::ActionView::MissingTemplate
-    render :partial => "barclamp/index"
+    render partial: "barclamp/index"
   end
 
   def show_raw_attributes?

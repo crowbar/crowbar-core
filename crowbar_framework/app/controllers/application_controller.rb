@@ -15,19 +15,18 @@
 # limitations under the License.
 #
 
-require 'uri'
+require "uri"
 
 # Filters added to this controller apply to all controllers in the application.
 # Likewise, all the methods added will be available for all controllers.
 class ApplicationController < ActionController::Base
-  rescue_from Crowbar::Error::NotFound, :with => :render_not_found
-  rescue_from Crowbar::Error::ChefOffline, :with => :chef_is_offline
+  rescue_from Crowbar::Error::NotFound, with: :render_not_found
+  rescue_from Crowbar::Error::ChefOffline, with: :chef_is_offline
 
   @@users = nil
 
-  before_filter :digest_authenticate, :if => :need_to_auth?
-  before_filter :enable_profiler, :if => Proc.new { ENV["ENABLE_PROFILER"] == "true" }
-
+  before_filter :digest_authenticate, if: :need_to_auth?
+  before_filter :enable_profiler, if: Proc.new { ENV["ENABLE_PROFILER"] == "true" }
 
   # Basis for the reflection/help system.
 
@@ -85,13 +84,13 @@ class ApplicationController < ActionController::Base
 
   add_help(:help)
   def help
-    render :json => { self.controller_name => self.help_contents.collect { |m|
+    render json: { self.controller_name => self.help_contents.collect { |m|
         res = {}
         m.each { |k,v|
           # sigh, we cannot resolve url_for at class definition time.
           # I suppose we have to do it at runtime.
-          url=URI::unescape(url_for({ :action => k,
-                        :controller => self.controller_name,
+          url=URI::unescape(url_for({ action: k,
+                        controller: self.controller_name
 
           }.merge(v["args"].inject({}) {|acc,x|
             acc.merge({x.to_s => "(#{x.to_s})"})
@@ -165,7 +164,7 @@ class ApplicationController < ActionController::Base
       user = list[0].strip rescue nil
       password = list[2].strip rescue nil
       realm = list[1].strip rescue nil
-      ret[user] ={:realm => realm, :password => password}
+      ret[user] ={realm: realm, password: password}
     }
     @@auth_load_mutex.synchronize  do
         @@users = ret.dup
@@ -180,21 +179,21 @@ class ApplicationController < ActionController::Base
   end
 
   def log_exception(e)
-    lines = [ e.message ] + e.backtrace
+    lines = [e.message] + e.backtrace
     Rails.logger.warn lines.join("\n")
   end
 
   def render_not_found
     respond_to do |format|
-      format.html { render "errors/not_found", :status => 404 }
-      format.json { render :json => { :error => "Not found" }, :status => 404 }
+      format.html { render "errors/not_found", status: 404 }
+      format.json { render json: { error: "Not found" }, status: 404 }
     end
   end
 
   def chef_is_offline
     respond_to do |format|
-      format.html { render "errors/chef_offline", :status => 500 }
-      format.json { render :json => { :error => "Chef server is not available" }, :status => 500 }
+      format.html { render "errors/chef_offline", status: 500 }
+      format.json { render json: { error: "Chef server is not available" }, status: 500 }
     end
   end
 

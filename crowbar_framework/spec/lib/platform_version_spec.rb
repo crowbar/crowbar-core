@@ -1,11 +1,11 @@
-require 'spec_helper'
+require "spec_helper"
 
 describe PlatformVersion do
   it "correctly implements ordering" do
     cases = {
       ["1.2.0", "1.1.1"] => ["1.1.1", "1.2.0"],
       ["0.0.1", "0.1.0"] => ["0.0.1", "0.1.0"],
-      ["1.0.0", "0.9.9"] => ["0.9.9", "1.0.0"],
+      ["1.0.0", "0.9.9"] => ["0.9.9", "1.0.0"]
     }
 
     cases.each do |versions, sorted|

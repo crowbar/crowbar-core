@@ -16,7 +16,6 @@
 #
 
 class DeployerService < ServiceObject
-
   def initialize(thelogger)
     super(thelogger)
     @bc_name = "deployer"
@@ -50,7 +49,7 @@ class DeployerService < ServiceObject
       return [404, "Failed to find node"]
     end
 
-    # 
+    #
     # If we are discovering the node, make sure that we add the deployer client to the node
     #
     if state == "discovering"
@@ -63,7 +62,7 @@ class DeployerService < ServiceObject
         return [404, "Failed to add role to node"]
       end
       @logger.debug("Deployer transition: leaving #{name} for #{state}: discovering passed.")
-      return [200, { :name => name } ]
+      return [200, { name: name }]
     end
 
     #
@@ -88,16 +87,16 @@ class DeployerService < ServiceObject
     # if delete - clear out stuff
     if state == "delete"
       # Do more work here - one day.
-      return [200, { :name => name } ]
+      return [200, { name: name }]
     end
 
     save_it = false
 
-    # 
+    #
     # Decide on the nodes role for the cloud
     #   * This includes adding a role for node type (for bios/raid update/config)
     #   * This includes adding an attribute on the node for inclusion in clouds
-    # 
+    #
     if state == "discovered"
       @logger.debug("Deployer transition: discovered state for #{name}")
 
@@ -121,7 +120,7 @@ class DeployerService < ServiceObject
       @logger.error("Failed to allocate admin address for: #{node.name}: #{result[0]}") if result[0] != 200
       if result[0] == 200
         address = result[1]["address"]
-        boot_ip_hex  = sprintf("%08X",address.split('.').inject(0){|acc,i|(acc << 8)+i.to_i})        
+        boot_ip_hex  = sprintf("%08X",address.split(".").inject(0){ |acc,i|(acc << 8)+i.to_i })
       end
 
       @logger.debug("Deployer transition: Done Allocate admin address for #{name} boot file:#{boot_ip_hex}")
@@ -167,7 +166,7 @@ class DeployerService < ServiceObject
       node.save
 
       @logger.debug("Deployer transition: leaving discovered for #{name} EOF")
-      return [200, { :name => name } ]
+      return [200, { name: name }]
     end
 
     #
@@ -188,26 +187,25 @@ class DeployerService < ServiceObject
       role.default_attributes["deployer"]["bios_map"].each do |match|
         roles.each do |r|
           if r =~ /#{match["pattern"]}/
-            node.crowbar["crowbar"]["hardware"] = {} if node.crowbar["crowbar"]["hardware"].nil? 
+            node.crowbar["crowbar"]["hardware"] = {} if node.crowbar["crowbar"]["hardware"].nil?
             node.crowbar["crowbar"]["hardware"]["bios_set"] = match["bios_set"] if node.crowbar["crowbar"]["hardware"]["bios_set"].nil?
             node.crowbar["crowbar"]["hardware"]["raid_set"] = match["raid_set"] if node.crowbar["crowbar"]["hardware"]["raid_set"].nil?
             done = true
             break
           end
-        end 
+        end
         break if done
       end
-      
+
       os_map = role.default_attributes["deployer"]["os_map"]
-      node.crowbar["crowbar"]["hardware"]["os"] = os_map[0]["install_os"] 
+      node.crowbar["crowbar"]["hardware"]["os"] = os_map[0]["install_os"]
       save_it = true
     end
 
     node.save if save_it
 
     @logger.debug("Deployer transition: leaving state for #{name} EOF")
-    return [200, { :name => name } ]
+    return [200, { name: name }]
   end
-
 end
 

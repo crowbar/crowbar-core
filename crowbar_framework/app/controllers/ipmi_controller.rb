@@ -16,7 +16,6 @@
 #
 
 class IpmiController < BarclampController
-
   protected
 
   def initialize_service
