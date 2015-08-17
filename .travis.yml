@@ -1,0 +1,19 @@
+language: ruby
+sudo: false
+
+rvm:
+  - 2.1.0
+
+gemfile: crowbar_framework/Gemfile
+
+install:
+  - cd crowbar_framework
+  - bin/bundle install
+  - bin/rake db:create db:migrate
+
+script:
+  - bin/rake spec brakeman:run
+
+  # ignore rest-client issues, chef 10 requires that
+  - bin/bundle exec bundle-audit update
+  - bin/bundle exec bundle-audit check --ignore CVE-2015-1820 OSVDB-117461
