@@ -822,6 +822,16 @@ class ServiceObject
     # We also check that all nodes we'll require are in the ready state.
     #
 
+    nodes_without_admin = NodeObject.find_all_nodes.reject do |node|
+      node[:platform] == "windows" || node.admin?
+    end.map(&:name)
+
+    apply_lock = Crowbar::Lock.new(
+      logger: @logger,
+      path: "/var/chef/cache/pause-file.lock",
+      remote: nodes_without_admin
+    ).acquire
+
     # Query for this role
     old_role = RoleObject.find_role_by_name(role.name)
 
@@ -1277,6 +1287,8 @@ class ServiceObject
     restore_to_ready(applying_nodes)
     process_queue unless in_queue
     [200, {}]
+  ensure
+    apply_lock.release
   end
 
   def apply_role_pre_chef_call(old_role, role, all_nodes)
