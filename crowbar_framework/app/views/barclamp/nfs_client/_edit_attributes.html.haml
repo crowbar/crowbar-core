@@ -1,0 +1,62 @@
+= attributes_for @proposal do
+  .panel-sub
+    = header show_raw_deployment?, true
+
+  .panel-body
+
+    %table.table.table-middle{ "data-dynamic" => "#mount-entries", "data-namespace" => "exports", "data-optional" => "mount_options", "data-invalid" => t(".error_invalid"), "data-duplicate" => t(".error_duplicate") }
+      %thead
+        %tr
+          %th.col-sm-3
+            = t(".name")
+          %th.col-sm-2
+            = t(".nfs_server")
+          %th.col-sm-2
+            = t(".export")
+          %th.col-sm-2
+            = t(".mount_path")
+          %th.col-sm-2
+            = t(".mount_options")
+          %th.col-sm-1
+
+      %tbody
+
+      %tfoot
+        %tr
+          %td
+            = text_field_tag "mount[name]", "", :placeholder => t(".name"), :class => "form-control", "data-name" => "name", "data-type" => "string"
+          %td
+            = text_field_tag "mount[nfs_server]", "", :placeholder => t(".nfs_server"), :class => "form-control", "data-name" => "nfs_server", "data-type" => "string"
+          %td
+            = text_field_tag "mount[export]", "", :placeholder => t(".export"), :class => "form-control", "data-name" => "export", "data-type" => "string"
+          %td
+            = text_field_tag "mount[mount_path]", "", :placeholder => t(".mount_path"), :class => "form-control", "data-name" => "mount_path", "data-type" => "string"
+          %td
+            = text_field_tag "mount[mount_options]", "", :placeholder => t(".mount_options"), :class => "form-control", "data-name" => "mount_options", "data-type" => "array-string"
+          %td
+            = link_to t(".add"), "#", :class => "btn btn-default btn-block", "data-add" => true
+
+    .alert.alert-warning
+      = t(".options_hint")
+
+%script#mount-entries{ :type => "text/x-handlebars-template" }
+  {{#each entries}}
+  %tr.edit
+    %td
+      = text_field_tag "mount[name]", "{{name}}", :placeholder => t(".name"), :class => "form-control", :disabled => "disabled"
+    %td
+      = text_field_tag "mount[nfs_server]", "{{nfs_server}}", :placeholder => t(".nfs_server"), :class => "form-control", "data-update" => "exports/{{name}}/nfs_server", "data-name" => "nfs_server", "data-type" => "string"
+    %td
+      = text_field_tag "mount[export]", "{{export}}", :placeholder => t(".export"), :class => "form-control", "data-update" => "exports/{{name}}/export", "data-name" => "export", "data-type" => "string"
+    %td
+      = text_field_tag "mount[mount_path]", "{{mount_path}}", :placeholder => t(".mount_path"), :class => "form-control", "data-update" => "exports/{{name}}/mount_path", "data-name" => "mount_path", "data-type" => "string"
+    %td
+      = text_field_tag "mount[mount_options]", "{{mount_options}}", :placeholder => t(".mount_options"), :class => "form-control", "data-update" => "exports/{{name}}/mount_options", "data-name" => "mount_options", "data-type" => "array-string"
+    %td
+      = link_to t(".remove"), "#", :class => "btn btn-default btn-block", "data-remove" => "{{name}}"
+  {{else}}
+  %tr
+    %td{ :colspan => 6 }
+      .empty.alert.alert-info.text-center
+        = t(".no_mounts")
+  {{/each}}
