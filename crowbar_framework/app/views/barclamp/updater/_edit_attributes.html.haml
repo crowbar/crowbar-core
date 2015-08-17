@@ -1,0 +1,10 @@
+= attributes_for @proposal do
+  .panel-sub
+    = header show_raw_deployment?, true
+
+  .panel-body
+    = select_field %w(zypper method), :collection => :zypper_methods_for_updater, "data-showit" => "patch", "data-showit-target" => "#zypper_patch_include_reboot_patches"
+    = boolean_field %w(zypper gpg_checks)
+    = boolean_field %w(zypper licenses_agree)
+    = boolean_field %w(zypper patch include_reboot_patches)
+    = boolean_field %w(do_reboot)
