@@ -33,14 +33,6 @@ class NetworkService < ServiceObject
     end
   end
 
-  def acquire_ip_lock
-    acquire_lock "ip"
-  end
-
-  def release_ip_lock(f)
-    release_lock f
-  end
-
   def allocate_ip_by_type(bc_instance, network, range, object, type, suggestion = nil)
     @logger.debug("Network allocate ip for #{type}: entering #{object} #{network} #{range}")
     return [404, "No network specified"] if network.nil?
@@ -63,8 +55,8 @@ class NetworkService < ServiceObject
 
     net_info = {}
     found = false
+    file_lock = Crowbar::Lock.new(logger: @logger, path: Rails.root.join("tmp", "ip.lock")).acquire
     begin
-      f = acquire_ip_lock
       db = Chef::DataBag.load("crowbar/#{network}_network") rescue nil
       net_info = build_net_info(network, name, db)
 
@@ -118,7 +110,7 @@ class NetworkService < ServiceObject
     rescue Exception => e
       @logger.error("Error finding address: #{e.message}")
     ensure
-      release_ip_lock(f)
+      file_lock.release
     end
 
     @logger.info("Network allocate ip for #{type}: no address available: #{name} #{network} #{range}") if !found
@@ -179,9 +171,8 @@ class NetworkService < ServiceObject
     end
 
     save = false
-    begin # Rescue block
-      f = acquire_ip_lock
-
+    file_lock = Crowbar::Lock.new(logger: @logger, path: Rails.root.join("tmp", "ip.lock")).acquire
+    begin
       address = type == :node ? net_info["address"] : nil
 
       # Did we already allocate this, but the node lose it?
@@ -214,7 +205,7 @@ class NetworkService < ServiceObject
     rescue Exception => e
       @logger.error("Error finding address: #{e.message}")
     ensure
-      release_ip_lock(f)
+      file_lock.release
     end
 
     if type == :node
