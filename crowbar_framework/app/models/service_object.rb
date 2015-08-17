@@ -822,9 +822,6 @@ class ServiceObject
     # We also check that all nodes we'll require are in the ready state.
     #
 
-    # Initialize variables used in ensure at the end of the method
-    chef_daemon_nodes = []
-
     # Query for this role
     old_role = RoleObject.find_role_by_name(role.name)
 
@@ -856,9 +853,11 @@ class ServiceObject
     end
     new_elements = expanded_new_elements
 
-    # stop chef daemon on all nodes
-    chef_daemon_nodes = new_elements.values.flatten.uniq
-    chef_daemon(:stop, chef_daemon_nodes)
+    # Don't start until all intervallic runs are done.  This avoids
+    # some of the orchestration problems described in:
+    #
+    #   https://bugzilla.suse.com/show_bug.cgi?id=857375
+    wait_for_chef_daemons(new_elements.values.flatten.uniq)
 
     # save list of expanded elements, as this is needed when we look at the old
     # role. See below the comments for old_elements.
@@ -1284,9 +1283,6 @@ class ServiceObject
     restore_to_ready(applying_nodes)
     process_queue unless in_queue
     [200, {}]
-  ensure
-    # start chef daemon on all nodes
-    chef_daemon(:start, chef_daemon_nodes)
   end
 
   def apply_role_pre_chef_call(old_role, role, all_nodes)
@@ -1412,24 +1408,15 @@ class ServiceObject
     }
   end
 
-  def chef_daemon(action, node_list)
-    wait_nodes = []
-
+  def wait_for_chef_daemons(node_list)
     node_list.each do |node_name|
       node = NodeObject.find_node_by_name(node_name)
 
       # we can't connect to windows nodes
       next if node[:platform] == "windows"
 
-      @logger.debug "apply_role: #{action.to_s} chef service on #{node_name}"
-      node.run_service :chef, action
-      wait_nodes << node_name
-    end
-
-    # wait for chef clients on all nodes
-    wait_nodes.each do |node_name|
       wait_for_chef_clients(node_name, logger: true)
-    end if action == :stop
+    end
   end
 
   private
