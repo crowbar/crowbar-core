@@ -46,8 +46,10 @@ class CrowbarService < ServiceObject
 
     @logger.info("Crowbar transition enter: #{name} to #{state}")
 
+    pop_it = false
+    node = NodeObject.find_node_by_name name
+
     Crowbar::Lock.new(logger: @logger, path: Rails.root.join("tmp", "BA-LOCK.lock")).with_lock do
-      node = NodeObject.find_node_by_name name
       if node.nil? and (state == "discovering" or state == "testing")
         @logger.debug("Crowbar transition: creating new node for #{name} to #{state}")
         node = NodeObject.create_new name
@@ -61,8 +63,6 @@ class CrowbarService < ServiceObject
       if state == "readying"
         transition_to_readying inst, name, state, node
       end
-
-      pop_it = false
 
       if %w(hardware-installing hardware-updating update).include? state
         @logger.debug("Crowbar transition: force run because of state #{name} to #{state}")
