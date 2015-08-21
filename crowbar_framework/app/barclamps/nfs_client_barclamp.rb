@@ -1,5 +1,6 @@
 #
-# Copyright 2013-2014, SUSE LINUX Products GmbH
+# Copyright 2011-2013, Dell
+# Copyright 2013-2015, SUSE Linux GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,18 +15,26 @@
 # limitations under the License.
 #
 
-barclamp:
-  name: 'updater'
-  display: 'Updater'
-  description: 'System Package Updater'
-  version: 0
-  user_managed: true
-  member:
-    - 'crowbar'
+class NfsClientBarclamp < Crowbar::Registry::Barclamp
+  name "nfs_client"
+  display "NFS Client"
+  description "Setup of NFS mounts"
 
-crowbar:
-  layout: 1
-  order: 99
-  run_order: 99
-  chef_order: 99
-  proposal_schema_version: 3
+  member [
+    "crowbar"
+  ]
+
+  requires [
+
+  ]
+
+  listed true
+
+  layout 1
+  version 0
+  schema 3
+
+  order 55
+end
+
+Crowbar::Registry.register NfsClientBarclamp.new

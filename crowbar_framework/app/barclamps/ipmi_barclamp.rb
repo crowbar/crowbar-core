@@ -1,6 +1,6 @@
 #
 # Copyright 2011-2013, Dell
-# Copyright 2013-2014, SUSE LINUX Products GmbH
+# Copyright 2013-2015, SUSE Linux GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,18 +15,26 @@
 # limitations under the License.
 #
 
-barclamp:
-  name: 'provisioner'
-  display: 'Provisioner'
-  description: 'The roles and recipes to set up the provisioning server and a base environment for all nodes'
-  version: 0
-  user_managed: true
-  member:
-    - 'crowbar'
+class IpmiBarclamp < Crowbar::Registry::Barclamp
+  name "ipmi"
+  display "IPMI"
+  description "IPMI Management"
 
-crowbar:
-  layout: 1
-  order: 10
-  run_order: 1060
-  chef_order: 1060
-  proposal_schema_version: 3
+  member [
+    "crowbar"
+  ]
+
+  requires [
+
+  ]
+
+  listed true
+
+  layout 1
+  version 0
+  schema 3
+
+  order 15
+end
+
+Crowbar::Registry.register IpmiBarclamp.new

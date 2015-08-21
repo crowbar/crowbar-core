@@ -1,6 +1,6 @@
 #
 # Copyright 2011-2013, Dell
-# Copyright 2013-2014, SUSE LINUX Products GmbH
+# Copyright 2013-2015, SUSE Linux GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,18 +15,35 @@
 # limitations under the License.
 #
 
-barclamp:
-  name: 'deployer'
-  display: 'Deployer'
-  description: 'Deployment Management'
-  version: 0
-  user_managed: true
-  member:
-    - 'crowbar'
+class CiscoUcsBarclamp < Crowbar::Registry::Barclamp
+  name "cisco_ucs"
+  display "Cisco UCS"
+  description "Integration with Cisco Unified Computing System platform"
 
-crowbar:
-  layout: 1
-  order: 10
-  run_order: 10
-  chef_order: 10
-  proposal_schema_version: 3
+  member [
+    "crowbar"
+  ]
+
+  requires [
+
+  ]
+
+  listed false
+
+  layout 1
+  version 0
+  schema 3
+
+  order 20
+
+  nav(
+    utils: {
+      ucs: {
+        order: 90,
+        route: "ucs_edit_path"
+      }
+    }
+  )
+end
+
+Crowbar::Registry.register CiscoUcsBarclamp.new

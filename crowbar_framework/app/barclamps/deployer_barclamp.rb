@@ -1,6 +1,6 @@
 #
 # Copyright 2011-2013, Dell
-# Copyright 2013-2014, SUSE LINUX Products GmbH
+# Copyright 2013-2015, SUSE Linux GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,18 +15,26 @@
 # limitations under the License.
 #
 
-barclamp:
-  name: 'ntp'
-  display: 'NTP'
-  description: 'NTP Management'
-  version: 0
-  user_managed: true
-  member:
-    - 'crowbar'
+class DeployerBarclamp < Crowbar::Registry::Barclamp
+  name "deployer"
+  display "Deployer"
+  description "Deployment Management"
 
-crowbar:
-  layout: 1
-  order: 50
-  run_order: 50
-  chef_order: 50
-  proposal_schema_version: 3
+  member [
+    "crowbar"
+  ]
+
+  requires [
+
+  ]
+
+  listed true
+
+  layout 1
+  version 0
+  schema 3
+
+  order 10
+end
+
+Crowbar::Registry.register DeployerBarclamp.new
