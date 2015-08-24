@@ -89,10 +89,16 @@ module Crowbar
       remote.each do |node|
         if action == "acquire"
           logger.info("Acquire remote temporary lock on #{path} on #{node}")
-          ssh_cmd(node, "touch")
+          ssh_cmd(node, "echo '#{Process.pid}' >")
         elsif action == "release"
           logger.info("Release remote temporary lock on #{path} on #{node}")
-          ssh_cmd(node, "rm -f")
+          # only the process that created the lock is allowed to remove it
+          pid = capture(:stdout) { ssh_cmd(node, "cat") }.chomp.to_i
+          if pid == Process.pid
+            ssh_cmd(node, "rm -f")
+          else
+            logger.error("Failed to remove #{path} on #{node}. pid #{pid} doesn't match #{Process.id}")
+          end
         end
       end
     end
