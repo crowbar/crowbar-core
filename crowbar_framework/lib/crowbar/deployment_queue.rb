@@ -227,7 +227,7 @@ module Crowbar
     end
 
     def file_lock
-      FileLock
+      Crowbar::Lock
     end
 
     # Removes the proposal reference from the queue, updates the proposal as not queued

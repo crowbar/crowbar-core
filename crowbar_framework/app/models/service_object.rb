@@ -143,11 +143,11 @@ class ServiceObject
 # Locking Routines
 #
   def acquire_lock(name)
-    FileLock.acquire(name, logger: @logger)
+    Crowbar::Lock.acquire(name, logger: @logger)
   end
 
   def release_lock(f)
-    FileLock.release(f, logger: @logger)
+    Crowbar::Lock.release(f, logger: @logger)
   end
 
 #
