@@ -142,12 +142,18 @@ class ServiceObject
 #
 # Locking Routines
 #
-  def acquire_lock(name)
-    Crowbar::Lock.acquire(name, logger: @logger)
+  def new_lock(name)
+    Crowbar::Lock.new(name: name, logger: @logger)
   end
 
-  def release_lock(f)
-    Crowbar::Lock.release(f, logger: @logger)
+  def acquire_lock(name)
+    new_lock(name).acquire
+  end
+
+  def with_lock(name)
+    new_lock(name).with_lock do
+      yield
+    end
   end
 
 #
@@ -155,8 +161,7 @@ class ServiceObject
 #
 
   def set_to_applying(nodes, inst)
-    f = acquire_lock "BA-LOCK"
-    begin
+    with_lock "BA-LOCK" do
       nodes.each do |node_name|
         node = NodeObject.find_node_by_name(node_name)
         next if node.nil?
@@ -165,14 +170,11 @@ class ServiceObject
         node.crowbar["state_owner"] = "#{@bc_name}-#{inst}"
         node.save
       end
-    ensure
-      release_lock f
     end
   end
 
   def restore_to_ready(nodes)
-    f = acquire_lock "BA-LOCK"
-    begin
+    with_lock "BA-LOCK" do
       nodes.each do |node_name|
         node = NodeObject.find_node_by_name(node_name)
         next if node.nil?
@@ -181,8 +183,6 @@ class ServiceObject
         node.crowbar["state_owner"] = ""
         node.save
       end
-    ensure
-      release_lock f
     end
   end
 
