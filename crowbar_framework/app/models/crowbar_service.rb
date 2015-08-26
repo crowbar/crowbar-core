@@ -46,9 +46,10 @@ class CrowbarService < ServiceObject
 
     @logger.info("Crowbar transition enter: #{name} to #{state}")
 
-    f = acquire_lock "BA-LOCK"
-    begin
-      node = NodeObject.find_node_by_name name
+    pop_it = false
+    node = NodeObject.find_node_by_name name
+
+    Crowbar::Lock.new(logger: @logger, path: Rails.root.join("tmp", "BA-LOCK.lock")).with_lock do
       if node.nil? and (state == "discovering" or state == "testing")
         @logger.debug("Crowbar transition: creating new node for #{name} to #{state}")
         node = NodeObject.create_new name
@@ -62,8 +63,6 @@ class CrowbarService < ServiceObject
       if state == "readying"
         transition_to_readying inst, name, state, node
       end
-
-      pop_it = false
 
       if %w(hardware-installing hardware-updating update).include? state
         @logger.debug("Crowbar transition: force run because of state #{name} to #{state}")
@@ -87,8 +86,6 @@ class CrowbarService < ServiceObject
       end
 
       node.save if transition_save_node
-    ensure
-      release_lock f
     end
 
     if pop_it
@@ -134,7 +131,10 @@ class CrowbarService < ServiceObject
           # it in lockstep.  Naturally the second save clobbers
           # the first, so the first node won't be present in that
           # proposal.
-          bc_lock = acquire_lock "#{bc}:#{rname}"
+          file_lock = Crowbar::Lock.new(
+            logger: @logger,
+            path: Rails.root.join("tmp", "#{bc}:#{rname}.lock")
+          ).acquire
           begin
             svc_name = "#{bc.camelize}Service"
             @logger.info("Crowbar transition: calling #{bc}:#{rname} for #{name} for #{state} - svc: #{svc_name}")
@@ -153,7 +153,7 @@ class CrowbarService < ServiceObject
             @logger.fatal("#{e.backtrace.join("\n")}")
             return [500, "#{bc} transition to #{rname} failed.\n#{e.message}\n#{e.backtrace.join("\n")}"]
           ensure
-            release_lock bc_lock
+            file_lock.release
           end
         end
       end
