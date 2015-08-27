@@ -143,7 +143,7 @@ class ServiceObject
 # Locking Routines
 #
   def new_lock(name)
-    Crowbar::Lock.new(name: name, logger: @logger)
+    Crowbar::Lock::LocalBlocking.new(name: name, logger: @logger)
   end
 
   def acquire_lock(name)
