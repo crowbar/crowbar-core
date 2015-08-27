@@ -40,11 +40,13 @@ if not nodes.nil? and not nodes.empty?
     mac_list = []
     unless mnode["network"].nil? || mnode["network"]["interfaces"].nil?
       mnode["network"]["interfaces"].each do |net, net_data|
-        net_data.each do |field, field_data|
-          next if field != "addresses"
-          field_data.each do |addr, addr_data|
-            next if addr_data["family"] != "lladdr"
-            mac_list << addr unless mac_list.include? addr
+        if !net.start_with?('tap', 'qvo', 'qbr', 'qvb', 'ovs')
+          net_data.each do |field, field_data|
+            next if field != "addresses"
+            field_data.each do |addr, addr_data|
+              next if addr_data["family"] != "lladdr"
+              mac_list << addr unless mac_list.include? addr
+            end
           end
         end
       end
