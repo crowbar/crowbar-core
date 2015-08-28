@@ -28,7 +28,7 @@ describe ServiceObject do
 
   describe "service object" do
     it "responds to include cluster method" do
-      service_object.should respond_to(:available_clusters)
+      expect(service_object).to respond_to(:available_clusters)
     end
   end
 
@@ -72,7 +72,7 @@ describe ServiceObject do
       prop.raw_data["attributes"]["crowbar"].delete("run_order")
 
       service_object.validate_proposal(prop.raw_data)
-      service_object.instance_variable_get(:@validation_errors).should be_empty
+      expect(service_object.instance_variable_get(:@validation_errors)).to be_empty
     end
   end
 
@@ -86,8 +86,8 @@ describe ServiceObject do
 
         dns_service.stubs(:role_constraints).returns({ "dns-client" => { "count" => 0, "admin" => true } })
         dns_service.validate_proposal_constraints(dns_proposal)
-        dns_service.validation_errors.should_not be_empty
-        dns_service.validation_errors.first.should match(/accept up to 0 elements only/)
+        expect(dns_service.validation_errors).to_not be_empty
+        expect(dns_service.validation_errors.first).to match(/accept up to 0 elements only/)
       end
     end
 
@@ -97,8 +97,8 @@ describe ServiceObject do
 
         dns_service.stubs(:role_constraints).returns({ "dns-client" => { } })
         dns_service.validate_proposal_constraints(dns_proposal)
-        dns_service.validation_errors.should_not be_empty
-        dns_service.validation_errors.first.should match(/does not accept admin nodes/)
+        expect(dns_service.validation_errors).to_not be_empty
+        expect(dns_service.validation_errors.first).to match(/does not accept admin nodes/)
       end
     end
 
@@ -109,8 +109,8 @@ describe ServiceObject do
 
         dns_service.stubs(:role_constraints).returns({ "dns-client" => { "unique" => true, "admin" => true } })
         dns_service.validate_proposal_constraints(dns_proposal)
-        dns_service.validation_errors.should_not be_empty
-        dns_service.validation_errors.first.should match(/cannot be assigned to another role/)
+        expect(dns_service.validation_errors).to_not be_empty
+        expect(dns_service.validation_errors.first).to match(/cannot be assigned to another role/)
       end
     end
 
@@ -121,8 +121,8 @@ describe ServiceObject do
         dns_service.stubs(:role_constraints).returns({ "dns-client" => { "cluster" => false, "admin" => true } })
         dns_service.stubs(:is_cluster?).returns(true)
         dns_service.validate_proposal_constraints(dns_proposal)
-        dns_service.validation_errors.should_not be_empty
-        dns_service.validation_errors.first.should match(/does not accept clusters/)
+        expect(dns_service.validation_errors).to_not be_empty
+        expect(dns_service.validation_errors.first).to match(/does not accept clusters/)
       end
     end
 
@@ -137,8 +137,8 @@ describe ServiceObject do
         })
 
         dns_service.validate_proposal_constraints(dns_proposal)
-        dns_service.validation_errors.should_not be_empty
-        dns_service.validation_errors.first.should match(/cannot be assigned to both role/)
+        expect(dns_service.validation_errors).to_not be_empty
+        expect(dns_service.validation_errors.first).to match(/cannot be assigned to both role/)
       end
     end
 
@@ -156,7 +156,7 @@ describe ServiceObject do
             }
           })
         dns_service.validate_proposal_constraints(dns_proposal)
-        dns_service.validation_errors.length.should be == 0
+        expect(dns_service.validation_errors.length).to be == 0
       end
 
       it "does not allow nodes of matched platform using operator >=" do
@@ -168,7 +168,7 @@ describe ServiceObject do
             }
           })
         dns_service.validate_proposal_constraints(dns_proposal)
-        dns_service.validation_errors.length.should be == 1
+        expect(dns_service.validation_errors.length).to be == 1
       end
 
       it "allows nodes of matched platform using operator >" do
@@ -180,7 +180,7 @@ describe ServiceObject do
             }
           })
         dns_service.validate_proposal_constraints(dns_proposal)
-        dns_service.validation_errors.length.should be == 0
+        expect(dns_service.validation_errors.length).to be == 0
       end
 
       it "does not allow nodes of matched platform using operator >" do
@@ -192,7 +192,7 @@ describe ServiceObject do
             }
           })
         dns_service.validate_proposal_constraints(dns_proposal)
-        dns_service.validation_errors.length.should be == 1
+        expect(dns_service.validation_errors.length).to be == 1
       end
 
       it "allows nodes of matched platform using operator <=" do
@@ -204,7 +204,7 @@ describe ServiceObject do
             }
           })
         dns_service.validate_proposal_constraints(dns_proposal)
-        dns_service.validation_errors.length.should be == 0
+        expect(dns_service.validation_errors.length).to be == 0
       end
 
       it "does not allow nodes of matched platform using operator <=" do
@@ -216,7 +216,7 @@ describe ServiceObject do
             }
           })
         dns_service.validate_proposal_constraints(dns_proposal)
-        dns_service.validation_errors.length.should be == 1
+        expect(dns_service.validation_errors.length).to be == 1
       end
 
       it "allows nodes of matched platform using operator ==" do
@@ -228,7 +228,7 @@ describe ServiceObject do
             }
           })
         dns_service.validate_proposal_constraints(dns_proposal)
-        dns_service.validation_errors.length.should be == 0
+        expect(dns_service.validation_errors.length).to be == 0
       end
 
       it "does not allow nodes of matched platform using operator ==" do
@@ -240,7 +240,7 @@ describe ServiceObject do
             }
           })
         dns_service.validate_proposal_constraints(dns_proposal)
-        dns_service.validation_errors.length.should be == 1
+        expect(dns_service.validation_errors.length).to be == 1
       end
 
       it "allows nodes of matched platform with fancy versioning" do
@@ -252,7 +252,7 @@ describe ServiceObject do
             }
           })
         dns_service.validate_proposal_constraints(dns_proposal)
-        dns_service.validation_errors.length.should be == 0
+        expect(dns_service.validation_errors.length).to be == 0
       end
 
       it "allows nodes of matched platform using regular expressions" do
@@ -264,7 +264,7 @@ describe ServiceObject do
             }
           })
         dns_service.validate_proposal_constraints(dns_proposal)
-        dns_service.validation_errors.length.should be == 0
+        expect(dns_service.validation_errors.length).to be == 0
       end
 
       it "allows nodes of matched platform using regular expressions (multiple platforms)" do
@@ -276,7 +276,7 @@ describe ServiceObject do
             }
           })
         dns_service.validate_proposal_constraints(dns_proposal)
-        dns_service.validation_errors.length.should be == 0
+        expect(dns_service.validation_errors.length).to be == 0
       end
 
       it "does not allow nodes of a different platform" do
@@ -288,7 +288,7 @@ describe ServiceObject do
             }
           })
         dns_service.validate_proposal_constraints(dns_proposal)
-        dns_service.validation_errors.first.should match(/can be used only for suse 12.0/)
+        expect(dns_service.validation_errors.first).to match(/can be used only for suse 12.0/)
       end
 
       it "does not allow nodes of a different platform (multiple parforms)" do
@@ -300,7 +300,7 @@ describe ServiceObject do
             }
           })
         dns_service.validate_proposal_constraints(dns_proposal)
-        dns_service.validation_errors.first.should match(/can be used only for suse 12.0/)
+        expect(dns_service.validation_errors.first).to match(/can be used only for suse 12.0/)
       end
 
       it "does not allow nodes of a Ubuntu" do
@@ -312,7 +312,7 @@ describe ServiceObject do
             }
           })
         dns_service.validate_proposal_constraints(dns_proposal)
-        dns_service.validation_errors.first.should match(/can't be used for ubuntu/)
+        expect(dns_service.validation_errors.first).to match(/can't be used for ubuntu/)
       end
     end
   end

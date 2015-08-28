@@ -15,15 +15,15 @@ describe CrowbarPacemakerProxy do
     let(:bad_nodes) { [OpenStruct.new(status: "i don't exist")] }
 
     it "returns the lowest state of the nodes" do
-      klass.cluster_status(nodes).should == "failed"
+      expect(klass.cluster_status(nodes)).to be == "failed"
     end
 
     it "returns unknown for empty clusters" do
-      klass.cluster_status([]).should == "unknown"
+      expect(klass.cluster_status([])).to be == "unknown"
     end
 
     it "returns unknown for weird node state" do
-      klass.cluster_status([]).should == "unknown"
+      expect(klass.cluster_status([])).to be == "unknown"
     end
   end
 end

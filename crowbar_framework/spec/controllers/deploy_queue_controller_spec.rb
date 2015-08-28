@@ -35,7 +35,7 @@ describe DeployQueueController do
 
     it "is successful" do
       get :index
-      response.should be_success
+      expect(response).to be_success
     end
 
     describe "with existing nodes" do
@@ -49,7 +49,7 @@ describe DeployQueueController do
         @controller.stubs(:currently_deployed).returns(prop)
 
         get :index
-        response.should be_success
+        expect(response).to be_success
       end
 
       it "is successful when there are clusters in the queue" do
@@ -57,7 +57,7 @@ describe DeployQueueController do
         @controller.stubs(:deployment_queue).returns(queue)
 
         get :index
-        response.should be_success
+        expect(response).to be_success
       end
     end
 
@@ -72,14 +72,14 @@ describe DeployQueueController do
         @controller.stubs(:currently_deployed).returns(prop)
 
         get :index
-        response.should be_success
+        expect(response).to be_success
       end
 
       it "is successful for clusters in the queue" do
         @controller.stubs(:deployment_queue).returns(queue)
 
         get :index
-        response.should be_success
+        expect(response).to be_success
       end
     end
   end

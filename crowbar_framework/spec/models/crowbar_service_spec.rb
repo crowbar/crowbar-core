@@ -28,19 +28,19 @@ describe CrowbarService do
   describe "transition" do
     it "returns 404 without state" do
       response = crowbar.transition("default", "testing", nil)
-      response.first.should == 404
+      expect(response.first).to be == 404
     end
 
     it "returns 404 if node not found" do
       NodeObject.stubs(:find_node_by_name).returns(nil)
       response = crowbar.transition("default", "missing", "a state")
-      response.first.should == 404
+      expect(response.first).to be == 404
     end
 
     it "returns 200 on successful transition" do
       RoleObject.stubs(:find_roles_by_search).returns([])
       response = crowbar.transition("default", "testing", "a state")
-      response.first.should == 200
+      expect(response.first).to be == 200
     end
 
     describe "to another state" do
@@ -51,8 +51,8 @@ describe CrowbarService do
       it "sets the state debug and state" do
         NodeObject.stubs(:find_node_by_name).returns(@node)
         crowbar.transition("default", @node.name, "a state")
-        @node.state.should == "a state"
-        @node.crowbar["crowbar"]["state_debug"].should_not be_empty
+        expect(@node.state).to be == "a state"
+        expect(@node.crowbar["crowbar"]["state_debug"]).to_not be_empty
       end
 
       it "saves the node" do
@@ -88,7 +88,7 @@ describe CrowbarService do
       it "check that the node is initially not allocated" do
         NodeObject.stubs(:find_node_by_name).returns(@node)
         crowbar.transition("default", "testing", "discovering")
-        @node.allocated?.should == false
+        expect(@node.allocated?).to be false
       end
     end
 
@@ -100,7 +100,7 @@ describe CrowbarService do
       it "forces nodes transition to a given state" do
         NodeObject.stubs(:find_node_by_name).returns(@node)
         crowbar.transition("default", "testing", "hardware-installing")
-        @node.state.should == "hardware-installing"
+        expect(@node.state).to be == "hardware-installing"
       end
     end
 
@@ -112,7 +112,7 @@ describe CrowbarService do
       it "forces nodes transition to a given state" do
         NodeObject.stubs(:find_node_by_name).returns(@node)
         crowbar.transition("default", "testing", "hardware-updating")
-        @node.state.should == "hardware-updating"
+        expect(@node.state).to be == "hardware-updating"
       end
     end
 
@@ -124,7 +124,7 @@ describe CrowbarService do
       it "forces nodes transition to a given state" do
         NodeObject.stubs(:find_node_by_name).returns(@node)
         crowbar.transition("default", "testing", "update")
-        @node.state.should == "update"
+        expect(@node.state).to be == "update"
       end
     end
   end
