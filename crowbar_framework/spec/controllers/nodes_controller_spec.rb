@@ -292,7 +292,7 @@ describe NodesController do
 
     it "renders complete node if no path passed" do
       get :attribute, name: @node.name
-      expect(response.body).to be == {value: @node.to_hash}.to_json
+      expect(response.body).to be == { value: @node.to_hash }.to_json
     end
 
     it "looks up the attribute by path" do

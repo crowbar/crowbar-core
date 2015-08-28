@@ -39,8 +39,10 @@ describe RemoteNode do
   end
   context "ssh get boottime" do
     it "should handle unsucessful ssh command" do
+      logger = mock("Logger")
+      logger.expects(:info).with(regexp_matches(/ssh-cmd .* to get datetime not successful/))
       RemoteNode.stubs(:ssh_cmd_base).returns(["false", "&&"]).once
-      expect(RemoteNode.ssh_cmd_get_boottime("localhost")).to eql 0
+      expect(RemoteNode.ssh_cmd_get_boottime("localhost", logger: logger)).to eql 0
     end
 
     it "should handle sucessful ssh command" do
