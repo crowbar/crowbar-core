@@ -48,7 +48,7 @@ them with physical hardware.
 
 ## Configuration
 
-* Log in to the Crowbar admin interface: http://yourhost:3000
+* Log in to the Crowbar admin interface: http://yourhost
 * There should now be a tab labelled "UCS".
 * Click the UCS tab. The settings screen will be opened where the
   following information needs to be entered.

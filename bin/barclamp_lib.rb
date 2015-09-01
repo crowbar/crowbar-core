@@ -25,7 +25,7 @@ require "getoptlong"
 @debug = false
 @hostname = ENV["CROWBAR_IP"]
 @hostname = "127.0.0.1" unless @hostname
-@port = ENV["CROWBAR_PORT"] || 3000
+@port = ENV["CROWBAR_PORT"] || 80
 @headers = {
   "Accept" => "application/json",
   "Content-Type" => "application/json"
