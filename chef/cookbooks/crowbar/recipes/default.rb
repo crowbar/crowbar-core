@@ -392,6 +392,7 @@ include_recipe "apache2::mod_proxy_http"
 include_recipe "apache2::mod_rewrite"
 include_recipe "apache2::mod_slotmem_shm"
 include_recipe "apache2::mod_socache_shmcb"
+include_recipe "apache2::mod_auth_digest"
 
 template "#{node[:apache][:dir]}/vhosts.d/crowbar.conf" do
   source "apache.conf.erb"
@@ -400,7 +401,8 @@ template "#{node[:apache][:dir]}/vhosts.d/crowbar.conf" do
   variables(
     port: node["crowbar"]["web_port"] || 3000,
     logfile: "/var/log/apache2/crowbar-access_log",
-    errorlog: "/var/log/apache2/crowbar-error_log"
+    errorlog: "/var/log/apache2/crowbar-error_log",
+    realm: realm
   )
 
   notifies :reload, resources(service: "apache2")

@@ -14,11 +14,19 @@
     ProxyErrorOverride On
 
     <Location />
+        <%- unless @realm.nil? %>
+        AuthType Digest
+        AuthName "<%= @realm %>"
+        AuthDigestProvider file
+        AuthUserFile /opt/dell/crowbar_framework/htdigest
+        Require valid-user
+        <%- else %>
         <%- if node[:apache][:version].to_f < 2.4 %>
         Order allow,deny
         Allow from all
         <%- else %>
         Require all granted
+        <%- end %>
         <%- end %>
     </Location>
 </VirtualHost>
