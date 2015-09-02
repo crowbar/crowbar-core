@@ -23,9 +23,6 @@ class ApplicationController < ActionController::Base
   rescue_from Crowbar::Error::NotFound, with: :render_not_found
   rescue_from Crowbar::Error::ChefOffline, with: :chef_is_offline
 
-  @@users = nil
-
-  before_filter :digest_authenticate, if: :need_to_auth?
   before_filter :enable_profiler, if: Proc.new { ENV["ENABLE_PROFILER"] == "true" }
 
   # Basis for the reflection/help system.
@@ -109,69 +106,6 @@ class ApplicationController < ActionController::Base
   # private stuff below.
 
   private
-
-  @@auth_load_mutex = Mutex.new
-  @@realm = ""
-
-  def need_to_auth?()
-    return false unless File::exists? "htdigest"
-    ip = session[:ip_address] rescue nil
-    return false if ip == request.remote_addr
-    return true
-  end
-
-  def digest_authenticate
-    load_users()
-    authenticate_or_request_with_http_digest(@@realm) { |u| find_user(u) }
-    ## only create the session if we're authenticated
-    if authenticate_with_http_digest(@@realm) { |u| find_user(u) }
-      session[:ip_address] = request.remote_addr
-    end
-  end
-
-  def find_user(username)
-    return false if !@@users || !username
-    user = @@users[username]
-    return false unless user
-    return user[:password] || false
-  end
-
-  ##
-  # load the ""user database"" but be careful about thread contention.
-  # $htdigest gets flushed when proposals get saved (in case they user database gets modified)
-  $htdigest_reload =true
-  $htdigest_timestamp = Time.now()
-  def load_users
-    unless $htdigest_reload
-      f = File.new("htdigest")
-      if $htdigest_timestamp != f.mtime
-        $htdigest_timestamp = f.mtime
-        $htdigest_reload = true
-      end
-    end
-    return if @@users and !$htdigest_reload
-
-    ## only 1 thread should load stuff..(and reset the flag)
-    @@auth_load_mutex.synchronize  do
-      $htdigest_reload = false if $htdigest_reload
-    end
-
-    ret = {}
-    data = IO.readlines("htdigest")
-    data.each { |entry|
-      next if entry.strip.length ==0
-      list = entry.split(":") ## format: user : realm : hashed pass
-      user = list[0].strip rescue nil
-      password = list[2].strip rescue nil
-      realm = list[1].strip rescue nil
-      ret[user] ={realm: realm, password: password}
-    }
-    @@auth_load_mutex.synchronize  do
-        @@users = ret.dup
-        @@realm = @@users.values[0][:realm]
-    end
-    ret
-  end
 
   def flash_and_log_exception(e)
     flash[:alert] = e.message
