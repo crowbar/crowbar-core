@@ -249,7 +249,7 @@ directory "#{logdir}/chef-client" do
 end
 
 unless node["crowbar"].nil? or node["crowbar"]["users"].nil? or node["crowbar"]["realm"].nil?
-  web_port = node["crowbar"]["web_port"]
+  web_port = node["crowbar"]["web_port"] || 3000
   realm = node["crowbar"]["realm"]
 
   users = {}
@@ -263,9 +263,9 @@ unless node["crowbar"].nil? or node["crowbar"]["users"].nil? or node["crowbar"][
   template "/opt/dell/crowbar_framework/htdigest" do
     source "htdigest.erb"
     variables(users: users, realm: realm)
-    owner "crowbar"
-    owner "crowbar"
-    mode "0644"
+    owner "root"
+    group node[:apache][:group]
+    mode "0640"
   end
 else
   web_port = 3000
@@ -279,7 +279,7 @@ template "/opt/dell/crowbar_framework/rainbows.cfg" do
   mode "0644"
   variables(
     web_host: "127.0.0.1",
-    web_port: node["crowbar"]["web_port"] || 3000,
+    web_port: web_port,
     user: "crowbar",
     concurrency_model: "EventMachine",
     group: "crowbar",
@@ -399,7 +399,7 @@ template "#{node[:apache][:dir]}/vhosts.d/crowbar.conf" do
   mode 0644
 
   variables(
-    port: node["crowbar"]["web_port"] || 3000,
+    port: web_port,
     logfile: "/var/log/apache2/crowbar-access_log",
     errorlog: "/var/log/apache2/crowbar-error_log",
     realm: realm
