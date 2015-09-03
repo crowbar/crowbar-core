@@ -264,7 +264,7 @@ unless node["crowbar"].nil? or node["crowbar"]["users"].nil? or node["crowbar"][
     source "htdigest.erb"
     variables(users: users, realm: realm)
     owner "crowbar"
-    owner "crowbar"
+    group "crowbar"
     mode "0644"
   end
 else
