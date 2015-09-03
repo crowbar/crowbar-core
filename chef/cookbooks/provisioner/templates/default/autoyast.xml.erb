@@ -96,8 +96,28 @@
           <device>/dev/<%= @boot_device %></device>
         <% end %>
         <initialize config:type="boolean">true</initialize>
-        <partitions config:type="list"/>
         <type config:type="symbol">CT_DISK</type>
+        <disklabel>gpt</disklabel>
+        <partitions config:type="list">
+          <partition>
+            <create config:type="boolean">true</create>
+            <partition_id config:type="integer">263</partition_id>
+            <size>10M</size>
+          </partition>
+          <partition>
+            <create config:type="boolean">true</create>
+            <filesystem config:type="symbol">swap</filesystem>
+            <format config:type="boolean">true</format>
+            <mount>swap</mount>
+            <size>auto</size>
+          </partition>
+          <partition>
+            <create config:type="boolean">true</create>
+            <format config:type="boolean">true</format>
+            <mount>/</mount>
+            <size>auto</size>
+          </partition>
+        </partitions>
         <use>all</use>
       </drive>
     <% else -%>
