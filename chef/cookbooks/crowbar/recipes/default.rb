@@ -263,9 +263,9 @@ unless node["crowbar"].nil? or node["crowbar"]["users"].nil? or node["crowbar"][
   template "/opt/dell/crowbar_framework/htdigest" do
     source "htdigest.erb"
     variables(users: users, realm: realm)
-    owner "crowbar"
-    group "crowbar"
-    mode "0644"
+    owner "root"
+    group node[:apache][:group]
+    mode "0640"
   end
 else
   web_port = 3000
