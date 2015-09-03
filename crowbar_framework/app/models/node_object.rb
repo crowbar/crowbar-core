@@ -170,6 +170,10 @@ class NodeObject < ChefObject
     self.find nil
   end
 
+  def self.admin_node
+    all.detect(&:admin?)
+  end
+
   def self.make_role_name(name)
     "crowbar-#{name.gsub(".", "_")}"
   end
