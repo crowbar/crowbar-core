@@ -17,6 +17,17 @@
 class Chef
   class Recipe
     def provisioner_server_node
+      if @provisioner_server_node
+        ohai_age = Time.now.to_i - node[:ohai_time]
+        if ohai_age > 120
+          # Invalidate the cache if older than a few minutes, since
+          # we're caching the whole node, and attributes for the
+          # provisioner server can change over time.
+          @provisioner_server_node = nil
+          Chef::Log.info("Invalidated provisioner server cache")
+        end
+      end
+
       @provisioner_server_node ||=
         begin
           env = node[:provisioner][:config][:environment]

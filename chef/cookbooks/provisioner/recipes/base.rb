@@ -78,6 +78,10 @@ end
 
 include_recipe "provisioner::shell_prompt"
 
+if node.roles.include?("provisioner-server")
+  include_recipe "provisioner::shell_vars"
+end
+
 template "/etc/sh.shrc.local" do
   source "shrc.local.erb"
   owner "root"
