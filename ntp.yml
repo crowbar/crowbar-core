@@ -18,6 +18,7 @@
 barclamp:
   name: 'ntp'
   display: 'NTP'
+  description: 'NTP Management'
   version: 0
   user_managed: true
   member:

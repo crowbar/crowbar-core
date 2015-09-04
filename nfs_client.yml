@@ -17,6 +17,7 @@
 barclamp:
   name: 'nfs_client'
   display: 'NFS Client'
+  description: 'Setup of NFS mounts'
   version: 0
   user_managed: true
   member:

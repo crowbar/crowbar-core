@@ -17,6 +17,7 @@
 barclamp:
   name: 'suse_manager_client'
   display: 'SUSE Manager Client'
+  description: 'Register systems as SUSE Manager clients'
   version: 0
   user_managed: true
   member:
