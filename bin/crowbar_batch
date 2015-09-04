@@ -101,13 +101,13 @@ def build()
   end
 
   data = YAML.load(input_data)
-  abort "#{input_file} is empty" unless data
+  abort "input is empty" unless data
 
   global_options = data["global_options"] || {}
 
   proposals = data["proposals"]
   if ! proposals || proposals.empty?
-    abort "#{input_file} didn't contain any proposals"
+    abort "input didn't contain any proposals"
   end
 
   begin
