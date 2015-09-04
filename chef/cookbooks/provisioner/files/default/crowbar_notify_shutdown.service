@@ -1,6 +1,6 @@
 [Unit]
 Description=Synchronize with Crowbar administration server (shutdown/reboot notify)
-After=network.target syslog.target remote-fs.target sshd.service neutron-ovs-cleanup.service xend.service libvirtd.service
+After=network.target syslog.target remote-fs.target sshd.service
 Before=crowbar_join.service
 
 [Service]
