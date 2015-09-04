@@ -44,6 +44,7 @@ require "easy_diff"
 require "chef/mixin/deep_merge"
 require "pp"
 
+ALIAS_REGEXP = /"(@@[^ @]+@@)"/
 ALIAS_TEMPLATE = "@@%s@@"
 
 INDENT = "   "
