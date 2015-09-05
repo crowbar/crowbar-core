@@ -5,4 +5,8 @@
 rubydeps.*
 
 Gemfile.lock
-crowbar_framework/public/assets
+/crowbar_framework/public/assets
+
+.bundle/config
+/vendor/
+/crowbar_framework/vendor/
