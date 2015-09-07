@@ -68,15 +68,10 @@ node["provisioner"]["access_keys"].strip.split("\n").each do |key|
   end
 end
 
-# Find provisioner servers and include them.
-provisioner_server_node = nil
-search(:node, "roles:provisioner-server AND provisioner_config_environment:#{node[:provisioner][:config][:environment]}") do |n|
-  provisioner_server_node = n if provisioner_server_node.nil?
-
-  pkey = n["crowbar"]["ssh"]["root_pub_key"] rescue nil
-  if !pkey.nil? and pkey != node["crowbar"]["ssh"]["access_keys"][n.name]
-    node.set["crowbar"]["ssh"]["access_keys"][n.name] = pkey
-  end
+pkey = provisioner_server_node["crowbar"]["ssh"]["root_pub_key"] rescue nil
+ps_name = provisioner_server_node.name
+if !pkey.nil? and pkey != node["crowbar"]["ssh"]["access_keys"][ps_name]
+  node.set["crowbar"]["ssh"]["access_keys"][ps_name] = pkey
 end
 
 # Fix bug we had in stoney and earlier where we never saved the target_platform
