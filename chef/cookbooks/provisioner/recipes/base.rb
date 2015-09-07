@@ -30,7 +30,7 @@ end
 unless node[:platform_family] == "suse"
   # Make sure we have Bluepill
   case node["state"]
-  when "ready","readying"
+  when "ready", "readying"
     include_recipe "bluepill"
   end
 end
@@ -41,7 +41,7 @@ include_recipe "provisioner::ssh"
 # of the node when the node was installed with the default target platform.
 # This only works because the default target platform didn't change between
 # stoney and tex.
-if node[:target_platform].nil? or node[:target_platform].empty?
+if node[:target_platform].nil? || node[:target_platform].empty?
   node.set[:target_platform] = provisioner_server_node[:provisioner][:default_os]
 end
 

@@ -30,18 +30,18 @@ node.set["crowbar"]["ssh"] ||= {}
 node.set["crowbar"]["ssh"]["access_keys"] = {}
 
 # Build my key
-if ::File.exists?("/root/.ssh/id_rsa.pub") == false
-  %x{ssh-keygen -t rsa -f /root/.ssh/id_rsa -N ""}
+if ::File.exist?("/root/.ssh/id_rsa.pub") == false
+  `ssh-keygen -t rsa -f /root/.ssh/id_rsa -N ""`
 end
 
-str = %x{cat /root/.ssh/id_rsa.pub}.chomp
+str = `cat /root/.ssh/id_rsa.pub`.chomp
 node.set["crowbar"]["ssh"]["root_pub_key"] = str
 node.set["crowbar"]["ssh"]["access_keys"][node.name] = str
 
 # Add additional keys
 node["provisioner"]["access_keys"].strip.split("\n").each do |key|
   key.strip!
-  if !key.empty?
+  unless key.empty?
     nodename = key.split(" ")[2]
     node.set["crowbar"]["ssh"]["access_keys"][nodename] = key
   end
@@ -49,7 +49,7 @@ end
 
 pkey = provisioner_server_node["crowbar"]["ssh"]["root_pub_key"] rescue nil
 ps_name = provisioner_server_node.name
-if !pkey.nil? and pkey != node["crowbar"]["ssh"]["access_keys"][ps_name]
+if !pkey.nil? && pkey != node["crowbar"]["ssh"]["access_keys"][ps_name]
   node.set["crowbar"]["ssh"]["access_keys"][ps_name] = pkey
 end
 

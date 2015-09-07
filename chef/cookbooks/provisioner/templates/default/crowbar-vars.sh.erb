@@ -2,12 +2,14 @@
 # fed up of copying and pasting Chef node and role names, e.g. when using the
 # knife command.
 
-# node variables
+# Assign node variables without overwriting any existing ones.  This
+# is important in the hopefully unlikely case a machine was given an
+# alias like 'HOME' or 'PATH' or 'IFS' ;-)
 <% @nodes.sort.each do |aliaz, node| %>
-<%= aliaz %>=<%= node %>
+: ${<%= aliaz %>:=<%= node %>}
 <% end %>
 
 # role variables
 <% @roles.sort.each do |role, machine| %>
-<%= role %>=<%= machine %>
+: ${<%= role %>:=<%= machine %>}
 <% end %>

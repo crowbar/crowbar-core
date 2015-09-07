@@ -24,7 +24,9 @@ admin_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(
 web_port = provisioner_server_node[:provisioner][:web_port]
 
 ntp_servers = search(:node, "roles:ntp-server")
-ntp_servers_ips = ntp_servers.map { |n| Chef::Recipe::Barclamp::Inventory.get_network_by_type(n, "admin").address }
+ntp_servers_ips = ntp_servers.map do |n|
+  Chef::Recipe::Barclamp::Inventory.get_network_by_type(n, "admin").address
+end
 
 template "/usr/sbin/crowbar_join" do
   mode 0755
@@ -34,7 +36,7 @@ template "/usr/sbin/crowbar_join" do
   variables(admin_ip: admin_ip,
             web_port: web_port,
             ntp_servers_ips: ntp_servers_ips,
-            target_platform_version: node["platform_version"] )
+            target_platform_version: node["platform_version"])
 end
 
 if node[:platform] == "suse" && node[:platform_version].to_f < 12.0
@@ -79,8 +81,12 @@ else
   bash "reload systemd after crowbar_join update" do
     code "systemctl daemon-reload"
     action :nothing
-    subscribes :run, resources(cookbook_file: "/etc/systemd/system/crowbar_notify_shutdown.service"), :immediately
-    subscribes :run, resources(cookbook_file: "/etc/systemd/system/crowbar_join.service"), :immediately
+    subscribes :run, resources(
+      cookbook_file: "/etc/systemd/system/crowbar_notify_shutdown.service"
+    ), :immediately
+    subscribes :run, resources(
+      cookbook_file: "/etc/systemd/system/crowbar_join.service"
+    ), :immediately
   end
 
   link "/usr/sbin/rccrowbar_join" do
@@ -112,8 +118,12 @@ end
 
 if node[:platform_family] == "suse"
   # make sure the repos are properly setup
-  repos = Provisioner::Repositories.get_repos(node[:platform], node[:platform_version], node[:kernel][:machine])
-  for name, attrs in repos
+  repos = Provisioner::Repositories.get_repos(
+    node[:platform],
+    node[:platform_version],
+    node[:kernel][:machine]
+  )
+  repos.each do |name, attrs|
     current_url = nil
     current_priority = nil
 

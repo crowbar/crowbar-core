@@ -32,7 +32,7 @@ end
     mode "0644"
 
     variables(
-      prompt_from_template: proc { |user, cwd|
+      prompt_from_template: proc do |user, cwd|
         node["provisioner"]["shell_prompt"].to_s \
           .gsub("USER", user) \
           .gsub("CWD", cwd) \
@@ -40,9 +40,9 @@ end
           .gsub("ALIAS", aliaz) \
           .gsub("HOST", node["hostname"]) \
           .gsub("FQDN", node["fqdn"])
-      },
+      end,
 
-      zsh_prompt_from_template: proc {
+      zsh_prompt_from_template: proc do
         node["provisioner"]["shell_prompt"].to_s \
           .gsub("USER", "%{\\e[0;31m%}%n%{\\e[0m%}") \
           .gsub("CWD", "%{\\e[0;35m%}%~%{\\e[0m%}") \
@@ -50,9 +50,9 @@ end
           .gsub("ALIAS", "%{\\e[0;35m%}#{aliaz}%{\\e[0m%}") \
           .gsub("HOST", "%{\\e[0;35m%}#{node["hostname"]}%{\\e[0m%}") \
           .gsub("FQDN", "%{\\e[0;35m%}#{node["fqdn"]}%{\\e[0m%}")
-      },
+      end,
 
-      bash_prompt_from_template: proc {
+      bash_prompt_from_template: proc do
         node["provisioner"]["shell_prompt"].to_s \
           .gsub("USER", "\\[\\e[01;31m\\]\\u\\[\\e[0m\\]") \
           .gsub("CWD", "\\[\\e[01;31m\\]\\w\\[\\e[0m\\]") \
@@ -60,7 +60,7 @@ end
           .gsub("ALIAS", "\\[\\e[01;35m\\]#{aliaz}\\[\\e[0m\\]") \
           .gsub("HOST", "\\[\\e[01;35m\\]#{node["hostname"]}\\[\\e[0m\\]") \
           .gsub("FQDN", "\\[\\e[01;35m\\]#{node["fqdn"]}\\[\\e[0m\\]")
-      }
+      end
     )
   end
 end
