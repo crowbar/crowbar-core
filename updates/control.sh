@@ -27,8 +27,36 @@ fi
 #set -x
 export PS4='${BASH_SOURCE}@${LINENO}(${FUNCNAME[0]}): '
 
-function is_suse {
-    [ -f /etc/SuSE-release ]
+# File /etc/SuSE-release is deprecated and will be removed
+# in a future service pack or release. Therefore we would
+# like to use /etc/os-release about details release,
+# but for SLES 11 SP3 /etc/os-release doesn't exist.
+function is_suse() {
+    # This check will work on SLE 11 SP3 and SLE 12
+    [ -f /etc/SuSE-release ] && return
+
+    # This will work only on SLE 12 and above, after
+    # /etc/SuSE-release will be deprecated
+    if [ -f /etc/os-release ]; then
+        . /etc/os-release
+        [ "$NAME" == "SLES" ] && return
+    fi
+
+    return 1
+}
+
+function suse_ver() {
+    local ver=$1
+    local suse_ver=0
+
+    if [ -f /etc/os-release ]; then
+        . /etc/os-release
+        [ "$NAME" == "SLES" ] && suse_ver=$VERSION
+    elif [ -f /etc/SuSE-release ]; then
+        suse_ver=`cat /etc/SuSE-release  | awk '/VERSION/ {print $3}'`
+    fi
+
+    [ "$suse_ver" -eq "$ver" ]
 }
 
 #
@@ -98,7 +126,7 @@ ALLOCATED=false
 export DHCP_STATE MYINDEX ADMIN_ADDRESS BMC_ADDRESS BMC_NETMASK BMC_ROUTER ADMIN_IP
 export ALLOCATED HOSTNAME CROWBAR_KEY CROWBAR_STATE
 
-if is_suse; then
+if suse_ver 11; then
     ntp="sntp -P no -r $ADMIN_IP"
 else
     ntp="/usr/sbin/ntpdate $ADMIN_IP"
@@ -116,7 +144,6 @@ done
 #
 killall dhclient
 killall dhclient3
-
 
 if ! is_suse
 then
