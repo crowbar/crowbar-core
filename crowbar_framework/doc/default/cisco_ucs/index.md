@@ -4,7 +4,7 @@ This barclamp communicates with a Cisco UCS Manager instance
 via its XML-based API server, and can perform the following 
 functions:
 
-* Instantiate UCS service profiles for SUSE Cloud compute and 
+* Instantiate UCS service profiles for SUSE OpenStack Cloud compute and 
   storage nodes from predefined UCS service profile templates.
 * Reboot and power up/down nodes.
 
@@ -21,7 +21,7 @@ functions:
 ### `suse-cloud-compute` service profile template
 
 This service profile template is to be used for preparing systems 
-as SUSE Cloud compute nodes. Minimum requirements:
+as SUSE OpenStack Cloud compute nodes. Minimum requirements:
 
 * 20GB storage
 * 8GB RAM
@@ -32,7 +32,7 @@ as SUSE Cloud compute nodes. Minimum requirements:
 ### `suse-cloud-storage` service profile template
 
 This service profile template is to be used for preparing systems 
-as SUSE Cloud storage nodes.
+as SUSE OpenStack Cloud storage nodes.
 
 
 ### UCS administrator account
