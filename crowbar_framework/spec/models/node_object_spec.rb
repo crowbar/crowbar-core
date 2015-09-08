@@ -31,7 +31,7 @@ describe NodeObject do
         :find_node_by_name_or_alias
       ].each do |method|
         it "responds to #{method}" do
-          NodeObject.should respond_to(method)
+          expect(NodeObject).to respond_to(method)
         end
       end
     end
@@ -39,32 +39,32 @@ describe NodeObject do
     describe "all" do
       it "returns all nodes" do
         nodes = NodeObject.all
-        nodes.should_not be_empty
-        nodes.all? { |n| n.is_a?(NodeObject) }.should be true
+        expect(nodes).to_not be_empty
+        expect(nodes).to all(be_a NodeObject)
       end
     end
 
     describe "find_nodes_by_name" do
       it "returns nodes with a given name only" do
         nodes = NodeObject.find_nodes_by_name("testing.crowbar.com")
-        nodes.should_not be_empty
-        nodes.all? { |n| n.name =~ /testing/ }.should be true
+        expect(nodes).to_not be_empty
+        expect(nodes.map(&:name)).to all(include("testing"))
       end
     end
 
     describe "find_node_by_name" do
       it "returns nodes matching name" do
         node = NodeObject.find_node_by_name("testing")
-        node.should_not be_nil
-        node.name.should =~ /testing/
+        expect(node).to_not be_nil
+        expect(node.name).to include("testing")
       end
     end
 
     describe "find_node_by_alias" do
       it "returns nodes matching alias" do
         node = NodeObject.find_node_by_alias("testing")
-        node.should_not be_nil
-        node.alias.should == "testing"
+        expect(node).to_not be_nil
+        expect(node.alias).to be == "testing"
       end
     end
   end
@@ -77,13 +77,13 @@ describe NodeObject do
       it "sets the key if the platform requires one" do
         CrowbarService.stubs(:require_license_key?).returns(true)
         node.license_key = key
-        node.license_key.should == key
+        expect(node.license_key).to be == key
       end
 
       it "leaves it blank if platform does not need a key" do
         CrowbarService.stubs(:require_license_key?).returns(false)
         node.license_key = key
-        node.license_key.should be_blank
+        expect(node.license_key).to be_blank
       end
     end
   end

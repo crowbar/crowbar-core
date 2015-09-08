@@ -21,7 +21,7 @@ describe DocsController do
   describe "GET index" do
     it "is successful" do
       get :index
-      response.should be_success
+      expect(response).to be_success
     end
   end
 end

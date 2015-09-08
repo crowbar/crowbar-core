@@ -20,37 +20,39 @@ describe RemoteNode do
   context "reboot_done?" do
     it "should return true because boottime is higher than reboot requesttime" do
       RemoteNode.stubs(:ssh_cmd_get_boottime).returns(100).once
-      RemoteNode.reboot_done?("localhost", 1).should eql true
+      expect(RemoteNode.reboot_done?("localhost", 1)).to eql true
     end
 
     it "should return false because boottime is lower than reboot requesttime" do
       RemoteNode.stubs(:ssh_cmd_get_boottime).returns(100).once
-      RemoteNode.reboot_done?("localhost", 999).should eql false
+      expect(RemoteNode.reboot_done?("localhost", 999)).to eql false
     end
 
     it "should return false because boottime equal to reboot requesttime" do
       RemoteNode.stubs(:ssh_cmd_get_boottime).returns(10).once
-      RemoteNode.reboot_done?("localhost", 10).should eql false
+      expect(RemoteNode.reboot_done?("localhost", 10)).to eql false
     end
 
     it "should return true because reboot requesttime is unknown" do
-      RemoteNode.reboot_done?("localhost", 0).should eql true
+      expect(RemoteNode.reboot_done?("localhost", 0)).to eql true
     end
   end
   context "ssh get boottime" do
     it "should handle unsucessful ssh command" do
+      logger = mock("Logger")
+      logger.expects(:info).with(regexp_matches(/ssh-cmd .* to get datetime not successful/))
       RemoteNode.stubs(:ssh_cmd_base).returns(["false", "&&"]).once
-      RemoteNode.ssh_cmd_get_boottime("localhost").should eql 0
+      expect(RemoteNode.ssh_cmd_get_boottime("localhost", logger: logger)).to eql 0
     end
 
     it "should handle sucessful ssh command" do
       RemoteNode.stubs(:ssh_cmd_base).returns(["eval"]).once
-      RemoteNode.ssh_cmd_get_boottime("localhost").should > 0
+      expect(RemoteNode.ssh_cmd_get_boottime("localhost")).to be > 0
     end
 
     it "should handle invalid input from ssh command" do
       RemoteNode.stubs(:ssh_cmd_base).returns(["echo", "invalid", "#"]).once
-      RemoteNode.ssh_cmd_get_boottime("localhost").should eql 0
+      expect(RemoteNode.ssh_cmd_get_boottime("localhost")).to eql 0
     end
   end
 end

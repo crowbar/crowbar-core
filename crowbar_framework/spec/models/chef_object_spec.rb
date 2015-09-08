@@ -34,12 +34,12 @@ describe ChefObject do
 
   describe "query chef" do
     it "returns new query" do
-      chef_object.query_chef.should be_a(Chef::Search::Query)
+      expect(chef_object.query_chef).to be_a(Chef::Search::Query)
     end
 
     it "returns empty node on failure" do
       Chef::Search::Query.stubs(:new).raises(StandardError)
-      chef_object.query_chef.should be_a(Chef::Node)
+      expect(chef_object.query_chef).to be_a(Chef::Node)
     end
   end
 end

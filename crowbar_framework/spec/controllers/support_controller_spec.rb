@@ -23,7 +23,7 @@ describe SupportController do
   describe "GET index" do
     it "is successful" do
       get :index
-      response.should be_success
+      expect(response).to be_success
     end
 
     it "is successful notifying about new export" do
@@ -35,7 +35,7 @@ describe SupportController do
       }))
 
       get :index
-      response.should be_success
+      expect(response).to be_success
     end
   end
 
@@ -43,8 +43,8 @@ describe SupportController do
     it "displays flash message on error" do
       NodeObject.stubs(:all).raises(StandardError)
       get :export_chef
-      response.should redirect_to(utils_url)
-      flash[:alert].should_not be_empty
+      expect(response).to redirect_to(utils_url)
+      expect(flash[:alert]).to_not be_empty
     end
 
     it "exports known data into db dir" do
@@ -58,10 +58,10 @@ describe SupportController do
         export = Rails.root.join("db", filename)
 
         get :export_chef
-        flash[:alert].should be_nil
-        response.should redirect_to(utils_url(waiting: true, file: filename))
+        expect(flash[:alert]).to be_nil
+        expect(response).to redirect_to(utils_url(waiting: true, file: filename))
 
-        Dir.glob(Rails.root.join("db", "*.json")).count.should_not == 0
+        expect(Dir.glob(Rails.root.join("db", "*.json")).count).to_not be_zero
       ensure
         Dir.glob(Rails.root.join("db", "*.json")).each { |json| FileUtils.rm(json) }
       end

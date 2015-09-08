@@ -28,9 +28,9 @@ describe CrowbarController do
   describe "GET index" do
     it "renders list of active roles as json" do
       get :index, format: "json"
-      response.should be_success
+      expect(response).to be_success
       json = JSON.parse(response.body)
-      json.should == assigns(:service_object).list_active.last
+      expect(json).to be == assigns(:service_object).list_active.last
     end
   end
 
@@ -43,9 +43,9 @@ describe CrowbarController do
 
     it "returns list of barclamp names as json" do
       get :barclamp_index, format: "json"
-      response.should be_success
+      expect(response).to be_success
       json = JSON.parse(response.body)
-      json.should include("crowbar")
+      expect(json).to include("crowbar")
     end
   end
 
@@ -53,55 +53,55 @@ describe CrowbarController do
     it "returns json with versions" do
       get :versions
       json = JSON.parse(response.body)
-      json["versions"].should_not be_empty
+      expect(json["versions"]).to_not be_empty
     end
 
     it "returns plain text message if version fetching fails" do
       CrowbarService.any_instance.stubs(:versions).returns([404, "Not found"])
       get :versions
-      response.should be_missing
-      response.body.should == "Not found"
+      expect(response).to be_missing
+      expect(response.body).to be == "Not found"
     end
   end
 
   describe "POST transition" do
     it "does not allow invalid states" do
       post :transition, barclamp: "crowbar", id: "default", state: "foobarz", name: "testing"
-      response.should be_bad_request
+      expect(response).to be_bad_request
     end
 
     it "does not allow upcased states" do
       post :transition, barclamp: "crowbar", id: "default", state: "Discovering", name: "testing"
-      response.should be_bad_request
+      expect(response).to be_bad_request
     end
 
     it "transitions the node into desired state" do
       RoleObject.stubs(:find_roles_by_search).returns([])
       post :transition, barclamp: "crowbar", id: "default", state: "discovering", name: "testing"
-      response.should be_success
+      expect(response).to be_success
     end
 
     it "returns plain text message if transitioning fails" do
       CrowbarService.any_instance.stubs(:transition).returns([500, "error"])
       post :transition, barclamp: "crowbar", id: "default", state: "discovering", name: "testing"
-      response.should be_server_error
-      response.body.should == "error"
+      expect(response).to be_server_error
+      expect(response.body).to be == "error"
     end
 
     it "returns node as a hash on success when passed a name" do
       CrowbarService.any_instance.stubs(:transition).returns([200, { name: "testing" }])
       post :transition, barclamp: "crowbar", id: "default", state: "discovering", name: "testing"
-      response.should be_success
+      expect(response).to be_success
       json = JSON.parse(response.body)
-      json["name"].should == "testing.crowbar.com"
+      expect(json["name"]).to be == "testing.crowbar.com"
     end
 
     it "returns node as a hash on success when passed a node (backward compatibility)" do
       CrowbarService.any_instance.stubs(:transition).returns([200, NodeObject.find_node_by_name("testing").to_hash])
       post :transition, barclamp: "crowbar", id: "default", state: "discovering", name: "testing"
-      response.should be_success
+      expect(response).to be_success
       json = JSON.parse(response.body)
-      json["name"].should == "testing.crowbar.com"
+      expect(json["name"]).to be == "testing.crowbar.com"
     end
   end
 
@@ -110,28 +110,28 @@ describe CrowbarController do
       it "returns plain text message if show fails" do
         CrowbarService.any_instance.stubs(:show_active).returns([500, "Error"])
         post :show, id: "default", format: "json"
-        response.should be_server_error
-        response.body.should == "Error"
+        expect(response).to be_server_error
+        expect(response.body).to be == "Error"
       end
 
       it "returns a json describing the instance" do
         get :show, id: "default", format: "json"
-        response.should be_success
+        expect(response).to be_success
         json = JSON.parse(response.body)
-        json["deployment"].should_not be_nil
+        expect(json["deployment"]).to_not be_nil
       end
     end
 
     describe "format html" do
       it "is successful" do
         get :show, id: "default"
-        response.should be_success
+        expect(response).to be_success
       end
 
       it "redirects to propsal path on failure" do
         CrowbarService.any_instance.stubs(:show_active).returns([500, "Error"])
         get :show, id: "default"
-        response.should redirect_to(proposal_barclamp_path(controller: "crowbar", id: "default"))
+        expect(response).to redirect_to(proposal_barclamp_path(controller: "crowbar", id: "default"))
       end
     end
   end
@@ -140,16 +140,16 @@ describe CrowbarController do
     it "returns plain text message if elements fails" do
       CrowbarService.any_instance.stubs(:elements).returns([500, "Error"])
       get :elements
-      response.should be_server_error
-      response.body.should == "Error"
+      expect(response).to be_server_error
+      expect(response.body).to be == "Error"
     end
 
     it "returns a json with list of assignable roles" do
       get :elements
-      response.should be_success
+      expect(response).to be_success
       json = JSON.parse(response.body)
-      json.should be_a(Array)
-      json.should_not be_empty
+      expect(json).to be_a(Array)
+      expect(json).to_not be_empty
     end
   end
 
@@ -157,16 +157,16 @@ describe CrowbarController do
     it "returns plain text message if element_info fails" do
       CrowbarService.any_instance.stubs(:element_info).returns([500, "Error"])
       get :element_info
-      response.should be_server_error
-      response.body.should == "Error"
+      expect(response).to be_server_error
+      expect(response.body).to be == "Error"
     end
 
     it "returns a json with list of assignable nodes for an element" do
       get :element_info, id: "crowbar"
-      response.should be_success
+      expect(response).to be_success
       json = JSON.parse(response.body)
       nodes = ["admin.crowbar.com", "testing.crowbar.com"]
-      json.sort.should == nodes.sort
+      expect(json.sort).to be == nodes.sort
     end
   end
 
@@ -174,20 +174,20 @@ describe CrowbarController do
     it "returns plain text message if proposals fails" do
       CrowbarService.any_instance.stubs(:proposals).returns([500, "Error"])
       get :proposals
-      response.should be_server_error
-      response.body.should == "Error"
+      expect(response).to be_server_error
+      expect(response.body).to be == "Error"
     end
 
     it "is successful" do
       get :proposals
-      response.should be_success
+      expect(response).to be_success
     end
 
     it "returns a list of proposals for a given instance" do
       get :proposals, format: "json"
       json = JSON.parse(response.body)
-      response.should be_success
-      json.should == ["default"]
+      expect(response).to be_success
+      expect(json).to be == ["default"]
     end
   end
 
@@ -204,26 +204,26 @@ describe CrowbarController do
     it "sets appropriate flash message" do
       CrowbarService.any_instance.stubs(:destroy_active).returns([200, "Yay!"])
       delete :delete, name: "default"
-      flash[:notice].should == I18n.t("proposal.actions.delete_success")
+      expect(flash[:notice]).to be == I18n.t("proposal.actions.delete_success")
     end
 
     it "redirects to barclamp module on success" do
       delete :delete, name: "default"
-      response.should redirect_to(barclamp_modules_path(id: "crowbar"))
+      expect(response).to redirect_to(barclamp_modules_path(id: "crowbar"))
     end
 
     it "returns 500 on failure for json" do
       CrowbarService.any_instance.stubs(:destroy_active).returns([500, "Error"])
       delete :delete, name: "default", format: "json"
-      response.should be_server_error
-      response.body.should == "Error"
+      expect(response).to be_server_error
+      expect(response.body).to be == "Error"
     end
 
     it "sets flash on failure for html" do
       CrowbarService.any_instance.stubs(:destroy_active).returns([500, "Error"])
       delete :delete, name: "default"
-      response.should be_redirect
-      flash[:alert].should_not be_nil
+      expect(response).to be_redirect
+      expect(flash[:alert]).to_not be_nil
     end
   end
 
