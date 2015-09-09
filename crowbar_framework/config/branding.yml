@@ -23,7 +23,7 @@ page_title: 'Crowbar'
 page_slogan: ''
 
 # This configuration entry can get used to customize the version name output.
-# SUSE Cloud for example should write something like SUSE Cloud v2.0, whereas
+# SUSE OpenStack Cloud for example should write something like SUSE OpenStack Cloud v2.0, whereas
 # Crowbar on Dell side writes Version 0.0.1. The variable CROWBAR_VERSION gets
 # replaced by the environment value.
 version: 'Version CROWBAR_VERSION'

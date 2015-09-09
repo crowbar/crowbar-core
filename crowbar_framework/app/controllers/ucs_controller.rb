@@ -16,7 +16,7 @@
 #
 
 # Things that still should be done:
-# - apply SUSE Cloud admin CSS to views
+# - apply SUSE OpenStack Cloud admin CSS to views
 # - encrypt the password in xml document
 
 require "net/http"
