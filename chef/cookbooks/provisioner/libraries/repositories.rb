@@ -29,7 +29,7 @@ class Provisioner
               SUSE-OpenStack-Cloud-SLE11-6-Pool
               SUSE-OpenStack-Cloud-SLE11-6-Updates
             )
-          when "12.0"
+          when "12.0", "12.1"
             %w(
               Cloud
               SUSE-OpenStack-Cloud-6-Pool
@@ -46,6 +46,8 @@ class Provisioner
             %w(SLE11-HAE-SP4-Pool SLE11-HAE-SP4-Updates)
           when "12.0"
             %w(SLE12-HA-Pool SLE12-HA-Updates)
+          when "12.1"
+            %w(SLE12-SP1-HA-Pool SLE12-SP1-HA-Updates)
           else
             []
           end
@@ -88,7 +90,7 @@ class Provisioner
           hae_available = false
           storage_available = false
 
-          %w(11.3 11.4 12.0).each do |version|
+          %w(11.3 11.4 12.0 12.1).each do |version|
             repos.merge! suse_get_repos_from_attributes(node,"suse",version)
 
             # Common optional repos (regardless of cloud vs. storage)
@@ -180,6 +182,11 @@ class Provisioner
             repo_names = %w(
               SLES12-Pool
               SLES12-Updates
+            )
+          when "12.1"
+            repo_names = %w(
+              SLES12-SP1-Pool
+              SLES12-SP1-Updates
             )
           else
             raise "Unsupported version of SLE/openSUSE!"

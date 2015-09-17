@@ -49,6 +49,11 @@
           "kernel": "boot/x86_64/loader/linux",
           "append": " "
         },
+        "suse-12.1": {
+          "initrd": "boot/x86_64/loader/initrd",
+          "kernel": "boot/x86_64/loader/linux",
+          "append": " "
+        },
         "windows-6.2": {
           "initrd": " ",
           "kernel": "boot/pxeboot.0",
@@ -112,7 +117,7 @@
     "provisioner": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 24,
+      "schema-revision": 30,
       "element_states": {
         "provisioner-bootdisk-finder": [ "hardware-installing" ],
         "provisioner-server": [ "readying", "ready", "applying" ],
