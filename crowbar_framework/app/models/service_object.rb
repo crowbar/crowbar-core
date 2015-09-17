@@ -320,7 +320,7 @@ class ServiceObject
 
   def proposals
     props = proposals_raw
-    props = props.map { |p| p["id"].gsub("bc-#{@bc_name}-", "") }
+    props = props.map { |p| p["id"].gsub("#{@bc_name}-", "") }
     [200, props]
   end
 
@@ -406,7 +406,7 @@ class ServiceObject
   # FIXME: looks like purely controller methods
   def proposal_create(params)
     base_id = params["id"]
-    params["id"] = "bc-#{@bc_name}-#{params["id"]}"
+    params["id"] = "#{@bc_name}-#{params["id"]}"
     if FORBIDDEN_PROPOSAL_NAMES.any?{ |n| n == base_id }
       return [403,I18n.t("model.service.illegal_name", names: FORBIDDEN_PROPOSAL_NAMES.to_sentence)]
     end
@@ -438,7 +438,7 @@ class ServiceObject
 
   def proposal_edit(params, validate_after_save = true)
     base_id = params["id"] || params[:name]
-    params["id"] = "bc-#{@bc_name}-#{base_id}"
+    params["id"] = "#{@bc_name}-#{base_id}"
     proposal = {}.merge(params)
     clean_proposal(proposal)
     _proposal_update(@bc_name, base_id, proposal, validate_after_save)
@@ -541,7 +541,7 @@ class ServiceObject
   def validate_proposal proposal
     path = proposal_schema_directory
     begin
-      validator = CrowbarValidator.new("#{path}/bc-template-#{@bc_name}.schema")
+      validator = CrowbarValidator.new("#{path}/template-#{@bc_name}.schema")
     rescue StandardError => e
       Rails.logger.error("failed to load databag schema for #{@bc_name}: #{e.message}")
       Rails.logger.debug e.backtrace.join("\n")
@@ -770,7 +770,7 @@ class ServiceObject
   def self.role_to_proposal(role, bc_name)
     proposal = {}
 
-    proposal["id"] = role.name.gsub("#{bc_name}-config-", "bc-#{bc_name}-")
+    proposal["id"] = role.name.gsub("#{bc_name}-config-", "#{bc_name}-")
     proposal["description"] = role.description
     proposal["attributes"] = role.default_attributes
     proposal["deployment"] = role.override_attributes
@@ -783,7 +783,7 @@ class ServiceObject
   #
   def self.proposal_to_role(proposal, bc_name)
     role = Chef::Role.new
-    role.name proposal["id"].gsub("bc-#{bc_name}-", "#{bc_name}-config-")
+    role.name proposal["id"].gsub("#{bc_name}-", "#{bc_name}-config-")
     role.description proposal["description"]
     role.default_attributes proposal["attributes"]
     role.override_attributes proposal["deployment"]

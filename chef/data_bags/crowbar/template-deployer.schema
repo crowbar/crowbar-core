@@ -2,17 +2,37 @@
   "type": "map",
   "required": true,
   "mapping": {
-    "id": { "type": "str", "required": true, "pattern": "/^==BC-MODEL==-|^template-==BC-MODEL==$/" },
+    "id": { "type": "str", "required": true, "pattern": "/^deployer-|^template-deployer$/" },
     "description": { "type": "str", "required": true },
     "attributes": {
       "type": "map",
       "required": true,
       "mapping": {
-        "==BC-MODEL==": {
+        "deployer": {
           "type": "map",
           "required": true,
           "mapping": {
-            "foo": { "type": "str", "required": true }
+            "use_allocate": { "type": "bool", "required": true },
+            "bios_map": {
+              "type": "seq",
+              "required": true,
+              "sequence": [ {
+                "type": "map",
+                "required": true,
+                "mapping": {
+                  "pattern": { "type": "str", "required": true },
+                  "bios_set": { "type": "str", "required": true },
+                  "raid_set": { "type": "str", "required": true }
+                } 
+              } ]
+            },
+            "os_map": { "type": "seq", "required": true, "sequence": [ {
+                  "type": "map", "required": true, "mapping": {
+                    "pattern": { "type": "str", "required": true },
+                    "install_os": { "type": "str", "required": true }               		   
+                  }
+              } ]
+            }
           }
         }
       }
@@ -21,15 +41,16 @@
       "type": "map",
       "required": true,
       "mapping": {
-        "==BC-MODEL==": {
+        "deployer": {
           "type": "map",
           "required": true,
           "mapping": {
             "crowbar-revision": { "type": "int", "required": true },
             "crowbar-committing": { "type": "bool" },
-            "crowbar-queued": { "type": "bool" },
+            "crowbar-applied": { "type": "bool" },
             "crowbar-status": { "type": "str" },
             "crowbar-failed": { "type": "str" },
+            "crowbar-queued": { "type": "bool" },
             "element_states": {
               "type": "map",
               "mapping": {

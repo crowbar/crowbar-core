@@ -2,17 +2,32 @@
   "type": "map",
   "required": true,
   "mapping": {
-    "id": { "type": "str", "required": true, "pattern": "/^==BC-MODEL==-|^template-==BC-MODEL==$/" },
+    "id": { "type": "str", "required": true, "pattern": "/^nfs_client-|^template-nfs_client$/" },
     "description": { "type": "str", "required": true },
     "attributes": {
       "type": "map",
       "required": true,
       "mapping": {
-        "==BC-MODEL==": {
+        "nfs_client": {
           "type": "map",
           "required": true,
           "mapping": {
-            "foo": { "type": "str", "required": true }
+            "exports": {
+              "type": "map",
+              "required": true,
+              "mapping": {
+                = : {
+                  "type": "map",
+                  "required": false,
+                  "mapping": {
+                    "nfs_server": { "type": "str", "required": true },
+                    "export": { "type": "str", "required": true },
+                    "mount_path": { "type": "str", "required": true },
+                    "mount_options": { "type": "seq", "required": false, "sequence": [ { "type": "str" } ] }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -21,12 +36,13 @@
       "type": "map",
       "required": true,
       "mapping": {
-        "==BC-MODEL==": {
+        "nfs_client": {
           "type": "map",
           "required": true,
           "mapping": {
             "crowbar-revision": { "type": "int", "required": true },
             "crowbar-committing": { "type": "bool" },
+	    "crowbar-applied": { "type": "bool" },
             "crowbar-queued": { "type": "bool" },
             "crowbar-status": { "type": "str" },
             "crowbar-failed": { "type": "str" },

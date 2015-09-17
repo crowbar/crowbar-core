@@ -573,7 +573,7 @@ module NodesHelper
 
   def role_to_proposal_name(role)
     role_split = role.split("-", 3)
-    "bc-#{role_split.first}-#{role_split.last}"
+    "#{role_split.first}-#{role_split.last}"
   end
 
   def node_role_map

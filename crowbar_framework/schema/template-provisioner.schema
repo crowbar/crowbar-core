@@ -2,17 +2,38 @@
   "type": "map",
   "required": true,
   "mapping": {
-    "id": { "type": "str", "required": true, "pattern": "/^==BC-MODEL==-|^template-==BC-MODEL==$/" },
+    "id": { "type": "str", "required": true, "pattern": "/^provisioner-|^template-provisioner$/" },
     "description": { "type": "str", "required": true },
     "attributes": {
       "type": "map",
       "required": true,
       "mapping": {
-        "==BC-MODEL==": {
+        "provisioner": {
           "type": "map",
           "required": true,
           "mapping": {
-            "foo": { "type": "str", "required": true }
+            "default_user": { "type": "str", "required": true },
+            "default_password": { "type": "str" },
+            "default_password_hash": { "type": "str" },
+            "web_port": { "type": "int", "required": true },
+            "use_local_security": { "type": "bool", "required": true },
+            "dhcp": {
+              "type": "map",
+              "required": true,
+              "mapping": {
+                "lease-time": { "type": "int", "required": true },
+                "state_machine": {
+                  "type": "map",
+                  "required": true,
+                  "mapping": {
+                    =: {
+                      "type": "str",
+                      "required": true
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -21,15 +42,13 @@
       "type": "map",
       "required": true,
       "mapping": {
-        "==BC-MODEL==": {
+        "provisioner": {
           "type": "map",
           "required": true,
           "mapping": {
             "crowbar-revision": { "type": "int", "required": true },
             "crowbar-committing": { "type": "bool" },
             "crowbar-queued": { "type": "bool" },
-            "crowbar-status": { "type": "str" },
-            "crowbar-failed": { "type": "str" },
             "element_states": {
               "type": "map",
               "mapping": {

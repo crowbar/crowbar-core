@@ -471,7 +471,7 @@ end
 
 def export_barclamp(barclamp, alias_by_host)
   begin
-    data_bag = Chef::DataBag.load("crowbar/bc-template-#{barclamp}")
+    data_bag = Chef::DataBag.load("crowbar/template-#{barclamp}")
   rescue Net::HTTPServerException => e
     if e.response.is_a? Net::HTTPNotFound
       abort "No template found for barclamp '#{barclamp}'; is it a valid barclamp?"

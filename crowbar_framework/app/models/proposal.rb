@@ -34,9 +34,9 @@ class Proposal < ActiveRecord::Base
   # FIXME: equivalent to ProposalObject.id
   def key
     if name == "template"
-      "bc-#{self.name}-#{self.barclamp}"
+      "#{name}-#{barclamp}"
     else
-      "bc-#{self.barclamp}-#{self.name}"
+      "#{barclamp}-#{name}"
     end
   end
 
@@ -232,7 +232,7 @@ class Proposal < ActiveRecord::Base
   end
 
   def properties_template_path
-    properties_template_dir.join("bc-template-#{self.barclamp}.json").expand_path
+    properties_template_dir.join("template-#{barclamp}.json").expand_path
   end
 
   def properties_template_dir
@@ -244,6 +244,6 @@ class Proposal < ActiveRecord::Base
   end
 
   def update_proposal_id
-    self.properties["id"] = "bc-#{self.barclamp}-#{self.name}"
+    properties["id"] = "#{self.barclamp}-#{self.name}"
   end
 end
