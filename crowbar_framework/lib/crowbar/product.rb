@@ -26,6 +26,11 @@ module Crowbar
       BarclampCatalog.barclamps.key?("suse_enterprise_storage") &&
         BarclampCatalog.members("suse_enterprise_storage").key?("suse_enterprise_storage")
     end
+
+    def self.ses_platform
+      # Returns the platform used for SES
+      "suse-12.0"
+    end
   end
 end
 

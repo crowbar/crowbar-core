@@ -101,9 +101,9 @@ class CrowbarService < ServiceObject
       end
 
       if Crowbar::Product::is_ses?
-        # For SUSE Enterprise Storage, default all non-admin nodes to SLES 12
+        # For SUSE Enterprise Storage, default all non-admin nodes to the right platform
         if state == "discovering" and !node.admin?
-          node["target_platform"] = "suse-12.0"
+          node["target_platform"] = Crowbar::Product::ses_platform
           node.save
         end
       end
