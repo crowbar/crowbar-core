@@ -244,6 +244,6 @@ class Proposal < ActiveRecord::Base
   end
 
   def update_proposal_id
-    properties["id"] = "#{self.barclamp}-#{self.name}"
+    properties["id"] = "#{barclamp}-#{name}"
   end
 end
