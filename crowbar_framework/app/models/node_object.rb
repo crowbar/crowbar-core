@@ -1168,7 +1168,7 @@ class NodeObject < ChefObject
     when :shutdown
       unless system("net", "rpc", "shutdown", "-I", @node.name ,"-U", "Administrator%#{@node[:provisioner][:windows][:admin_password]}")
         Rails.logger.warn("samba command \"#{cmd}\" for #{@node.name} failed - node in unknown state")
-        [422, I18n.t("unknown_stat", scope: "error")]
+        [422, I18n.t("unknown_state", scope: "error")]
       end
     else
       Rails.logger.warn("Unknown command #{cmd} for #{@node.name}.")
