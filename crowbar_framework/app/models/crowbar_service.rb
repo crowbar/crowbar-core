@@ -198,7 +198,7 @@ class CrowbarService < ServiceObject
               File.read(v)
             )
 
-            id = data["id"].gsub("bc-#{k}-", "")
+            id = data["id"].gsub("#{k}-", "")
           end
 
           @logger.debug("Crowbar apply_role: creating #{k}.#{id}")

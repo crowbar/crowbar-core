@@ -9,7 +9,7 @@ describe Proposal do
 
   it "updates the proposal id before save" do
     proposal.save
-    expect(proposal.properties["id"]).to eq("bc-crowbar-default")
+    expect(proposal.properties["id"]).to eq("crowbar-default")
   end
 
   it "raises when barclamp is not specified in the constructor" do

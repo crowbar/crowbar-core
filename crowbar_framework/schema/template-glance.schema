@@ -2,17 +2,17 @@
   "type": "map",
   "required": true,
   "mapping": {
-    "id": { "type": "str", "required": true, "pattern": "/^==BC-MODEL==-|^template-==BC-MODEL==$/" },
+    "id": { "type": "str", "required": true, "pattern": "/^glance-|^template-glance$/" },
     "description": { "type": "str", "required": true },
     "attributes": {
       "type": "map",
       "required": true,
       "mapping": {
-        "==BC-MODEL==": {
+        "glance": {
           "type": "map",
           "required": true,
           "mapping": {
-            "foo": { "type": "str", "required": true }
+            "backing_type": { "type": "str", "required": true }
           }
         }
       }
@@ -21,15 +21,13 @@
       "type": "map",
       "required": true,
       "mapping": {
-        "==BC-MODEL==": {
+        "glance": {
           "type": "map",
           "required": true,
           "mapping": {
             "crowbar-revision": { "type": "int", "required": true },
             "crowbar-committing": { "type": "bool" },
             "crowbar-queued": { "type": "bool" },
-            "crowbar-status": { "type": "str" },
-            "crowbar-failed": { "type": "str" },
             "element_states": {
               "type": "map",
               "mapping": {
