@@ -23,7 +23,7 @@ class Provisioner
           %w(PTF)
         when :cloud
           case version
-          when /^11\.[34]$/
+          when "11.3", "11.4"
             %w(
               Cloud
               SUSE-OpenStack-Cloud-SLE11-6-Pool
