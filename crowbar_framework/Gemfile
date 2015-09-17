@@ -57,7 +57,7 @@ unless ENV["PACKAGING"] && ENV["PACKAGING"] == "yes"
 
   group :development, :test do
     gem "brakeman", "~> 2.6.3"
-    gem "rspec-rails", "~> 3.1.0"
+    gem "rspec-rails", "~> 3.3.0"
     gem "byebug", "~> 5.0"
   end
 
