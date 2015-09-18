@@ -17,21 +17,11 @@
 return if node[:platform] == "windows"
 
 # Make sure packages we need will be present
-case node[:platform]
-when "ubuntu","debian","suse"
-  %w{bridge-utils vlan}.each do |pkg|
-    p = package pkg do
-      action :nothing
-    end
-    p.run_action :install
+node[:network][:base_pkgs].each do |pkg|
+  p = package pkg do
+    action :nothing
   end
-when "centos","redhat"
-  %w{bridge-utils vconfig}.each do |pkg|
-    p = package pkg do
-      action :nothing
-    end
-    p.run_action :install
-  end
+  p.run_action :install
 end
 
 require "fileutils"
@@ -87,6 +77,9 @@ old_ifs = node["crowbar_wall"]["network"]["interfaces"] || Mash.new rescue Mash.
 if_mapping = Mash.new
 addr_mapping = Mash.new
 default_route = {}
+# flag to avoid creating the chef (service and package) resources for ovs more
+# than once
+ovs_setup_once = false
 
 # dhclient running?  Not for long.
 ::Kernel.system("killall -w -q -r '^dhclient'")
@@ -246,6 +239,68 @@ node["crowbar"]["network"].keys.sort{|a,b|
     br.add_slave our_iface
     ifs[br.name]["slaves"] = [our_iface.name]
     ifs[br.name]["type"] = "bridge"
+    our_iface = br
+    net_ifs << our_iface.name
+  end
+  if network["add_ovs_bridge"]
+    bridge = node[:network][:networks][name][:bridge_name] || "br-#{name}"
+
+    # There might be more than one network that needs an ovs-bridge. Make
+    # sure these resources are only created once during the chef-client run.
+    unless ovs_setup_once
+      ovs_setup_once = true
+      node[:network][:ovs_pkgs].each do |pkg|
+        p = package pkg do
+          action :nothing
+        end
+        p.run_action :install
+      end
+
+      unless ::File.exists?("/sys/module/#{node[:network][:ovs_module]}")
+        ::Kernel.system("modprobe #{node[:network][:ovs_module]}")
+      end
+
+      s = service node[:network][:ovs_service] do
+        service_name node[:network][:ovs_service]
+        supports status: true, restart: true
+        action [:nothing]
+      end
+      s.run_action :enable
+      s.run_action :start
+    end
+
+    br = if Nic.exists?(bridge) && Nic.ovs_bridge?(bridge)
+      Chef::Log.info("Using OVS bridge #{bridge} for network #{name}")
+      Nic.new bridge
+    else
+      Chef::Log.info("Creating OVS bridge #{bridge} for network #{name}")
+      Nic::OvsBridge.create(bridge)
+    end
+    unless ifs.has_key? "ovs-system"
+      ifs["ovs-system"] ||= Hash.new
+      ifs["ovs-system"]["addresses"] ||= Array.new
+      ifs["ovs-system"]["ovs_master"] = true
+    end
+    ifs[br.name] ||= Hash.new
+    ifs[br.name]["addresses"] ||= Array.new
+    ifs[our_iface.name]["slave"] = true
+    ifs[our_iface.name]["ovs_slave"] = true
+    ifs[our_iface.name]["master"] = br.name
+    br.add_slave our_iface
+    # FIXME: Workaround for https://bugzilla.suse.com/show_bug.cgi?id=945219
+    # Find vlan interface on top of 'our_iface' that are plugged into other
+    # ovs bridges. Replug them.
+    our_kids = our_iface.children
+    our_kids.each do |k|
+      next unless Nic.vlan?(k)
+      ovs_master = k.ovs_master
+      unless ovs_master.nil?
+        Chef::Log.warn("Replugging #{k.name} to #{ovs_master.name} (workaround bnc#945219)")
+        ovs_master.replug(k.name)
+      end
+    end
+    ifs[br.name]["slaves"] = [our_iface.name]
+    ifs[br.name]["type"] = "ovs_bridge"
     our_iface = br
     net_ifs << our_iface.name
   end
