@@ -52,7 +52,7 @@ class Provisioner
         when :storage
           case version
           when "12.0"
-            %w(SUSE-Enterprise-Storage-1.0-Pool SUSE-Enterprise-Storage-1.0-Updates)
+            %w(SUSE-Enterprise-Storage-2-Pool SUSE-Enterprise-Storage-2-Updates)
           else
             []
           end
