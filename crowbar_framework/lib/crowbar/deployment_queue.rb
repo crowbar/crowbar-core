@@ -32,7 +32,7 @@ module Crowbar
       delay = []
       pre_cached_nodes = {}
       begin
-        f = file_lock.acquire("queue", logger: logger)
+        lock = acquire_lock("queue")
         if @proposal_queue.barclamp == bc && @proposal_queue.name == inst
           preexisting_queued_item = @proposal_queue.properties
         end unless @proposal_queue.nil?
@@ -76,7 +76,7 @@ module Crowbar
       rescue StandardError => e
         logger.error("Error queuing proposal for #{bc}:#{inst}: #{e.message} #{e.backtrace.join("\n")}")
       ensure
-        file_lock.release(f)
+        lock.release
       end
 
       # Mark the proposal as in the queue
@@ -92,7 +92,7 @@ module Crowbar
       logger.debug("dequeue proposal: enter #{inst} #{bc}")
       dequeued = false
       begin
-        f = file_lock.acquire("queue", logger: logger)
+        lock = acquire_lock("queue")
 
         if @proposal_queue.nil?
           logger.debug("dequeue proposal: exit #{inst} #{bc}: no entry")
@@ -105,7 +105,7 @@ module Crowbar
         logger.debug("dequeue proposal: exit #{inst} #{bc}: error")
         return [400, e.message]
       ensure
-        file_lock.release(f)
+        lock.release
       end
       logger.debug("dequeue proposal: exit #{inst} #{bc}")
       return dequeued ? [200, {}] : [400, ""]
@@ -127,7 +127,7 @@ module Crowbar
         # Proposals which reference non-ready nodes are also skipped.
         list = []
         begin
-          f = file_lock.acquire("queue", logger: logger)
+          lock = acquire_lock("queue")
 
           if @proposal_queue.nil?
             logger.debug("process queue: exit: empty queue")
@@ -172,7 +172,7 @@ module Crowbar
           logger.debug("process queue: exit: error")
           return
         ensure
-          file_lock.release(f)
+          lock.release
         end
 
         logger.debug("process queue: list: #{list.inspect}")
@@ -226,8 +226,12 @@ module Crowbar
       end
     end
 
-    def file_lock
-      FileLock
+    def new_lock(name)
+      Crowbar::Lock::LocalBlocking.new(name: name, logger: @logger)
+    end
+
+    def acquire_lock(name)
+      new_lock(name).acquire
     end
 
     # Removes the proposal reference from the queue, updates the proposal as not queued
@@ -270,8 +274,7 @@ module Crowbar
       nodes_map = elements_to_nodes_to_roles_map(elements)
 
       # Remove the entries from the nodes.
-      f = file_lock.acquire("BA-LOCK", logger: logger)
-      begin
+      new_lock("BA-LOCK").with_lock do
         nodes_map.each do |node_name, data|
           node = NodeObject.find_node_by_name(node_name)
           next if node.nil?
@@ -280,8 +283,6 @@ module Crowbar
             node.save
           end
         end
-      ensure
-        file_lock.release(f)
       end
     end
 
@@ -322,7 +323,7 @@ module Crowbar
       # We need to be sure that we're the only ones modifying the node records at this point.
       # This will work for preventing changes from rails app, but not necessarily chef.
       # Tough luck.
-      f = file_lock.acquire("BA-LOCK", logger: logger)
+      lock = acquire_lock("BA-LOCK")
 
       # Delay is the list of nodes that are not ready and are needed for this deploy to run
       delay = []
@@ -356,7 +357,7 @@ module Crowbar
       rescue StandardError => e
         logger.fatal("add_pending_elements: Exception #{e.message} #{e.backtrace.join("\n")}")
       ensure
-        file_lock.release(f)
+        lock.release
       end
 
       [delay, pre_cached_nodes]

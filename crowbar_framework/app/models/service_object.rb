@@ -142,12 +142,18 @@ class ServiceObject
 #
 # Locking Routines
 #
-  def acquire_lock(name)
-    FileLock.acquire(name, logger: @logger)
+  def new_lock(name)
+    Crowbar::Lock::LocalBlocking.new(name: name, logger: @logger)
   end
 
-  def release_lock(f)
-    FileLock.release(f, logger: @logger)
+  def acquire_lock(name)
+    new_lock(name).acquire
+  end
+
+  def with_lock(name)
+    new_lock(name).with_lock do
+      yield
+    end
   end
 
 #
@@ -155,8 +161,7 @@ class ServiceObject
 #
 
   def set_to_applying(nodes, inst)
-    f = acquire_lock "BA-LOCK"
-    begin
+    with_lock "BA-LOCK" do
       nodes.each do |node_name|
         node = NodeObject.find_node_by_name(node_name)
         next if node.nil?
@@ -165,14 +170,11 @@ class ServiceObject
         node.crowbar["state_owner"] = "#{@bc_name}-#{inst}"
         node.save
       end
-    ensure
-      release_lock f
     end
   end
 
   def restore_to_ready(nodes)
-    f = acquire_lock "BA-LOCK"
-    begin
+    with_lock "BA-LOCK" do
       nodes.each do |node_name|
         node = NodeObject.find_node_by_name(node_name)
         next if node.nil?
@@ -181,8 +183,6 @@ class ServiceObject
         node.crowbar["state_owner"] = ""
         node.save
       end
-    ensure
-      release_lock f
     end
   end
 
@@ -822,9 +822,6 @@ class ServiceObject
     # We also check that all nodes we'll require are in the ready state.
     #
 
-    # Initialize variables used in ensure at the end of the method
-    chef_daemon_nodes = []
-
     # Query for this role
     old_role = RoleObject.find_role_by_name(role.name)
 
@@ -855,10 +852,6 @@ class ServiceObject
       end
     end
     new_elements = expanded_new_elements
-
-    # stop chef daemon on all nodes
-    chef_daemon_nodes = new_elements.values.flatten.uniq
-    chef_daemon(:stop, chef_daemon_nodes)
 
     # save list of expanded elements, as this is needed when we look at the old
     # role. See below the comments for old_elements.
@@ -1046,9 +1039,46 @@ class ServiceObject
     # save databag with the role removal intention
     proposal.save if save_proposal
 
-    # mark nodes as applying; beware that all_nodes do not contain nodes that
-    # are actually removed
-    applying_nodes = run_order.flatten
+    applying_nodes = run_order.flatten.uniq.sort
+
+    # Prevent any intervallic runs from running whilst we apply the
+    # proposal, in order to avoid the orchestration problems described
+    # in https://bugzilla.suse.com/show_bug.cgi?id=857375
+    #
+    # First we pause the chef-client daemons by ensuring a magic
+    # pause-file.lock exists which the daemons will honour due to a
+    # custom patch:
+    nodes_to_lock = applying_nodes.reject do |node_name|
+      node = NodeObject.find_node_by_name(node_name)
+      node[:platform] == "windows" || node.admin?
+    end
+
+    begin
+      apply_locks = nodes_to_lock.map do |node|
+        Crowbar::Lock::SharedNonBlocking.new(
+          logger: @logger,
+          path: "/var/chef/cache/pause-file.lock",
+          node: node,
+          owner: "apply_role-#{role.name}-#{inst}-#{Process.pid}",
+          reason: "apply_role(#{role.name}, #{inst}, #{in_queue}) pid #{Process.pid}"
+        ).acquire
+      end
+    rescue Crowbar::Error::LockingFailure => e
+      message = "Failed to apply the proposal: #{e.message}"
+      update_proposal_status(inst, "failed", message)
+      return [409, message] # 409 is 'Conflict'
+    end
+
+    # Now that we've ensured no new intervallic runs can be started,
+    # wait for any which started before we paused the daemons.
+    wait_for_chef_daemons(applying_nodes)
+
+    # By this point, no intervallic runs should be running, and no
+    # more will be able to start running until we release the locks
+    # after the proposal has finished applying.
+
+    # Mark nodes as applying; beware that all_nodes do not contain nodes that
+    # are actually removed.
     set_to_applying(applying_nodes, inst)
 
     # Part III: Update run lists of nodes to reflect new deployment. I.e. write
@@ -1285,8 +1315,7 @@ class ServiceObject
     process_queue unless in_queue
     [200, {}]
   ensure
-    # start chef daemon on all nodes
-    chef_daemon(:start, chef_daemon_nodes)
+    apply_locks.each(&:release) if apply_locks
   end
 
   def apply_role_pre_chef_call(old_role, role, all_nodes)
@@ -1412,24 +1441,15 @@ class ServiceObject
     }
   end
 
-  def chef_daemon(action, node_list)
-    wait_nodes = []
-
+  def wait_for_chef_daemons(node_list)
     node_list.each do |node_name|
       node = NodeObject.find_node_by_name(node_name)
 
       # we can't connect to windows nodes
       next if node[:platform] == "windows"
 
-      @logger.debug "apply_role: #{action.to_s} chef service on #{node_name}"
-      node.run_service :chef, action
-      wait_nodes << node_name
-    end
-
-    # wait for chef clients on all nodes
-    wait_nodes.each do |node_name|
       wait_for_chef_clients(node_name, logger: true)
-    end if action == :stop
+    end
   end
 
   private
