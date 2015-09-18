@@ -1,23 +1,24 @@
 {
-  "id": "template-==BC-MODEL==",
-  "description": "Installation for ==*BC-MODEL==",
+  "id": "template-nfs_client",
+  "description": "Setup of NFS mounts",
   "attributes": {
-    "==BC-MODEL==": {
-      "foo": "bar"
+    "nfs_client": {
+      "exports": { }
     }
   },
   "deployment": {
-    "==BC-MODEL==": {
+    "nfs_client": {
       "crowbar-revision": 0,
+      "crowbar-applied": false,
       "element_states": {
-        "==BC-MODEL==-server": [ "readying", "ready", "applying" ]
+        "nfs-client": [ "readying", "ready", "applying" ]
       },
       "elements": {},
       "element_order": [
-        [ "==BC-MODEL==-server" ]
+        [ "nfs-client" ]
       ],
       "config": {
-        "environment": "==BC-MODEL==-base-config",
+        "environment": "nfs_client-base-config",
         "mode": "full",
         "transitions": false,
         "transition_list": [

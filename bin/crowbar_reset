@@ -38,7 +38,7 @@ EOF
     fi
 
     bc="$1" proposal="${2:-default}"
-    data_bag="bc-${bc}-${proposal}"
+    data_bag="${bc}-${proposal}"
 
     cmd="p = Proposal.where(barclamp: '"$bc"', name: '"$proposal"').first;
          raise(ActiveRecord::RecordNotFound.new) unless p;

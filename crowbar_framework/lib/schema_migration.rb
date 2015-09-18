@@ -35,7 +35,7 @@ module SchemaMigration
     return if all_scripts.empty?
 
     begin
-      validator = CrowbarValidator.new(data_bags_path.join("bc-template-#{bc_name}.schema"))
+      validator = CrowbarValidator.new(data_bags_path.join("template-#{bc_name}.schema"))
     rescue StandardError => e
       raise "Failed to load databag schema for #{bc_name}: #{e.message}"
     end
@@ -49,7 +49,7 @@ module SchemaMigration
       # Note: we don't want to commit the proposal we just migrated, because it
       # might have other uncommitted changes that are not wanted.
 
-      role_name = prop["id"].gsub("bc-#{bc_name}-", "#{bc_name}-config-")
+      role_name = prop["id"].gsub("#{bc_name}-", "#{bc_name}-config-")
       role = RoleObject.find_role_by_name(role_name)
 
       unless role.nil?

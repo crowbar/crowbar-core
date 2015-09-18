@@ -2,17 +2,30 @@
   "type": "map",
   "required": true,
   "mapping": {
-    "id": { "type": "str", "required": true, "pattern": "/^==BC-MODEL==-|^template-==BC-MODEL==$/" },
+    "id": { "type": "str", "required": true, "pattern": "/^updater-|^template-updater$/" },
     "description": { "type": "str", "required": true },
     "attributes": {
-      "type": "map",
-      "required": true,
+      "type": "map", "required": true,
       "mapping": {
-        "==BC-MODEL==": {
-          "type": "map",
-          "required": true,
+        "updater": {
+          "type": "map", "required": true,
           "mapping": {
-            "foo": { "type": "str", "required": true }
+            "do_reboot": { "type": "bool", "required": true },
+            "zypper": {
+              "type": "map", "required": true,
+              "mapping": {
+                "method": { "type": "str", "required": true },
+                "gpg_checks": { "type": "bool", "required": true },
+                "licenses_agree": { "type": "bool", "required": true },
+                "patch": {
+                  "type": "map", "required": true,
+                  "mapping": {
+                    "include_reboot_patches": { "type": "bool", "required": true }
+                  }
+                }
+              }
+            },
+            "one_shot_run": { "type": "bool" }
           }
         }
       }
@@ -21,15 +34,16 @@
       "type": "map",
       "required": true,
       "mapping": {
-        "==BC-MODEL==": {
+        "updater": {
           "type": "map",
           "required": true,
           "mapping": {
             "crowbar-revision": { "type": "int", "required": true },
             "crowbar-committing": { "type": "bool" },
-            "crowbar-queued": { "type": "bool" },
+            "crowbar-applied": { "type": "bool" },
             "crowbar-status": { "type": "str" },
             "crowbar-failed": { "type": "str" },
+            "crowbar-queued": { "type": "bool" },
             "element_states": {
               "type": "map",
               "mapping": {

@@ -2,17 +2,19 @@
   "type": "map",
   "required": true,
   "mapping": {
-    "id": { "type": "str", "required": true, "pattern": "/^==BC-MODEL==-|^template-==BC-MODEL==$/" },
+    "id": { "type": "str", "required": true, "pattern": "/^hadoop-|^template-hadoop$/" },
     "description": { "type": "str", "required": true },
     "attributes": {
       "type": "map",
       "required": true,
       "mapping": {
-        "==BC-MODEL==": {
+        "hadoop": {
           "type": "map",
           "required": true,
           "mapping": {
-            "foo": { "type": "str", "required": true }
+            "debug":  { "type": "bool", "required": true},
+            "admin_ip_eval": { "type": "str", "required": true },
+            "admin_interface_eval": { "type": "str", "required": true }
           }
         }
       }
@@ -21,15 +23,11 @@
       "type": "map",
       "required": true,
       "mapping": {
-        "==BC-MODEL==": {
+        "hadoop": {
           "type": "map",
           "required": true,
           "mapping": {
             "crowbar-revision": { "type": "int", "required": true },
-            "crowbar-committing": { "type": "bool" },
-            "crowbar-queued": { "type": "bool" },
-            "crowbar-status": { "type": "str" },
-            "crowbar-failed": { "type": "str" },
             "element_states": {
               "type": "map",
               "mapping": {
