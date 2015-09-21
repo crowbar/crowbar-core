@@ -70,7 +70,7 @@ when "suse"
     ruby2.1-rubygem-mixlib-shellout
     ruby2.1-rubygem-ohai-6
     ruby2.1-rubygem-rails-4_2
-    ruby2.1-rubygem-rainbows-rails
+    ruby2.1-rubygem-puma
     ruby2.1-rubygem-redcarpet
     ruby2.1-rubygem-ruby-shadow
     ruby2.1-rubygem-sass-rails
@@ -113,7 +113,7 @@ if node[:platform] != "suse"
     simple_navigation_renderers
     sqlite3
     syslogger
-    rainbows-rails
+    puma
   )
 
   gemlist.each do |g|
@@ -257,10 +257,15 @@ else
   realm = nil
 end
 
-template "/opt/dell/crowbar_framework/rainbows.cfg" do
-  source "rainbows.cfg.erb"
-  owner "crowbar"
-  group "crowbar"
+# Remove rainbows configuration, dating from before the switch to puma
+file "/opt/dell/crowbar_framework/rainbows.cfg" do
+  action :delete
+end
+
+template "/etc/sysconfig/crowbar" do
+  source "sysconfig.crowbar.erb"
+  owner "root"
+  group "root"
   mode "0644"
   variables(
     web_host: "127.0.0.1",
@@ -308,61 +313,39 @@ if node[:platform] != "suse"
     end
   end
 else
-  if node["platform_version"].to_f < 12.0
-    cookbook_file "/etc/init.d/crowbar" do
-      owner "root"
-      group "root"
-      mode "0755"
-      action :create
-      source "crowbar.suse"
-    end
+  cookbook_file "/etc/tmpfiles.d/crowbar.conf" do
+    owner "root"
+    group "root"
+    mode "0644"
+    action :create
+    source "crowbar.tmpfiles"
+  end
 
-    link "/usr/sbin/rccrowbar" do
-      action :create
-      to "/etc/init.d/crowbar"
-    end
+  bash "create tmpfiles.d files for crowbar" do
+    code "systemd-tmpfiles --create /etc/tmpfiles.d/crowbar.conf"
+    action :nothing
+    subscribes :run, resources("cookbook_file[/etc/tmpfiles.d/crowbar.conf]"), :immediately
+  end
 
-    # Make sure that any dependency change is taken into account
-    bash "insserv crowbar service" do
-      code "insserv crowbar"
-      action :nothing
-      subscribes :run, resources("cookbook_file[/etc/init.d/crowbar]"), :delayed
-    end
-  else
-    cookbook_file "/etc/tmpfiles.d/crowbar.conf" do
-      owner "root"
-      group "root"
-      mode "0644"
-      action :create
-      source "crowbar.tmpfiles"
-    end
+  # Use a systemd .service file on SLE12
+  cookbook_file "/etc/systemd/system/crowbar.service" do
+    owner "root"
+    group "root"
+    mode "0644"
+    action :create
+    source "crowbar.service"
+  end
 
-    bash "create tmpfiles.d files for crowbar" do
-      code "systemd-tmpfiles --create /etc/tmpfiles.d/crowbar.conf"
-      action :nothing
-      subscribes :run, resources("cookbook_file[/etc/tmpfiles.d/crowbar.conf]"), :immediately
-    end
+  # Make sure that any dependency change is taken into account
+  bash "reload systemd after crowbar update" do
+    code "systemctl daemon-reload"
+    action :nothing
+    subscribes :run, resources("cookbook_file[/etc/systemd/system/crowbar.service]"), :immediately
+  end
 
-    # Use a systemd .service file on SLE12
-    cookbook_file "/etc/systemd/system/crowbar.service" do
-      owner "root"
-      group "root"
-      mode "0644"
-      action :create
-      source "crowbar.service"
-    end
-
-    # Make sure that any dependency change is taken into account
-    bash "reload systemd after crowbar update" do
-      code "systemctl daemon-reload"
-      action :nothing
-      subscribes :run, resources("cookbook_file[/etc/systemd/system/crowbar.service]"), :immediately
-    end
-
-    link "/usr/sbin/rccrowbar" do
-      action :create
-      to "service"
-    end
+  link "/usr/sbin/rccrowbar" do
+    action :create
+    to "service"
   end
 
   service "crowbar" do
