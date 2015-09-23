@@ -23,7 +23,7 @@ end
 
 pkglist = ()
 logdir = "/var/log/crowbar"
-crowbar_home = "/home/crowbar"
+crowbar_home = "/var/lib/crowbar"
 
 case node[:platform]
 when "ubuntu","debian"
