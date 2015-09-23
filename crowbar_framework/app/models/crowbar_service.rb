@@ -101,9 +101,9 @@ class CrowbarService < ServiceObject
       end
 
       if Crowbar::Product::is_ses?
-        # For SUSE Enterprise Storage, default all non-admin nodes to SLES 12
+        # For SUSE Enterprise Storage, default all non-admin nodes to the right platform
         if state == "discovering" and !node.admin?
-          node["target_platform"] = "suse-12.0"
+          node["target_platform"] = Crowbar::Product::ses_platform
           node.save
         end
       end
@@ -289,7 +289,9 @@ class CrowbarService < ServiceObject
   end
 
   def self.pretty_target_platform(target_platform)
+    return "SLES 12 SP1" if target_platform == "suse-12.1"
     return "SLES 12" if target_platform == "suse-12.0"
+    return "SLES 11 SP4" if target_platform == "suse-11.4"
     return "SLES 11 SP3" if target_platform == "suse-11.3"
     return "Windows Server 2012 R2" if target_platform == "windows-6.3"
     return "Windows Server 2012" if target_platform == "windows-6.2"
@@ -311,7 +313,9 @@ class CrowbarService < ServiceObject
 
   def self.support_software_raid
     [
+      "suse-12.1",
       "suse-12.0",
+      "suse-11.4",
       "suse-11.3"
     ]
   end
