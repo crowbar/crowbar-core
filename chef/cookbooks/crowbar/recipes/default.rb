@@ -183,21 +183,6 @@ cookbook_file "/root/.chef/knife.rb" do
   source "knife.rb"
 end
 
-directory "#{crowbar_home}/.chef" do
-  owner "crowbar"
-  group "crowbar"
-  mode "0700"
-  action :create
-end
-
-cookbook_file "#{crowbar_home}/.chef/knife.rb" do
-  owner "crowbar"
-  group "crowbar"
-  mode "0600"
-  action :create
-  source "knife.rb"
-end
-
 bash "Add crowbar chef client" do
   environment({"EDITOR" => "/bin/true", "HOME" => "/root"})
   code "knife client create crowbar -a --file /opt/dell/crowbar_framework/config/client.pem -u chef-webui -k /etc/chef/webui.pem "
