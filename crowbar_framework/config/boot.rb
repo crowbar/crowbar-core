@@ -27,13 +27,13 @@ if File.exists? ENV["BUNDLE_GEMFILE"]
   Bundler.require(:default, Rails.env)
 else
   # rails related
-  gem "rails", version: "~> 4.1"
+  gem "rails", version: "~> 4.2"
   require "rails/all"
 
-  gem "haml-rails", version: "~> 0.5"
+  gem "haml-rails", version: "~> 0.9"
   require "haml-rails"
 
-  gem "sass-rails", version: "~> 4.0"
+  gem "sass-rails", version: "~> 5.0"
   require "sass-rails"
 
   gem "rainbows-rails", version: "~> 1.0"

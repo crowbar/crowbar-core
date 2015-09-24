@@ -69,7 +69,7 @@ when "suse"
     ruby2.1-rubygem-mime-types-1
     ruby2.1-rubygem-mixlib-shellout
     ruby2.1-rubygem-ohai-6
-    ruby2.1-rubygem-rails-4_1
+    ruby2.1-rubygem-rails-4_2
     ruby2.1-rubygem-rainbows-rails
     ruby2.1-rubygem-redcarpet
     ruby2.1-rubygem-ruby-shadow
