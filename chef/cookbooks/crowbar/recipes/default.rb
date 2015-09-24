@@ -23,7 +23,7 @@ end
 
 pkglist = ()
 logdir = "/var/log/crowbar"
-crowbar_home = "/home/crowbar"
+crowbar_home = "/var/lib/crowbar"
 
 case node[:platform]
 when "ubuntu","debian"
@@ -178,21 +178,6 @@ end
 cookbook_file "/root/.chef/knife.rb" do
   owner "root"
   group "root"
-  mode "0600"
-  action :create
-  source "knife.rb"
-end
-
-directory "#{crowbar_home}/.chef" do
-  owner "crowbar"
-  group "crowbar"
-  mode "0700"
-  action :create
-end
-
-cookbook_file "#{crowbar_home}/.chef/knife.rb" do
-  owner "crowbar"
-  group "crowbar"
   mode "0600"
   action :create
   source "knife.rb"
