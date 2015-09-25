@@ -317,8 +317,6 @@ service "bind9" do
     service_name "named"
   end
   supports restart: true, status: true, reload: true
-  running true
-  enabled true
   action [:enable, :start]
 end
 

@@ -51,8 +51,6 @@ end
 package rpcService
 
 service rpcService do
-  running true
-  enabled true
   action [:enable, :start]
 end
 
@@ -68,8 +66,6 @@ service "nfs-kernel-server" do
   service_name "nfs" if node[:platform] =~ /^(redhat|centos)$/
   service_name "nfsserver" if node[:platform] == "suse"
   supports restart: true, status: true, reload: true
-  running true
-  enabled true
   action [:enable, :start]
 end
 
