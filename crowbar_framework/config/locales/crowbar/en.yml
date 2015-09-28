@@ -78,6 +78,7 @@ en:
     utils:
       title: 'Utilities'
       logs: 'Exported Items'
+      repositories: 'Repositories'
     help:
       title: 'Help'
       docs: 'Documentation'

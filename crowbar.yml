@@ -73,6 +73,9 @@ nav:
     logs:
       order: 10
       route: 'utils_path'
+    repositories:
+      order: 15
+      route: 'repositories_path'
   help:
     order: 80
     route: 'docs_path'
