@@ -88,7 +88,7 @@ class NfsClientService < ServiceObject
 
       (p["deployment"]["nfs_client"]["elements"]["nfs-client"] || []).each do |e|
         if elements.include?(e)
-          p_name = p["id"].gsub("bc-#{@bc_name}-", "")
+          p_name = p["id"].gsub("#{@bc_name}-", "")
           errors << "Nodes cannot be part of multiple NFS client proposals, but #{e} is already part of proposal \"#{p_name}\"."
         end
       end
