@@ -1,0 +1,99 @@
+---
+suse-12.0:
+  repos:
+    sles12-pool:
+      name: "SLES12-Pool"
+      required: "mandatory"
+      product_name: "common"
+      content_key:
+      repomd:
+        key:
+        tag: "obsproduct://build.suse.de/SUSE:SLE-12:GA/SLES/12/POOL/x86_64"
+        md5: "9a62177e1c6852d48453ed3909956d6b"
+      patterns: []
+      url:
+      remote:
+    sles12-updates:
+      name: "SLES12-Updates"
+      required: "recommended"
+      product_name: "common"
+      content_key:
+      repomd:
+        key:
+        tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-SERVER:12:x86_64/update"
+        md5: "9a62177e1c6852d48453ed3909956d6b"
+      patterns: []
+      url:
+      remote:
+    suse-openstack-cloud-6-pool:
+      name: "SUSE-Openstack-Cloud-6-Pool"
+      required: "optional"
+      product_name: "cloud"
+      content_key:
+      repomd:
+        key:
+        tag: "obsproduct://build.suse.de/SUSE:SLE-12:Update:Products:Cloud6/suse-openstack-cloud/6/POOL/x86_64"
+        md5: "9a62177e1c6852d48453ed3909956d6b"
+      patterns: []
+      url:
+      remote:
+    suse-openstack-cloud-6-updates:
+      name: "SUSE-Openstack-Cloud-6-Updates"
+      required: "optional"
+      product_name: "cloud"
+      content_key:
+      repomd:
+        key:
+        tag:
+        md5: "9a62177e1c6852d48453ed3909956d6b"
+      patterns: []
+      url:
+      remote:
+    sle12-ha-pool:
+      name: "SLE12-HA-Pool"
+      required: "optional"
+      product_name: "hae"
+      content_key:
+      repomd:
+        key:
+        tag: "obsproduct://build.suse.de/SUSE:SLE-12:GA/sle-ha/12/POOL/x86_64"
+        md5: "9a62177e1c6852d48453ed3909956d6b"
+      patterns: []
+      url:
+      remote:
+    sle12-ha-updates:
+      name: "SLE12-HA-Updates"
+      required: "optional"
+      product_name: "hae"
+      content_key:
+      repomd:
+        key:
+        tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-HA:12:x86_64/update"
+        md5: "9a62177e1c6852d48453ed3909956d6b"
+      patterns: []
+      url:
+      remote:
+    suse-enterprise-storage-1.0-pool:
+      name: "SUSE-Enterprise-Storage-1.0-Pool"
+      required: "optional"
+      product_name: "storage"
+      content_key:
+      repomd:
+        key:
+        tag: "obsproduct://build.suse.de/SUSE:SLE-12:Update:Products:Cloud5/ses/1/POOL/x86_64"
+        md5: "9a62177e1c6852d48453ed3909956d6b"
+      patterns: []
+      url:
+      remote:
+    suse-enterprise-storage-1.0-updates:
+      name: "SUSE-Enterprise-Storage-1.0-Updates"
+      required: "optional"
+      product_name: "storage"
+      content_key:
+      repomd:
+        key:
+        tag: "obsrepository://build.suse.de/SUSE:Updates:Storage:1.0:x86_64/update"
+        md5: "9a62177e1c6852d48453ed3909956d6b"
+      patterns: []
+      url:
+      remote:
