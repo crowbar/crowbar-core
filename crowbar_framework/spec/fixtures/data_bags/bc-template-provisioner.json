@@ -1,0 +1,183 @@
+{
+   "id":"bc-provisioner-default",
+   "description":"The roles and recipes to set up the provisioning server and a base environment for all nodes",
+   "attributes":{
+      "provisioner":{
+         "default_user":"crowbar",
+         "default_password_hash":"$1$BDC3UwFr$/VqOWN1Wi6oM0jiMOjaPb.",
+         "access_keys":"ssh-dss AAAAB3NzaC1kc3MAAACBAI0hfNVGSr9X6FTv1ogc8sCJkkhdSKiz6BBhm68bZiNzvXLgoNuCN89hC/RQmW85wfyi29SILsrgMtjGUBdJ9Krf8t3cNIkTJFZem2eCZuNQzNMb2e1h3u7r1/LHQ+Cqp9FUMfMzNnkvKSkfQaaoxsORP+D4390WohC69lm2T+fDAAAAFQCDEURhjjzLWXkgoytAN5QS3sZp1QAAAIBNh2Igo3gDLlu6VUKWXJLk5VCmr0tzmjLNVVk3xes/501uUhx/8tYaGbJbFwrE7O2PWnrWzrpMRC807jKHGg4B0hsC/9mK6Hm8KDQCwinSyfpLD4lTJ6G03IxHLZGiQsGWYeEk/bfByZjiiybSkmZKsSNVU7C9zd6KCv1Ise846AAAAIA02zKOgpTtQWSIYnrZY5XFnzDuHtTB+e+KHIb58DTl0E8Z/u8oX6CaII10gNZkf4SJqC3G8jWFfQFBnR5PJSF5V5G5vebrxg27U4UO0PUpou3RhmlnQrq5K/KB34VENM+jgifUoQyluqpyjihfWsqcsoBOsM278I37V57batkdhQ== injected-key-from-host",
+         "shell_prompt":"USER@HOST:CWD SUFFIX",
+         "enable_pxe":true,
+         "supported_oses":{
+            "ubuntu-12.04":{
+               "initrd":"install/netboot/ubuntu-installer/amd64/initrd.gz",
+               "kernel":"install/netboot/ubuntu-installer/amd64/linux",
+               "append":"debian-installer/locale=en_US.utf8 console-setup/layoutcode=us keyboard-configuration/layoutcode=us netcfg/dhcp_timeout=120 netcfg/choose_interface=auto netcfg/get_hostname=root=/dev/ram rw quiet"
+            },
+            "redhat-6.2":{
+               "initrd":"images/pxeboot/initrd.img",
+               "kernel":"images/pxeboot/vmlinuz",
+               "append":"ksdevice=bootif"
+            },
+            "redhat-6.4":{
+               "initrd":"images/pxeboot/initrd.img",
+               "kernel":"images/pxeboot/vmlinuz",
+               "append":"ksdevice=bootif"
+            },
+            "centos-6.2":{
+               "initrd":"images/pxeboot/initrd.img",
+               "kernel":"images/pxeboot/vmlinuz",
+               "append":"ksdevice=bootif"
+            },
+            "centos-6.4":{
+               "initrd":"images/pxeboot/initrd.img",
+               "kernel":"images/pxeboot/vmlinuz",
+               "append":"ksdevice=bootif"
+            },
+            "suse-11.3":{
+               "initrd":"boot/x86_64/loader/initrd",
+               "kernel":"boot/x86_64/loader/linux",
+               "append":" "
+            },
+            "suse-11.4":{
+               "initrd":"boot/x86_64/loader/initrd",
+               "kernel":"boot/x86_64/loader/linux",
+               "append":" "
+            },
+            "suse-12.0":{
+               "initrd":"boot/x86_64/loader/initrd",
+               "kernel":"boot/x86_64/loader/linux",
+               "append":" "
+            },
+            "windows-6.2":{
+               "initrd":" ",
+               "kernel":"boot/pxeboot.0",
+               "append":" ",
+               "require_install_dir":false
+            },
+            "hyperv-6.2":{
+               "initrd":" ",
+               "kernel":"boot/pxeboot.0",
+               "append":" ",
+               "require_install_dir":false
+            },
+            "windows-6.3":{
+               "initrd":" ",
+               "kernel":"boot/pxeboot.0",
+               "append":" ",
+               "require_install_dir":false
+            },
+            "hyperv-6.3":{
+               "initrd":" ",
+               "kernel":"boot/pxeboot.0",
+               "append":" ",
+               "require_install_dir":false
+            }
+         },
+         "keep_existing_hostname":false,
+         "timezone":"UTC",
+         "web_port":8091,
+         "coredump":false,
+         "packages":{
+
+         },
+         "use_local_security":true,
+         "use_serial_console":false,
+         "serial_tty":"ttyS0,115200n8",
+         "windows":{
+            "admin_password":"crowbar"
+         },
+         "dhcp":{
+            "lease-time":60,
+            "state_machine":{
+               "web_app_state":"dhcp_state",
+               "discovered":"discovery",
+               "hardware-installing":"hwinstall",
+               "hardware-installed":"os_install",
+               "hardware-updating":"update",
+               "hardware-updated":"execute",
+               "installing":"os_install",
+               "installed":"execute",
+               "update":"update",
+               "readying":"execute",
+               "ready":"execute",
+               "reset":"reset",
+               "delete":"noop",
+               "delete-final":"delete",
+               "reinstall":"os_install",
+               "debug":"debug"
+            }
+         },
+         "suse":{
+            "autoyast":{
+               "repos":{
+                  "suse-12.0":{
+                     "SLES12-Updates-test":{
+                        "url":"http://dist.suse.de/ibs/SUSE:/Maintenance:/Test:/SLE-SERVER:/12:/x86_64/update/"
+                     }
+                  }
+               }
+            }
+         }
+      }
+   },
+   "deployment":{
+      "provisioner":{
+         "crowbar-revision":0,
+         "crowbar-applied":true,
+         "schema-revision":24,
+         "element_states":{
+            "provisioner-bootdisk-finder":[
+               "hardware-installing"
+            ],
+            "provisioner-server":[
+               "readying",
+               "ready",
+               "applying"
+            ],
+            "provisioner-base":[
+               "readying",
+               "ready",
+               "applying"
+            ]
+         },
+         "elements":{
+            "provisioner-server":[
+               "crowbar.crowbar.testing.com"
+            ],
+            "provisioner-base":[
+               "crowbar.crowbar.testing.com",
+               "d52-54-01-77-77-01.crowbar.testing.com",
+               "d52-54-02-77-77-02.crowbar.testing.com"
+            ],
+            "provisioner-bootdisk-finder":[
+               "crowbar.crowbar.testing.com",
+               "d52-54-01-77-77-01.crowbar.testing.com",
+               "d52-54-02-77-77-02.crowbar.testing.com"
+            ]
+         },
+         "element_order":[
+            [
+               "provisioner-bootdisk-finder"
+            ],
+            [
+               "provisioner-server"
+            ],
+            [
+               "provisioner-base"
+            ]
+         ],
+         "config":{
+            "environment":"provisioner-config-default",
+            "mode":"full",
+            "transitions":true,
+            "transition_list":[
+               "all"
+            ]
+         },
+         "crowbar-committing":false,
+         "crowbar-status":"success",
+         "crowbar-failed":""
+      }
+   }
+}
