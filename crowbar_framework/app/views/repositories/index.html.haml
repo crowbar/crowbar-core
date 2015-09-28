@@ -1,0 +1,79 @@
+.row
+  .col-xs-12
+    %h1.page-header
+      = t(".title")
+    .alert.alert-info
+      = t(".refresh_hint")
+
+- repository_platforms.each_with_index do |platform, index|
+  = form_for :repository, url: sync_repositories_path, html: { role: "form" } do |f|
+    .panel.panel-default
+      .panel-heading
+        %h2
+          = pretty_target_platform(platform)
+
+      %table.table.table-hover.table-middle.table-bordered
+        %thead
+          %tr
+            %th.col-xs-5
+              = t(".name")
+            %th.col-xs-2
+              = t(".required")
+            %th.col-xs-2
+              = t(".status")
+            %th.col-xs-2
+              = t(".md5_check")
+            %th.col-xs-1
+              %input{ type: "checkbox", value: "all", data: { checkall: "input.platform#{index}" } }
+                = t(".active")
+              .pull-right.center
+                %i.glyphicon.glyphicon-question-sign{ data: { tooltip: true, placement: "top" }, title: t(".active_repo_tooltip") }
+
+          %tbody
+          - @repocheck.sort_by{ |check| check.registry["name"] }.each do |repo|
+            - if repo.platform == platform
+              %tr
+              - if repo.available?
+                %td
+                  = link_to(repo.registry["name"], repo.url)
+                %td
+                  = repo.registry["required"]
+                %td.success
+                  %i.glyphicon.glyphicon-ok
+                  = t(".available")
+              - else
+                %td
+                  .span.text-muted
+                    = repo.registry["name"]
+                %td
+                  .text-muted
+                    = repo.registry["required"]
+                - if repo.registry["required"] == "mandatory"
+                  %td{ class: repository_availability(repo.registry["required"]) }
+                    %i.glyphicon.glyphicon-remove
+                    = t(".unavailable")
+                - else
+                  %td{ class: repository_availability(repo.registry["required"]) }
+                    .text-muted
+                      = t(".unavailable")
+              - if repo.valid_key_file?
+                %td.success
+                  %i.glyphicon.glyphicon-ok
+                  = t(".md5_ok")
+                %td
+                  = check_box "repo[#{platform}]", repo.registry["name"], { class: "platform#{index}", checked: repo.active? }
+              - else
+                - if repo.registry["required"] == "mandatory"
+                  %td{ class: repository_availability(repo.registry["required"]) }
+                    %i.glyphicon.glyphicon-remove
+                    = t(".md5_failed")
+                - else
+                  %td{ class: repository_availability(repo.registry["required"]) }
+                    .text-muted
+                      = t(".unavailable")
+                %td
+                  = check_box "repo[#{platform}]", repo.registry["name"], { class: "platform#{index}", checked: false, disabled: true }
+
+      .panel-footer.text-right
+        .btn-group
+          %input.btn.btn-default{ type: "submit", name: "submit", value: "Save" }

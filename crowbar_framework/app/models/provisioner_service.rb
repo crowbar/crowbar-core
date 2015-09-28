@@ -177,5 +177,58 @@ class ProvisionerService < ServiceObject
     @logger.debug("Provisioner transition: exiting for #{name} for #{state}")
     [200, { name: name }]
   end
-end
 
+  def load_repository_bag
+    bag = Chef::DataBag.load("repositories") rescue nil
+    if bag.nil?
+      create_repository_bag
+    end
+    bag
+  end
+
+  def synchronize_repositories(platforms)
+    platforms.each do |platform, repos|
+      repos.each do |reponame, active|
+        repo_object = Crowbar::Repository.where(platform: platform, repo: reponame).first
+        case active
+        when "0"
+          db = Chef::DataBagItem.load("repositories", repo_object.id) rescue nil
+          # skip repo if it hasn't been active before
+          next if db.nil?
+          # otherwise destroy DataBagItem
+          @logger.debug("Deactivating #{db.name} repository.")
+          db.destroy("repositories", repo_object.id)
+          # destroy the DataBag if it is empty
+          destroy_repository_bag if load_repository_bag.empty?
+        when "1"
+          # create DataBag if it doesn't exist yet
+          load_repository_bag
+          # create DataBagItem with the repo metadata used by provisioner recipes
+          repository_item = Chef::DataBagItem.new
+          repository_item.data_bag "repositories"
+          repository_item["id"] = repo_object.id
+          repository_item["platform"] = platform
+          repository_item["name"] = reponame
+          repository_item["url"] = repo_object.url
+          repository_item["product_name"] = repo_object.registry["product_name"]
+          @logger.debug("Setting #{reponame} repository for #{platform} as active.")
+          repository_item.save
+        end
+      end
+    end
+  end
+
+  private
+
+  def create_repository_bag
+    bag = Chef::DataBag.new
+    bag.name "repositories"
+    @logger.debug("Creating DataBag '#{bag.name}'.")
+    bag.save
+  end
+
+  def destroy_repository_bag
+    @logger.debug("No more active repositories. Destroying repositories DataBag.")
+    Chef::DataBag.chef_server_rest.delete_rest("data/repositories")
+  end
+end

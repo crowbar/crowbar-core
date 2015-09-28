@@ -80,4 +80,12 @@ table {
       }
     }
   }
+
+  th {
+    i {
+      display: inline-block;
+      float: none;
+      vertical-align: middle;
+    }
+  }
 }
