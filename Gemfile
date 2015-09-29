@@ -19,7 +19,7 @@ source "https://rubygems.org"
 
 group :development do
   gem "closure-compiler", "~> 1.1.10"
-  gem "sass", "~> 3.2.19"
+  gem "sass", "~> 3.4.13"
   gem "sprockets-standalone", "~> 1.2.1"
   gem "sprockets", "~> 2.11.0"
   gem "rspec", "~> 3.1.0"
