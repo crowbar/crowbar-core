@@ -160,10 +160,13 @@ class ServiceObject
 # Helper routines for queuing
 #
 
-  def set_to_applying(nodes, inst)
+  def set_to_applying(nodes, inst, pre_cached_nodes)
     with_lock "BA-LOCK" do
       nodes.each do |node_name|
-        node = NodeObject.find_node_by_name(node_name)
+        node = pre_cached_nodes[node_name]
+        if node.nil?
+          node = NodeObject.find_node_by_name(node_name)
+        end
         next if node.nil?
 
         node.crowbar["state"] = "applying"
@@ -1079,7 +1082,7 @@ class ServiceObject
 
     # Mark nodes as applying; beware that all_nodes do not contain nodes that
     # are actually removed.
-    set_to_applying(applying_nodes, inst)
+    set_to_applying(applying_nodes, inst, pre_cached_nodes)
 
     # Part III: Update run lists of nodes to reflect new deployment. I.e. write
     # through the deployment schedule in pending node actions into run lists.
