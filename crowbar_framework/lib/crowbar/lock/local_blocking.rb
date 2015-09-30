@@ -31,18 +31,18 @@ module Crowbar
       loop do
         count += 1
         logger.debug("Lock #{path} attempt #{count}")
-        if file.flock(File::LOCK_EX | File::LOCK_NB)
+        if @file.flock(File::LOCK_EX | File::LOCK_NB)
           break
         end
         sleep 1
       end
-      logger.debug("Acquire #{name} lock exit: #{file.inspect}")
+      logger.debug("Acquire #{name} lock exit: #{@file.inspect}")
       @locked = true
       self
     end
 
     def release
-      logger.debug("Release #{name} lock enter: #{file.inspect}")
+      logger.debug("Release #{name} lock enter: #{@file.inspect}")
       if @file
         @file.flock(File::LOCK_UN) if locked?
         @file.close unless @file.closed?
