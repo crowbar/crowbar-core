@@ -21,7 +21,7 @@ Ohai::Config[:plugin_path] << node.ohai.plugin_path
 Chef::Log.info("ohai plugins will be at: #{node.ohai.plugin_path}")
 
 # Make secure execution location for ohai
-unless node[:platform] == "windows"
+unless node[:platform_family] == "windows"
   d = directory "/var/run/ohai" do
     owner "root"
     group "root"
@@ -33,7 +33,7 @@ unless node[:platform] == "windows"
 end
 
 d = directory node.ohai.plugin_path do
-  unless node[:platform] == "windows"
+  unless node[:platform_family] == "windows"
     owner "root"
     group "root"
     mode 0755
@@ -45,7 +45,7 @@ d.run_action(:create)
 
 rd = remote_directory node.ohai.plugin_path do
   source "plugins"
-  unless node[:platform] == "windows"
+  unless node[:platform_family] == "windows"
     owner "root"
     group "root"
     mode 0755
@@ -54,7 +54,7 @@ rd = remote_directory node.ohai.plugin_path do
 end
 rd.run_action(:create)
 
-unless node[:platform] == "windows"
+unless node[:platform_family] == "windows"
   # we need to ensure that the cstruct gem is available (since we use it in our
   # plugin), except on sledgehammer (because it's already installed and we can't
   # install/check packages there)
