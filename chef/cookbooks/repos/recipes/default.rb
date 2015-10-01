@@ -26,8 +26,8 @@ if provisioner and !CrowbarHelper.in_sledgehammer?(node)
   web_port = provisioner["provisioner"]["web_port"]
   address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(provisioner, "admin").address
 
-  case node["platform"]
-  when "ubuntu","debian"
+  case node[:platform_family]
+  when "debian"
     repositories = provisioner["provisioner"]["repositories"][os_token]
     cookbook_file "/etc/apt/apt.conf.d/99-crowbar-no-auth" do
       source "apt.conf"
@@ -56,7 +56,7 @@ if provisioner and !CrowbarHelper.in_sledgehammer?(node)
       only_if { ::File.exists? "/tmp/.repo_update" }
     end
     package "rubygems"
-  when "redhat","centos"
+  when "rhel"
     maj,min = node[:platform_version].split(".",2)
     repositories = Range.new(0,min.to_i).to_a.reverse.map{|v|
       provisioner["provisioner"]["repositories"]["#{node[:platform]}-#{maj}.#{v}"] rescue nil
@@ -79,7 +79,7 @@ if provisioner and !CrowbarHelper.in_sledgehammer?(node)
     end
   end
 
-  if node["platform"] != "suse" and node["platform"] != "windows"
+  if node[:platform_family] != "suse" && node[:platform_family] != "windows"
     template "/etc/gemrc" do
       variables(admin_ip: address, web_port: web_port)
       mode "0644"
