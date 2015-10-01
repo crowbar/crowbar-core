@@ -42,7 +42,7 @@ template "/etc/rsyslog.d/10-crowbar-server.conf" do
   notifies :restart, "service[rsyslog]"
 end
 
-if node.platform == "ubuntu"
+if node[:platform] == "ubuntu"
   # dropping privileges seems to not allow network ports < 1024.
   # so, don't drop privileges.
   utils_line "# don't drop user privileges to keep network" do
