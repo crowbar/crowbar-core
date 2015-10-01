@@ -17,14 +17,14 @@
 # limitations under the License.
 #
 
-case node["platform"]
-when "ubuntu","debian"
+case node[:platform_family]
+when "debian"
   %w{build-essential binutils-doc}.each do |pkg|
     package pkg do
       action :install
     end
   end
-when "centos","redhat","fedora"
+when "rhel", "fedora"
   %w{gcc gcc-c++ kernel-devel make}.each do |pkg|
     package pkg do
       action :install
