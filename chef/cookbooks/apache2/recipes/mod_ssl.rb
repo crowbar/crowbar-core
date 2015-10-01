@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-if platform?("centos", "redhat", "fedora")
+if platform_family?("rhel", "fedora")
   package "mod_ssl" do
     action :install
     notifies :run, resources(execute: "generate-module-list"), :immediately
@@ -29,7 +29,7 @@ if platform?("centos", "redhat", "fedora")
   end
 end
 
-if node.platform == "suse"
+if node[:platform_family] == "suse"
   execute "/usr/sbin/a2enflag SSL" do
     command "/usr/sbin/a2enflag SSL"
   end

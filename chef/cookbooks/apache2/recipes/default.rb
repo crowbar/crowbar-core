@@ -18,10 +18,10 @@
 #
 
 package "apache2" do
-  case node[:platform]
-  when "centos", "redhat", "fedora"
+  case node[:platform_family]
+  when "rhel", "fedora"
     package_name "httpd"
-  when "debian", "ubuntu", "suse"
+  when "debian", "suse"
     package_name "apache2"
   when "arch"
     package_name "apache"
@@ -30,8 +30,8 @@ package "apache2" do
 end
 
 service "apache2" do
-  case node[:platform]
-  when "centos","redhat","fedora"
+  case node[:platform_family]
+  when "rhel", "fedora"
     service_name "httpd"
     # If restarted/reloaded too quickly httpd has a habit of failing.
     # This may happen with multiple recipes notifying apache to restart - like
@@ -46,10 +46,10 @@ service "apache2" do
     service_name "apache2"
     restart_command "/usr/sbin/invoke-rc.d apache2 restart && sleep 1"
     reload_command "/usr/sbin/invoke-rc.d apache2 reload && sleep 1"
-  when "ubuntu"
-    service_name "apache2"
-    restart_command "service apache2 restart && sleep 1"
-    reload_command "service apache2 graceful && sleep 1"
+    if node[:platform] == "ubuntu"
+      restart_command "service apache2 restart && sleep 1"
+      reload_command "service apache2 graceful && sleep 1"
+    end
   when "arch"
     service_name "httpd"
   end
@@ -60,13 +60,14 @@ service "apache2" do
     "redhat" => { "default" => [:restart, :reload, :status] },
     "fedora" => { "default" => [:restart, :reload, :status] },
     "suse" => { "default" => [:restart, :reload, :status] },
+    "opensuse" => { "default" => [:restart, :reload, :status] },
     "arch" => { "default" => [:restart, :reload, :status] },
     "default" => { "default" => [:restart, :reload] }
   )
   action :enable
 end
 
-if platform?("centos", "redhat", "fedora", "arch")
+if platform_family?("rhel", "fedora", "arch")
   directory node[:apache][:log_dir] do
     mode 0755
     action :create
@@ -124,7 +125,7 @@ if platform?("centos", "redhat", "fedora", "arch")
   end
 end
 
-if node.platform != "suse"
+unless node[:platform_family] == "suse"
   directory "#{node[:apache][:dir]}/ssl" do
     action :create
     mode 0755
@@ -146,10 +147,10 @@ if node.platform != "suse"
   end
 
   template "apache2.conf" do
-    case node[:platform]
-    when "centos","redhat","fedora","arch"
+    case node[:platform_family]
+    when "rhel", "fedora", "arch"
       path "#{node[:apache][:dir]}/conf/httpd.conf"
-    when "debian","ubuntu"
+    when "debian"
       path "#{node[:apache][:dir]}/apache2.conf"
     when "suse"
       path "#{node[:apache][:dir]}/httpd.conf"
@@ -191,7 +192,7 @@ if node.platform != "suse"
 end
 
 template "#{node[:apache][:dir]}/ports.conf" do
-  path "#{node[:apache][:dir]}/listen.conf" if node.platform == "suse"
+  path "#{node[:apache][:dir]}/listen.conf" if node[:platform_family] == "suse"
   source "ports.conf.erb"
   group "root"
   owner "root"
@@ -202,7 +203,7 @@ end
 
 # leave the default module list untouched for now on SUSE
 # (this doesn't seem to be needed for openstack)
-if node.platform != "suse"
+unless node[:platform_family] == "suse"
   include_recipe "apache2::mod_status"
   include_recipe "apache2::mod_alias"
   include_recipe "apache2::mod_auth_basic"
@@ -217,11 +218,8 @@ if node.platform != "suse"
   include_recipe "apache2::mod_mime"
   include_recipe "apache2::mod_negotiation"
   include_recipe "apache2::mod_setenvif"
-  include_recipe "apache2::mod_log_config" if platform?("centos", "redhat", "fedora", "suse", "arch")
+  include_recipe "apache2::mod_log_config" if platform_family?("rhel", "fedora", "arch")
 end
-
-# We don't need this.
-#apache_site "default" if platform?("centos", "redhat", "fedora")
 
 service "apache2" do
   action :start

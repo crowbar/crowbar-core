@@ -8,7 +8,7 @@ ServerRoot "<%= node[:apache][:dir] %>"
 #
 # The accept serialization lock file MUST BE STORED ON A LOCAL DISK.
 #
-<% if node[:platform] == "debian" || node[:platform] == "ubuntu" -%>
+<% if node[:platform_family] == "debian" -%>
 LockFile /var/lock/apache2/accept.lock
 <% elsif node[:platform] == "redhat" && node[:platform_version].to_f >= 6 -%>
 LockFile /var/lock/subsys/httpd
@@ -20,11 +20,11 @@ LockFile logs/accept.lock
 # PidFile: The file in which the server should record its process
 # identification number when it starts.
 #
-<% if node[:platform] == "debian" || node[:platform] == "ubuntu" -%>
+<% if node[:platform_family] == "debian" -%>
 PidFile /var/run/apache2.pid
-<% elsif (node[:platform] == "redhat" && node[:platform_version].to_f < 6) || node[:platform] == "fedora" -%>
+<% elsif (node[:platform] == "redhat" && node[:platform_version].to_f < 6) || node[:platform_family] == "fedora" -%>
 PidFile /var/run/httpd.pid
-<% elsif node[:platform] == "arch" || node[:platform] == "centos" || (node[:platform] == "redhat" && node[:platform_version].to_f >= 6)-%>
+<% elsif node[:platform_family] == "arch" || node[:platform_family] == "rhel -%>
 PidFile /var/run/httpd/httpd.pid
 <% else -%>
 PidFile logs/httpd.pid

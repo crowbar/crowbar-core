@@ -19,7 +19,14 @@
 
 define :apache_site, enable: true do
   include_recipe "apache2"
-  if node.platform != "suse"
+  if node[:platform_family] == "suse"
+    if not params[:enable]
+      file "#{node[:apache][:dir]}/vhosts.d/#{params[:name]}" do
+        action :delete
+        notifies :reload, resources(service: "apache2"), :immediately
+      end
+    end
+  else
     if params[:enable]
       execute "a2ensite #{params[:name]}" do
         command "/usr/sbin/a2ensite #{params[:name]}"
@@ -35,13 +42,6 @@ define :apache_site, enable: true do
         command "/usr/sbin/a2dissite #{params[:name]}"
         notifies :reload, resources(service: "apache2"), :immediately
         only_if do ::File.symlink?("#{node[:apache][:dir]}/sites-enabled/#{params[:name]}") end
-      end
-    end
-  else # in case node.platform == "suse"
-    if not params[:enable] then
-      file "#{node[:apache][:dir]}/vhosts.d/#{params[:name]}" do
-        action :delete
-        notifies :reload, resources(service: "apache2"), :immediately
       end
     end
   end

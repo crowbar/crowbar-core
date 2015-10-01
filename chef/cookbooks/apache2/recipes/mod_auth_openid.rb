@@ -17,20 +17,18 @@
 # limitations under the License.
 #
 
-openid_dev_pkgs = value_for_platform(
-  "ubuntu" => { "default" => %w{ apache2-prefork-dev libopkele-dev libopkele3 } },
+openid_dev_pkgs = value_for_platform_family(
   "debian" => { "default" => %w{ apache2-prefork-dev libopkele-dev libopkele3 } },
   "arch" => { "default" => ["libopkele"] }
 )
 
-case node[:platform]
-when "arch"
+if node[:platform_family] == "arch"
   include_recipe "pacman"
   package "tidyhtml"
 end
 
 openid_dev_pkgs.each do |pkg|
-  case node[:platform]
+  case node[:platform_family]
   when "arch"
     pacman_aur pkg do
       action [:build, :install]
@@ -53,7 +51,7 @@ bash "install mod_auth_openid" do
   perl -pi -e "s/-i -a -n 'authopenid'/-i -n 'authopenid'/g" Makefile
   make && make install
   EOH
-  case node[:platform]
+  case node[:platform_family]
   when "arch"
     not_if { ::File.exists?("/usr/lib/httpd/modules/mod_auth_openid.so") }
   else
