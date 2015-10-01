@@ -22,7 +22,7 @@ default["bluepill"]["state_dir"] = "/var/lib/bluepill"
 default["bluepill"]["group"] = 0
 default["bluepill"]["use_rsyslog"] = false
 
-case platform
+case platform_family
 when "arch"
   default["bluepill"]["init_dir"] = "/etc/rc.d"
   default["bluepill"]["conf_dir"] = "/etc/bluepill"

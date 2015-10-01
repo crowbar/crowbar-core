@@ -2,12 +2,7 @@ include_recipe "bluepill"
 
 # Boring
 package "nc" do
-  package_name case node["platform_family"]
-               when "debian"
-                 "netcat"
-               else
-                 "nc"
-               end
+  package_name "netcat" if node[:platform_family] == "debian"
 end
 
 # This fake services uses Netcat to continuously send the secret
