@@ -22,15 +22,11 @@ define :ruby_packages, action: :install do
   rv = params[:name].to_s
   raise "A Ruby version such as 1.8, 1.9 or 1.9.1 must be given" if rv.empty?
 
-  packages = case node[:platform]
-  when "ubuntu","debian"
-    [
+  case node[:platform_family]
+  when "debian"
+    packages = [
       "ruby#{rv}",
       "ruby#{rv}-dev",
-#      "rdoc#{rv}",
-#      "ri#{rv}",
-#      "irb#{rv}",
-#      "libopenssl-ruby#{rv}",
      ("libshadow-ruby1.8" if rv == "1.8")
     ].compact
 
@@ -38,7 +34,7 @@ define :ruby_packages, action: :install do
     rv = rv.slice(0..2)
     target = "ruby" + rv.delete(".")
 
-    [
+    packages = [
       # ruby-ssl is before ruby to ensure that ruby is initially
       # installed with the ssl USE flag enabled.
       "virtual/ruby-ssl:#{target}",
@@ -47,9 +43,9 @@ define :ruby_packages, action: :install do
      ("dev-ruby/ruby-shadow" if rv == "1.8")
     ].compact
 
-  when "centos","redhat","fedora"
+  when "rhel", "fedora"
     # yum requires full version numbers. :(
-    %w{
+    packages = %w{
       ruby
       ruby-libs
       ruby-devel
@@ -62,7 +58,7 @@ define :ruby_packages, action: :install do
 
   when "arch"
     # 1.8 only available from AUR. :(
-    %w{
+    packages = %w{
       ruby
       ruby-docs
     }
