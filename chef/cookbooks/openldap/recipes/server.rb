@@ -90,8 +90,7 @@ if (node[:platform] == "ubuntu") and (node[:platform_version].to_f >= 8.10)
     notifies :run, resources(execute: "slapd-config-convert")
   end
 else
-  case node[:platform]
-  when "debian","ubuntu"
+  if node[:platform_family] == "debian"
     template "/etc/default/slapd" do
       source "default_slapd.erb"
       owner "root"

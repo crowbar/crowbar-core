@@ -24,12 +24,12 @@ end
 openldap[:rootpw] = nil
 
 # File and directory locations for openldap.
-case platform
-when "redhat","centos"
+case node[:platform_family]
+when "rhel"
   set[:openldap][:dir]        = "/etc/openldap"
   set[:openldap][:run_dir]    = "/var/run/openldap"
   set[:openldap][:module_dir] = "/usr/lib64/openldap"
-when "debian","ubuntu"
+when "debian"
   set[:openldap][:dir]        = "/etc/ldap"
   set[:openldap][:run_dir]    = "/var/run/slapd"
   set[:openldap][:module_dir] = "/usr/lib/ldap"
