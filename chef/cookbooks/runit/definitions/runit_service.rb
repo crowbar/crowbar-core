@@ -125,7 +125,7 @@ define :runit_service, directory: nil, only_if: false, finish_script: false, con
     end
   end
 
-  unless node[:platform] == "gentoo"
+  unless node[:platform_family] == "gentoo"
     link service_dir_name do
       to sv_dir_name
     end
