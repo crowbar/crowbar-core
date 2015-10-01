@@ -19,8 +19,8 @@
 
 include_recipe "ruby"
 
-case node[:platform]
-when "ubuntu","debian"
+case node[:platform_family]
+when "debian"
   package "rails" do
     action :install
   end
