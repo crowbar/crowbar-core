@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 
-return if node[:platform] == "windows"
+return if node[:platform_family] == "windows"
 
 ###
 # If anything has to be applied to a Windows node, it has to be done
@@ -22,7 +22,7 @@ return if node[:platform] == "windows"
 ###
 
 package "ipmitool" do
-  package_name "OpenIPMI-tools" if node[:platform] =~ /^(redhat|centos)$/
+  package_name "OpenIPMI-tools" if node[:platform_family] == "rhel"
   action :install
 end
 
@@ -34,7 +34,7 @@ directory "/root/.ssh" do
 end
 
 # We don't want to use bluepill on SUSE and Windows
-if node["platform"] != "suse"
+unless node[:platform_family] == "suse"
   # Make sure we have Bluepill
   case node["state"]
   when "ready","readying"
@@ -108,7 +108,7 @@ end
 # Also put authorized_keys in tftpboot path on the admin node so that discovered
 # nodes can use the same.
 if node.roles.include? "crowbar"
-  case node[:platform]
+  case node[:platform_family]
   when "suse"
     tftpboot_path = "/srv/tftpboot"
   else
@@ -161,8 +161,8 @@ if node[:provisioner][:coredump]
     code "echo '* soft core unlimited' >> /etc/security/limits.conf"
     not_if "grep -q 'soft core unlimited' /etc/security/limits.conf"
   end
-  if node[:platform] == "suse"
-    if node[:platform_version].to_f < 12.0
+  if node[:platform_family] == "suse"
+    if node[:platform] == "suse" && node[:platform_version].to_f < 12.0
       package "ulimit"
       # Permanent core dumping (no reboot needed)
       bash "Enable permanent core dumps (/etc/sysconfig/ulimit)" do
@@ -185,8 +185,8 @@ else
     code 'sed -is "/\* soft core unlimited/d" /etc/security/limits.conf'
     only_if "grep -q '* soft core unlimited' /etc/security/limits.conf"
   end
-  if node[:platform] == "suse"
-    if node[:platform_version].to_f < 12.0
+  if node[:platform_family] == "suse"
+    if node[:platform] == "suse" && node[:platform_version].to_f < 12.0
       package "ulimit"
       bash "Disable permanent core dumps (/etc/sysconfig/ulimit)" do
         code 'sed -i s/SOFTCORELIMIT.*/SOFTCORELIMIT="1"/ /etc/sysconfig/ulimit'
@@ -202,7 +202,7 @@ else
 end
 
 config_file = "/etc/default/chef-client"
-config_file = "/etc/sysconfig/chef-client" if node[:platform] =~ /^(redhat|centos)$/
+config_file = "/etc/sysconfig/chef-client" if node[:platform_family] == "rhel"
 
 cookbook_file config_file do
   owner "root"
@@ -213,7 +213,7 @@ cookbook_file config_file do
 end
 
 # On SUSE: install crowbar_join properly, with init script
-if node["platform"] == "suse" && !node.roles.include?("provisioner-server")
+if node[:platform_family] == "suse" && !node.roles.include?("provisioner-server")
   admin_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(provisioner_server_node, "admin").address
   web_port = provisioner_server_node[:provisioner][:web_port]
 
@@ -231,7 +231,7 @@ if node["platform"] == "suse" && !node.roles.include?("provisioner-server")
               target_platform_version: node["platform_version"] )
   end
 
-  if node["platform_version"].to_f < 12.0
+  if node[:platform] == "suse" && node[:platform_version].to_f < 12.0
     cookbook_file "/etc/init.d/crowbar_join" do
       owner "root"
       group "root"
@@ -304,9 +304,9 @@ if node["platform"] == "suse" && !node.roles.include?("provisioner-server")
     action :delete
   end
 
-  if node["platform"] == "suse"
+  if node[:platform_family] == "suse"
     ## make sure the repos are properly setup
-    repos = Provisioner::Repositories.get_repos(provisioner_server_node, node["platform"], node["platform_version"])
+    repos = Provisioner::Repositories.get_repos(provisioner_server_node, node[:platform], node[:platform])
     for name, attrs in repos
       url = %x{zypper --non-interactive repos #{name} 2> /dev/null | grep "^URI " | cut -d : -f 2-}
       url.strip!
