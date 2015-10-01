@@ -7,7 +7,7 @@ timeout 3600
 worker_processes 4
 listen "<%= @web_host %>:<%= @web_port %>"
 user("<%= @user %>","<%= @group || nil %>")
-<% if node[:platform]=="suse" -%>
+<% if node[:platform_family] == "suse" -%>
 pid("/var/run/crowbar/crowbar.pid")
 <% end -%>
 stderr_path "<%= "#{@logdir}/#{@logname}.out" %>"
