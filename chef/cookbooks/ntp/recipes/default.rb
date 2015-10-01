@@ -30,9 +30,7 @@ if node["roles"].include?("ntp-server")
   is_server = true
 end
 
-if node[:platform]=="windows"
-  #for windows
-
+if node[:platform_family] == "windows"
   unless ntp_servers.nil? or ntp_servers.empty?
     ntplist=""
     ntp_servers.each do |ntpserver|
@@ -63,7 +61,7 @@ else
   end
 
   driftfile = "/var/lib/ntp/ntp.drift"
-  driftfile = "/var/lib/ntp/drift/ntp.drift" if node[:platform] == "suse"
+  driftfile = "/var/lib/ntp/drift/ntp.drift" if node[:platform_family] == "suse"
 
   user "ntp"
 
@@ -91,8 +89,8 @@ else
   end if ::File.exists?("/etc/network/if-up.d/ntpdate")
 
   service "ntp" do
-    service_name "ntpd" if node[:platform] =~ /^(centos|redhat)$/
-    service_name "ntpd" if node[:platform] == "suse" && node[:platform_version].to_f >= 12.0
+    service_name "ntpd" if node[:platform_family] == "rhel"
+    service_name "ntpd" if node[:platform] == "opensuse" || (node[:platform] == "suse" && node[:platform_version].to_f >= 12.0)
     supports restart: true, status: true, reload: true
     action [:enable, :start]
   end
