@@ -16,11 +16,11 @@
 include_recipe "utils"
 
 pkg = ""
-case node[:platform]
-when "ubuntu","debian"
+case node[:platform_family]
+when "debian"
   pkg = "dhcp3"
   package "dhcp3-server"
-when "redhat","centos"
+when "rhel"
   pkg = "dhcp"
   package "dhcp"
 when "suse"
@@ -65,8 +65,8 @@ address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").a
 
 d_opts = node[:dhcp][:options]
 
-case node[:platform]
-when "ubuntu","debian"
+case node[:platform_family]
+when "debian"
   case node[:lsb][:codename]
   when "natty","oneiric","precise"
     template "/etc/dhcp/dhcpd.conf" do
@@ -103,7 +103,7 @@ when "ubuntu","debian"
       notifies :restart, "service[dhcp3-server]"
     end
   end
-when "redhat","centos"
+when "rhel"
 
   dhcp_config_file = case
     when node[:platform_version].to_f >= 6
@@ -151,10 +151,9 @@ when "suse"
 end
 
 service "dhcp3-server" do
-  case node[:platform]
-  when "redhat", "centos", "suse"
+  if %w(suse rhel).include?(node[:platform_family])
     service_name "dhcpd"
-  when "ubuntu"
+  elsif node[:platform] == "ubuntu"
     case node[:lsb][:codename]
     when "maverick"
       service_name "dhcp3-server"
