@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-return if node[:platform] == "windows"
+return if node[:platform_family] == "windows"
 
 # Make sure packages we need will be present
 node[:network][:base_pkgs].each do |pkg|
@@ -41,7 +41,7 @@ if node[:platform] == "ubuntu"
   end
 end
 
-if %w(suse).include? node.platform
+if node[:platform_family] == "suse"
   # We used to create this file. Clean it up
   file "/etc/modprobe.d/10-bridge-disable-netfilter.conf" do
     action :delete
@@ -102,8 +102,8 @@ def kill_nic(nic)
   Chef::Log.info("Interface #{nic.name} is no longer being used, deconfiguring it.")
   nic.destroy
 
-  case node["platform"]
-  when "centos","redhat"
+  case node[:platform_family]
+  when "rhel"
     # Redhat and Centos have lots of small files definining interfaces.
     # Delete the ones we no longer care about here.
     if ::File.exists?("/etc/sysconfig/network-scripts/ifcfg-#{nic.name}")
@@ -456,15 +456,15 @@ node.save
 FileUtils.mkdir_p("/var/cache/crowbar/network")
 FileUtils.touch("/var/cache/crowbar/network/managed")
 
-case node["platform"]
-when "debian","ubuntu"
+case node[:platform_family]
+when "debian"
   template "/etc/network/interfaces" do
     source "interfaces.erb"
     owner "root"
     group "root"
     variables({ interfaces: ifs })
   end
-when "centos","redhat"
+when "rhel"
   # add redhat-specific code here
   Nic.nics.each do |nic|
     next unless ifs[nic.name]

@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 
-case node["platform"]
+case node[:platform_family]
 when "suse"
   default[:network][:base_pkgs] = ["bridge-utils",
                                    "vlan"]
@@ -21,7 +21,7 @@ when "suse"
                                   "openvswitch-switch",
                                   "openvswitch-kmp-default"]
   default[:network][:ovs_service] = "openvswitch-switch"
-when "centos", "redhat"
+when "rhel"
   default[:network][:base_pkgs] = ["bridge-utils",
                                    "vconfig"]
   default[:network][:ovs_pkgs] = ["openvswitch",
