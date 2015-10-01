@@ -22,8 +22,7 @@ if !node[:updater].has_key?(:one_shot_run) || !node[:updater][:one_shot_run]
   node[:updater][:one_shot_run] = true
   node.save
 
-  case node[:platform]
-  when "suse"
+  if node[:platform_family] == "suse"
     zypper_params = ["--non-interactive"]
     if not node[:updater][:zypper][:gpg_checks]
       zypper_params << "--no-gpg-checks"
@@ -92,7 +91,7 @@ if !node[:updater].has_key?(:one_shot_run) || !node[:updater][:one_shot_run]
       end # block
     end # ruby_block
 
-  end # case
+  end # platform_family suse block
 
   # handle case where there is a reboot needed from a previous run
   if node[:updater][:do_reboot] and node[:updater][:need_reboot]
