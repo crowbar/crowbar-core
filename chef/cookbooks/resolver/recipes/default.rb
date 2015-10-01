@@ -32,7 +32,7 @@ end
 dns_list << node[:dns][:nameservers]
 dns_list.flatten!
 
-unless node[:platform] == "windows"
+unless node[:platform_family] == "windows"
   unless CrowbarHelper.in_sledgehammer?(node)
     package "dnsmasq"
 
