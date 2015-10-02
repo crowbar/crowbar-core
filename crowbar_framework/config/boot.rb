@@ -55,7 +55,7 @@ else
   gem "dotenv", version: "~> 1.0"
   require "dotenv"
 
-  gem "hashie", version: "~> 2.1"
+  gem "hashie", version: "~> 3.4"
   require "hashie"
 
   gem "i18n-js", version: "~> 2.1"
