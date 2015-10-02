@@ -61,7 +61,7 @@ else
   gem "i18n-js", version: "~> 2.1"
   require "i18n-js"
 
-  gem "js-routes", version: "~> 0.9"
+  gem "js-routes", version: "~> 1.0"
   require "js-routes"
 
   gem "kwalify", version: "~> 0.7"
