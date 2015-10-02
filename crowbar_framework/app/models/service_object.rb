@@ -160,10 +160,13 @@ class ServiceObject
 # Helper routines for queuing
 #
 
-  def set_to_applying(nodes, inst)
+  def set_to_applying(nodes, inst, pre_cached_nodes)
     with_lock "BA-LOCK" do
       nodes.each do |node_name|
-        node = NodeObject.find_node_by_name(node_name)
+        node = pre_cached_nodes[node_name]
+        if node.nil?
+          node = NodeObject.find_node_by_name(node_name)
+        end
         next if node.nil?
 
         node.crowbar["state"] = "applying"
@@ -1041,6 +1044,10 @@ class ServiceObject
 
     applying_nodes = run_order.flatten.uniq.sort
 
+    # Mark nodes as applying; beware that all_nodes do not contain nodes that
+    # are actually removed.
+    set_to_applying(applying_nodes, inst, pre_cached_nodes)
+
     # Prevent any intervallic runs from running whilst we apply the
     # proposal, in order to avoid the orchestration problems described
     # in https://bugzilla.suse.com/show_bug.cgi?id=857375
@@ -1076,10 +1083,6 @@ class ServiceObject
     # By this point, no intervallic runs should be running, and no
     # more will be able to start running until we release the locks
     # after the proposal has finished applying.
-
-    # Mark nodes as applying; beware that all_nodes do not contain nodes that
-    # are actually removed.
-    set_to_applying(applying_nodes, inst)
 
     # Part III: Update run lists of nodes to reflect new deployment. I.e. write
     # through the deployment schedule in pending node actions into run lists.
