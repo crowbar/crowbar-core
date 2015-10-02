@@ -24,11 +24,12 @@
     %header
       = render :partial => "shared/header"
 
-    .container#content
-      = render :partial => "shared/flashes"
+    %section
+      .container#content
+        = render :partial => "shared/flashes"
+        = yield
 
     %footer
-      = yield
       = render :partial => "shared/footer"
 
     %script#message-template{ :type => "text/x-handlebars-template" }
