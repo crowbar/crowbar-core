@@ -21,7 +21,8 @@
       = javascript_include_tag "ie"
 
   %body{ :class => params[:controller] }
-    = render :partial => "shared/header"
+    %header
+      = render :partial => "shared/header"
 
     .container#content
       = render :partial => "shared/flashes"
