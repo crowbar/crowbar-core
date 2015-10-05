@@ -1,0 +1,2 @@
+# This can get removed after moving vendor libs to vendor/ folder
+crowbar_framework/app/assets/javascripts/bootstrap/*
