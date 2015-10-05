@@ -16,7 +16,7 @@
 
 # The main page title that gets displayed on all pages on the top bar and within
 # the meta information.
-page_title: 'Crowbar'
+page_title: 'SUSE® OpenStack Cloud Crowbar'
 
 # The page slogan is an optional value. If you don't define it nothings gets
 # printed out. If you define it, it gets printed as a suffix for the page title.
@@ -26,11 +26,11 @@ page_slogan: ''
 # SUSE OpenStack Cloud for example should write something like SUSE OpenStack Cloud v2.0, whereas
 # Crowbar on Dell side writes Version 0.0.1. The variable CROWBAR_VERSION gets
 # replaced by the environment value.
-version: 'Version CROWBAR_VERSION'
+version: '<a href="https://www.suse.com/cloud" target="_new">SUSE&reg; OpenStack Cloud 9</a>'
 
 # The provider will get displayed on the footer of crowbar to show who provides
 # this nice project ;-)
-provider: '<a href="https://crowbar.github.io/" target="_blank">Crowbar</a>'
+provider: '<a href="http://www.suse.com" target="_new">SUSE&reg;</a>'
 
 # The favicon that gets displayed on all pages.
-favicon: ''
+favicon: 'suse/favicon.ico'
