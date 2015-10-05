@@ -1,6 +1,5 @@
-%footer
-  %span
-    = raw(branding_config[:version].gsub("CROWBAR_VERSION", ENV["CROWBAR_VERSION"]))
+%span
+  = raw(branding_config[:version].gsub("CROWBAR_VERSION", ENV["CROWBAR_VERSION"]))
 
-  %span
-    = t(".provided_by", :provider => branding_config[:provider]).html_safe
+%span
+  = t(".provided_by", :provider => branding_config[:provider]).html_safe
