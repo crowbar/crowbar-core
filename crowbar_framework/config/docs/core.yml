@@ -4,28 +4,8 @@ en:
       heading: 'Deployment Resources'
       order: 100
       items:
-        crowbar_users_guide:
-          text: 'Crowbar User Guide'
-          pdf: '/docs/crowbar_users_guide.pdf'
+        deployment_guide:
+          text: 'Deployment Guide'
+          link: '/docs/deployment/'
+          pdf: '/docs/suse-openstack-cloud-deployment.en.pdf'
           order: 100
-        crowbar_batch_command:
-          text: 'Crowbar Batch Command'
-          link: '/docs/batch.md'
-          order: 890
-        cisco_ucs_integration:
-          text: 'Cisco UCS Integration'
-          link: '/docs/cisco_ucs.md'
-          order: 900
-
-# Here's an example of how to add links for downstream documentation
-#    others:
-#      heading: 'Other Resources'
-#      items:
-#        end_user_guide:
-#          text: 'End User Guide'
-#          link: '/docs/user/'
-#          pdf: '/docs/user_en.pdf'
-#        admin_user_guide:
-#          text: 'Admin User Guide'
-#          link: '/docs/admin/'
-#          pdf: '/docs/admin_en.pdf'
