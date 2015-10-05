@@ -21,12 +21,15 @@
       = javascript_include_tag "ie"
 
   %body{ :class => params[:controller] }
-    = render :partial => "shared/header"
+    %header
+      = render :partial => "shared/header"
 
-    .container#content
-      = render :partial => "shared/flashes"
+    %section
+      .container#content
+        = render :partial => "shared/flashes"
+        = yield
 
-      = yield
+    %footer
       = render :partial => "shared/footer"
 
     %script#message-template{ :type => "text/x-handlebars-template" }
