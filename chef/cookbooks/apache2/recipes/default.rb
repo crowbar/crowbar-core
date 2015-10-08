@@ -222,8 +222,3 @@ end
 
 # We don't need this.
 #apache_site "default" if platform?("centos", "redhat", "fedora")
-
-service "apache2" do
-  action :start
-  ignore_failure true
-end

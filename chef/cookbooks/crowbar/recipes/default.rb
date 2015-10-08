@@ -393,6 +393,10 @@ template "#{node[:apache][:dir]}/vhosts.d/crowbar.conf" do
   notifies :reload, resources(service: "apache2")
 end
 
+service "apache2" do
+  action [:enable, :start]
+end
+
 # The below code swiped from:
 # https://github.com/opscode-cookbooks/chef-server/blob/chef10/recipes/default.rb
 # It will automaticaly compact the couchdb database when it gets too large.
