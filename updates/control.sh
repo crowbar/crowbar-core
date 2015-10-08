@@ -45,20 +45,6 @@ function is_suse() {
     return 1
 }
 
-function suse_ver() {
-    local ver=$1
-    local suse_ver=0
-
-    if [ -f /etc/os-release ]; then
-        . /etc/os-release
-        [ "$NAME" == "SLES" ] && suse_ver=$VERSION
-    elif [ -f /etc/SuSE-release ]; then
-        suse_ver=`cat /etc/SuSE-release  | awk '/VERSION/ {print $3}'`
-    fi
-
-    [ "$suse_ver" -eq "$ver" ]
-}
-
 #
 # Override HOSTNAME if it is specified.  In kernel,
 # This handles changing boot IFs in the middle of
@@ -126,14 +112,8 @@ ALLOCATED=false
 export DHCP_STATE MYINDEX ADMIN_ADDRESS BMC_ADDRESS BMC_NETMASK BMC_ROUTER ADMIN_IP
 export ALLOCATED HOSTNAME CROWBAR_KEY CROWBAR_STATE
 
-if suse_ver 11; then
-    ntp="sntp -P no -r $ADMIN_IP"
-else
-    ntp="/usr/sbin/ntpdate $ADMIN_IP"
-fi
-
 # Make sure date is up-to-date
-until $ntp || [[ $DHCP_STATE = 'debug' ]]; do
+until /usr/sbin/ntpdate $ADMIN_IP || [[ $DHCP_STATE = 'debug' ]]; do
   echo "Waiting for NTP server"
   sleep 1
 done
