@@ -313,7 +313,7 @@ end
 
 service "bind9" do
   case node[:platform]
-  when "centos","redhat","suse"
+  when "centos", "redhat", "suse"
     service_name "named"
   end
   supports restart: true, status: true, reload: true
