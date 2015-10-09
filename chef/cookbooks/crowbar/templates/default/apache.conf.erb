@@ -11,6 +11,8 @@
 
     ProxyPass / http://127.0.0.1:<%= @port %>/ timeout=600 Keepalive=On
     ProxyPassReverse / http://127.0.0.1:<%= @port %>/
+    SetEnv proxy-nokeepalive 1
+    SetEnv proxy-initial-not-pooled 1
 
     <Location />
         <%- unless @realm.nil? %>
