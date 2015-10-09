@@ -51,7 +51,7 @@ function suse_ver() {
 
     if [ -f /etc/os-release ]; then
         . /etc/os-release
-        [ "$NAME" == "SLES" ] && suse_ver=$VERSION
+        [ "$NAME" == "SLES" ] && suse_ver=${VERSION%-SP[0-9]}
     elif [ -f /etc/SuSE-release ]; then
         suse_ver=`cat /etc/SuSE-release  | awk '/VERSION/ {print $3}'`
     fi
