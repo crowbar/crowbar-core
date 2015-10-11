@@ -299,7 +299,7 @@ PACKAGES_INSTALL="$PACKAGES_INSTALL openssh"
 
 # From autoyast profile
 PATTERNS_INSTALL="$PATTERNS_INSTALL Minimal base"
-PACKAGES_INSTALL="$PACKAGES_INSTALL netcat ruby2.1-rubygem-chef supportutils-plugin-suse-openstack-cloud"
+PACKAGES_INSTALL="$PACKAGES_INSTALL netcat ruby2.1-rubygem-chef"
 
 case $ARCH in
     x86_64) PACKAGES_INSTALL+=" biosdevname";;
@@ -309,8 +309,8 @@ zypper --non-interactive install -t pattern $PATTERNS_INSTALL
 # Auto-agree with the license since it was already agreed on for the admin server
 <% if @target_platform_version.to_f < 12.0 -%>
 zypper --non-interactive install --auto-agree-with-licenses suse-sle11-openstack-cloud-release
-<% else -%>
-zypper --non-interactive install --auto-agree-with-licenses suse-openstack-cloud-release
+<% elsif @target_platform_version == "12.1" -%>
+zypper --non-interactive install --auto-agree-with-licenses suse-openstack-cloud-release supportutils-plugin-suse-openstack-cloud
 <% end -%>
 zypper --non-interactive install $PACKAGES_INSTALL<%= " '#{@packages.join("' '")}'" unless @packages.empty? %>
 
@@ -368,7 +368,7 @@ export HOSTNAME
 <% if @target_platform_version.to_f < 12.0 -%>
 ntp="sntp -P no -r $NTP_SERVERS"
 <% else -%>
-ntp="sntp -s $NTP_SERVERS"
+ntp="/usr/sbin/ntpdate $NTP_SERVERS"
 <% end -%>
 # Make sure date is up-to-date
 until $ntp; do
