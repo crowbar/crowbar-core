@@ -1,5 +1,4 @@
 //= require jquery/jquery
-//= require jquery/migrate
 //= require jquery/ui
 //= require jquery/rails
 //= require jquery/blockui
