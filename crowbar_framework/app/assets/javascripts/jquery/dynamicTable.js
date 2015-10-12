@@ -68,7 +68,7 @@
     );
 
     var data = this.json;
-    var namespace = this.options.namespace.split('/');
+    var namespace = this.options.namespace.split('.');
 
     $.event.trigger({
       type: 'dynamicTableBeforeDuplicate',
@@ -171,7 +171,7 @@
       var inputs = self.root.find('tfoot input');
 
       var data = self.json;
-      var namespace = self.options.namespace.split('/');
+      var namespace = self.options.namespace.split('.');
       var values = {};
 
       var currentKey = false;
@@ -236,7 +236,7 @@
       event.preventDefault();
 
       var data = self.json;
-      var namespace = self.options.namespace.split('/');
+      var namespace = self.options.namespace.split('.');
 
       while (namespace.length > 1) {
         var current_namespace = namespace.shift();
@@ -265,7 +265,7 @@
       self.prepareJson();
 
       var data = self.json;
-      var namespace = $(this).data('update').toString().split('/');
+      var namespace = $(this).data('update').toString().split('.');
 
       var optionals = self.options.optional.toString().split(',');
 
@@ -313,7 +313,7 @@
     var self = this;
 
     var data = self.json;
-    var namespace = self.options.namespace.split('/');
+    var namespace = self.options.namespace.split('.');
     var entries = null;
 
     while (namespace.length > 1) {

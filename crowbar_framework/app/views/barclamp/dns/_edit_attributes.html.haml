@@ -58,7 +58,7 @@
     %td
       = text_field_tag "record[name]", "{{name}}", :placeholder => t(".record_name"), :class => "form-control", :disabled => "disabled"
     %td
-      = text_field_tag "record[ips]", "{{ips}}", :placeholder => t(".record_ips"), :class => "form-control", "data-update" => "records/{{name}}/ips", "data-name" => "ips", "data-type" => "array-string"
+      = text_field_tag "record[ips]", "{{ips}}", :placeholder => t(".record_ips"), :class => "form-control", "data-update" => "records.{{name}}.ips", "data-name" => "ips", "data-type" => "array-string"
     %td
       = link_to t(".record_remove"), "#", :class => "btn btn-default btn-block", "data-remove" => "{{name}}"
   {{else}}
