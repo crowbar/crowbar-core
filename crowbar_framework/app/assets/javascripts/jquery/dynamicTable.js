@@ -74,7 +74,7 @@
       type: 'dynamicTableBeforeDuplicate',
       input: input,
       json: data,
-      namespace: namespace
+      namespace: this.options.namespace
     });
 
     while (namespace.length > 0) {
@@ -92,7 +92,7 @@
         type: 'dynamicTableGotDuplicate',
         input: input,
         json: data,
-        namespace: namespace
+        namespace: this.options.namespace
       });
 
       return true;
@@ -214,7 +214,7 @@
       $.event.trigger({
         type: 'dynamicTableAddedEntry',
         json: data,
-        namespace: namespace,
+        namespace: self.options.namespace,
         values: values,
         inputs: inputs
       });
@@ -255,7 +255,7 @@
       $.event.trigger({
         type: 'dynamicTableRemovedEntry',
         json: data,
-        namespace: namespace
+        namespace: self.options.namespace
       });
 
       self.renderEntries();
@@ -303,7 +303,7 @@
       $.event.trigger({
         type: 'dynamicTableUpdatedEntry',
         json: data,
-        namespace: namespace,
+        namespace: self.options.namespace,
         optionals: optionals
       });
     });
@@ -352,7 +352,7 @@
     $.event.trigger({
       type: 'dynamicTableRenderedEntry',
       json: data,
-      namespace: namespace,
+      namespace: self.options.namespace,
       entries: entries
     });
   };
