@@ -68,13 +68,13 @@
     );
 
     var data = this.json;
-    var namespace = this.options.namespace.split('/');
+    var namespace = this.options.namespace.split('.');
 
     $.event.trigger({
       type: 'dynamicTableBeforeDuplicate',
       input: input,
       json: data,
-      namespace: namespace
+      namespace: this.options.namespace
     });
 
     while (namespace.length > 0) {
@@ -92,7 +92,7 @@
         type: 'dynamicTableGotDuplicate',
         input: input,
         json: data,
-        namespace: namespace
+        namespace: this.options.namespace
       });
 
       return true;
@@ -171,7 +171,7 @@
       var inputs = self.root.find('tfoot input');
 
       var data = self.json;
-      var namespace = self.options.namespace.split('/');
+      var namespace = self.options.namespace.split('.');
       var values = {};
 
       var currentKey = false;
@@ -214,7 +214,7 @@
       $.event.trigger({
         type: 'dynamicTableAddedEntry',
         json: data,
-        namespace: namespace,
+        namespace: self.options.namespace,
         values: values,
         inputs: inputs
       });
@@ -236,7 +236,7 @@
       event.preventDefault();
 
       var data = self.json;
-      var namespace = self.options.namespace.split('/');
+      var namespace = self.options.namespace.split('.');
 
       while (namespace.length > 1) {
         var current_namespace = namespace.shift();
@@ -255,7 +255,7 @@
       $.event.trigger({
         type: 'dynamicTableRemovedEntry',
         json: data,
-        namespace: namespace
+        namespace: self.options.namespace
       });
 
       self.renderEntries();
@@ -265,7 +265,7 @@
       self.prepareJson();
 
       var data = self.json;
-      var namespace = $(this).data('update').toString().split('/');
+      var namespace = $(this).data('update').toString().split('.');
 
       var optionals = self.options.optional.toString().split(',');
 
@@ -303,7 +303,7 @@
       $.event.trigger({
         type: 'dynamicTableUpdatedEntry',
         json: data,
-        namespace: namespace,
+        namespace: self.options.namespace,
         optionals: optionals
       });
     });
@@ -313,7 +313,7 @@
     var self = this;
 
     var data = self.json;
-    var namespace = self.options.namespace.split('/');
+    var namespace = self.options.namespace.split('.');
     var entries = null;
 
     while (namespace.length > 1) {
@@ -352,7 +352,7 @@
     $.event.trigger({
       type: 'dynamicTableRenderedEntry',
       json: data,
-      namespace: namespace,
+      namespace: self.options.namespace,
       entries: entries
     });
   };
