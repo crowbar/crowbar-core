@@ -29,7 +29,9 @@ class Provisioner
               SUSE-OpenStack-Cloud-SLE11-6-Pool
               SUSE-OpenStack-Cloud-SLE11-6-Updates
             )
-          when "12.0", "12.1"
+          when "12.0"
+            []
+          when "12.1"
             %w(
               Cloud
               SUSE-OpenStack-Cloud-6-Pool
