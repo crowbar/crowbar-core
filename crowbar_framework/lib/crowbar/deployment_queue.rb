@@ -182,10 +182,12 @@ module Crowbar
         # 202 means some nodes are not ready, bail out in that case
         # We're re-running the whole apply continuously, until there
         # are no items left in the queue.
+        # We also ignore proposals who can't be committed due to some error
+        # (4xx) with the proposal or some internal error (5xx).
         # FIXME: This is lame, because from the user perspective, we're still
         # applying the first barclamp, while this part was in fact already
         # completed and we're applying next item(s) in the queue.
-        loop_again = true if results.any? { |state| state != 202 }
+        loop_again = true if results.any? { |state| state != 202 && state < 400 }
 
         # For each ready item, apply it.
         logger.debug("process queue: exit")
