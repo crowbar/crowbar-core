@@ -257,7 +257,7 @@
     "network": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 11,
+      "schema-revision": 20,
       "element_states": {
         "network": [ "readying", "ready", "applying" ]
       },
@@ -269,7 +269,7 @@
         "environment": "network-base-config",
         "mode": "full",
         "transitions": true,
-        "transition_list": [ "discovered", "reset", "delete" ]
+        "transition_list": [ "discovered", "hardware-installing", "reset", "delete" ]
       }
     }
   }
