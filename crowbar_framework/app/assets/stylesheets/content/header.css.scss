@@ -3,8 +3,9 @@
     padding: 4px 15px 0;
 
     .title {
-      font-weight: bold;
-      font-size: 21px;
+      display: block;
+      text-indent: -100000px;
+      background: transparent image-url('logos/crowbar.png') no-repeat;
       width: 244px;
       height: 42px;
     }
