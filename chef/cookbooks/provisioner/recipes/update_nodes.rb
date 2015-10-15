@@ -138,7 +138,11 @@ if not nodes.nil? and not nodes.empty?
           if mnode.macaddress == mac_list[i]
             ipaddress admin_data_net.address
             options [
-             'if option arch = 00:06 {
+              'if exists dhcp-parameter-request-list {
+    # Always send the PXELINUX options (specified in hexadecimal)
+    option dhcp-parameter-request-list = concat(option dhcp-parameter-request-list,d0,d1,d2,d3);
+  }',
+              'if option arch = 00:06 {
     filename = "discovery/bootia32.efi";
   } else if option arch = 00:07 {
     filename = "discovery/bootx64.efi";
@@ -147,8 +151,8 @@ if not nodes.nil? and not nodes.empty?
   } else {
     filename = "discovery/pxelinux.0";
   }',
-             "next-server #{admin_ip}"
-                    ]
+              "next-server #{admin_ip}"
+            ]
           end
           action :add
         end

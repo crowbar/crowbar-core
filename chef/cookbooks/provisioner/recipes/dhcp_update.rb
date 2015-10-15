@@ -6,6 +6,10 @@ admin_net = node[:network][:networks]["admin"]
 lease_time = node[:provisioner][:dhcp]["lease-time"]
 pool_opts = {
   "dhcp" => ["allow unknown-clients",
+             'if exists dhcp-parameter-request-list {
+       # Always send the PXELINUX options (specified in hexadecimal)
+       option dhcp-parameter-request-list = concat(option dhcp-parameter-request-list,d0,d1,d2,d3);
+     }',
              'if option arch = 00:06 {
        filename = "discovery/bootia32.efi";
      } else if option arch = 00:07 {
