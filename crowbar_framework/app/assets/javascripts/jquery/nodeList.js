@@ -80,9 +80,23 @@
           // removed by another proposal, and there is no corresponding element
           // in the node list. In that case, the alias is no longer available.
           if (source.length == 0) {
-            $.event.trigger('nodeListNodeUnallocated', { role: role, id: node, alias: undefined });
+            $(document).trigger(
+              'nodeListNodeUnallocated',
+              {
+                role: role,
+                id: node,
+                alias: undefined
+              }
+            );
           } else {
-            $.event.trigger('nodeListNodeUnallocated', { role: role, id: source.data('id'), alias: source.data('alias') });
+            $(document).trigger(
+              'nodeListNodeUnallocated',
+              {
+                role: role,
+                id: source.data('id'),
+                alias: source.data('alias')
+              }
+            );
           }
           toRemove.push(index);
         }
@@ -144,7 +158,15 @@
       var role = $node.data('role');
 
       if (self.json.elements[role]) {
-        $.event.trigger('nodeListNodeUnallocated', { role: role, id: id, alias: alias });
+        $(document).trigger(
+          'nodeListNodeUnallocated',
+          {
+            role: role,
+            id: id,
+            alias: alias
+          }
+        );
+
         self.json.elements[role].removeValue(id);
       }
 
@@ -169,7 +191,14 @@
         var id = $node.data('id');
         var alias = $node.data('alias');
 
-        $.event.trigger('nodeListNodeUnallocated', { role: role, id: id, alias: alias });
+        $(document).trigger(
+          'nodeListNodeUnallocated',
+          {
+            role: role,
+            id: id,
+            alias: alias
+          }
+        );
       });
 
       $role.html('');
@@ -378,7 +407,7 @@
       self.updateJson();
     }
 
-    $.event.trigger('nodeListNodeAllocated', { role: role, id: id, alias: alias });
+    $(document).trigger('nodeListNodeAllocated', { role: role, id: id, alias: alias });
 
     return true;
   };
@@ -436,7 +465,7 @@
     };
 
     var oper = function(op, version1, version2) {
-      var ans = cmp(to_version(version1), to_version(version2)); 
+      var ans = cmp(to_version(version1), to_version(version2));
       switch (op) {
         case ">":
           return ans === 1;

@@ -70,11 +70,11 @@
     var data = this.json;
     var namespace = this.options.namespace.split('/');
 
-    $.event.trigger({
+    $(document).trigger({
       type: 'dynamicTableBeforeDuplicate',
       input: input,
       json: data,
-      namespace: namespace
+      namespaced: namespace
     });
 
     while (namespace.length > 0) {
@@ -88,11 +88,11 @@
     }
 
     if (data[$(input).val()]) {
-      $.event.trigger({
+      $(document).trigger({
         type: 'dynamicTableGotDuplicate',
         input: input,
         json: data,
-        namespace: namespace
+        namespaced: namespace
       });
 
       return true;
@@ -108,7 +108,7 @@
 
     var inputs = this.root.find('tfoot input');
 
-    $.event.trigger({
+    $(document).trigger({
       type: 'dynamicTableBeforeInvalid',
       optionals: optionals,
       inputs: inputs
@@ -124,7 +124,7 @@
     });
 
     if (isInvalid) {
-      $.event.trigger({
+      $(document).trigger({
         type: 'dynamicTableGotInvalid',
         optionals: optionals,
         inputs: inputs,
@@ -211,10 +211,10 @@
 
       self.writeJson();
 
-      $.event.trigger({
+      $(document).trigger({
         type: 'dynamicTableAddedEntry',
         json: data,
-        namespace: namespace,
+        namespaced: namespace,
         values: values,
         inputs: inputs
       });
@@ -252,10 +252,10 @@
 
       self.writeJson();
 
-      $.event.trigger({
+      $(document).trigger({
         type: 'dynamicTableRemovedEntry',
         json: data,
-        namespace: namespace
+        namespaced: namespace
       });
 
       self.renderEntries();
@@ -300,10 +300,10 @@
 
       self.writeJson();
 
-      $.event.trigger({
+      $(document).trigger({
         type: 'dynamicTableUpdatedEntry',
         json: data,
-        namespace: namespace,
+        namespaced: namespace,
         optionals: optionals
       });
     });
@@ -349,10 +349,10 @@
 
     self.root.find('tbody input[type=password]').hideShowPassword();
 
-    $.event.trigger({
+    $(document).trigger({
       type: 'dynamicTableRenderedEntry',
       json: data,
-      namespace: namespace,
+      namespaced: namespace,
       entries: entries
     });
   };
