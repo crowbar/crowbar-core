@@ -199,10 +199,10 @@ if not nodes.nil? and not nodes.empty?
 
         append << node[:provisioner][:available_oses][os][:append_line]
 
-        node_cfg_dir="#{tftproot}/nodes/#{mnode[:fqdn]}"
-        node_url="#{provisioner_web}/nodes/#{mnode[:fqdn]}"
-        os_url="#{provisioner_web}/#{os}"
-        install_url="#{os_url}/install"
+        node_cfg_dir = "#{tftproot}/nodes/#{mnode[:fqdn]}"
+        node_url = "#{provisioner_web}/nodes/#{mnode[:fqdn]}"
+        os_url = "#{provisioner_web}/#{os}/x86_64"
+        install_url = "#{os_url}/install"
 
         directory node_cfg_dir do
           action :create

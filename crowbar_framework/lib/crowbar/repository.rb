@@ -174,6 +174,7 @@ module Crowbar
 
     def initialize(platform, repo)
       @platform = platform
+      @arch = "x86_64"
       @id = repo
       @config = Repository.registry[@platform][@id]
     end
@@ -208,7 +209,7 @@ module Crowbar
 
     def url
       @config["url"] || \
-        "http://#{Repository.admin_ip}:#{Repository.web_port}/#{@platform}/repos/#{name}/"
+        "http://#{Repository.admin_ip}:#{Repository.web_port}/#{@platform}/#{@arch}/repos/#{name}/"
     end
 
     def active?
@@ -236,7 +237,7 @@ module Crowbar
     private
 
     def repos_path
-      Pathname.new(File.join("/srv/tftpboot", @platform, "repos"))
+      Pathname.new(File.join("/srv/tftpboot", @platform, @arch, "repos"))
     end
 
     def repodata_path

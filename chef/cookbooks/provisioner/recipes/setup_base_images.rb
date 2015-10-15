@@ -421,12 +421,12 @@ node.set[:provisioner][:repositories] = Mash.new
 node.set[:provisioner][:available_oses] = Mash.new
 
 node[:provisioner][:supported_oses].each do |os,params|
-  web_path = "#{provisioner_web}/#{os}"
-  admin_web="#{web_path}/install"
-  crowbar_repo_web="#{web_path}/crowbar-extra"
-  os_dir="#{tftproot}/#{os}"
-  os_codename=node[:lsb][:codename]
-  role="#{os}_install"
+  web_path = "#{provisioner_web}/#{os}/x86_64"
+  admin_web = "#{web_path}/install"
+  crowbar_repo_web = "#{web_path}/crowbar-extra"
+  os_dir = "#{tftproot}/#{os}/x86_64"
+  os_codename = node[:lsb][:codename]
+  role = "#{os}_install"
   missing_files = false
   append = params["append"].dup # We'll modify it inline
   initrd = params["initrd"]
@@ -446,14 +446,14 @@ node[:provisioner][:supported_oses].each do |os,params|
       node[:provisioner][:repositories][os][f] ||= Hash.new
       case
       when os =~ /(ubuntu|debian)/
-        bin="deb http://#{admin_ip}:#{web_port}/#{os}/crowbar-extra/#{f} /"
-        src="deb-src http://#{admin_ip}:#{web_port}/#{os}/crowbar-extra/#{f} /"
+        bin = "deb #{web_path}/crowbar-extra/#{f} /"
+        src = "deb-src #{web_path}/crowbar-extra/#{f} /"
         node.set[:provisioner][:repositories][os][f][bin] = true if
           File.exists? "#{os_dir}/crowbar-extra/#{f}/Packages.gz"
         node.set[:provisioner][:repositories][os][f][src] = true if
           File.exists? "#{os_dir}/crowbar-extra/#{f}/Sources.gz"
       when os =~ /(redhat|centos|suse)/
-        bin="baseurl=http://#{admin_ip}:#{web_port}/#{os}/crowbar-extra/#{f}"
+        bin = "baseurl=#{web_path}/crowbar-extra/#{f}"
         node.set[:provisioner][:repositories][os][f][bin] = true
         else
           raise ::RangeError.new("Cannot handle repos for #{os}")
@@ -475,7 +475,7 @@ node[:provisioner][:supported_oses].each do |os,params|
   case
   when /^(suse)/ =~ os
     # Add base OS install repo for suse
-    node.set[:provisioner][:repositories][os]["base"] = { "baseurl=http://#{admin_ip}:#{web_port}/#{os}/install" => true }
+    node.set[:provisioner][:repositories][os]["base"] = { "baseurl=#{admin_web}" => true }
 
     ntp_servers = search(:node, "roles:ntp-server")
     ntp_servers_ips = ntp_servers.map { |n| Chef::Recipe::Barclamp::Inventory.get_network_by_type(n, "admin").address }
@@ -506,6 +506,7 @@ node[:provisioner][:supported_oses].each do |os,params|
                 web_port: web_port,
                 ntp_servers_ips: ntp_servers_ips,
                 os: os,
+                arch: "x86_64",
                 crowbar_key: crowbar_key,
                 domain: domain_name,
                 repos: repos,
@@ -517,10 +518,10 @@ node[:provisioner][:supported_oses].each do |os,params|
 
   when /^(redhat|centos)/ =~ os
     # Add base OS install repo for redhat/centos
-    if ::File.exists? "#{tftproot}/#{os}/install/repodata"
-      node.set[:provisioner][:repositories][os]["base"] = { "baseurl=http://#{admin_ip}:#{web_port}/#{os}/install" => true }
+    if ::File.exists? "#{tftproot}/#{os}/x86_64/install/repodata"
+      node.set[:provisioner][:repositories][os]["base"] = { "baseurl=#{admin_web}" => true }
     else
-      node.set[:provisioner][:repositories][os]["base"] = { "baseurl=http://#{admin_ip}:#{web_port}/#{os}/install/Server" => true }
+      node.set[:provisioner][:repositories][os]["base"] = { "baseurl=#{admin_web}/Server" => true }
     end
     # Default kickstarts and crowbar_join scripts for redhat.
 
@@ -538,7 +539,7 @@ node[:provisioner][:supported_oses].each do |os,params|
     end
 
   when /^ubuntu/ =~ os
-    node.set[:provisioner][:repositories][os]["base"] = { "http://#{admin_ip}:#{web_port}/#{os}/install" => true }
+    node.set[:provisioner][:repositories][os]["base"] = { admin_web => true }
     # Default files needed for Ubuntu.
 
     template "#{os_dir}/net-post-install.sh" do
@@ -605,8 +606,8 @@ node[:provisioner][:supported_oses].each do |os,params|
     node.set[:provisioner][:available_oses][os][:initrd] = " "
     node.set[:provisioner][:available_oses][os][:append_line] = " "
   else
-    node.set[:provisioner][:available_oses][os][:kernel] = "../../../#{os}/install/#{kernel}"
-    node.set[:provisioner][:available_oses][os][:initrd] = "../../../#{os}/install/#{initrd}"
+    node.set[:provisioner][:available_oses][os][:kernel] = "../../../#{os}/x86_64/install/#{kernel}"
+    node.set[:provisioner][:available_oses][os][:initrd] = "../../../#{os}/x86_64/install/#{initrd}"
     node.set[:provisioner][:available_oses][os][:append_line] = append
   end
   node.set[:provisioner][:available_oses][os][:disabled] = missing_files
