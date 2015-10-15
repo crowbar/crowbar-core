@@ -405,7 +405,7 @@ node[:provisioner][:supported_oses].each do |os,params|
   os_codename=node[:lsb][:codename]
   role="#{os}_install"
   missing_files = false
-  append = params["append"]
+  append = params["append"].dup # We'll modify it inline
   initrd = params["initrd"]
   kernel = params["kernel"]
   require_install_dir = params["require_install_dir"].nil? ? true : params["require_install_dir"]
