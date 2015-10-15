@@ -188,8 +188,9 @@ module Crowbar
         loop_again = true if results.any? { |state| state != 202 }
 
         # For each ready item, apply it.
-        logger.debug("process queue: exit")
+        logger.debug("process queue: loop again") if loop_again
       end
+      logger.debug("process queue: exit")
     end
 
     private
