@@ -26,8 +26,8 @@ append_line = ""
 tftproot = node[:provisioner][:root]
 
 # This is what we could support, but this requires validation
-#discovery_arches = ["x86_64", "ia32"]
-discovery_arches = ["x86_64"]
+#discovery_arches = ["x86_64", "ppc64le", "ia32"]
+discovery_arches = ["x86_64", "ppc64le"]
 
 discovery_dir = "#{tftproot}/discovery"
 pxe_subdir = "bios"
@@ -60,7 +60,8 @@ directory discovery_dir do
 end
 
 # PXE config
-%w(x86_64).each do |arch|
+# ppc64le bootloader can parse pxelinux config files
+%w(x86_64 ppc64le).each do |arch|
   # Make it easy to totally disable/enable ppc64le
   next unless discovery_arches.include? arch
 

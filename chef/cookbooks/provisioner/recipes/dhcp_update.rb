@@ -16,6 +16,9 @@ pool_opts = {
        filename = "discovery/x86_64/efi/bootx64.efi";
      } else if option arch = 00:09 {
        filename = "discovery/x86_64/efi/bootx64.efi";
+     } else if option arch = 00:0e {
+       option path-prefix "discovery/ppc64le/bios/";
+       filename = "";
      } else {
        filename = "discovery/x86_64/bios/pxelinux.0";
      }',

@@ -179,6 +179,9 @@ if not nodes.nil? and not nodes.empty?
     filename = \"discovery/x86_64/efi/#{boot_ip_hex}.efi\";
   } else if option arch = 00:09 {
     filename = \"discovery/x86_64/efi/#{boot_ip_hex}.efi\";
+  } else if option arch = 00:0e {
+    option path-prefix \"discovery/ppc64le/bios/\";
+    filename = \"\";
   } else {
     filename = \"discovery/x86_64/bios/pxelinux.0\";
   }",
@@ -289,6 +292,7 @@ if not nodes.nil? and not nodes.empty?
                       node_fqdn: mnode[:fqdn],
                       node_hostname: mnode[:hostname],
                       target_platform_version: target_platform_version,
+                      architecture: arch,
                       is_ses: node[:provisioner][:suse] &&
                         !node[:provisioner][:suse][:cloud_available] && node[:provisioner][:suse][:storage_available],
                       crowbar_join: "#{os_url}/crowbar_join.sh")

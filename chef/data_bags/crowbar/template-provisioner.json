@@ -63,12 +63,22 @@
             "initrd": "boot/x86_64/loader/initrd",
             "kernel": "boot/x86_64/loader/linux",
             "append": " "
+          },
+          "ppc64le": {
+            "initrd": "boot/ppc64le/initrd",
+            "kernel": "boot/ppc64le/linux",
+            "append": " "
           }
         },
         "suse-12.1": {
           "x86_64": {
             "initrd": "boot/x86_64/loader/initrd",
             "kernel": "boot/x86_64/loader/linux",
+            "append": " "
+          },
+          "ppc64le": {
+            "initrd": "boot/ppc64le/initrd",
+            "kernel": "boot/ppc64le/linux",
             "append": " "
           }
         },
