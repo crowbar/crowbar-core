@@ -246,17 +246,6 @@ when "suse"
   end
 end
 
-service "bind9" do
-  case node[:platform]
-  when "centos","redhat","suse"
-    service_name "named"
-  end
-  supports restart: true, status: true, reload: true
-  running true
-  enabled true
-  action :enable
-end
-
 # Load up our default zones.  These never change.
 if node[:dns][:master]
   files=%w{db.0 db.255 named.conf.default-zones}
@@ -320,6 +309,15 @@ template "/etc/bind/named.conf" do
             allow_transfer: allow_transfer,
             ipaddress: admin_addr)
   notifies :restart, "service[bind9]", :immediately
+end
+
+service "bind9" do
+  case node[:platform]
+  when "centos", "redhat", "suse"
+    service_name "named"
+  end
+  supports restart: true, status: true, reload: true
+  action [:enable, :start]
 end
 
 node.set[:dns][:zones]=zones

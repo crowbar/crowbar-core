@@ -38,7 +38,5 @@ service "rsyslog" do
   provider Chef::Provider::Service::Upstart if node[:platform] == "ubuntu"
   service_name "syslog" if node[:platform] == "suse" && node[:platform_version].to_f < 12.0
   supports restart: true, status: true, reload: true
-  running true
-  enabled true
   action [:enable, :start]
 end

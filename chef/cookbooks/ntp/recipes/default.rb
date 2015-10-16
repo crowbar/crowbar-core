@@ -94,8 +94,6 @@ else
     service_name "ntpd" if node[:platform] =~ /^(centos|redhat)$/
     service_name "ntpd" if node[:platform] == "suse" && node[:platform_version].to_f >= 12.0
     supports restart: true, status: true, reload: true
-    running true
-    enabled true
     action [:enable, :start]
   end
 end
