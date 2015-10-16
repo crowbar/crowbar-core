@@ -1,0 +1,43 @@
+## Path:            Crowbar
+## Description:     Mode of operation
+## Type:            string(production,development,test)
+## Default:         production
+## ServiceRestart:  crowbar
+# Crowbar can run in production, development or test mode. Normally, this
+# determines which database is used, but it may also have other
+# implications.
+CROWBAR_ENV="production"
+
+## Path:            Crowbar
+## Description:     Maximum number of threads
+## Type:            integer
+## Default:         1
+## ServiceRestart:  crowbar
+# Sets the maximum number of threads used by the web server.
+CROWBAR_THREADS="1"
+
+## Path:            Crowbar
+## Description:     Maximum number of worker processes
+## Type:            integer
+## Default:         5
+## ServiceRestart:  crowbar
+# Sets the maximum number of separate worker processes spawned by the
+# web server.
+CROWBAR_WORKERS="5"
+
+## Path:            Crowbar
+## Description:     Listen address
+## Type:            ip
+## Default:         127.0.0.1
+## ServiceRestart:  crowbar
+# Network address which Crowbar listens to for connections.
+CROWBAR_LISTEN="127.0.0.1"
+
+## Path:            Crowbar
+## Description:     Port
+## Type:            integer(0:65565)
+## Default:         3000
+## ServiceRestart:  crowbar
+# Port which Crowbar listens to.
+CROWBAR_PORT=<%= @web_port %>
+

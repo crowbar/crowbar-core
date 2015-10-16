@@ -19,7 +19,7 @@ require File.expand_path("../boot", __FILE__)
 
 module Crowbar
   class Application < Rails::Application
-    SERVER_PID = %x[ps ax | grep "rainbows master" | grep -v grep].split(" ")[0]
+    SERVER_PID = system("[ps ax | grep 'puma master' | grep -v grep].split(' ')[0]")
 
     config.autoload_paths += %W(
       #{config.root}/lib
