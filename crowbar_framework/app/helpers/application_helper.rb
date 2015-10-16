@@ -246,11 +246,11 @@ module ApplicationHelper
     NodeObject.default_platform
   end
 
-  def available_platforms
-    NodeObject.available_platforms
+  def available_platforms(architecture)
+    NodeObject.available_platforms(architecture)
   end
 
-  def disabled_platforms
-    (NodeObject.disabled_platforms + Crowbar::Repository.disabled_platforms("x86_64")).uniq
+  def disabled_platforms(architecture)
+    (NodeObject.disabled_platforms(architecture) + Crowbar::Repository.disabled_platforms(architecture)).uniq
   end
 end

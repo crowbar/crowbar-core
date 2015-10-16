@@ -16,14 +16,13 @@
 #
 
 module FormHelper
-  def platforms_for_select(selected)
+  def platforms_for_select(selected, architecture)
     options_for_select(
-      available_platforms.select { |p|
-        # Only allow one platform for SUSE Enterprise Storage
-        Crowbar::Product::is_ses? ? p == Crowbar::Product::ses_platform : true
-      }.map { |p| [crowbar_service.pretty_target_platform(p), p] },
+      available_platforms(architecture).select.map do |p|
+        [crowbar_service.pretty_target_platform(p), p]
+      end,
       selected: selected.to_s,
-      disabled: disabled_platforms
+      disabled: disabled_platforms(architecture)
     )
   end
 
