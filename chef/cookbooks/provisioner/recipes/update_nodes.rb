@@ -201,7 +201,7 @@ if not nodes.nil? and not nodes.empty?
 
         node_cfg_dir = "#{tftproot}/nodes/#{mnode[:fqdn]}"
         node_url = "#{provisioner_web}/nodes/#{mnode[:fqdn]}"
-        os_url = "#{provisioner_web}/#{os}/x86_64"
+        os_url = "#{provisioner_web}/#{os}/#{arch}"
         install_url = "#{os_url}/install"
 
         directory node_cfg_dir do
@@ -391,7 +391,7 @@ if not nodes.nil? and not nodes.empty?
 
         bash "Build UEFI netboot loader with grub for #{mnode[:fqdn]} (#{new_group})" do
           cwd grubdir
-          code "grub2-mkstandalone -d /usr/lib/grub2/x86_64-efi/ -O x86_64-efi --fonts=\"unicode\" -o #{grubfile} boot/grub/grub.cfg"
+          code "grub2-mkstandalone -d /usr/lib/grub2/#{arch}-efi/ -O #{arch}-efi --fonts=\"unicode\" -o #{grubfile} boot/grub/grub.cfg"
           action :nothing
           subscribes :run, resources("template[#{grubcfgfile}]"), :immediately
         end
