@@ -27,8 +27,8 @@ append_line = ""
 
 tftproot = node[:provisioner][:root]
 
-pxecfg_dir="#{tftproot}/discovery/pxelinux.cfg"
-pxecfg_default="#{tftproot}/discovery/pxelinux.cfg/default"
+pxecfg_dir = "#{tftproot}/discovery/bios/pxelinux.cfg"
+pxecfg_default = "#{tftproot}/discovery/bios/pxelinux.cfg/default"
 uefi_dir = "#{tftproot}/discovery/efi"
 
 if ::File.exists?("/etc/crowbar.install.key")
@@ -55,21 +55,21 @@ directory "#{tftproot}/discovery" do
 end
 
 # PXE config
-["share","lib"].each do |d|
-  next unless ::File.exists?("/usr/#{d}/syslinux/pxelinux.0")
-  bash "Install pxelinux.0" do
-    code "cp /usr/#{d}/syslinux/pxelinux.0 #{tftproot}/discovery/"
-    not_if "cmp /usr/#{d}/syslinux/pxelinux.0 #{tftproot}/discovery/pxelinux.0"
-  end
-  break
-end
-
 directory pxecfg_dir do
   recursive true
   mode 0755
   owner "root"
   group "root"
   action :create
+end
+
+["share", "lib"].each do |d|
+  next unless ::File.exists?("/usr/#{d}/syslinux/pxelinux.0")
+  bash "Install pxelinux.0" do
+    code "cp /usr/#{d}/syslinux/pxelinux.0 #{tftproot}/discovery/bios/"
+    not_if "cmp /usr/#{d}/syslinux/pxelinux.0 #{tftproot}/discovery/bios/pxelinux.0"
+  end
+  break
 end
 
 template pxecfg_default do
@@ -79,8 +79,8 @@ template pxecfg_default do
   source "default.erb"
   variables(append_line: "#{append_line} crowbar.state=discovery",
             install_name: "discovery",
-            initrd: "initrd0.img",
-            kernel: "vmlinuz0")
+            initrd: "../initrd0.img",
+            kernel: "../vmlinuz0")
 end
 
 # UEFI config
@@ -581,12 +581,12 @@ node[:provisioner][:supported_oses].each do |os,params|
 
   node.set[:provisioner][:available_oses][os] ||= Mash.new
   if /^(hyperv|windows)/ =~ os
-    node.set[:provisioner][:available_oses][os][:kernel] = "../#{os}/#{kernel}"
+    node.set[:provisioner][:available_oses][os][:kernel] = "../../#{os}/#{kernel}"
     node.set[:provisioner][:available_oses][os][:initrd] = " "
     node.set[:provisioner][:available_oses][os][:append_line] = " "
   else
-    node.set[:provisioner][:available_oses][os][:kernel] = "../#{os}/install/#{kernel}"
-    node.set[:provisioner][:available_oses][os][:initrd] = "../#{os}/install/#{initrd}"
+    node.set[:provisioner][:available_oses][os][:kernel] = "../../#{os}/install/#{kernel}"
+    node.set[:provisioner][:available_oses][os][:initrd] = "../../#{os}/install/#{initrd}"
     node.set[:provisioner][:available_oses][os][:append_line] = append
   end
   node.set[:provisioner][:available_oses][os][:disabled] = missing_files

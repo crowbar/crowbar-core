@@ -17,7 +17,7 @@ pool_opts = {
      } else if option arch = 00:09 {
        filename = "discovery/efi/bootx64.efi";
      } else {
-       filename = "discovery/pxelinux.0";
+       filename = "discovery/bios/pxelinux.0";
      }',
              "next-server #{admin_ip}"],
   "host" => ["deny unknown-clients"]
