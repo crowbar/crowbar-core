@@ -167,12 +167,14 @@ wait_for_pxe() {
         echo -n "waiting for pxe file to be: $mode "
     fi
 
+    arch=`uname -m`
+
     until [ 1 = $done ] ; do
         if [ -n "$state" ]; then
-            curl --fail --silent --connect-timeout 5 "http://$ADMIN_IP:8091/discovery/pxelinux.cfg/$MYHEXIP" | grep -q "^DEFAULT $state$"
+            curl --fail --silent --connect-timeout 5 "http://$ADMIN_IP:8091/discovery/$arch/bios/pxelinux.cfg/$MYHEXIP" | grep -q "^DEFAULT $state$"
             ret=$?
         else
-            curl --fail --silent --head --connect-timeout 5 "http://$ADMIN_IP:8091/discovery/pxelinux.cfg/$MYHEXIP" > /dev/null
+            curl --fail --silent --head --connect-timeout 5 "http://$ADMIN_IP:8091/discovery/$arch/bios/pxelinux.cfg/$MYHEXIP" > /dev/null
             ret=$?
         fi
 

@@ -72,12 +72,14 @@ if not nodes.nil? and not nodes.empty?
       end
     end
 
+    arch = mnode[:kernel][:machine]
+
     # no boot_ip means that no admin network address has been assigned to node,
     # and it will boot into the default discovery image. But it won't help if
     # we're trying to delete the node.
     if boot_ip_hex
-      pxefile = "#{discovery_dir}/#{pxecfg_subdir}/#{boot_ip_hex}"
-      uefi_dir = "#{discovery_dir}/#{uefi_subdir}"
+      pxefile = "#{discovery_dir}/#{arch}/#{pxecfg_subdir}/#{boot_ip_hex}"
+      uefi_dir = "#{discovery_dir}/#{arch}/#{uefi_subdir}"
       if use_elilo
         uefifile = "#{uefi_dir}/#{boot_ip_hex}.conf"
         grubdir = nil
@@ -172,13 +174,13 @@ if not nodes.nil? and not nodes.empty?
     option dhcp-parameter-request-list = concat(option dhcp-parameter-request-list,d0,d1,d2,d3);
   }',
               "if option arch = 00:06 {
-    filename = \"discovery/efi/#{boot_ip_hex}.efi\";
+    filename = \"discovery/ia32/efi/#{boot_ip_hex}.efi\";
   } else if option arch = 00:07 {
-    filename = \"discovery/efi/#{boot_ip_hex}.efi\";
+    filename = \"discovery/x86_64/efi/#{boot_ip_hex}.efi\";
   } else if option arch = 00:09 {
-    filename = \"discovery/efi/#{boot_ip_hex}.efi\";
+    filename = \"discovery/x86_64/efi/#{boot_ip_hex}.efi\";
   } else {
-    filename = \"discovery/bios/pxelinux.0\";
+    filename = \"discovery/x86_64/bios/pxelinux.0\";
   }",
               "next-server #{admin_ip}"
             ]
