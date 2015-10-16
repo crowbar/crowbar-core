@@ -29,7 +29,7 @@ tftproot = node[:provisioner][:root]
 
 pxecfg_dir="#{tftproot}/discovery/pxelinux.cfg"
 pxecfg_default="#{tftproot}/discovery/pxelinux.cfg/default"
-uefi_dir="#{tftproot}/discovery"
+uefi_dir = "#{tftproot}/discovery/efi"
 
 if ::File.exists?("/etc/crowbar.install.key")
   crowbar_key = ::File.read("/etc/crowbar.install.key").chomp.strip
@@ -85,6 +85,14 @@ end
 
 # UEFI config
 use_elilo = true
+
+directory uefi_dir do
+  recursive true
+  mode 0755
+  owner "root"
+  group "root"
+  action :create
+end
 
 if node[:platform_family] != "suse"
   bash "Install elilo as UEFI netboot loader" do
@@ -151,8 +159,8 @@ if use_elilo
     source "default.elilo.erb"
     variables(append_line: "#{append_line} crowbar.state=discovery",
               install_name: "discovery",
-              initrd: "initrd0.img",
-              kernel: "vmlinuz0")
+              initrd: "../initrd0.img",
+              kernel: "../vmlinuz0")
   end
 end
 
