@@ -122,7 +122,7 @@ else
     package "grub2-x86_64-efi"
 
     # grub.cfg has to be in boot/grub/ subdirectory
-    directory "#{uefi_dir}/boot/grub" do
+    directory "#{uefi_dir}/default/boot/grub" do
       recursive true
       mode 0755
       owner "root"
@@ -130,7 +130,7 @@ else
       action :create
     end
 
-    template "#{uefi_dir}/boot/grub/grub.cfg" do
+    template "#{uefi_dir}/default/boot/grub/grub.cfg" do
       mode 0644
       owner "root"
       group "root"
@@ -143,10 +143,10 @@ else
     end
 
     bash "Build UEFI netboot loader with grub" do
-      cwd uefi_dir
-      code "grub2-mkstandalone -d /usr/lib/grub2/x86_64-efi/ -O x86_64-efi --fonts=\"unicode\" -o bootx64.efi boot/grub/grub.cfg"
+      cwd "#{uefi_dir}/default"
+      code "grub2-mkstandalone -d /usr/lib/grub2/x86_64-efi/ -O x86_64-efi --fonts=\"unicode\" -o #{uefi_dir}/bootx64.efi boot/grub/grub.cfg"
       action :nothing
-      subscribes :run, resources("template[#{uefi_dir}/boot/grub/grub.cfg]"), :immediately
+      subscribes :run, resources("template[#{uefi_dir}/default/boot/grub/grub.cfg]"), :immediately
     end
   end
 end
