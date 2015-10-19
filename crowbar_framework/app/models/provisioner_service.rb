@@ -187,35 +187,49 @@ class ProvisionerService < ServiceObject
   end
 
   def synchronize_repositories(platforms)
+    # create DataBag if it doesn't exist yet
+    load_repository_bag
     platforms.each do |platform, repos|
       repos.each do |reponame, active|
         repo_object = Crowbar::Repository.where(platform: platform, repo: reponame).first
-        case active
-        when "0"
+        case active.to_i
+        when 0
           db = Chef::DataBagItem.load("repositories", repo_object.id) rescue nil
           # skip repo if it hasn't been active before
           next if db.nil?
-          # otherwise destroy DataBagItem
-          @logger.debug("Deactivating #{db.name} repository.")
-          db.destroy("repositories", repo_object.id)
-          # destroy the DataBag if it is empty
-          destroy_repository_bag if load_repository_bag.empty?
-        when "1"
-          # create DataBag if it doesn't exist yet
-          load_repository_bag
-          # create DataBagItem with the repo metadata used by provisioner recipes
-          repository_item = Chef::DataBagItem.new
-          repository_item.data_bag "repositories"
-          repository_item["id"] = repo_object.id
-          repository_item["platform"] = platform
-          repository_item["name"] = reponame
-          repository_item["url"] = repo_object.url
-          repository_item["product_name"] = repo_object.registry["product_name"]
-          @logger.debug("Setting #{reponame} repository for #{platform} as active.")
-          repository_item.save
+          destroy_repository_item(repo_object)
+        when 1
+          create_repository_item(repo_object)
         end
       end
     end
+  end
+
+  def create_repository_item(repo_object)
+    # create DataBag if it doesn't exist yet
+    load_repository_bag
+    # create DataBagItem with the repo metadata used by provisioner recipes
+    repository_item = Chef::DataBagItem.new
+    repository_item.data_bag "repositories"
+    repository_item["id"] = repo_object.id
+    repository_item["platform"] = repo_object.platform
+    repository_item["name"] = repo_object.registry["name"]
+    repository_item["url"] = repo_object.url
+    repository_item["product_name"] = repo_object.registry["product_name"]
+    @logger.debug("Setting #{repo_object.registry['name']} repository for #{repo_object.platform} as active.")
+    repository_item.save ? true : false
+  end
+
+  def destroy_repository_item(repo_object)
+    # create DataBag if it doesn't exist yet
+    load_repository_bag
+    # otherwise destroy DataBagItem
+    db_item = repo_object.bag_item
+    @logger.debug("Deactivating #{db_item.id} repository.")
+    ret = db_item.destroy("repositories", db_item.id) ? true : false
+    # destroy the DataBag if it is empty
+    destroy_repository_bag if load_repository_bag.empty?
+    ret
   end
 
   private
