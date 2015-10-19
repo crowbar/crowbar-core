@@ -17,10 +17,10 @@
 # limitations under the License.
 #
 
-case node[:platform]
-when "debian","ubuntu"
+case node[:platform_family]
+when "debian"
   package "libapache2-mod-wsgi"
-when "redhat","centos","fedora", "arch"
+when "rhel", "fedora", "arch"
   package "mod_wsgi"
 when "suse"
   package "apache2-mod_wsgi"

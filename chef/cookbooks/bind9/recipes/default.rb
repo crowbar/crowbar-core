@@ -17,25 +17,27 @@ include_recipe "utils"
 require "ipaddr"
 
 package "bind9" do
-  case node[:platform]
-  when "centos","redhat", "suse"
+  case node[:platform_family]
+  when "rhel", "suse"
     package_name "bind"
   end
   action :install
 end
 package "bind9utils" do
-  case node[:platform]
-  when "centos","redhat", "suse"
+  case node[:platform_family]
+  when "rhel", "suse"
     package_name "bind-utils"
   end
   action :install
 end
 
-binduser, bindgroup = case node[:platform]
-  when "ubuntu","debian"
-    ["bind", "bind"]
-  when "centos","redhat","suse"
-    ["named", "named"]
+case node[:platform_family]
+when "debian"
+  binduser = "bind"
+  bindgroup = "bind"
+when "rhel", "suse"
+  binduser = "named"
+  bindgroup = "named"
 end
 
 directory "/etc/bind"
@@ -229,8 +231,8 @@ end
 
 zones[node[:dns][:domain]] = cluster_zone
 
-case node[:platform]
-when "redhat","centos"
+case node[:platform_family]
+when "rhel"
   template "/etc/sysconfig/named" do
     source "redhat-sysconfig-named.erb"
     mode 0644
@@ -312,8 +314,8 @@ template "/etc/bind/named.conf" do
 end
 
 service "bind9" do
-  case node[:platform]
-  when "centos", "redhat", "suse"
+  case node[:platform_family]
+  when "rhel", "suse"
     service_name "named"
   end
   supports restart: true, status: true, reload: true

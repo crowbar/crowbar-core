@@ -17,39 +17,37 @@
 # limitations under the License.
 #
 
-packages = case node[:platform]
-  when "centos","redhat","fedora","scientific"
-    %w{openssh-clients openssh}
-  when "arch"
-    %w{openssh}
-  else
-    %w{openssh-client openssh-server}
-  end
+case node[:platform_family]
+when "rhel", "fedora"
+  packages = %w{openssh-clients openssh}
+when "arch"
+  packages = %w{openssh}
+else
+  packages = %w{openssh-client openssh-server}
+end
 
 packages.each do |pkg|
   package pkg
 end
 
 service "ssh" do
-  case node[:platform]
-  when "centos","redhat","fedora","arch","scientific"
+  case node[:platform_family]
+  when "rhel", "fedora", "arch"
     service_name "sshd"
   else
     service_name "ssh"
   end
-  supports value_for_platform(
-    "debian" => { "default" => [:restart, :reload, :status] },
-    "ubuntu" => {
-      "8.04" => [:restart, :reload],
-      "default" => [:restart, :reload, :status]
-    },
-    "centos" => { "default" => [:restart, :reload, :status] },
-    "redhat" => { "default" => [:restart, :reload, :status] },
-    "fedora" => { "default" => [:restart, :reload, :status] },
-    "scientific" => { "default" => [:restart, :reload, :status] },
-    "arch" => { "default" => [:restart] },
-    "default" => { "default" => [:restart, :reload] }
-  )
+  if node[:platform] == "ubuntu" && node[:platform_version].to_f <= 8.04
+    supports [:restart, :reload]
+  else
+    supports value_for_platform_family(
+      "debian" => { "default" => [:restart, :reload, :status] },
+      "rhel" => { "default" => [:restart, :reload, :status] },
+      "fedora" => { "default" => [:restart, :reload, :status] },
+      "arch" => { "default" => [:restart] },
+      "default" => { "default" => [:restart, :reload] }
+    )
+  end
   action [:enable, :start]
 end
 

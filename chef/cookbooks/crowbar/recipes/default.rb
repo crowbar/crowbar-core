@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-if node[:platform] != "suse"
+unless node[:platform_family] == "suse"
   include_recipe "bluepill"
 end
 
@@ -25,8 +25,8 @@ pkglist = ()
 logdir = "/var/log/crowbar"
 crowbar_home = "/var/lib/crowbar"
 
-case node[:platform]
-when "ubuntu","debian"
+case node[:platform_family]
+when "debian"
   pkglist = %w(
     curl
     sudo
@@ -35,10 +35,10 @@ when "ubuntu","debian"
     libshadow-ruby1.8
     markdown
   )
-  unless search(:node, "platform:windows").empty?
+  unless search(:node, "platform_family:windows").empty?
     pkglist.push "smbclient"
   end
-when "redhat","centos"
+when "rhel"
   pkglist = %w(
     curl
     sudo
@@ -46,7 +46,7 @@ when "redhat","centos"
     sqlite-devel
     python-markdown
   )
-  unless search(:node, "platform:windows").empty?
+  unless search(:node, "platform_family:windows").empty?
     pkglist.push "samba-client"
   end
 when "suse"
@@ -80,7 +80,7 @@ when "suse"
     ruby2.1-rubygem-syslogger
     ruby2.1-rubygem-yaml_db
   )
-  unless search(:node, "platform:windows").empty?
+  unless search(:node, "platform_family:windows").empty?
     pkglist.push "samba-client"
   end
 end
@@ -91,7 +91,7 @@ pkglist.each do |p|
   end
 end
 
-if node[:platform] != "suse"
+unless node[:platform_family] == "suse"
   gemlist = %w(
     activerecord-session_store
     activeresource
@@ -202,7 +202,7 @@ file "/opt/dell/crowbar_framework/tmp/ip.lock" do
   action :create
 end
 
-if node[:platform] != "suse"
+unless node[:platform_family] == "suse"
   file "/var/run/crowbar-webserver.pid" do
     owner "crowbar"
     group "crowbar"
@@ -279,40 +279,7 @@ template "/etc/sysconfig/crowbar" do
   )
 end
 
-if node[:platform] != "suse"
-  %w(chef-server-api chef-server-webui chef-solr rabbitmq-server).each do |f|
-    file "/etc/logrotate.d/#{f}" do
-      action :delete
-    end
-  end
-
-  cookbook_file "/etc/logrotate.d/chef-server"
-
-  template "/etc/bluepill/crowbar-webserver.pill" do
-    source "crowbar-webserver.pill.erb"
-    variables(logdir: logdir, crowbar_home: crowbar_home)
-  end
-
-  bluepill_service "crowbar-webserver" do
-    action [:load, :start]
-  end
-
-  cookbook_file "/etc/init.d/crowbar" do
-    owner "root"
-    group "root"
-    mode "0755"
-    action :create
-    source "crowbar"
-  end
-
-  ["3", "5", "2"].each do |i|
-    link "/etc/rc#{i}.d/S99xcrowbar" do
-      action :create
-      to "/etc/init.d/crowbar"
-      not_if "test -L /etc/rc#{i}.d/S99xcrowbar"
-    end
-  end
-else
+if node[:platform_family] == "suse"
   cookbook_file "/etc/tmpfiles.d/crowbar.conf" do
     owner "root"
     group "root"
@@ -350,6 +317,39 @@ else
 
   service "crowbar" do
     action :enable
+  end
+else
+  %w(chef-server-api chef-server-webui chef-solr rabbitmq-server).each do |f|
+    file "/etc/logrotate.d/#{f}" do
+      action :delete
+    end
+  end
+
+  cookbook_file "/etc/logrotate.d/chef-server"
+
+  template "/etc/bluepill/crowbar-webserver.pill" do
+    source "crowbar-webserver.pill.erb"
+    variables(logdir: logdir, crowbar_home: crowbar_home)
+  end
+
+  bluepill_service "crowbar-webserver" do
+    action [:load, :start]
+  end
+
+  cookbook_file "/etc/init.d/crowbar" do
+    owner "root"
+    group "root"
+    mode "0755"
+    action :create
+    source "crowbar"
+  end
+
+  ["3", "5", "2"].each do |i|
+    link "/etc/rc#{i}.d/S99xcrowbar" do
+      action :create
+      to "/etc/init.d/crowbar"
+      not_if "test -L /etc/rc#{i}.d/S99xcrowbar"
+    end
   end
 end
 

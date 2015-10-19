@@ -18,7 +18,7 @@
 #
 
 define :apache_conf do
-  if node.platform == "suse"
+  if node[:platform_family] == "suse"
     if params[:name] == "ssl"
       # SSL is special
       mod_conf = "#{node[:apache][:dir]}/ssl-global.conf"

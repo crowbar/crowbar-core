@@ -25,7 +25,7 @@ define :web_app, template: "web_app.conf.erb" do
   include_recipe "apache2::mod_deflate"
   include_recipe "apache2::mod_headers"
 
-  if node.platform == "suse"
+  if node[:platform_family] == "suse"
     vhost_conf = "#{node[:apache][:dir]}/vhosts.d/#{application_name}.conf"
   else
     vhost_conf = "#{node[:apache][:dir]}/sites-available/#{application_name}.conf"

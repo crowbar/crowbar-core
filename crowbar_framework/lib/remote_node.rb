@@ -124,7 +124,7 @@ module RemoteNode
 
   def node_redhat?(host)
     nobj = NodeObject.find_node_by_name(host)
-    nobj && %w(redhat centos).include?(nobj[:platform])
+    nobj && nobj[:platform_family] == "rhel"
   end
 
   # Polls until yielded block returns true or a timeout is reached

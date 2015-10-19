@@ -1,4 +1,4 @@
-case node[:platform]
+case node[:platform_family]
 when "suse"
   default[:provisioner][:root] = "/srv/tftpboot"
 else

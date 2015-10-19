@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-return if node[:platform] == "windows"
+return if node[:platform_family] == "windows"
 
 include_recipe "logging::common"
 

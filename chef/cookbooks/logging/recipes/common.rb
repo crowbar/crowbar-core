@@ -16,8 +16,8 @@
 
 package "rsyslog"
 
-case node[:platform]
-when "redhat","centos"
+case node[:platform_family]
+when "rhel"
   # Disable syslogd in favor of rsyslog on redhat.
   service "syslog" do
     action [:stop, :disable]
@@ -29,8 +29,8 @@ when "suse"
       rc.search_file_replace_line(/^SYSLOG_DAEMON=/, "SYSLOG_DAEMON=rsyslogd")
       rc.write_file
     end
-    # SLE12 already defaults to rsyslog
-    only_if { node[:platform_version].to_f < 12.0 }
+    # SLE >= 12 and openSUSE already default to rsyslog
+    only_if { node[:platform] == "suse" && node[:platform_version].to_f < 12.0 }
   end
 end
 

@@ -11,8 +11,6 @@ address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(provisioner, "ad
 path = "/gemsite/"
 path = "" if web_port == 3001
 
-platform = node[:platform]
-
 t = template "/etc/gemrc" do
     variables(admin_ip: address, web_port: web_port, path: path)
     mode "0644"
@@ -32,8 +30,7 @@ gems.each do |gem|
   g.run_action(:install);
 end
 
-case platform
- when "centos", "redhat"
+if node[:platform_family] == "rhel"
   rpms.each do |rpm|
     log("rpm_package: #{rpm}, next")
     r = rpm_package rpm do

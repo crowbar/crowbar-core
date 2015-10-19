@@ -17,19 +17,15 @@
 # limitations under the License.
 #
 
-case node[:platform]
-when "debian", "ubuntu"
-  package "libapache2-mod-php5" do
-    action :install
-  end
+case node[:platform_family]
+when "debian"
+  package "libapache2-mod-php5"
 when "arch"
   package "php-apache" do
-    action :install
     notifies :run, resources(execute: "generate-module-list"), :immediately
   end
-when "centos", "redhat", "fedora"
+when "rhel", "fedora"
   package "php" do
-    action :install
     notifies :run, resources(execute: "generate-module-list"), :immediately
   end
 end

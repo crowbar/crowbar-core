@@ -28,7 +28,7 @@ define :apache_module, enable: true, conf: false do
     execute "a2enmod #{params[:name]}" do
       command "/usr/sbin/a2enmod #{params[:name]}"
       notifies :reload, resources(service: "apache2")
-      if node.platform == "suse"
+      if node[:platform_family] == "suse"
         not_if "/usr/sbin/a2enmod -q #{params[:name]}"
       else
         not_if do (::File.symlink?("#{node[:apache][:dir]}/mods-enabled/#{params[:name]}.load") and
@@ -41,7 +41,7 @@ define :apache_module, enable: true, conf: false do
     execute "a2dismod #{params[:name]}" do
       command "/usr/sbin/a2dismod #{params[:name]}"
       notifies :reload, resources(service: "apache2")
-      if node.platform == "suse"
+      if node[:platform_family] == "suse"
         only_if "/usr/sbin/a2enmod -q #{params[:name]}"
       else
         only_if do ::File.symlink?("#{node[:apache][:dir]}/mods-enabled/#{params[:name]}.load") end

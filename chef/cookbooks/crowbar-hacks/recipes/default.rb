@@ -18,7 +18,7 @@
 
 states = ["ready", "readying", "recovering", "applying"]
 if states.include?(node[:state])
-  if node["platform"] != "suse" and node["platform"] != "windows"
+  unless %w(suse windows).include?(node[:platform_family])
     # Don't waste time with mlocate or updatedb
     %w{mlocate mlocate.cron updatedb}.each do |f|
       file "/etc/cron.daily/#{f}" do
@@ -63,7 +63,7 @@ if states.include?(node[:state])
   end
   # Note: Hacks that are needed on SUSE platforms as well too come here
 
-  if platform?("suse", "redhat", "centos")
+  if %w(suse rhel).include?(node[:platform_family])
     # Workaround sysctl not loading configs from /etc/sysctl.d/
     # during reboot
     directory "create /etc/sysctl.d for reload-sysctl.d cronjob" do
