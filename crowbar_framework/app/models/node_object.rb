@@ -538,7 +538,7 @@ class NodeObject < ChefObject
     f = {}
     f[:drives] = pretty_drives
     f[:ram] = memory
-    f[:cpu] = cpu
+    f[:cpu] = cpu_arch
     f[:hw] = hardware
     f[:raid] = raid_set
     f[:nics] = nics
@@ -553,8 +553,22 @@ class NodeObject < ChefObject
     @node["memory"]["total"] rescue nil
   end
 
+  def architecture
+    @node["kernel"]["machine"] rescue nil
+  end
+
   def cpu
     @node["cpu"]["0"]["model_name"].squeeze(" ").strip rescue nil
+  end
+
+  def cpu_arch
+    if !cpu.blank? && !architecture.blank?
+      "#{cpu} (#{architecture})"
+    elsif !cpu.blank?
+      cpu
+    elsif !architecture.blank?
+      architecture
+    end
   end
 
   def uptime
