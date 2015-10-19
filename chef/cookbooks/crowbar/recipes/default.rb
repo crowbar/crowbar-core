@@ -294,7 +294,7 @@ if node[:platform_family] == "suse"
     subscribes :run, resources("cookbook_file[/etc/tmpfiles.d/crowbar.conf]"), :immediately
   end
 
-  # Use a systemd .service file on SLE12
+  # Use a systemd .service file on recent SUSE platforms
   cookbook_file "/etc/systemd/system/crowbar.service" do
     owner "root"
     group "root"
