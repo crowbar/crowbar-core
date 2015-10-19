@@ -2,13 +2,13 @@
   = link_to t(".identify"), hit_node_path(@node.handle, "identify"), class: "btn btn-default", remote: true
 
 - unless @node.admin?
-  - if @node[:platform] != 'windows' || @node.bmc_set?
+  - if @node[:platform_family] != 'windows' || @node.bmc_set?
     %button.btn.btn-default.dropdown-toggle{ type: "button", data: { toggle: "dropdown" } }
       = t(".actions")
       %span.caret
 
     %ul.dropdown-menu{ role: "menu" }
-      - if @node[:platform] != 'windows'
+      - if @node[:platform_family] != 'windows'
         %li{ role: "presentation" }
           = link_to t(".reboot"), hit_node_path(@node.handle, "reboot"), role: "menuitem", remote: true
         %li{ role: "presentation" }
@@ -17,7 +17,7 @@
       - if @node.bmc_set?
         %li{ role: "presentation" }
           = link_to t(".poweron"), hit_node_path(@node.handle, "poweron"), role: "menuitem", remote: true, "data-confirm" => t("are_you_sure")
-      - if @node[:platform] != 'windows' || @node.bmc_set?
+      - if @node[:platform_family] != 'windows' || @node.bmc_set?
         %li{ role: "presentation" }
           = link_to t(".powercycle"), hit_node_path(@node.handle, "powercycle"), role: "menuitem", remote: true
         %li{ role: "presentation" }
