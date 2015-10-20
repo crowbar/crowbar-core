@@ -508,7 +508,7 @@ en:
       error_import: 'Error! Import failed.'
       error_yml: 'Error! Could not parse Crowbar.yml'
       success: 'Success. Barclamp Imported!'
-      missing_prereq: 'Missing Prerequisits'
+      missing_prereq: 'Missing Prerequisites'
       select_files: 'Select Files to Upload'
       upload: 'Upload'
       delete_hint: 'Delete File from Import Directory'
