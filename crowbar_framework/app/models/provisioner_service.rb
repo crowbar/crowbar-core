@@ -206,30 +206,36 @@ class ProvisionerService < ServiceObject
   end
 
   def create_repository_item(repo_object)
+    saved = false
     # create DataBag if it doesn't exist yet
     load_repository_bag
     # create DataBagItem with the repo metadata used by provisioner recipes
-    repository_item = Chef::DataBagItem.new
-    repository_item.data_bag "repositories"
-    repository_item["id"] = repo_object.id
-    repository_item["platform"] = repo_object.platform
-    repository_item["name"] = repo_object.registry["name"]
-    repository_item["url"] = repo_object.url
-    repository_item["product_name"] = repo_object.registry["product_name"]
-    @logger.debug("Setting #{repo_object.registry['name']} repository for #{repo_object.platform} as active.")
-    repository_item.save ? true : false
+    if repo_object.available? && repo_object.valid_key_file?
+      @logger.debug("Setting #{repo_object.registry['name']} repository for #{repo_object.platform} as active.")
+      repo_object.to_databag!.save
+      saved = true
+    else
+      @logger.debug("Cannot set #{repo_object.registry['name']} repository for #{repo_object.platform} as active.")
+    end
+    saved
   end
 
   def destroy_repository_item(repo_object)
+    destroyed = false
     # create DataBag if it doesn't exist yet
     load_repository_bag
     # otherwise destroy DataBagItem
     db_item = repo_object.bag_item
-    @logger.debug("Deactivating #{db_item.id} repository.")
-    ret = db_item.destroy("repositories", db_item.id) ? true : false
+    ret = db_item.destroy("repositories", db_item.id) rescue nil
+    if ret
+      @logger.debug("Deactivating #{repo_object.registry['name']} repository.")
+      destroyed = true
+    else
+      @logger.debug("Cannot deactivate #{repo_object.registry['name']} repository.")
+    end
     # destroy the DataBag if it is empty
     destroy_repository_bag if load_repository_bag.empty?
-    ret
+    destroyed
   end
 
   private

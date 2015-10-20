@@ -117,6 +117,17 @@ module Crowbar
       !bag_item.nil?
     end
 
+    def to_databag!
+      repository_item = Chef::DataBagItem.new
+      repository_item.data_bag "repositories"
+      repository_item["id"] = @id
+      repository_item["platform"] = @platform
+      repository_item["name"] = @registry["name"]
+      repository_item["url"] = url
+      repository_item["product_name"] = @registry["product_name"]
+      repository_item
+    end
+
     def bag_item
       Chef::DataBagItem.load("repositories", @id) rescue nil
     end
