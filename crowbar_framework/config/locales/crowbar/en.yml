@@ -604,6 +604,8 @@ en:
     unknown_cmd: 'Unknown command %{cmd}'
     node_not_found: 'Node not found'
     role_not_found: 'Role not found'
+    cannot_activate_repo: 'Cannot activate %{id} repo'
+    cannot_deactivate_repo: 'Cannot deactivate %{id} repo'
 
   state:
     unknown: 'Unknown'

@@ -15,7 +15,7 @@
 #
 
 class RepositoriesController < ApplicationController
-  before_filter :load_repository_registry
+  before_filter :load_registry
   #
   # Repository Check
   #
@@ -32,17 +32,72 @@ class RepositoriesController < ApplicationController
   end
 
   # update the state of the repositories (active/disabled)
+  # /utils/repositories/sync   POST
   def sync
     unless params["repo"].nil?
-      prov_svc = ProvisionerService.new(logger)
-      prov_svc.load_repository_bag
-      prov_svc.synchronize_repositories(params["repo"])
+      ProvisionerService.new(logger).synchronize_repositories(params["repo"])
     end
 
     redirect_to repositories_path
   end
 
-  def load_repository_registry
+  #
+  # Activate a single Repository
+  #
+  # Provides the restful api call for
+  # Activate a Repository   /utils/repositories/activate   POST  Creates Repository DataBagItem
+  # required parameters: platform, repo
+  def activate
+    return render_not_found if params[:platform].nil? || params[:repo].nil?
+    respond_to do |format|
+      repo_object = Crowbar::Repository.where(platform: params[:platform], repo: params[:repo]).first
+      ret = ProvisionerService.new(logger).create_repository_item(repo_object) unless repo_object.nil?
+      if ret
+        format.json { head :ok }
+        format.html { redirect_to repositories_url }
+      else
+        format.json do
+          render json: { error: I18n.t("cannot_activate_repo", scope: "error", id: params[:repo]) },
+                 status: :unprocessable_entity
+        end
+        format.html do
+          flash[:alert] = I18n.t("cannot_activate_repo", scope: "error", id: params[:repo])
+          redirect_to repositories_url
+        end
+      end
+    end
+  end
+
+  #
+  # Deactivate a single Repository
+  #
+  # Provides the restful api call for
+  # Deactivate a Repository   /utils/repositories/deactivate   POST   Destroys Repository DataBagItem
+  # required parameters: platform, repo
+  def deactivate
+    return render_not_found if params[:platform].nil? || params[:repo].nil?
+    respond_to do |format|
+      repo_object = Crowbar::Repository.where(platform: params[:platform], repo: params[:repo]).first
+      ret = ProvisionerService.new(logger).destroy_repository_item(repo_object) unless repo_object.nil?
+      if ret
+        format.json { head :ok }
+        format.html { redirect_to repositories_url }
+      else
+        format.json do
+          render json: { error: I18n.t("cannot_deactivate_repo", scope: "error", id: params[:repo]) },
+                 status: :unprocessable_entity
+        end
+        format.html do
+          flash[:alert] = I18n.t("cannot_deactivate_repo", scope: "error", id: params[:repo])
+          redirect_to repositories_url
+        end
+      end
+    end
+  end
+
+  protected
+
+  def load_registry
     Crowbar::Repository.load!
   end
 end

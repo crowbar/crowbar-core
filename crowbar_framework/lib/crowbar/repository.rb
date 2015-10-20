@@ -114,8 +114,11 @@ module Crowbar
     end
 
     def active?
-      ret = Chef::DataBagItem.load("repositories", @id) rescue nil
-      !ret.nil?
+      !bag_item.nil?
+    end
+
+    def bag_item
+      Chef::DataBagItem.load("repositories", @id) rescue nil
     end
 
     private
