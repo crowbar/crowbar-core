@@ -108,14 +108,7 @@ end
 # Also put authorized_keys in tftpboot path on the admin node so that discovered
 # nodes can use the same.
 if node.roles.include? "crowbar"
-  case node[:platform_family]
-  when "suse"
-    tftpboot_path = "/srv/tftpboot"
-  else
-    tftpboot_path = "/tftpboot"
-  end
-
-  template "#{tftpboot_path}/authorized_keys" do
+  template "#{node[:provisioner][:root]}/authorized_keys" do
     owner "root"
     group "root"
     mode "0644"
