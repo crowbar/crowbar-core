@@ -19,8 +19,6 @@ require File.expand_path("../boot", __FILE__)
 
 module Crowbar
   class Application < Rails::Application
-    SERVER_PID = %x[pgrep --oldest puma | head -n1].strip
-
     config.autoload_paths += %W(
       #{config.root}/lib
     )

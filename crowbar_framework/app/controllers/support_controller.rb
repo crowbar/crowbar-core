@@ -130,27 +130,6 @@ class SupportController < ApplicationController
     redirect_to utils_url
   end
 
-  def restart
-    @init = false
-    @log = Rails.root.join("public", "export", "#{Crowbar::Application::SERVER_PID}.import.log")
-
-    if params[:id].nil?
-      render
-    elsif params[:id].eql? "request" or params[:id].eql? "import"
-      @init = true
-      render
-    elsif params[:id].eql? "in_process"
-      %x[sudo bluepill crowbar-webserver restart] unless Rails.env.development?
-      render json: true
-    elsif params[:id].eql? Crowbar::Application::SERVER_PID
-      render json: false
-    elsif !params[:id].eql? Crowbar::Application::SERVER_PID
-      render json: true
-    else
-      render
-    end
-  end
-
   protected
 
   def default_export_hash
