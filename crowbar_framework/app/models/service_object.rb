@@ -1057,7 +1057,7 @@ class ServiceObject
     # custom patch:
     nodes_to_lock = applying_nodes.reject do |node_name|
       node = NodeObject.find_node_by_name(node_name)
-      node[:platform] == "windows" || node.admin?
+      node[:platform_family] == "windows" || node.admin?
     end
 
     begin
@@ -1203,7 +1203,7 @@ class ServiceObject
       unless non_admin_nodes.empty?
         non_admin_nodes.each do |node|
           nobj = pre_cached_nodes[node] || NodeObject.find_node_by_name(node)
-          unless nobj[:platform] == "windows"
+          unless nobj[:platform_family] == "windows"
             filename = "#{ENV['CROWBAR_LOG_DIR']}/chef-client/#{node}.log"
             pid = run_remote_chef_client(node, "chef-client", filename)
             pids[pid] = node
@@ -1449,7 +1449,7 @@ class ServiceObject
       node = NodeObject.find_node_by_name(node_name)
 
       # we can't connect to windows nodes
-      next if node[:platform] == "windows"
+      next if node[:platform_family] == "windows"
 
       wait_for_chef_clients(node_name, logger: true)
     end

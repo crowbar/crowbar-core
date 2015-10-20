@@ -252,7 +252,7 @@ if node[:platform_family] == "suse" && !node.roles.include?("provisioner-server"
       subscribes :run, resources(cookbook_file: "/etc/init.d/crowbar_join"), :delayed
     end
   else
-    # Use a systemd .service file on SLE12
+    # Use a systemd .service file on recent SUSE platforms
     cookbook_file "/etc/systemd/system/crowbar_notify_shutdown.service" do
       owner "root"
       group "root"

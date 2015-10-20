@@ -1142,7 +1142,7 @@ class NodeObject < ChefObject
   end
 
   def ssh_cmd(cmd)
-    if @node[:platform] == "windows"
+    if @node[:platform_family] == "windows"
       Rails.logger.warn("ssh command \"#{cmd}\" for #{@node.name} ignored - node is running Windows")
       return [400, I18n.t("running_windows", scope: "error")]
     end
@@ -1264,7 +1264,7 @@ class NodeObject < ChefObject
       rescue Timeout::Error
         Rails.logger.warn("chef client seems to be still running after 5 minutes of wait; going on with the reboot")
       end
-      if @node[:platform] == "windows"
+      if @node[:platform_family] == "windows"
         net_rpc_cmd(:power_cycle)
       else
         ssh_cmd("/sbin/reboot")
@@ -1291,7 +1291,7 @@ class NodeObject < ChefObject
 
   def reboot
     set_state("reboot")
-    if @node[:platform] == "windows"
+    if @node[:platform_family] == "windows"
       net_rpc_cmd(:reboot)
     else
       ssh_cmd("/sbin/reboot")
@@ -1300,7 +1300,7 @@ class NodeObject < ChefObject
 
   def shutdown
     set_state("shutdown")
-    if @node[:platform] == "windows"
+    if @node[:platform_family] == "windows"
       net_rpc_cmd(:shutdown)
     else
       ssh_cmd("/sbin/poweroff")
@@ -1314,7 +1314,7 @@ class NodeObject < ChefObject
 
   def powercycle
     set_state("reboot")
-    if @node[:platform] == "windows"
+    if @node[:platform_family] == "windows"
       net_rpc_cmd(:power_cycle)
     else
       bmc_cmd("power cycle")
@@ -1323,7 +1323,7 @@ class NodeObject < ChefObject
 
   def poweroff
     set_state("shutdown")
-    if @node[:platform] == "windows"
+    if @node[:platform_family] == "windows"
       net_rpc_cmd(:power_off)
     else
       bmc_cmd("power off")
