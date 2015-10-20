@@ -71,7 +71,6 @@ Rails.application.routes.draw do
   get "utils/:controller/1.0", action: "utils", as: "utils_barclamp"
   get "utils/import/:id", controller: "support", action: "import", constraints: { id: /[^\/]+/ }, as: "utils_import"
   get "utils/upload/:id", controller: "support", action: "upload", constraints: { id: /[^\/]+/ }, as: "utils_upload"
-  get "utils/restart/:id(.:format)", controller: "support", action: "restart", as: "restart"
 
   # barclamps
   get "crowbar/:controller/1.0/help", action: "help", as: "help_barclamp"
