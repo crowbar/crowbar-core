@@ -73,7 +73,7 @@ class NetworkService < ServiceObject
       stop_address = IPAddr.new(net_info["subnet"]) | (stop_address.to_i + 1)
       address = IPAddr.new(net_info["subnet"]) | index
 
-      if suggestion
+      if suggestion.present?
         @logger.info("Allocating with suggestion: #{suggestion}")
         subsug = IPAddr.new(suggestion) & IPAddr.new(net_info["netmask"])
         subnet = IPAddr.new(net_info["subnet"]) & IPAddr.new(net_info["netmask"])
@@ -164,7 +164,7 @@ class NetworkService < ServiceObject
       net_info = node.get_network_by_type(network)
       if net_info.nil? or net_info["address"].nil?
         @logger.error("Network deallocate ip from #{type}: node does not have address: #{object} #{network}")
-        return [200, nil]
+        return [404, "Node does not have address"]
       end
       name = node.name
     else
