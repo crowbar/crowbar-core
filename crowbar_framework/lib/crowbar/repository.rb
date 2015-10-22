@@ -53,6 +53,10 @@ module Crowbar
         all_platforms.each do |platform|
           repositories(platform).each do |repo|
             check = self.new(platform, repo)
+            if platform != Crowbar::Product.ses_platform && Crowbar::Product.is_ses?
+              #FIXME skip the repo check until SES is ported to SLE12-SP1
+              check.registry["required"] = "optional"
+            end
             repochecks << check
           end
         end
