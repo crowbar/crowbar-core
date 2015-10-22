@@ -302,6 +302,54 @@ class NetworkService < ServiceObject
       end
     end
 
+    if state == "hardware-installing"
+
+      node = NodeObject.find_node_by_name name
+
+      # Allocate required addresses
+      range = node.admin? ? "admin" : "host"
+      @logger.debug("Deployer transition: Allocate admin address for #{name}")
+      result = allocate_ip("default", "admin", range, name)
+      @logger.error("Failed to allocate admin address for: #{node.name}: #{result[0]}") if result[0] != 200
+      if result[0] == 200
+        address = result[1]["address"]
+        boot_ip_hex = sprintf("%08X", address.split(".").inject(0) { |acc, i| (acc << 8) + i.to_i })
+      end
+
+      @logger.debug("Deployer transition: Done Allocate admin address for #{name} boot file:#{boot_ip_hex}")
+
+      if node.admin?
+        # If we are the admin node, we may need to add a vlan bmc address.
+        # Add the vlan bmc if the bmc network and the admin network are not the same.
+        # not great to do it this way, but hey.
+        admin_net = Chef::DataBag.load "crowbar/admin_network" rescue nil
+        bmc_net = Chef::DataBag.load "crowbar/bmc_network" rescue nil
+        if admin_net["network"]["subnet"] != bmc_net["network"]["subnet"]
+          @logger.debug("Deployer transition: Allocate bmc_vlan address for #{name}")
+          result = allocate_ip("default", "bmc_vlan", "host", name)
+          @logger.error("Failed to allocate bmc_vlan address for: #{node.name}: #{result[0]}") if result[0] != 200
+          @logger.debug("Deployer transition: Done Allocate bmc_vlan address for #{name}")
+        end
+
+        # Allocate the bastion network ip for the admin node if a bastion
+        # network is defined in the network proposal
+        bastion_net = Chef::DataBag.load "crowbar/bastion_network" rescue nil
+        unless bastion_net.nil?
+          result = allocate_ip("default", "bastion", range, name)
+          if result[0] != 200
+            @logger.error("Failed to allocate bastion address for: #{node.name}: #{result[0]}")
+          else
+            @logger.debug("Allocated bastion address: #{result[1]["address"]} for the admin node.")
+          end
+        end
+      end
+
+      # save this on the node after it's been refreshed with the network info.
+      node = NodeObject.find_node_by_name node.name
+      node.crowbar["crowbar"]["boot_ip_hex"] = boot_ip_hex if boot_ip_hex
+      node.save
+    end
+
     @logger.debug("Network transition: Exiting #{name} for #{state}")
     [200, { name: name }]
   end
