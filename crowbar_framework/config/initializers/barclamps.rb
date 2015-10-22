@@ -1,6 +1,6 @@
 #
 # Copyright 2011-2013, Dell
-# Copyright 2013-2014, SUSE LINUX Products GmbH
+# Copyright 2013-2015, SUSE Linux GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,18 +15,6 @@
 # limitations under the License.
 #
 
-barclamp:
-  name: 'logging'
-  display: 'Logging'
-  description: 'Logging Management'
-  version: 0
-  user_managed: true
-  member:
-    - 'crowbar'
-
-crowbar:
-  layout: 1
-  order: 40
-  run_order: 40
-  chef_order: 40
-  proposal_schema_version: 3
+Rails.root.join("app", "barclamps").children.each do |barclamp|
+  require barclamp.to_s if barclamp.extname == ".rb"
+end

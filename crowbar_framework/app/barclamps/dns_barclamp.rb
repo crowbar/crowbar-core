@@ -1,6 +1,6 @@
 #
 # Copyright 2011-2013, Dell
-# Copyright 2013-2014, SUSE LINUX Products GmbH
+# Copyright 2013-2015, SUSE Linux GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,29 +15,26 @@
 # limitations under the License.
 #
 
-barclamp:
-  name: 'network'
-  display: 'Network'
-  description: 'Network Configuration'
-  version: 1
-  user_managed: true
-  member:
-    - 'crowbar'
+class DnsBarclamp < Crowbar::Registry::Barclamp
+  name "dns"
+  display "DNS"
+  description "DNS Management"
 
-crowbar:
-  layout: 1
-  order: 20
-  run_order: 20
-  chef_order: 20
-  proposal_schema_version: 3
+  member [
+    "crowbar"
+  ]
 
-nav:
-  network:
-    order: 30
-    route: 'network_path'
-    switch:
-      order: 10
-      route: 'switch_path'
-    vlan:
-      order: 20
-      route: 'vlan_path'
+  requires [
+
+  ]
+
+  listed true
+
+  layout 1
+  version 0
+  schema 3
+
+  order 30
+end
+
+Crowbar::Registry.register DnsBarclamp.new

@@ -1,5 +1,6 @@
 #
-# Copyright 2013-2014, SUSE LINUX Products GmbH
+# Copyright 2011-2013, Dell
+# Copyright 2013-2015, SUSE Linux GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,18 +15,26 @@
 # limitations under the License.
 #
 
-barclamp:
-  name: 'nfs_client'
-  display: 'NFS Client'
-  description: 'Setup of NFS mounts'
-  version: 0
-  user_managed: true
-  member:
-    - 'crowbar'
+class ProvisionerBarclamp < Crowbar::Registry::Barclamp
+  name "provisioner"
+  display "Provisioner"
+  description "Provisioning server and a base environment"
 
-crowbar:
-  layout: 1
-  order: 55
-  run_order: 55
-  chef_order: 55
-  proposal_schema_version: 3
+  member [
+    "crowbar"
+  ]
+
+  requires [
+
+  ]
+
+  listed true
+
+  layout 1
+  version 0
+  schema 3
+
+  order 1060
+end
+
+Crowbar::Registry.register ProvisionerBarclamp.new
