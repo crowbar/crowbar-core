@@ -164,7 +164,7 @@ class NetworkService < ServiceObject
       net_info = node.get_network_by_type(network)
       if net_info.nil? or net_info["address"].nil?
         @logger.error("Network deallocate ip from #{type}: node does not have address: #{object} #{network}")
-        return [404, "Node does not have address"]
+        return [404, "Node does not have address in #{network}"]
       end
       name = node.name
     else
