@@ -87,14 +87,38 @@ ensure
   unlock(lock) unless lock.nil?
 end
 
+def search_and_replace(filename, search_regex, replaced_text)
+  rc = Chef::Util::FileEdit.new(filename)
+  rc.search_file_replace_line(
+    search_regex,
+    replaced_text
+  )
+  rc.write_file
+end
+
 action :add do
-  updated = add_and_filter(@new_resource.file,
-			                        @new_resource.name, @new_resource.regexp_exclude)
+  updated = add_and_filter(
+    @new_resource.file,
+    @new_resource.name,
+    @new_resource.regexp_exclude
+  )
   @new_resource.updated_by_last_action(true) if updated
 end
 
 action :remove do
-  updated = add_and_filter(@new_resource.file,nil,
-			                        "^#{@new_resource.name}$")
+  updated = add_and_filter(
+    @new_resource.file,
+    nil,
+    "^#{@new_resource.name}$"
+  )
+  @new_resource.updated_by_last_action(true) if updated
+end
+
+action :replace do
+  updated = search_and_replace(
+    @new_resource.file,
+    @new_resource.regexp,
+    @new_resource.replace
+  )
   @new_resource.updated_by_last_action(true) if updated
 end
