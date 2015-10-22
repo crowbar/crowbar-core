@@ -27,9 +27,9 @@ append_line = ""
 
 tftproot = node[:provisioner][:root]
 
-pxecfg_dir="#{tftproot}/discovery/pxelinux.cfg"
-pxecfg_default="#{tftproot}/discovery/pxelinux.cfg/default"
-uefi_dir="#{tftproot}/discovery"
+pxecfg_dir = "#{tftproot}/discovery/bios/pxelinux.cfg"
+pxecfg_default = "#{tftproot}/discovery/bios/pxelinux.cfg/default"
+uefi_dir = "#{tftproot}/discovery/efi"
 
 if ::File.exists?("/etc/crowbar.install.key")
   crowbar_key = ::File.read("/etc/crowbar.install.key").chomp.strip
@@ -55,21 +55,21 @@ directory "#{tftproot}/discovery" do
 end
 
 # PXE config
-["share","lib"].each do |d|
-  next unless ::File.exists?("/usr/#{d}/syslinux/pxelinux.0")
-  bash "Install pxelinux.0" do
-    code "cp /usr/#{d}/syslinux/pxelinux.0 #{tftproot}/discovery/"
-    not_if "cmp /usr/#{d}/syslinux/pxelinux.0 #{tftproot}/discovery/pxelinux.0"
-  end
-  break
-end
-
 directory pxecfg_dir do
   recursive true
   mode 0755
   owner "root"
   group "root"
   action :create
+end
+
+["share", "lib"].each do |d|
+  next unless ::File.exists?("/usr/#{d}/syslinux/pxelinux.0")
+  bash "Install pxelinux.0" do
+    code "cp /usr/#{d}/syslinux/pxelinux.0 #{tftproot}/discovery/bios/"
+    not_if "cmp /usr/#{d}/syslinux/pxelinux.0 #{tftproot}/discovery/bios/pxelinux.0"
+  end
+  break
 end
 
 template pxecfg_default do
@@ -79,12 +79,20 @@ template pxecfg_default do
   source "default.erb"
   variables(append_line: "#{append_line} crowbar.state=discovery",
             install_name: "discovery",
-            initrd: "initrd0.img",
-            kernel: "vmlinuz0")
+            initrd: "../initrd0.img",
+            kernel: "../vmlinuz0")
 end
 
 # UEFI config
 use_elilo = true
+
+directory uefi_dir do
+  recursive true
+  mode 0755
+  owner "root"
+  group "root"
+  action :create
+end
 
 if node[:platform_family] != "suse"
   bash "Install elilo as UEFI netboot loader" do
@@ -113,7 +121,16 @@ else
 
     package "grub2-x86_64-efi"
 
-    template "#{uefi_dir}/grub.conf" do
+    # grub.cfg has to be in boot/grub/ subdirectory
+    directory "#{uefi_dir}/default/boot/grub" do
+      recursive true
+      mode 0755
+      owner "root"
+      group "root"
+      action :create
+    end
+
+    template "#{uefi_dir}/default/boot/grub/grub.cfg" do
       mode 0644
       owner "root"
       group "root"
@@ -126,10 +143,10 @@ else
     end
 
     bash "Build UEFI netboot loader with grub" do
-      cwd uefi_dir
-      code "grub2-mkstandalone -d /usr/lib/grub2/x86_64-efi/ -O x86_64-efi --fonts=\"unicode\" -o bootx64.efi grub.cfg"
+      cwd "#{uefi_dir}/default"
+      code "grub2-mkstandalone -d /usr/lib/grub2/x86_64-efi/ -O x86_64-efi --fonts=\"unicode\" -o #{uefi_dir}/bootx64.efi boot/grub/grub.cfg"
       action :nothing
-      subscribes :run, resources("template[#{uefi_dir}/grub.conf]"), :immediately
+      subscribes :run, resources("template[#{uefi_dir}/default/boot/grub/grub.cfg]"), :immediately
     end
   end
 end
@@ -142,8 +159,8 @@ if use_elilo
     source "default.elilo.erb"
     variables(append_line: "#{append_line} crowbar.state=discovery",
               install_name: "discovery",
-              initrd: "initrd0.img",
-              kernel: "vmlinuz0")
+              initrd: "../initrd0.img",
+              kernel: "../vmlinuz0")
   end
 end
 
@@ -564,12 +581,12 @@ node[:provisioner][:supported_oses].each do |os,params|
 
   node.set[:provisioner][:available_oses][os] ||= Mash.new
   if /^(hyperv|windows)/ =~ os
-    node.set[:provisioner][:available_oses][os][:kernel] = "../#{os}/#{kernel}"
+    node.set[:provisioner][:available_oses][os][:kernel] = "../../#{os}/#{kernel}"
     node.set[:provisioner][:available_oses][os][:initrd] = " "
     node.set[:provisioner][:available_oses][os][:append_line] = " "
   else
-    node.set[:provisioner][:available_oses][os][:kernel] = "../#{os}/install/#{kernel}"
-    node.set[:provisioner][:available_oses][os][:initrd] = "../#{os}/install/#{initrd}"
+    node.set[:provisioner][:available_oses][os][:kernel] = "../../#{os}/install/#{kernel}"
+    node.set[:provisioner][:available_oses][os][:initrd] = "../../#{os}/install/#{initrd}"
     node.set[:provisioner][:available_oses][os][:append_line] = append
   end
   node.set[:provisioner][:available_oses][os][:disabled] = missing_files

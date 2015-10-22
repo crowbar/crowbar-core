@@ -7,6 +7,8 @@ omapi-port 9991;
 };
 omapi-key omapi_key;
 option arch code 93 = unsigned integer 16;
+option config-file code 209 = text;
+option path-prefix code 210 = text;
 <% if not @options.empty? -%>
   <% @options.each do |option| -%>
 <%= option %>;

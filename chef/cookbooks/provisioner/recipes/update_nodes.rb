@@ -16,13 +16,17 @@
 states = node["provisioner"]["dhcp"]["state_machine"]
 tftproot = node["provisioner"]["root"]
 timezone = (node["provisioner"]["timezone"] rescue "UTC") || "UTC"
-pxecfg_dir = "#{tftproot}/discovery/pxelinux.cfg"
-uefi_dir = "#{tftproot}/discovery"
 admin_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
 web_port = node[:provisioner][:web_port]
 provisioner_web = "http://#{admin_ip}:#{web_port}"
 dhcp_hosts_dir = node["provisioner"]["dhcp_hosts"]
 virtual_intfs = ["tap", "qbr", "qvo", "qvb", "brq", "ovs"]
+
+discovery_dir = "#{tftproot}/discovery"
+pxecfg_subdir = "bios/pxelinux.cfg"
+uefi_subdir = "efi"
+
+use_elilo = node[:platform_family] != "suse" || (node[:platform] == "suse" && node["platform_version"].to_f < 12.0)
 
 nodes = search(:node, "*:*")
 if not nodes.nil? and not nodes.empty?
@@ -72,13 +76,26 @@ if not nodes.nil? and not nodes.empty?
     # and it will boot into the default discovery image. But it won't help if
     # we're trying to delete the node.
     if boot_ip_hex
-      pxefile = "#{pxecfg_dir}/#{boot_ip_hex}"
-      uefifile = "#{uefi_dir}/#{boot_ip_hex}.conf"
+      pxefile = "#{discovery_dir}/#{pxecfg_subdir}/#{boot_ip_hex}"
+      uefi_dir = "#{discovery_dir}/#{uefi_subdir}"
+      if use_elilo
+        uefifile = "#{uefi_dir}/#{boot_ip_hex}.conf"
+        grubdir = nil
+        grubcfgfile = nil
+        grubfile = nil
+      else
+        uefifile = nil
+        grubdir = "#{uefi_dir}/#{boot_ip_hex}"
+        grubcfgfile = "#{grubdir}/boot/grub/grub.cfg"
+        grubfile = "#{uefi_dir}/#{boot_ip_hex}.efi"
+      end
       windows_tftp_file = "#{tftproot}/windows-common/tftp/#{boot_ip_hex}"
     else
       Chef::Log.warn("#{mnode[:fqdn]}: no boot IP known; PXE/UEFI boot files won't get updated!")
       pxefile = nil
       uefifile = nil
+      grubcfgfile = nil
+      grubfile = nil
       windows_tftp_file = nil
     end
 
@@ -100,10 +117,16 @@ if not nodes.nil? and not nodes.empty?
         end
       end
 
-      [pxefile,uefifile,windows_tftp_file].each do |f|
+      [pxefile, uefifile, grubfile, windows_tftp_file].each do |f|
         file f do
           action :delete
         end unless f.nil?
+      end
+      [grubdir].each do |d|
+        directory d do
+          recursive true
+          action :delete
+        end unless d.nil?
       end
 
       directory "#{tftproot}/nodes/#{mnode[:fqdn]}" do
@@ -123,10 +146,16 @@ if not nodes.nil? and not nodes.empty?
         end
       end
 
-      [pxefile,uefifile].each do |f|
+      [pxefile, grubfile, uefifile].each do |f|
         file f do
           action :delete
         end unless f.nil?
+      end
+      [grubdir].each do |d|
+        directory d do
+          recursive true
+          action :delete
+        end unless d.nil?
       end
 
     else
@@ -138,17 +167,21 @@ if not nodes.nil? and not nodes.empty?
           if mnode.macaddress == mac_list[i]
             ipaddress admin_data_net.address unless admin_data_net.nil?
             options [
-     '      if option arch = 00:06 {
-        filename = "discovery/bootia32.efi";
-     } else if option arch = 00:07 {
-        filename = "discovery/bootx64.efi";
-     } else if option arch = 00:09 {
-        filename = "discovery/bootx64.efi";
-     } else {
-        filename = "discovery/pxelinux.0";
-     }',
-                     "next-server #{admin_ip}"
-                    ]
+              'if exists dhcp-parameter-request-list {
+    # Always send the PXELINUX options (specified in hexadecimal)
+    option dhcp-parameter-request-list = concat(option dhcp-parameter-request-list,d0,d1,d2,d3);
+  }',
+              "if option arch = 00:06 {
+    filename = \"discovery/efi/#{boot_ip_hex}.efi\";
+  } else if option arch = 00:07 {
+    filename = \"discovery/efi/#{boot_ip_hex}.efi\";
+  } else if option arch = 00:09 {
+    filename = \"discovery/efi/#{boot_ip_hex}.efi\";
+  } else {
+    filename = \"discovery/bios/pxelinux.0\";
+  }",
+              "next-server #{admin_ip}"
+            ]
           end
           action :add
         end
@@ -303,33 +336,63 @@ if not nodes.nil? and not nodes.empty?
           raise RangeError.new("Do not know how to handle #{os} in update_nodes.rb!")
         end
 
-        [{file: pxefile, src: "default.erb"},
-         {file: uefifile, src: "default.elilo.erb"}].each do |t|
-          template t[:file] do
-            mode 0644
-            owner "root"
-            group "root"
-            source t[:src]
-            variables(append_line: append.join(" "),
-                      install_name: node[:provisioner][:available_oses][os][:install_name],
-                      initrd: node[:provisioner][:available_oses][os][:initrd],
-                      kernel: node[:provisioner][:available_oses][os][:kernel])
-          end unless t[:file].nil?
-        end
+        append_line = append.join(" ")
+        install_name = node[:provisioner][:available_oses][os][:install_name]
+        install_label = "OS Install (#{os})"
+        initrd = node[:provisioner][:available_oses][os][:initrd]
+        kernel = node[:provisioner][:available_oses][os][:kernel]
 
       else
-        [{file: pxefile, src: "default.erb"},
-         {file: uefifile, src: "default.elilo.erb"}].each do |t|
-          template t[:file] do
-            mode 0644
-            owner "root"
-            group "root"
-            source t[:src]
-            variables(append_line: "#{node[:provisioner][:sledgehammer_append_line]} crowbar.hostname=#{mnode[:fqdn]} crowbar.state=#{new_group}",
-                      install_name: new_group,
-                      initrd: "initrd0.img",
-                      kernel: "vmlinuz0")
-          end unless t[:file].nil?
+
+        append_line = "#{node[:provisioner][:sledgehammer_append_line]} crowbar.hostname=#{mnode[:fqdn]} crowbar.state=#{new_group}"
+        install_name = new_group
+        install_label = "Crowbar Discovery Image (#{new_group})"
+        initrd = "../initrd0.img"
+        kernel = "../vmlinuz0"
+
+      end
+
+      [{ file: pxefile, src: "default.erb" },
+       { file: uefifile, src: "default.elilo.erb" }].each do |t|
+        template t[:file] do
+          mode 0644
+          owner "root"
+          group "root"
+          source t[:src]
+          variables(append_line: append_line,
+                    install_name: install_name,
+                    initrd: initrd,
+                    kernel: kernel)
+        end unless t[:file].nil?
+      end
+
+      if !use_elilo && !grubfile.nil?
+        # grub.cfg has to be in boot/grub/ subdirectory
+        directory "#{grubdir}/boot/grub" do
+          recursive true
+          mode 0755
+          owner "root"
+          group "root"
+          action :create
+        end
+
+        template grubcfgfile do
+          mode 0644
+          owner "root"
+          group "root"
+          source "grub.conf.erb"
+          variables(append_line: append_line,
+                    install_name: install_label,
+                    admin_ip: admin_ip,
+                    initrd: initrd,
+                    kernel: kernel)
+        end
+
+        bash "Build UEFI netboot loader with grub for #{mnode[:fqdn]} (#{new_group})" do
+          cwd grubdir
+          code "grub2-mkstandalone -d /usr/lib/grub2/x86_64-efi/ -O x86_64-efi --fonts=\"unicode\" -o #{grubfile} boot/grub/grub.cfg"
+          action :nothing
+          subscribes :run, resources("template[#{grubcfgfile}]"), :immediately
         end
       end
     end
