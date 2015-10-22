@@ -279,33 +279,49 @@ cookbook_file "/etc/tftpd.conf" do
 end
 
 if node[:platform_family] == "suse"
-  service "tftp" do
-    # just enable, don't start (xinetd takes care of it)
-    enabled node[:provisioner][:enable_pxe] ? true : false
-    action node[:provisioner][:enable_pxe] ? "enable" : "disable"
-  end
+  if node[:platform] == "suse" && node[:platform_version].to_f < 12.0
+    service "tftp" do
+      # just enable, don't start (xinetd takes care of it)
+      enabled node[:provisioner][:enable_pxe] ? true : false
+      action node[:provisioner][:enable_pxe] ? "enable" : "disable"
+    end
 
-  # NOTE(toabctl): stop for tftp does not really help. the process gets started
-  # by xinetd and has a default timeout of 900 seconds which triggers when no
-  # new connections start in this period. So kill the process here
-  execute "kill in.tftpd process" do
-    command "pkill in.tftpd"
-    not_if { node[:provisioner][:enable_pxe] }
-    returns [0, 1]
-  end
+    # NOTE(toabctl): stop for tftp does not really help. the process gets started
+    # by xinetd and has a default timeout of 900 seconds which triggers when no
+    # new connections start in this period. So kill the process here
+    execute "kill in.tftpd process" do
+      command "pkill in.tftpd"
+      not_if { node[:provisioner][:enable_pxe] }
+      returns [0, 1]
+    end
 
-  service "xinetd" do
-    running node[:provisioner][:enable_pxe] ? true : false
-    enabled node[:provisioner][:enable_pxe] ? true : false
-    action node[:provisioner][:enable_pxe] ? ["enable", "start"] : ["disable", "stop"]
-    supports reload: true
-    subscribes :reload, resources(service: "tftp"), :immediately
-  end
+    service "xinetd" do
+      running node[:provisioner][:enable_pxe] ? true : false
+      enabled node[:provisioner][:enable_pxe] ? true : false
+      action node[:provisioner][:enable_pxe] ? ["enable", "start"] : ["disable", "stop"]
+      supports reload: true
+      subscribes :reload, resources(service: "tftp"), :immediately
+    end
 
-  template "/etc/xinetd.d/tftp" do
-    source "tftp.erb"
-    variables( tftproot: tftproot )
-    notifies :reload, resources(service: "xinetd")
+    template "/etc/xinetd.d/tftp" do
+      source "tftp.erb"
+      variables(tftproot: tftproot)
+      notifies :reload, resources(service: "xinetd")
+    end
+  else
+    service "tftp.socket" do
+      action node[:provisioner][:enable_pxe] ? ["enable", "start"] : ["disable", "stop"]
+    end
+
+    service "tftp.service" do
+      if node[:provisioner][:enable_pxe]
+        supports reload: true
+        action :nothing
+        subscribes :reload, resources("cookbook_file[/etc/tftpd.conf]")
+      else
+        action "stop"
+      end
+    end
   end
 else
   template "/etc/bluepill/tftpd.pill" do
