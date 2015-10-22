@@ -11,13 +11,13 @@ pool_opts = {
        option dhcp-parameter-request-list = concat(option dhcp-parameter-request-list,d0,d1,d2,d3);
      }',
              'if option arch = 00:06 {
-       filename = "discovery/efi/bootia32.efi";
+       filename = "discovery/ia32/efi/bootia32.efi";
      } else if option arch = 00:07 {
-       filename = "discovery/efi/bootx64.efi";
+       filename = "discovery/x86_64/efi/bootx64.efi";
      } else if option arch = 00:09 {
-       filename = "discovery/efi/bootx64.efi";
+       filename = "discovery/x86_64/efi/bootx64.efi";
      } else {
-       filename = "discovery/bios/pxelinux.0";
+       filename = "discovery/x86_64/bios/pxelinux.0";
      }',
              "next-server #{admin_ip}"],
   "host" => ["deny unknown-clients"]
