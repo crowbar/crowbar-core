@@ -44,6 +44,8 @@ end
 if crowbar_key != ""
   append_line += " crowbar.install.key=#{crowbar_key}"
 end
+# workaround broken IPMI/BMC firmwares not transmitting traffic for 35s (bsc#927997)
+append_line += " netwait=60"
 append_line = append_line.split.join(" ")
 node.set[:provisioner][:sledgehammer_append_line] = append_line
 
