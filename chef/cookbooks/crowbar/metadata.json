@@ -15,7 +15,8 @@
       "rails": [
 
       ],
-      "bluepill": []
+      "bluepill": [],
+      "utils": []
     },
     "groupings": {
     },

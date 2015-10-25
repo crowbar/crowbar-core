@@ -1,6 +1,6 @@
 #
-# Cookbook Name:: suse-manager-client
-# Role:: suse-manager-client
+# Cookbook Name:: nfs-client
+# Role:: nfs-client
 #
 # Copyright 2013-2014, SUSE LINUX Products GmbH
 #
@@ -21,5 +21,5 @@ name "nfs-client"
 description "NFS Client Role - Adding NFS mounts to node"
 
 run_list(
-  "recipe[nfs-client::default]"
+  "recipe[nfs-client::role_nfs_client]"
 )

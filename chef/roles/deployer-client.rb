@@ -2,11 +2,7 @@
 name "deployer-client"
 description "Deployer Client role - Discovery components"
 run_list(
-         "recipe[barclamp]",
-         "recipe[repos]",
-         "recipe[crowbar-hacks]",
-         "recipe[ohai]",
-         "recipe[kernel-panic]"
+         "recipe[deployer::role_deployer_client]"
 )
 default_attributes()
 override_attributes()

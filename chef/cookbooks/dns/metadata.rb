@@ -1,8 +1,5 @@
 #
-# Cookbook Name:: updater
-# Role:: updater
-#
-# Copyright 2013-2014, SUSE LINUX Products GmbH
+# Copyright 2015, SUSE LINUX GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,9 +14,12 @@
 # limitations under the License.
 #
 
-name "updater"
-description "Updater role"
+maintainer "Crowbar Project"
+maintainer_email "crowbar@googlegroups.com"
+license "Apache 2.0"
+description "DNS setup of nodes"
+long_description "DNS setup of nodes"
+version "0.1"
 
-run_list(
-  "recipe[updater::role_updater]"
-)
+depends "bind9"
+depends "resolver"
