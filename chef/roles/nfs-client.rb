@@ -20,6 +20,4 @@
 name "nfs-client"
 description "NFS Client Role - Adding NFS mounts to node"
 
-run_list(
-  "recipe[nfs-client::role_nfs_client]"
-)
+run_list("recipe[nfs-client::role_nfs_client]")

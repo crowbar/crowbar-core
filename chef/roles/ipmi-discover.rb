@@ -19,6 +19,4 @@
 
 name "ipmi-discover"
 description "IPMI discover - discover the BMC network information"
-run_list(
-  "recipe[ipmi::role_ipmi_discover]"
-)
+run_list("recipe[ipmi::role_ipmi_discover]")
