@@ -1,14 +1,11 @@
 #
-# Cookbook Name: ipmi
-# Role: ipmi-install
-#
-# Copyright (c) 2011 Dell Inc.
+# Copyright 2016, SUSE LINUX GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +14,13 @@
 # limitations under the License.
 #
 
-name "ipmi-discover"
-description "IPMI discover - discover the BMC network information"
-run_list("recipe[ipmi::role_ipmi_discover]")
+barclamp = "network"
+role = "network"
+
+# if nil, then this means all states are valid
+states_for_role = node[barclamp]["element_states"][role]
+
+if states_for_role.nil? || states_for_role.include?("all") || states_for_role.include?(node[:state])
+  include_recipe "network::default"
+  include_recipe "network::fast_nics_tune"
+end

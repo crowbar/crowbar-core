@@ -1,8 +1,5 @@
 #
-# Cookbook Name:: updater
-# Role:: updater
-#
-# Copyright 2013-2014, SUSE LINUX Products GmbH
+# Copyright 2016, SUSE LINUX GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +14,17 @@
 # limitations under the License.
 #
 
-name "updater"
-description "Updater role"
+barclamp = "provisioner"
+role = "provisioner-server"
 
-run_list("recipe[updater::role_updater]")
+# if nil, then this means all states are valid
+states_for_role = node[barclamp]["element_states"][role]
+
+if states_for_role.nil? || states_for_role.include?("all") || states_for_role.include?(node[:state])
+  include_recipe "utils::default"
+  include_recipe "dhcp::default"
+  include_recipe "nfs-server::default"
+  include_recipe "provisioner::setup_base_images"
+  include_recipe "provisioner::dhcp_update"
+  include_recipe "provisioner::update_nodes"
+end
