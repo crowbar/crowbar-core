@@ -63,10 +63,6 @@ module Crowbar
         repochecks
       end
 
-      def admin_platform
-        NodeObject.admin_node.target_platform
-      end
-
       def repositories(platform)
         registry[platform]["repos"].keys
       end
