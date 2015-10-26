@@ -20,7 +20,37 @@ module Crowbar
 
     class << self
       def load!
+        etc_yml = "/etc/crowbar/repos.yml"
+
         @all_repos = YAML.load_file(Rails.root.join("config/repos.yml"))
+
+        # merge data from etc config file
+        etc_repos = {}
+        if File.exist? etc_yml
+          begin
+            etc_repos = YAML.load_file(etc_yml)
+          rescue SyntaxError
+            # ok, let's live without it
+          end
+        end
+
+        etc_repos.each do |platform, repos|
+          if @all_repos.key? platform
+            repos["repos"].each do |id, repo|
+              # for repos that exist in our hard-coded file, we only allow
+              # overwriting a subset of attributes
+              if @all_repos[platform]["repos"].key? id
+                %w(url ask_on_error).each do |key|
+                  @all_repos[platform]["repos"][id][key] = repo[key] if repo.key? key
+                end
+              else
+                @all_repos[platform]["repos"][id] = repo
+              end
+            end
+          else
+            @all_repos[platform] = repos
+          end
+        end
       end
 
       def registry
