@@ -78,7 +78,7 @@ class Provisioner
         repos_from_databag.each do |reponame|
           dbi = Chef::DataBagItem.load("repositories", reponame)
           if dbi["platform"] == "#{platform}-#{version}"
-            repositories[dbi["name"]] = { url: dbi["url"] }
+            repositories[dbi["name"]] = { url: dbi["url"], ask_on_error: dbi["ask_on_error"] }
           end
         end
         repositories

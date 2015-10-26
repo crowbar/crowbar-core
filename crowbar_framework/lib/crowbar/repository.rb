@@ -128,6 +128,7 @@ module Crowbar
       repository_item["platform"] = @platform
       repository_item["name"] = @registry["name"]
       repository_item["url"] = url
+      repository_item["ask_on_error"] = @registry["ask_on_error"] || false
       repository_item["product_name"] = @registry["product_name"]
       repository_item
     end
