@@ -24,4 +24,6 @@ if states_for_role.nil? || states_for_role.include?("all") || states_for_role.in
   include_recipe "provisioner::base"
   include_recipe "utils::default"
   include_recipe "barclamp::default"
+else
+  Chef::Log.info("Skipping role \"#{role}\" because node is in state \"#{node[:state]}\".")
 end

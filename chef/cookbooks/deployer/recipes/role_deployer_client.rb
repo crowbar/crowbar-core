@@ -28,4 +28,6 @@ if states_for_role.nil? || states_for_role.include?("all") || states_for_role.in
   include_recipe "crowbar-hacks::default"
   include_recipe "ohai::default"
   include_recipe "kernel-panic::default"
+else
+  Chef::Log.info("Skipping role \"#{role}\" because node is in state \"#{node[:state]}\".")
 end

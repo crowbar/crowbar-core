@@ -25,4 +25,6 @@ states_for_role = node[barclamp]["element_states"][role] rescue nil
 if states_for_role.nil? || states_for_role.include?("all") || states_for_role.include?(node[:state])
   include_recipe "utils::default"
   include_recipe "crowbar::default"
+else
+  Chef::Log.info("Skipping role \"#{role}\" because node is in state \"#{node[:state]}\".")
 end

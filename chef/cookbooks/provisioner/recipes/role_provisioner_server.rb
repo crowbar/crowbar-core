@@ -27,4 +27,6 @@ if states_for_role.nil? || states_for_role.include?("all") || states_for_role.in
   include_recipe "provisioner::setup_base_images"
   include_recipe "provisioner::dhcp_update"
   include_recipe "provisioner::update_nodes"
+else
+  Chef::Log.info("Skipping role \"#{role}\" because node is in state \"#{node[:state]}\".")
 end
