@@ -211,7 +211,8 @@ module Crowbar
 
       repomd_path = repodata_path.join("repomd.xml")
       if repomd_path.file?
-        REXML::Document.new(repomd_path.open).root.elements["tags/repo"].text == expected
+        repo_tag = REXML::Document.new(repomd_path.open).root.elements["tags/repo"]
+        !repo_tag.nil? && repo_tag.text == expected
       else
         false
       end
