@@ -40,15 +40,15 @@ module Crowbar
 
         etc_repos.each do |platform, repos|
           if @all_repos.key? platform
-            repos["repos"].each do |id, repo|
+            repos.each do |id, repo|
               # for repos that exist in our hard-coded file, we only allow
               # overwriting a subset of attributes
-              if @all_repos[platform]["repos"].key? id
+              if @all_repos[platform].key? id
                 %w(url ask_on_error).each do |key|
-                  @all_repos[platform]["repos"][id][key] = repo[key] if repo.key? key
+                  @all_repos[platform][id][key] = repo[key] if repo.key? key
                 end
               else
-                @all_repos[platform]["repos"][id] = repo
+                @all_repos[platform][id] = repo
               end
             end
           else
@@ -83,7 +83,7 @@ module Crowbar
       end
 
       def repositories(platform)
-        registry[platform]["repos"].keys
+        registry[platform].keys
       end
 
       def check_all_repos
@@ -111,7 +111,7 @@ module Crowbar
           answer = true
 
           repositories(platform).each do |repo|
-            provided_features = registry[platform]["repos"][repo]["features"] || []
+            provided_features = registry[platform][repo]["features"] || []
 
             next unless provided_features.include? feature
             found = true
@@ -161,7 +161,7 @@ module Crowbar
     def initialize(platform, repo)
       @platform = platform
       @id = repo
-      @config = Repository.registry[@platform]["repos"][@id]
+      @config = Repository.registry[@platform][@id]
     end
 
     def remote?
