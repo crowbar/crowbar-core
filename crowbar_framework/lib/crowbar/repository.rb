@@ -172,7 +172,7 @@ module Crowbar
 
     def url
       @config["url"] || \
-        "http://#{Repository.admin_ip}:#{Repository.web_port}/#{@platform}/repos/#{@config["name"]}"
+        "http://#{Repository.admin_ip}:#{Repository.web_port}/#{@platform}/repos/#{@config["name"]}/"
     end
 
     def active?
