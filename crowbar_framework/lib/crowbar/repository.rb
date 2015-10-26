@@ -151,6 +151,8 @@ module Crowbar
 
     def check_repo_tag
       expected = @config["repomd"]["tag"]
+      return true if expected.blank?
+
       repomd_path = "#{repodata_path}/repomd.xml"
       if File.exist?(repomd_path)
         REXML::Document.new(File.open(repomd_path)).root.elements["tags/repo"].text == expected
@@ -161,6 +163,8 @@ module Crowbar
 
     def check_key_file
       expected = @config["repomd"]["md5"]
+      return true if expected.blank?
+
       key_path = "#{repodata_path}/repomd.xml.key"
       if File.exist?(key_path)
         md5 = Digest::MD5.hexdigest(File.read(key_path))
