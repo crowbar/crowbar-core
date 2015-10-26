@@ -87,17 +87,24 @@ module Crowbar
       @url = url
     end
 
+    def remote?
+      !@config["url"].blank?
+    end
+
     def available?
-      all_repo_dirs.include?(@config["name"]) && check_repo_tag
+      remote? || (check_directory && check_repo_tag && check_key_file)
+    end
+
+    def exist?
+      remote? || check_directory
+    end
+
+    def valid_repo?
+      remote? || check_repo_tag
     end
 
     def valid_key_file?
-      if File.exist?(repomd_key_path)
-        md5 = Digest::MD5.hexdigest(File.read(repomd_key_path))
-        repomd_key_md5 == md5
-      else
-        false
-      end
+      remote? || check_key_file
     end
 
     def repodata_path
@@ -139,12 +146,15 @@ module Crowbar
 
     private
 
+    def repos_dir
+      File.join("/srv/tftpboot", @platform, "repos")
+    end
+
     #
     # validation helpers
     #
-    def all_repo_dirs
-      path = File.join("/srv/tftpboot", @platform, "repos")
-      Dir["#{path}/*"].map { |p| p.split("/").last }
+    def check_directory
+      Dir.exist? File.join(repos_dir, @config["name"])
     end
 
     def check_repo_tag
@@ -152,6 +162,15 @@ module Crowbar
       repomd_path = "#{repodata_path}/repomd.xml"
       if File.exist?(repomd_path)
         REXML::Document.new(File.open(repomd_path)).root.elements["tags/repo"].text == expected
+      else
+        false
+      end
+    end
+
+    def check_key_file
+      if File.exist?(repomd_key_path)
+        md5 = Digest::MD5.hexdigest(File.read(repomd_key_path))
+        repomd_key_md5 == md5
       else
         false
       end

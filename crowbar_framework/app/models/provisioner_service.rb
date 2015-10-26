@@ -210,7 +210,7 @@ class ProvisionerService < ServiceObject
     # create DataBag if it doesn't exist yet
     load_repository_bag
     # create DataBagItem with the repo metadata used by provisioner recipes
-    if repo_object.available? && repo_object.valid_key_file?
+    if repo_object.available?
       @logger.debug("Setting #{repo_object.registry['name']} repository for #{repo_object.platform} as active.")
       repo_object.to_databag!.save
       saved = true

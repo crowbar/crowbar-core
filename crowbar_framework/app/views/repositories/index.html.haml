@@ -22,7 +22,7 @@
             %th.col-xs-2
               = t(".status")
             %th.col-xs-2
-              = t(".md5_check")
+              = t(".check")
             %th.col-xs-1
               %input{ type: "checkbox", value: "all", data: { checkall: "input.platform#{index}" } }
                 = t(".active")
@@ -33,7 +33,7 @@
           - @repocheck.sort_by{ |check| check.config["name"] }.each do |repo|
             - if repo.platform == platform
               %tr
-              - if repo.available?
+              - if repo.exist?
                 %td
                   = link_to(repo.config["name"], repo.url)
                 %td
@@ -56,17 +56,17 @@
                   %td{ class: repository_availability(repo.config["required"]) }
                     .text-muted
                       = t(".unavailable")
-              - if repo.valid_key_file?
+              - if repo.valid_repo? && repo.valid_key_file?
                 %td.success
                   %i.glyphicon.glyphicon-ok
-                  = t(".md5_ok")
+                  = t(".check_ok")
                 %td
                   = check_box "repo[#{platform}]", repo.config["name"], { class: "platform#{index}", checked: repo.active? }
               - else
                 - if repo.config["required"] == "mandatory"
                   %td{ class: repository_availability(repo.config["required"]) }
                     %i.glyphicon.glyphicon-remove
-                    = t(".md5_failed")
+                    = t(".check_failed")
                 - else
                   %td{ class: repository_availability(repo.config["required"]) }
                     .text-muted

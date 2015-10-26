@@ -531,9 +531,9 @@ en:
       status: 'Status'
       available: 'Available'
       unavailable: 'Not present'
-      md5_check: 'MD5 Check'
-      md5_ok: 'OK'
-      md5_failed: 'Failed'
+      check: 'Repository Check'
+      check_ok: 'OK'
+      check_failed: 'Failed'
       active: 'Active'
       active_repo_tooltip: 'Managed nodes will be automatically configured to use repositories only if they are marked as active'
 
