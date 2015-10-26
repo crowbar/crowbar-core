@@ -12,28 +12,10 @@ suse-12.0:
       ask_on_error: false
     sles12-updates:
       name: "SLES12-Updates"
-      required: "recommended"
+      required: "mandatory"
       product_name: "common"
       repomd:
         tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-SERVER:12:x86_64/update"
-        md5: "9a62177e1c6852d48453ed3909956d6b"
-      url:
-      ask_on_error: false
-    suse-openstack-cloud-6-pool:
-      name: "SUSE-Openstack-Cloud-6-Pool"
-      required: "optional"
-      product_name: "cloud"
-      repomd:
-        tag: "obsproduct://build.suse.de/SUSE:SLE-12:Update:Products:Cloud6/suse-openstack-cloud/6/POOL/x86_64"
-        md5: "9a62177e1c6852d48453ed3909956d6b"
-      url:
-      ask_on_error: false
-    suse-openstack-cloud-6-updates:
-      name: "SUSE-Openstack-Cloud-6-Updates"
-      required: "optional"
-      product_name: "cloud"
-      repomd:
-        tag:
         md5: "9a62177e1c6852d48453ed3909956d6b"
       url:
       ask_on_error: false
@@ -55,8 +37,8 @@ suse-12.0:
         md5: "9a62177e1c6852d48453ed3909956d6b"
       url:
       ask_on_error: false
-    suse-enterprise-storage-2.0-pool:
-      name: "SUSE-Enterprise-Storage-2.0-Pool"
+    suse-enterprise-storage-2-pool:
+      name: "SUSE-Enterprise-Storage-2-Pool"
       required: "optional"
       product_name: "storage"
       repomd:
@@ -64,13 +46,19 @@ suse-12.0:
         md5: "9a62177e1c6852d48453ed3909956d6b"
       url:
       ask_on_error: false
-    suse-enterprise-storage-2.0-updates:
-      name: "SUSE-Enterprise-Storage-2.0-Updates"
+    suse-enterprise-storage-2-updates:
+      name: "SUSE-Enterprise-Storage-2-Updates"
       required: "optional"
       product_name: "storage"
       repomd:
         tag: "obsrepository://build.suse.de/SUSE:Updates:Storage:2:x86_64/update"
         md5: "9a62177e1c6852d48453ed3909956d6b"
+      url:
+      ask_on_error: false
+    ptf:
+      name: "PTF"
+      required: "recommended"
+      product_name: "common"
       url:
       ask_on_error: false
 suse-12.1:
@@ -86,7 +74,7 @@ suse-12.1:
       ask_on_error: false
     sles12-sp1-updates:
       name: "SLES12-SP1-Updates"
-      required: "recommended"
+      required: "mandatory"
       product_name: "common"
       repomd:
         tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-SERVER:12-SP1:x86_64/update"
@@ -94,7 +82,7 @@ suse-12.1:
       url:
       ask_on_error: false
     suse-openstack-cloud-6-pool:
-      name: "SUSE-Openstack-Cloud-6-Pool"
+      name: "SUSE-OpenStack-Cloud-6-Pool"
       required: "optional"
       product_name: "cloud"
       repomd:
@@ -103,7 +91,7 @@ suse-12.1:
       url:
       ask_on_error: false
     suse-openstack-cloud-6-updates:
-      name: "SUSE-Openstack-Cloud-6-Updates"
+      name: "SUSE-OpenStack-Cloud-6-Updates"
       required: "optional"
       product_name: "cloud"
       repomd:
@@ -127,5 +115,11 @@ suse-12.1:
       repomd:
         tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-HA:12-SP1:x86_64/update"
         md5: "9a62177e1c6852d48453ed3909956d6b"
+      url:
+      ask_on_error: false
+    ptf:
+      name: "PTF"
+      required: "recommended"
+      product_name: "common"
       url:
       ask_on_error: false
