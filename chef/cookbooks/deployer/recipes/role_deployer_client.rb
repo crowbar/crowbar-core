@@ -18,7 +18,9 @@ barclamp = "deployer"
 role = "deployer-client"
 
 # if nil, then this means all states are valid
-states_for_role = node[barclamp]["element_states"][role]
+# we do a "rescue" here, because this role is special and used during install
+# of admin server, while there's no such attribute
+states_for_role = node[barclamp]["element_states"][role] rescue nil
 
 if states_for_role.nil? || states_for_role.include?("all") || states_for_role.include?(node[:state])
   include_recipe "barclamp::default"
