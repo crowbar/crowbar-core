@@ -48,27 +48,7 @@
                   "type": "map",
                   "required": false,
                   "mapping": {
-                    "ssh_password": { "type": "str", "required": false },
-                    "repos": {
-                      "type": "map",
-                      "required": false,
-                      "mapping": {
-                        =: {
-                          "type": "map",
-                          "required": false,
-                          "mapping": {
-                            =: {
-                              "type": "map",
-                              "required": false,
-                              "mapping": {
-                                "url":          { "type": "str",  "required": false },
-                                "ask_on_error": { "type": "bool", "required": false }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
+                    "ssh_password": { "type": "str", "required": false }
                   }
                 }
               }
