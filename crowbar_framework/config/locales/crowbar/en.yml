@@ -530,6 +530,7 @@ en:
       required: 'Required'
       status: 'Status'
       available: 'Available'
+      stale: 'Changed'
       unavailable: 'Not present'
       check: 'Repository Check'
       check_ok: 'OK'

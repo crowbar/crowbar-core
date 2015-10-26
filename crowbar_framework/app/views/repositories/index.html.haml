@@ -38,9 +38,14 @@
                   = link_to(repo.name, repo.url)
                 %td
                   = repo.required
-                %td.success
-                  %i.glyphicon.glyphicon-ok
-                  = t(".available")
+                - if repo.stale?
+                  %td.warning
+                    %i.glyphicon.glyphicon-refresh
+                    = t(".stale")
+                - else
+                  %td.success
+                    %i.glyphicon.glyphicon-ok
+                    = t(".available")
               - else
                 %td
                   .span.text-muted

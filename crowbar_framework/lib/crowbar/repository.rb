@@ -180,6 +180,15 @@ module Crowbar
       active_repos.fetch(@platform, {}).key? @id
     end
 
+    def stale?
+      active_repos = Chef::DataBag.load("crowbar/repositories") rescue {}
+      if active_repos.fetch(@platform, {}).key? @id
+        active_repos[@platform][@id] != to_databag_hash
+      else
+        false
+      end
+    end
+
     def to_databag_hash
       item = Hash.new
       item["name"] = name
