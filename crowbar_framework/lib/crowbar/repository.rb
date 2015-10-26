@@ -107,18 +107,6 @@ module Crowbar
       remote? || check_key_file
     end
 
-    def repodata_path
-      "/srv/tftpboot/#{@platform}/repos/#{@config['name']}/repodata"
-    end
-
-    def repomd_key_md5
-      @config["repomd"]["md5"]
-    end
-
-    def repomd_key_path
-      @config["repomd"]["key"] || "#{repodata_path}/repomd.xml.key"
-    end
-
     def url
       @config["url"] || \
         "http://#{Repository.admin_ip}:#{Repository.web_port}/#{@platform}/repos/#{@config['name']}"
@@ -150,6 +138,10 @@ module Crowbar
       File.join("/srv/tftpboot", @platform, "repos")
     end
 
+    def repodata_path
+      File.join(repos_dir, @config["name"], "repodata")
+    end
+
     #
     # validation helpers
     #
@@ -168,9 +160,11 @@ module Crowbar
     end
 
     def check_key_file
-      if File.exist?(repomd_key_path)
-        md5 = Digest::MD5.hexdigest(File.read(repomd_key_path))
-        repomd_key_md5 == md5
+      expected = @config["repomd"]["md5"]
+      key_path = "#{repodata_path}/repomd.xml.key"
+      if File.exist?(key_path)
+        md5 = Digest::MD5.hexdigest(File.read(key_path))
+        md5 == expected
       else
         false
       end

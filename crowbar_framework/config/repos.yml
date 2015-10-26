@@ -7,7 +7,6 @@ suse-12.0:
       product_name: "common"
       content_key:
       repomd:
-        key:
         tag: "obsproduct://build.suse.de/SUSE:SLE-12:GA/SLES/12/POOL/x86_64"
         md5: "9a62177e1c6852d48453ed3909956d6b"
       patterns: []
@@ -20,7 +19,6 @@ suse-12.0:
       product_name: "common"
       content_key:
       repomd:
-        key:
         tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-SERVER:12:x86_64/update"
         md5: "9a62177e1c6852d48453ed3909956d6b"
       patterns: []
@@ -33,7 +31,6 @@ suse-12.0:
       product_name: "cloud"
       content_key:
       repomd:
-        key:
         tag: "obsproduct://build.suse.de/SUSE:SLE-12:Update:Products:Cloud6/suse-openstack-cloud/6/POOL/x86_64"
         md5: "9a62177e1c6852d48453ed3909956d6b"
       patterns: []
@@ -46,7 +43,6 @@ suse-12.0:
       product_name: "cloud"
       content_key:
       repomd:
-        key:
         tag:
         md5: "9a62177e1c6852d48453ed3909956d6b"
       patterns: []
@@ -59,7 +55,6 @@ suse-12.0:
       product_name: "hae"
       content_key:
       repomd:
-        key:
         tag: "obsproduct://build.suse.de/SUSE:SLE-12:GA/sle-ha/12/POOL/x86_64"
         md5: "9a62177e1c6852d48453ed3909956d6b"
       patterns: []
@@ -72,7 +67,6 @@ suse-12.0:
       product_name: "hae"
       content_key:
       repomd:
-        key:
         tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-HA:12:x86_64/update"
         md5: "9a62177e1c6852d48453ed3909956d6b"
       patterns: []
@@ -85,7 +79,6 @@ suse-12.0:
       product_name: "storage"
       content_key:
       repomd:
-        key:
         tag: "obsproduct://build.suse.de/SUSE:SLE-12:Update:Products:SES2/ses/2/POOL/x86_64"
         md5: "9a62177e1c6852d48453ed3909956d6b"
       patterns: []
@@ -98,7 +91,6 @@ suse-12.0:
       product_name: "storage"
       content_key:
       repomd:
-        key:
         tag: "obsrepository://build.suse.de/SUSE:Updates:Storage:2:x86_64/update"
         md5: "9a62177e1c6852d48453ed3909956d6b"
       patterns: []
@@ -113,7 +105,6 @@ suse-12.1:
       product_name: "common"
       content_key:
       repomd:
-        key:
         tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP1:GA/SLES/12.1/POOL/x86_64"
         md5: "9a62177e1c6852d48453ed3909956d6b"
       patterns: []
@@ -126,7 +117,6 @@ suse-12.1:
       product_name: "common"
       content_key:
       repomd:
-        key:
         tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-SERVER:12-SP1:x86_64/update"
         md5: "9a62177e1c6852d48453ed3909956d6b"
       patterns: []
@@ -139,7 +129,6 @@ suse-12.1:
       product_name: "cloud"
       content_key:
       repomd:
-        key:
         tag: "obsproduct://build.suse.de/SUSE:SLE-12:SP1:Products:Cloud6/suse-openstack-cloud/6/POOL/x86_64"
         md5: "9a62177e1c6852d48453ed3909956d6b"
       patterns: []
@@ -152,7 +141,6 @@ suse-12.1:
       product_name: "cloud"
       content_key:
       repomd:
-        key:
         tag: "obsrepository://build.suse.de/SUSE:Updates:OpenStack-Cloud:6:x86_64/update"
         md5: "9a62177e1c6852d48453ed3909956d6b"
       patterns: []
@@ -165,7 +153,6 @@ suse-12.1:
       product_name: "hae"
       content_key:
       repomd:
-        key:
         tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP1:GA/sle-ha/12.1/POOL/x86_64"
         md5: "9a62177e1c6852d48453ed3909956d6b"
       patterns: []
@@ -178,7 +165,6 @@ suse-12.1:
       product_name: "hae"
       content_key:
       repomd:
-        key:
         tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-HA:12-SP1:x86_64/update"
         md5: "9a62177e1c6852d48453ed3909956d6b"
       patterns: []
