@@ -48,6 +48,10 @@ module Crowbar
         registry.keys
       end
 
+      def repositories(platform)
+        registry[platform]["repos"].keys
+      end
+
       def check_all_repos
         repochecks = []
         all_platforms.each do |platform|
@@ -61,10 +65,6 @@ module Crowbar
           end
         end
         repochecks
-      end
-
-      def repositories(platform)
-        registry[platform]["repos"].keys
       end
 
       def admin_ip
