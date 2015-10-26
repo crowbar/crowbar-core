@@ -84,18 +84,18 @@ suse-12.1:
       name: "SUSE-OpenStack-Cloud-6-Pool"
       required: "optional"
       features: ["openstack"]
-      repomd:
-        tag: "obsproduct://build.suse.de/SUSE:SLE-12:SP1:Products:Cloud6/suse-openstack-cloud/6/POOL/x86_64"
-        md5: "9a62177e1c6852d48453ed3909956d6b"
+#      repomd:
+#        tag: "obsproduct://build.suse.de/SUSE:SLE-12:SP1:Products:Cloud6/suse-openstack-cloud/6/POOL/x86_64"
+#        md5: "9a62177e1c6852d48453ed3909956d6b"
       url:
       ask_on_error: false
     suse-openstack-cloud-6-updates:
       name: "SUSE-OpenStack-Cloud-6-Updates"
       required: "optional"
       features: ["openstack"]
-      repomd:
-        tag: "obsrepository://build.suse.de/SUSE:Updates:OpenStack-Cloud:6:x86_64/update"
-        md5: "9a62177e1c6852d48453ed3909956d6b"
+#      repomd:
+#        tag: "obsrepository://build.suse.de/SUSE:Updates:OpenStack-Cloud:6:x86_64/update"
+#        md5: "9a62177e1c6852d48453ed3909956d6b"
       url:
       ask_on_error: false
     sle12-sp1-ha-pool:
