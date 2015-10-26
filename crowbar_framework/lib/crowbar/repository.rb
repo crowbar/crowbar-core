@@ -22,7 +22,11 @@ module Crowbar
       def load!
         etc_yml = "/etc/crowbar/repos.yml"
 
-        @all_repos = YAML.load_file(Rails.root.join("config/repos.yml"))
+        if Crowbar::Product.is_ses?
+          @all_repos = YAML.load_file(Rails.root.join("config/repos-ses.yml"))
+        else
+          @all_repos = YAML.load_file(Rails.root.join("config/repos-cloud.yml"))
+        end
 
         # merge data from etc config file
         etc_repos = {}
@@ -86,12 +90,7 @@ module Crowbar
         repochecks = []
         all_platforms.each do |platform|
           repositories(platform).each do |repo|
-            check = self.new(platform, repo)
-            if platform != Crowbar::Product.ses_platform && Crowbar::Product.is_ses?
-              #FIXME skip the repo check until SES is ported to SLE12-SP1
-              check.config["required"] = "optional"
-            end
-            repochecks << check
+            repochecks << self.new(platform, repo)
           end
         end
         repochecks
