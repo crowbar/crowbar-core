@@ -30,30 +30,30 @@
                 %i.glyphicon.glyphicon-question-sign{ data: { tooltip: true, placement: "top" }, title: t(".active_repo_tooltip") }
 
           %tbody
-          - @repocheck.sort_by{ |check| check.config["name"] }.each do |repo|
+          - @repocheck.sort_by{ |check| check.name }.each do |repo|
             - if repo.platform == platform
               %tr
               - if repo.exist?
                 %td
-                  = link_to(repo.config["name"], repo.url)
+                  = link_to(repo.name, repo.url)
                 %td
-                  = repo.config["required"]
+                  = repo.required
                 %td.success
                   %i.glyphicon.glyphicon-ok
                   = t(".available")
               - else
                 %td
                   .span.text-muted
-                    = repo.config["name"]
+                    = repo.name
                 %td
                   .text-muted
-                    = repo.config["required"]
-                - if repo.config["required"] == "mandatory"
-                  %td{ class: repository_availability(repo.config["required"]) }
+                    = repo.required
+                - if repo.required == "mandatory"
+                  %td{ class: repository_availability(repo.required) }
                     %i.glyphicon.glyphicon-remove
                     = t(".unavailable")
                 - else
-                  %td{ class: repository_availability(repo.config["required"]) }
+                  %td{ class: repository_availability(repo.required) }
                     .text-muted
                       = t(".unavailable")
               - if repo.valid_repo? && repo.valid_key_file?
@@ -61,18 +61,18 @@
                   %i.glyphicon.glyphicon-ok
                   = t(".check_ok")
                 %td
-                  = check_box "repo[#{platform}]", repo.config["name"], { class: "platform#{index}", checked: repo.active? }
+                  = check_box "repo[#{platform}]", repo.name, { class: "platform#{index}", checked: repo.active? }
               - else
-                - if repo.config["required"] == "mandatory"
-                  %td{ class: repository_availability(repo.config["required"]) }
+                - if repo.required == "mandatory"
+                  %td{ class: repository_availability(repo.required) }
                     %i.glyphicon.glyphicon-remove
                     = t(".check_failed")
                 - else
-                  %td{ class: repository_availability(repo.config["required"]) }
+                  %td{ class: repository_availability(repo.required) }
                     .text-muted
                       = t(".unavailable")
                 %td
-                  = check_box "repo[#{platform}]", repo.config["name"], { class: "platform#{index}", checked: false, disabled: true }
+                  = check_box "repo[#{platform}]", repo.name, { class: "platform#{index}", checked: false, disabled: true }
 
       .panel-footer.text-right
         .btn-group

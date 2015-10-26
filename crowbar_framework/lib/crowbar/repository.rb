@@ -140,7 +140,6 @@ module Crowbar
       @platform = platform
       @id = repo
       @config = Repository.registry[@platform]["repos"][@id]
-      @url = url
     end
 
     def remote?
@@ -163,6 +162,14 @@ module Crowbar
       remote? || check_key_file
     end
 
+    def name
+      @config["name"] || @id
+    end
+
+    def required
+      @config["required"] || "optional"
+    end
+
     def url
       @config["url"] || \
         "http://#{Repository.admin_ip}:#{Repository.web_port}/#{@platform}/repos/#{@config["name"]}"
@@ -175,7 +182,7 @@ module Crowbar
 
     def to_databag_hash
       item = Hash.new
-      item["name"] = @config["name"]
+      item["name"] = name
       item["url"] = url
       item["ask_on_error"] = @config["ask_on_error"] || false
       item
