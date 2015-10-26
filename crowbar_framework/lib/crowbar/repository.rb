@@ -126,6 +126,29 @@ module Crowbar
         answer
       end
 
+      def platform_available?(platform)
+        available = true
+
+        repositories(platform).each do |repo|
+          r = self.new(platform, repo)
+
+          next if r.required != "mandatory"
+          next if r.active?
+
+          available = false
+          break
+        end
+
+        available
+      end
+
+      def disabled_platforms
+        # forcefully reload the data, as we don't want to have outdated info
+        # about what is mandatory or not
+        load!
+        all_platforms.reject { |platform| platform_available? platform }
+      end
+
       def admin_ip
         NodeObject.admin_node.ip
       end

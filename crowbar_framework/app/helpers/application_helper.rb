@@ -251,6 +251,6 @@ module ApplicationHelper
   end
 
   def disabled_platforms
-    NodeObject.disabled_platforms
+    (NodeObject.disabled_platforms + Crowbar::Repository.disabled_platforms).uniq
   end
 end
