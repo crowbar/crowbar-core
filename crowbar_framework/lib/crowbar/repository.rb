@@ -212,7 +212,11 @@ module Crowbar
       repomd_path = repodata_path.join("repomd.xml")
       if repomd_path.file?
         repo_tag = REXML::Document.new(repomd_path.open).root.elements["tags/repo"]
-        !repo_tag.nil? && repo_tag.text == expected
+        if expected.is_a?(Array)
+          !repo_tag.nil? && expected.include?(repo_tag.text)
+        else
+          !repo_tag.nil? && repo_tag.text == expected
+        end
       else
         false
       end
@@ -225,7 +229,11 @@ module Crowbar
       key_path = repodata_path.join("repomd.xml.key")
       if key_path.file?
         md5 = Digest::MD5.hexdigest(key_path.read)
-        md5 == expected
+        if expected.is_a?(Array)
+          expected.include? md5
+        else
+          md5 == expected
+        end
       else
         false
       end

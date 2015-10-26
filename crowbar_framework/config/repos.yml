@@ -84,9 +84,11 @@ suse-12.1:
       name: "Cloud"
       required: "optional"
       features: ["openstack"]
-#      repomd:
-#        tag: "obsproduct://build.suse.de/SUSE:SLE-12:SP1:Products:Cloud6/suse-openstack-cloud/6/POOL/x86_64"
-#        md5: "9a62177e1c6852d48453ed3909956d6b"
+      repomd:
+        tag: ["obsproduct://build.suse.de/SUSE:SLE-12:SP1:Products:Cloud6/suse-openstack-cloud/6/POOL/x86_64",
+              "obsproduct://build.suse.de/Devel:Cloud:6:Staging/suse-openstack-cloud/6/cd/x86_64",
+              "obsproduct://build.suse.de/Devel:Cloud:6/suse-openstack-cloud/6/cd/x86_64"]
+        md5: ["9a62177e1c6852d48453ed3909956d6b", "6e2920076653964b7de9d6d0421955bb"]
       url:
       ask_on_error: false
     suse-openstack-cloud-6-pool:
