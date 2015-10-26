@@ -105,7 +105,7 @@ jQuery(document).ready(function($) {
     var checker = $(event.target).data('checkall');
 
     if (event.target.checked) {
-      $(checker).attr('checked','checked');
+      $(checker).not(':disabled').attr('checked','checked');
     } else {
       $(checker).removeAttr('checked');
     }

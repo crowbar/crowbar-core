@@ -177,5 +177,78 @@ class ProvisionerService < ServiceObject
     @logger.debug("Provisioner transition: exiting for #{name} for #{state}")
     [200, { name: name }]
   end
-end
 
+  def load_repository_bag
+    bag = Chef::DataBag.load("repositories") rescue nil
+    if bag.nil?
+      create_repository_bag
+    end
+    bag
+  end
+
+  def synchronize_repositories(platforms)
+    # create DataBag if it doesn't exist yet
+    load_repository_bag
+    platforms.each do |platform, repos|
+      repos.each do |reponame, active|
+        repo_object = Crowbar::Repository.where(platform: platform, repo: reponame).first
+        case active.to_i
+        when 0
+          db = Chef::DataBagItem.load("repositories", repo_object.id) rescue nil
+          # skip repo if it hasn't been active before
+          next if db.nil?
+          destroy_repository_item(repo_object)
+        when 1
+          create_repository_item(repo_object)
+        end
+      end
+    end
+  end
+
+  def create_repository_item(repo_object)
+    saved = false
+    # create DataBag if it doesn't exist yet
+    load_repository_bag
+    # create DataBagItem with the repo metadata used by provisioner recipes
+    if repo_object.available? && repo_object.valid_key_file?
+      @logger.debug("Setting #{repo_object.registry['name']} repository for #{repo_object.platform} as active.")
+      repo_object.to_databag!.save
+      saved = true
+    else
+      @logger.debug("Cannot set #{repo_object.registry['name']} repository for #{repo_object.platform} as active.")
+    end
+    saved
+  end
+
+  def destroy_repository_item(repo_object)
+    destroyed = false
+    # create DataBag if it doesn't exist yet
+    load_repository_bag
+    # otherwise destroy DataBagItem
+    db_item = repo_object.bag_item
+    ret = db_item.destroy("repositories", db_item.id) rescue nil
+    if ret
+      @logger.debug("Deactivating #{repo_object.registry['name']} repository.")
+      destroyed = true
+    else
+      @logger.debug("Cannot deactivate #{repo_object.registry['name']} repository.")
+    end
+    # destroy the DataBag if it is empty
+    destroy_repository_bag if load_repository_bag.empty?
+    destroyed
+  end
+
+  private
+
+  def create_repository_bag
+    bag = Chef::DataBag.new
+    bag.name "repositories"
+    @logger.debug("Creating DataBag '#{bag.name}'.")
+    bag.save
+  end
+
+  def destroy_repository_bag
+    @logger.debug("No more active repositories. Destroying repositories DataBag.")
+    Chef::DataBag.chef_server_rest.delete_rest("data/repositories")
+  end
+end

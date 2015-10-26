@@ -78,6 +78,7 @@ en:
     utils:
       title: 'Utilities'
       logs: 'Exported Items'
+      repositories: 'Repositories'
     help:
       title: 'Help'
       docs: 'Documentation'
@@ -521,6 +522,21 @@ en:
       two_words_connector: ' and '
       last_word_connector: ' and '
 
+  repositories:
+    index:
+      title: 'Repositories'
+      name: 'Repository Name'
+      refresh_hint: 'You may obtain the latest state of the repositories by refreshing this page.'
+      required: 'Required'
+      status: 'Status'
+      available: 'Available'
+      unavailable: 'Not present'
+      md5_check: 'MD5 Check'
+      md5_ok: 'OK'
+      md5_failed: 'Failed'
+      active: 'Active'
+      active_repo_tooltip: 'Managed nodes will be automatically configured to use repositories only if they are marked as active'
+
   # Global
   overview: 'Overview'
   show: 'View'
@@ -588,6 +604,8 @@ en:
     unknown_cmd: 'Unknown command %{cmd}'
     node_not_found: 'Node not found'
     role_not_found: 'Role not found'
+    cannot_activate_repo: 'Cannot activate %{id} repo'
+    cannot_deactivate_repo: 'Cannot deactivate %{id} repo'
 
   state:
     unknown: 'Unknown'
