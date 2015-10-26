@@ -80,6 +80,15 @@ suse-12.1:
         md5: "9a62177e1c6852d48453ed3909956d6b"
       url:
       ask_on_error: false
+    cloud:
+      name: "Cloud"
+      required: "optional"
+      features: ["openstack"]
+#      repomd:
+#        tag: "obsproduct://build.suse.de/SUSE:SLE-12:SP1:Products:Cloud6/suse-openstack-cloud/6/POOL/x86_64"
+#        md5: "9a62177e1c6852d48453ed3909956d6b"
+      url:
+      ask_on_error: false
     suse-openstack-cloud-6-pool:
       name: "SUSE-OpenStack-Cloud-6-Pool"
       required: "optional"
