@@ -22,7 +22,7 @@ class Provisioner
           raise "Internal error: inspect_repos method should only be called on provisioner-server node."
         end
 
-        common_available, cloud_available, hae_available, storage_available = nil
+        common_available, cloud_available, hae_available, storage_available = false
         repos_from_databag = Chef::DataBag.load("repositories").keys rescue []
 
         case node[:platform]
