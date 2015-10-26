@@ -99,6 +99,32 @@ class RepositoriesController < ApplicationController
     end
   end
 
+  #
+  # Activate all Repositories
+  #
+  # Provides the restful api call for
+  # Activate all Repositories   /utils/repositories/activate_all   POST  Creates Repository DataBagItem
+  def activate_all
+    ProvisionerService.new(logger).enable_all_repositories
+    respond_to do |format|
+      format.json { head :ok }
+      format.html { redirect_to repositories_url }
+    end
+  end
+
+  #
+  # Deactivate all Repositories
+  #
+  # Provides the restful api call for
+  # Deactivate all Repositories   /utils/repositories/deactivate_all   POST   Destroys Repository DataBagItem
+  def deactivate_all
+    ProvisionerService.new(logger).disable_all_repositories
+    respond_to do |format|
+      format.json { head :ok }
+      format.html { redirect_to repositories_url }
+    end
+  end
+
   protected
 
   def reload_registry

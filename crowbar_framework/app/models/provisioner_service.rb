@@ -205,6 +205,24 @@ class ProvisionerService < ServiceObject
     end
   end
 
+  def enable_all_repositories
+    @logger.debug("Enabling all repositories.")
+    bag = load_repository_bag
+    Crowbar::Repository.check_all_repos.each do |repo|
+      enable_repository(repo.platform, repo.id, bag)
+    end
+  end
+
+  def disable_all_repositories
+    @logger.debug("Disabling all repositories.")
+    bag = load_repository_bag
+    bag.keys.each do |platform|
+      next if platform == "id"
+      bag.delete(platform)
+    end
+    bag.save
+  end
+
   def enable_repository(platform, repo, bag = nil)
     bag = load_repository_bag if bag.nil?
 

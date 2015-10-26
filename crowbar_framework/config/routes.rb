@@ -75,6 +75,8 @@ Rails.application.routes.draw do
   post "utils/repositories/sync", controller: "repositories", action: "sync", as: "sync_repositories"
   post "utils/repositories/activate", controller: "repositories", action: "activate", as: "activate_repository"
   post "utils/repositories/deactivate", controller: "repositories", action: "deactivate", as: "deactivate_repository"
+  post "utils/repositories/activate_all", controller: "repositories", action: "activate_all", as: "activate_all_repositories"
+  post "utils/repositories/deactivate_all", controller: "repositories", action: "deactivate_all", as: "deactivate_all_repositories"
 
   # barclamps
   get "crowbar/:controller/1.0/help", action: "help", as: "help_barclamp"
