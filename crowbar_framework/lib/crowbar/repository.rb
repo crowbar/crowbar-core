@@ -82,12 +82,13 @@ module Crowbar
           answer = true
 
           repositories(platform).each do |repo|
-            if registry[platform]["repos"][repo]["product_name"] == feature
-              found = true
+            provided_features = registry[platform]["repos"][repo]["features"] || []
 
-              r = self.new(platform, repo)
-              answer &&= r.active?
-            end
+            next unless provided_features.include? feature
+            found = true
+
+            r = self.new(platform, repo)
+            answer &&= r.active?
           end
 
           answer = false unless found
@@ -147,7 +148,6 @@ module Crowbar
       item["name"] = @config["name"]
       item["url"] = url
       item["ask_on_error"] = @config["ask_on_error"] || false
-      item["product_name"] = @config["product_name"]
       item
     end
 
