@@ -436,6 +436,7 @@ en:
       identify: 'Identify'
     form:
       allocate: 'Allocate'
+      repo_hint: 'To find out why a platform is disabled, check the <a href="%{url}">status of repositories</a>.'
       save: 'Save'
       raid: 'RAID'
       bios: 'BIOS'
