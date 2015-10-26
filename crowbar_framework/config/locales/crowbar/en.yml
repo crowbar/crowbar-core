@@ -536,7 +536,8 @@ en:
       check: 'Repository Check'
       check_remote: 'Remote repository'
       check_ok: 'OK'
-      check_failed: 'Failed'
+      check_failed_tag: 'Wrong repository'
+      check_failed_md5: 'Unexpected signature'
       active: 'Active'
       active_repo_tooltip: 'Managed nodes will be automatically configured to use repositories only if they are marked as active'
 
