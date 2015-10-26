@@ -150,7 +150,7 @@ module Crowbar
     end
 
     def check_repo_tag
-      expected = @config["repomd"]["tag"]
+      expected = @config.fetch("repomd", {})["tag"]
       return true if expected.blank?
 
       repomd_path = "#{repodata_path}/repomd.xml"
@@ -162,7 +162,7 @@ module Crowbar
     end
 
     def check_key_file
-      expected = @config["repomd"]["md5"]
+      expected = @config.fetch("repomd", {})["md5"]
       return true if expected.blank?
 
       key_path = "#{repodata_path}/repomd.xml.key"
