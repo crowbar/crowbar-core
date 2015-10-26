@@ -15,7 +15,7 @@
 #
 
 class RepositoriesController < ApplicationController
-  before_filter :load_registry
+  before_filter :reload_registry
   #
   # Repository Check
   #
@@ -101,7 +101,7 @@ class RepositoriesController < ApplicationController
 
   protected
 
-  def load_registry
+  def reload_registry
     Crowbar::Repository.load!
   end
 end
