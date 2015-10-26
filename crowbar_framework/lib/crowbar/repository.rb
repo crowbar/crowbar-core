@@ -128,28 +128,28 @@ module Crowbar
 
     private
 
-    def repos_dir
-      File.join("/srv/tftpboot", @platform, "repos")
+    def repos_path
+      Pathname.new(File.join("/srv/tftpboot", @platform, "repos"))
     end
 
     def repodata_path
-      File.join(repos_dir, @config["name"], "repodata")
+      repos_path.join(@config["name"], "repodata")
     end
 
     #
     # validation helpers
     #
     def check_directory
-      Dir.exist? File.join(repos_dir, @config["name"])
+      repos_path.join(@config["name"]).directory?
     end
 
     def check_repo_tag
       expected = @config.fetch("repomd", {})["tag"]
       return true if expected.blank?
 
-      repomd_path = "#{repodata_path}/repomd.xml"
-      if File.exist?(repomd_path)
-        REXML::Document.new(File.open(repomd_path)).root.elements["tags/repo"].text == expected
+      repomd_path = repodata_path.join("repomd.xml")
+      if repomd_path.file?
+        REXML::Document.new(repomd_path.open).root.elements["tags/repo"].text == expected
       else
         false
       end
@@ -159,9 +159,9 @@ module Crowbar
       expected = @config.fetch("repomd", {})["md5"]
       return true if expected.blank?
 
-      key_path = "#{repodata_path}/repomd.xml.key"
-      if File.exist?(key_path)
-        md5 = Digest::MD5.hexdigest(File.read(key_path))
+      key_path = repodata_path.join("repomd.xml.key")
+      if key_path.file?
+        md5 = Digest::MD5.hexdigest(key_path.read)
         md5 == expected
       else
         false
