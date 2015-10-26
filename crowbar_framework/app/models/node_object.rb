@@ -68,7 +68,7 @@ class NodeObject < ChefObject
       unless provisioner.nil? || provisioner["provisioner"]["default_os"].nil?
          provisioner["provisioner"]["default_os"]
       else
-        admin = NodeObject.find("role:crowbar").find { |n| n.admin? }
+        admin = admin_node
         if admin.nil?
           ""
         else
@@ -171,7 +171,7 @@ class NodeObject < ChefObject
   end
 
   def self.admin_node
-    all.detect(&:admin?)
+    find("role:crowbar").detect(&:admin?)
   end
 
   def self.make_role_name(name)
