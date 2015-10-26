@@ -61,7 +61,13 @@
                   %td{ class: repository_availability(repo.required) }
                     .text-muted
                       = t(".unavailable")
-              - if repo.valid_repo? && repo.valid_key_file?
+              - if repo.remote?
+                %td.success
+                  %i.glyphicon.glyphicon-ok
+                  = t(".check_remote")
+                %td
+                  = check_box "repo[#{platform}]", repo.id, { class: "platform#{index}", checked: repo.active? }
+              - elsif repo.valid_repo? && repo.valid_key_file?
                 %td.success
                   %i.glyphicon.glyphicon-ok
                   = t(".check_ok")

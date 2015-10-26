@@ -534,6 +534,7 @@ en:
       stale: 'Changed'
       unavailable: 'Not present'
       check: 'Repository Check'
+      check_remote: 'Remote repository'
       check_ok: 'OK'
       check_failed: 'Failed'
       active: 'Active'
