@@ -66,7 +66,7 @@ describe Crowbar::Repository do
   describe "performing repository checks" do
     let(:platform) { Crowbar::Repository.all_platforms.first }
     let(:repo_names) { Crowbar::Repository.repositories(platform) }
-    let(:accessors) { [:platform, :id, :registry] }
+    let(:accessors) { [:platform, :id, :config] }
     let(:repository) { Crowbar::Repository.new(platform, repo_names.first) }
 
     context "creating a new Repository check" do

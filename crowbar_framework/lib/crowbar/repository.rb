@@ -16,16 +16,16 @@
 
 module Crowbar
   class Repository
-    attr_reader :platform, :id, :registry
+    attr_reader :platform, :id, :config
 
     class << self
       def load!
-        @config = YAML.load_file(Rails.root.join("config/repos.yml"))
+        @all_repos = YAML.load_file(Rails.root.join("config/repos.yml"))
       end
 
       def registry
-        load! unless defined? @config
-        @config
+        load! unless defined? @all_repos
+        @all_repos
       end
 
       def where(options = {})
@@ -34,12 +34,12 @@ module Crowbar
         check_all_repos.select do |r|
           if platform
             if repo
-              r.platform == platform && r.registry["name"] == repo
+              r.platform == platform && r.config["name"] == repo
             else
               r.platform == platform
             end
           else
-            r.registry["name"] == repo
+            r.config["name"] == repo
           end
         end
       end
@@ -55,7 +55,7 @@ module Crowbar
             check = self.new(platform, repo)
             if platform != Crowbar::Product.ses_platform && Crowbar::Product.is_ses?
               #FIXME skip the repo check until SES is ported to SLE12-SP1
-              check.registry["required"] = "optional"
+              check.config["required"] = "optional"
             end
             repochecks << check
           end
@@ -67,10 +67,6 @@ module Crowbar
         NodeObject.admin_node.target_platform
       end
 
-      def web_port
-        Proposal.where(barclamp: "provisioner").first.raw_attributes["web_port"]
-      end
-
       def repositories(platform)
         registry[platform]["repos"].keys
       end
@@ -78,17 +74,21 @@ module Crowbar
       def admin_ip
         NodeObject.admin_node.ip
       end
+
+      def web_port
+        Proposal.where(barclamp: "provisioner").first.raw_attributes["web_port"]
+      end
     end
 
     def initialize(platform, repo)
       @platform = platform
       @id = repo
-      @registry = Repository.registry[@platform]["repos"][@id]
+      @config = Repository.registry[@platform]["repos"][@id]
       @url = url
     end
 
     def available?
-      all_repo_dirs.include?(@registry["name"]) && check_repo_tag
+      all_repo_dirs.include?(@config["name"]) && check_repo_tag
     end
 
     def valid_key_file?
@@ -101,20 +101,20 @@ module Crowbar
     end
 
     def repodata_path
-      "/srv/tftpboot/#{@platform}/repos/#{@registry['name']}/repodata"
+      "/srv/tftpboot/#{@platform}/repos/#{@config['name']}/repodata"
     end
 
     def repomd_key_md5
-      @registry["repomd"]["md5"]
+      @config["repomd"]["md5"]
     end
 
     def repomd_key_path
-      @registry["repomd"]["key"] || "#{repodata_path}/repomd.xml.key"
+      @config["repomd"]["key"] || "#{repodata_path}/repomd.xml.key"
     end
 
     def url
-      @registry["url"] || \
-        "http://#{Repository.admin_ip}:#{Repository.web_port}/#{@platform}/repos/#{@registry['name']}"
+      @config["url"] || \
+        "http://#{Repository.admin_ip}:#{Repository.web_port}/#{@platform}/repos/#{@config['name']}"
     end
 
     def active?
@@ -126,10 +126,10 @@ module Crowbar
       repository_item.data_bag "repositories"
       repository_item["id"] = @id
       repository_item["platform"] = @platform
-      repository_item["name"] = @registry["name"]
+      repository_item["name"] = @config["name"]
       repository_item["url"] = url
-      repository_item["ask_on_error"] = @registry["ask_on_error"] || false
-      repository_item["product_name"] = @registry["product_name"]
+      repository_item["ask_on_error"] = @config["ask_on_error"] || false
+      repository_item["product_name"] = @config["product_name"]
       repository_item
     end
 
@@ -148,7 +148,7 @@ module Crowbar
     end
 
     def check_repo_tag
-      expected = @registry["repomd"]["tag"]
+      expected = @config["repomd"]["tag"]
       repomd_path = "#{repodata_path}/repomd.xml"
       if File.exist?(repomd_path)
         REXML::Document.new(File.open(repomd_path)).root.elements["tags/repo"].text == expected
