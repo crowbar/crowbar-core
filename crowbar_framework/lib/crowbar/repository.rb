@@ -83,7 +83,7 @@ module Crowbar
       end
 
       def repositories(platform)
-        registry[platform].keys
+        registry.fetch(platform, {}).keys
       end
 
       def check_all_repos
