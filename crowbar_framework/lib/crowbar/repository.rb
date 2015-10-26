@@ -198,6 +198,10 @@ module Crowbar
       repos_path.join(@config["name"], "repodata")
     end
 
+    def repodata_media_path
+      repos_path.join(@config["name"], "suse", "repodata")
+    end
+
     #
     # validation helpers
     #
@@ -210,6 +214,8 @@ module Crowbar
       return true if expected.blank?
 
       repomd_path = repodata_path.join("repomd.xml")
+      repomd_path = repodata_media_path.join("repomd.xml") unless repomd_path.file?
+
       if repomd_path.file?
         repo_tag = REXML::Document.new(repomd_path.open).root.elements["tags/repo"]
         if expected.is_a?(Array)
@@ -227,6 +233,8 @@ module Crowbar
       return true if expected.blank?
 
       key_path = repodata_path.join("repomd.xml.key")
+      key_path = repodata_media_path.join("repomd.xml.key") unless key_path.file?
+
       if key_path.file?
         md5 = Digest::MD5.hexdigest(key_path.read)
         if expected.is_a?(Array)
