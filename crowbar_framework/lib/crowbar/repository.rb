@@ -194,7 +194,7 @@ module Crowbar
 
     def url
       @config["url"] || \
-        "http://#{Repository.admin_ip}:#{Repository.web_port}/#{@platform}/repos/#{@config["name"]}/"
+        "http://#{Repository.admin_ip}:#{Repository.web_port}/#{@platform}/repos/#{name}/"
     end
 
     def active?
@@ -226,18 +226,18 @@ module Crowbar
     end
 
     def repodata_path
-      repos_path.join(@config["name"], "repodata")
+      repos_path.join(name, "repodata")
     end
 
     def repodata_media_path
-      repos_path.join(@config["name"], "suse", "repodata")
+      repos_path.join(name, "suse", "repodata")
     end
 
     #
     # validation helpers
     #
     def check_directory
-      repos_path.join(@config["name"]).directory?
+      repos_path.join(name).directory?
     end
 
     def check_repo_tag
