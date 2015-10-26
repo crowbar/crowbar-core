@@ -50,11 +50,13 @@ class RepositoriesController < ApplicationController
   def activate
     return render_not_found if params[:platform].nil? || params[:repo].nil?
     respond_to do |format|
-      repo_object = Crowbar::Repository.where(platform: params[:platform], repo: params[:repo]).first
-      ret = ProvisionerService.new(logger).create_repository_item(repo_object) unless repo_object.nil?
-      if ret
+      ret = ProvisionerService.new(logger).enable_repository(params[:platform], params[:repo])
+      case ret
+      when 200
         format.json { head :ok }
         format.html { redirect_to repositories_url }
+      when 404
+        render_not_found
       else
         format.json do
           render json: { error: I18n.t("cannot_activate_repo", scope: "error", id: params[:repo]) },
@@ -77,11 +79,13 @@ class RepositoriesController < ApplicationController
   def deactivate
     return render_not_found if params[:platform].nil? || params[:repo].nil?
     respond_to do |format|
-      repo_object = Crowbar::Repository.where(platform: params[:platform], repo: params[:repo]).first
-      ret = ProvisionerService.new(logger).destroy_repository_item(repo_object) unless repo_object.nil?
-      if ret
+      ret = ProvisionerService.new(logger).disable_repository(params[:platform], params[:repo])
+      case ret
+      when 200
         format.json { head :ok }
         format.html { redirect_to repositories_url }
+      when 404
+        render_not_found
       else
         format.json do
           render json: { error: I18n.t("cannot_deactivate_repo", scope: "error", id: params[:repo]) },

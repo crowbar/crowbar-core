@@ -74,12 +74,15 @@ class Provisioner
       # they can be used.
       def get_repos(platform, version)
         repositories = {}
-        repos_from_databag = Chef::DataBag.load("repositories").keys rescue []
-        repos_from_databag.each do |reponame|
-          dbi = Chef::DataBagItem.load("repositories", reponame)
-          if dbi["platform"] == "#{platform}-#{version}"
-            repositories[dbi["name"]] = { url: dbi["url"], ask_on_error: dbi["ask_on_error"] }
-          end
+
+        repos_db = begin
+          Chef::DataBag.load("crowbar/repositories")
+        rescue Net::HTTPServerException
+          {}
+        end
+
+        repos_db.fetch("#{platform}-#{version}", {}).each do |id, config|
+          repositories[config["name"]] = { url: config["url"], ask_on_error: config["ask_on_error"] }
         end
         repositories
       end

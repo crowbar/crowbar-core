@@ -113,23 +113,17 @@ module Crowbar
     end
 
     def active?
-      !bag_item.nil?
+      active_repos = Chef::DataBag.load("crowbar/repositories") rescue {}
+      active_repos.fetch(@platform, {}).key? @id
     end
 
-    def to_databag!
-      repository_item = Chef::DataBagItem.new
-      repository_item.data_bag "repositories"
-      repository_item["id"] = @id
-      repository_item["platform"] = @platform
-      repository_item["name"] = @config["name"]
-      repository_item["url"] = url
-      repository_item["ask_on_error"] = @config["ask_on_error"] || false
-      repository_item["product_name"] = @config["product_name"]
-      repository_item
-    end
-
-    def bag_item
-      Chef::DataBagItem.load("repositories", @id) rescue nil
+    def to_databag_hash
+      item = Hash.new
+      item["name"] = @config["name"]
+      item["url"] = url
+      item["ask_on_error"] = @config["ask_on_error"] || false
+      item["product_name"] = @config["product_name"]
+      item
     end
 
     private
