@@ -257,7 +257,6 @@ if not nodes.nil? and not nodes.empty?
           append << "install=#{install_url} autoyast=#{node_url}/autoyast.xml"
           append << "ifcfg=dhcp4 netwait=60"
 
-          Provisioner::Repositories.inspect_repos(node)
           target_platform_version = os.gsub(/^.*-/, "")
           repos = Provisioner::Repositories.get_repos("suse", target_platform_version)
           Chef::Log.info("repos: #{repos.inspect}")
