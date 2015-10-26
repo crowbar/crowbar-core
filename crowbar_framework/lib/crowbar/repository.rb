@@ -67,6 +67,35 @@ module Crowbar
         repochecks
       end
 
+      def provided_and_enabled?(feature, platform = nil)
+        answer = false
+
+        if platform.nil?
+          all_platforms.each do |p|
+            if provided_and_enabled?(feature, p)
+              answer = true
+              break
+            end
+          end
+        else
+          found = false
+          answer = true
+
+          repositories(platform).each do |repo|
+            if registry[platform]["repos"][repo]["product_name"] == feature
+              found = true
+
+              r = self.new(platform, repo)
+              answer &&= r.active?
+            end
+          end
+
+          answer = false unless found
+        end
+
+        answer
+      end
+
       def admin_ip
         NodeObject.admin_node.ip
       end
