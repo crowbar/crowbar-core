@@ -229,7 +229,7 @@ module Crowbar
     end
 
     def check_key_file
-      expected = @config.fetch("repomd", {})["md5"]
+      expected = @config.fetch("repomd", {})["key_md5"]
       return true if expected.blank?
 
       key_path = repodata_path.join("repomd.xml.key")
