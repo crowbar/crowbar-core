@@ -64,12 +64,12 @@ module Crowbar
         check_all_repos.select do |r|
           if platform
             if repo
-              r.platform == platform && r.config["name"] == repo
+              r.platform == platform && r.id == repo
             else
               r.platform == platform
             end
           else
-            r.config["name"] == repo
+            r.id == repo
           end
         end
       end
