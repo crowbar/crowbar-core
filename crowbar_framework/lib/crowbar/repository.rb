@@ -20,6 +20,10 @@ module Crowbar
 
     class << self
       def load!
+        # reset other cached values
+        @admin_ip = nil
+        @web_port = nil
+
         etc_yml = "/etc/crowbar/repos.yml"
 
         if Crowbar::Product.is_ses?
@@ -153,11 +157,11 @@ module Crowbar
       end
 
       def admin_ip
-        NodeObject.admin_node.ip
+        @admin_ip ||= NodeObject.admin_node.ip
       end
 
       def web_port
-        Proposal.where(barclamp: "provisioner").first.raw_attributes["web_port"]
+        @web_port ||= Proposal.where(barclamp: "provisioner").first.raw_attributes["web_port"]
       end
     end
 
