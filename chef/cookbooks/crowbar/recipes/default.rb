@@ -270,12 +270,6 @@ template "/etc/sysconfig/crowbar" do
   variables(
     web_host: "127.0.0.1",
     web_port: web_port,
-    user: "crowbar",
-    concurrency_model: "EventMachine",
-    group: "crowbar",
-    logdir: logdir,
-    logname: "production",
-    app_location: "/opt/dell/crowbar_framework"
   )
 end
 
