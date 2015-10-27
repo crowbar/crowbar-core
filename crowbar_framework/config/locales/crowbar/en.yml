@@ -533,7 +533,7 @@ en:
       available: 'Available'
       stale: 'Changed'
       unavailable: 'Not present'
-      check: 'Repository Check'
+      check: 'Check'
       check_remote: 'Remote repository'
       check_ok: 'OK'
       check_failed_tag: 'Wrong repository'

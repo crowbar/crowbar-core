@@ -104,7 +104,7 @@ module Crowbar
         repochecks = []
         all_platforms.each do |platform|
           repositories(platform).each do |repo|
-            repochecks << self.new(platform, repo)
+            repochecks << new(platform, repo)
           end
         end
         repochecks
@@ -130,7 +130,7 @@ module Crowbar
             next unless provided_features.include? feature
             found = true
 
-            r = self.new(platform, repo)
+            r = new(platform, repo)
             answer &&= r.active?
           end
 
@@ -144,7 +144,7 @@ module Crowbar
         available = true
 
         repositories(platform).each do |repo|
-          r = self.new(platform, repo)
+          r = new(platform, repo)
 
           next if r.required != "mandatory"
           next if r.active?
