@@ -49,8 +49,8 @@ class RepositoriesController < ApplicationController
   # required parameters: platform, repo
   def activate
     return render_not_found if params[:platform].nil? || params[:repo].nil?
+    ret, _message = ProvisionerService.new(logger).enable_repository(params[:platform], params[:repo])
     respond_to do |format|
-      ret = ProvisionerService.new(logger).enable_repository(params[:platform], params[:repo])
       case ret
       when 200
         format.json { head :ok }
@@ -78,8 +78,8 @@ class RepositoriesController < ApplicationController
   # required parameters: platform, repo
   def deactivate
     return render_not_found if params[:platform].nil? || params[:repo].nil?
+    ret, _message = ProvisionerService.new(logger).disable_repository(params[:platform], params[:repo])
     respond_to do |format|
-      ret = ProvisionerService.new(logger).disable_repository(params[:platform], params[:repo])
       case ret
       when 200
         format.json { head :ok }

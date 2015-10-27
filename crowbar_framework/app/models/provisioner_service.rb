@@ -228,11 +228,13 @@ class ProvisionerService < ServiceObject
 
     repo_object = Crowbar::Repository.where(platform: platform, repo: repo).first
     if repo_object.nil?
-      @logger.debug("#{repo} repository for #{platform} does not exist.")
-      return 404
+      message = "#{repo} repository for #{platform} does not exist."
+      @logger.debug(message)
+      return [404, message]
     end
 
     code = 200
+    message = ""
 
     if repo_object.available?
       bag[platform] ||= {}
@@ -245,7 +247,8 @@ class ProvisionerService < ServiceObject
         @logger.debug("#{repo} repository for #{platform} is already active.")
       end
     else
-      @logger.debug("Cannot set #{repo} repository for #{platform} as active.")
+      message = "Cannot set #{repo} repository for #{platform} as active."
+      @logger.debug(message)
       if bag.fetch(platform, {}).key? repo
         @logger.debug("Forcefully disabling #{repo} repository for #{platform}.")
         disable_repository(platform, repo, bag)
@@ -254,7 +257,7 @@ class ProvisionerService < ServiceObject
       code = 403
     end
 
-    code
+    [code, message]
   end
 
   def disable_repository(platform, repo, bag = nil)
@@ -262,8 +265,9 @@ class ProvisionerService < ServiceObject
 
     repo_object = Crowbar::Repository.where(platform: platform, repo: repo).first
     if repo_object.nil?
-      @logger.debug("#{repo} repository for #{platform} does not exist.")
-      return 404
+      message = "#{repo} repository for #{platform} does not exist."
+      @logger.debug(message)
+      return [404, message]
     end
 
     if bag.fetch(platform, {}).key? repo
@@ -275,6 +279,6 @@ class ProvisionerService < ServiceObject
       @logger.debug("#{repo} repository for #{platform} is already inactive.")
     end
 
-    200
+    [200, ""]
   end
 end
