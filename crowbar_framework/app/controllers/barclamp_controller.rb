@@ -167,25 +167,6 @@ class BarclampController < ApplicationController
 
   #
   # Provides the restful api call for
-  # List Proposals 	/crowbar/<barclamp-name>/<version>/proposals 	GET 	Returns a json list of proposals for instances
-  #
-  add_help(:proposals)
-  def proposals
-    ret = @service_object.proposals
-    @proposals = ret[1]
-    return render text: @proposals, status: ret[0] if ret[0] != 200
-    respond_to do |format|
-      format.html {
-        @proposals = @proposals.map { |p| Proposal.where(barclamp: @bc_name, name: p).first }
-        render template: "barclamp/proposals"
-      }
-      format.xml  { render xml: @proposals }
-      format.json { render json: @proposals }
-    end
-  end
-
-  #
-  # Provides the restful api call for
   # List Instances 	/crowbar/<barclamp-name>/<version> 	GET 	Returns a json list of string names for the ids of instances
   #
   add_help(:index)
@@ -271,103 +252,227 @@ class BarclampController < ApplicationController
   end
 
   #
-  # Provides the restful api call for
-  # Show Proposal Instance 	/crowbar/<barclamp-name>/<version>/proposals/<barclamp-instance-name> 	GET 	Returns a json document for the specificed proposal
+  # List proposals
+  # /crowbar/<barclamp-name>/<version>/proposals GET Returns a json list of proposals for instances
   #
-  add_help(:proposal_show,[:id])
-  def proposal_show
-    ret = @service_object.proposal_show params[:id]
-    raise Crowbar::Error::NotFound.new if ret[0] == 404
-    @proposal = ret[1]
-    @active = begin RoleObject.active(params[:controller], params[:id]).length>0 rescue false end
-    flash.now[:alert] = @proposal.fail_reason if @proposal.failed?
+  add_help(:proposals, [], [:get])
+  def proposals
+    code, message = @service_object.proposals
 
+    raise Crowbar::Error::NotFound if code == 404
     respond_to do |format|
-      format.html { render template: "barclamp/proposal_show" }
-      format.xml  { render xml: @proposal.raw_data }
-      format.json { render json: @proposal.raw_data }
-    end
-  end
-
-  #
-  # Currently, A UI ONLY METHOD
-  #
-  add_help(:proposal_status,[:id, :barclamp, :name],[:get])
-  def proposal_status
-    proposals = {}
-    i18n = {}
-    begin
-      active = RoleObject.active(params[:barclamp], params[:name])
-
-      result = if params[:id].nil?
-        Proposal.all
+      case code
+      when 200
+        format.json do
+          render json: message
+        end
+        format.html do
+          @proposals = message.map do |proposal|
+            Proposal.where(barclamp: @bc_name, name: proposal).first
+          end
+        end
       else
-        [Proposal.where(barclamp: params[:barclamp], name: params[:name]).first]
+        format.json do
+          render json: { error: message }, status: code
+        end
+        format.html do
+          flash[:alert] = message
+
+          redirect_to(
+            root_url
+          )
+        end
       end
-      result.each do |prop|
-        prop_id = "#{prop.barclamp}_#{prop.name}"
-        status = (["unready", "pending"].include?(prop.status) or active.include?(prop_id))
-        proposals[prop_id] = (status ? prop.status : "hold")
-        i18n[prop_id] = {proposal: prop.name.humanize, status: t("proposal.status.#{proposals[prop_id]}", default: proposals[prop_id])}
-      end
-      render inline: {proposals: proposals, i18n: i18n, count: proposals.length}.to_json, cache: false
-    rescue StandardError => e
-      count = (e.class.to_s == "Errno::ECONNREFUSED" ? -2 : -1)
-      lines = ["Failed to iterate over proposal list due to '#{e.message}'"] + e.backtrace
-      Rails.logger.fatal(lines.join("\n"))
-      render inline: {proposals: proposals, count: count, error: e.message}.to_json, cache: false
     end
   end
 
   #
-  # Provides the restful api call for
-  # Create Proposal Instance 	/crowbar/<barclamp-name>/<version>/proposals 	PUT 	Putting a json document will create a proposal
+  # Template proposal
+  # /crowbar/<barclamp-name>/<version>/proposals/template GET This reads the proposal template and prints it out.
   #
-  add_help(:proposal_create,[:name],[:put])
-  def proposal_create
-    Rails.logger.info "Proposal Create starting. Params #{params.inspect}"
-    controller = params[:controller]
-    orig_id = params[:name] || params[:id]
-    params[:id] = orig_id
-    answer = [500, "Server issue"]
-    begin
-      Rails.logger.info "asking for proposal of: #{params.inspect}"
-      answer = @service_object.proposal_create params
-      Rails.logger.info "proposal is: #{answer.inspect}"
-      unless answer[0] == 200
-        flash[:alert] = answer[1]
-      end
-    rescue StandardError => e
-      flash_and_log_exception(e)
-    end
+  add_help(:proposal_template, [], [:get])
+  def proposal_template
+    code, message = @service_object.proposal_template
+
+    raise Crowbar::Error::NotFound if code == 404
     respond_to do |format|
-      format.html {
-        return redirect_to barclamp_modules_path id: params[:controller] if answer[0] != 200
-        redirect_to proposal_barclamp_path controller: controller, id: orig_id
-      }
-      format.xml  {
-        return render text: flash[:alert], status: answer[0] if answer[0] != 200
-        render xml: answer[1]
-      }
-      format.json {
-        return render text: flash[:alert], status: answer[0] if answer[0] != 200
-        render json: answer[1]
-      }
+      case code
+      when 200
+        format.json do
+          render json: message
+        end
+      else
+        format.json do
+          render json: { error: message }, status: code
+        end
+      end
     end
   end
 
   #
-  # Provides the restful api call for
-  # Edit Proposal Instance 	/crowbar/<barclamp-name>/<version>/propsosals/<barclamp-instance-name> 	POST 	Posting a json document will replace the current proposal
+  # Show proposal
+  # /crowbar/<barclamp-name>/<version>/proposals/<barclamp-instance-name> GET Returns a json document for the specificed proposal
   #
-  add_help(:proposal_update,[:id],[:post])
+  add_help(:proposal_show, [:id], [:get])
+  def proposal_show
+    code, message = @service_object.proposal_show(
+      params[:id]
+    )
+
+    raise Crowbar::Error::NotFound if code == 404
+    respond_to do |format|
+      case code
+      when 200
+        format.json do
+          render json: message.raw_data
+        end
+        format.html do
+          @proposal = message
+
+          @active = begin
+            RoleObject.active(
+              params[:controller],
+              params[:id]
+            ).length > 0
+          rescue
+            false
+          end
+
+          flash.now[:alert] = @proposal.fail_reason if @proposal.failed?
+        end
+      else
+        format.json do
+          render json: { error: message }, status: code
+        end
+        format.html do
+          flash[:alert] = message
+
+          redirect_to(
+            root_url
+          )
+        end
+      end
+    end
+  end
+
+  #
+  # Delete proposal
+  # /crowbar/<barclamp-name>/<version>/proposals/<barclamp-instance-name> DELETE This will remove a proposal
+  #
+  add_help(:proposal_delete, [:id], [:delete])
+  def proposal_delete
+    code, message = @service_object.proposal_delete(
+      params[:id]
+    )
+
+    raise Crowbar::Error::NotFound if code == 404
+    respond_to do |format|
+      case code
+      when 200
+        format.json do
+          head :ok
+        end
+      else
+        format.json do
+          render json: { error: message }, status: code
+        end
+      end
+    end
+  end
+
+  #
+  # Commit proposal
+  # /crowbar/<barclamp-name>/<version>/proposals/commit/<barclamp-instance-name> POST This action will create a new instance based upon this proposal. If the instance already exists, it will be edited and replaced
+  #
+  add_help(:proposal_commit, [:id], [:post])
+  def proposal_commit
+    code, message = @service_object.proposal_commit(
+      params[:id]
+    )
+
+    raise Crowbar::Error::NotFound if code == 404
+    respond_to do |format|
+      case code
+      when 200
+        format.json do
+          head :ok
+        end
+      when 202
+        format.json do
+          head :ok
+        end
+      else
+        format.json do
+          render json: { error: message }, status: code
+        end
+      end
+    end
+  end
+
+  #
+  # Dequeue proposal
+  # /crowbar/<barclamp-name>/<version>/proposals/dequeue/<barclamp-instance-name> DELETE This action will dequeue an existing proposal.
+  #
+  add_help(:proposal_dequeue, [:id], [:delete])
+  def proposal_dequeue
+    code, message = @service_object.dequeue_proposal(
+      params[:id]
+    )
+
+    raise Crowbar::Error::NotFound if code == 404
+    respond_to do |format|
+      case code
+      when 200
+        format.json do
+          head :ok
+        end
+      else
+        format.json do
+          render json: { error: message }, status: code
+        end
+      end
+    end
+  end
+
+  #
+  # Edit proposal
+  # /crowbar/<barclamp-name>/<version>/propsosals/<barclamp-instance-name> POST Posting a json document will replace the current proposal
+  #
+  add_help(:proposal_update, [:id], [:post])
   def proposal_update
-    if params[:submit].nil?  # This is RESTFul path
-      # This gets validated _proposal_update
-      ret = @service_object.proposal_edit params
-      return render text: ret[1], status: ret[0] if ret[0] != 200
-      return render json: ret[1]
-    else # This is UI.
+    if params[:submit].nil?
+      #
+      # This is RESTFul path
+      #
+
+      code, message = @service_object.proposal_edit(
+        params.slice(
+          :id,
+          :description,
+          :attributes,
+          :deployment
+        )
+      )
+
+      respond_to do |format|
+        case code
+        when 200
+          format.json do
+            render json: message
+          end
+        else
+          format.json do
+            render json: { error: message }, status: code
+          end
+        end
+      end
+    else
+      #
+      # This is the UI path
+      #
+
+
+
       if params[:submit] == t("barclamp.proposal_show.save_proposal")
         @proposal = Proposal.where(barclamp: params[:barclamp], name: params[:id] || params[:name]).first
 
@@ -446,56 +551,85 @@ class BarclampController < ApplicationController
 
         redirect_to proposal_barclamp_path(redirect_params)
       end
+
+
+
     end
   end
 
   #
-  # Provides the restful api call for
-  # Destroy Proposal Instance 	/crowbar/<barclamp-name>/<version>/proposals/<barclamp-instance-name> 	DELETE 	Delete will remove a proposal
+  # Create proposal
+  # /crowbar/<barclamp-name>/<version>/proposals PUT Putting a json document will create a proposal
   #
-  add_help(:proposal_delete,[:id],[:delete])
-  def proposal_delete
-    answer = @service_object.proposal_delete params[:id]
-    set_flash(answer, "proposal.actions.delete_%s")
+  add_help(:proposal_create, [:name], [:put])
+  def proposal_create
+    code, message = @service_object.proposal_create(
+      params.slice(
+        :id,
+        :description,
+        :attributes,
+        :deployment
+      )
+    )
+
     respond_to do |format|
-      format.html {
-        return render text: flash[:alert], status: answer[0] if answer[0] != 200
-        render text: answer[1]
-      }
-      format.xml  {
-        return render text: flash[:alert], status: answer[0] if answer[0] != 200
-        render xml: answer[1]
-      }
-      format.json {
-        return render text: flash[:alert], status: answer[0] if answer[0] != 200
-        render json: answer[1]
-      }
+      case code
+      when 200
+        format.json do
+          render json: message
+        end
+        format.html do
+          redirect_to(
+            proposal_barclamp_path(
+              controller: params[:controller],
+              id: params[:id]
+            )
+          )
+        end
+      else
+        format.json do
+          render json: { error: message }, status: code
+        end
+        format.html do
+          flash[:alert] = message
+
+          redirect_to(
+            barclamp_modules_path(
+              id: params[:controller]
+            )
+          )
+        end
+      end
     end
   end
 
   #
-  # Provides the restful api call for
-  # Commit Proposal Instance 	/crowbar/<barclamp-name>/<version>/proposals/commit/<barclamp-instance-name> 	POST 	This action will create a new instance based upon this proposal. If the instance already exists, it will be edited and replaced
+  # Currently, A UI ONLY METHOD
   #
-  add_help(:proposal_commit,[:id],[:post])
-  def proposal_commit
-    ret = @service_object.proposal_commit params[:id]
-    return render text: ret[1], status: ret[0] if ret[0] >= 210
-    render json: ret[1], status: ret[0]
-  end
+  add_help(:proposal_status,[:id, :barclamp, :name],[:get])
+  def proposal_status
+    proposals = {}
+    i18n = {}
+    begin
+      active = RoleObject.active(params[:barclamp], params[:name])
 
-  #
-  # Provides the restful api call for
-  # Dequeue Proposal Instance 	/crowbar/<barclamp-name>/<version>/proposals/dequeue/<barclamp-instance-name> 	DELETE 	This action will dequeue an existing proposal.
-  #
-  add_help(:proposal_dequeue,[:id],[:delete])
-  def proposal_dequeue
-    answer = @service_object.dequeue_proposal params[:id]
-    set_flash(answer, "proposal.actions.dequeue_%s")
-    if answer[0] == 200
-      return render json: {}, status: answer[0]
-    else
-      return render text: flash[:alert], status: answer[0]
+      result = if params[:id].nil?
+        Proposal.all
+      else
+        [Proposal.where(barclamp: params[:barclamp], name: params[:name]).first]
+      end
+      result.each do |prop|
+        prop_id = "#{prop.barclamp}_#{prop.name}"
+        status = (["unready", "pending"].include?(prop.status) or active.include?(prop_id))
+        proposals[prop_id] = (status ? prop.status : "hold")
+        i18n[prop_id] = {proposal: prop.name.humanize, status: t("proposal.status.#{proposals[prop_id]}", default: proposals[prop_id])}
+      end
+      render inline: {proposals: proposals, i18n: i18n, count: proposals.length}.to_json, cache: false
+    rescue StandardError => e
+      count = (e.class.to_s == "Errno::ECONNREFUSED" ? -2 : -1)
+      lines = ["Failed to iterate over proposal list due to '#{e.message}'"] + e.backtrace
+      Rails.logger.fatal(lines.join("\n"))
+      render inline: {proposals: proposals, count: count, error: e.message}.to_json, cache: false
     end
   end
 
