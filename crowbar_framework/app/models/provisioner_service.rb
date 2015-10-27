@@ -193,13 +193,15 @@ class ProvisionerService < ServiceObject
   def synchronize_repositories(platforms)
     bag = load_repository_bag
 
-    platforms.each do |platform, repos|
-      repos.each do |repo, active|
-        case active.to_i
-        when 0
-          disable_repository(platform, repo, bag)
-        when 1
-          enable_repository(platform, repo, bag)
+    platforms.each do |platform, arches|
+      arches.each do |arch, repos|
+        repos.each do |repo, active|
+          case active.to_i
+          when 0
+            disable_repository(platform, arch, repo, bag)
+          when 1
+            enable_repository(platform, arch, repo, bag)
+          end
         end
       end
     end
@@ -209,7 +211,7 @@ class ProvisionerService < ServiceObject
     @logger.debug("Enabling all repositories.")
     bag = load_repository_bag
     Crowbar::Repository.check_all_repos.each do |repo|
-      enable_repository(repo.platform, repo.id, bag)
+      enable_repository(repo.platform, repo.arch, repo.id, bag)
     end
   end
 
@@ -223,12 +225,12 @@ class ProvisionerService < ServiceObject
     bag.save
   end
 
-  def enable_repository(platform, repo, bag = nil)
+  def enable_repository(platform, arch, repo, bag = nil)
     bag = load_repository_bag if bag.nil?
 
-    repo_object = Crowbar::Repository.where(platform: platform, repo: repo).first
+    repo_object = Crowbar::Repository.where(platform: platform, arch: arch, repo: repo).first
     if repo_object.nil?
-      message = "#{repo} repository for #{platform} does not exist."
+      message = "#{repo} repository for #{platform} / #{arch} does not exist."
       @logger.debug(message)
       return [404, message]
     end
@@ -241,20 +243,21 @@ class ProvisionerService < ServiceObject
 
     if repo_object.available?
       bag[platform] ||= {}
+      bag[platform][arch] ||= {}
       repo_hash = repo_object.to_databag_hash
-      if bag[platform][repo_id] != repo_object.to_databag_hash
-        @logger.debug("Setting #{repo_id} repository for #{platform} as active.")
-        bag[platform][repo_id] = repo_hash
+      if bag[platform][arch][repo_id] != repo_object.to_databag_hash
+        @logger.debug("Setting #{repo_id} repository for #{platform} / #{arch} as active.")
+        bag[platform][arch][repo_id] = repo_hash
         bag.save
       else
-        @logger.debug("#{repo_id} repository for #{platform} is already active.")
+        @logger.debug("#{repo_id} repository for #{platform} / #{arch} is already active.")
       end
     else
-      message = "Cannot set #{repo_id} repository for #{platform} as active."
+      message = "Cannot set #{repo_id} repository for #{platform} / #{arch} as active."
       @logger.debug(message)
-      if bag.fetch(platform, {}).key? repo_id
-        @logger.debug("Forcefully disabling #{repo_id} repository for #{platform}.")
-        disable_repository(platform, repo_id, bag)
+      if bag.fetch(platform, {}).fetch(arch, {}).key? repo_id
+        @logger.debug("Forcefully disabling #{repo_id} repository for #{platform} / #{arch}.")
+        disable_repository(platform, arch, repo_id, bag)
       end
 
       code = 403
@@ -263,12 +266,12 @@ class ProvisionerService < ServiceObject
     [code, message]
   end
 
-  def disable_repository(platform, repo, bag = nil)
+  def disable_repository(platform, arch, repo, bag = nil)
     bag = load_repository_bag if bag.nil?
 
-    repo_object = Crowbar::Repository.where(platform: platform, repo: repo).first
+    repo_object = Crowbar::Repository.where(platform: platform, arch: arch, repo: repo).first
     if repo_object.nil?
-      message = "#{repo} repository for #{platform} does not exist."
+      message = "#{repo} repository for #{platform} / #{arch} does not exist."
       @logger.debug(message)
       return [404, message]
     end
@@ -276,13 +279,14 @@ class ProvisionerService < ServiceObject
     repo_id = repo_object.id
     @logger.debug("ID for #{repo} is #{repo_id}") if repo_id != repo
 
-    if bag.fetch(platform, {}).key? repo_id
-      @logger.debug("Setting #{repo_id} repository for #{platform} as inactive.")
-      bag[platform].delete(repo_id)
+    if bag.fetch(platform, {}).fetch(arch, {}).key? repo_id
+      @logger.debug("Setting #{repo_id} repository for #{platform} / #{arch} as inactive.")
+      bag[platform][arch].delete(repo_id)
+      bag[platform].delete(arch) if bag[platform][arch].empty?
       bag.delete(platform) if bag[platform].empty?
       bag.save
     else
-      @logger.debug("#{repo_id} repository for #{platform} is already inactive.")
+      @logger.debug("#{repo_id} repository for #{platform} / #{arch} is already inactive.")
     end
 
     [200, ""]

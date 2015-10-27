@@ -16,7 +16,7 @@
 
 module Crowbar
   class Repository
-    attr_reader :platform, :id, :config
+    attr_reader :platform, :arch, :id, :config
 
     class << self
       def load!
@@ -45,21 +45,27 @@ module Crowbar
           end
         end
 
-        etc_repos.each do |platform, repos|
+        etc_repos.each do |platform, arches|
           if @all_repos.key? platform
-            repos.each do |id, repo|
-              # for repos that exist in our hard-coded file, we only allow
-              # overwriting a subset of attributes
-              if @all_repos[platform].key? id
-                %w(url ask_on_error).each do |key|
-                  @all_repos[platform][id][key] = repo[key] if repo.key? key
+            arches.each do |arch, repos|
+              if @all_repos[platform].key? arch
+                repos.each do |id, repo|
+                  # for repos that exist in our hard-coded file, we only allow
+                  # overwriting a subset of attributes
+                  if @all_repos[platform][arch].key? id
+                    %w(url ask_on_error).each do |key|
+                      @all_repos[platform][arch][id][key] = repo[key] if repo.key? key
+                    end
+                  else
+                    @all_repos[platform][arch][id] = repo
+                  end
                 end
               else
-                @all_repos[platform][id] = repo
+                @all_repos[platform][arch] = repos
               end
             end
           else
-            @all_repos[platform] = repos
+            @all_repos[platform] = arches
           end
         end
       end
@@ -71,19 +77,26 @@ module Crowbar
 
       def where(options = {})
         platform = options.fetch :platform, nil
+        arch = options.fetch :arch, nil
         repo = options.fetch :repo, nil
         result = []
 
         [:id, :name].each do |attr|
           result = check_all_repos.select do |r|
-            if platform
-              if repo
-                r.platform == platform && r.send(attr) == repo
-              else
-                r.platform == platform
-              end
+            if platform && arch && repo
+              r.platform == platform && r.arch == arch && r.send(attr) == repo
+            elsif platform && arch
+              r.platform == platform && r.arch == arch
+            elsif platform && repo
+              r.platform == platform && r.send(attr) == repo
+            elsif platform
+              r.platform == platform
+            elsif arch && repo
+              r.arch == arch && r.send(attr) == repo
+            elsif arch
+              r.arch == arch
             else
-              r.id == repo
+              r.send(attr) == repo
             end
           end
           break unless result.empty?
@@ -96,21 +109,27 @@ module Crowbar
         registry.keys
       end
 
-      def repositories(platform)
+      def arches(platform)
         registry.fetch(platform, {}).keys
+      end
+
+      def repositories(platform, arch)
+        registry.fetch(platform, {}).fetch(arch, {}).keys
       end
 
       def check_all_repos
         repochecks = []
         all_platforms.each do |platform|
-          repositories(platform).each do |repo|
-            repochecks << new(platform, repo)
+          arches(platform).each do |arch|
+            repositories(platform, arch).each do |repo|
+              repochecks << new(platform, arch, repo)
+            end
           end
         end
         repochecks
       end
 
-      def provided_and_enabled?(feature, platform = nil)
+      def provided_and_enabled?(feature, platform = nil, arch = nil)
         answer = false
 
         if platform.nil?
@@ -120,17 +139,24 @@ module Crowbar
               break
             end
           end
+        elsif arch.nil?
+          arches(platform).each do |a|
+            if provided_and_enabled?(feature, platform, a)
+              answer = true
+              break
+            end
+          end
         else
           found = false
           answer = true
 
-          repositories(platform).each do |repo|
-            provided_features = registry[platform][repo]["features"] || []
+          repositories(platform, arch).each do |repo|
+            provided_features = registry[platform][arch][repo]["features"] || []
 
             next unless provided_features.include? feature
             found = true
 
-            r = new(platform, repo)
+            r = new(platform, arch, repo)
             answer &&= r.active?
           end
 
@@ -140,11 +166,11 @@ module Crowbar
         answer
       end
 
-      def platform_available?(platform)
+      def platform_available?(platform, arch)
         available = true
 
-        repositories(platform).each do |repo|
-          r = new(platform, repo)
+        repositories(platform, arch).each do |repo|
+          r = new(platform, arch, repo)
 
           next if r.required != "mandatory"
           next if r.active?
@@ -156,11 +182,11 @@ module Crowbar
         available
       end
 
-      def disabled_platforms
+      def disabled_platforms(arch)
         # forcefully reload the data, as we don't want to have outdated info
         # about what is mandatory or not
         load!
-        all_platforms.reject { |platform| platform_available? platform }
+        all_platforms.reject { |platform| platform_available?(platform, arch) }
       end
 
       def admin_ip
@@ -172,11 +198,11 @@ module Crowbar
       end
     end
 
-    def initialize(platform, repo)
+    def initialize(platform, arch, repo)
       @platform = platform
-      @arch = "x86_64"
+      @arch = arch
       @id = repo
-      @config = Repository.registry[@platform][@id]
+      @config = Repository.registry[@platform][@arch][@id]
     end
 
     def remote?
@@ -214,13 +240,13 @@ module Crowbar
 
     def active?
       active_repos = Chef::DataBag.load("crowbar/repositories") rescue {}
-      active_repos.fetch(@platform, {}).key? @id
+      active_repos.fetch(@platform, {}).fetch(@arch, {}).key? @id
     end
 
     def stale?
       active_repos = Chef::DataBag.load("crowbar/repositories") rescue {}
-      if active_repos.fetch(@platform, {}).key? @id
-        active_repos[@platform][@id] != to_databag_hash
+      if active_repos.fetch(@platform, {}).fetch(@arch, {}).key? @id
+        active_repos[@platform][@arch][@id] != to_databag_hash
       else
         false
       end
