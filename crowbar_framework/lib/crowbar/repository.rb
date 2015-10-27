@@ -72,17 +72,24 @@ module Crowbar
       def where(options = {})
         platform = options.fetch :platform, nil
         repo = options.fetch :repo, nil
-        check_all_repos.select do |r|
-          if platform
-            if repo
-              r.platform == platform && r.id == repo
+        result = []
+
+        [:id, :name].each do |attr|
+          result = check_all_repos.select do |r|
+            if platform
+              if repo
+                r.platform == platform && r.send(attr) == repo
+              else
+                r.platform == platform
+              end
             else
-              r.platform == platform
+              r.id == repo
             end
-          else
-            r.id == repo
           end
+          break unless result.empty?
         end
+
+        result
       end
 
       def all_platforms

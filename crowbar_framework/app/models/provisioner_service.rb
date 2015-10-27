@@ -236,22 +236,25 @@ class ProvisionerService < ServiceObject
     code = 200
     message = ""
 
+    repo_id = repo_object.id
+    @logger.debug("ID for #{repo} is #{repo_id}") if repo_id != repo
+
     if repo_object.available?
       bag[platform] ||= {}
       repo_hash = repo_object.to_databag_hash
-      if bag[platform][repo] != repo_object.to_databag_hash
-        @logger.debug("Setting #{repo} repository for #{platform} as active.")
-        bag[platform][repo] = repo_hash
+      if bag[platform][repo_id] != repo_object.to_databag_hash
+        @logger.debug("Setting #{repo_id} repository for #{platform} as active.")
+        bag[platform][repo_id] = repo_hash
         bag.save
       else
-        @logger.debug("#{repo} repository for #{platform} is already active.")
+        @logger.debug("#{repo_id} repository for #{platform} is already active.")
       end
     else
-      message = "Cannot set #{repo} repository for #{platform} as active."
+      message = "Cannot set #{repo_id} repository for #{platform} as active."
       @logger.debug(message)
-      if bag.fetch(platform, {}).key? repo
-        @logger.debug("Forcefully disabling #{repo} repository for #{platform}.")
-        disable_repository(platform, repo, bag)
+      if bag.fetch(platform, {}).key? repo_id
+        @logger.debug("Forcefully disabling #{repo_id} repository for #{platform}.")
+        disable_repository(platform, repo_id, bag)
       end
 
       code = 403
@@ -270,13 +273,16 @@ class ProvisionerService < ServiceObject
       return [404, message]
     end
 
-    if bag.fetch(platform, {}).key? repo
-      @logger.debug("Setting #{repo} repository for #{platform} as inactive.")
-      bag[platform].delete(repo)
+    repo_id = repo_object.id
+    @logger.debug("ID for #{repo} is #{repo_id}") if repo_id != repo
+
+    if bag.fetch(platform, {}).key? repo_id
+      @logger.debug("Setting #{repo_id} repository for #{platform} as inactive.")
+      bag[platform].delete(repo_id)
       bag.delete(platform) if bag[platform].empty?
       bag.save
     else
-      @logger.debug("#{repo} repository for #{platform} is already inactive.")
+      @logger.debug("#{repo_id} repository for #{platform} is already inactive.")
     end
 
     [200, ""]
