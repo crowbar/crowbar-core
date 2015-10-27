@@ -24,6 +24,11 @@ class RepositoriesController < ApplicationController
   # Renders an HTML view in the UI
   def index
     @repocheck = Crowbar::Repository.check_all_repos
+    @repocheck.sort! do |a, b|
+      required_a = RepositoriesHelper.repository_required_to_i(a.required)
+      required_b = RepositoriesHelper.repository_required_to_i(b.required)
+      [required_a, a.name] <=> [required_b, b.name]
+    end
     respond_to do |format|
       format.html { @repocheck }
       format.xml { render xml: @repocheck }

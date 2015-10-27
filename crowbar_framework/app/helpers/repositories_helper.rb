@@ -26,7 +26,7 @@ module RepositoriesHelper
     end
   end
 
-  def repository_required_to_i(required)
+  def self.repository_required_to_i(required)
     case required.to_sym
     when :mandatory
       1
@@ -35,6 +35,10 @@ module RepositoriesHelper
     when :optional
       3
     end
+  end
+
+  def repository_required_to_i(required)
+    RepositoriesHelper.repository_required_to_i(required)
   end
 
   def repository_platforms

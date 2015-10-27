@@ -30,7 +30,7 @@
                 %i.glyphicon.glyphicon-question-sign{ data: { tooltip: true, placement: "top" }, title: t(".active_repo_tooltip") }
 
           %tbody
-          - @repocheck.sort{ |a, b| [repository_required_to_i(a.required), a.name] <=> [repository_required_to_i(b.required), b.name] }.each do |repo|
+          - @repocheck.each do |repo|
             - if repo.platform == platform
               %tr
               - if repo.exist?
