@@ -32,9 +32,12 @@ module Crowbar
         etc_repos = {}
         if File.exist? etc_yml
           begin
-            etc_repos = YAML.load_file(etc_yml)
+            loaded = YAML.load_file(etc_yml)
+            raise SyntaxError unless loaded.is_a?(Hash)
+            etc_repos = loaded
           rescue SyntaxError
             # ok, let's live without it
+            Rails.logger.warn("Could not parse #{etc_yml}; not using locally defined repositories!")
           end
         end
 
