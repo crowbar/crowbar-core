@@ -286,17 +286,19 @@ node["crowbar"]["network"].keys.sort{|a,b|
     ifs[our_iface.name]["slave"] = true
     ifs[our_iface.name]["ovs_slave"] = true
     ifs[our_iface.name]["master"] = br.name
-    br.add_slave our_iface
-    # FIXME: Workaround for https://bugzilla.suse.com/show_bug.cgi?id=945219
-    # Find vlan interface on top of 'our_iface' that are plugged into other
-    # ovs bridges. Replug them.
-    our_kids = our_iface.children
-    our_kids.each do |k|
-      next unless Nic.vlan?(k)
-      ovs_master = k.ovs_master
-      unless ovs_master.nil?
-        Chef::Log.warn("Replugging #{k.name} to #{ovs_master.name} (workaround bnc#945219)")
-        ovs_master.replug(k.name)
+    unless our_iface.ovs_master && our_iface.ovs_master.name == br.name
+      br.add_slave our_iface
+      # FIXME: Workaround for https://bugzilla.suse.com/show_bug.cgi?id=945219
+      # Find vlan interface on top of 'our_iface' that are plugged into other
+      # ovs bridges. Replug them.
+      our_kids = our_iface.children
+      our_kids.each do |k|
+        next unless Nic.vlan?(k)
+        ovs_master = k.ovs_master
+        unless ovs_master.nil?
+          Chef::Log.warn("Replugging #{k.name} to #{ovs_master.name} (workaround bnc#945219)")
+          ovs_master.replug(k.name)
+        end
       end
     end
     ifs[br.name]["slaves"] = [our_iface.name]
@@ -505,6 +507,31 @@ when "suse"
       end
     else
       file "/etc/sysconfig/network/ifroute-#{nic.name}" do
+        action :delete
+      end
+    end
+  end
+
+  # Avoid running the wicked related thing on SLE11 nodes
+  unless node[:platform] == "suse" && node[:platform_version].to_f < 12.0
+    if ovs_setup_once
+      # If we're using an ovs-bridge somewhere, enable wicked-nanny to be started
+      # for the next boot.
+      # Note: There's no need to restart wicked here as all interfaces
+      # should be correctly configure at this point.
+      template "/etc/wicked/local.conf" do
+        source "wicked-local.conf.erb"
+        owner "root"
+        group "root"
+        mode "0644"
+        variables(
+          use_nanny: true
+        )
+      end
+    else
+      # Delete file when we don't need it anymore (to switch back to wicked's
+      # default
+      file "/etc/wicked/local.conf" do
         action :delete
       end
     end
