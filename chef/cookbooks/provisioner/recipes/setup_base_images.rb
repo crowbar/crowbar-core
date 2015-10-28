@@ -492,7 +492,6 @@ node[:provisioner][:supported_oses].each do |os,params|
                 target_platform_version: target_platform_version)
     end
 
-    Provisioner::Repositories.inspect_repos(node)
     repos = Provisioner::Repositories.get_repos("suse", target_platform_version)
 
     packages = node[:provisioner][:packages][os] || []

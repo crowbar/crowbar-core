@@ -22,7 +22,7 @@
             %th.col-xs-2
               = t(".status")
             %th.col-xs-2
-              = t(".md5_check")
+              = t(".check")
             %th.col-xs-1
               %input{ type: "checkbox", value: "all", data: { checkall: "input.platform#{index}" } }
                 = t(".active")
@@ -30,49 +30,68 @@
                 %i.glyphicon.glyphicon-question-sign{ data: { tooltip: true, placement: "top" }, title: t(".active_repo_tooltip") }
 
           %tbody
-          - @repocheck.sort_by{ |check| check.registry["name"] }.each do |repo|
+          - @repocheck.each do |repo|
             - if repo.platform == platform
               %tr
-              - if repo.available?
+              - if repo.exist?
                 %td
-                  = link_to(repo.registry["name"], repo.url)
+                  = link_to(repo.name, repo.url)
                 %td
-                  = repo.registry["required"]
-                %td.success
-                  %i.glyphicon.glyphicon-ok
-                  = t(".available")
+                  = repo.required
+                - if repo.stale?
+                  %td.warning
+                    %i.glyphicon.glyphicon-refresh
+                    = t(".stale")
+                - else
+                  %td.success
+                    %i.glyphicon.glyphicon-ok
+                    = t(".available")
               - else
                 %td
                   .span.text-muted
-                    = repo.registry["name"]
+                    = repo.name
                 %td
                   .text-muted
-                    = repo.registry["required"]
-                - if repo.registry["required"] == "mandatory"
-                  %td{ class: repository_availability(repo.registry["required"]) }
+                    = repo.required
+                - if repo.required == "mandatory"
+                  %td{ class: repository_availability(repo.required) }
                     %i.glyphicon.glyphicon-remove
                     = t(".unavailable")
                 - else
-                  %td{ class: repository_availability(repo.registry["required"]) }
+                  %td{ class: repository_availability(repo.required) }
                     .text-muted
                       = t(".unavailable")
-              - if repo.valid_key_file?
+
+              - if !repo.exist?
+                %td{ class: repository_availability(repo.required) }
+                  .text-muted
+                    = t(".unavailable")
+                %td
+                  = check_box "repo[#{platform}]", repo.id, { class: "platform#{index}", checked: false, disabled: true }
+              - elsif repo.remote?
                 %td.success
                   %i.glyphicon.glyphicon-ok
-                  = t(".md5_ok")
+                  = t(".check_remote")
                 %td
-                  = check_box "repo[#{platform}]", repo.registry["name"], { class: "platform#{index}", checked: repo.active? }
+                  = check_box "repo[#{platform}]", repo.id, { class: "platform#{index}", checked: repo.active? }
+              - elsif !repo.valid_repo?
+                %td{ class: repository_availability(repo.required) }
+                  %i.glyphicon.glyphicon-remove
+                  = t(".check_failed_tag")
+                %td
+                  = check_box "repo[#{platform}]", repo.id, { class: "platform#{index}", checked: false, disabled: true }
+              - elsif !repo.valid_key_file?
+                %td{ class: repository_availability(repo.required) }
+                  %i.glyphicon.glyphicon-remove
+                  = t(".check_failed_md5")
+                %td
+                  = check_box "repo[#{platform}]", repo.id, { class: "platform#{index}", checked: false, disabled: true }
               - else
-                - if repo.registry["required"] == "mandatory"
-                  %td{ class: repository_availability(repo.registry["required"]) }
-                    %i.glyphicon.glyphicon-remove
-                    = t(".md5_failed")
-                - else
-                  %td{ class: repository_availability(repo.registry["required"]) }
-                    .text-muted
-                      = t(".unavailable")
+                %td.success
+                  %i.glyphicon.glyphicon-ok
+                  = t(".check_ok")
                 %td
-                  = check_box "repo[#{platform}]", repo.registry["name"], { class: "platform#{index}", checked: false, disabled: true }
+                  = check_box "repo[#{platform}]", repo.id, { class: "platform#{index}", checked: repo.active? }
 
       .panel-footer.text-right
         .btn-group

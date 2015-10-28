@@ -26,6 +26,21 @@ module RepositoriesHelper
     end
   end
 
+  def self.repository_required_to_i(required)
+    case required.to_sym
+    when :mandatory
+      1
+    when :recommended
+      2
+    when :optional
+      3
+    end
+  end
+
+  def repository_required_to_i(required)
+    RepositoriesHelper.repository_required_to_i(required)
+  end
+
   def repository_platforms
     Crowbar::Repository.all_platforms
   end

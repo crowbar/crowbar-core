@@ -15,7 +15,7 @@
 #
 
 class RepositoriesController < ApplicationController
-  before_filter :load_registry
+  before_filter :reload_registry
   #
   # Repository Check
   #
@@ -24,6 +24,11 @@ class RepositoriesController < ApplicationController
   # Renders an HTML view in the UI
   def index
     @repocheck = Crowbar::Repository.check_all_repos
+    @repocheck.sort! do |a, b|
+      required_a = RepositoriesHelper.repository_required_to_i(a.required)
+      required_b = RepositoriesHelper.repository_required_to_i(b.required)
+      [required_a, a.name] <=> [required_b, b.name]
+    end
     respond_to do |format|
       format.html { @repocheck }
       format.xml { render xml: @repocheck }
@@ -49,12 +54,14 @@ class RepositoriesController < ApplicationController
   # required parameters: platform, repo
   def activate
     return render_not_found if params[:platform].nil? || params[:repo].nil?
+    ret, _message = ProvisionerService.new(logger).enable_repository(params[:platform], params[:repo])
     respond_to do |format|
-      repo_object = Crowbar::Repository.where(platform: params[:platform], repo: params[:repo]).first
-      ret = ProvisionerService.new(logger).create_repository_item(repo_object) unless repo_object.nil?
-      if ret
+      case ret
+      when 200
         format.json { head :ok }
         format.html { redirect_to repositories_url }
+      when 404
+        render_not_found
       else
         format.json do
           render json: { error: I18n.t("cannot_activate_repo", scope: "error", id: params[:repo]) },
@@ -76,12 +83,14 @@ class RepositoriesController < ApplicationController
   # required parameters: platform, repo
   def deactivate
     return render_not_found if params[:platform].nil? || params[:repo].nil?
+    ret, _message = ProvisionerService.new(logger).disable_repository(params[:platform], params[:repo])
     respond_to do |format|
-      repo_object = Crowbar::Repository.where(platform: params[:platform], repo: params[:repo]).first
-      ret = ProvisionerService.new(logger).destroy_repository_item(repo_object) unless repo_object.nil?
-      if ret
+      case ret
+      when 200
         format.json { head :ok }
         format.html { redirect_to repositories_url }
+      when 404
+        render_not_found
       else
         format.json do
           render json: { error: I18n.t("cannot_deactivate_repo", scope: "error", id: params[:repo]) },
@@ -95,9 +104,35 @@ class RepositoriesController < ApplicationController
     end
   end
 
+  #
+  # Activate all Repositories
+  #
+  # Provides the restful api call for
+  # Activate all Repositories   /utils/repositories/activate_all   POST  Creates Repository DataBagItem
+  def activate_all
+    ProvisionerService.new(logger).enable_all_repositories
+    respond_to do |format|
+      format.json { head :ok }
+      format.html { redirect_to repositories_url }
+    end
+  end
+
+  #
+  # Deactivate all Repositories
+  #
+  # Provides the restful api call for
+  # Deactivate all Repositories   /utils/repositories/deactivate_all   POST   Destroys Repository DataBagItem
+  def deactivate_all
+    ProvisionerService.new(logger).disable_all_repositories
+    respond_to do |format|
+      format.json { head :ok }
+      format.html { redirect_to repositories_url }
+    end
+  end
+
   protected
 
-  def load_registry
+  def reload_registry
     Crowbar::Repository.load!
   end
 end
