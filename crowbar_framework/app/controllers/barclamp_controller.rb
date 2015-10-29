@@ -253,7 +253,8 @@ class BarclampController < ApplicationController
 
   #
   # List proposals
-  # /crowbar/<barclamp-name>/<version>/proposals GET Returns a json list of proposals for instances
+  # Return a list of available proposals
+  # GET /crowbar/<barclamp-name>/<version>/proposals
   #
   add_help(:proposals, [], [:get])
   def proposals
@@ -288,7 +289,8 @@ class BarclampController < ApplicationController
 
   #
   # Template proposal
-  # /crowbar/<barclamp-name>/<version>/proposals/template GET This reads the proposal template and prints it out.
+  # Return the content of a proposal template
+  # GET /crowbar/<barclamp-name>/<version>/proposals/template
   #
   add_help(:proposal_template, [], [:get])
   def proposal_template
@@ -311,7 +313,8 @@ class BarclampController < ApplicationController
 
   #
   # Show proposal
-  # /crowbar/<barclamp-name>/<version>/proposals/<barclamp-instance-name> GET Returns a json document for the specificed proposal
+  # Return the details of a specific proposal
+  # GET /crowbar/<barclamp-name>/<version>/proposals/<barclamp-instance-name>
   #
   add_help(:proposal_show, [:id], [:get])
   def proposal_show
@@ -357,7 +360,8 @@ class BarclampController < ApplicationController
 
   #
   # Delete proposal
-  # /crowbar/<barclamp-name>/<version>/proposals/<barclamp-instance-name> DELETE This will remove a proposal
+  # Remove a specific proposal
+  # DELETE /crowbar/<barclamp-name>/<version>/proposals/<barclamp-instance-name>
   #
   add_help(:proposal_delete, [:id], [:delete])
   def proposal_delete
@@ -382,7 +386,8 @@ class BarclampController < ApplicationController
 
   #
   # Commit proposal
-  # /crowbar/<barclamp-name>/<version>/proposals/commit/<barclamp-instance-name> POST This action will create a new instance based upon this proposal. If the instance already exists, it will be edited and replaced
+  # Commit a specific proposal to apply it
+  # POST /crowbar/<barclamp-name>/<version>/proposals/commit/<barclamp-instance-name>
   #
   add_help(:proposal_commit, [:id], [:post])
   def proposal_commit
@@ -411,7 +416,8 @@ class BarclampController < ApplicationController
 
   #
   # Dequeue proposal
-  # /crowbar/<barclamp-name>/<version>/proposals/dequeue/<barclamp-instance-name> DELETE This action will dequeue an existing proposal.
+  # Remove a specific proposal from the queue
+  # DELETE /crowbar/<barclamp-name>/<version>/proposals/dequeue/<barclamp-instance-name>
   #
   add_help(:proposal_dequeue, [:id], [:delete])
   def proposal_dequeue
@@ -436,7 +442,8 @@ class BarclampController < ApplicationController
 
   #
   # Edit proposal
-  # /crowbar/<barclamp-name>/<version>/propsosals/<barclamp-instance-name> POST Posting a json document will replace the current proposal
+  # Update a specific proposal
+  # POST /crowbar/<barclamp-name>/<version>/propsosals/<barclamp-instance-name>
   #
   add_help(:proposal_update, [:id], [:post])
   def proposal_update
@@ -470,8 +477,6 @@ class BarclampController < ApplicationController
       #
       # This is the UI path
       #
-
-
 
       if params[:submit] == t("barclamp.proposal_show.save_proposal")
         @proposal = Proposal.where(barclamp: params[:barclamp], name: params[:id] || params[:name]).first
@@ -551,15 +556,13 @@ class BarclampController < ApplicationController
 
         redirect_to proposal_barclamp_path(redirect_params)
       end
-
-
-
     end
   end
 
   #
   # Create proposal
-  # /crowbar/<barclamp-name>/<version>/proposals PUT Putting a json document will create a proposal
+  # Create a new specific proposal
+  # PUT /crowbar/<barclamp-name>/<version>/proposals
   #
   add_help(:proposal_create, [:name], [:put])
   def proposal_create
@@ -606,34 +609,61 @@ class BarclampController < ApplicationController
   #
   # Currently, A UI ONLY METHOD
   #
-  add_help(:proposal_status,[:id, :barclamp, :name],[:get])
+  add_help(:proposal_status, [:id, :barclamp, :name], [:get])
   def proposal_status
     proposals = {}
     i18n = {}
+
     begin
-      active = RoleObject.active(params[:barclamp], params[:name])
+      active = RoleObject.active(
+        params[:barclamp],
+        params[:name]
+      )
 
       result = if params[:id].nil?
         Proposal.all
       else
-        [Proposal.where(barclamp: params[:barclamp], name: params[:name]).first]
+        [
+          Proposal.where(
+            barclamp: params[:barclamp],
+            name: params[:name]
+          ).first
+        ]
       end
+
       result.each do |prop|
         prop_id = "#{prop.barclamp}_#{prop.name}"
-        status = (["unready", "pending"].include?(prop.status) or active.include?(prop_id))
+        status = (["unready", "pending"].include?(prop.status) || active.include?(prop_id))
         proposals[prop_id] = (status ? prop.status : "hold")
-        i18n[prop_id] = {proposal: prop.name.humanize, status: t("proposal.status.#{proposals[prop_id]}", default: proposals[prop_id])}
+
+        i18n[prop_id] = {
+          proposal: prop.name.humanize,
+          status: t(
+            "proposal.status.#{proposals[prop_id]}",
+            default: proposals[prop_id]
+          )
+        }
       end
-      render inline: {proposals: proposals, i18n: i18n, count: proposals.length}.to_json, cache: false
+
+      render inline: {
+        proposals: proposals,
+        i18n: i18n,
+        count: proposals.length
+      }.to_json, cache: false
     rescue StandardError => e
       count = (e.class.to_s == "Errno::ECONNREFUSED" ? -2 : -1)
       lines = ["Failed to iterate over proposal list due to '#{e.message}'"] + e.backtrace
       Rails.logger.fatal(lines.join("\n"))
-      render inline: {proposals: proposals, count: count, error: e.message}.to_json, cache: false
+
+      render inline: {
+        proposals: proposals,
+        count: count,
+        error: e.message
+      }.to_json, cache: false
     end
   end
 
-  add_help(:nodes,[],[:get])
+  add_help(:nodes, [], [:get])
   def nodes
     #Empty method to override if your barclamp has a "nodes" view.
   end
