@@ -24,7 +24,7 @@ describe DeployQueueController do
     before do
       # We don't have Pacemaker at hand and the helper returns false because of
       # that, need to stub this
-      ServiceObject.stubs(:is_cluster?).returns(true)
+      allow(ServiceObject).to receive(:is_cluster?).and_return(true)
     end
 
     let(:prop) { Proposal.where(barclamp: "crowbar", name: "default").first_or_create(barclamp: "crowbar", name: "default") }
@@ -41,12 +41,13 @@ describe DeployQueueController do
     describe "with existing nodes" do
       before do
         # Simulate the expansion to a node whose look up we can fake
-        ServiceObject.stubs(:expand_nodes_for_all).returns([["testing.crowbar.com"],[]])
+        allow(ServiceObject).to receive(:expand_nodes_for_all).
+          and_return([["testing.crowbar.com"], []])
       end
 
       it "is successful when a prop with clusters is deployed" do
         # Is now deploying
-        @controller.stubs(:currently_deployed).returns(prop)
+        allow(@controller).to receive(:currently_deployed).and_return(prop)
 
         get :index
         expect(response).to be_success
@@ -54,7 +55,7 @@ describe DeployQueueController do
 
       it "is successful when there are clusters in the queue" do
         # Is queued
-        @controller.stubs(:deployment_queue).returns(queue)
+        allow(@controller).to receive(:deployment_queue).and_return(queue)
 
         get :index
         expect(response).to be_success
@@ -64,19 +65,20 @@ describe DeployQueueController do
     describe "with non-existing nodes" do
       before do
         # Cluster referencing a non-existent node (deleted)
-        ServiceObject.stubs(:expand_nodes_for_all).returns([["I just dont exist"],[]])
+        allow(ServiceObject).to receive(:expand_nodes_for_all).
+          and_return([["I just dont exist"], []])
       end
 
       it "is successful when a prop with clusters is deployed" do
         # Is now deploying
-        @controller.stubs(:currently_deployed).returns(prop)
+        allow(@controller).to receive(:currently_deployed).and_return(prop)
 
         get :index
         expect(response).to be_success
       end
 
       it "is successful for clusters in the queue" do
-        @controller.stubs(:deployment_queue).returns(queue)
+        allow(@controller).to receive(:deployment_queue).and_return(queue)
 
         get :index
         expect(response).to be_success

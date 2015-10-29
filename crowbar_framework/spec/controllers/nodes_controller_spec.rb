@@ -22,7 +22,7 @@ describe NodesController do
 
   before do
     Proposal.where(barclamp: "crowbar", name: "default").first_or_create(barclamp: "crowbar", name: "default")
-    NodeObject.any_instance.stubs(:system).returns(true)
+    allow_any_instance_of(NodeObject).to receive(:system).and_return(true)
   end
 
   describe "GET index" do
@@ -47,7 +47,7 @@ describe NodesController do
     end
 
     it "sets a flash notice if no nodes found" do
-      NodeObject.stubs(:all).returns([])
+      allow(NodeObject).to receive(:all).and_return([])
       get :index
       expect(flash[:notice]).to_not be_empty
     end
@@ -55,7 +55,7 @@ describe NodesController do
 
   describe "POST update" do
     before do
-      NodeObject.stubs(:find_node_by_public_name).returns(nil)
+      allow(NodeObject).to receive(:find_node_by_public_name).and_return(nil)
       @node = NodeObject.find_node_by_name("admin")
     end
 
@@ -132,8 +132,8 @@ describe NodesController do
     end
 
     it "reports nodes for which update failed" do
-      NodeObject.any_instance.stubs(:force_alias=).raises(StandardError)
-      NodeObject.any_instance.stubs(:force_public_name=).raises(StandardError)
+      allow_any_instance_of(NodeObject).to receive(:force_alias=) { raise StandardError }
+      allow_any_instance_of(NodeObject).to receive(:force_public_name=) { raise StandardError }
 
       post :bulk, node: { node.name => { "allocate" => true, "alias" => "newalias" } }
       expect(assigns(:report)[:failed]).to include(node.name)
@@ -170,7 +170,7 @@ describe NodesController do
     end
 
     it "renders error if fetch fails" do
-      NodeObject.stubs(:all).raises(Errno::ECONNREFUSED)
+      allow(NodeObject).to receive(:all) { raise Errno::ECONNREFUSED }
       get :status, format: "json"
       json = JSON.parse(response.body)
       expect(json["error"]).to_not be_empty
@@ -228,12 +228,12 @@ describe NodesController do
 
     it "sets the machine state" do
       ["reinstall", "reset", "update", "delete"].each do |action|
-        NodeObject.any_instance.expects(:set_state).with(action).once
         post :hit, req: action, id: "testing"
+        expect(response.body).to include(action)
       end
 
       ["reboot", "shutdown", "poweron", "powercycle", "poweroff", "identify", "allocate"].each do |action|
-        NodeObject.any_instance.expects(action.to_sym).once
+        expect_any_instance_of(NodeObject).to receive(action.to_sym)
         post :hit, req: action, id: "testing"
       end
     end
@@ -252,7 +252,7 @@ describe NodesController do
     end
 
     it "assigns a node to a group" do
-      NodeObject.stubs(:find_node_by_name).returns(@node)
+      allow(NodeObject).to receive(:find_node_by_name).and_return(@node)
 
       new_group = "new_group"
       post :group_change, id: @node.name, group: new_group
@@ -262,7 +262,7 @@ describe NodesController do
     end
 
     it "sets node group to blank if 'automatic' passed" do
-      NodeObject.stubs(:find_node_by_name).returns(@node)
+      allow(NodeObject).to receive(:find_node_by_name).and_return(@node)
 
       new_group = "automatic"
       post :group_change, id: @node.name, group: new_group

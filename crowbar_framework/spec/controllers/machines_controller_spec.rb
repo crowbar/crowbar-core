@@ -19,12 +19,12 @@ require "spec_helper"
 
 describe MachinesController do
   before do
-    NodeObject.any_instance.stubs(:system).returns(true)
+    allow_any_instance_of(NodeObject).to receive(:system).and_return(true)
   end
 
   describe "GET index" do
     before do
-      File.stubs(:exist?).returns(true)
+      allow(File).to receive(:exist?).and_return(true)
     end
 
     it "is successful" do
@@ -65,7 +65,7 @@ describe MachinesController do
 
     context "without nodes" do
       before do
-        NodeObject.stubs(:find_all_nodes).returns([])
+        allow(NodeObject).to receive(:find_all_nodes).and_return([])
       end
 
       it "renders json" do
@@ -121,7 +121,7 @@ describe MachinesController do
   describe "POST role" do
     context "for existent node" do
       it "assignes role compute" do
-        NodeObject.any_instance.expects(:intended_role=).with("compute").once
+        expect_any_instance_of(NodeObject).to receive(:intended_role=).with("compute")
 
         post :role, name: "testing", role: "compute", format: "json"
         expect(response).to have_http_status(:ok)
@@ -134,8 +134,8 @@ describe MachinesController do
     end
 
     it "return 422 (unprocessable_entity) http status when save fails" do
-      NodeObject.any_instance.stubs(:save).returns(false)
-      NodeObject.any_instance.expects(:intended_role=).with("compute").once
+      allow_any_instance_of(NodeObject).to receive(:save).and_return(false)
+      expect_any_instance_of(NodeObject).to receive(:intended_role=).with("compute")
 
       post :role, name: "testing", role: "compute", format: "json"
 
@@ -146,7 +146,7 @@ describe MachinesController do
   describe "POST rename" do
     context "for existent node" do
       it "renames a node to tester" do
-        NodeObject.any_instance.expects(:alias=).with("tester").once
+        expect_any_instance_of(NodeObject).to receive(:alias=).with("tester")
 
         post :rename, name: "testing", alias: "tester", format: "json"
         expect(response).to have_http_status(:ok)
@@ -159,8 +159,8 @@ describe MachinesController do
     end
 
     it "return 422 (unprocessable_entity) http status when save fails" do
-      NodeObject.any_instance.stubs(:save).returns(false)
-      NodeObject.any_instance.expects(:alias=).with("tester").once
+      allow_any_instance_of(NodeObject).to receive(:save).and_return(false)
+      expect_any_instance_of(NodeObject).to receive(:alias=).with("tester")
 
       post :rename, name: "testing", alias: "tester", format: "json"
 
@@ -175,7 +175,7 @@ describe MachinesController do
     describe "POST #{action}" do
       context "for existent node" do
         it "invokes #{action}" do
-          NodeObject.any_instance.expects(action).once
+          expect_any_instance_of(NodeObject).to receive(action)
 
           post action, name: "testing", format: "json"
           expect(response).to have_http_status(:ok)
@@ -186,10 +186,6 @@ describe MachinesController do
         it "return 404 (not found) http status" do
           post action, name: "nonexistent", format: "json"
           expect(response).to have_http_status(:not_found)
-        end
-
-        it "prevents #{action}" do
-          NodeObject.any_instance.expects(action).never
         end
       end
     end
@@ -209,14 +205,14 @@ describe MachinesController do
     describe "POST #{action}" do
       context "for existent node" do
         it "invokes #{action}" do
-          NodeObject.any_instance.expects(action).once
+          expect_any_instance_of(NodeObject).to receive(action)
 
           post action, name: "testing", format: "json"
           expect(response).to have_http_status(:ok)
         end
 
         it "return 403 (forbidden) http status for admin node" do
-          NodeObject.any_instance.stubs(:admin?).returns(true)
+          allow_any_instance_of(NodeObject).to receive(:admin?).and_return(true)
           post action, name: "testing", format: "json"
           expect(response).to have_http_status(:forbidden)
         end
@@ -226,10 +222,6 @@ describe MachinesController do
         it "renders 404" do
           post action, name: "nonexistent", format: "json"
           expect(response).to have_http_status(:not_found)
-        end
-
-        it "prevents #{action}" do
-          NodeObject.any_instance.expects(action).never
         end
       end
     end

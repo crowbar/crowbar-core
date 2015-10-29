@@ -75,13 +75,13 @@ describe NodeObject do
       let(:key) { "a key" }
 
       it "sets the key if the platform requires one" do
-        CrowbarService.stubs(:require_license_key?).returns(true)
+        allow(CrowbarService).to receive(:require_license_key?).and_return(true)
         node.license_key = key
         expect(node.license_key).to be == key
       end
 
       it "leaves it blank if platform does not need a key" do
-        CrowbarService.stubs(:require_license_key?).returns(false)
+        allow(CrowbarService).to receive(:require_license_key?).and_return(false)
         node.license_key = key
         expect(node.license_key).to be_blank
       end
@@ -94,7 +94,7 @@ describe NodeObject do
 
     it "doesnt allow duplicates" do
       # Stub out chef call
-      NodeObject.any_instance.stubs(:update_alias).returns(true)
+      allow_any_instance_of(NodeObject).to receive(:update_alias).and_return(true)
 
       expect {
         testing_node.alias = "admin"

@@ -54,7 +54,7 @@ describe ServiceObject do
 
   describe "validate_proposal" do
     it "raises ValidationFailed on missing schema" do
-      service_object.stubs(:proposal_schema_directory).returns("/idontexist")
+      allow(service_object).to receive(:proposal_schema_directory).and_return("/idontexist")
       expect {
         service_object.validate_proposal(proposal.raw_data)
       }.to raise_error(Chef::Exceptions::ValidationFailed)
@@ -62,7 +62,8 @@ describe ServiceObject do
 
     it "validates the proposal" do
       prop = proposal
-      CrowbarValidator.any_instance.expects(:validate).with(prop.raw_data).once.returns([])
+      expect_any_instance_of(CrowbarValidator).to receive(:validate).
+        with(prop.raw_data).and_return([])
       service_object.validate_proposal(prop.raw_data)
     end
 
@@ -84,7 +85,8 @@ describe ServiceObject do
       it "limits the number of elements in a role" do
         dns_proposal.elements["dns-client"] = ["admin"]
 
-        dns_service.stubs(:role_constraints).returns({ "dns-client" => { "count" => 0, "admin" => true } })
+        allow(dns_service).to receive(:role_constraints).
+          and_return("dns-client" => { "count" => 0, "admin" => true })
         dns_service.validate_proposal_constraints(dns_proposal)
         expect(dns_service.validation_errors).to_not be_empty
         expect(dns_service.validation_errors.first).to match(/accept up to 0 elements only/)
@@ -95,7 +97,7 @@ describe ServiceObject do
       it "does not allow admin nodes to be assigned by default" do
         dns_proposal.elements["dns-client"] = ["admin"]
 
-        dns_service.stubs(:role_constraints).returns({ "dns-client" => { } })
+        allow(dns_service).to receive(:role_constraints).and_return("dns-client" => {})
         dns_service.validate_proposal_constraints(dns_proposal)
         expect(dns_service.validation_errors).to_not be_empty
         expect(dns_service.validation_errors.first).to match(/does not accept admin nodes/)
@@ -107,7 +109,8 @@ describe ServiceObject do
         dns_proposal.elements["dns-client"] = ["admin"]
         dns_proposal.elements["dns-server"] = ["admin"]
 
-        dns_service.stubs(:role_constraints).returns({ "dns-client" => { "unique" => true, "admin" => true } })
+        allow(dns_service).to receive(:role_constraints).
+          and_return("dns-client" => { "unique" => true, "admin" => true })
         dns_service.validate_proposal_constraints(dns_proposal)
         expect(dns_service.validation_errors).to_not be_empty
         expect(dns_service.validation_errors.first).to match(/cannot be assigned to another role/)
@@ -118,8 +121,9 @@ describe ServiceObject do
       it "does not allow clusters of nodes to be assigned" do
         dns_proposal.elements["dns-client"] = ["cluster:test"]
 
-        dns_service.stubs(:role_constraints).returns({ "dns-client" => { "cluster" => false, "admin" => true } })
-        dns_service.stubs(:is_cluster?).returns(true)
+        allow(dns_service).to receive(:role_constraints).
+          and_return("dns-client" => { "cluster" => false, "admin" => true })
+        allow(dns_service).to receive(:is_cluster?).and_return(true)
         dns_service.validate_proposal_constraints(dns_proposal)
         expect(dns_service.validation_errors).to_not be_empty
         expect(dns_service.validation_errors.first).to match(/does not accept clusters/)
@@ -131,10 +135,10 @@ describe ServiceObject do
         dns_proposal.elements["dns-client"] = ["test"]
         dns_proposal.elements["dns-server"] = ["test"]
 
-        dns_service.stubs(:role_constraints).returns({
+        allow(dns_service).to receive(:role_constraints).and_return(
           "dns-server" => { "conflicts_with" => ["dns-client", "hawk-server"], "admin" => true },
           "dns-client" => { "conflicts_with" => ["dns-server", "hawk-server"], "admin" => true }
-        })
+        )
 
         dns_service.validate_proposal_constraints(dns_proposal)
         expect(dns_service.validation_errors).to_not be_empty
@@ -148,31 +152,33 @@ describe ServiceObject do
       end
 
       it "allows nodes of matched platform using operator >=" do
-        dns_service.stubs(:role_constraints).returns(
+        allow(dns_service).to receive(:role_constraints).and_return(
           {
             "dns-client" => {
               "admin" => true ,
               "platform" => { "ubuntu" => ">= 10.10" }
             }
-          })
+          }
+        )
         dns_service.validate_proposal_constraints(dns_proposal)
         expect(dns_service.validation_errors.length).to be == 0
       end
 
       it "does not allow nodes of matched platform using operator >=" do
-        dns_service.stubs(:role_constraints).returns(
+        allow(dns_service).to receive(:role_constraints).and_return(
           {
             "dns-client" => {
               "admin" => true ,
               "platform" => { "ubuntu" => ">= 10.10.1" }
             }
-          })
+          }
+        )
         dns_service.validate_proposal_constraints(dns_proposal)
         expect(dns_service.validation_errors.length).to be == 1
       end
 
       it "allows nodes of matched platform using operator >" do
-        dns_service.stubs(:role_constraints).returns(
+        allow(dns_service).to receive(:role_constraints).and_return(
           {
             "dns-client" => {
               "admin" => true ,
@@ -184,7 +190,7 @@ describe ServiceObject do
       end
 
       it "does not allow nodes of matched platform using operator >" do
-        dns_service.stubs(:role_constraints).returns(
+        allow(dns_service).to receive(:role_constraints).and_return(
           {
             "dns-client" => {
               "admin" => true ,
@@ -196,7 +202,7 @@ describe ServiceObject do
       end
 
       it "allows nodes of matched platform using operator <=" do
-        dns_service.stubs(:role_constraints).returns(
+        allow(dns_service).to receive(:role_constraints).and_return(
           {
             "dns-client" => {
               "admin" => true ,
@@ -208,7 +214,7 @@ describe ServiceObject do
       end
 
       it "does not allow nodes of matched platform using operator <=" do
-        dns_service.stubs(:role_constraints).returns(
+        allow(dns_service).to receive(:role_constraints).and_return(
           {
             "dns-client" => {
               "admin" => true ,
@@ -220,7 +226,7 @@ describe ServiceObject do
       end
 
       it "allows nodes of matched platform using operator ==" do
-        dns_service.stubs(:role_constraints).returns(
+        allow(dns_service).to receive(:role_constraints).and_return(
           {
             "dns-client" => {
               "admin" => true ,
@@ -232,7 +238,7 @@ describe ServiceObject do
       end
 
       it "does not allow nodes of matched platform using operator ==" do
-        dns_service.stubs(:role_constraints).returns(
+        allow(dns_service).to receive(:role_constraints).and_return(
           {
             "dns-client" => {
               "admin" => true ,
@@ -244,7 +250,7 @@ describe ServiceObject do
       end
 
       it "allows nodes of matched platform with fancy versioning" do
-        dns_service.stubs(:role_constraints).returns(
+        allow(dns_service).to receive(:role_constraints).and_return(
           {
             "dns-client" => {
               "admin" => true ,
@@ -256,7 +262,7 @@ describe ServiceObject do
       end
 
       it "allows nodes of matched platform using regular expressions" do
-        dns_service.stubs(:role_constraints).returns(
+        allow(dns_service).to receive(:role_constraints).and_return(
           {
             "dns-client" => {
               "admin" => true ,
@@ -268,7 +274,7 @@ describe ServiceObject do
       end
 
       it "allows nodes of matched platform using regular expressions (multiple platforms)" do
-        dns_service.stubs(:role_constraints).returns(
+        allow(dns_service).to receive(:role_constraints).and_return(
           {
             "dns-client" => {
               "admin" => true ,
@@ -280,7 +286,7 @@ describe ServiceObject do
       end
 
       it "does not allow nodes of a different platform" do
-        dns_service.stubs(:role_constraints).returns(
+        allow(dns_service).to receive(:role_constraints).and_return(
           {
             "dns-client" => {
               "admin" => true ,
@@ -292,7 +298,7 @@ describe ServiceObject do
       end
 
       it "does not allow nodes of a different platform (multiple parforms)" do
-        dns_service.stubs(:role_constraints).returns(
+        allow(dns_service).to receive(:role_constraints).and_return(
           {
             "dns-client" => {
               "admin" => true ,
@@ -304,7 +310,7 @@ describe ServiceObject do
       end
 
       it "does not allow nodes of a Ubuntu" do
-        dns_service.stubs(:role_constraints).returns(
+        allow(dns_service).to receive(:role_constraints).and_return(
           {
             "dns-client" => {
               "admin" => true ,

@@ -38,7 +38,7 @@ describe ChefObject do
     end
 
     it "returns empty node on failure" do
-      Chef::Search::Query.stubs(:new).raises(StandardError)
+      allow(Chef::Search::Query).to receive(:new) { raise StandardError }
       expect(chef_object.query_chef).to be_a(Chef::Node)
     end
   end
