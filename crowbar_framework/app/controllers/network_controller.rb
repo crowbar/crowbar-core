@@ -19,74 +19,128 @@ class NetworkController < BarclampController
   # Make a copy of the barclamp controller help
   self.help_contents = Array.new(superclass.help_contents)
 
-  add_help(:allocate_ip,[:id,:network,:range,:name],[:post])
+  add_help(:allocate_ip, [:id, :network, :range, :name], [:post])
   def allocate_ip
-    id = params[:id]       # Network id
-    network = params[:network]
-    range = params[:range]
-    name = params[:name]
-    suggestion = params[:suggestion]
+    code, message = @service_object.allocate_ip(
+      params[:id],
+      params[:network],
+      params[:range],
+      params[:name],
+      params[:suggestion]
+    )
 
-    ret = @service_object.allocate_ip(id, network, range, name, suggestion)
-    return render text: ret[1], status: ret[0] if ret[0] != 200
-    render json: ret[1]
+    respond_to do |format|
+      case code
+      when 200
+        format.json { render json: message }
+      else
+        format.json do
+          render json: { error: message }, status: code
+        end
+      end
+    end
   end
 
-  add_help(:allocate_virtual_ip,[:id,:network,:range,:name],[:post])
+  add_help(:allocate_virtual_ip, [:id, :network, :range, :name], [:post])
   def allocate_virtual_ip
-    id = params[:id]       # Network id
-    network = params[:network]
-    range = params[:range]
-    name = params[:name]
-    suggestion = params[:suggestion]
+    code, message = @service_object.allocate_virtual_ip(
+      params[:id],
+      params[:network],
+      params[:range],
+      params[:name],
+      params[:suggestion]
+    )
 
-    ret = @service_object.allocate_virtual_ip(id, network, range, name, suggestion)
-    return render text: ret[1], status: ret[0] if ret[0] != 200
-    render json: ret[1]
+    respond_to do |format|
+      case code
+      when 200
+        format.json { render json: message }
+      else
+        format.json do
+          render json: { error: message }, status: code
+        end
+      end
+    end
   end
 
-  add_help(:deallocate_virtual_ip,[:id,:network,:name],[:post])
+  add_help(:deallocate_virtual_ip, [:id, :network, :name], [:post])
   def deallocate_virtual_ip
-    id = params[:id]       # Network id
-    network = params[:network]
-    name = params[:name]
+    code, message = @service_object.deallocate_virtual_ip(
+      params[:id],
+      params[:network],
+      params[:name]
+    )
 
-    ret = @service_object.deallocate_virtual_ip(id, network, name)
-    return render text: ret[1], status: ret[0] if ret[0] != 200
-    render json: ret[1]
+    respond_to do |format|
+      case code
+      when 200
+        format.json { head :ok }
+      else
+        format.json do
+          render json: { error: message }, status: code
+        end
+      end
+    end
   end
 
-  add_help(:deallocate_ip,[:id,:network,:name],[:post])
+  add_help(:deallocate_ip, [:id, :network, :name], [:post])
   def deallocate_ip
-    id = params[:id]       # Network id
-    network = params[:network]
-    name = params[:name]
+    code, message = @service_object.deallocate_ip(
+      params[:id],
+      params[:network],
+      params[:name]
+    )
 
-    ret = @service_object.deallocate_ip(id, network, name)
-    return render text: ret[1], status: ret[0] if ret[0] != 200
-    render json: ret[1]
+    respond_to do |format|
+      case code
+      when 200
+        format.json { head :ok }
+      else
+        format.json do
+          render json: { error: message }, status: code
+        end
+      end
+    end
   end
 
-  add_help(:enable_interface,[:id,:network,:name],[:post])
+  add_help(:enable_interface, [:id, :network, :name], [:post])
   def enable_interface
-    id = params[:id]       # Network id
-    network = params[:network]
-    name = params[:name]
+    code, message = @service_object.enable_interface(
+      params[:id],
+      params[:network],
+      params[:name]
+    )
 
-    ret = @service_object.enable_interface(id, network, name)
-    return render text: ret[1], status: ret[0] if ret[0] != 200
-    render json: ret[1]
+    respond_to do |format|
+      case code
+      when 200
+        format.json { render json: message }
+      else
+        format.json do
+          render json: { error: message }, status: code
+        end
+      end
+    end
   end
 
-  add_help(:disable_interface,[:id,:network,:name],[:post])
+  add_help(:disable_interface, [:id, :network, :name], [:post])
   def disable_interface
-    id = params[:id]       # Network id
-    network = params[:network]
-    name = params[:name]
+    code, message = @service_object.disable_interface(
+      params[:id],
+      params[:network],
+      params[:name]
+    )
 
-    ret = @service_object.disable_interface(id, network, name)
-    return render text: ret[1], status: ret[0] if ret[0] != 200
-    render json: ret[1]
+    respond_to do |format|
+      case code
+      when 200
+        format.json { head :ok }
+      else
+        format.json do
+          render json: { error: message }, status: code
+        end
+      end
+    end
   end
 
   def switch
