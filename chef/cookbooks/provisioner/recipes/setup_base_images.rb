@@ -309,18 +309,28 @@ if node[:platform_family] == "suse"
       notifies :reload, resources(service: "xinetd")
     end
   else
-    service "tftp.socket" do
-      action node[:provisioner][:enable_pxe] ? ["enable", "start"] : ["disable", "stop"]
+    template "/etc/systemd/system/tftp.service" do
+      source "tftp.service.erb"
+      owner "root"
+      group "root"
+      mode "0644"
+      variables(tftproot: tftproot, admin_ip: admin_ip)
     end
 
     service "tftp.service" do
       if node[:provisioner][:enable_pxe]
-        supports reload: true
-        action :nothing
-        subscribes :reload, resources("cookbook_file[/etc/tftpd.conf]")
+        action ["enable", "start"]
+        subscribes :restart, resources("cookbook_file[/etc/tftpd.conf]")
+        subscribes :restart, resources("template[/etc/systemd/system/tftp.service]")
       else
-        action "stop"
+        action ["disable", "stop"]
       end
+    end
+
+    bash "reload systemd after tftp.service update" do
+      code "systemctl daemon-reload"
+      action :nothing
+      subscribes :run, resources(template: "/etc/systemd/system/tftp.service"), :immediately
     end
   end
 else
