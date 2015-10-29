@@ -79,11 +79,7 @@ en:
       title: 'Utilities'
       logs: 'Exported Items'
       repositories: 'Repositories'
-    help:
-      title: 'Help'
-      docs: 'Documentation'
-      crowbar_users: 'Crowbar Users Guide'
-      wiki: 'Online Help'
+    help: 'Help'
 
   layouts:
     application:
