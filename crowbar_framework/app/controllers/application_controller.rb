@@ -137,7 +137,7 @@ class ApplicationController < ActionController::Base
   end
 
   def crowbar_mode
-    if Rails.configuration.crowbar_mode == "installer"
+    if ENV["CROWBAR_MODE"] && ENV["CROWBAR_MODE"] == "installer"
       redirect_to install_path
     end
   end

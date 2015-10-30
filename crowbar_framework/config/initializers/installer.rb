@@ -16,6 +16,6 @@
 
 Rails.application.config.tap do |config|
   unless File.exist?(Rails.root.join(".crowbar-installed-ok"))
-    config.crowbar_mode = "installer"
+    ENV["CROWBAR_MODE"] = "installer"
   end
 end
