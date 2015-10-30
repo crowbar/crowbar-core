@@ -369,5 +369,11 @@ service "bind9" do
   action [:enable, :start]
 end
 
+execute "reload nscd after dns config change" do
+  command "nscd -i hosts"
+  action :nothing
+  subscribes :run, "template[/etc/bind/db.#{node[:dns][:domain]}]"
+end
+
 node.set[:dns][:zones]=zones
 include_recipe "resolver"
