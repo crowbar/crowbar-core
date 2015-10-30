@@ -158,8 +158,8 @@ EOC
         variables(append_line: "#{append_line} crowbar.state=discovery",
                   install_name: "Crowbar Discovery Image",
                   admin_ip: admin_ip,
-                  initrd: "#{arch}/initrd0.img",
-                  kernel: "#{arch}/vmlinuz0")
+                  initrd: "discovery/#{arch}/initrd0.img",
+                  kernel: "discovery/#{arch}/vmlinuz0")
       end
 
       bash "Build UEFI netboot loader with grub" do
@@ -635,12 +635,12 @@ node[:provisioner][:supported_oses].each do |os, arches|
     node.set[:provisioner][:available_oses][os] ||= Mash.new
     node.set[:provisioner][:available_oses][os][arch] ||= Mash.new
     if /^(hyperv|windows)/ =~ os
-      node.set[:provisioner][:available_oses][os][arch][:kernel] = "../../../#{os}/#{kernel}"
+      node.set[:provisioner][:available_oses][os][arch][:kernel] = "#{os}/#{kernel}"
       node.set[:provisioner][:available_oses][os][arch][:initrd] = " "
       node.set[:provisioner][:available_oses][os][arch][:append_line] = " "
     else
-      node.set[:provisioner][:available_oses][os][arch][:kernel] = "../../../#{os}/#{arch}/install/#{kernel}"
-      node.set[:provisioner][:available_oses][os][arch][:initrd] = "../../../#{os}/#{arch}/install/#{initrd}"
+      node.set[:provisioner][:available_oses][os][arch][:kernel] = "#{os}/#{arch}/install/#{kernel}"
+      node.set[:provisioner][:available_oses][os][arch][:initrd] = "#{os}/#{arch}/install/#{initrd}"
       node.set[:provisioner][:available_oses][os][arch][:append_line] = append
     end
     node.set[:provisioner][:available_oses][os][arch][:disabled] = missing_files

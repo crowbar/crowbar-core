@@ -340,6 +340,8 @@ if not nodes.nil? and not nodes.empty?
         append_line = append.join(" ")
         install_name = node[:provisioner][:available_oses][os][arch][:install_name]
         install_label = "OS Install (#{os})"
+        relative_to_pxelinux = "../../../"
+        relative_to_tftpboot = ""
         initrd = node[:provisioner][:available_oses][os][arch][:initrd]
         kernel = node[:provisioner][:available_oses][os][arch][:kernel]
 
@@ -348,8 +350,10 @@ if not nodes.nil? and not nodes.empty?
         append_line = "#{node[:provisioner][:sledgehammer_append_line]} crowbar.hostname=#{mnode[:fqdn]} crowbar.state=#{new_group}"
         install_name = new_group
         install_label = "Crowbar Discovery Image (#{new_group})"
-        initrd = "../initrd0.img"
-        kernel = "../vmlinuz0"
+        relative_to_pxelinux = "../"
+        relative_to_tftpboot = "discovery/#{arch}/"
+        initrd = "initrd0.img"
+        kernel = "vmlinuz0"
 
       end
 
@@ -362,8 +366,8 @@ if not nodes.nil? and not nodes.empty?
           source t[:src]
           variables(append_line: append_line,
                     install_name: install_name,
-                    initrd: initrd,
-                    kernel: kernel)
+                    initrd: "#{relative_to_pxelinux}#{initrd}",
+                    kernel: "#{relative_to_pxelinux}#{kernel}")
         end unless t[:file].nil?
       end
 
@@ -385,8 +389,8 @@ if not nodes.nil? and not nodes.empty?
           variables(append_line: append_line,
                     install_name: install_label,
                     admin_ip: admin_ip,
-                    initrd: initrd,
-                    kernel: kernel)
+                    initrd: "#{relative_to_tftpboot}#{initrd}",
+                    kernel: "#{relative_to_tftpboot}#{kernel}")
         end
 
         bash "Build UEFI netboot loader with grub for #{mnode[:fqdn]} (#{new_group})" do
