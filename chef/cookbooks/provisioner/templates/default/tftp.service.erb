@@ -1,0 +1,6 @@
+[Unit]
+Description=Tftp Server
+
+[Service]
+Type=simple
+ExecStart=/usr/sbin/in.tftpd -u tftp -s <%= @tftproot %> -m /etc/tftpd.conf -L -a <%= @admin_ip %>
