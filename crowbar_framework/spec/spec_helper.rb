@@ -63,7 +63,7 @@ RSpec.configure do |config|
   #
   # If you prefer to use mocha, flexmock or RR, uncomment the appropriate line:
   #
-  config.mock_with :mocha
+  config.mock_with :rspec
   # config.mock_with :flexmock
   # config.mock_with :rr
 
@@ -102,9 +102,9 @@ RSpec.configure do |config|
   config.infer_spec_type_from_file_location!
 
   config.before do
-    ChefObject.stubs(:cloud_domain).returns("crowbar.com")
-
-    Proposal.any_instance.stubs(:properties_template_dir).returns(Rails.root.join("spec/fixtures/data_bags"))
+    allow(ChefObject).to receive(:cloud_domain).and_return("crowbar.com")
+    allow_any_instance_of(Proposal).to receive(:properties_template_dir).
+      and_return(Rails.root.join("spec/fixtures/data_bags"))
   end
 
   config.append_before(:each) do

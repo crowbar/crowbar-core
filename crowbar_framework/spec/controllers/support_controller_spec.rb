@@ -27,12 +27,14 @@ describe SupportController do
     end
 
     it "is successful notifying about new export" do
-      @controller.stubs(:default_export_hash).returns(Utils::ExtendedHash.new({
-        waiting: false,
-        counter: 1,
-        current: "foo.tar.gz",
-        files: { chef: ["foo.tar.gz"], logs: [], other: [], support_configs: [], bc_import: [] }
-      }))
+      allow(@controller).to receive(:default_export_hash).and_return(
+        Utils::ExtendedHash.new(
+          waiting: false,
+          counter: 1,
+          current: "foo.tar.gz",
+          files: { chef: ["foo.tar.gz"], logs: [], other: [], support_configs: [], bc_import: [] }
+        )
+      )
 
       get :index
       expect(response).to be_success
@@ -41,7 +43,7 @@ describe SupportController do
 
   describe "GET export_chef" do
     it "displays flash message on error" do
-      NodeObject.stubs(:all).raises(StandardError)
+      allow(NodeObject).to receive(:all) { raise StandardError }
       get :export_chef
       expect(response).to redirect_to(utils_url)
       expect(flash[:alert]).to_not be_empty
@@ -50,9 +52,8 @@ describe SupportController do
     it "exports known data into db dir" do
       begin
         now = Time.now
-        Time.stubs(:now).returns(now)
-
-        Process.stubs(:fork).returns(0)
+        allow(Time).to receive(:now).and_return(now)
+        allow(Process).to receive(:fork).and_return(0)
 
         filename = "crowbar-chef-#{now.strftime("%Y%m%d-%H%M%S")}.tgz"
         export = Rails.root.join("db", filename)

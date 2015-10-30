@@ -63,7 +63,6 @@ unless ENV["PACKAGING"] && ENV["PACKAGING"] == "yes"
 
   group :test do
     gem "database_cleaner", "~> 1.4.1"
-    gem "mocha", "~> 1.1.0"
     gem "sinatra", "~> 1.4.5"
     gem "webmock", "~> 1.19.0"
     gem "bundler-audit", "~> 0.4.0"
