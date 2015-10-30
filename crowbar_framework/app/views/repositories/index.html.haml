@@ -5,12 +5,15 @@
     .alert.alert-info
       = t(".refresh_hint")
 
-- repository_platforms.each_with_index do |platform, index|
+- @repos_groups.each_with_index do |repos_group, index|
+  - platform = repos_group[:platform]
+  - arch = repos_group[:arch]
+  - repos = repos_group[:repos]
   = form_for :repository, url: sync_repositories_path, html: { role: "form" } do |f|
     .panel.panel-default
       .panel-heading
         %h2
-          = pretty_target_platform(platform)
+          = "#{pretty_target_platform(platform)} (#{arch})"
 
       %table.table.table-hover.table-middle.table-bordered
         %thead
@@ -30,68 +33,67 @@
                 %i.glyphicon.glyphicon-question-sign{ data: { tooltip: true, placement: "top" }, title: t(".active_repo_tooltip") }
 
           %tbody
-          - @repocheck.each do |repo|
-            - if repo.platform == platform
-              %tr
-              - if repo.exist?
-                %td
-                  = link_to(repo.name, repo.url)
-                %td
+          - repos.each do |repo|
+            %tr
+            - if repo.exist?
+              %td
+                = link_to(repo.name, repo.url)
+              %td
+                = repo.required
+              - if repo.stale?
+                %td.warning
+                  %i.glyphicon.glyphicon-refresh
+                  = t(".stale")
+              - else
+                %td.success
+                  %i.glyphicon.glyphicon-ok
+                  = t(".available")
+            - else
+              %td
+                .span.text-muted
+                  = repo.name
+              %td
+                .text-muted
                   = repo.required
-                - if repo.stale?
-                  %td.warning
-                    %i.glyphicon.glyphicon-refresh
-                    = t(".stale")
-                - else
-                  %td.success
-                    %i.glyphicon.glyphicon-ok
-                    = t(".available")
+              - if repo.required == "mandatory"
+                %td{ class: repository_availability(repo.required) }
+                  %i.glyphicon.glyphicon-remove
+                  = t(".unavailable")
               - else
-                %td
-                  .span.text-muted
-                    = repo.name
-                %td
+                %td{ class: repository_availability(repo.required) }
                   .text-muted
-                    = repo.required
-                - if repo.required == "mandatory"
-                  %td{ class: repository_availability(repo.required) }
-                    %i.glyphicon.glyphicon-remove
                     = t(".unavailable")
-                - else
-                  %td{ class: repository_availability(repo.required) }
-                    .text-muted
-                      = t(".unavailable")
 
-              - if !repo.exist?
-                %td{ class: repository_availability(repo.required) }
-                  .text-muted
-                    = t(".unavailable")
-                %td
-                  = check_box "repo[#{platform}]", repo.id, { class: "platform#{index}", checked: false, disabled: true }
-              - elsif repo.remote?
-                %td.success
-                  %i.glyphicon.glyphicon-ok
-                  = t(".check_remote")
-                %td
-                  = check_box "repo[#{platform}]", repo.id, { class: "platform#{index}", checked: repo.active? }
-              - elsif !repo.valid_repo?
-                %td{ class: repository_availability(repo.required) }
-                  %i.glyphicon.glyphicon-remove
-                  = t(".check_failed_tag")
-                %td
-                  = check_box "repo[#{platform}]", repo.id, { class: "platform#{index}", checked: false, disabled: true }
-              - elsif !repo.valid_key_file?
-                %td{ class: repository_availability(repo.required) }
-                  %i.glyphicon.glyphicon-remove
-                  = t(".check_failed_md5")
-                %td
-                  = check_box "repo[#{platform}]", repo.id, { class: "platform#{index}", checked: false, disabled: true }
-              - else
-                %td.success
-                  %i.glyphicon.glyphicon-ok
-                  = t(".check_ok")
-                %td
-                  = check_box "repo[#{platform}]", repo.id, { class: "platform#{index}", checked: repo.active? }
+            - if !repo.exist?
+              %td{ class: repository_availability(repo.required) }
+                .text-muted
+                  = t(".unavailable")
+              %td
+                = check_box "repo[#{platform}][#{arch}]", repo.id, { class: "platform#{index}", checked: false, disabled: true }
+            - elsif repo.remote?
+              %td.success
+                %i.glyphicon.glyphicon-ok
+                = t(".check_remote")
+              %td
+                = check_box "repo[#{platform}][#{arch}]", repo.id, { class: "platform#{index}", checked: repo.active? }
+            - elsif !repo.valid_repo?
+              %td{ class: repository_availability(repo.required) }
+                %i.glyphicon.glyphicon-remove
+                = t(".check_failed_tag")
+              %td
+                = check_box "repo[#{platform}][#{arch}]", repo.id, { class: "platform#{index}", checked: false, disabled: true }
+            - elsif !repo.valid_key_file?
+              %td{ class: repository_availability(repo.required) }
+                %i.glyphicon.glyphicon-remove
+                = t(".check_failed_md5")
+              %td
+                = check_box "repo[#{platform}][#{arch}]", repo.id, { class: "platform#{index}", checked: false, disabled: true }
+            - else
+              %td.success
+                %i.glyphicon.glyphicon-ok
+                = t(".check_ok")
+              %td
+                = check_box "repo[#{platform}][#{arch}]", repo.id, { class: "platform#{index}", checked: repo.active? }
 
       .panel-footer.text-right
         .btn-group

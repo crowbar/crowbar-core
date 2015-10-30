@@ -164,6 +164,7 @@ ADMIN_BROADCAST="<%= @admin_broadcast %>"
 WEB_PORT="<%= @web_port %>"
 HTTP_SERVER="http://${ADMIN_IP}:${WEB_PORT}"
 CROWBAR_OS="<%= @os %>"
+CROWBAR_ARCH="<%= @arch %>"
 CROWBAR_KEY="<%= @crowbar_key %>"
 DOMAIN="<%= @domain %>"
 NTP_SERVERS="<%= @ntp_servers_ips.join(" ") %>"
@@ -437,7 +438,7 @@ chkconfig -a chef-client
 systemctl enable chef-client.service
 <% end -%>
 
-curl -s -o /usr/sbin/crowbar_join $HTTP_SERVER/$CROWBAR_OS/crowbar_join.sh
+curl -s -o /usr/sbin/crowbar_join $HTTP_SERVER/$CROWBAR_OS/$CROWBAR_ARCH/crowbar_join.sh
 chmod +x /usr/sbin/crowbar_join
 
 post_state $HOSTNAME "installed"

@@ -21,9 +21,17 @@ describe Crowbar::Repository do
         expect(platforms).to be_an(Array)
       end
 
-      it "lists all repositories for a given platform" do
+      it "lists all architectures for a given platform" do
         platforms.each do |platform|
-          expect(Crowbar::Repository.repositories(platform)).to be_an(Array)
+          expect(Crowbar::Repository.arches(platform)).to be_an(Array)
+        end
+      end
+
+      it "lists all repositories for a given platform / architecture" do
+        platforms.each do |platform|
+          Crowbar::Repository.arches(platform).each do |arch|
+            expect(Crowbar::Repository.repositories(platform, arch)).to be_an(Array)
+          end
         end
       end
     end
@@ -43,19 +51,23 @@ describe Crowbar::Repository do
     context "select specific repositories" do
       it "returns a list of repository objects" do
         platforms.each do |platform|
-          Crowbar::Repository.repositories(platform).each do |repo|
-            repo_objects = Crowbar::Repository.where(platform: platform, name: repo)
-            expect(repo_objects).to be_an(Array)
+          platforms.each do |arch|
+            Crowbar::Repository.repositories(platform, arch).each do |repo|
+              repo_objects = Crowbar::Repository.where(platform: platform, arch: arch, name: repo)
+              expect(repo_objects).to be_an(Array)
+            end
           end
         end
       end
 
       it "validates the list of repository objects" do
         platforms.each do |platform|
-          Crowbar::Repository.repositories(platform).each do |repo|
-            repo_objects = Crowbar::Repository.where(platform: platform, name: repo)
-            repo_objects.each do |repo_object|
-              expect(repo_object).to be_an_instance_of(Crowbar::Repository)
+          platforms.each do |arch|
+            Crowbar::Repository.repositories(platform, arch).each do |repo|
+              repo_objects = Crowbar::Repository.where(platform: platform, arch: arch, name: repo)
+              repo_objects.each do |repo_object|
+                expect(repo_object).to be_an_instance_of(Crowbar::Repository)
+              end
             end
           end
         end
@@ -65,9 +77,10 @@ describe Crowbar::Repository do
 
   describe "performing repository checks" do
     let(:platform) { Crowbar::Repository.all_platforms.first }
-    let(:repo_names) { Crowbar::Repository.repositories(platform) }
-    let(:accessors) { [:platform, :id, :config] }
-    let(:repository) { Crowbar::Repository.new(platform, repo_names.first) }
+    let(:arch) { Crowbar::Repository.arches(platform).first }
+    let(:repo_names) { Crowbar::Repository.repositories(platform, arch) }
+    let(:accessors) { [:platform, :arch, :id, :config] }
+    let(:repository) { Crowbar::Repository.new(platform, arch, repo_names.first) }
 
     context "creating a new Repository check" do
       it "returns the correct object" do

@@ -446,197 +446,206 @@ end
 node.set[:provisioner][:repositories] = Mash.new
 node.set[:provisioner][:available_oses] = Mash.new
 
-node[:provisioner][:supported_oses].each do |os,params|
-  web_path = "#{provisioner_web}/#{os}"
-  admin_web="#{web_path}/install"
-  crowbar_repo_web="#{web_path}/crowbar-extra"
-  os_dir="#{tftproot}/#{os}"
-  os_codename=node[:lsb][:codename]
-  role="#{os}_install"
-  missing_files = false
-  append = params["append"].dup # We'll modify it inline
-  initrd = params["initrd"]
-  kernel = params["kernel"]
-  require_install_dir = params["require_install_dir"].nil? ? true : params["require_install_dir"]
+node[:provisioner][:supported_oses].each do |os, arches|
+  arches.each do |arch, params|
+    web_path = "#{provisioner_web}/#{os}/#{arch}"
+    admin_web = "#{web_path}/install"
+    crowbar_repo_web = "#{web_path}/crowbar-extra"
+    os_dir = "#{tftproot}/#{os}/#{arch}"
+    os_codename = node[:lsb][:codename]
+    role = "#{os}_install"
+    missing_files = false
+    append = params["append"].dup # We'll modify it inline
+    initrd = params["initrd"]
+    kernel = params["kernel"]
+    require_install_dir = params["require_install_dir"].nil? ? true : params["require_install_dir"]
 
-  if require_install_dir
-    # Don't bother for OSes that are not actually present on the provisioner node.
-    next unless File.directory? os_dir and File.directory? "#{os_dir}/install"
-  end
+    if require_install_dir
+      # Don't bother for OSes that are not actually present on the provisioner node.
+      next unless File.directory?(os_dir) && File.directory?("#{os_dir}/install")
+    end
 
-  # Index known barclamp repositories for this OS
-  node[:provisioner][:repositories][os] ||= Mash.new
-  if File.exists? "#{os_dir}/crowbar-extra" and File.directory? "#{os_dir}/crowbar-extra"
-    Dir.foreach("#{os_dir}/crowbar-extra") do |f|
-      next unless File.symlink? "#{os_dir}/crowbar-extra/#{f}"
-      node[:provisioner][:repositories][os][f] ||= Hash.new
-      case
-      when os =~ /(ubuntu|debian)/
-        bin="deb http://#{admin_ip}:#{web_port}/#{os}/crowbar-extra/#{f} /"
-        src="deb-src http://#{admin_ip}:#{web_port}/#{os}/crowbar-extra/#{f} /"
-        node.set[:provisioner][:repositories][os][f][bin] = true if
-          File.exists? "#{os_dir}/crowbar-extra/#{f}/Packages.gz"
-        node.set[:provisioner][:repositories][os][f][src] = true if
-          File.exists? "#{os_dir}/crowbar-extra/#{f}/Sources.gz"
-      when os =~ /(redhat|centos|suse)/
-        bin="baseurl=http://#{admin_ip}:#{web_port}/#{os}/crowbar-extra/#{f}"
-        node.set[:provisioner][:repositories][os][f][bin] = true
+    # Index known barclamp repositories for this OS
+    node[:provisioner][:repositories][os] ||= Mash.new
+    node[:provisioner][:repositories][os][arch] ||= Mash.new
+
+    if File.exist?("#{os_dir}/crowbar-extra") && File.directory?("#{os_dir}/crowbar-extra")
+      Dir.foreach("#{os_dir}/crowbar-extra") do |f|
+        next unless File.symlink? "#{os_dir}/crowbar-extra/#{f}"
+        node[:provisioner][:repositories][os][arch][f] ||= Hash.new
+        case
+        when os =~ /(ubuntu|debian)/
+          bin = "deb #{web_path}/crowbar-extra/#{f} /"
+          src = "deb-src #{web_path}/crowbar-extra/#{f} /"
+          node.set[:provisioner][:repositories][os][arch][f][bin] = true if
+            File.exist? "#{os_dir}/crowbar-extra/#{f}/Packages.gz"
+          node.set[:provisioner][:repositories][os][arch][f][src] = true if
+            File.exist? "#{os_dir}/crowbar-extra/#{f}/Sources.gz"
+        when os =~ /(redhat|centos|suse)/
+          bin = "baseurl=#{web_path}/crowbar-extra/#{f}"
+          node.set[:provisioner][:repositories][os][arch][f][bin] = true
         else
           raise ::RangeError.new("Cannot handle repos for #{os}")
         end
-    end
-  end
-
-  # If we were asked to use a serial console, arrange for it.
-  if node[:provisioner][:use_serial_console]
-    append << " console=tty0 console=#{node[:provisioner][:serial_tty]}"
-  end
-
-  # Make sure we get a crowbar install key as well.
-  unless crowbar_key.empty?
-    append << " crowbar.install.key=#{crowbar_key}"
-  end
-
-  # These should really be made libraries or something.
-  case
-  when /^(suse)/ =~ os
-    # Add base OS install repo for suse
-    node.set[:provisioner][:repositories][os]["base"] = { "baseurl=http://#{admin_ip}:#{web_port}/#{os}/install" => true }
-
-    ntp_servers = search(:node, "roles:ntp-server")
-    ntp_servers_ips = ntp_servers.map { |n| Chef::Recipe::Barclamp::Inventory.get_network_by_type(n, "admin").address }
-
-    target_platform_version = os.gsub(/^.*-/, "")
-    template "#{os_dir}/crowbar_join.sh" do
-      mode 0644
-      owner "root"
-      group "root"
-      source "crowbar_join.suse.sh.erb"
-      variables(admin_ip: admin_ip,
-                web_port: web_port,
-                ntp_servers_ips: ntp_servers_ips,
-                target_platform_version: target_platform_version)
-    end
-
-    repos = Provisioner::Repositories.get_repos("suse", target_platform_version)
-
-    packages = node[:provisioner][:packages][os] || []
-
-    template "#{os_dir}/crowbar_register" do
-      mode 0644
-      owner "root"
-      group "root"
-      source "crowbar_register.erb"
-      variables(admin_ip: admin_ip,
-                admin_broadcast: admin_broadcast,
-                web_port: web_port,
-                ntp_servers_ips: ntp_servers_ips,
-                os: os,
-                crowbar_key: crowbar_key,
-                domain: domain_name,
-                repos: repos,
-                packages: packages,
-                target_platform_version: target_platform_version)
-    end
-
-    missing_files = ! File.exists?("#{os_dir}/install/boot/x86_64/common")
-
-  when /^(redhat|centos)/ =~ os
-    # Add base OS install repo for redhat/centos
-    if ::File.exists? "#{tftproot}/#{os}/install/repodata"
-      node.set[:provisioner][:repositories][os]["base"] = { "baseurl=http://#{admin_ip}:#{web_port}/#{os}/install" => true }
-    else
-      node.set[:provisioner][:repositories][os]["base"] = { "baseurl=http://#{admin_ip}:#{web_port}/#{os}/install/Server" => true }
-    end
-    # Default kickstarts and crowbar_join scripts for redhat.
-
-    template "#{os_dir}/crowbar_join.sh" do
-      mode 0644
-      owner "root"
-      group "root"
-      source "crowbar_join.redhat.sh.erb"
-      variables(admin_web: admin_web,
-                os_codename: os_codename,
-                crowbar_repo_web: crowbar_repo_web,
-                admin_ip: admin_ip,
-                provisioner_web: provisioner_web,
-                web_path: web_path)
-    end
-
-  when /^ubuntu/ =~ os
-    node.set[:provisioner][:repositories][os]["base"] = { "http://#{admin_ip}:#{web_port}/#{os}/install" => true }
-    # Default files needed for Ubuntu.
-
-    template "#{os_dir}/net-post-install.sh" do
-      mode 0644
-      owner "root"
-      group "root"
-      variables(admin_web: admin_web,
-                os_codename: os_codename,
-                repos: node[:provisioner][:repositories][os],
-                admin_ip: admin_ip,
-                provisioner_web: provisioner_web,
-                web_path: web_path)
-    end
-
-    template "#{os_dir}/crowbar_join.sh" do
-      mode 0644
-      owner "root"
-      group "root"
-      source "crowbar_join.ubuntu.sh.erb"
-      variables(admin_web: admin_web,
-                os_codename: os_codename,
-                crowbar_repo_web: crowbar_repo_web,
-                admin_ip: admin_ip,
-                provisioner_web: provisioner_web,
-                web_path: web_path)
-    end
-
-  when /^(hyperv|windows)/ =~ os
-    template "#{tftproot}/adk-tools/build_winpe_#{os}.ps1" do
-      mode 0644
-      owner "root"
-      group "root"
-      source "build_winpe_os.ps1.erb"
-      variables(os: os,
-                admin_ip: admin_ip)
-    end
-
-    directory "#{os_dir}" do
-      mode 0755
-      owner "root"
-      group "root"
-      action :create
-    end
-
-    # Let's stay compatible with the old code and remove the per-version extra directory
-    if File.directory? "#{os_dir}/extra"
-      directory "#{os_dir}/extra" do
-        recursive true
-        action :delete
       end
     end
 
-    link "#{os_dir}/extra" do
-      action :create
-      to "../windows-common/extra"
+    # If we were asked to use a serial console, arrange for it.
+    if node[:provisioner][:use_serial_console]
+      append << " console=tty0 console=#{node[:provisioner][:serial_tty]}"
     end
 
-    missing_files = ! File.exists?("#{os_dir}/boot/bootmgr.exe")
-  end
+    # Make sure we get a crowbar install key as well.
+    unless crowbar_key.empty?
+      append << " crowbar.install.key=#{crowbar_key}"
+    end
 
-  node.set[:provisioner][:available_oses][os] ||= Mash.new
-  if /^(hyperv|windows)/ =~ os
-    node.set[:provisioner][:available_oses][os][:kernel] = "../../../#{os}/#{kernel}"
-    node.set[:provisioner][:available_oses][os][:initrd] = " "
-    node.set[:provisioner][:available_oses][os][:append_line] = " "
-  else
-    node.set[:provisioner][:available_oses][os][:kernel] = "../../../#{os}/install/#{kernel}"
-    node.set[:provisioner][:available_oses][os][:initrd] = "../../../#{os}/install/#{initrd}"
-    node.set[:provisioner][:available_oses][os][:append_line] = append
+    # These should really be made libraries or something.
+    case
+    when /^(suse)/ =~ os
+      # Add base OS install repo for suse
+      node.set[:provisioner][:repositories][os][arch]["base"] = { "baseurl=#{admin_web}" => true }
+
+      ntp_servers = search(:node, "roles:ntp-server")
+      ntp_servers_ips = ntp_servers.map { |n| Chef::Recipe::Barclamp::Inventory.get_network_by_type(n, "admin").address }
+
+      target_platform_version = os.gsub(/^.*-/, "")
+      template "#{os_dir}/crowbar_join.sh" do
+        mode 0644
+        owner "root"
+        group "root"
+        source "crowbar_join.suse.sh.erb"
+        variables(admin_ip: admin_ip,
+                  web_port: web_port,
+                  ntp_servers_ips: ntp_servers_ips,
+                  target_platform_version: target_platform_version)
+      end
+
+      repos = Provisioner::Repositories.get_repos("suse", target_platform_version, arch)
+
+      packages = node[:provisioner][:packages][os] || []
+
+      template "#{os_dir}/crowbar_register" do
+        mode 0644
+        owner "root"
+        group "root"
+        source "crowbar_register.erb"
+        variables(admin_ip: admin_ip,
+                  admin_broadcast: admin_broadcast,
+                  web_port: web_port,
+                  ntp_servers_ips: ntp_servers_ips,
+                  os: os,
+                  arch: arch,
+                  crowbar_key: crowbar_key,
+                  domain: domain_name,
+                  repos: repos,
+                  packages: packages,
+                  target_platform_version: target_platform_version)
+      end
+
+      missing_files = !File.exist?("#{os_dir}/install/boot/#{arch}/common")
+
+    when /^(redhat|centos)/ =~ os
+      # Add base OS install repo for redhat/centos
+      if ::File.exist? "#{tftproot}/#{os}/#{arch}/install/repodata"
+        node.set[:provisioner][:repositories][os][arch]["base"] = { "baseurl=#{admin_web}" => true }
+      else
+        node.set[:provisioner][:repositories][os][arch]["base"] = { "baseurl=#{admin_web}/Server" => true }
+      end
+      # Default kickstarts and crowbar_join scripts for redhat.
+
+      template "#{os_dir}/crowbar_join.sh" do
+        mode 0644
+        owner "root"
+        group "root"
+        source "crowbar_join.redhat.sh.erb"
+        variables(admin_web: admin_web,
+                  os_codename: os_codename,
+                  crowbar_repo_web: crowbar_repo_web,
+                  admin_ip: admin_ip,
+                  provisioner_web: provisioner_web,
+                  web_path: web_path)
+      end
+
+    when /^ubuntu/ =~ os
+      node.set[:provisioner][:repositories][os][arch]["base"] = { admin_web => true }
+      # Default files needed for Ubuntu.
+
+      template "#{os_dir}/net-post-install.sh" do
+        mode 0644
+        owner "root"
+        group "root"
+        variables(admin_web: admin_web,
+                  os_codename: os_codename,
+                  repos: node[:provisioner][:repositories][os][arch],
+                  admin_ip: admin_ip,
+                  provisioner_web: provisioner_web,
+                  web_path: web_path)
+      end
+
+      template "#{os_dir}/crowbar_join.sh" do
+        mode 0644
+        owner "root"
+        group "root"
+        source "crowbar_join.ubuntu.sh.erb"
+        variables(admin_web: admin_web,
+                  os_codename: os_codename,
+                  crowbar_repo_web: crowbar_repo_web,
+                  admin_ip: admin_ip,
+                  provisioner_web: provisioner_web,
+                  web_path: web_path)
+      end
+
+    when /^(hyperv|windows)/ =~ os
+      # Windows is x86_64-only
+      os_dir = "#{tftproot}/#{os}"
+
+      template "#{tftproot}/adk-tools/build_winpe_#{os}.ps1" do
+        mode 0644
+        owner "root"
+        group "root"
+        source "build_winpe_os.ps1.erb"
+        variables(os: os,
+                  admin_ip: admin_ip)
+      end
+
+      directory "#{os_dir}" do
+        mode 0755
+        owner "root"
+        group "root"
+        action :create
+      end
+
+      # Let's stay compatible with the old code and remove the per-version extra directory
+      if File.directory? "#{os_dir}/extra"
+        directory "#{os_dir}/extra" do
+          recursive true
+          action :delete
+        end
+      end
+
+      link "#{os_dir}/extra" do
+        action :create
+        to "../windows-common/extra"
+      end
+
+      missing_files = !File.exist?("#{os_dir}/boot/bootmgr.exe")
+    end
+
+    node.set[:provisioner][:available_oses][os] ||= Mash.new
+    node.set[:provisioner][:available_oses][os][arch] ||= Mash.new
+    if /^(hyperv|windows)/ =~ os
+      node.set[:provisioner][:available_oses][os][arch][:kernel] = "../../../#{os}/#{kernel}"
+      node.set[:provisioner][:available_oses][os][arch][:initrd] = " "
+      node.set[:provisioner][:available_oses][os][arch][:append_line] = " "
+    else
+      node.set[:provisioner][:available_oses][os][arch][:kernel] = "../../../#{os}/#{arch}/install/#{kernel}"
+      node.set[:provisioner][:available_oses][os][arch][:initrd] = "../../../#{os}/#{arch}/install/#{initrd}"
+      node.set[:provisioner][:available_oses][os][arch][:append_line] = append
+    end
+    node.set[:provisioner][:available_oses][os][arch][:disabled] = missing_files
+    node.set[:provisioner][:available_oses][os][arch][:install_name] = role
   end
-  node.set[:provisioner][:available_oses][os][:disabled] = missing_files
-  node.set[:provisioner][:available_oses][os][:install_name] = role
 end
 
 # Save this node config.

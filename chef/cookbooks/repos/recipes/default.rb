@@ -15,8 +15,10 @@
 
 provisioners = search(:node, "roles:provisioner-server")
 provisioner = provisioners[0] if provisioners
-os_token="#{node[:platform]}-#{node[:platform_version]}"
-Chef::Log.info("Running on #{os_token}")
+os_token = "#{node[:platform]}-#{node[:platform_version]}"
+arch = node[:kernel][:machine]
+
+Chef::Log.info("Running on #{os_token} / #{arch}")
 
 file "/tmp/.repo_update" do
   action :nothing
@@ -28,7 +30,7 @@ if provisioner and !CrowbarHelper.in_sledgehammer?(node)
 
   case node[:platform_family]
   when "debian"
-    repositories = provisioner["provisioner"]["repositories"][os_token]
+    repositories = provisioner["provisioner"]["repositories"][os_token][arch]
     cookbook_file "/etc/apt/apt.conf.d/99-crowbar-no-auth" do
       source "apt.conf"
     end
@@ -57,10 +59,10 @@ if provisioner and !CrowbarHelper.in_sledgehammer?(node)
     end
     package "rubygems"
   when "rhel"
-    maj,min = node[:platform_version].split(".",2)
-    repositories = Range.new(0,min.to_i).to_a.reverse.map{|v|
-      provisioner["provisioner"]["repositories"]["#{node[:platform]}-#{maj}.#{v}"] rescue nil
-    }.compact.first
+    maj, min = node[:platform_version].split(".", 2)
+    repositories = Range.new(0, min.to_i).to_a.reverse.map do |v|
+      provisioner["provisioner"]["repositories"]["#{node[:platform]}-#{maj}.#{v}"][arch] rescue nil
+    end.compact.first
     bash "update software sources" do
       code "yum clean expire-cache"
       action :nothing

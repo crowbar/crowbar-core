@@ -20,7 +20,7 @@ class Provisioner
       # This returns a hash containing the data about the repos that must be
       # used on nodes; optional repos (such as HA) will only be returned if
       # they can be used.
-      def get_repos(platform, version)
+      def get_repos(platform, version, arch)
         repositories = {}
 
         repos_db = begin
@@ -29,7 +29,7 @@ class Provisioner
           {}
         end
 
-        repos_db.fetch("#{platform}-#{version}", {}).each do |id, config|
+        repos_db.fetch("#{platform}-#{version}", {}).fetch(arch, {}).each do |id, config|
           repositories[config["name"]] = { url: config["url"], ask_on_error: config["ask_on_error"] }
         end
         repositories
