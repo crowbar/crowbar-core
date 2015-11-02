@@ -72,7 +72,7 @@ if not nodes.nil? and not nodes.empty?
       end
     end
 
-    arch = mnode[:kernel][:machine]
+    arch = mnode[:kernel][:machine] rescue "x86_64"
 
     # no boot_ip means that no admin network address has been assigned to node,
     # and it will boot into the default discovery image. But it won't help if
