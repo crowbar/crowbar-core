@@ -1,8 +1,5 @@
 #
-# Cookbook Name:: updater
-# Role:: updater
-#
-# Copyright 2013-2014, SUSE LINUX Products GmbH
+# Copyright 2015, SUSE LINUX GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +14,16 @@
 # limitations under the License.
 #
 
-name "updater"
-description "Updater role"
+barclamp = "provisioner"
+role = "provisioner-base"
 
-run_list("recipe[updater::role_updater]")
+# if nil, then this means all states are valid
+states_for_role = node[barclamp]["element_states"][role]
+
+if states_for_role.nil? || states_for_role.include?("all") || states_for_role.include?(node[:state])
+  include_recipe "provisioner::base"
+  include_recipe "utils::default"
+  include_recipe "barclamp::default"
+else
+  Chef::Log.info("Skipping role \"#{role}\" because node is in state \"#{node[:state]}\".")
+end

@@ -19,6 +19,4 @@
 
 name "ipmi-configure"
 description "IPMI configure - configure the BMC to allow remote management"
-run_list(
-  "recipe[ipmi::ipmi-configure]"
-)
+run_list("recipe[ipmi::role_ipmi_configure]")
