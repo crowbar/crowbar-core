@@ -19,15 +19,11 @@
         "crowbar": { "password": "crowbar" }
       },
       "simple_proposal_ui": true
-    },
-    "rails": {
-      "max_pool_size": 256,
-      "environment": "production"
     }
   },
   "deployment": {
     "crowbar": {
-      "crowbar-revision": 0,
+      "crowbar-revision": 10,
       "crowbar-applied": false,
       "element_states": {
         "crowbar": [ "all" ]

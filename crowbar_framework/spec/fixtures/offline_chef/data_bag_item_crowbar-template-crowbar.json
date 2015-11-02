@@ -21,10 +21,6 @@
         "crowbar": { "password": "crowbar" }
       },
       "simple_proposal_ui": true
-    },
-    "rails": {
-      "max_pool_size": 256,
-      "environment": "production"
     }
   },
   "deployment": {
