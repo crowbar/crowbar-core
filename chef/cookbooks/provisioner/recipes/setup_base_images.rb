@@ -25,14 +25,17 @@ append_line = ""
 
 tftproot = node[:provisioner][:root]
 
-# This is what we could support, but this requires validation
-#discovery_arches = ["x86_64", "ia32"]
-discovery_arches = ["x86_64"]
-
 discovery_dir = "#{tftproot}/discovery"
 pxe_subdir = "bios"
 pxecfg_subdir = "bios/pxelinux.cfg"
 uefi_subdir = "efi"
+
+# This is what we could support, but this requires validation
+#discovery_arches = ["x86_64", "ppc64le", "ia32"]
+discovery_arches = ["x86_64", "ppc64le"]
+discovery_arches.select! do |arch|
+  File.exist?("#{discovery_dir}/#{arch}/initrd0.img") && File.exist?("#{discovery_dir}/#{arch}/vmlinuz0")
+end
 
 if ::File.exists?("/etc/crowbar.install.key")
   crowbar_key = ::File.read("/etc/crowbar.install.key").chomp.strip
@@ -60,8 +63,9 @@ directory discovery_dir do
 end
 
 # PXE config
-%w(x86_64).each do |arch|
-  # Make it easy to totally disable/enable ppc64le
+# ppc64le bootloader can parse pxelinux config files
+%w(x86_64 ppc64le).each do |arch|
+  # Make it easy to totally disable/enable an architecture
   next unless discovery_arches.include? arch
 
   directory "#{discovery_dir}/#{arch}/#{pxecfg_subdir}" do
@@ -100,7 +104,7 @@ end
 # UEFI config
 use_elilo = true
 %w(x86_64 ia32).each do |arch|
-  # Make it easy to totally disable/enable architectures
+  # Make it easy to totally disable/enable an architecture
   next unless discovery_arches.include? arch
 
   uefi_dir = "#{discovery_dir}/#{arch}/#{uefi_subdir}"
