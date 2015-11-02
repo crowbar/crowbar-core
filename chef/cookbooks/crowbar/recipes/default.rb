@@ -61,7 +61,6 @@ when "suse"
     ruby2.1-rubygem-chef
     ruby2.1-rubygem-closure-compiler
     ruby2.1-rubygem-dotenv
-    ruby2.1-rubygem-dotenv-deployment
     ruby2.1-rubygem-haml-rails
     ruby2.1-rubygem-hashie
     ruby2.1-rubygem-js-routes

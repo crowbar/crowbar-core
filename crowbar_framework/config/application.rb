@@ -42,5 +42,9 @@ module Crowbar
       g.test_framework :rspec, fixture: true
       g.fallbacks[:rspec] = :test_unit
     end
+
+    config.before_configuration do
+      Dotenv.load *Dir.glob(Rails.root.join("config", "*.env"))
+    end
   end
 end

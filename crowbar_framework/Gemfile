@@ -48,9 +48,6 @@ gem "activerecord-session_store", "~> 0.1.0",
 gem "mime-types", "~> 1.25.1",
     require: "mime/types"
 
-gem "dotenv-deployment", "~> 0.2.0",
-    require: false
-
 unless ENV["PACKAGING"] && ENV["PACKAGING"] == "yes"
   gem "rack-mini-profiler", "~> 0.9.1",
       require: false
