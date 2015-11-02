@@ -117,7 +117,7 @@
         "admin_password": "crowbar"
       },
       "dhcp": {
-        "lease-time": 60,
+        "lease-time": 300,
         "state_machine": {
           "web_app_state":  "dhcp_state",
           "discovered": "discovery",
