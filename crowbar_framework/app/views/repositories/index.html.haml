@@ -29,8 +29,8 @@
             %th.col-xs-1
               %input{ type: "checkbox", value: "all", data: { checkall: "input.platform#{index}" } }
                 = t(".active")
-              .pull-right.center
-                %i.glyphicon.glyphicon-question-sign{ data: { tooltip: true, placement: "top" }, title: t(".active_repo_tooltip") }
+              .pull-right
+                = icon_tag :question_circle, nil, data: { tooltip: true, placement: "top" }, title: t(".active_repo_tooltip")
 
           %tbody
           - repos.each do |repo|
@@ -42,11 +42,11 @@
                 = repo.required
               - if repo.stale?
                 %td.warning
-                  %i.glyphicon.glyphicon-refresh
+                  = icon_tag :refresh
                   = t(".stale")
               - else
                 %td.success
-                  %i.glyphicon.glyphicon-ok
+                  = icon_tag :ok
                   = t(".available")
             - else
               %td
@@ -57,7 +57,7 @@
                   = repo.required
               - if repo.required == "mandatory"
                 %td{ class: repository_availability(repo.required) }
-                  %i.glyphicon.glyphicon-remove
+                  = icon_tag :remove
                   = t(".unavailable")
               - else
                 %td{ class: repository_availability(repo.required) }
@@ -72,25 +72,25 @@
                 = check_box "repo[#{platform}][#{arch}]", repo.id, { class: "platform#{index}", checked: false, disabled: true }
             - elsif repo.remote?
               %td.success
-                %i.glyphicon.glyphicon-ok
+                = icon_tag :ok
                 = t(".check_remote")
               %td
                 = check_box "repo[#{platform}][#{arch}]", repo.id, { class: "platform#{index}", checked: repo.active? }
             - elsif !repo.valid_repo?
               %td{ class: repository_availability(repo.required) }
-                %i.glyphicon.glyphicon-remove
+                = icon_tag :remove
                 = t(".check_failed_tag")
               %td
                 = check_box "repo[#{platform}][#{arch}]", repo.id, { class: "platform#{index}", checked: false, disabled: true }
             - elsif !repo.valid_key_file?
               %td{ class: repository_availability(repo.required) }
-                %i.glyphicon.glyphicon-remove
+                = icon_tag :remove
                 = t(".check_failed_md5")
               %td
                 = check_box "repo[#{platform}][#{arch}]", repo.id, { class: "platform#{index}", checked: false, disabled: true }
             - else
               %td.success
-                %i.glyphicon.glyphicon-ok
+                = icon_tag :ok
                 = t(".check_ok")
               %td
                 = check_box "repo[#{platform}][#{arch}]", repo.id, { class: "platform#{index}", checked: repo.active? }

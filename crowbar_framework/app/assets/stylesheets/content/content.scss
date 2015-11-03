@@ -9,13 +9,13 @@
   }
 }
 
-.glyphicon {
+.fa {
   font-size: $font-size-base;
 }
-.glyphicon-ok-sign {
+.fa-ok-sign {
   color: $brand-success;
 }
-.glyphicon-exclamation-sign {
+.fa-exclamation-sign {
   color: $brand-warning;
 }
 
@@ -45,12 +45,12 @@
   }
 }
 
-.dropdown-menu {  
+.dropdown-menu {
   border-radius: 6px;
   border: 1px solid rgba(0, 0, 0, 0.2);
   right: -1px;
 
-  & > li > a {  
+  & > li > a {
     padding: 3px 10px;
     margin: 0px 5px;
   }

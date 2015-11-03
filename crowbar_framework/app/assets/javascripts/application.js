@@ -5,6 +5,7 @@
 //= require codemirror
 //= require bootstrap-sprockets
 //= require bootstrap
+//= require fontawesome
 //= require_self
 //= require branding
 
@@ -208,8 +209,8 @@ jQuery(document).ready(function($) {
 
     if ($(target).hasClass('hidden')) {
       $(this).find('span').switchClass(
-        "glyphicon-chevron-right",
-        "glyphicon-chevron-down",
+        "fa-chevron-right",
+        "fa-chevron-down",
         0
       );
 
@@ -220,8 +221,8 @@ jQuery(document).ready(function($) {
       );
     } else {
       $(this).find('span').switchClass(
-        "glyphicon-chevron-down",
-        "glyphicon-chevron-right",
+        "fa-chevron-down",
+        "fa-chevron-right",
         0
       );
 
