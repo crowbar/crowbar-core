@@ -38,7 +38,7 @@
               = create_proposal_form_for(barclamp_name) do
                 %tr
                   %td.col-xs-1.status
-                    %span.glyphicon.glyphicon-plus
+                    = icon_tag :plus
                   %td.col-xs-2
                     = text_field_tag :name, barclamp[:suggested_proposal_name], :class => "form-control input-sm"
                   %td.col-xs-8

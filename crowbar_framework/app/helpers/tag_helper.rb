@@ -45,9 +45,9 @@ module TagHelper
     )
   end
 
-  # Directly generate a tag for the glyphicons web font icons
+  # Directly generate a tag for the fontawesome web font icons
   def icon_tag(icon, text = nil, options = {})
-    options[:class] = [options[:class], "glyphicon", "glyphicon-#{icon}"].compact.join(" ")
+    options[:class] = [options[:class], "fa", "fa-#{icon.to_s.tr("_", "-")}"].compact.join(" ")
     [
       content_tag(:span, "", options),
       text

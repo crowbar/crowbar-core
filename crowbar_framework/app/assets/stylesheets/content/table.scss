@@ -82,9 +82,7 @@ table {
   }
 
   th {
-    i {
-      display: inline-block;
-      float: none;
+    .fa {
       vertical-align: middle;
     }
   }

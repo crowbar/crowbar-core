@@ -50,7 +50,7 @@
           %ul.nodes
             - nodes_hash.each do |n, detail|
               %li.form-control.input-sm.available{ "data-draggable" => "true", "data-id" => n, "data-alias" => detail[:alias], "data-cluster" => "false", "data-admin" => detail[:admin].to_s, "data-platform" => detail[:platform], "data-platform-version" => detail[:platform_version], :title => (detail[:title] || t("not_set")) }
-                = icon_tag :hdd
+                = icon_tag :hdd_o
                 = detail[:alias]
                 = link_to icon_tag("link"), node_path(detail[:handle]), :title => t(".node_link", :alias => detail[:alias]), :class => "pull-right"
 
@@ -70,7 +70,7 @@
     {{#if cluster}}
     = icon_tag :cloud
     {{else}}
-    = icon_tag :hdd
+    = icon_tag :hdd_o
     {{/if}}
 
     {{alias}}
