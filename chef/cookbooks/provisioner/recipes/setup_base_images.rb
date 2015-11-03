@@ -300,8 +300,6 @@ if node[:platform_family] == "suse"
     end
 
     service "xinetd" do
-      running node[:provisioner][:enable_pxe] ? true : false
-      enabled node[:provisioner][:enable_pxe] ? true : false
       action node[:provisioner][:enable_pxe] ? ["enable", "start"] : ["disable", "stop"]
       supports reload: true
       subscribes :reload, resources(service: "tftp"), :immediately
