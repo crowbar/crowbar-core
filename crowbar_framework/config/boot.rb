@@ -97,7 +97,4 @@ else
 
   gem "chef", version: "~> 10.32"
   require "chef"
-
-  # wirthout require
-  gem "dotenv-deployment", version: "~> 0.2"
 end

@@ -42,5 +42,20 @@ module Crowbar
       g.test_framework :rspec, fixture: true
       g.fallbacks[:rspec] = :test_unit
     end
+
+    config.before_configuration do
+      Dotenv.load *Dir.glob(Rails.root.join("config", "*.env"))
+
+      begin
+        Chef::Config.tap do |config|
+          config.node_name ENV["CHEF_NODE_NAME"]
+          config.client_key ENV["CHEF_CLIENT_KEY"]
+          config.chef_server_url ENV["CHEF_SERVER_URL"]
+          config.http_retry_count 3
+        end
+      rescue LoadError
+        Rails.logger.warn "Failed to load chef"
+      end
+    end
   end
 end
