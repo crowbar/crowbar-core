@@ -23,7 +23,7 @@ class ApplicationController < ActionController::Base
   rescue_from Crowbar::Error::NotFound, with: :render_not_found
   rescue_from Crowbar::Error::ChefOffline, with: :chef_is_offline
 
-  before_filter :enable_profiler, if: Proc.new { ENV["ENABLE_PROFILER"] == "true" }
+  before_filter :enable_profiler, if: proc { ENV["ENABLE_PROFILER"] == "true" }
   before_filter :enforce_installer, if: proc { ENV["CROWBAR_MODE"] == "installer" }
 
   # Basis for the reflection/help system.
