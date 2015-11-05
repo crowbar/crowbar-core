@@ -529,6 +529,25 @@ en:
       active: 'Active'
       active_repo_tooltip: 'Managed nodes will be automatically configured to use repositories only if they are marked as active'
 
+  installer:
+    status:
+      installation_failed: 'Installation failed prematurely. Please examine /var/log/crowbar/install.log'
+    index:
+      installation_header: 'Installing Crowbar'
+      install_button: 'Install'
+      pre_sanity_checks: 'Performing pre-installation sanity checks'
+      run_services: 'Starting required services'
+      initial_chef_client: 'Performing initial chef-client run'
+      barclamp_install: 'Installing Barclamps'
+      bootstrap_crowbar_setup: 'Bootstrapping Crowbar setup'
+      apply_crowbar_config: 'Applying Crowbar configuration for Admin Server'
+      transition_crowbar: 'Transitioning Admin server to ready state'
+      chef_client_daemon: 'Starting chef-client'
+      post_sanity_checks: 'Performing post-installation sanity checks'
+      documentation: 'Documentation'
+      release_notes: 'Release Notes'
+      deployment_guide: 'Crowbar Deployment Guide'
+
   # Global
   overview: 'Overview'
   show: 'View'

@@ -19,6 +19,7 @@ require "chef"
 require "json"
 
 class BarclampController < ApplicationController
+  skip_before_filter :enforce_installer
   before_filter :initialize_service
   before_filter :controller_to_barclamp
 

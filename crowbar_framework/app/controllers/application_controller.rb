@@ -24,7 +24,7 @@ class ApplicationController < ActionController::Base
   rescue_from Crowbar::Error::ChefOffline, with: :chef_is_offline
 
   before_filter :enable_profiler, if: Proc.new { ENV["ENABLE_PROFILER"] == "true" }
-  before_filter :crowbar_mode
+  before_filter :enforce_installer, if: proc { ENV["CROWBAR_MODE"] == "installer" }
 
   # Basis for the reflection/help system.
 
@@ -136,9 +136,7 @@ class ApplicationController < ActionController::Base
     Rack::MiniProfiler.authorize_request
   end
 
-  def crowbar_mode
-    if ENV["CROWBAR_MODE"] && ENV["CROWBAR_MODE"] == "installer"
-      redirect_to install_path
-    end
+  def enforce_installer
+    redirect_to installer_path
   end
 end
