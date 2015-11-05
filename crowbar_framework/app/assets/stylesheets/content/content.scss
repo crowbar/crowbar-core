@@ -45,21 +45,24 @@
   }
 }
 
-.dropdown-menu {
-  border-radius: 6px;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  right: -1px;
+h1,
+h2,
+h3.modal-title {
+  color: #2a8d8e;
+}
 
-  & > li > a {
-    padding: 3px 10px;
-    margin: 0px 5px;
-  }
+h1 {
+  font-size: 30px;
+  font-weight: normal;
+}
 
-  li a:hover {
-    border-radius: 3px;
-    box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.4) inset,1px 1px 0 rgba(255, 255, 255, 0.1);
-    background-color: #2e3235;
-  }
+h2 {
+  font-size: 23px;
+}
+
+h3,
+h3.modal-title {
+  font-size: 19px;
 }
 
 @-moz-document url-prefix() {

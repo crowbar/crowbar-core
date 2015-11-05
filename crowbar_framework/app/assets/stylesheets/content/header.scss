@@ -1,35 +1,21 @@
 .navbar-inverse {
   .navbar-brand {
-    padding: 4px 15px 0;
+    padding: 0 15px;
 
     .title {
       display: block;
       text-indent: -100000px;
-      background: transparent image-url('logos/crowbar.png') no-repeat;
-      width: 244px;
-      height: 42px;
+      background: transparent image-url("logo.png") no-repeat;
+      width: 220px;
+      height: 36px;
     }
   }
 
-  .navbar-nav > .open > a {
-    background-color: #25282a !important;
-    box-shadow: 1px 1px 0 rgba(0,0,0,0.4) inset, 1px 1px 0 rgba(255,255,255,0.1);
-  }
+  .panel .panel-heading {
+    padding: 5px 15px;
 
-  .dropdown-menu {
-    border-radius: 6px;
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    right: -1px;
-
-    & > li > a {
-      padding: 3px 10px;
-      margin: 0px 5px;
-    }
-
-    li a:hover {
-      border-radius: 3px;
-      box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.4) inset,1px 1px 0 rgba(255, 255, 255, 0.1);
-      background-color: #2e3235 !important;
+    h2 {
+      font-size: 18px;
     }
   }
 }

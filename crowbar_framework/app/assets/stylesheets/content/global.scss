@@ -18,8 +18,14 @@
   width: device-width;
 }
 
+html {
+  min-height: 100%;
+  position: relative;
+}
+
 body {
   cursor: default;
   padding-top: 70px;
   padding-bottom: 0;
+  margin-bottom: 60px;
 }
