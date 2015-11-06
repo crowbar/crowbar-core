@@ -774,7 +774,7 @@ class ServiceObject
       [200, {}]
     rescue Net::HTTPServerException => e
       Rails.logger.error ([e.message] + e.backtrace).join("\n")
-      [e.response.code, e.message]
+      [e.response.code, "An unknown error occured"]
     rescue Chef::Exceptions::ValidationFailed => e2
       Rails.logger.error ([e2.message] + e2.backtrace).join("\n")
       [400, "Failed to validate proposal: #{e2.message}"]
