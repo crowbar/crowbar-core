@@ -3,10 +3,28 @@
     %h1.page-header
       = t(".title")
 
+- @sections.each do |section|
+  .panel.panel-default
+    .panel-heading
+      %h2
+	= section["heading"]
+
+    %ul.list-group
+    - section["items"].each do |item|
+      %li.list-group-item
+        - if item.key? "link"
+          = link_to item["text"], item["link"], :target => "_blank"
+        -else
+          = item["text"]
+        - if item.key? "pdf_link"
+          = surround '(', ')' do
+            = link_to t('.pdf'), item["pdf_link"], :target => "_blank"
+
 .panel.panel-default
   .panel-heading
     %h2
-      = t(".index")
+      = t('.online_section')
 
-  %ul.list-group.list-tree
-    = render :partial => "tree", :locals => { :topics => @index["topics"] }
+  %ul.list-group
+    %li.list-group-item
+      = t('.online', :url => 'http://crowbar.github.io').html_safe

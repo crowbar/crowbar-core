@@ -79,16 +79,3 @@ nav:
   help:
     order: 80
     route: 'docs_path'
-    docs:
-      order: 10
-      route: 'docs_path'
-    crowbar_users:
-      order: 20
-      path: '/docs/crowbar_users_guide.pdf'
-      params:
-        target: '_blank'
-    wiki:
-      order: 90
-      url: 'https://github.com/crowbar/crowbar/wiki'
-      params:
-        target: '_blank'

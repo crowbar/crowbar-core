@@ -1,0 +1,20 @@
+en:
+  docs:
+    -
+      heading: 'Deployment Resources'
+      items:
+        -
+          text: 'User Guide'
+          pdf_link: 'docs/crowbar_users_guide.pdf'
+# Here's an example of how to add links for downstream documentation
+#    -
+#      heading: 'Other Resources'
+#      items:
+#        -
+#          text: 'End User Guide'
+#          link: 'docs/user/'
+#          pdf_link: 'docs/user_en.pdf'
+#        -
+#          text: 'Admin User Guide'
+#          link: 'docs/admin/'
+#          pdf_link: 'docs/admin_en.pdf'

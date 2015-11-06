@@ -25,8 +25,6 @@ Rails.application.routes.draw do
   root to: "nodes#index"
 
   get "docs", controller: "docs", action: "index"
-  get "docs/*id", controller: "docs", action: "show", as: "topic_docs"
-  get "docs/:controller/:id", action: "docs", as: "docs_barclamp"
 
   # nodes
   resources :nodes, only: [:index]
