@@ -6,6 +6,12 @@ en:
         -
           text: 'User Guide'
           pdf_link: 'docs/crowbar_users_guide.pdf'
+        -
+          text: 'crowbar batch'
+          link: 'docs/batch.md'
+        -
+          text: 'Cisco UCS Integration'
+          link: 'docs/cisco_ucs.md'
 # Here's an example of how to add links for downstream documentation
 #    -
 #      heading: 'Other Resources'
