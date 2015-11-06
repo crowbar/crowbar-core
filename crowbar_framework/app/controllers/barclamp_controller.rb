@@ -566,6 +566,8 @@ class BarclampController < ApplicationController
   #
   add_help(:proposal_create, [:name], [:put])
   def proposal_create
+    params[:id] = params[:id] || params[:name]
+
     code, message = @service_object.proposal_create(
       params.slice(
         :id,
