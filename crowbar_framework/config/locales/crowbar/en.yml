@@ -534,6 +534,8 @@ en:
       installation_failed: 'Installation failed prematurely. Please examine /var/log/crowbar/install.log'
     index:
       installation_header: 'Installing Crowbar'
+      installation_successful: 'Installation was successful. You will be redirected in a few seconds'
+      reinstall_notice: 'If you want to install again please remove /opt/dell/crowbar_framework/crowbar-installed-ok'
       install_button: 'Install'
       pre_sanity_checks: 'Performing pre-installation sanity checks'
       run_services: 'Starting required services'

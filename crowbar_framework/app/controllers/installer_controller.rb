@@ -93,7 +93,14 @@ class InstallerController < ApplicationController
     steps = all_steps.select do |step|
       crowbar_lib_dir.join(step.to_s).exist?
     end
-    { steps: steps, failed: failed?, success: successful? }
+    {
+      steps: steps,
+      failed: failed?,
+      success: successful?,
+      errorMsg: error_msg,
+      successMsg: success_msg,
+      noticeMsg: notice_msg
+    }
   end
 
   def failed?
@@ -102,6 +109,18 @@ class InstallerController < ApplicationController
 
   def successful?
     Rails.root.join(".crowbar-installed-ok").exist?
+  end
+
+  def error_msg
+    I18n.t(".installation_failed", scope: "installer.status") if failed?
+  end
+
+  def success_msg
+    I18n.t(".installation_successful", scope: "installer.index") if successful?
+  end
+
+  def notice_msg
+    I18n.t(".reinstall_notice", scope: "installer.index")
   end
 
   def write_file(path, filename)

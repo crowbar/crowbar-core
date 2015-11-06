@@ -8,6 +8,9 @@ $(document).ready(function() {
         success: function(data) {
           var failed = data.failed;
           var success = data.success;
+          var errorMsg = data.errorMsg
+          var successMsg = data.successMsg
+          var noticeMsg = data.noticeMsg
           data = data.steps;
           var mostRecent = $("li." + data[data.length-1]);
           var mostRecentIcon = mostRecent.children();
@@ -50,7 +53,7 @@ $(document).ready(function() {
               .parent()
               .prepend("<div class='col-lg-12'> \
                           <div class='alert alert-danger'> \
-                            <span>Something went wrong. Please examine <b>/var/log/crowbar/install.log</b></span> \
+                            <span>" + errorMsg + "</span> \
                           </div> \
                         </div>");
           } else if (!success) {
@@ -61,10 +64,10 @@ $(document).ready(function() {
               .parent()
               .prepend("<div class='col-lg-12'> \
                          <div class='alert alert-success'> \
-                           <span>Installation was successful. You will be redirected in a few seconds.</span> \
+                           <span>" + successMsg + "</span> \
                          </div> \
                          <div class='alert alert-info'> \
-                           <span>If you want to install again please remove <b>/opt/dell/crowbar_framework/crowbar-installed-ok</b></span> \
+                           <span>" + noticeMsg + "</span> \
                          </div> \
                        </div>");
             setTimeout(function(){
