@@ -9,9 +9,8 @@
     ErrorDocument 422 /422.html
     ErrorDocument 500 /500.html
 
-    ProxyPass / http://127.0.0.1:<%= @port %>/ timeout=600 Keepalive=On
+    ProxyPass / http://127.0.0.1:<%= @port %>/ timeout=1500 Keepalive=On
     ProxyPassReverse / http://127.0.0.1:<%= @port %>/
-    SetEnv proxy-nokeepalive 1
     SetEnv proxy-initial-not-pooled 1
 
     <Location />
