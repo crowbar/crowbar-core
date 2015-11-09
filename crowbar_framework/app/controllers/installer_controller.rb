@@ -17,7 +17,6 @@
 class InstallerController < ApplicationController
   skip_before_filter :enforce_installer
   before_filter :hide_navigation
-  after_filter :post_install
 
   def index
     @steps = all_steps
@@ -125,11 +124,5 @@ class InstallerController < ApplicationController
 
   def write_file(path, filename)
     FileUtils.touch path.join(filename)
-  end
-
-  def post_install
-    if successful?
-      ENV["CROWBAR_MODE"] = nil
-    end
   end
 end
