@@ -33,10 +33,6 @@ unless caller.grep(/rake/).present? || (ENV["SKIP_CHECKS"] && ENV["SKIP_CHECKS"]
     raise "No local interface is configured with an correct ip address."
   end
 
-  unless network_checks.network_valid?
-    raise "Failed to validate network.json configuration. Please check and fix with yast2 crowbar."
-  end
-
   unless network_checks.firewall_disabled?
     raise "Firewall is not completely disabled."
   end
