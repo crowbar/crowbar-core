@@ -85,7 +85,7 @@ class InstallerController < ApplicationController
   end
 
   def crowbar_lib_dir
-    Pathname.new("/var/lib/crowbar")
+    Pathname.new("/var/lib/crowbar/install")
   end
 
   def status_hash
