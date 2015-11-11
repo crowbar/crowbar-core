@@ -20,7 +20,12 @@ when "suse"
   default[:network][:ovs_pkgs] = ["openvswitch",
                                   "openvswitch-switch",
                                   "openvswitch-kmp-default"]
-  default[:network][:ovs_service] = "openvswitch-switch"
+  # SLES11 uses a different service name for openvswitch
+  if node[:platform] == "suse" && node[:platform_version].to_f < 12.0
+    default[:network][:ovs_service] = "openvswitch-switch"
+  else
+    default[:network][:ovs_service] = "openvswitch"
+  end
 when "rhel"
   default[:network][:base_pkgs] = ["bridge-utils",
                                    "vconfig"]
@@ -38,3 +43,7 @@ else
 end
 
 default[:network][:ovs_module] = "openvswitch"
+
+# This flag be overridden on the node/role level (e.g. by the neutron
+# barclamp) to indicate that a node needs openvswitch installed and running
+default[:network][:needs_openvswitch] = false
