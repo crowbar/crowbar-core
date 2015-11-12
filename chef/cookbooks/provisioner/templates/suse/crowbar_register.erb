@@ -232,12 +232,12 @@ add_user qemu 484 kvm
 # Check that we're really on the admin network
 # --------------------------------------------
 
-MD5_ADMIN=$(curl -s $HTTP_SERVER/$CROWBAR_OS/crowbar_register | md5sum | awk -F " " '{print $1}')
+MD5_ADMIN=$(curl -s $HTTP_SERVER/$CROWBAR_OS/$CROWBAR_ARCH/crowbar_register | md5sum | awk -F " " '{print $1}')
 MD5_LOCAL=$(md5sum $0 | awk -F " " '{print $1}')
 
 if test "x$MD5_ADMIN" != "x$MD5_LOCAL"; then
     echo "This script does not match the one from the administration server."
-    echo "Please download $HTTP_SERVER/$CROWBAR_OS/crowbar_register and use it."
+    echo "Please download $HTTP_SERVER/$CROWBAR_OS/$CROWBAR_ARCH/crowbar_register and use it."
     exit 1
 fi
 
