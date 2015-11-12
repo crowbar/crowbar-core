@@ -16,20 +16,54 @@
 #
 
 class DocsController < ApplicationController
-
   def index
     @sections = help_sections
+
     respond_to do |format|
-      format.html { @sections }
-      format.xml { render xml: @sections }
-      format.json { render json: @sections }
+      format.html
+      format.json do
+        render json: @sections
+      end
     end
   end
 
   protected
 
   def help_sections
-    docs_yml = YAML.load_file(Rails.root.join("config/docs.yml"))
-    docs_yml.fetch("en", {}).fetch("docs", {}) || []
+    content = Hashie::Mash.new.tap do |elements|
+      Rails.root.join("config", "docs").children.each do |file|
+        next unless file.extname == ".yml"
+
+        yml = YAML.load_file(
+          file
+        )
+
+        elements.easy_merge! yml
+      end
+    end
+
+    translated = content.fetch(
+      :en,
+      {}
+    ).fetch(
+      :docs,
+      {}
+    ).values
+
+    translated.sort_by! do |value|
+      value.delete(:order) || 1000
+    end
+
+    translated.map do |section|
+      items = section.fetch(:items, {}).values
+
+      items.sort_by! do |value|
+        value.delete(:order) || 1000
+      end
+
+      section.merge(
+        items: items
+      )
+    end
   end
 end

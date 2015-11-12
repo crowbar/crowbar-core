@@ -7,24 +7,25 @@
   .panel.panel-default
     .panel-heading
       %h2
-	= section["heading"]
+        = section.heading
 
     %ul.list-group
-    - section["items"].each do |item|
-      %li.list-group-item
-        - if item.key? "link"
-          = link_to item["text"], item["link"], :target => "_blank"
-        -else
-          = item["text"]
-        - if item.key? "pdf_link"
-          = surround '(', ')' do
-            = link_to t('.pdf'), item["pdf_link"], :target => "_blank"
+      - section.items.each do |item|
+        %li.list-group-item
+          - if item.link?
+            = link_to item.text, item.link, target: "_blank"
+          - else
+            = item.text
+
+          - if item.pdf?
+            = link_to item.pdf, target: "_blank", title: t(".pdf") do
+              = icon_tag(:file_pdf_o)
 
 .panel.panel-default
   .panel-heading
     %h2
-      = t('.online_section')
+      = t(".online_section")
 
   %ul.list-group
     %li.list-group-item
-      = t('.online', :url => 'http://crowbar.github.io').html_safe
+      = t(".online", url: "http://crowbar.github.io").html_safe
