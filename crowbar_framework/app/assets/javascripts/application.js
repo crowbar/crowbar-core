@@ -246,6 +246,43 @@ jQuery(document).ready(function($) {
     },
     500
   );
+
+  $('[data-toggle="tooltip"]').tooltip({html : true});
+  $('[data-toggle="inline"]').popover({
+    html : true,
+    content: function() {
+      return $($(this).data('inline')).html();
+    }
+  });
+
+  $('body.backup input[name="upload"]').fileinput({
+    uploadUrl: Routes.backup_upload_path({
+      format: "json"
+    }),
+    uploadAsync: true,
+    allowedFileExtensions: ["tar.gz"],
+    dropZoneEnabled: false
+  })
+  .on('filepreupload', function(event, data) {
+    var valid = true;
+    $.each(data.files, function(index, file) {
+      var match = file.name.match(/([\w-]+)-([0-9]{8}-[0-9]{6})/);
+      if (match === null) {
+        valid = false;
+      }
+    });
+    if ( !valid ) {
+      return {
+        message: "wrong file format, please use [FILENAME]-[YYYYMMDD]-[HHMMSS].tar.gz"
+      };
+    }
+  })
+  .on('uploaded', function() {
+    location.reload();
+  })
+  .on('filecustomerror', function(event, params) {
+    console.log(params);
+  });
 });
 
 if (!String.prototype.localize) {

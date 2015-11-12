@@ -1,0 +1,68 @@
+.container
+  .row
+    .col-xs-12
+      %h2
+        = t(".title")
+.container
+  .row
+    .panel.panel-default
+      .panel-heading
+        %button.btn.btn-primary{ data: { toggle: "modal", target: "#create_backup_modal" } }
+          = t(".create_image")
+        .btn.btn-primary.pull-right{ data: { toggle: "modal", target: "#upload_modal" } }
+          = t(".upload_image")
+      %table.table
+        %thead
+          %tr
+            %th
+              = t(".image_name")
+            %th
+              = t(".created_at")
+            %th
+            %th
+        %tbody
+          - @backups.each do |backup|
+            %tr
+              %td
+                = link_to backup_download_path(backup.name, backup.created_at) do
+                  = icon_tag(:cloud_download, backup.name)
+              %td
+                = date_parse(backup.created_at)
+              %td
+                = restore_button(backup)
+              %td
+                = delete_backup_button(backup)
+
+.modal.fade{ id: "create_backup_modal" }
+  .modal-dialog
+    .modal-content
+      .modal-header
+        .btn.close{ data: { dismiss: "modal" } }
+          = icon_tag("times")
+        %h2
+          = t(".create_image")
+      .modal-body
+        = form_tag "/utils/backup" do
+          %h3
+            = t(".enter_name")
+          %p
+            = text_field_tag "filename", "", class: "form-control", placeholder: t(".image_name")
+      .modal-footer
+        .row
+          .btn.btn-default{ data: { dismiss: "modal" } }
+            = t("cancel")
+          = submit_tag t("create"), class: "btn btn-success"
+
+.modal.fade{ id: "upload_modal" }
+  .modal-dialog
+    .modal-content
+      .modal-header
+        .btn.close{ data: { dismiss: "modal" } }
+          = icon_tag("times")
+        %h2
+          = t(".upload_image")
+      .modal-body
+        %input{ name: "upload", type: "file" }
+      .modal-footer
+        .btn.btn-default{ data: { dismiss: "modal" } }
+          = t("cancel")
