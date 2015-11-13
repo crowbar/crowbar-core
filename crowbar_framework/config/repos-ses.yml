@@ -9,6 +9,7 @@ suse-12.0:
         tag: "obsproduct://build.suse.de/SUSE:SLE-12:GA/SLES/12/POOL/x86_64"
         key_md5: "9a62177e1c6852d48453ed3909956d6b"
       url:
+      smt_path: "SUSE/Products/SLE-SERVER/12/x86_64/product"
       ask_on_error: false
     sles12-updates:
       name: "SLES12-Updates"
@@ -18,6 +19,7 @@ suse-12.0:
         tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-SERVER:12:x86_64/update"
         key_md5: "9a62177e1c6852d48453ed3909956d6b"
       url:
+      smt_path: "SUSE/Updates/SLE-SERVER/12/x86_64/update"
       ask_on_error: false
     sle12-ha-pool:
       name: "SLE12-HA-Pool"
@@ -45,6 +47,7 @@ suse-12.0:
         tag: "obsproduct://build.suse.de/SUSE:SLE-12:Update:Products:SES2/ses/2/POOL/x86_64"
         key_md5: "9a62177e1c6852d48453ed3909956d6b"
       url:
+      smt_path: "SUSE/products/storage/2/x86_64/product"
       ask_on_error: false
     suse-enterprise-storage-2-updates:
       name: "SUSE-Enterprise-Storage-2-Updates"
@@ -54,6 +57,7 @@ suse-12.0:
         tag: "obsrepository://build.suse.de/SUSE:Updates:Storage:2:x86_64/update"
         key_md5: "9a62177e1c6852d48453ed3909956d6b"
       url:
+      smt_path: "SUSE/Updates/Storage/2/x86_64/update"
       ask_on_error: false
     ptf:
       name: "PTF"
