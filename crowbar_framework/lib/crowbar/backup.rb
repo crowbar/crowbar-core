@@ -16,7 +16,7 @@
 #
 
 module Crowbar
-  module Backup
+  class Backup
     autoload :Base,
       File.expand_path("../backup/base", __FILE__)
 

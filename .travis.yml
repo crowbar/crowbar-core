@@ -7,6 +7,11 @@ rvm:
 env:
   - SKIP_CHECKS=yes
 
+addons:
+  apt:
+    packages:
+      - libarchive-dev
+
 gemfile: crowbar_framework/Gemfile
 
 install:

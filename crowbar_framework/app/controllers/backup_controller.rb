@@ -15,8 +15,20 @@
 #
 
 class BackupController < ApplicationController
+  skip_before_filter :enforce_installer
+
+  #
+  # Backup
+  #
+  # Provides the restful api call for
+  # /utils/backup 	GET 	Returns a json list of available backups
   def index
-    @backups = Crowbar::Backup::Image.all_images
+    @backups = Backup.all
+
+    respond_to do |format|
+      format.html
+      format.json { render json: @backups }
+    end
   end
 
   #
@@ -25,10 +37,21 @@ class BackupController < ApplicationController
   # Provides the restful api call for
   # /utils/backup   POST   Trigger a backup
   def backup
-    Crowbar::Backup::Image.create(params[:filename])
+    @backup = Backup.new(
+      name: params[:filename]
+    )
     respond_to do |format|
-      format.json { head :ok }
-      format.html { redirect_to backup_path }
+      if @backup.save
+        format.json { head :ok }
+        format.html { redirect_to backup_path }
+      else
+        msg = I18n.t(".invalid_filename", scope: "backup.index")
+        format.json { render json: { error: msg }, status: :bad_request }
+        format.html do
+          flash[:alert] = msg
+          redirect_to backup_path
+        end
+      end
     end
   end
 
@@ -38,23 +61,32 @@ class BackupController < ApplicationController
   # Provides the restful api call for
   # /utils/backup/restore   POST   Trigger a restore
   def restore
-    Crowbar::Backup::Image.new(params[:name], params[:created_at]).restore(params[:scope])
-    respond_to do |format|
-      format.json { head :ok }
-      format.html { redirect_to backup_path }
-    end
-  end
+    @backup = Backup.new(
+      name: params[:name],
+      created_at: params[:created_at]
+    )
 
-  #
-  # Backups
-  #
-  # Provides the restful api call for
-  # /utils/backups 	GET 	Returns a json list of available backups
-  def backups
-    # read the contents of /var/lib/crowbar/backup or rails.root("storage")
     respond_to do |format|
-      format.html { redirect_to backup_path }
-      format.json { render json: Crowbar::Backup::Image.all_images.to_json }
+      if @backup.valid?
+        ret = @backup.restore
+        if ret[:status] == :ok
+          format.json { head :ok }
+          format.html { redirect_to backup_path }
+        else
+          format.html do
+            flash[:alert] = ret[:msg]
+            redirect_to backup_path
+          end
+          format.json { render json: { error: ret[:msg] }, status: :bad_request }
+        end
+      else
+        msg = I18n.t(".invalid_backup", scope: "backup.index")
+        format.json { render json: { error: msg }, status: :bad_request }
+        format.html do
+          flash[:alert] = msg
+          redirect_to backup_path
+        end
+      end
     end
   end
 
@@ -64,15 +96,25 @@ class BackupController < ApplicationController
   # Provides the restful api call for
   # /utils/backup/download/:name/:created_at 	GET 	Download a backup
   def download
+    @backup = Backup.new(
+      name: params[:name],
+      created_at: params[:created_at]
+    )
     respond_to do |format|
-      format.any do
-        send_file(
-          Crowbar::Backup::Image.new(
-            params[:name],
-            params[:created_at]
-          ).path,
-          filename: "#{params[:name]}-#{params[:created_at]}.tar.gz"
-        )
+      if @backup.exist?
+        format.any do
+          send_file(
+            @backup.path,
+            filename: @backup.filename
+          )
+        end
+      else
+        msg = I18n.t(".missing_backup", scope: "backup.index")
+        format.json { render json: { error: msg }, status: :bad_request }
+        format.html do
+          flash[:alert] = msg
+          redirect_to backup_path
+        end
       end
     end
   end
@@ -84,15 +126,25 @@ class BackupController < ApplicationController
   # /utils/backup/upload   POST   Upload a backup
   def upload
     file = params[:upload]
-    File.open("#{Crowbar::Backup::Image.image_dir}/#{file.original_filename}", "wb") do |f|
-      f.write(file.read)
-    end
-    # FIXME
-    # add a validation in case of raw upload over a json request
-    # right now there is only validation in the front-end
+    filename, created_at = Backup.filename_time(file.original_filename)
+    @backup = Backup.new(
+      name: filename,
+      created_at: created_at
+    )
+
     respond_to do |format|
-      format.html { redirect_to backup_path }
-      format.json { head :ok }
+      if @backup.valid?
+        @backup.upload(file)
+
+        format.json { head :ok }
+        format.html { redirect_to backup_path }
+      else
+        format.json { render json: { error: @backup.errors.full_messages.first }, status: :bad_request }
+        format.html do
+          flash[:alert] = @backup.errors
+          redirect_to backup_path
+        end
+      end
     end
   end
 
@@ -103,13 +155,21 @@ class BackupController < ApplicationController
   # data-confirm method delete
   # /utils/backup/delete 	DELETE 	Delete a backup
   def delete
-    if params[:name] && params[:created_at]
-      Crowbar::Backup::Image.new(params[:name], params[:created_at]).delete
-    end
+    @backup = Backup.new(
+      name: params[:name],
+      created_at: params[:created_at]
+    )
 
     respond_to do |format|
-      format.json { head :ok }
-      format.html { redirect_to backup_path }
+      if @backup.valid?
+        @backup.delete
+
+        format.json { head :ok }
+        format.html { redirect_to backup_path }
+      else
+        format.json { render json: { error: @backup.errors }, status: :bad_request }
+        format.html { flash[:alert] = @backup.errors }
+      end
     end
   end
 end

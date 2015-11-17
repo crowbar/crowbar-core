@@ -19,7 +19,7 @@ require "chef"
 require "yaml_db"
 
 module Crowbar
-  module Backup
+  class Backup
     class Export < Base
       attr_accessor :path
 

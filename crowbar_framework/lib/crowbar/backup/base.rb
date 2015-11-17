@@ -18,7 +18,7 @@
 require "logger"
 
 module Crowbar
-  module Backup
+  class Backup
     class Base
       attr_accessor :logger
 

@@ -15,7 +15,7 @@
 #
 
 module Crowbar
-  module Backup
+  class Backup
     class Validate
       attr_accessor :path
 

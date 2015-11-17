@@ -80,7 +80,6 @@ Rails.application.routes.draw do
   delete "utils/backup/delete/:name/:created_at", controller: "backup", action: "delete", as: "backup_delete"
   post "utils/backup", controller: "backup", action: "backup", as: "backup_create"
   post "utils/backup/upload", controller: "backup", action: "upload", as: "backup_upload"
-  get "utils/backups", controller: "backup", action: "backups", as: "backups"
   post "utils/backup/restore", controller: "backup", action: "restore", as: "restore"
 
   # barclamps
