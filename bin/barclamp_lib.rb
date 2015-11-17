@@ -21,6 +21,7 @@ require "active_support/all"
 @hostname = ENV["CROWBAR_IP"] || "127.0.0.1"
 @port = ENV["CROWBAR_PORT"] || 80
 
+@credentials = false
 @debug = false
 @allow_zero_args = false
 @timeout = 500
@@ -152,7 +153,7 @@ end
 def get_user_password
   key = ENV["CROWBAR_KEY"]
 
-  if key.nil? and ::File.exists?(@crowbar_key_file) and ::File.readable?(@crowbar_key_file)
+  if key.nil? && ::File.exist?(@crowbar_key_file) && ::File.readable?(@crowbar_key_file)
     begin
       key = File.read(@crowbar_key_file).strip
     rescue => e
@@ -161,6 +162,18 @@ def get_user_password
   end
 
   if key
+    if ::File.exist(@crowbar_key_file) && ::File.readable?(@crowbar_key_file)
+      begin
+        from_file = File.read(@crowbar_key_file).strip
+
+        if from_file != key
+          @credentials = true
+        end
+      rescue => e
+        warn "Unable to read crowbar key from #{@crowbar_key_file}: #{e}"
+      end
+    end
+
     @username, @password = key.split(":",2)
   end
 end
@@ -185,8 +198,10 @@ def parse_standard_opt(opt, arg)
   when "--hostname"
     @hostname = arg
   when "--username"
+    @credentials = true
     @username = arg
   when "--password"
+    @credentials = true
     @password = arg
   when "--port"
     @port = arg.to_i
@@ -236,12 +251,18 @@ def deprecated_exec(*cmd)
     cmd
   )
 
-  if @username.present?
-    execute.push "-U '#{@username}'"
-  end
+  if @credentials
+    if @username.present?
+      execute.push "-U '#{@username}'"
+    end
 
-  if @password.present?
-    execute.push "-P '#{@password}'"
+    if @password.present?
+      execute.push "-P '#{@password}'"
+    end
+  else
+    unless File.exist? @crowbar_key_file
+      execute.push "--anonymous"
+    end
   end
 
   if @timeout != 500
