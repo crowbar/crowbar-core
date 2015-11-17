@@ -508,7 +508,7 @@ class NodeObject < ChefObject
     when "hardware-installing", "hardware-install", "hardware-installed",
          "hardware-updated", "hardware-updating"
       "building"  # yellow
-    when "crowbar_upgrade"
+    when "crowbar_upgrade", "os_upgrading", "os_upgraded"
       "crowbar_upgrade" # blue
     else # including: installing, installed, reinstall, reboot, recovering, readying, applying
       "unready"   # spinner

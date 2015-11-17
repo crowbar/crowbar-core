@@ -65,7 +65,7 @@ class CrowbarService < ServiceObject
         transition_to_readying inst, name, state, node
       end
 
-      if %w(hardware-installing hardware-updating update).include? state
+      if %w(hardware-installing hardware-updating update os_upgrading).include? state
         @logger.debug("Crowbar transition: force run because of state #{name} to #{state}")
         pop_it = true
       end

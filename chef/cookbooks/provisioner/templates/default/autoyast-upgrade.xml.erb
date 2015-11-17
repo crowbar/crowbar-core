@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<!DOCTYPE profile>
+<profile xmlns="http://www.suse.com/1.0/yast2ns" xmlns:config="http://www.suse.com/1.0/configns">
+  <deploy_image>
+    <image_installation config:type="boolean">false</image_installation>
+  </deploy_image>
+  <general>
+    <ask-list config:type="list"/>
+    <mode>
+      <confirm config:type="boolean">false</confirm>
+      <final_halt config:type="boolean">false</final_halt>
+      <final_reboot config:type="boolean">false</final_reboot>
+      <halt config:type="boolean">false</halt>
+      <second_stage config:type="boolean">true</second_stage>
+    </mode>
+    <mouse>
+      <id>none</id>
+    </mouse>
+    <proposals config:type="list"/>
+    <signature-handling>
+      <accept_file_without_checksum config:type="boolean">true</accept_file_without_checksum>
+      <accept_non_trusted_gpg_key config:type="boolean">true</accept_non_trusted_gpg_key>
+      <accept_unknown_gpg_key config:type="boolean">true</accept_unknown_gpg_key>
+      <accept_unsigned_file config:type="boolean">true</accept_unsigned_file>
+      <accept_verification_failed config:type="boolean">true</accept_verification_failed>
+      <import_gpg_key config:type="boolean">true</import_gpg_key>
+    </signature-handling>
+    <storage/>
+  </general>
+  <add-on>
+    <add_on_products config:type="list">
+    <% @repos.keys.sort.each do |name| %>
+      <listentry>
+        <name><%= name %></name>
+        <product><%= name %></product>
+        <product_dir>/</product_dir>
+        <media_url><%= @repos[name][:url] %></media_url>
+        <!-- See bnc#787157 for discussion on ask_on_error -->
+        <ask_on_error config:type="boolean"><%= @repos[name][:ask_on_error] || 'false' %></ask_on_error>
+      </listentry>
+    <% end %>
+    </add_on_products>
+  </add-on>
+  <timezone>
+    <hwclock>UTC</hwclock>
+    <timezone><%=@timezone%></timezone>
+  </timezone>
+  <services-manager>
+    <services>
+      <enable config:type="list">
+        <service>sshd</service>
+      </enable>
+    </services>
+  </services-manager>
+  <software>
+    <packages config:type="list">
+      <package>autoyast2-installation</package>
+<% if @architecture == "x86_64" -%>
+      <package>biosdevname</package>
+<% end -%>
+      <package>netcat</package>
+      <package>ruby2.1-rubygem-chef</package>
+<% if @is_ses -%>
+      <package>ses-release</package>
+<% else -%>
+      <package>suse-openstack-cloud-release</package>
+      <package>supportutils-plugin-suse-openstack-cloud</package>
+<% end -%>
+<% @packages.each do |package| -%>
+      <package><%= package %></package>
+<% end -%>
+    </packages>
+    <patterns config:type="list">
+      <pattern>Minimal</pattern>
+      <pattern>base</pattern>
+    </patterns>
+    <!-- Cleanup leftover Cloud 5 packages -->
+    <remove-packages config:type="list">
+     <package>facter</package>
+     <package>gstreamer-0_10</package>
+     <package>gstreamer-0_10-lang</package>
+     <package>ifplugd</package>
+     <package>ksh</package>
+     <package>libgstreamer-0_10-0</package>
+     <package>libipset2</package>
+     <package>libjpeg-32bit</package>
+     <package>libopensc2</package>
+     <package>libopenssl0_9_8</package>
+     <package>libopenssl0_9_8-32bit</package>
+     <package>libstdc++33</package>
+     <package>libtiff3-32bit</package>
+     <package>libyajl1</package>
+     <package>netdate</package>
+     <package>pcre-32bit</package>
+     <package>puppet</package>
+     <package>python-ordereddict</package>
+     <package>ruby2.1-rubygem-treetop-1_4</package>
+     <package>rubygem-bundler</package>
+     <package>rubygems</package>
+     <package>yast2-wagon</package>
+    </remove-packages>
+  </software>
+</profile>
