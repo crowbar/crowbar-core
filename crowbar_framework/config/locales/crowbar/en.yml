@@ -79,6 +79,7 @@ en:
       title: 'Utilities'
       logs: 'Exported Items'
       repositories: 'Repositories'
+      backup: 'Backup &amp; Restore'
     help: 'Help'
 
   layouts:
