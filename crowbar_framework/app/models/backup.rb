@@ -60,6 +60,7 @@ class Backup
   end
 
   def restore
+    upgrade if upgrade?
     return false unless data_valid?
     Crowbar::Backup::Restore.new(self).restore
   end
@@ -83,6 +84,15 @@ class Backup
     @version ||= begin
       data.join("crowbar", "version").read.strip
     end
+  end
+
+  def upgrade?
+    ENV["CROWBAR_VERSION"].to_f > version.to_f
+  end
+
+  def upgrade
+    upgrade = Crowbar::Upgrade.new(self)
+    upgrade.upgrade if upgrade.supported?
   end
 
   class << self
