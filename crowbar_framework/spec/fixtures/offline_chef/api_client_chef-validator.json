@@ -1,0 +1,8 @@
+{
+  "name": "crowbar",
+  "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQMMMIIBCgKCAQEArABqa3kMxPGVliJVkxxv\n4cLQWZaj0Czmti6i5QvDCDzDzpqsQJFsgcw3pjQUXyNRm5ZEUpgw4ax+aIw5llZ7\nLxW0oQuUhf/Pu2gihCpIrnlfCj0Enm2P59bY0UZd6FhTpP+d+Oi0B24pExk+OAAN\nqh75VEn4y76xWfUIuUNOhLP+o+gkclS3N+gD/0k6NEKpXbJMh2ApE0/O+kyATBja\nd9iFCWCAZ6HBS+3vxLc8NNQlLgaKWpSzoO9jqk3S3tNBPGePnTvzbzSjyxhvvniI\nYu+gmrEiJHRvoaGPLf6dzYmF8Xy3wvwUMg35Agpot1CZ/vojfMgK0nELK50X48DO\nLwIDAQAB\n-----END PUBLIC KEY-----\n",
+  "admin": true,
+  "json_class": "Chef::ApiClient",
+  "chef_type": "client",
+  "_rev": "3-3e305d374a4f58e3bff967d6aef1b573"
+}
