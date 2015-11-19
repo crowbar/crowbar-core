@@ -19,7 +19,7 @@ class InstallerController < ApplicationController
   before_filter :hide_navigation
 
   def index
-    @steps = all_steps
+    @steps = Crowbar::Installer.steps
   end
 
   #
@@ -27,10 +27,11 @@ class InstallerController < ApplicationController
   #
   # Provides the restful api call for
   # /installer/status 	GET 	return done steps, error and success
-  # returns a hash with an indicator if the installation failed/succeeded and the steps that are done
+  # returns a hash with an indicator if the installation failed/succeeded
+  # and the steps that are done
   def status
     respond_to do |format|
-      format.json { render json: status_hash }
+      format.json { render json: Crowbar::Installer.status }
       format.html { redirect_to installer_url }
     end
   end
@@ -40,27 +41,29 @@ class InstallerController < ApplicationController
   #
   # Provides the restful api call for
   # /installer/install 	POST 	triggers install-chef-suse.sh
-  # the bash Process will be spawned in the background and therefore has not a direct return value which we can use here
   def install
-    crowbar_dir = Rails.root.join("..")
-    if Rails.root.join(".crowbar-installed-ok").exist?
+    if Crowbar::Installer.successful?
       respond_to do |format|
-        format.json { render json: status_hash.to_json and return }
-        format.html { redirect_to installer_url and return }
+        format.json { render json: Crowbar::Installer.status }
+        format.html { redirect_to installer_url }
       end
-    end
-
-    if File.exist?("#{crowbar_lib_dir.to_path}/crowbar_installing")
-      flash[:notice] = "Crowbar is already installing. Please wait."
     else
-      pid = spawn("sudo #{crowbar_dir}/bin/install-chef-suse.sh --crowbar")
-      write_file(crowbar_lib_dir, "crowbar_installing")
-      Process.detach(pid)
-    end
+      # the shell Process will be spawned in the background and therefore has
+      # not a direct return value which we can use here
+      if Crowbar::Installer.installing?
+        flash[:notice] = I18n.t(".installation_ongoing", scope: "installer.index")
+      else
+        ret = Crowbar::Installer.install
+        case ret[:status]
+        when 501
+          flash[:alert] = ret[:msg]
+        end
+      end
 
-    respond_to do |format|
-      format.json { head :ok }
-      format.html { redirect_to installer_url }
+      respond_to do |format|
+        format.json { head :ok }
+        format.html { redirect_to installer_url }
+      end
     end
   end
 
@@ -68,61 +71,5 @@ class InstallerController < ApplicationController
 
   def hide_navigation
     @hide_navigation = true
-  end
-
-  def all_steps
-    [
-      :pre_sanity_checks,
-      :run_services,
-      :initial_chef_client,
-      :barclamp_install,
-      :bootstrap_crowbar_setup,
-      :apply_crowbar_config,
-      :transition_crowbar,
-      :chef_client_daemon,
-      :post_sanity_checks
-    ]
-  end
-
-  def crowbar_lib_dir
-    Pathname.new("/var/lib/crowbar/install")
-  end
-
-  def status_hash
-    steps = all_steps.select do |step|
-      crowbar_lib_dir.join(step.to_s).exist?
-    end
-    {
-      steps: steps,
-      failed: failed?,
-      success: successful?,
-      errorMsg: error_msg,
-      successMsg: success_msg,
-      noticeMsg: notice_msg
-    }
-  end
-
-  def failed?
-    Rails.root.join(".crowbar-install-failed").exist?
-  end
-
-  def successful?
-    Rails.root.join(".crowbar-installed-ok").exist?
-  end
-
-  def error_msg
-    I18n.t(".installation_failed", scope: "installer.status") if failed?
-  end
-
-  def success_msg
-    I18n.t(".installation_successful", scope: "installer.index") if successful?
-  end
-
-  def notice_msg
-    I18n.t(".reinstall_notice", scope: "installer.index")
-  end
-
-  def write_file(path, filename)
-    FileUtils.touch path.join(filename)
   end
 end

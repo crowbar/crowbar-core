@@ -2,7 +2,7 @@
   .panel.panel-default
     .panel-heading
       %h2
-        = t(".installation_header").html_safe
+        = t(".installation_header", product: branding_config.page_title)
         .btn-group.pull-right
           = button_to t(".install_button"), install_path, class: "btn btn-success", method: :post
     %ul.list-group.action

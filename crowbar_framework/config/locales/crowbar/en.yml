@@ -533,10 +533,11 @@ en:
     status:
       installation_failed: 'Installation failed prematurely. Please examine /var/log/crowbar/install.log'
     index:
-      installation_header: 'Installing Crowbar'
-      installation_successful: 'Installation was successful. You will be redirected in a few seconds'
-      reinstall_notice: 'If you want to install again please remove /opt/dell/crowbar_framework/crowbar-installed-ok'
-      install_button: 'Install'
+      installation_header: 'Installing %{product}'
+      installation_successful: 'Installation was successful. You will be redirected in a few seconds.'
+      installation_ongoing: 'Installation is already ongoing, please wait.'
+      reinstall_notice: 'If you want to reinstall to get a fresh Crowbar setup, please remove the following file: /var/lib/crowbar/install/crowbar-installed-ok'
+      install_button: 'Start Installation'
       pre_sanity_checks: 'Performing pre-installation sanity checks'
       run_services: 'Starting required services'
       initial_chef_client: 'Performing initial chef-client run'
@@ -549,6 +550,7 @@ en:
       documentation: 'Documentation'
       release_notes: 'Release Notes'
       deployment_guide: 'Crowbar Deployment Guide'
+      system_not_supported: 'System currently not supported for installation'
 
   # Global
   overview: 'Overview'

@@ -24,7 +24,7 @@ class ApplicationController < ActionController::Base
   rescue_from Crowbar::Error::ChefOffline, with: :chef_is_offline
 
   before_filter :enable_profiler, if: proc { ENV["ENABLE_PROFILER"] == "true" }
-  before_filter :enforce_installer, unless: proc { Rails.root.join(".crowbar-installed-ok").exist? || ENV["RAILS_ENV"] == "test" }
+  before_filter :enforce_installer, unless: proc { Crowbar::Installer.successful? || ENV["RAILS_ENV"] == "test" }
 
   # Basis for the reflection/help system.
 
