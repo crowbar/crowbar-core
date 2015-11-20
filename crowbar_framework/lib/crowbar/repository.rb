@@ -266,19 +266,23 @@ module Crowbar
       Pathname.new(File.join("/srv/tftpboot", @platform, @arch, "repos"))
     end
 
+    def repo_path
+      repos_path.join(name)
+    end
+
     def repodata_path
-      repos_path.join(name, "repodata")
+      repo_path.join("repodata")
     end
 
     def repodata_media_path
-      repos_path.join(name, "suse", "repodata")
+      repo_path.join("suse", "repodata")
     end
 
     #
     # validation helpers
     #
     def check_directory
-      repos_path.join(name).directory?
+      repo_path.directory?
     end
 
     def check_repo_tag
