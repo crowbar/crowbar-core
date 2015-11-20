@@ -88,7 +88,7 @@ module Crowbar
       end
 
       def firewall_disabled?
-        if system("LANG=C iptables -n -L | grep -qvE '^$|^Chain [^ ]|^target     prot'")
+        if system("sudo LANG=C iptables -n -L | grep -qvE '^$|^Chain [^ ]|^target     prot'")
           return false
         end
 
