@@ -66,11 +66,11 @@ class NfsClientService < ServiceObject
       elsif mount_path.empty?
         errors << "NFS mount \"#{nfs_mount}\" has an empty mount path."
       end
-      if nfs_mounts.has_key?(nfs_mount)
+      if nfs_mounts.key?(nfs_mount)
         error = "NFS mount \"#{nfs_mount}\" is defined multiple times."
         errors << error unless errors.include?(error)
       end
-      if mount_paths.has_key?(mount_path)
+      if mount_paths.key?(mount_path)
         error = "Mount path \"#{mount_path}\" is used by several NFS mounts."
         errors << error unless errors.include?(error)
       end

@@ -789,7 +789,7 @@ class NodeObject < ChefObject
     # Chef::Mixin::DeepMerge::deep_merge doesn't do
     def _remove_elements_from_node(old, new, from_node)
       old.each_key do |k|
-        if not new.has_key?(k)
+        if not new.key?(k)
           from_node.delete(k) unless from_node[k].nil?
         elsif old[k].is_a?(Hash) and new[k].is_a?(Hash) and from_node[k].is_a?(Hash)
           _remove_elements_from_node(old[k], new[k], from_node[k])
@@ -891,7 +891,7 @@ class NodeObject < ChefObject
     bus_order = nil
     @node["network"]["interface_map"].each do |data|
       if @node[:dmi][:system][:product_name] =~ /#{data["pattern"]}/
-        if data.has_key?("serial_number")
+        if data.key?("serial_number")
           bus_order = data["bus_order"] if @node[:dmi][:system][:serial_number].strip == data["serial_number"].strip
         else
           bus_order = data["bus_order"]

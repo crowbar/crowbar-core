@@ -81,7 +81,7 @@ module BarclampLibrary
         node["network"]["interface_map"].each do |data|
           hardware = node[:dmi][:system][:product_name] rescue "unknown"
           if hardware =~ /#{data["pattern"]}/
-            if data.has_key?("serial_number")
+            if data.key?("serial_number")
                 bus_order = data["bus_order"] if node[:dmi][:system][:serial_number].strip == data["serial_number"].strip
             else
                 bus_order = data["bus_order"]

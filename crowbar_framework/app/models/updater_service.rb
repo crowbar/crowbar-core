@@ -66,7 +66,7 @@ class UpdaterService < ServiceObject
     end
    ## Rather work directly on Chef::Node objects to avoid Crowbar's deep_merge stuff
    #ChefObject.query_chef.search("node")[0].each do |node|
-   #  if node.has_key?(:updater) && node[:updater].has_key?(:one_shot_run)
+   #  if node.key?(:updater) && node[:updater].has_key?(:one_shot_run)
    #    node[:updater][:one_shot_run] = false
    #    @logger.debug("Updater apply_role_post_chef_call: delete [:updater][:one_shot_run] for #{node.name} (#{node[:updater].inspect}")
    #    node.save

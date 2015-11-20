@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-if !node[:updater].has_key?(:one_shot_run) || !node[:updater][:one_shot_run]
+if !node[:updater].key?(:one_shot_run) || !node[:updater][:one_shot_run]
 
   node[:updater][:one_shot_run] = true
   node.save
