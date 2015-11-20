@@ -31,3 +31,6 @@ version: 'Version CROWBAR_VERSION'
 # The provider will get displayed on the footer of crowbar to show who provides
 # this nice project ;-)
 provider: '<a href="https://crowbar.github.io/" target="_blank">Crowbar</a>'
+
+# The favicon that gets displayed on all pages.
+favicon: ''
