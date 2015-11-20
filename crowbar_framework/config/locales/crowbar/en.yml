@@ -79,11 +79,7 @@ en:
       title: 'Utilities'
       logs: 'Exported Items'
       repositories: 'Repositories'
-    help:
-      title: 'Help'
-      docs: 'Documentation'
-      crowbar_users: 'Crowbar Users Guide'
-      wiki: 'Online Help'
+    help: 'Help'
 
   layouts:
     application:
@@ -243,17 +239,9 @@ en:
   docs:
     index:
       title: 'Documentation'
-      details: 'Updated at %{date} by %{author}'
-      index: 'Topics'
-
-    show:
-      title: 'Documentation'
-      details: 'Updated at %{date} by %{author}'
-      root: 'Back to index'
-      parent: 'One page up'
-      index: 'Topics'
-      parse_failed: 'Failed to parse the documentation'
-      topic_missing: 'Failed to find the requested topic'
+      online_section: 'Crowbar Online Resources'
+      online: 'You can find additional up-to-date information about Crowbar on the <a href="%{url}">project webpage</a>, but do note that it may be for a different version.'
+      pdf: 'PDF'
 
   model:
     node:
