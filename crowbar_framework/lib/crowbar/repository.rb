@@ -264,7 +264,7 @@ module Crowbar
     private
 
     def repos_path
-      Pathname.new(File.join("/srv/tftpboot", @platform, @arch, "repos"))
+      Pathname.new("/srv/tftpboot").join(@platform, @arch, "repos")
     end
 
     def repo_path
