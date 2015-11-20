@@ -203,6 +203,7 @@ module Crowbar
       @arch = arch
       @id = repo
       @config = Repository.registry[@platform][@arch][@id]
+      ensure_link_smt_path
     end
 
     def remote?
@@ -270,12 +271,24 @@ module Crowbar
       repos_path.join(name)
     end
 
+    def smt_path
+      unless @config["smt_path"].blank?
+        Pathname.new("/srv/www/htdocs/repo").join(@config["smt_path"])
+      end
+    end
+
     def repodata_path
       repo_path.join("repodata")
     end
 
     def repodata_media_path
       repo_path.join("suse", "repodata")
+    end
+
+    def ensure_link_smt_path
+      unless remote? || smt_path.nil? || repo_path.directory? || !smt_path.directory?
+        system("sudo", "-i", "ln", "-s", smt_path.to_s, repo_path.to_s)
+      end
     end
 
     #
