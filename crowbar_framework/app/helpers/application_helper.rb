@@ -124,6 +124,13 @@ module ApplicationHelper
     registered_javascripts.push(javascripts).flatten!
   end
 
+  # Generate the shortcut icon href tag that gets displayed on the page meta information
+  def favicon_tag
+    unless branding_config[:favicon].blank?
+      favicon_link_tag image_path(branding_config[:favicon])
+    end
+  end
+
   # Generate the page title that gets displayed on every page within the header
   def page_title
     [].tap do |output|
