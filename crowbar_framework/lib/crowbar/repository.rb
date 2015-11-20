@@ -239,25 +239,68 @@ module Crowbar
     end
 
     def active?
-      active_repos = Chef::DataBag.load("crowbar/repositories") rescue {}
-      active_repos.fetch(@platform, {}).fetch(@arch, {}).key? @id
+      db = data_bag
+      !db.nil? && db.include?(data_bag_item_name)
     end
 
     def stale?
-      active_repos = Chef::DataBag.load("crowbar/repositories") rescue {}
-      if active_repos.fetch(@platform, {}).fetch(@arch, {}).key? @id
-        active_repos[@platform][@arch][@id] != to_databag_hash
-      else
+      db_item = data_bag_item
+
+      if db_item.nil?
         false
+      else
+        Repository.data_bag_item_to_hash(db_item) != to_databag.to_hash
       end
     end
 
-    def to_databag_hash
-      item = Hash.new
+    #
+    # Helpers for data bag storage
+    #
+
+    def to_databag
+      item = Chef::DataBagItem.new
+      item.data_bag data_bag_name
+      item["id"] = data_bag_item_name
       item["name"] = name
       item["url"] = url
       item["ask_on_error"] = @config["ask_on_error"] || false
       item
+    end
+
+    def data_bag_name
+      "repos-#{platform}-#{arch}".tr(".", "_")
+    end
+
+    def data_bag_item_name
+      @id
+    end
+
+    def data_bag(create_if_needed = false)
+      db = begin
+        Chef::DataBag.load(data_bag_name)
+      rescue Net::HTTPServerException
+        nil
+      end
+
+      if db.nil? && create_if_needed
+        db = Chef::DataBag.new
+        db.name data_bag_name
+        db.save
+      end
+
+      db
+    end
+
+    def data_bag_item
+      Chef::DataBagItem.load(data_bag_name, data_bag_item_name)
+    rescue Net::HTTPServerException
+      nil
+    end
+
+    def self.data_bag_item_to_hash(item = data_bag_item)
+      hash = item.to_hash
+      hash.delete("_rev")
+      hash
     end
 
     private

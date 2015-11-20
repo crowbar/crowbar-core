@@ -22,16 +22,24 @@ class Provisioner
       # they can be used.
       def get_repos(platform, version, arch)
         repositories = {}
+        db = "repos-#{platform}-#{version}-#{arch}".tr(".", "_")
 
         repos_db = begin
-          Chef::DataBag.load("crowbar/repositories")
+          Chef::DataBag.load(db)
         rescue Net::HTTPServerException
-          {}
+          []
         end
 
-        repos_db.fetch("#{platform}-#{version}", {}).fetch(arch, {}).each do |id, config|
-          repositories[config["name"]] = { url: config["url"], ask_on_error: config["ask_on_error"] }
+        repos_db.each do |id, url|
+          repo = begin
+            Chef::DataBagItem.load(db, id)
+          rescue Net::HTTPServerException
+            {}
+          end
+          next if repo["url"].nil?
+          repositories[repo["name"]] = { url: repo["url"], ask_on_error: repo["ask_on_error"] }
         end
+
         repositories
       end
     end

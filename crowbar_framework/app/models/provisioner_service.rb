@@ -178,29 +178,15 @@ class ProvisionerService < ServiceObject
     [200, { name: name }]
   end
 
-  def load_repository_bag
-    bag = Chef::DataBag.load("crowbar/repositories") rescue nil
-    if bag.nil?
-      @logger.debug("Creating repositories data bag")
-      bag = Chef::DataBagItem.new
-      bag.data_bag "crowbar"
-      bag["id"] = "repositories"
-      bag.save
-    end
-    bag
-  end
-
   def synchronize_repositories(platforms)
-    bag = load_repository_bag
-
     platforms.each do |platform, arches|
       arches.each do |arch, repos|
         repos.each do |repo, active|
           case active.to_i
           when 0
-            disable_repository(platform, arch, repo, bag)
+            disable_repository(platform, arch, repo)
           when 1
-            enable_repository(platform, arch, repo, bag)
+            enable_repository(platform, arch, repo)
           end
         end
       end
@@ -209,25 +195,30 @@ class ProvisionerService < ServiceObject
 
   def enable_all_repositories
     @logger.debug("Enabling all repositories.")
-    bag = load_repository_bag
     Crowbar::Repository.check_all_repos.each do |repo|
-      enable_repository(repo.platform, repo.arch, repo.id, bag)
+      enable_repository(repo.platform, repo.arch, repo.id)
     end
   end
 
   def disable_all_repositories
     @logger.debug("Disabling all repositories.")
-    bag = load_repository_bag
-    bag.keys.each do |platform|
-      next if platform == "id"
-      bag.delete(platform)
+    all_db = begin
+      Chef::DataBag.list
+    rescue Net::HTTPServerException
+      []
     end
-    bag.save
+
+    all_db.keys.each do |db_name|
+      next unless db_name =~ /^repos-.*/
+      begin
+        chef_data_bag_destroy(db_name)
+      rescue Net::HTTPServerException
+        @logger.debug("Cannot disable repos for #{db_name}!")
+      end
+    end
   end
 
-  def enable_repository(platform, arch, repo, bag = nil)
-    bag = load_repository_bag if bag.nil?
-
+  def enable_repository(platform, arch, repo)
     repo_object = Crowbar::Repository.where(platform: platform, arch: arch, repo: repo).first
     if repo_object.nil?
       message = "#{repo} repository for #{platform} / #{arch} does not exist."
@@ -242,22 +233,21 @@ class ProvisionerService < ServiceObject
     @logger.debug("ID for #{repo} is #{repo_id}") if repo_id != repo
 
     if repo_object.available?
-      bag[platform] ||= {}
-      bag[platform][arch] ||= {}
-      repo_hash = repo_object.to_databag_hash
-      if bag[platform][arch][repo_id] != repo_object.to_databag_hash
+      repo_in_db = repo_object.data_bag_item
+      repo_current = repo_object.to_databag
+      if repo_in_db.nil? || Crowbar::Repository.data_bag_item_to_hash(repo_in_db) != repo_current.to_hash
         @logger.debug("Setting #{repo_id} repository for #{platform} / #{arch} as active.")
-        bag[platform][arch][repo_id] = repo_hash
-        bag.save
+        repo_object.data_bag(true)
+        repo_current.save
       else
         @logger.debug("#{repo_id} repository for #{platform} / #{arch} is already active.")
       end
     else
       message = "Cannot set #{repo_id} repository for #{platform} / #{arch} as active."
       @logger.debug(message)
-      if bag.fetch(platform, {}).fetch(arch, {}).key? repo_id
+      unless repo_object.data_bag_item.nil?
         @logger.debug("Forcefully disabling #{repo_id} repository for #{platform} / #{arch}.")
-        disable_repository(platform, arch, repo_id, bag)
+        disable_repository(platform, arch, repo_id)
       end
 
       code = 403
@@ -266,9 +256,7 @@ class ProvisionerService < ServiceObject
     [code, message]
   end
 
-  def disable_repository(platform, arch, repo, bag = nil)
-    bag = load_repository_bag if bag.nil?
-
+  def disable_repository(platform, arch, repo)
     repo_object = Crowbar::Repository.where(platform: platform, arch: arch, repo: repo).first
     if repo_object.nil?
       message = "#{repo} repository for #{platform} / #{arch} does not exist."
@@ -279,16 +267,25 @@ class ProvisionerService < ServiceObject
     repo_id = repo_object.id
     @logger.debug("ID for #{repo} is #{repo_id}") if repo_id != repo
 
-    if bag.fetch(platform, {}).fetch(arch, {}).key? repo_id
+    repo_in_db = repo_object.data_bag_item
+    if !repo_in_db.nil?
       @logger.debug("Setting #{repo_id} repository for #{platform} / #{arch} as inactive.")
-      bag[platform][arch].delete(repo_id)
-      bag[platform].delete(arch) if bag[platform][arch].empty?
-      bag.delete(platform) if bag[platform].empty?
-      bag.save
+      repo_in_db.destroy(repo_object.data_bag_name, repo_object.data_bag_item_name)
+      db = repo_object.data_bag
+      if !db.nil? && db.empty?
+        chef_data_bag_destroy(repo_object.data_bag_name)
+      end
     else
       @logger.debug("#{repo_id} repository for #{platform} / #{arch} is already inactive.")
     end
 
     [200, ""]
+  end
+
+  private
+
+  # workaround for Chef::DataBag.destroy not working
+  def chef_data_bag_destroy(name)
+    Chef::DataBag.chef_server_rest.delete_rest("data/#{name}")
   end
 end
