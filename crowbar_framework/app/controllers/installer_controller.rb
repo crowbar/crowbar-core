@@ -40,7 +40,7 @@ class InstallerController < ApplicationController
   # Perform Crowbar Installation
   #
   # Provides the restful api call for
-  # /installer/install 	POST 	triggers install-chef-suse.sh
+  # /installer/install 	POST 	triggers installation
   def install
     if Crowbar::Installer.successful?
       respond_to do |format|
