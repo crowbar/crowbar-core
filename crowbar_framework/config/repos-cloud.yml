@@ -72,7 +72,7 @@ suse-12.1:
       url:
       smt_path: "SUSE/Updates/SLE-HA/12-SP1/x86_64/update"
       ask_on_error: false
-    suse-enterprise-storage-2.1-pool:
+    suse-enterprise-storage-2_1-pool:
       name: "SUSE-Enterprise-Storage-2.1-Pool"
       required: "optional"
       features: ["ceph"]
@@ -82,7 +82,7 @@ suse-12.1:
       url:
       smt_path: "SUSE/Products/Storage/2.1/x86_64/product"
       ask_on_error: false
-    suse-enterprise-storage-2.1-updates:
+    suse-enterprise-storage-2_1-updates:
       name: "SUSE-Enterprise-Storage-2.1-Updates"
       required: "optional"
       features: ["ceph"]
