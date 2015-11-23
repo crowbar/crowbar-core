@@ -92,7 +92,7 @@ else
   require "easy_diff"
 
   # chef related
-  gem "mixlib-shellout", version: "~> 1.4"
+  gem "mixlib-shellout", version: "~> 1.3"
   require "mixlib/shellout"
 
   gem "ohai", version: "~> 6.24"
