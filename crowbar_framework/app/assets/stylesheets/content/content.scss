@@ -65,6 +65,18 @@ h3.modal-title {
   font-size: 19px;
 }
 
+.installers {
+  li {
+    border-radius: 3px;
+    line-height: 2em;
+    padding-right: 5px;
+  }
+
+  .action > li > span {
+    margin-right: 5px;
+  }
+}
+
 @-moz-document url-prefix() {
   a {
     &.btn {

@@ -7,6 +7,7 @@
 //= require bootstrap
 //= require fontawesome
 //= require_self
+//= require installer
 //= require branding
 
 jQuery(document).ready(function($) {

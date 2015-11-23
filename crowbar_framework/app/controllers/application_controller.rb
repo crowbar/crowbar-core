@@ -23,7 +23,8 @@ class ApplicationController < ActionController::Base
   rescue_from Crowbar::Error::NotFound, with: :render_not_found
   rescue_from Crowbar::Error::ChefOffline, with: :chef_is_offline
 
-  before_filter :enable_profiler, if: Proc.new { ENV["ENABLE_PROFILER"] == "true" }
+  before_filter :enable_profiler, if: proc { ENV["ENABLE_PROFILER"] == "true" }
+  before_filter :enforce_installer, unless: proc { Crowbar::Installer.successful? || ENV["RAILS_ENV"] == "test" }
 
   # Basis for the reflection/help system.
 
@@ -133,5 +134,9 @@ class ApplicationController < ActionController::Base
 
   def enable_profiler
     Rack::MiniProfiler.authorize_request
+  end
+
+  def enforce_installer
+    redirect_to installer_path
   end
 end

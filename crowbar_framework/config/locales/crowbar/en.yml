@@ -529,6 +529,30 @@ en:
       active: 'Active'
       active_repo_tooltip: 'Managed nodes will be automatically configured to use repositories only if they are marked as active'
 
+  installers:
+    status:
+      installation_failed: 'Installation failed. Please check the log at /var/log/crowbar/install.log'
+    show:
+      installation_header: 'Installing %{product}'
+      installation_successful: 'Installation was successful. You will be redirected in a few seconds.'
+      reinstall_notice: 'If you want to reinstall to get a fresh setup, please remove the following file: /var/lib/crowbar/install/crowbar-installed-ok'
+      install_button: 'Start Installation'
+      pre_sanity_checks: 'Performing pre-installation sanity checks'
+      run_services: 'Starting required services'
+      initial_chef_client: 'Performing initial chef-client run'
+      barclamp_install: 'Installing Barclamps'
+      bootstrap_crowbar_setup: 'Bootstrapping Crowbar setup'
+      apply_crowbar_config: 'Applying Crowbar configuration for Administration Server'
+      transition_crowbar: 'Transitioning Administration server to ready state'
+      chef_client_daemon: 'Starting chef-client'
+      post_sanity_checks: 'Performing post-installation sanity checks'
+      documentation: 'Documentation'
+      release_notes: 'Release Notes'
+      deployment_guide: 'Deployment Guide'
+      system_not_supported: 'System currently not supported for installation'
+    start:
+      installation_ongoing: 'Installation is already ongoing, please wait.'
+
   # Global
   overview: 'Overview'
   show: 'View'
