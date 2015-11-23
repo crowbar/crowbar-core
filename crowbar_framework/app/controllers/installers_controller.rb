@@ -14,11 +14,11 @@
 # limitations under the License.
 #
 
-class InstallerController < ApplicationController
+class InstallersController < ApplicationController
   skip_before_filter :enforce_installer
   before_filter :hide_navigation
 
-  def index
+  def show
     @steps = Crowbar::Installer.steps
   end
 
@@ -40,8 +40,8 @@ class InstallerController < ApplicationController
   # Perform Crowbar Installation
   #
   # Provides the restful api call for
-  # /installer/install 	POST 	triggers installation
-  def install
+  # /installer/start 	POST 	triggers installation
+  def start
     if Crowbar::Installer.successful?
       respond_to do |format|
         format.json { render json: Crowbar::Installer.status }
@@ -51,7 +51,7 @@ class InstallerController < ApplicationController
       # the shell Process will be spawned in the background and therefore has
       # not a direct return value which we can use here
       if Crowbar::Installer.installing?
-        flash[:notice] = I18n.t(".installation_ongoing", scope: "installer.index")
+        flash[:notice] = I18n.t(".installers.start.installation_ongoing")
       else
         ret = Crowbar::Installer.install
         case ret[:status]

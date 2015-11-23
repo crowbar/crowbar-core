@@ -24,7 +24,7 @@ module Crowbar
         else
           return {
             status: 501,
-            msg: I18n.t(".system_not_supported", scope: "installer.index")
+            msg: I18n.t(".installers.show.system_not_supported")
           }
         end
 
@@ -90,15 +90,15 @@ module Crowbar
       end
 
       def error_msg
-        I18n.t(".installation_failed", scope: "installer.status") if failed?
+        I18n.t(".installers.status.installation_failed") if failed?
       end
 
       def success_msg
-        I18n.t(".installation_successful", scope: "installer.index") if successful?
+        I18n.t(".installers.show.installation_successful") if successful?
       end
 
       def notice_msg
-        I18n.t(".reinstall_notice", scope: "installer.index")
+        I18n.t(".installers.show.reinstall_notice")
       end
     end
   end

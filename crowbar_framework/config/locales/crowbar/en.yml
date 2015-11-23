@@ -529,10 +529,10 @@ en:
       active: 'Active'
       active_repo_tooltip: 'Managed nodes will be automatically configured to use repositories only if they are marked as active'
 
-  installer:
+  installers:
     status:
       installation_failed: 'Installation failed. Please check the log at /var/log/crowbar/install.log'
-    index:
+    show:
       installation_header: 'Installing %{product}'
       installation_successful: 'Installation was successful. You will be redirected in a few seconds.'
       reinstall_notice: 'If you want to reinstall to get a fresh setup, please remove the following file: /var/lib/crowbar/install/crowbar-installed-ok'
@@ -550,7 +550,7 @@ en:
       release_notes: 'Release Notes'
       deployment_guide: 'Deployment Guide'
       system_not_supported: 'System currently not supported for installation'
-    install:
+    start:
       installation_ongoing: 'Installation is already ongoing, please wait.'
 
   # Global

@@ -1,10 +1,10 @@
 $(document).ready(function() {
-  $("body.installer").each(function() {
+  $("body.installers").each(function() {
     function statusCheck() {
       $.ajax({
         type: "GET",
         dataType: "json",
-        url: Routes.installer_status_path(),
+        url: Routes.status_installer_path(),
         success: function(data) {
           var mostRecent = $("li." + data.steps[data.steps.length-1]);
           var mostRecentIcon = mostRecent.children();

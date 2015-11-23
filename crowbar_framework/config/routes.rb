@@ -121,9 +121,12 @@ Rails.application.routes.draw do
   get "crowbar/:barclamp", action: "versions", controller: "barclamp"
   post "crowbar/:barclamp/1.0/:action/:id", controller: "barclamp"
 
-  get "installer", controller: "installer", action: "index", as: "installer"
-  get "installer/status", controller: "installer", action: "status", as: "installer_status"
-  post "installer/install", controller: "installer", action: "install", as: "install"
+  resource :installer, only: [:show] do
+    collection do
+      get :status
+      post :start
+    end
+  end
 
   match "/:controller/:action/*(:.format)", via: [:get, :post, :put, :patch, :delete]
 end
