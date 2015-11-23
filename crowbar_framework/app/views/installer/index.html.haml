@@ -3,13 +3,14 @@
     .panel-heading
       %h2
         = t(".installation_header", product: branding_config.page_title)
-        .btn-group.pull-right
-          = button_to t(".install_button"), install_path, class: "btn btn-success", method: :post
     %ul.list-group.action
       - @steps.each do |step|
         %li.list-group-item{ class: step }
           = icon_tag(:hourglass_o)
           = t(".#{step}")
+    .panel-footer.text-right
+      .btn-group
+        = button_to t(".install_button"), install_path, class: "btn btn-success", method: :post
 .col-lg-5.lg-offset-1.col-md-5.col-md-offset-1.col-sm-6.col-xs-12
   %h1
     = t(".documentation")
