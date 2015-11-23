@@ -53,10 +53,10 @@ node[:nfs_client][:exports].each do |name, data|
   options << comment_option
 
   ## Some checks
-  if nfs_mounts.has_key?(nfs_mount)
+  if nfs_mounts.key?(nfs_mount)
     raise "NFS mount \"#{nfs_mount}\" is defined multiple times."
   end
-  if mount_paths.has_key?(mount_path)
+  if mount_paths.key?(mount_path)
     raise "Mount path \"#{mount_path}\" is used by several NFS mounts."
   end
 
@@ -86,9 +86,9 @@ end
     end
 
     unless owned_by_barclamp
-      if nfs_mounts.has_key?(device)
+      if nfs_mounts.key?(device)
         raise "NFS mount \"#{device}\" is already defined in /etc/fstab."
-      elsif mount_paths.has_key?(mount_path)
+      elsif mount_paths.key?(mount_path)
         raise "Mount path \"#{mount_path}\" is already used in /etc/fstab."
       end
 
@@ -100,13 +100,13 @@ end
     # remove old mount that are not valid anymore
     remove_mount = false
 
-    if not nfs_mounts.has_key?(device)
+    if not nfs_mounts.key?(device)
       Chef::Log.info("Removing mount that is not configured anymore: #{device} -> #{mount_path}")
       remove_mount = true
     elsif nfs_mounts[device][0] != mount_path
       Chef::Log.info("Removing mount that does not have correct mount path: #{device} -> #{mount_path}")
       remove_mount = true
-    elsif mount_paths.has_key?(mount_path) && mount_paths[mount_path] != device
+    elsif mount_paths.key?(mount_path) && mount_paths[mount_path] != device
       # technically, this should actually never be reached, but let's keep this
       # to be safe
       Chef::Log.info("Removing mount that does not have correct NFS mount: #{device} -> #{mount_path}")

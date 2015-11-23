@@ -282,7 +282,7 @@ class ServiceObject
       dep = role.override_attributes
       dep[@bc_name]["elements"] = {}
       dep[@bc_name].delete("elements_expanded")
-      @logger.debug "#{inst} proposal has a crowbar-committing key" if dep[@bc_name]["config"].has_key? "crowbar-committing"
+      @logger.debug "#{inst} proposal has a crowbar-committing key" if dep[@bc_name]["config"].key? "crowbar-committing"
       dep[@bc_name]["config"].delete("crowbar-committing")
       dep[@bc_name]["config"].delete("crowbar-queued")
       role.override_attributes = dep
@@ -389,7 +389,7 @@ class ServiceObject
       valid_nodes = preferred_all_nodes unless preferred_all_nodes.empty?
     end
 
-    if role_constraints[role] && role_constraints[role].has_key?("count") && role_constraints[role]["count"] >= 0
+    if role_constraints[role] && role_constraints[role].key?("count") && role_constraints[role]["count"] >= 0
       valid_nodes = valid_nodes.take(role_constraints[role]["count"])
     end
 
@@ -570,7 +570,7 @@ class ServiceObject
   end
 
   def violates_count_constraint?(elements, role)
-    if role_constraints[role] && role_constraints[role].has_key?("count")
+    if role_constraints[role] && role_constraints[role].key?("count")
       len = elements[role].length
       max_count = role_constraints[role]["count"]
       max_count >= 0 && len > max_count
@@ -607,7 +607,7 @@ class ServiceObject
     if role_constraints[role] && !role_constraints[role]["admin"]
       elements[role].each do |element|
         next if is_cluster? element
-        unless nodes_is_admin.has_key? element
+        unless nodes_is_admin.key? element
           node = NodeObject.find_node_by_name(element)
           nodes_is_admin[element] = (!node.nil? && node.admin?)
         end
@@ -618,7 +618,7 @@ class ServiceObject
   end
 
   def violates_platform_constraint?(elements, role)
-    if role_constraints[role] && role_constraints[role].has_key?("platform")
+    if role_constraints[role] && role_constraints[role].key?("platform")
       constraints = role_constraints[role]["platform"]
       elements[role].each do |element|
         next if is_cluster? element
@@ -633,7 +633,7 @@ class ServiceObject
   end
 
   def violates_exclude_platform_constraint?(elements, role)
-    if role_constraints[role] && role_constraints[role].has_key?("exclude_platform")
+    if role_constraints[role] && role_constraints[role].key?("exclude_platform")
       constraints = role_constraints[role]["exclude_platform"]
       elements[role].each do |element|
         next if is_cluster? element
@@ -665,7 +665,7 @@ class ServiceObject
     nodes_is_admin = {}
 
     role_constraints.keys.each do |role|
-      next unless elements.has_key?(role)
+      next unless elements.key?(role)
 
       if violates_count_constraint?(elements, role)
         validation_error("Role #{role} can accept up to #{role_constraints[role]["count"]} elements only.")
@@ -708,7 +708,7 @@ class ServiceObject
   def validate_one_for_role(proposal, role)
     elements = proposal["deployment"][@bc_name]["elements"]
 
-    if not elements.has_key?(role) or elements[role].length != 1
+    if not elements.key?(role) or elements[role].length != 1
       validation_error("Need one (and only one) #{role} node.")
     end
   end
@@ -719,7 +719,7 @@ class ServiceObject
   def validate_at_least_n_for_role(proposal, role, n)
     elements = proposal["deployment"][@bc_name]["elements"]
 
-    if not elements.has_key?(role) or elements[role].length < n
+    if not elements.key?(role) or elements[role].length < n
       validation_error("Need at least #{n} #{role} node#{"s" if n > 1}.")
     end
   end
@@ -730,7 +730,7 @@ class ServiceObject
   def validate_count_as_odd_for_role(proposal, role)
     elements = proposal["deployment"][@bc_name]["elements"]
 
-    if not elements.has_key?(role) or elements[role].length.to_i.even?
+    if not elements.key?(role) or elements[role].length.to_i.even?
       validation_error("Need an odd number of #{role} nodes.")
     end
   end

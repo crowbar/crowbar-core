@@ -234,7 +234,7 @@ end
 # let's create records for allocated addresses which do not belong to a node
 search(:crowbar, "id:*_network").each do |network|
   #this is not network, or at least there is no nodes
-  next unless network.has_key?("allocated_by_name")
+  next unless network.key?("allocated_by_name")
   net_name=network[:id].gsub(/_network$/, "").gsub("_","-")
   network[:allocated_by_name].each_key do |host|
     if search(:node, "fqdn:#{host}").size > 0 or not host.match(/.#{node[:dns][:domain]}$/)

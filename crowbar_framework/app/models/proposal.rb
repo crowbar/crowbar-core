@@ -137,7 +137,7 @@ class Proposal < ActiveRecord::Base
     else
       return "unready" if bc["crowbar-committing"]
       return "pending" if bc["crowbar-queued"]
-      return "hold" if !bc.has_key? "crowbar-queued" and !bc.has_key? "crowbar-committing"
+      return "hold" if !bc.key? "crowbar-queued" and !bc.has_key? "crowbar-committing"
       if !bc.key? "crowbar-status" or bc["crowbar-status"] === "success"
         "ready"
       else

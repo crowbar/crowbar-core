@@ -20,10 +20,10 @@ class NodesController < ApplicationController
     @sum = 0
     @groups = {}
     session[:node] = params[:name]
-    if params.has_key?(:role)
+    if params.key?(:role)
       result = NodeObject.all #this is not efficient, please update w/ a search!
       @nodes = result.find_all { |node| node.role? params[:role] }
-      if params.has_key?(:names_only)
+      if params.key?(:names_only)
          names = @nodes.map { |node| node.handle }
          @nodes = {role: params[:role], nodes: names, count: names.count}
       end
@@ -206,7 +206,7 @@ class NodesController < ApplicationController
       NodeObject.all.each do |node|
         family = node.family.to_s
 
-        unless families.has_key? family
+        unless families.key? family
           families[family] = {
             names: [],
             family: node.family
