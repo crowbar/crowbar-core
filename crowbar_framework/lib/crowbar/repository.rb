@@ -272,7 +272,7 @@ module Crowbar
     end
 
     def data_bag_item_name
-      @id
+      @id.tr(".", "_")
     end
 
     def data_bag(create_if_needed = false)
