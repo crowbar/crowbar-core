@@ -399,14 +399,42 @@ class BarclampController < ApplicationController
     respond_to do |format|
       case code
       when 200
+        format.html do
+          redirect_to(
+            proposal_barclamp_path(
+              controller: params[:id],
+              id: params[:id]
+            )
+          )
+        end
         format.json do
           head :ok
         end
       when 202
+        format.html do
+          flash[:warning] = message
+
+          redirect_to(
+            proposal_barclamp_path(
+              controller: params[:id],
+              id: params[:id]
+            )
+          )
+        end
         format.json do
           head :ok
         end
       else
+        format.html do
+          flash[:alert] = message
+
+          redirect_to(
+            proposal_barclamp_path(
+              controller: params[:id],
+              id: params[:id]
+            )
+          )
+        end
         format.json do
           render json: { error: message }, status: code
         end
@@ -464,10 +492,28 @@ class BarclampController < ApplicationController
       respond_to do |format|
         case code
         when 200
+          format.html do
+            redirect_to(
+              proposal_barclamp_path(
+                controller: params[:id],
+                id: params[:id]
+              )
+            )
+          end
           format.json do
             render json: message
           end
         else
+          format.html do
+            flash[:alert] = message
+
+            redirect_to(
+              proposal_barclamp_path(
+                controller: params[:id],
+                id: params[:id]
+              )
+            )
+          end
           format.json do
             render json: { error: message }, status: code
           end
