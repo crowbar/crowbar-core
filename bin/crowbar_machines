@@ -246,7 +246,7 @@ def deprecated_exec(*cmd)
       execute.push "-P '#{@password}'"
     end
   else
-    unless File.exist? @crowbar_key_file
+    unless ENV["CROWBAR_KEY"].present?
       execute.push "--anonymous"
     end
   end
