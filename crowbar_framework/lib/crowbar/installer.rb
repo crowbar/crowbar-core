@@ -54,6 +54,7 @@ module Crowbar
           steps: steps_done,
           failed: failed?,
           success: successful?,
+          installing: installing?,
           errorMsg: error_msg,
           successMsg: success_msg,
           noticeMsg: notice_msg
