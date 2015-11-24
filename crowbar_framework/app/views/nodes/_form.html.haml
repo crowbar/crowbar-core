@@ -107,6 +107,10 @@
         %span.help-block
           = t('.intended_role_hint')
 
+      .form-group
+        = f.label :default_fs , t('.default_fs')
+        = select_tag :default_fs, fs_for_select(@node.default_fs), :class => "form-control"
+
       - if have_openstack
         .form-group
           = f.label :availability_zone, t('.availability_zone')

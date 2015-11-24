@@ -206,7 +206,7 @@
             <source>
 <![CDATA[
 # Change the default FS YaST will use for partitions
-sed -i s/"^[[:space:]]*DEFAULT_FS=.*"/DEFAULT_FS=\"ext4\"/ /etc/sysconfig/storage
+sed -i s/"^[[:space:]]*DEFAULT_FS=.*"/DEFAULT_FS=\"<%= @default_fs %>\"/ /etc/sysconfig/storage
 ]]>
             </source>
         </script>

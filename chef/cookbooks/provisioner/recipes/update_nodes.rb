@@ -295,7 +295,8 @@ if not nodes.nil? and not nodes.empty?
                       architecture: arch,
                       is_ses: node[:provisioner][:suse] &&
                         !node[:provisioner][:suse][:cloud_available] && node[:provisioner][:suse][:storage_available],
-                      crowbar_join: "#{os_url}/crowbar_join.sh")
+                      crowbar_join: "#{os_url}/crowbar_join.sh",
+                      default_fs: mnode[:crowbar_wall][:default_fs] || "ext4")
           end
 
         when os =~ /^(hyperv|windows)/

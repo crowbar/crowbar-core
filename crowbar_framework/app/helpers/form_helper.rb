@@ -41,6 +41,20 @@ module FormHelper
     )
   end
 
+  # Possible values for nodes default file system
+  def fs_for_select(selected)
+    fs_values = [
+      "ext3",
+      "ext4",
+      "xfs",
+      "btrfs"
+    ]
+    options_for_select(
+      fs_values.zip(fs_values),
+      selected.to_s
+    )
+  end
+
   def booleans_for_select(selected)
     options_for_select(
       [

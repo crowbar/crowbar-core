@@ -443,6 +443,7 @@ en:
       availability_zone: 'Availability Zone'
       availability_zone_hint: 'Availability zones allow to arrange sets of either OpenStack Compute or OpenStack Block Storage hosts into logical groups. If empty, the default availability zone will be used.'
       intended_role: 'Intended Role'
+      default_fs: 'Filesystem Type'
       controller: 'Controller'
       compute: 'Compute'
       storage: 'Storage'

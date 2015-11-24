@@ -298,6 +298,15 @@ class NodeObject < ChefObject
     @node["crowbar_wall"]["intended_role"] = value
   end
 
+  def default_fs
+    crowbar_wall["default_fs"] || "ext4"
+  end
+
+  def default_fs=(value)
+    @node["crowbar_wall"] ||= {}
+    @node["crowbar_wall"]["default_fs"] = value
+  end
+
   def raid_type
     crowbar_wall["raid_type"] || "single"
   end
