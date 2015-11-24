@@ -170,7 +170,7 @@
             </raid_options>
           </partition>
           <partition>
-            <filesystem config:type="symbol">ext3</filesystem>
+            <filesystem config:type="symbol"><%= @default_fs %></filesystem>
             <format config:type="boolean">true</format>
             <mount>/</mount>
             <partition_id config:type="integer">131</partition_id>
