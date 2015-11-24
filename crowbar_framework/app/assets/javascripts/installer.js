@@ -6,6 +6,19 @@ $(document).ready(function() {
         dataType: "json",
         url: Routes.status_installer_path(),
         success: function(data) {
+          // initially steps are empty, so we need to return
+          if (!data.steps) {
+            // indicate first step after triggering installation
+            // otherwise the UI will take 3 seconds to catch up
+            if (data.installing) {
+              $("li.pre_sanity_checks").addClass("list-group-item-success");
+              $("li.pre_sanity_checks span.fa")
+                .removeClass("fa-hourglass-o")
+                .addClass("fa-circle-o-notch fa-spin");
+            }
+            setTimeout(statusCheck, 3000);
+            return;
+          }
           var mostRecent = $("li." + data.steps[data.steps.length-1]);
           var mostRecentIcon = mostRecent.children();
 
