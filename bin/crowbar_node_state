@@ -73,7 +73,7 @@ def opt_parse
   standard_opt_parse
 
   if ARGV.length == 0 and !@allow_zero_args
-    usage -1
+    usage(-1)
   end
 
   check_user_password

@@ -144,7 +144,7 @@ def opt_parse
   standard_opt_parse
 
   if ARGV.length == 0 and !@allow_zero_args
-    usage -1
+    usage(-1)
   end
 
   check_user_password
@@ -162,7 +162,7 @@ def get_user_password
   end
 
   if key
-    if ::File.exist(@crowbar_key_file) && ::File.readable?(@crowbar_key_file)
+    if ::File.exist?(@crowbar_key_file) && ::File.readable?(@crowbar_key_file)
       begin
         from_file = File.read(@crowbar_key_file).strip
 
@@ -380,16 +380,16 @@ def run_sub_command(cmds, subcmd)
         args_count = 1
         args_append = ""
 
-        args_append.push(
+        args_append.concat(
           @data
-        ) if data.present?
+        ) if @data.present?
       when "edit"
         args_count = 1
         args_append = ""
 
-        args_append.push(
+        args_append.concat(
           @data
-        ) if data.present?
+        ) if @data.present?
       when "show"
         args_count = 1
         args_append = "--format json"
