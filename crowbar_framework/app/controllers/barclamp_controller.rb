@@ -485,7 +485,8 @@ class BarclampController < ApplicationController
           :id,
           :description,
           :attributes,
-          :deployment
+          :deployment,
+          "crowbar-deep-merge-template"
         )
       )
 
@@ -619,7 +620,8 @@ class BarclampController < ApplicationController
         :id,
         :description,
         :attributes,
-        :deployment
+        :deployment,
+        "crowbar-deep-merge-template"
       )
     )
 
