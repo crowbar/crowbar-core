@@ -422,7 +422,7 @@ class BarclampController < ApplicationController
           )
         end
         format.json do
-          head :ok
+          head :accepted
         end
       else
         format.html do
