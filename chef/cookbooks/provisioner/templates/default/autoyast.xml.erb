@@ -170,7 +170,7 @@
             </raid_options>
           </partition>
           <partition>
-            <filesystem config:type="symbol">ext3</filesystem>
+            <filesystem config:type="symbol"><%= @default_fs %></filesystem>
             <format config:type="boolean">true</format>
             <mount>/</mount>
             <partition_id config:type="integer">131</partition_id>
@@ -206,7 +206,7 @@
             <source>
 <![CDATA[
 # Change the default FS YaST will use for partitions
-sed -i s/"^[[:space:]]*DEFAULT_FS=.*"/DEFAULT_FS=\"ext4\"/ /etc/sysconfig/storage
+sed -i s/"^[[:space:]]*DEFAULT_FS=.*"/DEFAULT_FS=\"<%= @default_fs %>\"/ /etc/sysconfig/storage
 ]]>
             </source>
         </script>
