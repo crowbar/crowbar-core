@@ -31,8 +31,12 @@ class InstallersController < ApplicationController
   # and the steps that are done
   def status
     respond_to do |format|
-      format.json { render json: Crowbar::Installer.status }
-      format.html { redirect_to installer_url }
+      format.json do
+        render json: Crowbar::Installer.status
+      end
+      format.html do
+        redirect_to installer_url
+      end
     end
   end
 
@@ -44,25 +48,47 @@ class InstallersController < ApplicationController
   def start
     if Crowbar::Installer.successful?
       respond_to do |format|
-        format.json { render json: Crowbar::Installer.status }
-        format.html { redirect_to installer_url }
+        format.json do
+          head :gone
+        end
+        format.html do
+          redirect_to installer_url
+        end
       end
     else
-      # the shell Process will be spawned in the background and therefore has
-      # not a direct return value which we can use here
       if Crowbar::Installer.installing?
-        flash[:notice] = I18n.t(".installers.start.installation_ongoing")
+        respond_to do |format|
+          format.json do
+            head :im_used
+          end
+          format.html do
+            flash[:notice] = I18n.t(".installers.start.installation_ongoing")
+            redirect_to installer_url
+          end
+        end
       else
         ret = Crowbar::Installer.install
         case ret[:status]
         when 501
-          flash[:alert] = ret[:msg]
+          respond_to do |format|
+            format.json do
+              head :not_implemented
+            end
+          end
+          format.html do
+            flash[:alert] = ret[:msg]
+            redirect_to installer_url
+          end
         end
-      end
 
-      respond_to do |format|
-        format.json { head :ok }
-        format.html { redirect_to installer_url }
+        respond_to do |format|
+          format.json do
+            head :ok
+          end
+          format.html do
+            redirect_to installer_url
+          end
+        end
       end
     end
   end
