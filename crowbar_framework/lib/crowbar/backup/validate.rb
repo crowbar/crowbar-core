@@ -25,27 +25,37 @@ module Crowbar
 
       def validate
         [:hostname, :version, :file_extension].each do |test|
-          unless send(test)
-            Rails.logger.error("Backup validation failed for #{test}.")
-            return false
+          ret = send(test)
+          unless ret[:status] == :ok
+            return ret
           end
         end
 
-        true
+        { status: :ok, msg: "" }
       end
 
       protected
 
       def hostname
         hostname_file = File.join(path, "crowbar", "etc", "HOSTNAME")
-        return false unless File.exist?(hostname_file)
+        unless File.exist?(hostname_file)
+          return {
+            status: :failed_dependency,
+            msg: I18n.t(".hostname_file_missing", scope: "backup.validation")
+          }
+        end
 
         system_hostname = `hostname -f`.strip
         backup_hostname = File.open(hostname_file, &:readline).strip
 
-        return false unless system_hostname == backup_hostname
+        unless system_hostname == backup_hostname
+          return {
+            status: :failed_dependency,
+            msg: I18n.t(".hostnames_not_identical", scope: "backup.validation")
+          }
+        end
 
-        true
+        { status: :ok, msg: "" }
       end
 
       def version
@@ -71,7 +81,7 @@ module Crowbar
           }
         end
 
-        true
+        { status: :ok, msg: "" }
       end
 
       def file_extension
@@ -84,7 +94,7 @@ module Crowbar
           }
         end
 
-        true
+        { status: :ok, msg: "" }
       end
     end
   end

@@ -581,6 +581,14 @@ en:
       invalid_filename: 'Invalid filename. Please dont use whitespace or special characters'
       invalid_backup: 'Cannot restore from invalid backup'
       missing_backup: 'Backup does not exist'
+      upgrade_not_supported: 'Upgrade not supported'
+    validation:
+      hostname_file_missing: 'Backup hostname file is missing'
+      hostnames_not_identical: 'Hostnames not identical'
+      version_file_missing: 'Backup version file is missing'
+      version_to_low: 'Backup version to low'
+      version_to_hight: 'Backup version higher than current version'
+      non_json_file: 'Unprocessable chef file found'
 
   # Global
   overview: 'Overview'

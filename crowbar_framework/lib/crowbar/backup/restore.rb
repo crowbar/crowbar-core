@@ -70,6 +70,13 @@ module Crowbar
         sleep(1) until Crowbar::Installer.successful? || Crowbar::Installer.failed?
         return false if Crowbar::Installer.failed?
 
+        if Crowbar::Installer.failed?
+          return {
+            status: :not_acceptable,
+            msg: I18n.t(".installation_failed", scope: "installers.status")
+          }
+        end
+
         true
       end
 
