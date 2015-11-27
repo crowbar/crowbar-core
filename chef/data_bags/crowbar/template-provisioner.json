@@ -80,6 +80,11 @@
             "initrd": "boot/ppc64le/initrd",
             "kernel": "boot/ppc64le/linux",
             "append": " "
+          },
+          "s390x": {
+            "initrd": "boot/s390x/initrd",
+            "kernel": "boot/s390x/linux",
+            "append": " "
           }
         },
         "windows-6.2": {
