@@ -97,3 +97,40 @@ suse-12.1:
       required: "recommended"
       url:
       ask_on_error: false
+  s390x:
+    sles12-sp1-pool:
+      name: "SLES12-SP1-Pool"
+      required: "optional"
+      features: ["os"]
+      repomd:
+        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP1:GA/SLES/12.1/POOL/s390x"
+        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+      url:
+      smt_path: "SUSE/Products/SLE-SERVER/12-SP1/s390x/product"
+      ask_on_error: false
+    sles12-sp1-updates:
+      name: "SLES12-SP1-Updates"
+      required: "optional"
+      features: ["os"]
+      repomd:
+        tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-SERVER:12-SP1:s390x/update"
+        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+      url:
+      smt_path: "SUSE/Updates/SLE-SERVER/12-SP1/s390x/update"
+      ask_on_error: false
+    cloud:
+      name: "Cloud"
+      required: "mandatory"
+      features: ["openstack"]
+      repomd:
+        tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP1:Update:Products:Cloud6/suse-openstack-cloud/6/cd/s390x",
+              "obsproduct://build.suse.de/Devel:Cloud:6:Staging/suse-openstack-cloud/6/cd/s390x",
+              "obsproduct://build.suse.de/Devel:Cloud:6/suse-openstack-cloud/6/cd/s390x"]
+        key_md5: ["9a62177e1c6852d48453ed3909956d6b", "6e2920076653964b7de9d6d0421955bb"]
+      url:
+      ask_on_error: false
+    ptf:
+      name: "PTF"
+      required: "recommended"
+      url:
+      ask_on_error: false
