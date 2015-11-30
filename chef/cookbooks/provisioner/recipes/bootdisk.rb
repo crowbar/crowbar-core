@@ -46,6 +46,8 @@ ruby_block "Find the fallback boot device" do
           break if dev =~ /^c[0-9]+d[0-9]+$/
           # xen-vbd-51712-part1 -> ../../xvda1
           break if dev =~ /^xvd[a-z]+$/
+          # ccw-0.0.0150 -> ../../dasda
+          break if dev =~ /^ccw-[0-9\.]+$/
           dev = nil
           disk_by_path = nil
         end
