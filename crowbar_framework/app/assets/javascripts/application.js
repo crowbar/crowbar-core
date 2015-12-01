@@ -7,7 +7,6 @@
 //= require bootstrap
 //= require fontawesome
 //= require_self
-//= require installer
 
 jQuery(document).ready(function($) {
   $('textarea.editor').each(function() {
