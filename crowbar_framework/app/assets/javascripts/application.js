@@ -8,7 +8,6 @@
 //= require fontawesome
 //= require_self
 //= require installer
-//= require branding
 
 jQuery(document).ready(function($) {
   $('textarea.editor').each(function() {
