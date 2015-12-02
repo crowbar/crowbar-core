@@ -73,6 +73,8 @@ module ApplicationHelper
         files.push "barclamps/#{barclamp_name}/application"
       end
 
+      files.push "branding"
+
       files
     end
   end
@@ -113,6 +115,8 @@ module ApplicationHelper
       if barclamp_path.file?
         files.push "barclamps/#{barclamp_name}/application"
       end
+
+      files.push "branding"
 
       files
     end
