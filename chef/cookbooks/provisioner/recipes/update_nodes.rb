@@ -273,6 +273,15 @@ if not nodes.nil? and not nodes.empty?
 
           packages = node[:provisioner][:packages][os] || []
 
+          # Need to know if we're doing a storage-only deploy so we can tweak
+          # the autoyast profile slightly
+          storage_available = false
+          cloud_available = false
+          repos.each do |name, repo|
+            storage_available = true if name.include? "Storage"
+            cloud_available = true if name.include? "Cloud"
+          end
+
           template "#{node_cfg_dir}/autoyast.xml" do
             mode 0644
             source "autoyast.xml.erb"
@@ -293,8 +302,7 @@ if not nodes.nil? and not nodes.empty?
                       node_hostname: mnode[:hostname],
                       target_platform_version: target_platform_version,
                       architecture: arch,
-                      is_ses: node[:provisioner][:suse] &&
-                        !node[:provisioner][:suse][:cloud_available] && node[:provisioner][:suse][:storage_available],
+                      is_ses: storage_available && !cloud_available,
                       crowbar_join: "#{os_url}/crowbar_join.sh",
                       default_fs: mnode[:crowbar_wall][:default_fs] || "ext4")
           end
