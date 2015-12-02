@@ -18,4 +18,13 @@
 module Crowbar
   autoload :Backup,
     File.expand_path("../crowbar/backup", __FILE__)
+
+  autoload :Installer,
+    File.expand_path("../installer.rb", __FILE__)
+
+  autoload :Migrate,
+    File.expand_path("../migrate.rb", __FILE__)
+
+  autoload :Upgrade,
+    File.expand_path("../upgrade.rb", __FILE__)
 end
