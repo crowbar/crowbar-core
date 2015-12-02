@@ -28,6 +28,7 @@ require "active_support/all"
 @crowbar_key_file = "/etc/crowbar.install.key"
 
 @data = ""
+@file = ""
 
 @mapped_commands = [
   "api_help",
@@ -210,7 +211,7 @@ def parse_standard_opt(opt, arg)
   when "--data"
     @data = arg
   when "--file"
-    @data = File.read(arg)
+    @file = arg
   else
     return false
   end
@@ -381,15 +382,23 @@ def run_sub_command(cmds, subcmd)
         args_append = ""
 
         args_append.concat(
-          @data
+          "--data '#{@data}'"
         ) if @data.present?
+
+        args_append.concat(
+          "--file #{@file}"
+        ) if @file.present?
       when "edit"
         args_count = 1
         args_append = ""
 
         args_append.concat(
-          @data
+          "--data '#{@data}'"
         ) if @data.present?
+
+        args_append.concat(
+          "--file #{@file}"
+        ) if @file.present?
       when "show"
         args_count = 1
         args_append = "--format json"
