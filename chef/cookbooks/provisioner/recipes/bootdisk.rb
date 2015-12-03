@@ -94,9 +94,12 @@ ruby_block "Find the fallback boot device" do
           bootdisks.find{ |b|b =~ /^ata-/ } ||
           bootdisks.find{ |b|b =~ /^cciss-/ } ||
           bootdisks.first
-        node[:crowbar_wall][:boot_device] = "disk/by-id/#{bootdisk}"
+        dev = "disk/by-id/#{bootdisk}"
       end
     end
+    raise "Cannot find a hard disk!" unless dev
+
+    node[:crowbar_wall][:boot_device] = dev
     disk = BarclampLibrary::Barclamp::Inventory::Disk.new(node,dev)
     disk.claim("Boot")
     node.save
