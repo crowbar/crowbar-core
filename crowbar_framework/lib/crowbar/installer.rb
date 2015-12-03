@@ -35,6 +35,12 @@ module Crowbar
         { status: 200, msg: "" }
       end
 
+      def install!
+        installed_file = lib_path.join("crowbar-installed-ok")
+        installed_file.delete if installed_file.file?
+        install
+      end
+
       def steps
         [
           :pre_sanity_checks,

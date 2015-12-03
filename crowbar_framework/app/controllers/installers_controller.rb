@@ -46,47 +46,72 @@ class InstallersController < ApplicationController
   # Provides the restful api call for
   # /installer/start 	POST 	triggers installation
   def start
-    if Crowbar::Installer.successful?
+    if params[:force]
+      ret = Crowbar::Installer.install!
+      case ret[:status]
+      when 501
+        respond_to do |format|
+          format.json do
+            head :not_implemented
+          end
+        end
+        format.html do
+          flash[:alert] = ret[:msg]
+          redirect_to installer_url
+        end
+      end
+
       respond_to do |format|
         format.json do
-          head :gone
+          head :ok
         end
         format.html do
           redirect_to installer_url
         end
       end
     else
-      if Crowbar::Installer.installing?
+      if Crowbar::Installer.successful?
         respond_to do |format|
           format.json do
-            head :im_used
+            head :gone
           end
           format.html do
-            flash[:notice] = I18n.t(".installers.start.installation_ongoing")
             redirect_to installer_url
           end
         end
       else
-        ret = Crowbar::Installer.install
-        case ret[:status]
-        when 501
+        if Crowbar::Installer.installing?
           respond_to do |format|
             format.json do
-              head :not_implemented
+              head :im_used
+            end
+            format.html do
+              flash[:notice] = I18n.t(".installers.start.installation_ongoing")
+              redirect_to installer_url
             end
           end
-          format.html do
-            flash[:alert] = ret[:msg]
-            redirect_to installer_url
+        else
+          ret = Crowbar::Installer.install
+          case ret[:status]
+          when 501
+            respond_to do |format|
+              format.json do
+                head :not_implemented
+              end
+            end
+            format.html do
+              flash[:alert] = ret[:msg]
+              redirect_to installer_url
+            end
           end
-        end
 
-        respond_to do |format|
-          format.json do
-            head :ok
-          end
-          format.html do
-            redirect_to installer_url
+          respond_to do |format|
+            format.json do
+              head :ok
+            end
+            format.html do
+              redirect_to installer_url
+            end
           end
         end
       end
