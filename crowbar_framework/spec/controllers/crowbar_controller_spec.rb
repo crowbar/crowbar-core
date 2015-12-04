@@ -176,8 +176,8 @@ describe CrowbarController do
     it "returns plain text message if proposals fails" do
       allow_any_instance_of(CrowbarService).to receive(:proposals).and_return([500, "Error"])
       get :proposals
-      expect(response).to be_server_error
-      expect(response.body).to be == "Error"
+      expect(response).to redirect_to(root_path)
+      expect(flash[:alert]).to eq("Error")
     end
 
     it "is successful" do

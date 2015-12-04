@@ -108,7 +108,7 @@ module Crowbar
         lock.release
       end
       logger.debug("dequeue proposal: exit #{inst} #{bc}")
-      return dequeued ? [200, {}] : [400, ""]
+      dequeued ? [200, {}] : [400, I18n.t("barclamp.proposal_show.dequeue_proposal_failure")]
     end
 
     #

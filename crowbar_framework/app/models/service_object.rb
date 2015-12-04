@@ -327,10 +327,26 @@ class ServiceObject
     [200, props]
   end
 
+  def proposal_template
+    template = proposal_schema_directory.join("template-#{@bc_name}.json")
+
+    if template.exist?
+      [
+        200,
+        JSON.load(template.read)
+      ]
+    else
+      [
+        404,
+        I18n.t("model.service.template_missing", name: @bc_name)
+      ]
+    end
+  end
+
   def proposal_show(inst)
     prop = Proposal.where(barclamp: @bc_name, name: inst).first
     if prop.nil?
-      [404, {}]
+      [404, I18n.t("model.service.cannot_find")]
     else
       [200, prop]
     end
@@ -416,7 +432,7 @@ class ServiceObject
 
     prop = Proposal.where(barclamp: @bc_name, name: base_id).first
     return [400, I18n.t("model.service.name_exists")] unless prop.nil?
-    return [400, I18n.t("model.service.too_short")] if base_id.length == 0
+    return [400, I18n.t("model.service.too_short")] if base_id.to_s.length == 0
     return [400, I18n.t("model.service.illegal_chars")] if base_id =~ /[^A-Za-z0-9_]/
 
     proposal = create_proposal
@@ -450,7 +466,7 @@ class ServiceObject
   def proposal_delete(inst)
     prop = Proposal.where(barclamp: @bc_name, name: inst).first
     if prop.nil?
-      [404, {}]
+      [404, I18n.t("model.service.cannot_find")]
     else
       prop.destroy
       [200, {}]
@@ -758,7 +774,7 @@ class ServiceObject
       [200, {}]
     rescue Net::HTTPServerException => e
       Rails.logger.error ([e.message] + e.backtrace).join("\n")
-      [e.response.code, {}]
+      [e.response.code, I18n.t("model.service.unknown_error")]
     rescue Chef::Exceptions::ValidationFailed => e2
       Rails.logger.error ([e2.message] + e2.backtrace).join("\n")
       [400, "Failed to validate proposal: #{e2.message}"]
