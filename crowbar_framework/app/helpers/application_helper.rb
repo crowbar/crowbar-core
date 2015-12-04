@@ -47,6 +47,7 @@ module ApplicationHelper
   def registered_stylesheets
     @registered_stylesheets ||= begin
       files = [
+        "vendor",
         "application"
       ]
 
@@ -90,6 +91,7 @@ module ApplicationHelper
   def registered_javascripts
     @registered_javascripts ||= begin
       files = [
+        "vendor",
         "application"
       ]
 

@@ -1,13 +1,4 @@
-//= require js-routes
-
-//= require jquery
-//= require misc
-//= require codemirror
-//= require bootstrap-sprockets
-//= require bootstrap
-//= require fontawesome
 //= require_self
-//= require installer
 
 jQuery(document).ready(function($) {
   $('textarea.editor').each(function() {
@@ -256,3 +247,27 @@ jQuery(document).ready(function($) {
     500
   );
 });
+
+if (!String.prototype.localize) {
+  String.prototype.localize = function() {
+    var values = {
+      'barclamp.node_selector.node_duplicate': 'Node {0} is already assigned to {1}',
+      'barclamp.node_selector.cluster_duplicate': 'Cluster {0} is already assigned to {1}',
+      'barclamp.node_selector.outdated': 'There have been deleted old nodes removed, please save this proposal.',
+      'barclamp.node_selector.no_admin': 'Failed to assign {0} to {1}, no admin nodes allowed',
+      'barclamp.node_selector.no_cluster': 'Failed to assign {0} to {1}, no clusters allowed',
+      'barclamp.node_selector.unique': 'Failed to assign {0} to {1}, it\'s already assigned to another role',
+      'barclamp.node_selector.zero': 'Failed to assign {0} to {1}, no assignment allowed',
+      'barclamp.node_selector.max_count': 'Failed to assign {0} to {1}, maximum of allowed nodes/clusters reached',
+      'barclamp.node_selector.platform': 'Failed to assign {0} to {1}, this platform is not allowed',
+      'barclamp.node_selector.exclude_platform': 'Failed to assign {0} to {1}, this platform is excluded',
+      'barclamp.node_selector.conflicting_roles': 'Node {0} cannot be assigned to both {1} and any of these roles: {2}'
+    };
+
+    if (values[this]) {
+      return values[this];
+    } else {
+      return this;
+    }
+  };
+}

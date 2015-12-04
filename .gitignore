@@ -9,4 +9,3 @@ Gemfile.lock
 
 .bundle/config
 /vendor/
-/crowbar_framework/vendor/
