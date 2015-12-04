@@ -338,7 +338,7 @@ class ServiceObject
     else
       [
         404,
-        "Template for #{@bc_name} does not exist"
+        I18n.t("model.service.template_missing", name: @bc_name)
       ]
     end
   end
@@ -346,7 +346,7 @@ class ServiceObject
   def proposal_show(inst)
     prop = Proposal.where(barclamp: @bc_name, name: inst).first
     if prop.nil?
-      [404, "Failed to find proposal"]
+      [404, I18n.t("model.service.cannot_find")]
     else
       [200, prop]
     end
@@ -466,7 +466,7 @@ class ServiceObject
   def proposal_delete(inst)
     prop = Proposal.where(barclamp: @bc_name, name: inst).first
     if prop.nil?
-      [404, "Proposal does not exist"]
+      [404, I18n.t("model.service.cannot_find")]
     else
       prop.destroy
       [200, {}]
@@ -774,7 +774,7 @@ class ServiceObject
       [200, {}]
     rescue Net::HTTPServerException => e
       Rails.logger.error ([e.message] + e.backtrace).join("\n")
-      [e.response.code, "An unknown error occured"]
+      [e.response.code, I18n.t("model.service.unknown_error")]
     rescue Chef::Exceptions::ValidationFailed => e2
       Rails.logger.error ([e2.message] + e2.backtrace).join("\n")
       [400, "Failed to validate proposal: #{e2.message}"]

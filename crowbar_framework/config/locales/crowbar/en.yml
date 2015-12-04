@@ -265,6 +265,8 @@ en:
       template_invalid: 'Proposal template for barclamp %{name} does not contain valid JSON.'
       dependency_missing: 'Cannot create a proposal for %{name}, please create a %{dependson} proposal first.'
       would_break_dependency: 'Cannot deactivate a proposal for %{name}, as it breaks dependencies of %{dependson}.'
+      template_missing: 'Template for %{name} does not exist'
+      unknown_error: 'An unknown error occured'
     attributes:
       node:
         name: 'Full Name'
