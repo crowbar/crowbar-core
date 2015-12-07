@@ -168,7 +168,7 @@ do_setup() {
         echo "zypper_check_gpg true" >> $cfg
     fi
 
-<% if @target_platform_version.to_f < 12.0 %>
+<% if @platform == "suse" && @target_platform_version.to_f < 12.0 %>
     log_to chef chkconfig -a chef-client
 <% else %>
     log_to chef systemctl enable chef-client
@@ -458,7 +458,7 @@ if [ "$MODE" == "setup" -o "$MODE" == "start" ]; then
     HOSTNAME=$(hostname -f)
 
     # stop ntpd before we run ntpdate, and start it again afterwards.
-<% if @target_platform_version.to_f < 12.0 then %>
+<% if @platform == "suse" && @target_platform_version.to_f < 12.0 then %>
     NTP_SERVICE=ntp
 <% else %>
     NTP_SERVICE=ntpd

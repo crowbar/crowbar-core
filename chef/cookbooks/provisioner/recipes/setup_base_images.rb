@@ -505,14 +505,16 @@ node[:provisioner][:supported_oses].each do |os, arches|
 
     # These should really be made libraries or something.
     case
-    when /^(suse)/ =~ os
+    when /^(open)?suse/ =~ os
       # Add base OS install repo for suse
       node.set[:provisioner][:repositories][os][arch]["base"] = { "baseurl=#{admin_web}" => true }
 
       ntp_servers = search(:node, "roles:ntp-server")
       ntp_servers_ips = ntp_servers.map { |n| Chef::Recipe::Barclamp::Inventory.get_network_by_type(n, "admin").address }
 
+      target_platform_distro = os.gsub(/-.*$/, "")
       target_platform_version = os.gsub(/^.*-/, "")
+
       template "#{os_dir}/crowbar_join.sh" do
         mode 0644
         owner "root"
@@ -521,10 +523,13 @@ node[:provisioner][:supported_oses].each do |os, arches|
         variables(admin_ip: admin_ip,
                   web_port: web_port,
                   ntp_servers_ips: ntp_servers_ips,
+                  platform: target_platform_distro,
                   target_platform_version: target_platform_version)
       end
 
-      repos = Provisioner::Repositories.get_repos("suse", target_platform_version, arch)
+      repos = Provisioner::Repositories.get_repos(target_platform_distro,
+                                                  target_platform_version,
+                                                  arch)
 
       packages = node[:provisioner][:packages][os] || []
 
@@ -543,6 +548,7 @@ node[:provisioner][:supported_oses].each do |os, arches|
                   domain: domain_name,
                   repos: repos,
                   packages: packages,
+                  platform: target_platform_distro,
                   target_platform_version: target_platform_version)
       end
 

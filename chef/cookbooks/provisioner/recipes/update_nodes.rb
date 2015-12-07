@@ -260,8 +260,11 @@ if not nodes.nil? and not nodes.empty?
           append << "install=#{install_url} autoyast=#{node_url}/autoyast.xml"
           append << "ifcfg=dhcp4 netwait=60"
 
+          target_platform_distro = os.gsub(/-.*$/, "")
           target_platform_version = os.gsub(/^.*-/, "")
-          repos = Provisioner::Repositories.get_repos("suse", target_platform_version, arch)
+          repos = Provisioner::Repositories.get_repos(target_platform_distro,
+                                                      target_platform_version,
+                                                      arch)
           Chef::Log.info("repos: #{repos.inspect}")
 
           if node[:provisioner][:suse]
@@ -300,6 +303,7 @@ if not nodes.nil? and not nodes.empty?
                       node_ip: mnode[:crowbar][:network][:admin][:address],
                       node_fqdn: mnode[:fqdn],
                       node_hostname: mnode[:hostname],
+                      platform: target_platform_distro,
                       target_platform_version: target_platform_version,
                       architecture: arch,
                       is_ses: storage_available && !cloud_available,
