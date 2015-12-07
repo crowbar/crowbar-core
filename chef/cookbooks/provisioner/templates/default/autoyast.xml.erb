@@ -305,6 +305,9 @@ sync
       <package>supportutils-plugin-suse-openstack-cloud</package>
   <% end -%>
 <% end -%>
+<% if @platform == "opensuse" -%>
+      <package>rsyslog</package>
+<% end -%>
 <% @packages.each do |package| -%>
       <package><%= package %></package>
 <% end -%>
