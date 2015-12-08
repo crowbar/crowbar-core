@@ -37,7 +37,11 @@ class Provisioner
             {}
           end
           next if repo["url"].nil?
-          repositories[repo["name"]] = { url: repo["url"], ask_on_error: repo["ask_on_error"] }
+          repositories[repo["name"]] = {
+            url: repo["url"],
+            ask_on_error: repo["ask_on_error"] || false,
+            priority: repo["priority"] || 99
+          }
         end
 
         repositories

@@ -53,7 +53,7 @@ module Crowbar
                   # for repos that exist in our hard-coded file, we only allow
                   # overwriting a subset of attributes
                   if @all_repos[platform][arch].key? id
-                    %w(url ask_on_error).each do |key|
+                    %w(url priority ask_on_error).each do |key|
                       @all_repos[platform][arch][id][key] = repo[key] if repo.key? key
                     end
                   else
@@ -239,6 +239,10 @@ module Crowbar
         "http://#{Repository.admin_ip}:#{Repository.web_port}/#{@platform}/#{@arch}/repos/#{name}/"
     end
 
+    def priority
+      @config["priority"] || 99
+    end
+
     def active?
       db = data_bag
       !db.nil? && db.include?(data_bag_item_name)
@@ -264,6 +268,7 @@ module Crowbar
       item["id"] = data_bag_item_name
       item["name"] = name
       item["url"] = url
+      item["priority"] = priority
       item["ask_on_error"] = @config["ask_on_error"] || false
       item
     end
