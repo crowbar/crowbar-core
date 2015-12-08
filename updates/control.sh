@@ -40,6 +40,7 @@ function is_suse() {
     if [ -f /etc/os-release ]; then
         . /etc/os-release
         [ "$NAME" == "SLES" ] && return
+        [ "$NAME" == "openSUSE Leap" ] && return
     fi
 
     return 1
