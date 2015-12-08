@@ -71,11 +71,6 @@ if node[:platform] == "ubuntu"
 end
 
 if node[:platform_family] == "suse"
-  # We used to create this file. Clean it up
-  file "/etc/modprobe.d/10-bridge-disable-netfilter.conf" do
-    action :delete
-  end
-
   # Make sure netfilter is enabled for bridges
   cookbook_file "modprobe-bridge.conf" do
     source "modprobe-bridge.conf"
