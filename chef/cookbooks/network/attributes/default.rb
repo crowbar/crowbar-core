@@ -18,8 +18,11 @@ when "suse"
   default[:network][:base_pkgs] = ["bridge-utils",
                                    "vlan"]
   default[:network][:ovs_pkgs] = ["openvswitch",
-                                  "openvswitch-switch",
-                                  "openvswitch-kmp-default"]
+                                  "openvswitch-switch"]
+  # openSUSE uses the module shipped with upstream kernel
+  if node[:platform] == "suse"
+    default[:network][:ovs_pkgs].push("openvswitch-kmp-default")
+  end
   # SLES11 uses a different service name for openvswitch
   if node[:platform] == "suse" && node[:platform_version].to_f < 12.0
     default[:network][:ovs_service] = "openvswitch-switch"
