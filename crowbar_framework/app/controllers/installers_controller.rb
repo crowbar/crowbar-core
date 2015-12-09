@@ -46,74 +46,43 @@ class InstallersController < ApplicationController
   # Provides the restful api call for
   # /installer/start 	POST 	triggers installation
   def start
+    header = :ok
+    msg = ""
+    msg_type = :alert
+
     if params[:force]
       ret = Crowbar::Installer.install!
       case ret[:status]
       when 501
-        respond_to do |format|
-          format.json do
-            head :not_implemented
-          end
-        end
-        format.html do
-          flash[:alert] = ret[:msg]
-          redirect_to installer_url
-        end
-      end
-
-      respond_to do |format|
-        format.json do
-          head :ok
-        end
-        format.html do
-          redirect_to installer_url
-        end
+        header = :not_implemented
+        msg = ret[:msg]
       end
     else
       if Crowbar::Installer.successful?
-        respond_to do |format|
-          format.json do
-            head :gone
-          end
-          format.html do
-            redirect_to installer_url
-          end
-        end
+        header = :gone
       else
         if Crowbar::Installer.installing?
-          respond_to do |format|
-            format.json do
-              head :im_used
-            end
-            format.html do
-              flash[:notice] = I18n.t(".installers.start.installation_ongoing")
-              redirect_to installer_url
-            end
-          end
+          header = :im_used
+          msg = I18n.t(".installers.start.installation_ongoing")
+          msg_type = :notice
         else
           ret = Crowbar::Installer.install
           case ret[:status]
           when 501
-            respond_to do |format|
-              format.json do
-                head :not_implemented
-              end
-            end
-            format.html do
-              flash[:alert] = ret[:msg]
-              redirect_to installer_url
-            end
-          end
-
-          respond_to do |format|
-            format.json do
-              head :ok
-            end
-            format.html do
-              redirect_to installer_url
-            end
+            header = :not_implemented
+            msg = ret[:msg]
           end
         end
+      end
+    end
+
+    respond_to do |format|
+      format.json do
+        head header
+      end
+      format.html do
+        flash[msg_type] = msg unless msg.empty?
+        redirect_to installer_url
       end
     end
   end
