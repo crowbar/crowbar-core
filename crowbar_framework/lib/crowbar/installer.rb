@@ -61,6 +61,7 @@ module Crowbar
           failed: failed?,
           success: successful?,
           installing: installing?,
+          validNetwork: valid_network_json?,
           errorMsg: error_msg,
           successMsg: success_msg,
           noticeMsg: notice_msg
@@ -83,6 +84,10 @@ module Crowbar
         steps_done.include?(:initial_chef_client)
       end
 
+      def valid_network_json?
+        Crowbar::Validator::NetworkValidator.new.validate
+      end
+
       def steps_done
         steps_path = lib_path.join("installation_steps")
         steps_path.readlines.map do |step|
@@ -97,7 +102,13 @@ module Crowbar
       end
 
       def error_msg
-        I18n.t(".installers.status.installation_failed") if failed?
+        errors = ""
+        if failed?
+          errors += I18n.t(".installers.status.installation_failed")
+        elsif valid_network_json?
+          errors += I18n.t(".installers.status.invalid_network")
+        end
+        errors
       end
 
       def success_msg

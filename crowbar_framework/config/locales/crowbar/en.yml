@@ -535,6 +535,7 @@ en:
   installers:
     status:
       installation_failed: 'Installation failed. Please check the log at /var/log/crowbar/install.log'
+      invalid_network: '/etc/crowbar/network.json is invalid.'
     show:
       installation_header: 'Installing %{product}'
       installation_successful: 'Installation was successful. You will be redirected in a few seconds.'
