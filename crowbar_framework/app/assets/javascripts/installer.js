@@ -7,7 +7,7 @@ $(document).ready(function() {
       success: function(data) {
         // check for invalid network.json
         $("#network-alert").remove();
-        if (!data.validNetwork) {
+        if (!data.network.valid) {
           $(".button_to").find("input").prop("disabled", true);
           $(".panel")
             .parent()
