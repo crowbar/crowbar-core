@@ -132,19 +132,18 @@ sync_time() {
 
     local tries_left=120
 
-<% if @target_platform_version.to_f < 12.0 %>
-    SNTP_OPTS="-P no -r"
-<% elsif @target_platform_version.to_f < 12.09 %>
-    SNTP_OPTS="-s"
-<% else %>
-    SNTP_OPTS="-S"
-<% end %>
     while [[ $tries_left > 0 ]] ; do
+<% if @target_platform_version.to_f < 12.0 -%>
         for ntpserver in $VALID_NTP_SERVERS ; do
-            if sntp $SNTP_OPTS $ntpserver; then
+            if sntp -P no -r $ntpserver; then
                 break 2
             fi
         done
+<% else -%>
+        if /usr/sbin/ntpdate -u $VALID_NTP_SERVERS; then
+            break
+        fi
+<% end -%>
         tries_left=$(($tries_left-1))
         echo_verbose "Waiting for NTP server(s) $VALID_NTP_SERVERS"
         sleep 1
