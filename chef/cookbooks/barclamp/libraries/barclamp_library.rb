@@ -270,6 +270,24 @@ module BarclampLibrary
           end
         end
 
+        # return 2 lists of unclaimed disks:
+        #   - first with the disks that have the given role set
+        #   - second with the disks with no assigned role
+        def self.prepared_for(node, role)
+          disk_roles = node["crowbar_wall"]["disk_roles"] || {}
+          prepared_role = []
+          without_role = []
+          unclaimed(node).each do |d|
+            disk_role = disk_roles.fetch(d.unique_name, "")
+            if disk_role == role
+              prepared_role.push d
+            elsif disk_role.empty?
+              without_role.push d
+            end
+          end
+          [prepared_role, without_role]
+        end
+
         # can be /dev/hda, /dev/sda or /dev/cciss/c0d0
         def name
           File.join("/dev/",@device.gsub(/!/, "/"))
