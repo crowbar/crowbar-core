@@ -304,7 +304,7 @@ if node[:platform_family] == "suse" && !node.roles.include?("provisioner-server"
       current_url = nil
       current_priority = nil
 
-      out = %x{LANG=C zypper --non-interactive repos #{name} 2> /dev/null}
+      out = `LANG=C zypper --non-interactive repos #{name} 2> /dev/null`
       out.split("\n").each do |line|
         attribute, value = line.split(":", 2)
         next if value.nil?
@@ -320,13 +320,13 @@ if node[:platform_family] == "suse" && !node.roles.include?("provisioner-server"
       if current_url != attrs[:url]
         unless current_url.nil? || current_url.empty?
           Chef::Log.info("Removing #{name} zypper repository pointing to wrong URI...")
-          %x{zypper --non-interactive removerepo #{name}}
+          `zypper --non-interactive removerepo #{name}`
         end
         Chef::Log.info("Adding #{name} zypper repository...")
-        %x{zypper --non-interactive addrepo --refresh #{attrs[:url]} #{name}}
+        `zypper --non-interactive addrepo --refresh #{attrs[:url]} #{name}`
       end
       if current_priority != attrs[:priority]
-        %x{zypper --non-interactive modifyrepo --priority #{attrs[:priority]} #{name}}
+        `zypper --non-interactive modifyrepo --priority #{attrs[:priority]} #{name}`
       end
     end
     # install additional packages
