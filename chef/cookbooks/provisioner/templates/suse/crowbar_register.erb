@@ -375,7 +375,7 @@ ntp="/usr/sbin/ntpdate $NTP_SERVERS"
 <% end -%>
 # Make sure date is up-to-date
 until $ntp; do
-  echo "Waiting for NTP server(s)"
+  echo "Waiting for NTP server(s) $NTP_SERVERS"
   sleep 1
 done
 

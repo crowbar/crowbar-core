@@ -146,7 +146,7 @@ sync_time() {
             fi
         done
         tries_left=$(($tries_left-1))
-        echo_verbose "Waiting for NTP server(s)"
+        echo_verbose "Waiting for NTP server(s) $VALID_NTP_SERVERS"
         sleep 1
     done
     if [ $tries_left -eq 0 ]; then
