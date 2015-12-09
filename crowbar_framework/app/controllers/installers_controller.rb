@@ -31,8 +31,12 @@ class InstallersController < ApplicationController
   # and the steps that are done
   def status
     respond_to do |format|
-      format.json { render json: Crowbar::Installer.status }
-      format.html { redirect_to installer_url }
+      format.json do
+        render json: Crowbar::Installer.status
+      end
+      format.html do
+        redirect_to installer_url
+      end
     end
   end
 
@@ -42,27 +46,43 @@ class InstallersController < ApplicationController
   # Provides the restful api call for
   # /installer/start 	POST 	triggers installation
   def start
-    if Crowbar::Installer.successful?
-      respond_to do |format|
-        format.json { render json: Crowbar::Installer.status }
-        format.html { redirect_to installer_url }
+    header = :ok
+    msg = ""
+    msg_type = :alert
+
+    if params[:force]
+      ret = Crowbar::Installer.install!
+      case ret[:status]
+      when 501
+        header = :not_implemented
+        msg = ret[:msg]
       end
     else
-      # the shell Process will be spawned in the background and therefore has
-      # not a direct return value which we can use here
-      if Crowbar::Installer.installing?
-        flash[:notice] = I18n.t(".installers.start.installation_ongoing")
+      if Crowbar::Installer.successful?
+        header = :gone
       else
-        ret = Crowbar::Installer.install
-        case ret[:status]
-        when 501
-          flash[:alert] = ret[:msg]
+        if Crowbar::Installer.installing?
+          header = :im_used
+          msg = I18n.t(".installers.start.installation_ongoing")
+          msg_type = :notice
+        else
+          ret = Crowbar::Installer.install
+          case ret[:status]
+          when 501
+            header = :not_implemented
+            msg = ret[:msg]
+          end
         end
       end
+    end
 
-      respond_to do |format|
-        format.json { head :ok }
-        format.html { redirect_to installer_url }
+    respond_to do |format|
+      format.json do
+        head header
+      end
+      format.html do
+        flash[msg_type] = msg unless msg.empty?
+        redirect_to installer_url
       end
     end
   end
