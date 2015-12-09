@@ -307,6 +307,42 @@ class NodeObject < ChefObject
     @node["crowbar_wall"]["default_fs"] = value
   end
 
+  def disk_roles=(value)
+    @node.set["crowbar_wall"] ||= {}
+    @node.set["crowbar_wall"]["disk_roles"] = value
+  end
+
+  # remove devices that were claimed after their role was set
+  def drop_claimed_disks_from_roles
+    crowbar_wall["disk_roles"].keys.each do |name|
+      if crowbar_wall[:claimed_disks][name]
+        crowbar_wall["disk_roles"].delete(name)
+      end
+    end
+  end
+
+  def add_unclaimed_disks_to_roles
+    # Check for current unclaimed disks, and add unclaimed disk to
+    # disk_roles hash if it is not there yet.
+    # (New disk could have been added to the node)
+    unclaimed_physical_drives.each do |d|
+      unique_name = unique_device_for(d.first)
+      unless crowbar_wall["disk_roles"][unique_name]
+        crowbar_wall["disk_roles"][unique_name] = ""
+      end
+    end
+  end
+
+  def disk_roles(options = {})
+    @node["crowbar_wall"] ||= {}
+    crowbar_wall["disk_roles"] ||= {}
+    if options.fetch(:refresh, false)
+      drop_claimed_disks_from_roles
+      add_unclaimed_disks_to_roles
+    end
+    crowbar_wall["disk_roles"]
+  end
+
   def raid_type
     crowbar_wall["raid_type"] || "single"
   end
