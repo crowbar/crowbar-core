@@ -42,17 +42,6 @@ echo "<%=url%>" >> \
 
 rm -f /target/etc/apt/sources.list
 
-rsyslog_dir="/target/etc/rsyslog.d"
-if [ -d "$rsyslog_dir" ]; then
-    if [ ! -f "$rsyslog_dir/10-crowbar-client.conf" ]; then
-        echo "*.* @@<%= @admin_ip %>" > "$rsyslog_dir/10-crowbar-client.conf"
-	if ! wget -O "$rsyslog_dir/00-crowbar-debug.conf" -q http://<%=@provisioner_web%>/rsyslog.d/00-crowbar-debug.conf
-	then
-	    rm -f "$rsyslog_dir/00-crowbar-debug.conf"
-	fi
-    fi
-fi
-
 mkdir -p /target/root/.ssh
 chmod 700 /target/root/.ssh
 if ! wget -O /target/root/.ssh/authorized_keys.wget -q <%=@provisioner_web%>/authorized_keys; then
