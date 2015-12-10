@@ -62,6 +62,9 @@ class InstallersController < ApplicationController
     else
       if status[:success]
         header = :gone
+      elsif !status[:network][:valid]
+        header = :precondition_failed
+        msg = status[:network][:msg]
       else
         if status[:installing]
           header = :im_used
