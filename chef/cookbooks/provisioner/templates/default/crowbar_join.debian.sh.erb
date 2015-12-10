@@ -28,7 +28,7 @@
 
 case $1 in
     stop) exit 0;;
-    status) bluepill chef-client status ; exit $? ;;
+    status) /etc/init.d/chef-client status ; exit $? ;;
     start|'') : ;;
     *) echo "Unknown action to crowbar_join.sh."
         exit 1;;
@@ -119,73 +119,6 @@ sync_time
 post_state $HOSTNAME "readying"
 final_state="ready"
 
-if [[ ! -x /etc/init.d/bluepill ]]; then
-    # Install Chef
-    echo "Installing Chef..."
-
-    while ! log_to apt /usr/bin/apt-get update ; do
-        echo "Failed to apt-get update, wait and try again"
-        sleep 1
-    done
-    while ! log_to apt /usr/bin/apt-get --force-yes -y install \
-        chef libxml2-dev zlib1g-dev tcpdump; do
-        echo "Failed to apt-get install, wait and try again"
-        sleep 1
-    done
-
-    # Disable the chef-client service and make it not executable.
-    log_to chef service chef-client stop
-    log_to chef killall chef-client
-    log_to chef update-rc.d chef-client disable
-    log_to chef chmod ugo-x /etc/init.d/chef-client
-
-    mkdir -p /opt/dell/
-    (   cd /opt/dell
-        wget -q "<%=@provisioner_web%>/patches.tar.gz"
-        tar xzvf patches.tar.gz
-        cd patches
-        ./patch.sh
-    )
-
-    # Make rubygems do what we want.
-    cat >/etc/gemrc <<EOF
-:sources:
-- <%=@provisioner_web%>/gemsite/
-gem: --no-ri --no-rdoc --bindir /usr/local/bin
-EOF
-    gem install xml-simple
-    gem install libxml-ruby
-    gem install wsman
-    gem install cstruct
-    gem install bluepill
-    mkdir -p /etc/bluepill
-    curl -o /etc/bluepill/chef-client.pill <%=@provisioner_web%>/chef-client.pill
-    # Create an init script for bluepill
-    cat > /etc/init.d/bluepill <<EOF
-#!/bin/bash
-# chkconfig: 2345 99 01
-# description: Bluepill Daemon runner
-PATH=$PATH:/usr/local/bin:/usr/local/sbin
-case \$1 in
-    start) for pill in /etc/bluepill/*.pill; do
-              [[ -f \$pill ]] || continue
-              bluepill load "\$pill"
-           done;;
-    stop) echo "Stop is not implemented, since bluepill processes are run independently.";;
-    status) if pidof bluepilld; then
-             echo "Bluepill is running."
-             exit 0
-            else
-             echo "Bluepill is not running."
-             exit 1
-            fi;;
-    *) echo "\$1: Not supported.";;
-esac
-EOF
-    chmod 755 /etc/init.d/bluepill
-fi
-
-
 # Run Chef
 echo "Syncing time (pass 2)"
 sync_time
@@ -244,9 +177,6 @@ fi
 log_to apt apt-get -q --force-yes -y upgrade
 
 log_to time service ntp start
-
-# Fire up bluepill, and let it keep chef-client up.
-service bluepill start
 
 # Transition to our final state
 post_state $HOSTNAME "$final_state"

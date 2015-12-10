@@ -33,8 +33,8 @@ directory "/root/.ssh" do
   action :create
 end
 
-# We don't want to use bluepill on SUSE and Windows
-unless node[:platform_family] == "suse"
+# We don't want to use bluepill on Debian, SUSE and Windows
+unless %w(debian suse windows).include?(node[:platform_family])
   # Make sure we have Bluepill
   case node["state"]
   when "ready","readying"
