@@ -455,4 +455,4 @@ d-i finish-install/reboot_in_progress note
 # directly, or use the apt-install and in-target commands to easily install
 # packages and run commands in the target system.
 #d-i preseed/late_command string apt-install zsh; in-target chsh -s /bin/zsh
-d-i preseed/late_command string wget <%= @os_url %>/net-post-install.sh -O /target/net-post-install.sh ; chmod +x /target/net-post-install.sh ; /target/net-post-install.sh
+d-i preseed/late_command string wget <%= @os_url %>/net-post-install.sh -O /target/root/net-post-install.sh ; chmod +x /target/root/net-post-install.sh ; in-target /root/net-post-install.sh
