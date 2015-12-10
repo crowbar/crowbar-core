@@ -578,7 +578,6 @@ node[:provisioner][:supported_oses].each do |os, arches|
         group "root"
         variables(admin_web: admin_web,
                   os_codename: os_codename,
-                  repos: node[:provisioner][:repositories][os][arch],
                   admin_ip: admin_ip,
                   provisioner_web: provisioner_web,
                   web_path: web_path)
