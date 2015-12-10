@@ -91,7 +91,8 @@
           "x86_64": {
             "initrd": "boot/x86_64/loader/initrd",
             "kernel": "boot/x86_64/loader/linux",
-            "append": " "
+            "append": " ",
+            "install_url": "http://download.opensuse.org/distribution/leap/42.1/repo/oss/"
           }
         },
         "windows-6.2": {

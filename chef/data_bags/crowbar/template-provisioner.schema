@@ -38,7 +38,8 @@
                         "append": { "type": "str", "required": true },
                         "kernel": { "type": "str", "required": true },
                         "initrd": { "type": "str", "required": true },
-                        "require_install_dir": { "type": "bool", "required": false }
+                        "require_install_dir": { "type": "bool", "required": false },
+                        "install_url": { "type": "str", "required": false }
                       }
                     }
 	          }

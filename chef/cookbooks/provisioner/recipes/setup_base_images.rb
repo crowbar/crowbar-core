@@ -449,7 +449,6 @@ node.set[:provisioner][:available_oses] = Mash.new
 node[:provisioner][:supported_oses].each do |os, arches|
   arches.each do |arch, params|
     web_path = "#{provisioner_web}/#{os}/#{arch}"
-    install_url = "#{web_path}/install"
     crowbar_repo_web = "#{web_path}/crowbar-extra"
     os_dir = "#{tftproot}/#{os}/#{arch}"
     os_codename = node[:lsb][:codename]
@@ -458,6 +457,10 @@ node[:provisioner][:supported_oses].each do |os, arches|
     append = params["append"].dup # We'll modify it inline
     initrd = params["initrd"]
     kernel = params["kernel"]
+    install_url = params["install_url"]
+    if install_url.nil? || install_url.empty?
+      install_url = "#{web_path}/install"
+    end
     require_install_dir = params["require_install_dir"].nil? ? true : params["require_install_dir"]
 
     if require_install_dir
@@ -543,7 +546,40 @@ node[:provisioner][:supported_oses].each do |os, arches|
                   target_platform_version: target_platform_version)
       end
 
-      missing_files = !File.exist?("#{os_dir}/install/boot/#{arch}/common")
+      if target_platform_distro == "suse"
+        missing_files = !File.exist?("#{os_dir}/install/boot/#{arch}/common")
+      elsif target_platform_distro == "opensuse"
+        # if we use remote URL, then we don't require a rsync of the install
+        # media, but we still need to copy the kernel/initrd
+        param_install_url = params["install_url"]
+
+        missing_files = !File.exist?("#{os_dir}/install/boot/#{arch}/common")
+
+        if missing_files && !param_install_url.nil? && !param_install_url.empty?
+          kernel_path = Pathname.new(os_dir).join("install").join(kernel)
+          kernel_tmp_path = Pathname.new(os_dir).join("install").join("#{kernel}.check")
+          initrd_path = Pathname.new(os_dir).join("install").join(initrd)
+          initrd_tmp_path = Pathname.new(os_dir).join("install").join("#{initrd}.check")
+
+          unless kernel_path.exist?
+            kernel_path.dirname.mkpath
+            `wget --timeout 5 -O #{kernel_tmp_path} #{param_install_url}/#{kernel}`
+            if Digest::MD5.file(kernel_tmp_path.to_s).hexdigest == "fcc6dc33eac95bdf96c6cea4dd3eb7c2"
+              kernel_tmp_path.rename(kernel_path.to_s)
+            end
+          end
+
+          unless initrd_path.exist?
+            initrd_path.dirname.mkpath
+            `wget --timeout 5 -O #{initrd_tmp_path} #{param_install_url}/#{initrd}`
+            if Digest::MD5.file(initrd_tmp_path.to_s).hexdigest == "c15afdcd69e1866c6df724d559aabe51"
+              initrd_tmp_path.rename(initrd_path.to_s)
+            end
+          end
+
+          missing_files = !kernel_path.exist? || !initrd_path.exist?
+        end
+      end
 
     when /^(redhat|centos)/ =~ os
       # Add base OS install repo for redhat/centos
@@ -638,10 +674,12 @@ node[:provisioner][:supported_oses].each do |os, arches|
       node.set[:provisioner][:available_oses][os][arch][:kernel] = "#{os}/#{kernel}"
       node.set[:provisioner][:available_oses][os][arch][:initrd] = " "
       node.set[:provisioner][:available_oses][os][arch][:append_line] = " "
+      node.set[:provisioner][:available_oses][os][arch][:install_url] = ""
     else
       node.set[:provisioner][:available_oses][os][arch][:kernel] = "#{os}/#{arch}/install/#{kernel}"
       node.set[:provisioner][:available_oses][os][arch][:initrd] = "#{os}/#{arch}/install/#{initrd}"
       node.set[:provisioner][:available_oses][os][arch][:append_line] = append
+      node.set[:provisioner][:available_oses][os][arch][:install_url] = install_url
     end
     node.set[:provisioner][:available_oses][os][arch][:disabled] = missing_files
     node.set[:provisioner][:available_oses][os][arch][:install_name] = role
