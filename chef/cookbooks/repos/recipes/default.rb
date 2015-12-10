@@ -15,7 +15,14 @@
 
 provisioners = search(:node, "roles:provisioner-server")
 provisioner = provisioners[0] if provisioners
-os_token = "#{node[:platform]}-#{node[:platform_version]}"
+if node[:platform] == "debian"
+  # Debian releases updates to stable version, and this changes the platform
+  # version :/ We don't want 8.2, but 8.
+  platform_version = node[:platform_version].split(".")[0]
+else
+  platform_version = node[:platform_version]
+end
+os_token = "#{node[:platform]}-#{platform_version}"
 arch = node[:kernel][:machine]
 
 Chef::Log.info("Running on #{os_token} / #{arch}")
