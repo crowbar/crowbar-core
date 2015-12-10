@@ -567,7 +567,7 @@ node[:provisioner][:supported_oses].each do |os, arches|
                   web_path: web_path)
       end
 
-    when /^ubuntu/ =~ os
+    when /^debian/ =~ os || /^ubuntu/ =~ os
       node.set[:provisioner][:repositories][os][arch]["base"] = { admin_web => true }
       # Default files needed for Ubuntu.
 

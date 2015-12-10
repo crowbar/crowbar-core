@@ -220,21 +220,29 @@ if not nodes.nil? and not nodes.empty?
         end
 
         case
-        when os =~ /^ubuntu/
-          append << "url=#{node_url}/net_seed"
-          template "#{node_cfg_dir}/net_seed" do
+        when os =~ /^debian/ || os =~ /^ubuntu/
+          append << "auto url=#{node_url}/preseed.cfg"
+
+          ntp_server = search(:node, "roles:ntp-server").first
+          ntp_server_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(ntp_server, "admin").address unless ntp_server.nil?
+
+          template "#{node_cfg_dir}/preseed.cfg" do
             mode 0644
             owner "root"
             group "root"
-            source "net_seed.erb"
+            source "preseed.cfg.erb"
             variables(install_name: os,
-                      cc_use_local_security: node[:provisioner][:use_local_security],
-                      cc_install_web_port: web_port,
+                      cc_use_local_security: node[:provisioner][:use_local_security], # FIXME: kill?
+                      cc_built_admin_node_ip: admin_ip, # FIXME: kill?
+                      cc_install_web_port: web_port, # FIXME: kill?
                       boot_device: (mnode[:crowbar_wall][:boot_device] rescue nil),
-                      cc_built_admin_node_ip: admin_ip,
                       timezone: timezone,
-                      node_name: mnode[:fqdn],
-                      install_path: "#{os}/install")
+                      ntp_server: ntp_server_ip,
+                      root_password_hash: node[:provisioner][:root_password_hash] || "",
+                      node_hostname: mnode[:hostname],
+                      node_domain: mnode[:domain],
+                      os_url: os_url,
+                      install_url: install_url)
           end
 
         when os =~ /^(redhat|centos)/
