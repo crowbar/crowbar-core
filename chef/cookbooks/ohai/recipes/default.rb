@@ -89,6 +89,13 @@ unless CrowbarHelper.in_sledgehammer?(node)
   end
 end
 
+unless node[:platform_family] == "windows"
+  p = package "tcpdump" do
+    action :nothing
+  end
+  p.run_action(:install)
+end
+
 o = Ohai::System.new
 o.all_plugins
 node.automatic_attrs.merge! o.data
