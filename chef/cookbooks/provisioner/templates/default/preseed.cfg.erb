@@ -431,6 +431,7 @@ d-i finish-install/reboot_in_progress note
 # installation, and then run these commands:
 #   debconf-get-selections --installer > file
 #   debconf-get-selections >> file
+chef    chef/chef_server_url    string  http://<%= @admin_ip %>:4000
 
 
 #### Advanced options

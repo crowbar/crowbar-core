@@ -237,6 +237,7 @@ if not nodes.nil? and not nodes.empty?
                       cc_use_local_security: node[:provisioner][:use_local_security], # FIXME: kill?
                       cc_built_admin_node_ip: admin_ip, # FIXME: kill?
                       cc_install_web_port: web_port, # FIXME: kill?
+                      admin_ip: admin_ip,
                       boot_device: (mnode[:crowbar_wall][:boot_device] rescue nil),
                       timezone: timezone,
                       ntp_server: ntp_server_ip,

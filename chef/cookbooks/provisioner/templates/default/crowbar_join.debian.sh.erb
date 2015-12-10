@@ -124,13 +124,11 @@ wget -q "<%=@provisioner_web%>/validation.pem" -O- > /etc/chef/validation.pem
 if [[ ! -x /etc/init.d/bluepill ]]; then
     # Install Chef
     echo "Installing Chef..."
-    echo "chef chef/chef_server_url string http://<%=@admin_ip%>:4000" >/tmp/debsel.conf
 
     while ! log_to apt /usr/bin/apt-get update ; do
         echo "Failed to apt-get update, wait and try again"
         sleep 1
     done
-    log_to apt /usr/bin/debconf-set-selections /tmp/debsel.conf
     while ! log_to apt /usr/bin/apt-get --force-yes -y install \
         chef libxml2-dev zlib1g-dev tcpdump; do
         echo "Failed to apt-get install, wait and try again"
