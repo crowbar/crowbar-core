@@ -46,6 +46,8 @@ ruby_block "Find the fallback boot device" do
           break if dev =~ /^c[0-9]+d[0-9]+$/
           # xen-vbd-51712-part1 -> ../../xvda1
           break if dev =~ /^xvd[a-z]+$/
+          # ccw-0.0.0150 -> ../../dasda
+          break if dev =~ /^ccw-[0-9\.]+$/
           dev = nil
           disk_by_path = nil
         end
@@ -92,22 +94,12 @@ ruby_block "Find the fallback boot device" do
           bootdisks.find{ |b|b =~ /^ata-/ } ||
           bootdisks.find{ |b|b =~ /^cciss-/ } ||
           bootdisks.first
-        node[:crowbar_wall][:boot_device] = "disk/by-id/#{bootdisk}"
+        dev = "disk/by-id/#{bootdisk}"
       end
     end
-    # If we still have a /dev/disk/by-path name in boot_device here and the
-    # devices looks like a virtio device it is safer to use the base device
-    # name for bootdisk instead of the by-path name. According to:
-    #  https://www.mail-archive.com/systemd-devel@lists.freedesktop.org/msg20607.html
-    # the by-path names for virtio device are not stable and don't even exist
-    # anymore with newer udev releases
-    # This is only for SLE_11_SP3 sleshammer. On SLE_12 based image
-    # directory "disk/by-path" with virtio disks driver doesn't exist
-    if File.dirname(node[:crowbar_wall][:boot_device]) == "disk/by-path" and
-        File.basename(node[:crowbar_wall][:boot_device]) =~ /-virtio-/
-      Chef::Log.debug("#{node[:crowbar_wall][:boot_device]} appears to be a virtio device, falling back to simple device name #{dev}")
-      node[:crowbar_wall][:boot_device] = dev
-    end
+    raise "Cannot find a hard disk!" unless dev
+
+    node[:crowbar_wall][:boot_device] = dev
     disk = BarclampLibrary::Barclamp::Inventory::Disk.new(node,dev)
     disk.claim("Boot")
     node.save
