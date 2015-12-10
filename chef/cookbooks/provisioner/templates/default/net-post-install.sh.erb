@@ -54,7 +54,9 @@ export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true
 export LC_ALL=C LANGUAGE=C LANG=C
 apt-get -y --force-yes remove apparmor
 
-wget -q <%= @web_path %>/crowbar_join.sh -O /etc/init.d/crowbar_join.sh
+wget -O /etc/chef/validation.pem -q <%= @provisioner_web %>/validation.pem
+
+wget -O /etc/init.d/crowbar_join.sh -q <%= @web_path %>/crowbar_join.sh
 chmod a+x /etc/init.d/crowbar_join.sh
 update-rc.d crowbar_join.sh defaults
 
