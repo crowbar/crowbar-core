@@ -569,7 +569,8 @@ node[:provisioner][:supported_oses].each do |os, arches|
 
     when /^debian/ =~ os || /^ubuntu/ =~ os
       node.set[:provisioner][:repositories][os][arch]["base"] = { admin_web => true }
-      # Default files needed for Ubuntu.
+
+      # Default files needed for Debian/Ubuntu.
 
       template "#{os_dir}/net-post-install.sh" do
         mode 0644
@@ -594,6 +595,28 @@ node[:provisioner][:supported_oses].each do |os, arches|
                   admin_ip: admin_ip,
                   provisioner_web: provisioner_web,
                   web_path: web_path)
+      end
+
+      if os == "debian-8"
+        param_install_url = params["install_url"]
+        debian_arch = case arch
+          when "x86_64"
+            "amd64"
+          when "ppc64le"
+            "ppc64el"
+          else
+            arch
+          end
+
+        kernel_path = Pathname.new(os_dir).join("install").join(kernel)
+        initrd_path = Pathname.new(os_dir).join("install").join(initrd)
+
+        missing_files = !kernel_path.exist? || !initrd_path.exist?
+
+        if missing_files && !param_install_url.nil? && !param_install_url.empty?
+          `wget --timeout 5 -O #{os_dir}/install/netboot.tar.gz #{param_install_url}/debian/dists/jessie/main/installer-#{debian_arch}/current/images/netboot/netboot.tar.gz && tar xf #{os_dir}/install/netboot.tar.gz -C #{os_dir}/install`
+          missing_files = !kernel_path.exist? || !initrd_path.exist?
+        end
       end
 
     when /^(hyperv|windows)/ =~ os
