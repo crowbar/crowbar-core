@@ -66,27 +66,6 @@ module Crowbar
         true
       end
 
-      def network_valid?
-        if File.exist?("/etc/crowbar/network.json")
-          network_json = "/etc/crowbar/network.json"
-        else
-          network_json = Rails.root.join(
-            "..", "chef", "data_bags", "crowbar", "template-network.json").to_s
-        end
-
-        admin_ip = NodeObject.admin_node.ip
-        validator = File.join("", "opt", "dell", "bin", "network-json-validator")
-
-        unless ipv4_addrs.include?(admin_ip)
-          return false
-        end
-        unless system("#{validator} --admin-ip \"#{admin_ip}\" #{network_json}")
-          return false
-        end
-
-        true
-      end
-
       def firewall_disabled?
         if system("sudo LANG=C iptables -n -L | grep -qvE '^$|^Chain [^ ]|^target     prot'")
           return false
