@@ -54,11 +54,14 @@ rd = remote_directory node.ohai.plugin_path do
 end
 rd.run_action(:create)
 
-unless node[:platform_family] == "windows"
+unless CrowbarHelper.in_sledgehammer?(node)
   # we need to ensure that the cstruct gem is available (since we use it in our
   # plugin), except on sledgehammer (because it's already installed and we can't
   # install/check packages there)
-  unless CrowbarHelper.in_sledgehammer?(node)
+  case node[:platform_family]
+  when "windows"
+    # not needed there
+  when "suse"
     # During the upgrade process (stoney -> tex, old ruby&rails -> tex
     # ruby&rails), we need to run the new cookbook with the old ruby&rails once,
     # so we need to support this
@@ -68,7 +71,14 @@ unless node[:platform_family] == "windows"
       pkg = "ruby#{node["languages"]["ruby"]["version"].to_f}-rubygem-cstruct"
     end
     package(pkg).run_action(:install)
+  when "debian"
+    # On Debian/Ubuntu, gems are not packaged directly
+    gem_package "cstruct"
+  else
+    raise "Unsupported platform family!"
+  end
 
+  unless node[:platform_family] == "windows"
     begin
       require "cstruct"
     rescue LoadError
