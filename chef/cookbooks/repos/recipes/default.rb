@@ -37,34 +37,35 @@ if provisioner and !CrowbarHelper.in_sledgehammer?(node)
 
   case node[:platform_family]
   when "debian"
-    repositories = provisioner["provisioner"]["repositories"][os_token][arch]
-    cookbook_file "/etc/apt/apt.conf.d/99-crowbar-no-auth" do
-      source "apt.conf"
-    end
-    file "/etc/apt/sources.list" do
-      action :delete
-    end
-    repositories.each do |repo,urls|
-      case repo
-      when "base"
-        template "/etc/apt/sources.list.d/00-base.list" do
-          variables(urls: urls)
-          notifies :create, "file[/tmp/.repo_update]", :immediately
-        end
-      else
-        template "/etc/apt/sources.list.d/10-barclamp-#{repo}.list" do
-          source "10-crowbar-extra.list.erb"
-          variables(urls: urls)
-          notifies :create, "file[/tmp/.repo_update]", :immediately
-        end
-      end
-    end
-    bash "update software sources" do
-      code "apt-get update"
-      notifies :delete, "file[/tmp/.repo_update]", :immediately
-      only_if { ::File.exists? "/tmp/.repo_update" }
-    end
-    package "rubygems"
+# FIXME: need to rewrite this
+#    repositories = provisioner["provisioner"]["repositories"][os_token][arch]
+#    cookbook_file "/etc/apt/apt.conf.d/99-crowbar-no-auth" do
+#      source "apt.conf"
+#    end
+#    file "/etc/apt/sources.list" do
+#      action :delete
+#    end
+#    repositories.each do |repo,urls|
+#      case repo
+#      when "base"
+#        template "/etc/apt/sources.list.d/00-base.list" do
+#          variables(urls: urls)
+#          notifies :create, "file[/tmp/.repo_update]", :immediately
+#        end
+#      else
+#        template "/etc/apt/sources.list.d/10-barclamp-#{repo}.list" do
+#          source "10-crowbar-extra.list.erb"
+#          variables(urls: urls)
+#          notifies :create, "file[/tmp/.repo_update]", :immediately
+#        end
+#      end
+#    end
+#    bash "update software sources" do
+#      code "apt-get update"
+#      notifies :delete, "file[/tmp/.repo_update]", :immediately
+#      only_if { ::File.exists? "/tmp/.repo_update" }
+#    end
+#    package "rubygems"
   when "rhel"
     maj, min = node[:platform_version].split(".", 2)
     repositories = Range.new(0, min.to_i).to_a.reverse.map do |v|
