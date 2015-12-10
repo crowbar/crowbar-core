@@ -13,7 +13,7 @@
           "x86_64": {
             "initrd": "debian-installer/amd64/initrd.gz",
             "kernel": "debian-installer/amd64/linux",
-            "append": "quiet",
+            "append": "debian-installer/locale=en_US.UTF8 keyboard-configuration/xkb-keymap=us netcfg/choose_interface=auto quiet",
             "install_url": "http://ftp.de.debian.org"
           }
         },

@@ -221,7 +221,9 @@ if not nodes.nil? and not nodes.empty?
 
         case
         when os =~ /^debian/ || os =~ /^ubuntu/
-          append << "auto url=#{node_url}/preseed.cfg"
+          append << "auto=true url=#{node_url}/preseed.cfg"
+          # The values in the preseed file can't work as they're fetched after network is up
+          append << "hostname=#{mnode[:hostname]} domain=#{mnode[:domain]}"
 
           ntp_server = search(:node, "roles:ntp-server").first
           ntp_server_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(ntp_server, "admin").address unless ntp_server.nil?
