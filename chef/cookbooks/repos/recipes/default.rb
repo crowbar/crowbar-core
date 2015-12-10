@@ -89,10 +89,11 @@ if provisioner and !CrowbarHelper.in_sledgehammer?(node)
     end
   end
 
-  if node[:platform_family] != "suse" && node[:platform_family] != "windows"
-    template "/etc/gemrc" do
-      variables(admin_ip: address, web_port: web_port)
-      mode "0644"
-    end
-  end
+# FIXME: kill rubygem mirror?
+#  if node[:platform_family] != "suse" && node[:platform_family] != "windows"
+#    template "/etc/gemrc" do
+#      variables(admin_ip: address, web_port: web_port)
+#      mode "0644"
+#    end
+#  end
 end
