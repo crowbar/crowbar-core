@@ -576,9 +576,7 @@ node[:provisioner][:supported_oses].each do |os, arches|
         mode 0644
         owner "root"
         group "root"
-        variables(admin_web: admin_web,
-                  os_codename: os_codename,
-                  admin_ip: admin_ip,
+        variables(admin_ip: admin_ip,
                   provisioner_web: provisioner_web,
                   web_path: web_path)
       end
@@ -587,7 +585,7 @@ node[:provisioner][:supported_oses].each do |os, arches|
         mode 0644
         owner "root"
         group "root"
-        source "crowbar_join.ubuntu.sh.erb"
+        source "crowbar_join.debian.sh.erb"
         variables(admin_web: admin_web,
                   os_codename: os_codename,
                   crowbar_repo_web: crowbar_repo_web,

@@ -14,26 +14,18 @@
 # limitations under the License.
 #
 
-# This script is called by the net_ubuntu.seed file during
-# ubuntu install.  It handles doing the manual sets needed to layout the
-# filesystem the rest of the way before running the common_install.sh.
-#
-# The intent is that once the system is finished installing, the customer
-# will edit the config.json file and run install.sh to complete installation
-# and initial configuration.
-#
-
 mkdir -p /root/.ssh
 chmod 700 /root/.ssh
-if ! wget -O /root/.ssh/authorized_keys.wget -q <%= @provisioner_web %>/authorized_keys; then
+if ! wget -O /root/.ssh/authorized_keys.wget -q <%= @provisioner_web %>/authorized_keys ||
+    grep -q "Error 404" /root/.ssh/authorized_keys.wget; then
     rm -f /root/.ssh/authorized_keys.wget
 else
     chmod 644 /root/.ssh/authorized_keys
-    cat /root/.ssh/authorized_keys.wget >>/root/.ssh/authorized_keys
+    cat /root/.ssh/authorized_keys.wget >> /root/.ssh/authorized_keys
     rm -f /root/.ssh/authorized_keys.wget
 fi
 
-wget -q <%=@web_path%>/crowbar_join.sh -O- > /etc/init.d/crowbar_join.sh
+mkdir /var/log/crowbar
 
 key_re='crowbar\.install\.key=([^ ]+)'
 if [[ $(cat /proc/cmdline) =~ $key_re ]]; then
@@ -49,24 +41,21 @@ post_state() {
       -H "Accept: application/json" -H "Content-Type: application/json" \
       --max-time 240)
   [[ $CROWBAR_KEY ]] && curlargs+=(-u "$CROWBAR_KEY" --digest --anyauth)
-  curl "${curlargs[@]}" "http://<%=@admin_ip%>/crowbar/crowbar/1.0/transition/default"
+  curl "${curlargs[@]}" "http://<%= @admin_ip %>/crowbar/crowbar/1.0/transition/default"
 }
 
-HOSTNAME=$(hostname -f)
-
-export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true
-export LC_ALL=C LANGUAGE=C LANG=C
-apt-get -y --force-yes remove apparmor
-apt-get -y --force-yes install screen
-sleep 30
-
-post_state $HOSTNAME "installed"
+post_state $(hostname -f) "installed"
 
 # Wait for DHCP to update - this is mainly for virtual environments or really large deploys
 sleep 30
 
-chmod +x /etc/init.d/crowbar_join.sh
-ln -s /etc/init.d/crowbar_join.sh /etc/rc3.d/S80crowbar
-ln -s /etc/init.d/crowbar_join.sh /etc/rc5.d/S80crowbar
-ln -s /etc/init.d/crowbar_join.sh /etc/rc2.d/S80crowbar
+# FIXME: should really not be done here...
+export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true
+export LC_ALL=C LANGUAGE=C LANG=C
+apt-get -y --force-yes remove apparmor
+
+wget -q <%= @web_path %>/crowbar_join.sh -O /etc/init.d/crowbar_join.sh
+chmod a+x /etc/init.d/crowbar_join.sh
+update-rc.d crowbar_join.sh defaults
+
 sync
