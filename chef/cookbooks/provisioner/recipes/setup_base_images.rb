@@ -446,13 +446,15 @@ end
 node.set[:provisioner][:repositories] = Mash.new
 node.set[:provisioner][:available_oses] = Mash.new
 
+ntp_servers = search(:node, "roles:ntp-server")
+ntp_servers_ips = ntp_servers.map { |n| Chef::Recipe::Barclamp::Inventory.get_network_by_type(n, "admin").address }
+
 node[:provisioner][:supported_oses].each do |os, arches|
   arches.each do |arch, params|
     web_path = "#{provisioner_web}/#{os}/#{arch}"
     admin_web = "#{web_path}/install"
     crowbar_repo_web = "#{web_path}/crowbar-extra"
     os_dir = "#{tftproot}/#{os}/#{arch}"
-    os_codename = node[:lsb][:codename]
     role = "#{os}_install"
     missing_files = false
     append = params["append"].dup # We'll modify it inline
@@ -506,18 +508,16 @@ node[:provisioner][:supported_oses].each do |os, arches|
       # Add base OS install repo for suse
       node.set[:provisioner][:repositories][os][arch]["base"] = { "baseurl=#{admin_web}" => true }
 
-      ntp_servers = search(:node, "roles:ntp-server")
-      ntp_servers_ips = ntp_servers.map { |n| Chef::Recipe::Barclamp::Inventory.get_network_by_type(n, "admin").address }
-
       target_platform_version = os.gsub(/^.*-/, "")
       template "#{os_dir}/crowbar_join.sh" do
         mode 0644
         owner "root"
         group "root"
-        source "crowbar_join.suse.sh.erb"
+        source "crowbar_join.sh.erb"
         variables(admin_ip: admin_ip,
                   web_port: web_port,
                   ntp_servers_ips: ntp_servers_ips,
+                  platform_family: "suse",
                   target_platform_version: target_platform_version)
       end
 
@@ -554,6 +554,8 @@ node[:provisioner][:supported_oses].each do |os, arches|
       end
       # Default kickstarts and crowbar_join scripts for redhat.
 
+      os_codename = node[:lsb][:codename]
+
       template "#{os_dir}/crowbar_join.sh" do
         mode 0644
         owner "root"
@@ -585,13 +587,12 @@ node[:provisioner][:supported_oses].each do |os, arches|
         mode 0644
         owner "root"
         group "root"
-        source "crowbar_join.debian.sh.erb"
-        variables(admin_web: admin_web,
-                  os_codename: os_codename,
-                  crowbar_repo_web: crowbar_repo_web,
-                  admin_ip: admin_ip,
-                  provisioner_web: provisioner_web,
-                  web_path: web_path)
+        source "crowbar_join.sh.erb"
+        variables(admin_ip: admin_ip,
+                  web_port: web_port,
+                  ntp_servers_ips: ntp_servers_ips,
+                  platform_family: "debian",
+                  target_platform_version: target_platform_version)
       end
 
       if os == "debian-8"

@@ -132,7 +132,9 @@ sync_time() {
 
     local tries_left=120
 
-<% if @target_platform_version.to_f < 12.0 %>
+<% if @platform_family == "debian" -%>
+    SNTP_OPTS="-s"
+<% elsif @target_platform_version.to_f < 12.0 -%>
     SNTP_OPTS="-P no -r"
 <% elsif @target_platform_version.to_f < 12.09 %>
     SNTP_OPTS="-s"
@@ -160,20 +162,24 @@ do_setup() {
     curl -o /etc/chef/validation.pem \
         "http://$HTTP_SERVER/validation.pem"
 
+<% unless @platform_family == "debian" -%>
     # Make sure that the client knows how to talk to the server.
     local cfg=/etc/chef/client.rb
     if ! [ -f $cfg ] || \
        ! grep -q "^\s*chef_server_url\s*[\"\']http://$IP:4000[\"\']" $cfg; then
         test -f $cfg && mv $cfg $cfg.bak
         echo "chef_server_url \"http://$IP:4000\"" >$cfg
+  <% if @platform_family == "suse" -%>
         echo "zypper_check_gpg true" >> $cfg
+  <% end -%>
     fi
 
-<% if @target_platform_version.to_f < 12.0 %>
+  <% if @target_platform_version.to_f < 12.0 -%>
     log_to chef chkconfig -a chef-client
-<% else %>
+  <% else -%>
     log_to chef systemctl enable chef-client
-<% end %>
+  <% end -%>
+<% end -%>
 }
 
 do_ensure_chef_configuration() {
