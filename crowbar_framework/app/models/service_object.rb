@@ -1073,7 +1073,7 @@ class ServiceObject
     # custom patch:
     nodes_to_lock = applying_nodes.reject do |node_name|
       node = NodeObject.find_node_by_name(node_name)
-      node[:platform_family] == "windows" || node.admin?
+      node[:platform_family] != "suse" || node.admin?
     end
 
     begin
