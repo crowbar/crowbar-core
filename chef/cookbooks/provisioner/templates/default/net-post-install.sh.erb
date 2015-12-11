@@ -58,4 +58,7 @@ wget -O /usr/sbin/crowbar_join -q <%= @web_path %>/crowbar_join.sh
 chmod a+x /usr/sbin/crowbar_join
 /usr/sbin/crowbar_join --setup --debug --verbose
 
+# there'll be a reboot after the install
+post_state $(hostname -f) "reboot"
+
 sync
