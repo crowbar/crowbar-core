@@ -189,7 +189,11 @@ do_ensure_chef_configuration() {
     # FIXME: there is a cleaner way of adding handlers:
     # http://wiki.opscode.com/display/chef/Opscode+LWRP+Resources#OpscodeLWRPResources-chefhandler
 
+<% if @platform_family == "debian" -%>
+    HANDLERS_DIR=/var/lib/chef/handlers
+<% else -%>
     HANDLERS_DIR=/var/chef/handlers
+<% end -%>
 
     mkdir -p $HANDLERS_DIR
     # create reboot handler
