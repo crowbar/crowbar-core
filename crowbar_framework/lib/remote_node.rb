@@ -97,7 +97,7 @@ module RemoteNode
   # chef-client daemon started by pid 1 is not counted
   def chef_clients_running?(host_or_ip)
     ssh_cmd = ssh_cmd_base(host_or_ip)
-    ssh_cmd << "'if test -f /var/chef/cache/chef-client-running.pid; then flock -n /var/chef/cache/chef-client-running.pid true; fi'"
+    ssh_cmd << "'if test -f /var/chef/cache/chef-client-running.pid; then flock -n /var/chef/cache/chef-client-running.pid true; elif test -f /var/cache/chef/chef-client-running.pid; then flock -n /var/cache/chef/chef-client-running.pid true; fi'"
     ssh_cmd = ssh_cmd.map(&:chomp).join(" ")
     res = `#{ssh_cmd}`
     case $?.exitstatus
