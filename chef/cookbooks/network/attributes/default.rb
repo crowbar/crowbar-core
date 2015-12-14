@@ -15,10 +15,14 @@
 
 case node[:platform_family]
 when "suse"
-  default[:network][:base_pkgs] = ["bridge-utils",
-                                   "vlan"]
-  default[:network][:ovs_pkgs] = ["openvswitch",
-                                  "openvswitch-switch"]
+  default[:network][:base_pkgs] = [
+    "bridge-utils",
+    "vlan"
+  ]
+  default[:network][:ovs_pkgs] = [
+    "openvswitch",
+    "openvswitch-switch"
+  ]
   # openSUSE uses the module shipped with upstream kernel
   if node[:platform] == "suse"
     default[:network][:ovs_pkgs].push("openvswitch-kmp-default")
@@ -30,18 +34,26 @@ when "suse"
     default[:network][:ovs_service] = "openvswitch"
   end
 when "rhel"
-  default[:network][:base_pkgs] = ["bridge-utils",
-                                   "vconfig"]
-  default[:network][:ovs_pkgs] = ["openvswitch",
-                                  "openstack-neutron-openvswitch"]
+  default[:network][:base_pkgs] = [
+    "bridge-utils",
+    "vconfig"
+  ]
+  default[:network][:ovs_pkgs] = [
+    "openvswitch",
+    "openstack-neutron-openvswitch"
+  ]
   default[:network][:ovs_service] = "openvswitch"
 
 else
-  default[:network][:base_pkgs] = ["bridge-utils",
-                                   "vlan"]
-  default[:network][:ovs_pkgs] = ["linux-headers-#{`uname -r`.strip}",
-                                  "openvswitch-datapath-dkms",
-                                  "openvswitch-switch"]
+  default[:network][:base_pkgs] = [
+    "bridge-utils",
+    "vlan"
+  ]
+  default[:network][:ovs_pkgs] = [
+    "linux-headers-#{`uname -r`.strip}",
+    "openvswitch-datapath-dkms",
+    "openvswitch-switch"
+  ]
   default[:network][:ovs_service] = "openvswitch-service"
 end
 
