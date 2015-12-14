@@ -49,6 +49,8 @@ require File.join(File.expand_path(File.dirname(__FILE__)), "barclamp_lib")
   "disable_interface <name> <node> <network> - Ensure that an interface is not enabled for the specified network"
 ]
 
+alias :super_run_sub_command :run_sub_command
+
 def run_sub_command(cmds, subcmd)
   if [
     "enable_interface",
@@ -137,7 +139,7 @@ def run_sub_command(cmds, subcmd)
     ]
   end
 
-  super
+  super_run_sub_command(cmds, subcmd)
 end
 
 main
