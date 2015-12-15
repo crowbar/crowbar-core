@@ -62,7 +62,7 @@ def run_sub_command(cmds, subcmd)
   ].include?(subcmd)
     case subcmd
     when "enable_interface"
-      usage(-2) if ARGV.length < 4 || ARGV.length > 5
+      usage(-2) unless ARGV.length == 3
 
       res = deprecated_exec(
         "network",
@@ -73,7 +73,7 @@ def run_sub_command(cmds, subcmd)
         ARGV.shift
       )
     when "disable_interface"
-      usage(-2) if ARGV.length < 4 || ARGV.length > 5
+      usage(-2) unless ARGV.length == 3
 
       res = deprecated_exec(
         "network",
