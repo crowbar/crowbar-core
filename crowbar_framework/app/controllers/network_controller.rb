@@ -125,22 +125,28 @@ class NetworkController < BarclampController
 
   add_help(:disable_interface, [:id, :network, :name], [:post])
   def disable_interface
-    code, message = @service_object.disable_interface(
-      params[:id],
-      params[:network],
-      params[:name]
-    )
-
     respond_to do |format|
-      case code
-      when 200
-        format.json { head :ok }
-      else
-        format.json do
-          render json: { error: message }, status: code
-        end
+      format.json do
+        render json: { error: "Disabling is unsupported" }, status: 500
       end
     end
+
+    # code, message = @service_object.disable_interface(
+    #   params[:id],
+    #   params[:network],
+    #   params[:name]
+    # )
+
+    # respond_to do |format|
+    #   case code
+    #   when 200
+    #     format.json { head :ok }
+    #   else
+    #     format.json do
+    #       render json: { error: message }, status: code
+    #     end
+    #   end
+    # end
   end
 
   def switch
