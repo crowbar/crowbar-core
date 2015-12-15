@@ -317,6 +317,11 @@ zypper --non-interactive install --auto-agree-with-licenses suse-openstack-cloud
 <% end -%>
 zypper --non-interactive install $PACKAGES_INSTALL<%= " '#{@packages.join("' '")}'" unless @packages.empty? %>
 
+<% if @platform == "opensuse" -%>
+# we need rsyslog, not systemd-logger
+zypper --non-interactive remove systemd-logger
+<% end -%>
+
 # Fail early if we know we can't succeed because of a missing chef-client
 if ! which chef-client &> /dev/null; then
   echo "chef-client is not available."
