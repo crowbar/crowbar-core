@@ -37,14 +37,38 @@
     background: image-url("jquery/ledUpdate/red.png");
   }
 
-  &.blink {
-    filter: unquote("progid:DXImageTransform.Microsoft.Alpha(Opacity=50)");
-    opacity: .50;
-  }
+//  &.blink {
+//    filter: unquote("progid:DXImageTransform.Microsoft.Alpha(Opacity=50)");
+//    opacity: .50;
+//  }
 
   &.unready,
   &.spin,
   &.in_process {
     background: image-url("jquery/ledUpdate/yellow-green-spin.png");
   }
+}
+
+.status-border-unready {
+  border-left: 7px solid #F8E71C!important;
+  animation-name: blink;
+  animation-duration: 2s;
+  animation-iteration-count: infinite;
+}
+@keyframes blink {
+  0% {border-left: 7px green!important;}
+  50% {border-left: 7px solid yellow!important;}
+  100% {border-left: 7px green!important;}
+}
+
+.status-border-ready {
+  border-left: 7px solid #599517!important;
+}
+
+.status-border-failed {
+  border-left: 7px solid #FF001F!important;
+}
+
+.status-border-unknown {
+  border-left: 7px solid #ddd!important;
 }
