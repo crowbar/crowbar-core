@@ -381,13 +381,19 @@ def run_sub_command(cmds, subcmd)
         args_count = 1
         args_append = ""
 
-        args_append.concat(
-          "--data '#{@data}'"
-        ) if @data.present?
+        if @data.empty? && @file.empty?
+          args_append.concat(
+            "--data '{\"id\":\"#{ARGV.first}\"}'"
+          )
+        else
+          args_append.concat(
+            "--data '#{@data}'"
+          ) if @data.present?
 
-        args_append.concat(
-          "--file #{@file}"
-        ) if @file.present?
+          args_append.concat(
+            "--file #{@file}"
+          ) if @file.present?
+        end
       when "edit"
         args_count = 1
         args_append = ""
