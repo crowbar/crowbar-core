@@ -301,15 +301,32 @@ if node[:platform_family] == "suse" && !node.roles.include?("provisioner-server"
     # make sure the repos are properly setup
     repos = Provisioner::Repositories.get_repos(node[:platform], node[:platform_version], node[:kernel][:machine])
     for name, attrs in repos
-      url = %x{zypper --non-interactive repos #{name} 2> /dev/null | grep "^URI " | cut -d : -f 2-}
-      url.strip!
-      if url != attrs[:url]
-        unless url.empty?
+      current_url = nil
+      current_priority = nil
+
+      out = `LANG=C zypper --non-interactive repos #{name} 2> /dev/null`
+      out.split("\n").each do |line|
+        attribute, value = line.split(":", 2)
+        next if value.nil?
+        attribute.strip!
+        value.strip!
+        if attribute == "URI"
+          current_url = value
+        elsif attribute == "Priority"
+          current_priority = value
+        end
+      end
+
+      if current_url != attrs[:url]
+        unless current_url.nil? || current_url.empty?
           Chef::Log.info("Removing #{name} zypper repository pointing to wrong URI...")
-          %x{zypper --non-interactive removerepo #{name}}
+          `zypper --non-interactive removerepo #{name}`
         end
         Chef::Log.info("Adding #{name} zypper repository...")
-        %x{zypper --non-interactive addrepo --refresh #{attrs[:url]} #{name}}
+        `zypper --non-interactive addrepo --refresh #{attrs[:url]} #{name}`
+      end
+      if current_priority != attrs[:priority]
+        `zypper --non-interactive modifyrepo --priority #{attrs[:priority]} #{name}`
       end
     end
     # install additional packages

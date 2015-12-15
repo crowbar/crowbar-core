@@ -278,6 +278,9 @@ fi
 
 <% @repos.keys.sort.each do |name| %>
 zypper -n ar "<%= @repos[name][:url] %>" "<%= name %>"
+  <% unless @repos[name][:priority] == 99 -%>
+zypper -n mr -p "<%= @repos[name][:priority] %>" "<%= name %>"
+  <% end -%>
 <% end %>
 <% if @repos.keys.include? "PTF" -%>
 

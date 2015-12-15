@@ -35,6 +35,9 @@
         <product><%= name %></product>
         <product_dir>/</product_dir>
         <media_url><%= @repos[name][:url] %></media_url>
+        <% unless @repos[name][:priority] == 99 -%>
+        <priority><%= @repos[name][:priority] %></priority>
+        <% end -%>
         <!-- See bnc#787157 for discussion on ask_on_error -->
         <ask_on_error config:type="boolean"><%= @repos[name][:ask_on_error] || 'false' %></ask_on_error>
       </listentry>
