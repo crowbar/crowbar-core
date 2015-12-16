@@ -48,6 +48,9 @@ nav:
     roles:
       order: 40
       route: 'active_roles_path'
+    upgrade:
+      order: 60
+      route: 'nodes_upgrade_path'
     families:
       order: 50
       route: 'nodes_families_path'

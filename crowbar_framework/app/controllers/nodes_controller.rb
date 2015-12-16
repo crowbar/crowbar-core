@@ -227,6 +227,12 @@ class NodesController < ApplicationController
     end
   end
 
+  def upgrade
+    respond_to do |format|
+      format.html
+    end
+  end
+
   def group_change
     NodeObject.find_node_by_name(params[:id]).tap do |node|
       raise ActionController::RoutingError.new("Not Found") if node.nil?

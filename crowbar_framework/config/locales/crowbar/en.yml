@@ -70,6 +70,7 @@ en:
       clusters: 'HA Clusters'
       roles: 'Active Roles'
       families: 'Family Groups'
+      upgrade: 'Upgrade to Cloud 6'
     barclamps:
       title: 'Barclamps'
       all: 'All Barclamps'
@@ -380,6 +381,10 @@ en:
       nics: 'NICs'
       cpu: 'CPU Type'
       hardware: 'Platform'
+    upgrade:
+      title: 'Upgrade to Cloud 6'
+      upgrade_hint: 'Stop all running services on your nodes before upgrading.'
+      start_upgrade: 'Start the Upgrade'
     new:
       title: 'Add node'
     edit:
