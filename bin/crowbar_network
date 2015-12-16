@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 #
 # Copyright 2011-2013, Dell
-# Copyright 2013-2014, SUSE LINUX Products GmbH
+# Copyright 2013-2015, SUSE Linux GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,98 +19,127 @@
 require File.join(File.expand_path(File.dirname(__FILE__)), "barclamp_lib")
 @barclamp = "network"
 
-@commands["deallocate_virtual_ip"] = ["deallocate_ip(ARGV.shift,ARGV.shift,ARGV.shift,:service)", "deallocate_virtual_ip <name> <service> <network> - Deallocate an ip from a service on a network"]
-@commands["allocate_virtual_ip"] = ["allocate_ip(ARGV.shift,ARGV.shift,ARGV.shift,ARGV.shift,ARGV.shift,:service)", "allocate_virtual_ip <name> <service> <network> <range> [<suggestion>] - Allocate an ip for a service on a network from a range"]
-@commands["deallocate_ip"] = ["deallocate_ip(ARGV.shift,ARGV.shift,ARGV.shift,:node)", "deallocate_ip <name> <node> <network> - Deallocate an ip from a node on a network"]
-@commands["allocate_ip"] = ["allocate_ip(ARGV.shift,ARGV.shift,ARGV.shift,ARGV.shift,ARGV.shift,:node)", "allocate_ip <name> <node> <network> <range> [<suggestion>] - Allocate an ip for a node on a network from a range"]
-@commands["enable_interface"] = ["enable_interface(ARGV.shift,ARGV.shift,ARGV.shift)", "enable_interface <name> <node> <network> - Ensure that an interface is present for the specified network"]
-@commands["disable_interface"] = ["disable_interface(ARGV.shift,ARGV.shift,ARGV.shift)", "disable_interface <name> <node> <network> - Ensure that an interface is not enabled for the specified network"]
+@commands["deallocate_virtual_ip"] = [
+  "deallocate_ip(ARGV.shift,ARGV.shift,ARGV.shift,:service)",
+  "deallocate_virtual_ip <name> <service> <network> - Deallocate an ip from a service on a network"
+]
 
-def enable_interface(name, node, network)
-  usage -1 if name.nil? or name == ""
-  usage -1 if node.nil? or node == ""
-  usage -1 if network.nil? or network == ""
+@commands["allocate_virtual_ip"] = [
+  "allocate_ip(ARGV.shift,ARGV.shift,ARGV.shift,ARGV.shift,ARGV.shift,:service)",
+  "allocate_virtual_ip <name> <service> <network> <range> [<suggestion>] - Allocate an ip for a service on a network from a range"
+]
 
-  @data = { "name" => node, "network" => network }.to_json
-  struct = post_json("/enable_interface/#{name}", @data)
+@commands["deallocate_ip"] = [
+  "deallocate_ip(ARGV.shift,ARGV.shift,ARGV.shift,:node)",
+  "deallocate_ip <name> <node> <network> - Deallocate an ip from a node on a network"
+]
 
-  if struct[1] == 200
-    ["Enabled interface #{name} #{struct[0].inspect}", 0]
-  elsif struct[1] == 404
-    ["Failed to enable interface: #{name} : Not Found", 1]
-  elsif struct[1] == 400
-    ["Failed to enable interface: #{name} : Errors in data\n#{struct[0]}", 1]
-  else
-    ["Failed to talk to service enable_interface: #{struct[1]}: #{struct[0]}", 1]
+@commands["allocate_ip"] = [
+  "allocate_ip(ARGV.shift,ARGV.shift,ARGV.shift,ARGV.shift,ARGV.shift,:node)",
+  "allocate_ip <name> <node> <network> <range> [<suggestion>] - Allocate an ip for a node on a network from a range"
+]
+
+@commands["enable_interface"] = [
+  "enable_interface(ARGV.shift,ARGV.shift,ARGV.shift)",
+  "enable_interface <name> <node> <network> - Ensure that an interface is present for the specified network"
+]
+
+@commands["disable_interface"] = [
+  "disable_interface(ARGV.shift,ARGV.shift,ARGV.shift)",
+  "disable_interface <name> <node> <network> - Ensure that an interface is not enabled for the specified network"
+]
+
+alias :super_run_sub_command :run_sub_command
+
+def run_sub_command(cmds, subcmd)
+  if [
+    "enable_interface",
+    "disable_interface",
+    "deallocate_virtual_ip",
+    "allocate_virtual_ip",
+    "deallocate_ip",
+    "allocate_ip"
+  ].include?(subcmd)
+    case subcmd
+    when "enable_interface"
+      usage(-2) unless ARGV.length == 3
+
+      res = deprecated_exec(
+        "network",
+        "interface",
+        "enable",
+        ARGV.shift,
+        ARGV.shift,
+        ARGV.shift
+      )
+    when "disable_interface"
+      usage(-2) unless ARGV.length == 3
+
+      res = deprecated_exec(
+        "network",
+        "interface",
+        "disable",
+        ARGV.shift,
+        ARGV.shift,
+        ARGV.shift
+      )
+    when "deallocate_virtual_ip"
+      usage(-2) unless ARGV.length == 3
+
+      res = deprecated_exec(
+        "network",
+        "virtualip",
+        "deallocate",
+        ARGV.shift,
+        ARGV.shift,
+        ARGV.shift
+      )
+    when "allocate_virtual_ip"
+      usage(-2) if ARGV.length < 4 || ARGV.length > 5
+
+      res = deprecated_exec(
+        "network",
+        "virtualip",
+        "allocate",
+        ARGV.shift,
+        ARGV.shift,
+        ARGV.shift,
+        ARGV.shift,
+        ARGV.shift
+      )
+    when "deallocate_ip"
+      usage(-2) unless ARGV.length == 3
+
+      res = deprecated_exec(
+        "network",
+        "hostip",
+        "deallocate",
+        ARGV.shift,
+        ARGV.shift,
+        ARGV.shift
+      )
+    when "allocate_ip"
+      usage(-2) if ARGV.length < 4 || ARGV.length > 5
+
+      res = deprecated_exec(
+        "network",
+        "hostip",
+        "allocate",
+        ARGV.shift,
+        ARGV.shift,
+        ARGV.shift,
+        ARGV.shift,
+        ARGV.shift
+      )
+    end
+
+    return [
+      "",
+      res || 1
+    ]
   end
-end
 
-def allocate_ip(name, object, network, range, suggestion, type)
-  usage -1 if name.nil? or name == ""
-  usage -1 if network.nil? or network == ""
-  usage -1 if object.nil? or object == ""
-  usage -1 if range.nil? or range == ""
-
-  @data = { "name" => object, "network" => network, "range" => range }
-  @data["suggestion"] = suggestion if suggestion
-  @data = @data.to_json
-  if type == :node
-    struct = post_json("/allocate_ip/#{name}", @data)
-  else
-    struct = post_json("/allocate_virtual_ip/#{name}", @data)
-  end
-
-  if struct[1] == 200
-    ["Allocate ip #{name} #{struct[0].inspect}", 0]
-  elsif struct[1] == 404
-    ["Failed to Allocate ip: #{name} : Not Found", 1]
-  elsif struct[1] == 400
-    ["Failed to Allocate ip: #{name} : Errors in data\n#{struct[0]}", 1]
-  else
-    ["Failed to talk to service allocate_ip: #{struct[1]}: #{struct[0]}", 1]
-  end
-end
-
-def deallocate_ip(name, object, network, type)
-  usage -1 if name.nil? or name == ""
-  usage -1 if network.nil? or network == ""
-  usage -1 if object.nil? or object == ""
-
-  @data = { "name" => object, "network" => network }.to_json
-  if type == :node
-    struct = post_json("/deallocate_ip/#{name}", @data)
-  else
-    struct = post_json("/deallocate_virtual_ip/#{name}", @data)
-  end
-
-  if struct[1] == 200
-    ["Deallocate address #{network} #{object}", 0]
-  elsif struct[1] == 404
-    ["Failed to deallocate ip: #{name} : Not Found", 1]
-  elsif struct[1] == 400
-    ["Failed to deallocate ip: #{name} : Errors in data\n#{struct[0]}", 1]
-  else
-    ["Failed to talk to service deallocate_ip: #{struct[1]}: #{struct[0]}", 1]
-  end
-end
-
-def disable_interface(name, node, network)
-  usage -1 if name.nil? or name == ""
-  usage -1 if node.nil? or node == ""
-  usage -1 if network.nil? or network == ""
-
-  @data = { "name" => node, "network" => network }.to_json
-  struct = post_json("/disable_interface/#{name}", @data)
-
-  if struct[1] == 200
-    ["Disable interface #{network} #{node}", 0]
-  elsif struct[1] == 404
-    ["Failed to disable interface: #{name} : Not Found", 1]
-  elsif struct[1] == 400
-    ["Failed to disable interface: #{name} : Errors in data\n#{struct[0]}", 1]
-  else
-    ["Failed to talk to service disable_interface: #{struct[1]}: #{struct[0]}", 1]
-  end
+  super_run_sub_command(cmds, subcmd)
 end
 
 main
