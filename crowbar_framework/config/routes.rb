@@ -36,6 +36,7 @@ Rails.application.routes.draw do
   get "nodes/unallocated(.:format)", controller: "nodes", action: "unallocated", as: "unallocated_list"
   post "nodes/bulk(.:format)", controller: "nodes", action: "bulk", as: "bulk_nodes"
   get "nodes/families(.:format)", controller: "nodes", action: "families", as: "nodes_families"
+  get "nodes/upgrade(.:format)", controller: "nodes", action: "upgrade", as: "nodes_upgrade"
   get "nodes/:id/hit/:req(.:format)", controller: "nodes", action: "hit", constraints: { id: /[^\/]+/ }, as: "hit_node"
   get "nodes/:name/edit(.:format)", controller: "nodes", action: "edit", constraints: { name: /[^\/]+/ }, as: "edit_node"
   get "dashboard(.:format)", controller: "nodes", action: "index", as: "dashboard"
