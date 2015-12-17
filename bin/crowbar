@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 #
 # Copyright 2011-2013, Dell
-# Copyright 2013-2015, SUSE Linux GmbH
+# Copyright 2013-2014, SUSE LINUX Products GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,67 +16,30 @@
 # limitations under the License.
 #
 
-require "pathname"
-
-def usage(exit_code)
-  $stdout.puts "Usage: crowbar <area> <subcommand>"
-  $stdout.puts "  Areas: #{@areas.keys.sort.join(" ")}"
-
-  deprecate = "The crowbar command is deprecated, please use the new crowbarctl utility!"
-
-  if $stdout.tty?
-    $stderr.puts "\e[31m#{deprecate}\e[0m"
-  else
-    $stderr.puts deprecate
-  end
-
-  exit exit_code
+def usage (rc)
+  puts "Usage: crowbar <area> <subcommand>"
+  puts "  Areas: #{@areas.sort.join(" ")}"
+  exit rc
 end
 
-loc = Pathname.new(
-  File.expand_path(
-    File.dirname(
-      __FILE__
-    )
-  )
-)
-
-sym = if File.symlink?(__FILE__)
-  Pathname.new(
-    File.expand_path(
-      File.dirname(
-        File.readlink(
-          __FILE__
-        )
-      )
-    )
-  )
+if File.symlink?(__FILE__)
+  loc = File.expand_path(File.dirname(File.readlink(__FILE__)))
+else
+  loc = File.expand_path(File.dirname(__FILE__))
 end
 
-@areas = {}.tap do |areas|
-  [
-    sym,
-    loc
-  ].compact.each do |path|
-    path.children.each do |child|
-      next unless child.executable?
+@areas = Dir.glob("./crowbar_*").select { |ex| File.executable?(ex) }
+@areas = @areas.map! { |x| x.gsub("./crowbar_", "") }
+@areas << Dir.glob(File.join(loc,"crowbar_*")).map! { |x| x.gsub(File.join(loc,"crowbar_"), "") }
+@areas = @areas.flatten.select { |a| a !~ /\.sh$/ }
 
-      match = child.basename.to_s.match(
-        /\Acrowbar_([\w_-]+)\z/
-      )
-
-      if match
-        areas[match[1]] = child
-      end
-    end
-  end
+if ARGV.length == 0
+  usage -1
 end
 
-usage(-1) if ARGV.empty?
 area = ARGV.shift
-usage(-1) if @areas[area].nil?
 
-exec(
-  @areas[area].to_s,
-  *ARGV
-)
+usage -1 unless @areas.include?(area)
+
+exec("./crowbar_#{area}", *ARGV) if File.exists?("./crowbar_#{area}")
+exec(File.join(loc,"crowbar_#{area}"), *ARGV) if File.exists?(File.join(loc,"crowbar_#{area}"))
