@@ -33,6 +33,12 @@ class Backup
     @path = Backup.image_dir.join(@filename)
   end
 
+  def as_json(options: {})
+    result = super
+    result["path"] = path.to_s
+    result
+  end
+
   def save
     valid? && persist!
   end
