@@ -75,6 +75,7 @@ Rails.application.routes.draw do
   post "utils/repositories/deactivate(.:format)", controller: "repositories", action: "deactivate", as: "deactivate_repository"
   post "utils/repositories/activate_all(.:format)", controller: "repositories", action: "activate_all", as: "activate_all_repositories"
   post "utils/repositories/deactivate_all(.:format)", controller: "repositories", action: "deactivate_all", as: "deactivate_all_repositories"
+  get "utils/upgrade", controller: "upgrade", action: "upgrade", as: "upgrade"
 
   # barclamps
   get "crowbar/:controller/1.0/help(.:format)", action: "help", as: "help_barclamp"

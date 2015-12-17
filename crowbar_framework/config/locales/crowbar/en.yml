@@ -79,6 +79,7 @@ en:
       title: 'Utilities'
       logs: 'Exported Items'
       repositories: 'Repositories'
+      upgrade: 'Upgrade to Cloud 6'
     help: 'Help'
 
   layouts:
@@ -513,6 +514,10 @@ en:
       words_connector: ', '
       two_words_connector: ' and '
       last_word_connector: ' and '
+  upgrade:
+      next: 'Next'
+      title: 'Upgrade to Cloud 6'
+      upgrade_hint: 'Please make sure you have all the latest maintenance updates installed. To start the upgrade process, click Next.'
 
   repositories:
     index:
