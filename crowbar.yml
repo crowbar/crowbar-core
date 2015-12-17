@@ -76,6 +76,9 @@ nav:
     repositories:
       order: 15
       route: 'repositories_path'
+    upgrade:
+      order: 20
+      route: 'upgrade_path'
   help:
     order: 80
     route: 'docs_path'
