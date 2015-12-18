@@ -32,46 +32,6 @@ module Crowbar
         def restore_files
           [
             [
-              "crowbar/client.pem",
-              "/opt/dell/crowbar_framework/config/client.pem"
-            ],
-            [
-              "etc/crowbar.install.key",
-              "/etc/crowbar.install.key"
-            ],
-            [
-              "etc/crowbar.json",
-              "/etc/crowbar/crowbar.json"
-            ],
-            [
-              "etc/hosts",
-              "/etc/hosts"
-            ],
-            [
-              "etc/HOSTNAME",
-              "/etc/HOSTNAME"
-            ],
-            [
-              "etc/network.json",
-              "/etc/crowbar/network.json"
-            ],
-            [
-              "etc/resolv.conf.forwarders",
-              "/etc/resolv.conf"
-            ],
-            [
-              "etc/client.pem",
-              "/etc/chef/client.pem"
-            ],
-            [
-              "etc/webui.pem",
-              "/etc/chef/webui.pem"
-            ],
-            [
-              "etc/validation.pem",
-              "/etc/chef/validation.pem"
-            ],
-            [
               "root/.gnupg",
               "/root/.gnupg"
             ],
@@ -80,7 +40,43 @@ module Crowbar
               "/root/.ssh"
             ],
             [
-              "tftp/validation.pem",
+              "data",
+              "/var/lib/crowbar"
+            ],
+            [
+              "configs/hosts",
+              "/etc/hosts"
+            ],
+            [
+              "configs/hostname",
+              "/etc/hostname"
+            ],
+            [
+              "configs/resolv.conf.forwarders",
+              "/etc/resolv.conf"
+            ],
+            [
+              "keys/crowbar-client.pem",
+              "/opt/dell/crowbar_framework/config/client.pem"
+            ],
+            [
+              "keys/webui.pem",
+              "/etc/chef/webui.pem"
+            ],
+            [
+              "keys/chef-client.pem",
+              "/etc/chef/client.pem"
+            ],
+            [
+              "keys/crowbar.install.key",
+              "/etc/crowbar.install.key"
+            ],
+            [
+              "keys/chef-validation.pem",
+              "/etc/chef/validation.pem"
+            ],
+            [
+              "keys/tftp-validation.pem",
               "/srv/tftpboot/validation.pem"
             ]
           ]

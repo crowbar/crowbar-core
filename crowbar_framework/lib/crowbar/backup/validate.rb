@@ -37,7 +37,7 @@ module Crowbar
       protected
 
       def hostname
-        hostname_file = File.join(path, "crowbar", "etc", "HOSTNAME")
+        hostname_file = File.join(path, "crowbar", "configs", "hostname")
         unless File.exist?(hostname_file)
           return {
             status: :failed_dependency,

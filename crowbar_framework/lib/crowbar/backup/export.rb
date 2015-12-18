@@ -106,7 +106,7 @@ module Crowbar
         logger.debug "Backing up Crowbar files"
 
         data_dir = workdir.join("crowbar")
-        ["tftp", "etc", "crowbar", "root"].each do |folder|
+        ["keys", "configs", "root"].each do |folder|
           absolute_path = data_dir.join(folder)
           absolute_path.mkpath unless absolute_path.directory?
         end
