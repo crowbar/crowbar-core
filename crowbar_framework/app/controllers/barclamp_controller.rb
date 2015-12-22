@@ -584,13 +584,36 @@ class BarclampController < ApplicationController
           if answer[0] == 202
             missing_nodes = answer[1].map { |node_dns| NodeObject.find_node_by_name(node_dns) }
 
-            unready_nodes = missing_nodes.map(&:alias)
+            unready_nodes = missing_nodes.select { |n| n.state != "ready" }.map(&:alias)
             unallocated_nodes = missing_nodes.reject(&:allocated?).map(&:alias)
 
-            flash[:notice] = "#{t('barclamp.proposal_show.commit_proposal_queued')}: #{(unready_nodes - unallocated_nodes).join(", ")}"
-
+            unless unready_nodes.empty?
+              flash[:notice] = t(
+                "barclamp.proposal_show.commit_proposal_queued",
+                nodes: (unready_nodes - unallocated_nodes).join(", ")
+              )
+            end
             unless unallocated_nodes.empty?
-              flash[:alert]  = "#{t('barclamp.proposal_show.commit_proposal_queued_unallocated')}: #{unallocated_nodes.join(", ")}"
+              flash[:alert] = t(
+                "barclamp.proposal_show.commit_proposal_queued_unallocated",
+                nodes: unallocated_nodes.join(", ")
+              )
+            end
+            if unready_nodes.empty? && unallocated_nodes.empty?
+              # find out which proposals were not applied yet
+              deps = @service_object.proposal_dependencies(
+                ServiceObject.proposal_to_role(@proposal, params[:barclamp])
+              )
+              missing_barclamps = deps.map do |dep|
+                prop = Proposal.where(barclamp: dep["barclamp"], name: dep["inst"]).first
+                queued   = prop["deployment"][dep["barclamp"]]["crowbar-queued"] rescue false
+                deployed = (prop["deployment"][dep["barclamp"]]["crowbar-status"] == "success") rescue false
+                dep["barclamp"] if queued || !deployed
+              end.compact
+              flash[:notice] = t(
+                "barclamp.proposal_show.commit_proposal_queued_dependency",
+                barclamps: missing_barclamps.join(", ")
+              )
             end
           end
         rescue StandardError => e
