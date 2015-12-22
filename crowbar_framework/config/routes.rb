@@ -170,5 +170,7 @@ Rails.application.routes.draw do
     end
   end
 
-  match "/:controller/:action/*(:.format)", via: [:get, :post, :put, :patch, :delete]
+  # TODO(must): Get rid of this wildcard route
+  match "/:controller/:action/*(:.format)",
+    via: [:get, :post, :put, :patch, :delete]
 end
