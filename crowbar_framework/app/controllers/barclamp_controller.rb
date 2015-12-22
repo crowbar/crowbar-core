@@ -461,6 +461,50 @@ class BarclampController < ApplicationController
   end
 
   #
+  # Reset proposal
+  # Reset a specific proposal status
+  # POST /crowbar/<barclamp-name>/<version>/proposals/reset/<barclamp-instance-name>
+  #
+  add_help(:proposal_reset, [:id], [:post])
+  def proposal_reset
+    code, message = @service_object.reset_proposal(
+      params[:id]
+    )
+
+    raise Crowbar::Error::NotFound if code == 404
+    respond_to do |format|
+      case code
+      when 200
+        format.html do
+          redirect_to(
+            proposal_barclamp_path(
+              controller: params[:controller],
+              id: params[:id]
+            )
+          )
+        end
+        format.json do
+          head :ok
+        end
+      else
+        format.html do
+          flash[:alert] = message
+
+          redirect_to(
+            proposal_barclamp_path(
+              controller: params[:controller],
+              id: params[:id]
+            )
+          )
+        end
+        format.json do
+          render json: { error: message }, status: code
+        end
+      end
+    end
+  end
+
+  #
   # Dequeue proposal
   # Remove a specific proposal from the queue
   # DELETE /crowbar/<barclamp-name>/<version>/proposals/dequeue/<barclamp-instance-name>
