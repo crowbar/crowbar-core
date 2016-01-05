@@ -14,7 +14,7 @@ TimeoutStopSec=10
 WorkingDirectory=/opt/dell/crowbar_framework
 
 Environment="CROWBAR_ENV=production"
-Environment="CROWBAR_THREADS=1"
+Environment="CROWBAR_THREADS=10"
 Environment="CROWBAR_WORKERS=5"
 Environment="CROWBAR_LISTEN=127.0.0.1"
 Environment="CROWBAR_PORT=3000"
