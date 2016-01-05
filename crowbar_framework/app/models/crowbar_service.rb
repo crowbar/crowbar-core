@@ -294,6 +294,7 @@ class CrowbarService < ServiceObject
     return "SLES 12" if target_platform == "suse-12.0"
     return "SLES 11 SP4" if target_platform == "suse-11.4"
     return "SLES 11 SP3" if target_platform == "suse-11.3"
+    return "Debian 8 (Jessie)" if target_platform == "debian-8"
     return "Windows Server 2012 R2" if target_platform == "windows-6.3"
     return "Windows Server 2012" if target_platform == "windows-6.2"
     return "Hyper-V Server 2012 R2" if target_platform == "hyperv-6.3"

@@ -9,6 +9,14 @@
       "shell_prompt": "USER@HOST:CWD SUFFIX",
       "enable_pxe": true,
       "supported_oses": {
+        "debian-8": {
+          "x86_64": {
+            "initrd": "debian-installer/amd64/initrd.gz",
+            "kernel": "debian-installer/amd64/linux",
+            "append": "debian-installer/locale=en_US.UTF8 keyboard-configuration/xkb-keymap=us netcfg/choose_interface=auto quiet",
+            "install_url": "http://ftp.de.debian.org"
+          }
+        },
 	"ubuntu-12.04": {
           "x86_64": {
 	    "initrd": "install/netboot/ubuntu-installer/amd64/initrd.gz",

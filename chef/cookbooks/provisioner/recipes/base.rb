@@ -33,8 +33,8 @@ directory "/root/.ssh" do
   action :create
 end
 
-# We don't want to use bluepill on SUSE and Windows
-unless node[:platform_family] == "suse"
+# We don't want to use bluepill on Debian, SUSE and Windows
+unless %w(debian suse windows).include?(node[:platform_family])
   # Make sure we have Bluepill
   case node["state"]
   when "ready","readying"
@@ -205,8 +205,8 @@ cookbook_file config_file do
   source "chef-client"
 end
 
-# On SUSE: install crowbar_join properly, with init script
-if node[:platform_family] == "suse" && !node.roles.include?("provisioner-server")
+# On Debian and SUSE: install crowbar_join properly, with init script
+if %w(debian suse).include?(node[:platform_family]) && !node.roles.include?("provisioner-server")
   admin_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(provisioner_server_node, "admin").address
   web_port = provisioner_server_node[:provisioner][:web_port]
 
@@ -217,14 +217,30 @@ if node[:platform_family] == "suse" && !node.roles.include?("provisioner-server"
     mode 0755
     owner "root"
     group "root"
-    source "crowbar_join.suse.sh.erb"
+    source "crowbar_join.sh.erb"
     variables(admin_ip: admin_ip,
               web_port: web_port,
               ntp_servers_ips: ntp_servers_ips,
+              platform_family: node[:platform_family],
               target_platform_version: node["platform_version"] )
   end
 
-  if node[:platform] == "suse" && node[:platform_version].to_f < 12.0
+  if node[:platform_family] == "debian"
+    cookbook_file "/etc/init.d/crowbar_join" do
+      owner "root"
+      group "root"
+      mode "0755"
+      action :create
+      source "crowbar_join.init.debian"
+    end
+
+    # Make sure that any dependency change is taken into account
+    bash "update rc.d for crowbar_join service" do
+      code "update-rc.d crowbar_join defaults"
+      action :nothing
+      subscribes :run, resources(cookbook_file: "/etc/init.d/crowbar_join"), :delayed
+    end
+  elsif node[:platform] == "suse" && node[:platform_version].to_f < 12.0
     cookbook_file "/etc/init.d/crowbar_join" do
       owner "root"
       group "root"
@@ -288,7 +304,7 @@ if node[:platform_family] == "suse" && !node.roles.include?("provisioner-server"
     owner "root"
     group "root"
     mode "0644"
-    source "crowbar_join.logrotate.suse"
+    source "crowbar_join.logrotate"
     action :create
   end
 

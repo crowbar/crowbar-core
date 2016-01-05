@@ -33,6 +33,7 @@ if states.include?(node[:state])
       mode "0644"
       variables(logfiles: "/var/log/chef/client.log",
                 postrotate: "bluepill chef-client restart")
+      only_if { node[:platform_family] == "rhel" }
     end
 
     # Set up some basic log rotation

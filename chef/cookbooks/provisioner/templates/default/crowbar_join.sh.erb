@@ -132,7 +132,9 @@ sync_time() {
 
     local tries_left=120
 
-<% if @target_platform_version.to_f < 12.0 %>
+<% if @platform_family == "debian" -%>
+    SNTP_OPTS="-s"
+<% elsif @target_platform_version.to_f < 12.0 -%>
     SNTP_OPTS="-P no -r"
 <% elsif @target_platform_version.to_f < 12.09 %>
     SNTP_OPTS="-s"
@@ -160,20 +162,24 @@ do_setup() {
     curl -o /etc/chef/validation.pem \
         "http://$HTTP_SERVER/validation.pem"
 
+<% unless @platform_family == "debian" -%>
     # Make sure that the client knows how to talk to the server.
     local cfg=/etc/chef/client.rb
     if ! [ -f $cfg ] || \
        ! grep -q "^\s*chef_server_url\s*[\"\']http://$IP:4000[\"\']" $cfg; then
         test -f $cfg && mv $cfg $cfg.bak
         echo "chef_server_url \"http://$IP:4000\"" >$cfg
+  <% if @platform_family == "suse" -%>
         echo "zypper_check_gpg true" >> $cfg
+  <% end -%>
     fi
 
-<% if @target_platform_version.to_f < 12.0 %>
+  <% if @target_platform_version.to_f < 12.0 -%>
     log_to chef chkconfig -a chef-client
-<% else %>
+  <% else -%>
     log_to chef systemctl enable chef-client
-<% end %>
+  <% end -%>
+<% end -%>
 }
 
 do_ensure_chef_configuration() {
@@ -183,7 +189,13 @@ do_ensure_chef_configuration() {
     # FIXME: there is a cleaner way of adding handlers:
     # http://wiki.opscode.com/display/chef/Opscode+LWRP+Resources#OpscodeLWRPResources-chefhandler
 
-    mkdir -p /var/chef/handlers
+<% if @platform_family == "debian" -%>
+    HANDLERS_DIR=/var/lib/chef/handlers
+<% else -%>
+    HANDLERS_DIR=/var/chef/handlers
+<% end -%>
+
+    mkdir -p $HANDLERS_DIR
     # create reboot handler
     read -d '' reboot_handler_content <<"EOF"
 class RebootHandler < Chef::Handler
@@ -200,16 +212,16 @@ class RebootHandler < Chef::Handler
 end
 EOF
 
-    if [ -f /var/chef/handlers/reboot_handler.rb ] ; then
+    if [ -f $HANDLERS_DIR/reboot_handler.rb ] ; then
         # only update reboot_handler.rb if something changed
-        local reboot_handler_shasum_file=$(sha256sum /var/chef/handlers/reboot_handler.rb | cut -d ' ' -f 1)
+        local reboot_handler_shasum_file=$(sha256sum $HANDLERS_DIR/reboot_handler.rb | cut -d ' ' -f 1)
         local reboot_handler_shasum_new=$(echo "$reboot_handler_content" | sha256sum | cut -d ' ' -f 1)
 
         if [ "$reboot_handler_shasum_file" != "$reboot_handler_shasum_new" ] ; then
-            echo "$reboot_handler_content" > /var/chef/handlers/reboot_handler.rb
+            echo "$reboot_handler_content" > $HANDLERS_DIR/reboot_handler.rb
         fi
     else
-        echo "$reboot_handler_content" > /var/chef/handlers/reboot_handler.rb
+        echo "$reboot_handler_content" > $HANDLERS_DIR/reboot_handler.rb
     fi
 
     # create reboot handler reset
@@ -230,27 +242,27 @@ class RebootHandlerReset < Chef::Handler
   end
 end
 EOF
-    if [ -f /var/chef/handlers/reboot_handler_reset.rb ] ; then
+    if [ -f $HANDLERS_DIR/reboot_handler_reset.rb ] ; then
         # only update reboot_handler_reset.rb if something changed
-        local reboot_handler_reset_shasum_file=$(sha256sum /var/chef/handlers/reboot_handler_reset.rb | cut -d ' ' -f 1)
+        local reboot_handler_reset_shasum_file=$(sha256sum $HANDLERS_DIR/reboot_handler_reset.rb | cut -d ' ' -f 1)
         local reboot_handler_reset_shasum_new=$(echo "$reboot_handler_reset_content" | sha256sum | cut -d ' ' -f 1)
 
         if [ "$reboot_handler_reset_shasum_file" != "$reboot_handler_reset_shasum_new" ] ; then
-            echo "$reboot_handler_reset_content" > /var/chef/handlers/reboot_handler_reset.rb
+            echo "$reboot_handler_reset_content" > $HANDLERS_DIR/reboot_handler_reset.rb
         fi
     else
-        echo "$reboot_handler_reset_content" > /var/chef/handlers/reboot_handler_reset.rb
+        echo "$reboot_handler_reset_content" > $HANDLERS_DIR/reboot_handler_reset.rb
     fi
 
     # add reboot handler as report_handler
-    for line in 'require "/var/chef/handlers/reboot_handler"' \
+    for line in "require \"$HANDLERS_DIR/reboot_handler\"" \
         'reboot_handler = RebootHandler.new' \
         'report_handlers << reboot_handler # these fire at the end of a successful run'; do
         grep -q -e "^$line$" /etc/chef/client.rb || echo "$line" >> /etc/chef/client.rb
     done
 
     # add reboot handler reset as start_handler
-    for line in 'require "/var/chef/handlers/reboot_handler_reset"' \
+    for line in "require \"$HANDLERS_DIR/reboot_handler_reset\"" \
         'reboot_handler_reset = RebootHandlerReset.new' \
         'start_handlers << reboot_handler_reset # these fire at the start of a run'; do
         grep -q -e "^$line$" /etc/chef/client.rb || echo "$line" >> /etc/chef/client.rb
