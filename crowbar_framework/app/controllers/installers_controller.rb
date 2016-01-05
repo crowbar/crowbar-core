@@ -50,6 +50,8 @@ class InstallersController < ApplicationController
     msg = ""
     msg_type = :alert
 
+    status = Crowbar::Installer.status
+
     if params[:force]
       ret = Crowbar::Installer.install!
       case ret[:status]
@@ -58,10 +60,13 @@ class InstallersController < ApplicationController
         msg = ret[:msg]
       end
     else
-      if Crowbar::Installer.successful?
+      if status[:success]
         header = :gone
+      elsif !status[:network][:valid]
+        header = :precondition_failed
+        msg = status[:network][:msg]
       else
-        if Crowbar::Installer.installing?
+        if status[:installing]
           header = :im_used
           msg = I18n.t(".installers.start.installation_ongoing")
           msg_type = :notice

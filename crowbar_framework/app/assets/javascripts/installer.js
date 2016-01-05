@@ -5,6 +5,21 @@ $(document).ready(function() {
       dataType: "json",
       url: Routes.status_installer_path(),
       success: function(data) {
+        // check for invalid network.json
+        $("#network-alert").remove();
+        if (!data.network.valid) {
+          $(".button_to").find("input").prop("disabled", true);
+          $(".panel")
+            .parent()
+            .parent()
+            .prepend("<div id='network-alert' class='col-lg-12'>" +
+                        "<div class='alert alert-danger'>" +
+                          "<span>" + data.errorMsg + "</span>" +
+                        "</div>" +
+                      "</div>");
+        } else {
+          $(".button_to").find("input").prop("disabled", false);
+        }
         // initially steps are empty, so we need to return
         if (!data.steps) {
           // indicate first step after triggering installation
