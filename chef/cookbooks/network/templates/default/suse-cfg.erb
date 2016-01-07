@@ -18,40 +18,58 @@ iface=@interfaces[@nic.name]
 -%>
 NAME=<%=quote(@nic.name)%>
 STARTMODE=auto
-<% if iface["slave"] && Nic.bond?(iface["master"])-%>
+<% # For bonding slave we need BOOTPROTO=none to skip the link-layer
+   # setup (see ifcfg(5))
+   if iface["slave"] && Nic.bond?(iface["master"])
+-%>
 BOOTPROTO=none
-<% else -%>
+<% else
+   # All others (including device enslaved into linuxbridge or OVS) get
+   # BOOTPROTO=static
+-%>
 BOOTPROTO=static
 <% end -%>
-<% unless @nic.kind_of?(Nic::Vlan) or @nic.kind_of?(Nic::Bond) or
+<%
+   # ETHTOOL_OPTIONS are only needed for "real" interfaces (i.e.
+   # everything not a bond, bridge or vlan)
+   unless @nic.kind_of?(Nic::Vlan) or @nic.kind_of?(Nic::Bond) or
        @nic.kind_of?(Nic::OvsBridge) -%>
-  <% unless @ethtool_options.empty? -%>
+<%   unless @ethtool_options.empty? -%>
 ETHTOOL_OPTIONS="-K iface <%= @ethtool_options -%>"
-  <% end -%>
+<%   end -%>
 <% end -%>
 <% case
+   # Settings specific to linuxbridge devices (ifcfg-bridge(5))
    when @nic.kind_of?(Nic::Bridge) -%>
 BRIDGE=yes
 BRIDGE_PORTS=<%=quote(iface["slaves"])%>
-<% when @nic.kind_of?(Nic::OvsBridge) -%>
+<%
+   # Settings specific to openvswitch devices (ifcfg-ovs-bridge(5))
+   when @nic.kind_of?(Nic::OvsBridge) -%>
 OVS_BRIDGE=yes
 <%   iface["slaves"].each_with_index do |slave, i| -%>
 OVS_BRIDGE_PORT_DEVICE_<%=i%>=<%=quote(slave)%>
 <%   end -%>
-<% when @nic.kind_of?(Nic::Vlan) -%>
+<%
+   # Settings specific to vlan devices (ifcfg-vlan(5))
+   when @nic.kind_of?(Nic::Vlan) -%>
 VLAN_ID=<%=iface["vlan"]%>
 ETHERDEVICE=<%=quote(iface["parent"])%>
-<% when @nic.kind_of?(Nic::Bond) -%>
+<%
+   # Settings specific to bond devices (ifcfg-bonding(5))
+   when @nic.kind_of?(Nic::Bond) -%>
 BONDING_MASTER=yes
 BONDING_MODULE_OPTS=<%=quote("mode=#{@nic.mode} miimon=#{@nic.miimon}")%>
 <% iface["slaves"].each_with_index do |slave,i| -%>
 BONDING_SLAVE_<%=i%>=<%=quote(slave)%>
-<% end -%>
-<% if iface["mtu"] && iface["mtu"] != 1500 -%>
+<%   end -%>
+<%   if iface["mtu"] && iface["mtu"] != 1500 -%>
 BONDING_MASTER_UP_ENSLAVE='yes'
+<%   end -%>
 <% end -%>
-<% end -%>
-<% v4addrs, v6addrs = iface["addresses"].map{|a|::IP.coerce(a)}.partition{|a|a.kind_of? IP::IP4}
+<%
+   # And finally the IP Addresses of the device (might be empty)
+   v4addrs, v6addrs = iface["addresses"].map{|a|::IP.coerce(a)}.partition{|a|a.kind_of? IP::IP4}
    v4addrs.each_index do |i| -%>
 IPADDR<%=(i == 0)?'':(i+1).to_s%>=<%=v4addrs[i].to_s%>
 <% end -%>
