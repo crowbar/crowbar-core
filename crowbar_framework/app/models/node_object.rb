@@ -498,17 +498,20 @@ class NodeObject < ChefObject
     subState = !state.nil? ? state.split[0].downcase : ""
     case subState
     when "ready", "completed"
-      "ready"     #green
+      "ready"     # green
     when "discovered", "wait", "waiting", "user", "hold", "pending", "input"
-      "pending"   #flashing yellow
+      "pending"   # flashing yellow
     when "discovering", "reset", "delete", "shutdown", "poweron", "noupdate"
-      "unknown"   #grey
+      "unknown"   # grey
     when "problem", "issue", "error", "failed", "fail", "warn", "warning", "fubar", "alert"
-      "failed"    #flashing red
-    when "hardware-installing", "hardware-install", "hardware-installed", "hardware-updated", "hardware-updating"
-      "building"  #yellow
+      "failed"    # flashing red
+    when "hardware-installing", "hardware-install", "hardware-installed",
+         "hardware-updated", "hardware-updating"
+      "building"  # yellow
+    when "crowbar_upgrade"
+      "crowbar_upgrade" # blue
     else # including: installing, installed, reinstall, reboot, recovering, readying, applying
-      "unready"   #spinner
+      "unready"   # spinner
     end
   end
 
