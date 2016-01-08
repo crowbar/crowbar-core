@@ -32,6 +32,19 @@ class CrowbarService < ServiceObject
     end
   end
 
+  def shutdown_openstack_at_nodes
+    NodeObject.all.each do |node|
+      next unless node.state == "crowbar_upgrade"
+
+      # mark the position in the upgrade process
+      node["crowbar_wall"]["crowbar_openstack_upgrade"] = true
+      node.save
+    end
+
+    # commit current proposal (crowbar-upgrade role should be currently assigned to nodes),
+    proposal_commit("default", false, false)
+  end
+
   #
   # Below are the parts to handle transition requests.
   #

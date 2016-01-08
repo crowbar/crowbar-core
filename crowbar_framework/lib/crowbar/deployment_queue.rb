@@ -375,7 +375,9 @@ module Crowbar
         next if node.nil?
 
         pre_cached_nodes[n] = node
-        delay << n if node.crowbar["state"] != "ready" and !delay.include?(n)
+        # allow commiting proposal for nodes in the crowbar_upgrade state
+        state = node.crowbar["state"]
+        delay << n if (state != "ready" && state != "crowbar_upgrade") && !delay.include?(n)
       end
       [delay, pre_cached_nodes]
     end
