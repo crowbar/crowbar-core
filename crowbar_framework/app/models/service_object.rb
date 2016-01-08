@@ -1303,6 +1303,21 @@ class ServiceObject
     # XXX: This should not be done this way.  Something else should request this.
     system("sudo", "-i", Rails.root.join("..", "bin", "single_chef_client.sh").expand_path.to_s) if !ran_admin
 
+    # Post deploy callback
+    begin
+      apply_role_post_chef_call(old_role, role, all_nodes)
+    rescue StandardError => e
+      @logger.fatal("apply_role: Exception #{e.message} #{e.backtrace.join("\n")}")
+      message = "Failed to apply the proposal: exception after calling chef (#{e.message})"
+      update_proposal_status(inst, "failed", message)
+      restore_to_ready(applying_nodes)
+      process_queue unless in_queue
+      return [405, message]
+    end
+
+    # Invalidate cache as apply_role_post_chef_call can save nodes
+    pre_cached_nodes = {}
+
     # are there any roles to remove from the runlist?
     # The @bcname proposal's elements key will contain the removal intentions
     # proposal.elements =>
@@ -1326,21 +1341,6 @@ class ServiceObject
 
     # Save if we did a change
     proposal.save unless roles_to_remove.empty?
-
-    # Post deploy callback
-    begin
-      apply_role_post_chef_call(old_role, role, all_nodes)
-    rescue StandardError => e
-      @logger.fatal("apply_role: Exception #{e.message} #{e.backtrace.join("\n")}")
-      message = "Failed to apply the proposal: exception after calling chef (#{e.message})"
-      update_proposal_status(inst, "failed", message)
-      restore_to_ready(applying_nodes)
-      process_queue unless in_queue
-      return [405, message]
-    end
-
-    # Invalidate cache as apply_role_post_chef_call can save nodes
-    pre_cached_nodes = {}
 
     update_proposal_status(inst, "success", "")
     restore_to_ready(applying_nodes)
