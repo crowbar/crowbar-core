@@ -1194,6 +1194,9 @@ class ServiceObject
       return [405, message]
     end
 
+    # Invalidate cache as apply_role_pre_chef_call can save nodes
+    pre_cached_nodes = {}
+
     # Each batch is a list of nodes that can be done in parallel.
     ran_admin = false
     run_order.each do |batch|
@@ -1335,6 +1338,9 @@ class ServiceObject
       process_queue unless in_queue
       return [405, message]
     end
+
+    # Invalidate cache as apply_role_post_chef_call can save nodes
+    pre_cached_nodes = {}
 
     update_proposal_status(inst, "success", "")
     restore_to_ready(applying_nodes)
