@@ -1079,7 +1079,8 @@ class ServiceObject
     # pause-file.lock exists which the daemons will honour due to a
     # custom patch:
     nodes_to_lock = applying_nodes.reject do |node_name|
-      node = NodeObject.find_node_by_name(node_name)
+      pre_cached_nodes[node_name] ||= NodeObject.find_node_by_name(node_name)
+      node = pre_cached_nodes[node_name]
       node[:platform_family] == "windows" || node.admin?
     end
 
@@ -1116,11 +1117,8 @@ class ServiceObject
     pending_node_actions.each do |node_name, lists|
       # pre_cached_nodes contains only new_nodes, we need to look up the
       # old ones as well.
+      pre_cached_nodes[node_name] ||= NodeObject.find_node_by_name(node_name)
       node = pre_cached_nodes[node_name]
-      if node.nil?
-        node = NodeObject.find_node_by_name(node_name)
-        pre_cached_nodes[node_name] = node
-      end
       next if node.nil?
 
       admin_nodes << node_name if node.admin?
@@ -1228,7 +1226,8 @@ class ServiceObject
       pids = {}
       unless non_admin_nodes.empty?
         non_admin_nodes.each do |node|
-          nobj = pre_cached_nodes[node] || NodeObject.find_node_by_name(node)
+          pre_cached_nodes[node] ||= NodeObject.find_node_by_name(node)
+          nobj = pre_cached_nodes[node]
           unless nobj[:platform_family] == "windows"
             filename = "#{ENV['CROWBAR_LOG_DIR']}/chef-client/#{node}.log"
             pid = run_remote_chef_client(node, "chef-client", filename)
@@ -1333,6 +1332,9 @@ class ServiceObject
       # executed the role, hence the delete()
       nodes_with_role_to_remove = proposal.elements.delete(role_to_remove)
       nodes_with_role_to_remove.each do |node_name|
+        # Do not use pre_cached_nodes, as nodes might have been saved in
+        # apply_role_pre_chef_call
+        pre_cached_nodes[node_name] ||= NodeObject.find_node_by_name(node_name)
         node = pre_cached_nodes[node_name]
         node.delete_from_run_list(role_to_remove)
         node.save
