@@ -23,19 +23,26 @@
   },
   "deployment": {
     "crowbar": {
-      "crowbar-revision": 10,
+      "crowbar-revision": 0,
       "crowbar-applied": false,
+      "schema-revision": 11,
       "element_states": {
-        "crowbar": [ "all" ]
+        "crowbar": [ "all" ],
+        "crowbar-upgrade": [ "crowbar_upgrade" ]
       },
       "elements": {},
       "element_order": [
-        [ "crowbar" ]
+        [ "crowbar" ],
+        [ "crowbar-upgrade" ]
       ],
+      "element_run_list_order": {
+        "crowbar": 10,
+        "crowbar-upgrade": 2000
+      },
       "config": {
         "environment": "crowbar-config-test",
         "mode": "full",
-        "transitions": false,
+        "transitions": true,
         "transition_list": [ ]
       }
     }
