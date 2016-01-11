@@ -176,6 +176,46 @@ class CrowbarService < ServiceObject
     base
   end
 
+  def prepare_nodes_for_os_upgrade
+    all_nodes = NodeObject.all
+
+    all_nodes.each do |node|
+      next if node.admin? || node[:platform] == "windows"
+      node.set_state("os_upgrading")
+    end
+
+    # wait for the pxe_config to be updated, then reboot the nodes
+    discovery_dir = "#{NodeObject.admin_node[:provisioner][:root]}/discovery/"
+    pxecfg_subdir = "bios/pxelinux.cfg"
+
+    all_nodes.each do |node|
+      next if node.admin? || node["platform"] == "windows"
+
+      boot_ip_hex = node["crowbar"]["boot_ip_hex"]
+      node_arch = node["kernel"]["machine"]
+      pxe_conf = "#{discovery_dir}/#{node_arch}/#{pxecfg_subdir}/#{boot_ip_hex}"
+      ready_for_reboot = false
+
+      while Time.now.to_i < Time.now.to_i + 120 && !ready_for_reboot
+        @logger.debug("waiting for pxe configuration to be updated for #{node.name}")
+        if File.file?(pxe_conf)
+          File.open(pxe_conf).each_line do |line|
+            line.chomp!
+            if line =~ /^DEFAULT\s+.+_install$/
+              ready_for_reboot = true
+            end
+          end.close
+        end
+        sleep(5) unless ready_for_reboot
+      end
+      if ready_for_reboot
+        @logger.debug("Rebooting node #{node.name} for operating system upgrade")
+        node.ssh_cmd("/sbin/reboot")
+      end
+    end
+    true
+  end
+
   def apply_role (role, inst, in_queue)
     @logger.debug("Crowbar apply_role: enter")
     answer = super
