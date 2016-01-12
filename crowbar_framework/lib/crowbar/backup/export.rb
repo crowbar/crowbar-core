@@ -68,6 +68,7 @@ module Crowbar
           bag_dir.mkpath unless bag_dir.directory?
 
           Chef::DataBag.load(name).each do |item, item_url|
+            next if item.match(/\Atemplate-.*/)
             logger.debug "Backing up databag #{name}/#{item}"
 
             record = Chef::DataBagItem.load(

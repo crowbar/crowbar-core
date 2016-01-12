@@ -60,8 +60,29 @@ class Backup
   end
 
   def restore
-    #PLACEHOLDER
-    `touch /tmp/#{@filename}`
+    return false unless data_valid?
+    Crowbar::Backup::Restore.new(self).restore
+  end
+
+  def extract
+    backup_dir = Dir.mktmpdir
+    Archive.extract(path.to_s, backup_dir)
+    Pathname.new(backup_dir)
+  end
+
+  def data
+    @data ||= extract
+  end
+
+  def data_valid?
+    validate = Crowbar::Backup::Validate.new(data)
+    validate.validate
+  end
+
+  def version
+    @version ||= begin
+      data.join("crowbar", "version").read.strip
+    end
   end
 
   class << self
