@@ -15,10 +15,6 @@
 #
 
 module BackupHelper
-  def date_parse(datestring)
-    DateTime.strptime(datestring, "%Y%m%d-%H%M%S")
-  end
-
   def download_backup_button(backup)
     button_to(
       t("download"),

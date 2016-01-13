@@ -33,6 +33,7 @@ module Crowbar
         roles
         databags
         db
+        crowbar
       end
 
       def clients
@@ -59,7 +60,7 @@ module Crowbar
       def databags
         logger.debug "Backing up databags"
 
-        data_dir = workdir.join("databags")
+        data_dir = workdir.join("knife", "databags")
         data_dir.mkpath
 
         Chef::DataBag.list.each do |name, url|
@@ -105,7 +106,8 @@ module Crowbar
 
         data_dir = workdir.join("crowbar")
         ["tftp", "etc", "crowbar", "root"].each do |folder|
-          data_dir.join(folder).mkpath
+          absolute_path = data_dir.join(folder)
+          absolute_path.mkpath unless absolute_path.directory?
         end
 
         self.class.export_files.each do |filemap|
@@ -131,6 +133,22 @@ module Crowbar
 
       protected
 
+      def forwarders
+        f = File.open("/etc/bind/named.conf")
+        arr = []
+        write = false
+        f.each_line do |line|
+          if line =~ /forwarders {/
+            write = true
+            next
+          end
+          write = false if write && line =~ /};/
+          arr.push(line) if write
+        end
+        arr.map(&:chomp!).map(&:strip!)
+        arr.each { |s| s.slice!(";") }
+      end
+
       def workdir
         @workdir ||= Pathname.new(
           path
@@ -140,7 +158,7 @@ module Crowbar
       def chef(component, klass)
         logger.debug "Backing up #{component.pluralize}"
 
-        data_dir = workdir.join(component.pluralize)
+        data_dir = workdir.join("knife", component.pluralize)
         data_dir.mkpath
 
         klass.list.each do |name, url|

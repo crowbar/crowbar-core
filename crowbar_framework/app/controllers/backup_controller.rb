@@ -19,6 +19,11 @@ class BackupController < ApplicationController
     @backups = Crowbar::Backup::Image.all_images
   end
 
+  #
+  # Backup
+  #
+  # Provides the restful api call for
+  # /utils/backup   POST   Trigger a backup
   def backup
     Crowbar::Backup::Image.create(params[:filename])
     respond_to do |format|

@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+require "find"
+
 module Crowbar
   module Backup
     class Image
@@ -34,11 +36,17 @@ module Crowbar
       end
 
       def self.create(filename)
-        # call the backup routines and create a tar file
-        # redirect to index and show the tar file in the list
-        timestamp = Time.now.strftime("%Y%m%d-%H%M%S")
-        filename = "#{filename}-#{timestamp}.tar.gz"
-        File.new("/opt/dell/crowbar_framework/storage/#{filename}", "w")
+        dir = Dir.mktmpdir
+        Crowbar::Backup::Export.new(dir).export
+        Dir.chdir(dir) do
+          ar = Archive::Compress.new(
+            "#{Crowbar::Backup::Image.image_dir.to_path}/#{filename}-#{Time.now.strftime("%Y%m%d-%H%M%S")}.tar.gz",
+            type: :tar,
+            compression: :gzip2
+          )
+          ar.compress(Find.find(".").select { |f| File.file?(f) })
+        end
+        FileUtils.rm_rf(dir)
       end
 
       def self.all_images
