@@ -1,5 +1,6 @@
 #
-# Copyright 2015, SUSE LINUX GmbH
+# Copyright 2011-2013, Dell
+# Copyright 2013-2015, SUSE LINUX GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,60 +17,33 @@
 
 require "find"
 
-class Backup
-  include ActiveModel::Model
+class Backup < ActiveRecord::Base
+  attr_accessor :file
 
-  attr_accessor :name, :created_at, :filename, :path
+  before_validation :save_or_create_archive, on: :create
+  after_validation :delete_archive, unless: -> { errors.empty? }
+  after_destroy :delete_archive
 
-  validates :name, :created_at, presence: true
-  validates :created_at, exclusion: { in: [nil, ""] }
-  validate :filename, :filename_has_format
-  validate :filename, :filename_has_characters
+  validates :name,
+    presence: true,
+    uniqueness: true,
+    format: {
+      with: /\A[a-zA-Z0-9\-_]+\z/,
+      message: "allows only letters and numbers"
+    }
+  validates :version,
+    presence: true
+  validates :size,
+    presence: true
 
-  def initialize(options)
-    @name = options.fetch :name, nil
-    @created_at = options.fetch :created_at, Time.zone.now.strftime("%Y%m%d-%H%M%S")
-    @filename = "#{@name}-#{@created_at}.tar.gz"
-    @path = Backup.image_dir.join(@filename)
+  validate :validate_file_extension, :validate_version, :validate_hostname
+
+  def path
+    self.class.image_dir.join("#{name}.tar.gz")
   end
 
-  def as_json(options: {})
-    result = super
-    result["path"] = path.to_s
-    result
-  end
-
-  def save
-    valid? && persist!
-  end
-
-  def exist?
-    !Backup.where(name: name, created_at: created_at).nil?
-  end
-
-  def delete
-    @path.delete
-  end
-
-  def size
-    if path.file?
-      path.size
-    else
-      0
-    end
-  end
-
-  def upload(file)
-    Backup.image_dir.join(file.original_filename).open("wb") do |f|
-      f.write(file.read)
-    end
-  end
-
-  def restore
-    upgrade if upgrade?
-    ret = data_valid?
-    return ret unless ret[:status] == :ok
-    Crowbar::Backup::Restore.new(self).restore
+  def filename
+    "#{name}.tar.gz"
   end
 
   def extract
@@ -82,19 +56,13 @@ class Backup
     @data ||= extract
   end
 
-  def data_valid?
-    validate = Crowbar::Backup::Validate.new(data)
-    validate.validate
-  end
-
-  def version
-    @version ||= begin
-      data.join("crowbar", "version").read.strip
-    end
+  def restore
+    upgrade if upgrade?
+    Crowbar::Backup::Restore.new(self).restore
   end
 
   def upgrade?
-    ENV["CROWBAR_VERSION"].to_f > version.to_f
+    ENV["CROWBAR_VERSION"].to_f > version
   end
 
   def upgrade
@@ -102,45 +70,12 @@ class Backup
     if upgrade.supported?
       upgrade.upgrade
     else
-      return {
-        status: :not_acceptable,
-        msg: I18n.t(
-          "backup.index.upgrade_not_supported"
-        )
-      }
+      errors.add(:base, I18n.t("backups.index.upgrade_not_supported"))
+      return false
     end
   end
 
   class << self
-    def where(options = {})
-      name = options.fetch :name, nil
-      created_at = options.fetch :created_at, nil
-
-      all.each do |image|
-        return image if image.name == name && image.created_at == created_at
-      end
-
-      return nil
-    end
-
-    def all
-      list = []
-
-      backup_files = image_dir.children.select do |c|
-        c.file? && c.to_s =~ /gz$/
-      end
-
-      backup_files.each do |backup_file|
-        name, created_at = filename_time(backup_file.basename.to_s)
-        image = new(
-          name: name,
-          created_at: created_at
-        )
-        list.push(image) if image.valid?
-      end
-      list.sort_by(&:created_at)
-    end
-
     def image_dir
       if Rails.env.production?
         Pathname.new("/var/lib/crowbar/backup")
@@ -148,50 +83,80 @@ class Backup
         Rails.root.join("storage")
       end
     end
-
-    def filename_time(filename)
-      filename.split(/([\w-]+)-([0-9]{8}-[0-9]{6})/).reject(&:empty?)
-    end
   end
 
   protected
 
-  def persist!
-    self.exist? ? false : create
+  def save_or_create_archive
+    if name.blank?
+      save_archive
+    else
+      create_archive
+    end
   end
 
-  def create
-    saved = false
+  def create_archive
     dir = Dir.mktmpdir
 
     Crowbar::Backup::Export.new(dir).export
     Dir.chdir(dir) do
       ar = Archive::Compress.new(
-        self.class.image_dir.join("#{name}-#{created_at}.tar.gz").to_s,
+        path.to_s,
         type: :tar,
         compression: :gzip
       )
-      ar.compress(Find.find(".").select { |f| f.gsub!(/^.\//, "") if File.file?(f) })
-      saved = true
+      ar.compress(::Find.find(".").select { |f| f.gsub!(/^.\//, "") if ::File.file?(f) })
     end
-    saved
+    self.version = ENV["CROWBAR_VERSION"]
+    self.size = path.size
   ensure
     FileUtils.rm_rf(dir)
   end
 
-  def filename_has_format
-    return if Backup.filename_time(@filename).count == 3
-    errors.add(
-      :filename,
-      I18n.t(".invalid_filename_format", scope: "backup.index")
-    )
+  def save_archive
+    self.name = file.original_filename.split(".").first
+
+    if path.exist?
+      errors.add(:filename, I18n.t(".invalid_filename", scope: "backups.index"))
+      return false
+    end
+
+    path.open("wb") do |f|
+      f.write(file.read)
+    end
+
+    meta = YAML.load_file(data.join("meta.yml"))
+    self.version = meta["version"]
+    self.size = path.size
+    self.created_at = Time.zone.parse(meta["created_at"])
   end
 
-  def filename_has_characters
-    return if @filename =~ /[^0-9A-Za-z]/
-    errors.add(
-      :filename,
-      I18n.t(".invalid_filename", scope: "backup.index")
-    )
+  def delete_archive
+    path.delete if path.exist?
+  end
+
+  def validate_file_extension
+    Dir.glob(data.join("knife", "**", "*")).each do |file|
+      next if Pathname.new(file).directory?
+      next if File.extname(file) == ".json"
+      errors.add(:base, I18n.t("backups.validation.non_json_file"))
+    end
+  end
+
+  def validate_version
+    if version < 1.9
+      errors.add(:base, I18n.t("backups.validation.version_too_low"))
+    elsif version > ENV["CROWBAR_VERSION"].to_f
+      errors.add(:base, I18n.t("backups.validation.version_too_high"))
+    end
+  end
+
+  def validate_hostname
+    backup_hostname = data.join("crowbar", "configs", "hostname").read.strip
+    system_hostname = `hostname -f`.strip
+
+    unless system_hostname == backup_hostname
+      errors.add(:base, I18n.t("backups.validation.hostnames_not_identical"))
+    end
   end
 end

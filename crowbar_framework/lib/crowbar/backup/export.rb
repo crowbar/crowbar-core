@@ -34,6 +34,7 @@ module Crowbar
         databags
         db
         crowbar
+        meta
       end
 
       def clients
@@ -126,9 +127,16 @@ module Crowbar
             system("sudo", "chown", "-R", "crowbar:crowbar", dest)
           end
         end
+      end
 
-        data_dir.join("version").open("w") do |file|
-          file.write(ENV["CROWBAR_VERSION"])
+      def meta
+        meta = Hash.new
+        meta["version"] = ENV["CROWBAR_VERSION"]
+        meta["created_at"] = Time.zone.now.to_s
+        meta["platform"] = NodeObject.admin_node.target_platform
+
+        workdir.join("meta.yml").open("w") do |file|
+          file.write(meta.to_yaml)
         end
       end
 

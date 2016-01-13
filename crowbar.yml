@@ -78,7 +78,7 @@ nav:
       route: 'repositories_path'
     backup:
       order: 20
-      route: 'backup_path'
+      route: 'backups_path'
   help:
     order: 80
     route: 'docs_path'

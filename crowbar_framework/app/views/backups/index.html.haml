@@ -14,6 +14,8 @@
         %th.col-xs-3
           = t(".image_name")
         %th.col-xs-3
+          = t(".version")
+        %th.col-xs-3
           = t(".created_at")
         %th.col-xs-3
           = t(".file_size")
@@ -26,7 +28,9 @@
           %td
             = backup.name
           %td
-            = l(DateTime.strptime(backup.created_at, "%Y%m%d-%H%M%S"), format: :long)
+            = backup.version
+          %td
+            = l(backup.created_at, format: :long)
           %td
             = number_to_human_size(backup.size)
           %td
@@ -44,17 +48,17 @@
           &times
         %h2
           = t(".create_image")
-      = form_tag backup_create_path do
+      = form_for new_backup do |f|
         .modal-body
           %h3
             = t(".enter_name")
           %p
-            = text_field_tag "filename", "", class: "form-control", placeholder: t(".image_name")
+            = f.text_field(:name, class: "form-control")
         .modal-footer
           .row
             .btn.btn-default{ data: { dismiss: "modal" } }
               = t("cancel")
-            = submit_tag t("create"), class: "btn btn-success"
+            = f.submit(class: "btn btn-success")
 
 .modal.fade{ id: "upload_backup_modal" }
   .modal-dialog
@@ -65,7 +69,7 @@
         %h2
           = t(".upload_image")
       .modal-body
-        %input{ name: "upload", type: "file" }
+        %input{ name: "backup[file]", type: "file" }
       .modal-footer
         .btn.btn-default{ data: { dismiss: "modal" } }
           = t("cancel")

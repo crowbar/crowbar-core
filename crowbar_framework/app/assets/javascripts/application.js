@@ -255,33 +255,16 @@ jQuery(document).ready(function($) {
     }
   });
 
-  $('body.backup input[name="upload"]').fileinput({
-    uploadUrl: Routes.backup_upload_path({
-      format: "json"
+  $('body.backups input[name="backup[file]"]').fileinput({
+    uploadUrl: Routes.upload_backups_path({
+      format: 'json'
     }),
     uploadAsync: true,
-    allowedFileExtensions: ["tar.gz"],
+    allowedFileExtensions: ['tar.gz'],
     dropZoneEnabled: false
   })
-  .on('filepreupload', function(event, data) {
-    var valid = true;
-    $.each(data.files, function(index, file) {
-      var match = file.name.match(/([\w-]+)-([0-9]{8}-[0-9]{6})/);
-      if (match === null) {
-        valid = false;
-      }
-    });
-    if ( !valid ) {
-      return {
-        message: "wrong file format, please use [FILENAME]-[YYYYMMDD]-[HHMMSS].tar.gz"
-      };
-    }
-  })
-  .on('uploaded', function() {
+  .on('fileuploaded', function() {
     location.reload();
-  })
-  .on('filecustomerror', function(event, params) {
-    console.log(params);
   });
 });
 

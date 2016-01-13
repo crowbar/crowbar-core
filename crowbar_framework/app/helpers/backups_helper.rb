@@ -14,26 +14,20 @@
 # limitations under the License.
 #
 
-module BackupHelper
+module BackupsHelper
   def download_backup_button(backup)
     button_to(
       t("download"),
-      backup_download_path(
-        backup.name,
-        backup.created_at
-      ),
+      download_backup_path(backup.id),
       method: :get,
       class: "btn btn-default"
     )
   end
 
   def delete_backup_button(backup)
-    link_to(
+    button_to(
       t("delete"),
-      backup_delete_path(
-        name: backup.name,
-        created_at: backup.created_at
-      ),
+      backup_path(backup.id),
       method: :delete,
       class: "btn btn-danger",
       data: { confirm: t("are_you_sure") }
@@ -43,13 +37,14 @@ module BackupHelper
   def restore_backup_button(backup)
     button_to(
       t(".restore"),
-      restore_path(
-        name: backup.name,
-        created_at: backup.created_at
-      ),
+      restore_backup_path(backup.id),
       method: :post,
       class: "btn btn-success",
       data: { confirm: t(".restore_warning") }
     )
+  end
+
+  def new_backup
+    Backup.new
   end
 end

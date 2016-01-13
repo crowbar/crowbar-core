@@ -25,23 +25,31 @@ describe Backup do
         it "is valid" do
           bu = Backup.new(name: "testbackup", created_at: created_at)
           allow_any_instance_of(Crowbar::Backup::Export).to receive(:export).and_return(true)
+          allow_any_instance_of(Backup).to receive(:validate_file_extension).and_return(true)
+          allow_any_instance_of(Backup).to receive(:validate_version).and_return(true)
+          allow_any_instance_of(Backup).to receive(:validate_hostname).and_return(true)
           expect(bu.save).to be true
         end
       end
 
       context "not valid" do
-        it "has an invalid timestamp" do
-          [nil, ""].each do |timestamp|
-            bu = Backup.new(name: "testbackup", created_at: timestamp)
-            allow_any_instance_of(Crowbar::Backup::Export).to receive(:export).and_return(true)
-            expect(bu.save).to be false
-          end
+        it "already exists" do
+          allow_any_instance_of(Crowbar::Backup::Export).to receive(:export).and_return(true)
+          allow_any_instance_of(Backup).to receive(:validate_file_extension).and_return(true)
+          allow_any_instance_of(Backup).to receive(:validate_version).and_return(true)
+          allow_any_instance_of(Backup).to receive(:validate_hostname).and_return(true)
+          Backup.new(name: "testbackup", created_at: created_at).save
+          bu = Backup.new(name: "testbackup", created_at: created_at)
+          expect(bu.save).to be false
         end
 
         it "has an invalid filename" do
           [" white space", "$%§&$%"].each do |filename|
             bu = Backup.new(name: filename, created_at: created_at)
             allow_any_instance_of(Crowbar::Backup::Export).to receive(:export).and_return(true)
+            allow_any_instance_of(Backup).to receive(:validate_file_extension).and_return(true)
+            allow_any_instance_of(Backup).to receive(:validate_version).and_return(true)
+            allow_any_instance_of(Backup).to receive(:validate_hostname).and_return(true)
             expect(bu.save).to be false
           end
         end
