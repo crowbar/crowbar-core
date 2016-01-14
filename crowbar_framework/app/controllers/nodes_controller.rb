@@ -239,8 +239,22 @@ class NodesController < ApplicationController
 
       node.save
 
-      Rails.logger.info "Node #{node.name} (#{node.alias}) changed its group to be #{node.group || "automatic"}."
-      render inline: "Added #{node.name} to #{node.group}.", cache: false
+      respond_to do |format|
+        format.html do
+          flash[:success] = I18n.t(
+            "nodes.group_change.updated",
+            name: node.name,
+            group: node.group
+          )
+
+          redirect_to dashboard_url
+        end
+        format.json do
+          render json: {
+            group: node.group
+          }
+        end
+      end
     end
   end
 
