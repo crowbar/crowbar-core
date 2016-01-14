@@ -150,6 +150,8 @@
           "hardware-updated": "execute",
           "installing": "os_install",
           "installed": "execute",
+          "os_upgrading": "os_install",
+          "os_upgraded": "execute",
           "update": "update",
           "readying": "execute",
           "ready": "execute",
@@ -167,7 +169,7 @@
     "provisioner": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 33,
+      "schema-revision": 34,
       "element_states": {
         "provisioner-bootdisk-finder": [ "hardware-installing" ],
         "provisioner-server": [ "readying", "ready", "applying" ],
