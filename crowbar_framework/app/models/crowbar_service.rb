@@ -33,15 +33,71 @@ class CrowbarService < ServiceObject
   end
 
   def shutdown_openstack_at_nodes
-    NodeObject.all.each do |node|
-      next unless node.state == "crowbar_upgrade"
+    db_nodes = []
+    NodeObject.find("state:crowbar_upgrade").each do |node|
+
+      # Find the nodes with Database role
+      # (we can't look at node.roles, because that list has been reduced to just crowbar-upgrade)
+      node.crowbar["run_list_map"].each do |role, v|
+        db_nodes.push node.name if role == "database-server"
+      end
 
       # mark the position in the upgrade process
-      node["crowbar_wall"]["crowbar_openstack_upgrade"] = true
+      node["crowbar_wall"]["crowbar_openstack_shutdown"] = true
       node.save
     end
 
-    # commit current proposal (crowbar-upgrade role should be currently assigned to nodes),
+    # Adapt current proposal, so only non-db nodes have crowbar-upgrade role
+    # (crowbar-upgrade role is currently assigned to all nodes)
+    proposal = ProposalObject.find_proposal("crowbar", "default")
+    proposal["deployment"]["crowbar"]["elements"]["crowbar-upgrade"] -= db_nodes
+    proposal.save
+
+    return true if proposal["deployment"]["crowbar"]["elements"]["crowbar-upgrade"].empty?
+
+    # Commit proposal so the shutdown actions from crowbar-upgrade get executed for non-db nodes
+    proposal_commit("default", false, false)
+  end
+
+  def dump_openstack_database
+    # Find the nodes with Database role
+    # (we can't look at node.roles, because that list has been reduced to just crowbar-upgrade item)
+    db_nodes = NodeObject.find("state:crowbar_upgrade AND run_list_map:database-server")
+
+    raise "There does not seem to exist any node running the database." if db_nodes.empty?
+
+    proposal = ProposalObject.find_proposal("crowbar", "default")
+    # After all non-DB services are shut down, adapt the proposal again and
+    # commit it with DB nodes only (and the special role for them)
+    proposal["deployment"]["crowbar"]["elements"]["crowbar-upgrade"] = []
+    proposal["deployment"]["crowbar"]["elements"]["crowbar-db-dump"] = db_nodes.map(&:name)
+    proposal.save
+
+    # This proposal could return some error if there's not enough space for DB dump
+    # Controller must show the error and be able to call the function again once the problem
+    # is resolved
+    proposal_commit("default", false, false)
+
+    proposal = ProposalObject.find_proposal("crowbar", "default")
+    if proposal["deployment"]["crowbar"]["crowbar-status"] == "failed"
+      raise proposal["deployment"]["crowbar"]["crowbar-failed"]
+    end
+
+    # If the function succeedes, we need to tell user where to find the database dump
+  end
+
+  # Finish shut down of openstack + HA services on DB nodes.
+  # This needs to be done in separate step because user might want
+  # to download DB dump before the database is shut down.
+  def finalize_openstack_shutdown
+    NodeObject.find("roles:crowbar-db-dump").each do |node|
+      # mark the position in the upgrade process
+      node["crowbar_wall"]["crowbar_openstack_shutdown"] = false
+      node["crowbar_wall"]["crowbar_db_shutdown"] = true
+      node.save
+    end
+
+    # Commit the same proposal, we have only crowbar-db-dump role non-empty now
     proposal_commit("default", false, false)
   end
 
@@ -224,6 +280,19 @@ class CrowbarService < ServiceObject
       end
     end
     true
+  end
+
+  def apply_role_pre_chef_call(old_role, role, all_nodes)
+    @logger.debug("crowbar apply_role_pre_chef_call: entering #{all_nodes.inspect}")
+    all_nodes.each do |n|
+      node = NodeObject.find_node_by_name n
+      # value of crowbar_wall["crowbar_upgrade"] indicates that the role should be executed
+      # but node state should not be changed: this is needed when reverting node state to ready
+      if (node.role?("crowbar-upgrade") || node.role?("crowbar-db-dump")) &&
+          node.crowbar_wall["crowbar_upgrade"]
+        node.set_state("crowbar_upgrade")
+      end
+    end
   end
 
   def apply_role (role, inst, in_queue)
