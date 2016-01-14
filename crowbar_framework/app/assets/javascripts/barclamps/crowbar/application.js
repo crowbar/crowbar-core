@@ -87,7 +87,8 @@ jQuery(document).ready(function($) {
                 if ($oldUl.children().length <= 0) {
                   $oldUl.parents('[data-droppable=true]').remove();
                 }
-              }
+              },
+              'json'
             );
           }
 
@@ -169,7 +170,8 @@ jQuery(document).ready(function($) {
             if ($oldUl.children().length <= 0) {
               $oldUl.parents('[data-droppable=true]').remove();
             }
-          }
+          },
+          'json'
         );
       }
 
