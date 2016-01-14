@@ -52,7 +52,9 @@ class MachinesController < BarclampController
     @nodes = NodeObject.find_all_nodes.map do |node|
       {
         name: node.name,
-        alias: node.alias
+        alias: node.alias,
+        group: node.group,
+        status: node.status
       }
     end
 
