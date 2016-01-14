@@ -79,6 +79,7 @@ en:
       title: 'Utilities'
       logs: 'Exported Items'
       repositories: 'Repositories'
+      backup: 'Backup & Restore'
     help: 'Help'
 
   layouts:
@@ -558,14 +559,48 @@ en:
       system_not_supported: 'System currently not supported for installation'
     start:
       installation_ongoing: 'Installation is already ongoing, please wait.'
+  backups:
+    destroy:
+      failed: 'Failed to delete backup from disk'
+    index:
+      title: 'Crowbar Backup & Restore'
+      backup_hint: 'To restore Crowbar from a backup, select one of the backups below or make sure to upload a backup tarball.'
+      backup: 'Backup'
+      start: 'Start Crowbar Restore'
+      image_name: 'Image Name'
+      created_at: 'Created At'
+      file_size: 'File Size'
+      version: 'Image Version'
+      systems_to_restore: 'System(s) to Restore'
+      crowbar: 'Crowbar'
+      openstack: 'OpenStack'
+      restore: 'Restore'
+      restore_warning: 'By pressing OK, you will start the restore of the system. Are you sure?'
+      upload_image: 'Upload Backup Image'
+      create_image: 'Create Backup Image'
+      download_image: 'Click to download image'
+      enter_name: 'Please enter a name for the image'
+      invalid_filename_format: 'Wrong file format, please dont use whitespace or special characters'
+      invalid_filename: 'Invalid filename, backup already exists.'
+      invalid_backup: 'Cannot restore from invalid backup'
+      missing_backup: 'Backup does not exist'
+      upgrade_not_supported: 'Upgrade not supported'
+    validation:
+      hostnames_not_identical: 'Hostnames not identical'
+      version_too_low: 'Backup version too low'
+      version_too_high: 'Backup version higher than current version'
+      non_json_file: 'Unprocessable chef file found'
 
   # Global
   overview: 'Overview'
   show: 'View'
   all: 'All'
   destroy: 'Remove'
+  delete: 'Delete'
+  download: 'Download'
   back: 'Go Back'
   cancel: 'Cancel'
+  create: 'Create'
   edit: 'Edit'
   actions: 'Actions'
   are_you_sure: 'Are you sure?'

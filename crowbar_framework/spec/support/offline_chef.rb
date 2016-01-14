@@ -28,20 +28,40 @@ class OfflineChef < Sinatra::Base
     render_search_json(type, params[:q])
   end
 
+  get "/data" do
+    render_json(:data_bag, :crowbar)
+  end
+
   get "/data/*" do |bag|
     render_json(:data_bag_item, bag.gsub("/", "-"))
+  end
+
+  post "/data/*" do |data|
+    empty_json
+  end
+
+  get "/nodes" do
+    render_json(:nodes, :crowbar)
   end
 
   get "/nodes/:fqdn" do |fqdn|
     render_json(:node, fqdn)
   end
 
-  get "/roles/:name" do |name|
-    render_json(:role, name)
+  post "/nodes/*" do |node|
+    empty_json
   end
 
-  post "/data/*" do |data|
+  put "/nodes/*" do |node|
     empty_json
+  end
+
+  get "/roles" do
+    render_json(:roles, :crowbar)
+  end
+
+  get "/roles/:name" do |name|
+    render_json(:role, name)
   end
 
   post "/roles/*" do |role|
@@ -52,12 +72,12 @@ class OfflineChef < Sinatra::Base
     empty_json
   end
 
-  post "/nodes/*" do |node|
-    empty_json
+  get "/clients" do
+    render_json(:api, :client)
   end
 
-  put "/nodes/*" do |node|
-    empty_json
+  get "/clients/*" do |client|
+    render_json(:api_client, client)
   end
 
   private

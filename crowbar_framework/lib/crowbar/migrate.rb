@@ -14,8 +14,23 @@
 # limitations under the License.
 #
 
-Rails.application.config.tap do |config|
-  if caller.grep(/rake/).empty?
-    Crowbar::Migrate.migrate!
+module Crowbar
+  class Migrate
+    class << self
+      def migrate!
+        migrator = ActiveRecord::Migrator.new(
+          :up,
+          ActiveRecord::Migrator.migrations(
+            ActiveRecord::Migrator.migrations_paths
+          )
+        )
+        if migrator.pending_migrations.any?
+          puts "Migrating database schema to #{migrator.pending_migrations.last.version}..."
+          ActiveRecord::Migrator.migrate(
+            ActiveRecord::Migrator.migrations_paths
+          )
+        end
+      end
+    end
   end
 end

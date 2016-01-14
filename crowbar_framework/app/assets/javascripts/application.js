@@ -246,6 +246,26 @@ jQuery(document).ready(function($) {
     },
     500
   );
+
+  $('[data-toggle="tooltip"]').tooltip({html : true});
+  $('[data-toggle="inline"]').popover({
+    html : true,
+    content: function() {
+      return $($(this).data('inline')).html();
+    }
+  });
+
+  $('body.backups input[name="backup[file]"]').fileinput({
+    uploadUrl: Routes.upload_backups_path({
+      format: 'json'
+    }),
+    uploadAsync: true,
+    allowedFileExtensions: ['tar.gz'],
+    dropZoneEnabled: false
+  })
+  .on('fileuploaded', function() {
+    location.reload();
+  });
 });
 
 if (!String.prototype.localize) {

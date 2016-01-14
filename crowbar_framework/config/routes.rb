@@ -76,6 +76,19 @@ Rails.application.routes.draw do
   post "utils/repositories/activate_all(.:format)", controller: "repositories", action: "activate_all", as: "activate_all_repositories"
   post "utils/repositories/deactivate_all(.:format)", controller: "repositories", action: "deactivate_all", as: "deactivate_all_repositories"
 
+  scope :utils do
+    resources :backups, only: [:index, :create, :destroy] do
+      collection do
+        post :upload
+      end
+
+      member do
+        post :restore
+        get :download
+      end
+    end
+  end
+
   # barclamps
   get "crowbar/:controller/1.0/help(.:format)", action: "help", as: "help_barclamp"
   get "crowbar/:controller/1.0/proposals/nodes(.:format)", action: "nodes", as: "barclamp_nodes"

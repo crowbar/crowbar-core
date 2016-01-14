@@ -1,5 +1,6 @@
 #
-# Copyright 2015, SUSE LINUX GmbH
+# Copyright 2011-2013, Dell
+# Copyright 2013-2015, SUSE LINUX GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,8 +15,16 @@
 # limitations under the License.
 #
 
-Rails.application.config.tap do |config|
-  if caller.grep(/rake/).empty?
-    Crowbar::Migrate.migrate!
-  end
+module Crowbar
+  autoload :Backup,
+    File.expand_path("../crowbar/backup", __FILE__)
+
+  autoload :Installer,
+    File.expand_path("../installer.rb", __FILE__)
+
+  autoload :Migrate,
+    File.expand_path("../migrate.rb", __FILE__)
+
+  autoload :Upgrade,
+    File.expand_path("../upgrade.rb", __FILE__)
 end
