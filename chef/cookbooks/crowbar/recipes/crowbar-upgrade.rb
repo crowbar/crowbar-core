@@ -24,21 +24,16 @@
 
 return unless node[:platform] == "suse"
 
-if node["crowbar_wall"]["crowbar_openstack_upgrade"]
+if node["crowbar_wall"]["crowbar_openstack_shutdown"]
 
   # Actions to be run last, when admin node is already new SUSE Cloud version (6)
   # Nodes will be restarted and their system upgraded after this.
 
-  # put HA node into maintenance mode (TODO is it needed? It wasn't in 4-5 upgrade...)
-
-  # 1. Find the node which runs database
-  db_node = ::Kernel.system("service postgresql status")
-
-  # 2. Stop all BUT postgresql pacemaker resources in all clusters
+  # 2. Stop all pacemaker resources
   bash "stop pacemaker resources" do
     code <<-EOF
       for type in clone ms primitive; do
-        for resource in $(crm configure show | grep ^$type | grep -Ev "postgresql|vip-admin-database" | cut -d " " -f2); do
+        for resource in $(crm configure show | grep ^$type | cut -d " " -f2); do
           crm resource stop $resource
         done
       done
@@ -46,57 +41,21 @@ if node["crowbar_wall"]["crowbar_openstack_upgrade"]
     only_if { ::File.exist?("/usr/sbin/crm") }
   end
 
-  # 3. Stop openstack services
-  # Note that for HA, they should be already stopped by pacemaker
+  # 3. Stop openstack services and corosync
+  # Note that for HA, services should be already stopped by pacemaker
   bash "stop HA and openstack services" do
     code <<-EOF
       for i in /etc/init.d/openstack-* \
                /etc/init.d/openvswitch-switch \
                /etc/init.d/ovs-usurp-config-* \
+               /etc/init.d/drbd \
+               /etc/init.d/openais;
       do
-        test -e $i && $i stop
+        if test -e $i; then
+          $i stop
+        fi
       done
     EOF
-  end
-
-  # 4. Dump the database at the DB node
-  # FIXME check the available space before: sudo -u postgres pg_dumpall | wc -c
-  # FIXME find the correct place for the dump (drbd?)
-
-  if db_node
-    dump_location = "/var/lib/pgsql/db.dump"
-
-    # if we have drbd, find out the device
-    if ::Kernel.system("service drbd status")
-      device = node["drbd"]["rsc"]["postgresql"]["device"]
-      dump_location = `grep #{device} /etc/mtab | cut -d ' ' -f 2`
-      dump_location += "/db.dump"
-    end
-
-    bash "dump database content" do
-      code <<-EOF
-        su - postgres -c 'pg_dumpall > #{dump_location}'
-      EOF
-    end
-  end
-
-  # 4. Stop HA related services and remaining pacemaker resources
-  # a) in cluster without DB resources
-  # b) in DB cluster after the DB dump, from the DB node
-  # FIXME while drbd is stopped, dump is not available to user...
-  bash "stop HA and openstack services" do
-    code <<-EOF
-      if #{db_node} || ! crm resource show ms-drbd-postgresql 2>/dev/null >&2
-      then
-        crm resource stop postgresql
-        crm resource stop fs-postgresql
-        crm resource stop vip-admin-database-default-data
-
-        test -e /etc/init.d/drbd && /etc/init.d/drbd stop
-        /etc/init.d/openais stop
-      fi
-    EOF
-    only_if { ::File.exist?("/usr/sbin/crm") }
   end
 
 elsif node["crowbar_wall"]["crowbar_upgrade"]
