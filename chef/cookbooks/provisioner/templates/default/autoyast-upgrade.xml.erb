@@ -41,10 +41,6 @@
     <% end %>
     </add_on_products>
   </add-on>
-  <timezone>
-    <hwclock>UTC</hwclock>
-    <timezone><%=@timezone%></timezone>
-  </timezone>
   <services-manager>
     <services>
       <enable config:type="list">
@@ -100,19 +96,6 @@
                 curl "${curlargs[@]}" "http://$IP/crowbar/crowbar/1.0/transition/default"
             }
 
-            mkdir -p /mnt/root/.ssh
-            chmod 700 /mnt/root/.ssh
-
-            if ! curl -s -o /mnt/root/.ssh/authorized_keys.wget \
-                http://$HTTP_SERVER/authorized_keys ||\
-                grep -q "Error 404" /mnt/root/.ssh/authorized_keys.wget; then
-                rm -f /mnt/root/.ssh/authorized_keys.wget
-            else
-                chmod 644 /mnt/root/.ssh/authorized_keys
-                cat /mnt/root/.ssh/authorized_keys.wget >> /mnt/root/.ssh/authorized_keys
-                rm -f /mnt/root/.ssh/authorized_keys.wget
-            fi
-
             curl -s -o /mnt/usr/sbin/crowbar_join <%= @crowbar_join %>
             chmod +x /mnt/usr/sbin/crowbar_join
 
@@ -126,17 +109,6 @@
           </source>
         </script>
       </chroot-scripts>
-      <init-scripts config:type="list">
-        <!-- bugfix bnc#886238: https://bugzilla.novell.com/show_bug.cgi?id=886238 -->
-        <script>
-          <filename>autoyast_set_hostentries.sh</filename>
-          <source>
-            <![CDATA[
-             echo "<%= @node_ip %> <%= @node_fqdn %> <%= @node_hostname %>" >> /etc/hosts
-            ]]>
-          </source>
-        </script>
-      </init-scripts>
     </scripts>
     <patterns config:type="list">
       <pattern>Minimal</pattern>
