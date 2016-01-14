@@ -1,11 +1,11 @@
 def upgrade(ta, td, a, d)
-  a["dhcp"]["state_machine"]["os_upgrading"] = ta["dhcp"]["state_machine"]["os_upgrading"]
-  a["dhcp"]["state_machine"]["os_upgraded"] = ta["dhcp"]["state_machine"]["os_upgraded"]
+  a["dhcp"]["state_machine"]["os-upgrading"] = ta["dhcp"]["state_machine"]["os-upgrading"]
+  a["dhcp"]["state_machine"]["os-upgraded"] = ta["dhcp"]["state_machine"]["os-upgraded"]
   [a, d]
 end
 
 def downgrade(ta, td, a, d)
-  a["dhcp"]["state_machine"].delete("os_upgrading")
-  a["dhcp"]["state_machine"].delete("os_upgraded")
+  a["dhcp"]["state_machine"].delete("os-upgrading")
+  a["dhcp"]["state_machine"].delete("os-upgraded")
   [a, d]
 end

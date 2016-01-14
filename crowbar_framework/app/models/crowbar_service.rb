@@ -181,7 +181,7 @@ class CrowbarService < ServiceObject
 
     all_nodes.each do |node|
       next if node.admin? || node[:platform] == "windows"
-      node.set_state("os_upgrading")
+      node.set_state("os-upgrading")
     end
 
     # wait for the pxe_config to be updated, then reboot the nodes

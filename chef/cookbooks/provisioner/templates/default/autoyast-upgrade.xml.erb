@@ -100,7 +100,7 @@
             chmod +x /mnt/usr/sbin/crowbar_join
 
             mkdir -p /mnt/var/log/crowbar
-            post_state $HOSTNAME "os_upgraded"
+            post_state $HOSTNAME "os-upgraded"
 
             # Wait for DHCP to update - this is mainly for virtual environments or really large deploys
             sleep 30
