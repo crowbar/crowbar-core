@@ -303,6 +303,12 @@ class UcsController < ApplicationController
   def sendXML(xmlString = "")
     uri = URI.parse(@ucs_url)
     http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = False
+    if uri.scheme == "https"
+      http.use_ssl = True
+      ### Make configurable
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    end
     api_request = Net::HTTP::Post.new(uri.request_uri)
     api_request.body = xmlString
 
