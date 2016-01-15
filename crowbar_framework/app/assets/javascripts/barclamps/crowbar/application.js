@@ -16,6 +16,26 @@
  */
 
 jQuery(document).ready(function($) {
+  function nodeStatus() {
+    $.ajax({
+      type: "GET",
+      dataType: "json",
+      url: Routes.index_barclamp_path("machines"),
+      success: function(data) {
+        $.each(data.nodes, function( key, node ) {
+          $("[data-alias="+node.alias+"]").removeClass (function (index, css) {
+            return (css.match (/(^|\s)status-border-\S+/g) || []).join(" ");
+          });
+          $("[data-alias="+node.alias+"]").addClass("status-border-"+node.status);
+        });
+      }
+    });
+
+    setTimeout(nodeStatus, 10000);
+  }
+
+  nodeStatus();
+
   $('[data-group-add]').live('submit', function(event) {
     var $el = $(event.target);
     var $input = $el.find('input[name=group]');

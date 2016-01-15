@@ -14,6 +14,7 @@
           - group[:nodes].values.sort_by { |handle| @nodes[handle][:alias] }.each do |handle|
             - @nodes[handle].tap do |node|
               %li.list-group-item{ "data-id" => handle.parameterize,
+                                   "data-alias" => node[:alias],
                                    "data-draggable" => @draggable.to_s,
                                    "data-update" => group_change_path(:id => handle.parameterize,
                                                                       :group => "{0}".html_safe),
