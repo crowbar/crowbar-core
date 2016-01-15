@@ -102,60 +102,6 @@
     self.conditionalReload(reload);
   };
 
-  LedUpdate.prototype.processNodes = function(response, ignores) {
-    var self = this;
-    var reload = false;
-
-    $('[data-node]').each(function(index, current) {
-      var current_handle = $(current).data('node');
-
-      // Node in page not found in response, reload
-      if (!response.nodes[current_handle]) {
-        reload = true;
-      }
-    });
-
-    if (self.$el.data('ledsingle') == undefined) {
-      $.each(response.nodes, function(key, val) {
-        var current = $(
-          '[data-node="{0}"]'.format(key)
-        );
-
-        // Node in response not found in page, reload
-        if (current.length == 0) {
-          reload = true;
-        } else {
-          if(current.hasClass('unknown')) {
-            self.update(
-              current,
-              val.class,
-              val.status
-            );
-          } else {
-            self.update(
-              current,
-              val.class,
-              val.status,
-              function() {
-                current.effect('fade').effect('fade');
-              }
-            );
-          }
-
-          var text = $(
-            '[data-node-state="{0}"]'.format(key)
-          );
-
-          if (text.html() != val.status) {
-            text.html(val.status).effect('fade').effect('fade');
-          }
-        }
-      });
-    }
-
-    self.conditionalReload(reload);
-  };
-
   LedUpdate.prototype.processProposals = function(response, ignores) {
     var self = this;
     $.each(response.proposals, function(key, val) {
