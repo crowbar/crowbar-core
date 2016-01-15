@@ -258,8 +258,8 @@ if not nodes.nil? and not nodes.empty?
 
         when os =~ /^(open)?suse/
           append << "install=#{install_url} autoyast=#{node_url}/autoyast.xml"
-          append << " ifcfg=dhcp4 netwait=60"
-          append << " autoupgrade=1" if mnode[:state] == "os_upgrading"
+          append << "ifcfg=dhcp4 netwait=60"
+          append << "autoupgrade=1" if mnode[:state] == "os-upgrading"
 
           target_platform_version = os.gsub(/^.*-/, "")
           repos = Provisioner::Repositories.get_repos("suse", target_platform_version, arch)
@@ -283,7 +283,7 @@ if not nodes.nil? and not nodes.empty?
             cloud_available = true if name.include? "Cloud"
           end
 
-          autoyast_template = mnode[:state] == "os_upgrading" ? "autoyast-upgrade" : "autoyast"
+          autoyast_template = mnode[:state] == "os-upgrading" ? "autoyast-upgrade" : "autoyast"
           template "#{node_cfg_dir}/autoyast.xml" do
             mode 0644
             source "#{autoyast_template}.xml.erb"

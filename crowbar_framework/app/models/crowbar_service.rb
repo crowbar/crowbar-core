@@ -65,7 +65,7 @@ class CrowbarService < ServiceObject
         transition_to_readying inst, name, state, node
       end
 
-      if %w(hardware-installing hardware-updating update os_upgrading).include? state
+      if %w(hardware-installing hardware-updating update).include? state
         @logger.debug("Crowbar transition: force run because of state #{name} to #{state}")
         pop_it = true
       end
@@ -177,20 +177,17 @@ class CrowbarService < ServiceObject
   end
 
   def prepare_nodes_for_os_upgrade
-    all_nodes = NodeObject.all
+    upgrade_nodes = NodeObject.all.reject { |node| node.admin? || node[:platform] == "windows" }
 
-    all_nodes.each do |node|
-      next if node.admin? || node[:platform] == "windows"
-      node.set_state("os_upgrading")
+    upgrade_nodes.each do |node|
+      node.set_state("os-upgrading")
     end
 
     # wait for the pxe_config to be updated, then reboot the nodes
     discovery_dir = "#{NodeObject.admin_node[:provisioner][:root]}/discovery/"
     pxecfg_subdir = "bios/pxelinux.cfg"
 
-    all_nodes.each do |node|
-      next if node.admin? || node["platform"] == "windows"
-
+    upgrade_nodes.each do |node|
       boot_ip_hex = node["crowbar"]["boot_ip_hex"]
       node_arch = node["kernel"]["machine"]
       pxe_conf = "#{discovery_dir}/#{node_arch}/#{pxecfg_subdir}/#{boot_ip_hex}"
