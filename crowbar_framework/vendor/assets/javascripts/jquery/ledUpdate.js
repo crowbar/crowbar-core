@@ -49,59 +49,6 @@
     }
   };
 
-  LedUpdate.prototype.processGroups = function(response, ignores) {
-    var self   = this;
-    var reload = false;
-    $('[data-group]').each(function(index, current) {
-      var current_handle = $(current).data('group');
-
-      if (!response.groups[current_handle]) {
-        reload = true;
-      }
-    });
-
-    if (self.$el.data('ledsingle') == undefined) {
-      $.each(response.groups, function(key, val) {
-        var current = $(
-          '[data-group="{0}"] [data-piechart]'.format(key)
-        );
-
-        if (current.length > 0) {
-          var chartVals = [
-            val.status.ready,
-            val.status.failed,
-            val.status.unknown,
-            val.status.crowbar_upgrade,
-            val.status.unready + val.status.pending
-          ];
-
-          current.attr('title', val.tooltip).tooltip('destroy').tooltip({
-            html: true
-          });
-
-          current.sparkline(
-            chartVals,
-            {
-              type: 'pie',
-              tagValuesAttribute: 'data-piechart',
-              disableTooltips: true,
-              disableHighlight: true,
-              sliceColors: [
-                '#0f0',
-                '#f00',
-                '#999',
-                '#ff0'
-              ]
-            }
-          );
-        } else {
-          reload = true;
-        }
-      });
-    }
-    self.conditionalReload(reload);
-  };
-
   LedUpdate.prototype.processNodes = function(response, ignores) {
     var self = this;
     var reload = false;
@@ -199,10 +146,6 @@
 
     if ($.isFunction(self.options.beforeProcess)) {
       self.options.beforeProcess.call(this, response);
-    }
-
-    if (response.groups && $.inArray("groups", ignores) < 0) {
-      self.processGroups(response, ignores);
     }
 
     if (response.nodes && $.inArray("nodes", ignores) < 0) {

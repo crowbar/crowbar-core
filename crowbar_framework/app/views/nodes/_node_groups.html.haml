@@ -7,8 +7,7 @@
     .col-xs-3{ "data-id" => group_name, "data-droppable" => @draggable.to_s, "data-group" => group_name }
       .panel.panel-default
         .panel-heading
-          %h2
-            = piechart_for group
+          %h3
             = truncate(group_name || t("unknown"), :length => 25)
 
         %ul.list-group

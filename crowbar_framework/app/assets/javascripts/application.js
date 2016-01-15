@@ -65,19 +65,6 @@ jQuery(document).ready(function($) {
     afterInit = true;
   });
 
-  $('[data-piechart]').sparkline('html', {
-    type: 'pie',
-    tagValuesAttribute: 'data-piechart',
-    disableTooltips: true,
-    disableHighlight: true,
-    sliceColors: [
-      '#0f0',
-      '#f00',
-      '#999',
-      '#ff0'
-    ]
-  });
-
   $('[data-blockui]').live('submit', function(event) {
     $.blockUI({
       css: {
@@ -232,7 +219,6 @@ jQuery(document).ready(function($) {
   $('[data-dynamic]').dynamicTable();
   $('[data-change]').updateAttribute();
   $('[data-listsearch]').listSearch();
-  $('[data-ledupdate]').ledUpdate();
   $('[data-show-for-clusters-only="true"]').hideShowClusterConf();
 
   $('#proposal_attributes, #proposal_deployment').changedState();
