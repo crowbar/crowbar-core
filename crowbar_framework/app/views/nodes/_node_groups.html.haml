@@ -16,12 +16,8 @@
               %li.list-group-item{ "data-id" => handle.parameterize,
                                    "data-draggable" => @draggable.to_s,
                                    "data-update" => group_change_path(:id => handle.parameterize,
-                                                                      :group => "{0}".html_safe) }
-                %span.led{ :class => node[:status],
-                           :title => t(node[:state],
-                           :scope => "state",
-                           :default => node[:state].titlecase),
-                           "data-node" => handle }
+                                                                      :group => "{0}".html_safe),
+                                   "class" => "status-border-unknown"}
                 = link_to(truncate(node[:alias], :length => 25), node_path(handle), :title => node[:description])
 
 - if @draggable
