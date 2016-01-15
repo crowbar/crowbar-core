@@ -177,10 +177,9 @@ class CrowbarService < ServiceObject
   end
 
   def prepare_nodes_for_os_upgrade
-    all_nodes = NodeObject.all
+    upgrade_nodes = NodeObject.all.reject { |node| node.admin? || node[:platform] == "windows" }
 
-    all_nodes.each do |node|
-      next if node.admin? || node[:platform] == "windows"
+    upgrade_nodes.each do |node|
       node.set_state("os-upgrading")
     end
 
@@ -188,9 +187,7 @@ class CrowbarService < ServiceObject
     discovery_dir = "#{NodeObject.admin_node[:provisioner][:root]}/discovery/"
     pxecfg_subdir = "bios/pxelinux.cfg"
 
-    all_nodes.each do |node|
-      next if node.admin? || node["platform"] == "windows"
-
+    upgrade_nodes.each do |node|
       boot_ip_hex = node["crowbar"]["boot_ip_hex"]
       node_arch = node["kernel"]["machine"]
       pxe_conf = "#{discovery_dir}/#{node_arch}/#{pxecfg_subdir}/#{boot_ip_hex}"
