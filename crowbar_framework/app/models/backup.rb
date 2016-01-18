@@ -114,7 +114,7 @@ class Backup < ActiveRecord::Base
   end
 
   def save_archive
-    self.name = file.original_filename.split(".").first
+    self.name = file.original_filename.remove(".tar.gz")
 
     if path.exist?
       errors.add(:filename, I18n.t(".invalid_filename", scope: "backups.index"))
