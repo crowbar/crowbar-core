@@ -66,7 +66,7 @@ module Crowbar
 
         Chef::DataBag.list.each do |name, url|
           bag_dir = data_dir.join(name)
-          bag_dir.mkpath unless bag_dir.directory?
+          bag_dir.mkpath
 
           Chef::DataBag.load(name).each do |item, item_url|
             next if item.match(/\Atemplate-.*/)
@@ -174,11 +174,6 @@ module Crowbar
           logger.debug "Backing up #{component} #{name}"
 
           record = klass.load(name)
-
-          unless record
-            logger.error "Faild to load #{component} #{name}"
-            next
-          end
 
           data_dir.join("#{name}.json").open("w") do |file|
             file.write(

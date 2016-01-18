@@ -39,7 +39,7 @@ class Backup < ActiveRecord::Base
   validate :validate_file_extension, :validate_version, :validate_hostname
 
   def path
-    self.class.image_dir.join("#{name}.tar.gz")
+    self.class.image_dir.join(filename)
   end
 
   def filename
@@ -117,7 +117,7 @@ class Backup < ActiveRecord::Base
     self.name = file.original_filename.remove(".tar.gz")
 
     if path.exist?
-      errors.add(:filename, I18n.t(".invalid_filename", scope: "backups.index"))
+      errors.add(:filename, I18n.t(".invalid_filename_exists", scope: "backups.index"))
       return false
     end
 
