@@ -1079,7 +1079,8 @@ class ServiceObject
     # pause-file.lock exists which the daemons will honour due to a
     # custom patch:
     nodes_to_lock = applying_nodes.reject do |node_name|
-      node = NodeObject.find_node_by_name(node_name)
+      pre_cached_nodes[node_name] ||= NodeObject.find_node_by_name(node_name)
+      node = pre_cached_nodes[node_name]
       node[:platform_family] == "windows" || node.admin?
     end
 
@@ -1116,11 +1117,8 @@ class ServiceObject
     pending_node_actions.each do |node_name, lists|
       # pre_cached_nodes contains only new_nodes, we need to look up the
       # old ones as well.
+      pre_cached_nodes[node_name] ||= NodeObject.find_node_by_name(node_name)
       node = pre_cached_nodes[node_name]
-      if node.nil?
-        node = NodeObject.find_node_by_name(node_name)
-        pre_cached_nodes[node_name] = node
-      end
       next if node.nil?
 
       admin_nodes << node_name if node.admin?
@@ -1194,6 +1192,9 @@ class ServiceObject
       return [405, message]
     end
 
+    # Invalidate cache as apply_role_pre_chef_call can save nodes
+    pre_cached_nodes = {}
+
     # Each batch is a list of nodes that can be done in parallel.
     ran_admin = false
     run_order.each do |batch|
@@ -1225,7 +1226,8 @@ class ServiceObject
       pids = {}
       unless non_admin_nodes.empty?
         non_admin_nodes.each do |node|
-          nobj = pre_cached_nodes[node] || NodeObject.find_node_by_name(node)
+          pre_cached_nodes[node] ||= NodeObject.find_node_by_name(node)
+          nobj = pre_cached_nodes[node]
           unless nobj[:platform_family] == "windows"
             filename = "#{ENV['CROWBAR_LOG_DIR']}/chef-client/#{node}.log"
             pid = run_remote_chef_client(node, "chef-client", filename)
@@ -1300,6 +1302,21 @@ class ServiceObject
     # XXX: This should not be done this way.  Something else should request this.
     system("sudo", "-i", Rails.root.join("..", "bin", "single_chef_client.sh").expand_path.to_s) if !ran_admin
 
+    # Post deploy callback
+    begin
+      apply_role_post_chef_call(old_role, role, all_nodes)
+    rescue StandardError => e
+      @logger.fatal("apply_role: Exception #{e.message} #{e.backtrace.join("\n")}")
+      message = "Failed to apply the proposal: exception after calling chef (#{e.message})"
+      update_proposal_status(inst, "failed", message)
+      restore_to_ready(applying_nodes)
+      process_queue unless in_queue
+      return [405, message]
+    end
+
+    # Invalidate cache as apply_role_post_chef_call can save nodes
+    pre_cached_nodes = {}
+
     # are there any roles to remove from the runlist?
     # The @bcname proposal's elements key will contain the removal intentions
     # proposal.elements =>
@@ -1315,6 +1332,9 @@ class ServiceObject
       # executed the role, hence the delete()
       nodes_with_role_to_remove = proposal.elements.delete(role_to_remove)
       nodes_with_role_to_remove.each do |node_name|
+        # Do not use pre_cached_nodes, as nodes might have been saved in
+        # apply_role_pre_chef_call
+        pre_cached_nodes[node_name] ||= NodeObject.find_node_by_name(node_name)
         node = pre_cached_nodes[node_name]
         node.delete_from_run_list(role_to_remove)
         node.save
@@ -1323,18 +1343,6 @@ class ServiceObject
 
     # Save if we did a change
     proposal.save unless roles_to_remove.empty?
-
-    # Post deploy callback
-    begin
-      apply_role_post_chef_call(old_role, role, all_nodes)
-    rescue StandardError => e
-      @logger.fatal("apply_role: Exception #{e.message} #{e.backtrace.join("\n")}")
-      message = "Failed to apply the proposal: exception after calling chef (#{e.message})"
-      update_proposal_status(inst, "failed", message)
-      restore_to_ready(applying_nodes)
-      process_queue unless in_queue
-      return [405, message]
-    end
 
     update_proposal_status(inst, "success", "")
     restore_to_ready(applying_nodes)
