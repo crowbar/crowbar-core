@@ -191,7 +191,7 @@
     <hwclock>UTC</hwclock>
     <timezone><%=@timezone%></timezone>
   </timezone>
-  <% if @target_platform_version.to_f >= 12 -%>
+  <% if @platform == "suse" && @target_platform_version.to_f >= 12 || @platform == "opensuse" -%>
   <services-manager>
     <services>
       <enable config:type="list">
@@ -201,7 +201,7 @@
   </services-manager>
   <% end %>
   <scripts>
-    <% if @target_platform_version.to_f >= 12 -%>
+    <% if @platform == "suse" && @target_platform_version.to_f >= 12 || @platform == "opensuse" -%>
       <pre-scripts config:type="list">
         <script>
             <debug config:type="boolean">true</debug>
@@ -301,9 +301,9 @@ sync
 <% if @is_ses -%>
       <package>ses-release</package>
 <% else -%>
-  <% if @target_platform_version == "11.3" -%>
+  <% if @platform == "suse" && @target_platform_version == "11.3" -%>
       <package>suse-sle11-openstack-cloud-release</package>
-  <% elsif @target_platform_version == "12.1" -%>
+  <% elsif @platform == "suse" && @target_platform_version == "12.1" -%>
       <package>suse-openstack-cloud-release</package>
       <package>supportutils-plugin-suse-openstack-cloud</package>
   <% end -%>
@@ -316,7 +316,13 @@ sync
 <% end -%>
     </packages>
     <patterns config:type="list">
+<% if @platform == "suse" -%>
       <pattern>Minimal</pattern>
+<% elsif @platform == "opensuse" -%>
+      <pattern>enhanced_base</pattern>
+      <pattern>sw_management</pattern>
+      <!-- not required, might be nice <pattern>yast2_basis</pattern> -->
+<% end -%>
       <pattern>base</pattern>
     </patterns>
   </software>

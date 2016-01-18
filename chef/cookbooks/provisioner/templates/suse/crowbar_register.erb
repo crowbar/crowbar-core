@@ -304,7 +304,11 @@ PACKAGES_INSTALL=
 PACKAGES_INSTALL="$PACKAGES_INSTALL openssh"
 
 # From autoyast profile
+<% if @platform == "suse" -%>
 PATTERNS_INSTALL="$PATTERNS_INSTALL Minimal base"
+<% elsif @platform == "opensuse" -%>
+PATTERNS_INSTALL="$PATTERNS_INSTALL base enhanced_base sw_management"
+<% end -%>
 PACKAGES_INSTALL="$PACKAGES_INSTALL netcat ruby2.1-rubygem-chef"
 
 case $ARCH in
@@ -313,9 +317,9 @@ esac
 
 zypper --non-interactive install -t pattern $PATTERNS_INSTALL
 # Auto-agree with the license since it was already agreed on for the admin server
-<% if @target_platform_version.to_f < 12.0 -%>
+<% if @platform == "suse" && @target_platform_version.to_f < 12.0 -%>
 zypper --non-interactive install --auto-agree-with-licenses suse-sle11-openstack-cloud-release
-<% elsif @target_platform_version == "12.1" -%>
+<% elsif @platform == "suse" && @target_platform_version == "12.1" -%>
 zypper --non-interactive install --auto-agree-with-licenses suse-openstack-cloud-release supportutils-plugin-suse-openstack-cloud
 <% end -%>
 zypper --non-interactive install $PACKAGES_INSTALL<%= " '#{@packages.join("' '")}'" unless @packages.empty? %>
@@ -341,7 +345,7 @@ if [ -x /sbin/SuSEfirewall2 ] ; then
 fi
 
 # SSH setup
-<% if @target_platform_version.to_f < 12.0 -%>
+<% if @platform == "suse" && @target_platform_version.to_f < 12.0 -%>
 chkconfig -a sshd
 service sshd start
 <% else -%>
@@ -376,7 +380,7 @@ hostname "$HOSTNAME"
 export DOMAIN
 export HOSTNAME
 
-<% if @target_platform_version.to_f < 12.0 -%>
+<% if @platform == "suse" && @target_platform_version.to_f < 12.0 -%>
 ntp="sntp -P no -r $NTP_SERVERS"
 <% else -%>
 ntp="/usr/sbin/ntpdate -u $NTP_SERVERS"
