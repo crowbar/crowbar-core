@@ -22,33 +22,17 @@
 # consists of several steps which we distinguish by various attributes
 # saved in the node structure.
 
-return unless node[:platform] == "suse"
+return unless node[:platform_family] == "suse"
 
 if node["crowbar_wall"]["crowbar_openstack_shutdown"]
 
-  # Actions to be run last, when admin node is already new SUSE Cloud version (6)
-  # Nodes will be restarted and their system upgraded after this.
+  include_recipe "crowbar::stop-services-before-upgrade"
 
-  # 2. Stop all pacemaker resources
-  bash "stop pacemaker resources" do
-    code <<-EOF
-      for type in clone ms primitive; do
-        for resource in $(crm configure show | grep ^$type | cut -d " " -f2); do
-          crm resource stop $resource
-        done
-      done
-    EOF
-    only_if { ::File.exist?("/usr/sbin/crm") }
-  end
-
-  # 3. Stop openstack services and corosync
-  # Note that for HA, services should be already stopped by pacemaker
+  # Stop DRBD and corosync.
+  # (Note that this node is not running database)
   bash "stop HA and openstack services" do
     code <<-EOF
-      for i in /etc/init.d/openstack-* \
-               /etc/init.d/openvswitch-switch \
-               /etc/init.d/ovs-usurp-config-* \
-               /etc/init.d/drbd \
+      for i in /etc/init.d/drbd \
                /etc/init.d/openais;
       do
         if test -e $i; then

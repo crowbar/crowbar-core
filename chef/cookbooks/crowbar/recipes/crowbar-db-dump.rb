@@ -25,43 +25,17 @@
 # First the database content should be dumped. In the next run (indicated by extra argument),
 # the database needs to be shut down.
 
-return unless node[:platform] == "suse"
+return unless node[:platform_family] == "suse"
 
 if node["crowbar_wall"]["crowbar_openstack_shutdown"]
 
-  # 1. Stop all BUT postgresql pacemaker resources in this cluster
-  bash "stop pacemaker resources" do
-    code <<-EOF
-      for type in clone ms primitive; do
-        for resource in $(crm configure show | grep ^$type | grep -Ev "postgresql|vip-admin-database" | cut -d " " -f2); do
-          crm resource stop $resource
-        done
-      done
-    EOF
-    only_if { ::File.exist?("/usr/sbin/crm") }
-  end
-
-  # 2. Stop openstack services on this node
-  # Note that for HA setup, they should be already stopped by pacemaker
-  # Services running on other nodes should be already stopped by previous run of crowbar-upgrade
-  bash "stop openstack services" do
-    code <<-EOF
-      for i in /etc/init.d/openstack-* \
-               /etc/init.d/openvswitch-switch \
-               /etc/init.d/ovs-usurp-config-*;
-      do
-        if test -e $i; then
-          $i stop
-        fi
-      done
-    EOF
-  end
+  include_recipe "crowbar::stop-services-before-upgrade"
 
   # If postgres is not running here, it means we're in the DB cluster and database runs
   # on the other node: let the other node take care of the rest.
   return unless ::Kernel.system("service postgresql status")
 
-  # 3. Check the available space before the dump
+  # Check the available space before the dump
 
   dump_location = node[:crowbar][:upgrade][:db_dump_location]
 
@@ -80,7 +54,7 @@ if node["crowbar_wall"]["crowbar_openstack_shutdown"]
 
   Chef::Log.info("dumping DB into #{dump_location}")
 
-  # 4. Dump the database at the DB node
+  # Dump the database at the DB node
   bash "dump database content" do
     code <<-EOF
       su - postgres -c 'pg_dumpall > #{dump_location}'
@@ -89,8 +63,8 @@ if node["crowbar_wall"]["crowbar_openstack_shutdown"]
 
 elsif node["crowbar_wall"]["crowbar_db_shutdown"]
 
-  # Now, stop DB.
-  # In case of HA setup, stop remaining pacemaker resources and HA services
+  # Now, stop the database.
+  # In case of HA setup, also stop remaining pacemaker resources and HA services.
   bash "stop the database" do
     code <<-EOF
       if test -e /usr/sbin/crm; then
