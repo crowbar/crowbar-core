@@ -20,6 +20,23 @@ module NodesHelper
     NodeObject.find("roles:#{role}").sort_by(&:alias)
   end
 
+  def node_icon(node)
+    return icon_tag "rocket" if node[:admin]
+
+    case node[:role]
+    when "controller"
+      icon_tag "cogs"
+    when "compute"
+      icon_tag "desktop"
+    when "network"
+      icon_tag "wifi"
+    when "storage"
+      icon_tag "cube"
+    else
+      icon_tag "question-circle"
+    end
+  end
+
   def format_memory(kbyte)
     sprintf(
       "%#1.2f GB",

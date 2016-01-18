@@ -483,7 +483,14 @@ class NodesController < ApplicationController
       raw_nodes = NodeObject.all
       raw_nodes.each do |node|
         @sum = @sum + node.name.hash
-        @nodes[node.handle] = { alias: node.alias, description: node.description, status: node.status, state: node.state }
+        @nodes[node.handle] = {
+          alias: node.alias,
+          description: node.description,
+          status: node.status,
+          state: node.state,
+          role: node.intended_role,
+          admin: node.admin?
+        }
         group = node.group
         @groups[group] = { automatic: !node.display_set?("group"),
                            status: { "ready" => 0,

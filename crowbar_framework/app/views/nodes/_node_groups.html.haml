@@ -19,7 +19,9 @@
                                    "data-update" => group_change_path(:id => handle.parameterize,
                                                                       :group => "{0}".html_safe),
                                    "class" => "status-border-unknown"}
-                = link_to(truncate(node[:alias], :length => 25), node_path(handle), :title => node[:description])
+                = link_to( node_icon(node) + " " + truncate(node[:alias], length: 25),
+                           node_path(handle),
+                           title: node[:description] )
 
 - if @draggable
   %script#group-panel{ :type => "text/x-handlebars-template" }
