@@ -19,7 +19,7 @@ when "suse"
                                    "vlan"]
   default[:network][:ovs_pkgs] = ["openvswitch",
                                   "openvswitch-switch",
-                                  "openvswitch-kmp-default"]
+                                  "openvswitch-kmp"]
   # SLES11 uses a different service name for openvswitch
   if node[:platform] == "suse" && node[:platform_version].to_f < 12.0
     default[:network][:ovs_service] = "openvswitch-switch"
