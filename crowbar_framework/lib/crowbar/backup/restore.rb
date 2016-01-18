@@ -26,7 +26,7 @@ module Crowbar
       end
 
       def restore
-        [:crowbar, :knife, :database].each do |component|
+        [:restore_crowbar, :run_installer, :restore_chef, :restore_database].each do |component|
           ret = send(component)
           return ret unless ret == true
         end
@@ -36,7 +36,7 @@ module Crowbar
 
       protected
 
-      def knife
+      def restore_chef
         [:nodes, :roles, :clients, :databags].each do |type|
           Dir.glob(@data.join("knife", type.to_s, "**", "*")).each do |file|
             file = Pathname.new(file)
@@ -55,7 +55,7 @@ module Crowbar
         true
       end
 
-      def crowbar
+      def restore_crowbar
         Crowbar::Backup::Base.restore_files.each do |source, destination|
           # keep the permissions of the files that are already in place
           system(
@@ -66,6 +66,10 @@ module Crowbar
           )
         end
 
+        true
+      end
+
+      def run_installer
         Crowbar::Installer.install!
         sleep(1) until Crowbar::Installer.successful? || Crowbar::Installer.failed?
         return false if Crowbar::Installer.failed?
@@ -80,7 +84,7 @@ module Crowbar
         true
       end
 
-      def database
+      def restore_database
         SerializationHelper::Base.new(YamlDb::Helper).load(
           @data.join("crowbar", "production.yml")
         )
