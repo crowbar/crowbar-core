@@ -44,7 +44,7 @@ module Crowbar
             record = JSON.load(file.read)
             if file.basename.to_s.include?("-default.json") && type == :databags
               bc_name = file.basename.to_s.split("-").first
-              Proposal.create(barclamp: bc_name, name: "default", properties: json)
+              Proposal.create(barclamp: bc_name, name: "default", properties: record)
               SchemaMigration.run_for_bc(bc_name)
             else
               record.save
