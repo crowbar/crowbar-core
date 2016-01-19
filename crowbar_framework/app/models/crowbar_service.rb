@@ -32,7 +32,23 @@ class CrowbarService < ServiceObject
     end
   end
 
-  def shutdown_openstack_at_nodes
+  # This is relevant to upgrade process only.
+  #
+  # Commit current proposal of crowbar barclamp and check if the commit doesn't
+  # end with some errors.
+  #
+  # Unfortunatelly we need to explicitely look at crowbar-status of the proposal
+  # because apply_role from this model ignores errors from superclass's apply_role.
+  def commit_and_check_proposal
+    proposal_commit("default", false, false)
+
+    proposal = ProposalObject.find_proposal("crowbar", "default")
+    if proposal["deployment"]["crowbar"]["crowbar-status"] == "failed"
+      raise proposal["deployment"]["crowbar"]["crowbar-failed"]
+    end
+  end
+
+  def shutdown_services_at_non_db_nodes
     db_nodes = []
     NodeObject.find("state:crowbar_upgrade").each do |node|
 
@@ -56,7 +72,7 @@ class CrowbarService < ServiceObject
     return true if proposal["deployment"]["crowbar"]["elements"]["crowbar-upgrade"].empty?
 
     # Commit proposal so the shutdown actions from crowbar-upgrade get executed for non-db nodes
-    proposal_commit("default", false, false)
+    commit_and_check_proposal
   end
 
   def dump_openstack_database
@@ -76,12 +92,7 @@ class CrowbarService < ServiceObject
     # This proposal could return some error if there's not enough space for DB dump
     # Controller must show the error and be able to call the function again once the problem
     # is resolved
-    proposal_commit("default", false, false)
-
-    proposal = ProposalObject.find_proposal("crowbar", "default")
-    if proposal["deployment"]["crowbar"]["crowbar-status"] == "failed"
-      raise proposal["deployment"]["crowbar"]["crowbar-failed"]
-    end
+    commit_and_check_proposal
 
     # If the function succeedes, we need to tell user where to find the database dump
   end
@@ -98,7 +109,7 @@ class CrowbarService < ServiceObject
     end
 
     # Commit the same proposal, we have only crowbar-db-dump role non-empty now
-    proposal_commit("default", false, false)
+    commit_and_check_proposal
   end
 
   #
