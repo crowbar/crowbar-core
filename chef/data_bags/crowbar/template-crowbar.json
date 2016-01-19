@@ -18,24 +18,37 @@
         "machine-install": { "password": "machine_password" },
         "crowbar": { "password": "crowbar" }
       },
-      "simple_proposal_ui": true
+      "simple_proposal_ui": true,
+      "upgrade": {
+        "db_dump_location" : "/var/lib/pgsql/db-before-cloud6.dump"
+      }
     }
   },
   "deployment": {
     "crowbar": {
-      "crowbar-revision": 10,
+      "crowbar-revision": 0,
       "crowbar-applied": false,
+      "schema-revision": 11,
       "element_states": {
-        "crowbar": [ "all" ]
+        "crowbar": [ "all" ],
+        "crowbar-upgrade": [ "crowbar_upgrade" ],
+        "crowbar-db-dump": [ "crowbar_upgrade" ]
       },
       "elements": {},
       "element_order": [
-        [ "crowbar" ]
+        [ "crowbar" ],
+        [ "crowbar-upgrade" ],
+        [ "crowbar-db-dump" ]
       ],
+      "element_run_list_order": {
+        "crowbar": 10,
+        "crowbar-upgrade": 2000,
+        "crowbar-db-dump": 2001
+      },
       "config": {
         "environment": "crowbar-config-test",
         "mode": "full",
-        "transitions": false,
+        "transitions": true,
         "transition_list": [ ]
       }
     }

@@ -20,7 +20,10 @@
         "machine-install": { "password": "machine_password" },
         "crowbar": { "password": "crowbar" }
       },
-      "simple_proposal_ui": true
+      "simple_proposal_ui": true,
+      "upgrade": {
+        "db_dump_location" : "/var/lib/pgsql/db-before-cloud6.dump"
+      }
     }
   },
   "deployment": {

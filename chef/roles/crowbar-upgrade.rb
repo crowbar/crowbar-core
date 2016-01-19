@@ -1,10 +1,14 @@
-# Copyright 2012, Dell Inc., Inc.
+#
+# Cookbook Name:: crowbar
+# Role:: crowbar-upgrade
+#
+# Copyright 2013-2014, SUSE LINUX Products GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +17,9 @@
 # limitations under the License.
 #
 
-default[:crowbar][:simple_proposal_ui] = true
+name "crowbar-upgrade"
+description "Prepare nodes for the crowbar upgrade"
 
-default[:crowbar][:upgrade][:db_dump_location] = "/var/lib/pgsql/db-before-cloud6.dump"
+run_list(
+  "recipe[crowbar::crowbar-upgrade]"
+)
