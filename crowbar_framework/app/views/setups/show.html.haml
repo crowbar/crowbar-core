@@ -1,0 +1,66 @@
+%section
+  .container
+    %p Step 3: This needs to be added to the beginning page of the installer, tweaks might be needed
+    .row
+      .panel.panel-default
+        .panel-heading
+          = button_to "Continue Upgrade", backups_path, class: "btn btn-primary", method: :get
+        .panel-body
+          %p ...this is where the rest of the first page of the current installer should begin...or maybe not, who knows.
+          %p Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam at porttitor sem. Aliquam erat volutpat. Donec placerat nisl magna, et faucibus arcu condimentum sed.Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+%section
+  .container
+    %p Step 4:
+    .row
+      .panel.panel-default
+        .panel-heading
+          %h4 Missing Repositories
+        .panel-body
+          %p The software repository for "SUSE Linux Enterprise High Availability Extension" and "SUSE Linux Enterprise Storage" are missing. Please configure these by hand and click recheck below when the repositories are available.
+          = button_to "Recheck Repositories", repositories_path, class: "btn btn-primary center-block", method: :get
+%section
+  .container
+    %p Step 5:
+    .row
+      .panel.panel-default
+        .panel-heading
+          %h4 Stop OpenStack Services
+        .panel-body
+          %p Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam at porttitor sem. Aliquam erat volutpat. Donec placerat nisl magna, et faucibus arcu condimentum sed.Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+          = button_to "Continue Upgrade Process", stop_setup_path, class: "btn btn-success center-block", method: :get
+%section
+  .container
+    %p Step 6:
+    .row
+      .panel.panel-default
+        .panel-heading
+          %h4 Data Backup
+        .panel-body
+          %p Now is the time to backup all the other data in your system.
+          %p Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam at porttitor sem. Aliquam erat volutpat. Donec placerat nisl magna, et faucibus arcu condimentum sed.Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+          %button.btn.btn-success.center-block{:type => "button"} Continue Upgrade Process
+%section
+  .container
+    %p Step 7:
+    .row
+      .panel.panel-default
+        .panel-heading
+          %h4 Upgrading Nodes
+        .panel-body
+          %dl.dl-horizontal
+            %dt Upgrading node:
+            %dd 134
+            %dt Nodes left to update:
+            %dd 89
+          %p The button below should be class btn-default until the nodes are succesfully upgraded, then is should have the class btn-success
+          = button_to "Continue Upgrade Process", nodes_setup_path, class: "btn btn-primary center-block", method: :get
+%section
+  .container
+    %p Step 8:
+    .row
+      .panel.panel-default
+        .panel-heading
+          %h4 Upgrade Finished
+        .panel-body
+          %p The upgrade is finished and SUSE OpenStack Cloud is now running. Please re-apply all your barclamps in the proper order for the upgrade to take effect. or whatever the heck this text should say.
+          = button_to "Go to your barclamps now", barclamp_modules_path, class: "btn btn-primary center-block", method: :get
