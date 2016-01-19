@@ -37,19 +37,25 @@ module Crowbar
       protected
 
       def restore_chef
-        [:nodes, :roles, :clients, :databags].each do |type|
-          Dir.glob(@data.join("knife", type.to_s, "**", "*")).each do |file|
-            file = Pathname.new(file)
-            next unless file.extname == ".json"
-            record = JSON.load(file.read)
-            if file.basename.to_s.include?("-default.json") && type == :databags
-              bc_name = file.basename.to_s.split("-").first
-              Proposal.create(barclamp: bc_name, name: "default", properties: record)
-              SchemaMigration.run_for_bc(bc_name)
-            else
-              record.save
+        begin
+          [:nodes, :roles, :clients, :databags].each do |type|
+            Dir.glob(@data.join("knife", type.to_s, "**", "*")).each do |file|
+              file = Pathname.new(file)
+              next unless file.extname == ".json"
+              record = JSON.load(file.read)
+              if file.basename.to_s.include?("-default.json") && type == :databags
+                bc_name = file.basename.to_s.split("-").first
+                Proposal.create(barclamp: bc_name, name: "default", properties: record)
+                SchemaMigration.run_for_bc(bc_name)
+              else
+                record.save
+              end
             end
           end
+        rescue Errno::ECONNREFUSED
+          raise Crowbar::Error::ChefOffline.new
+        rescue Net::HTTPServerException
+          raise "Restore failed"
         end
 
         true
