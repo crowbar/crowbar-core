@@ -130,40 +130,11 @@ module Crowbar
       end
 
       def provided_and_enabled?(feature, platform = nil, arch = nil)
-        answer = false
+        provided_with_enabled?(feature, platform, arch, true)
+      end
 
-        if platform.nil?
-          all_platforms.each do |p|
-            if provided_and_enabled?(feature, p)
-              answer = true
-              break
-            end
-          end
-        elsif arch.nil?
-          arches(platform).each do |a|
-            if provided_and_enabled?(feature, platform, a)
-              answer = true
-              break
-            end
-          end
-        else
-          found = false
-          answer = true
-
-          repositories(platform, arch).each do |repo|
-            provided_features = registry[platform][arch][repo]["features"] || []
-
-            next unless provided_features.include? feature
-            found = true
-
-            r = new(platform, arch, repo)
-            answer &&= r.active?
-          end
-
-          answer = false unless found
-        end
-
-        answer
+      def provided?(feature, platform = nil, arch = nil)
+        provided_with_enabled?(feature, platform, arch, false)
       end
 
       def platform_available?(platform, arch)
@@ -196,6 +167,48 @@ module Crowbar
       def web_port
         @web_port ||= Proposal.where(barclamp: "provisioner").first.raw_attributes["web_port"]
       end
+
+      private
+
+      def provided_with_enabled?(feature, platform = nil, arch = nil, check_enabled = true)
+        answer = false
+
+        if platform.nil?
+          all_platforms.each do |p|
+            if provided_with_enabled?(feature, p, arch, check_enabled)
+              answer = true
+              break
+            end
+          end
+        elsif arch.nil?
+          arches(platform).each do |a|
+            if provided_with_enabled?(feature, platform, a, check_enabled)
+              answer = true
+              break
+            end
+          end
+        else
+          found = false
+          answer = true
+
+          repositories(platform, arch).each do |repo|
+            provided_features = registry[platform][arch][repo]["features"] || []
+
+            next unless provided_features.include? feature
+            found = true
+
+            break unless check_enabled
+
+            r = new(platform, arch, repo)
+            answer &&= r.active?
+          end
+
+          answer = false unless found
+        end
+
+        answer
+      end
+
     end
 
     def initialize(platform, arch, repo)
