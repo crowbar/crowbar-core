@@ -24,21 +24,39 @@
 
     .row#nodelist{ "data-constraints" => local_assigns[:constraints].to_json }
       .col-xs-6.dragzone
-        - unless @service_object.available_clusters.empty?
+        - unless @service_object.available_clusters_excluding_remotes.empty?
           %h4
             = t("barclamp.proposal_show.available_clusters")
+            = tooltip_tag(t("barclamp.proposal_show.available_clusters_hint"), class: "fa-lg pull-right text-info")
 
           .form-group
             %input.form-control.input-sm{ :type => "search", :placeholder => "Search", "data-listsearch" => "#nodelist .dragzone ul.clusters", :title => t(".filter") }
 
           .form-group
             %ul.clusters
-              - @service_object.available_clusters.sort.each do |cluster_name, role|
+              - @service_object.available_clusters_excluding_remotes.sort.each do |cluster_name, role|
                 - cluster_barclamp, cluster_proposal = @service_object.cluster_get_barclamp_and_proposal(cluster_name)
                 %li.form-control.input-sm.available{ "data-draggable" => "true", "data-id" => cluster_name, "data-alias" => cluster_proposal, "data-cluster" => "true", "data-admin" => "false", :title => cluster_proposal }
-                  = icon_tag :cloud
+                  = icon_tag :cloud, nil, class: "fa-lg fa-fw"
                   = cluster_proposal
-                  = link_to icon_tag("link"), url_for_proposal_with_name(cluster_barclamp, cluster_proposal), :title => t(".node_link", :alias => cluster_proposal), :class => "pull-right"
+                  = link_to icon_tag("link", nil, class: "fa-lg"), url_for_proposal_with_name(cluster_barclamp, cluster_proposal), :title => t(".node_link", :alias => cluster_proposal), :class => "pull-right"
+
+        - unless @service_object.available_clusters_including_remotes.empty?
+          %h4
+            = t("barclamp.proposal_show.available_remotes")
+            = tooltip_tag(t("barclamp.proposal_show.available_remotes_hint"), class: "fa-lg pull-right text-info")
+
+          .form-group
+            %input.form-control.input-sm{ :type => "search", :placeholder => "Search", "data-listsearch" => "#nodelist .dragzone ul.remotes", :title => t(".filter") }
+
+          .form-group
+            %ul.remotes
+              - @service_object.available_clusters_including_remotes.sort.each do |cluster_name, role|
+                - cluster_barclamp, cluster_proposal = @service_object.cluster_get_barclamp_and_proposal(cluster_name)
+                %li.form-control.input-sm.available{ "data-draggable" => "true", "data-id" => cluster_name, "data-alias" => cluster_proposal, "data-remotes" => "true", "data-admin" => "false", :title => cluster_proposal }
+                  = icon_tag :mixcloud, nil, class: "fa-lg fa-fw"
+                  = cluster_proposal
+                  = link_to icon_tag("link", nil, class: "fa-lg"), url_for_proposal_with_name(cluster_barclamp, cluster_proposal), :title => t(".node_link", :alias => cluster_proposal), :class => "pull-right"
 
         %h4
           = t("barclamp.proposal_show.available_nodes")
@@ -50,9 +68,9 @@
           %ul.nodes
             - nodes_hash.each do |n, detail|
               %li.form-control.input-sm.available{ "data-draggable" => "true", "data-id" => n, "data-alias" => detail[:alias], "data-cluster" => "false", "data-admin" => detail[:admin].to_s, "data-platform" => detail[:platform], "data-platform-version" => detail[:platform_version], :title => (detail[:title] || t("not_set")) }
-                = icon_tag :hdd_o
+                = icon_tag :hdd_o, nil, class: "fa-lg fa-fw"
                 = detail[:alias]
-                = link_to icon_tag("link"), node_path(detail[:handle]), :title => t(".node_link", :alias => detail[:alias]), :class => "pull-right"
+                = link_to icon_tag("link", nil, class: "fa-lg"), node_path(detail[:handle]), :title => t(".node_link", :alias => detail[:alias]), :class => "pull-right"
 
       .col-xs-6.dropzone
         - @proposal.all_elements.each do |element|
@@ -68,13 +86,17 @@
 %script#nodelist-item{ :type => "text/x-handlebars-template" }
   %li{ "data-draggable" => "false", "data-id" => "{{id}}", "data-alias" => "{{alias}}", "data-admin" => "{{admin}}", "data-role" => "{{role}}"  }
     {{#if cluster}}
-    = icon_tag :cloud
+    = icon_tag :cloud, nil, class: "fa-lg fa-fw"
     {{else}}
-    = icon_tag :hdd_o
+    {{#if remotes}}
+    = icon_tag :mixcloud, nil, class: "fa-lg fa-fw"
+    {{else}}
+    = icon_tag :hdd_o, nil, class: "fa-lg fa-fw"
+    {{/if}}
     {{/if}}
 
     {{alias}}
-    = link_to icon_tag("trash"), "#", :title => t(".node_remove", :alias => "{{alias}}"), :class => "pull-right delete"
+    = link_to icon_tag("trash", nil, class: "fa-lg"), "#", :title => t(".node_remove", :alias => "{{alias}}"), :class => "pull-right delete"
 
 %script#nodelist-warning{ :type => "text/x-handlebars-template" }
   .alert.alert-warning.alert-dismissable

@@ -73,6 +73,7 @@
             source.data('platform'),
             source.data('platform-version'),
             source.data('cluster'),
+            source.data('remotes'),
             true
           );
         } else {
@@ -140,6 +141,7 @@
           $node.data('platform'),
           $node.data('platform-version'),
           $node.data('cluster'),
+          $node.data('remotes'),
           false
         );
       }
@@ -236,7 +238,7 @@
     );
   };
 
-  NodeList.prototype.insertNode = function(role, id, alias, admin, platform, platform_version, cluster, initial) {
+  NodeList.prototype.insertNode = function(role, id, alias, admin, platform, platform_version, cluster, remotes, initial) {
     var self = this;
     var $role = $(self.dataBag.roleTarget.format(role));
 
@@ -252,10 +254,16 @@
 
     if (!initial) {
       if ($.inArray(id, self.json.elements[role]) >= 0) {
-        if (cluster) {
-          var key = 'barclamp.node_selector.cluster_duplicate';
-        } else {
-          var key = 'barclamp.node_selector.node_duplicate';
+        switch([cluster, remotes]) {
+          case [true, false]:
+            var key = 'barclamp.node_selector.cluster_duplicate';
+            break;
+          case [false, true]:
+            var key = 'barclamp.node_selector.remotes_duplicate';
+            break;
+          default:
+            var key = 'barclamp.node_selector.node_duplicate';
+            break;
         }
 
         return self.errorMessage(
@@ -283,6 +291,17 @@
         if (cluster) {
           return self.errorMessage(
             'barclamp.node_selector.no_cluster'.localize().format(
+              alias,
+              role
+            )
+          );
+        }
+      }
+
+      if (constraints.remotes == undefined || !constraints.remotes) {
+        if (remotes) {
+          return self.errorMessage(
+            'barclamp.node_selector.no_remotes'.localize().format(
               alias,
               role
             )
@@ -392,7 +411,8 @@
         id: id,
         alias: alias,
         admin: admin,
-        cluster: cluster
+        cluster: cluster,
+        remotes: remotes
       })
     );
 
