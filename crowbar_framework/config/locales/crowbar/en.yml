@@ -592,6 +592,7 @@ en:
       version_too_low: 'Backup version too low'
       version_too_high: 'Backup version higher than current version'
       non_json_file: 'Unprocessable chef file found'
+      invalid_file_extension: 'Filename needs to be a valid tarball with a .tar.gz file extension'
 
   # Global
   overview: 'Overview'
