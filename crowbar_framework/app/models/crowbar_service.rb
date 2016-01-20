@@ -358,6 +358,10 @@ class CrowbarService < ServiceObject
   def apply_role (role, inst, in_queue)
     @logger.debug("Crowbar apply_role: enter")
     answer = super
+    if answer.first != 200
+      @logger.error("Crowbar apply_role: super apply_role finished with error")
+      return answer
+    end
     @logger.debug("Crowbar apply_role: super apply_role finished")
 
     role = role.default_attributes
