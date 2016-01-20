@@ -59,7 +59,7 @@ class CrowbarService < ServiceObject
       end
 
       # mark the position in the upgrade process
-      node["crowbar_wall"]["crowbar_openstack_shutdown"] = true
+      node["crowbar_wall"]["crowbar_upgrade_step"] = "openstack_shutdown"
       node.save
     end
 
@@ -103,8 +103,7 @@ class CrowbarService < ServiceObject
   def finalize_openstack_shutdown
     NodeObject.find("roles:crowbar-db-dump").each do |node|
       # mark the position in the upgrade process
-      node["crowbar_wall"]["crowbar_openstack_shutdown"] = false
-      node["crowbar_wall"]["crowbar_db_shutdown"] = true
+      node["crowbar_wall"]["crowbar_upgrade_step"] = "db_shutdown"
       node.save
     end
 
@@ -300,7 +299,7 @@ class CrowbarService < ServiceObject
       # value of crowbar_wall["crowbar_upgrade"] indicates that the role should be executed
       # but node state should not be changed: this is needed when reverting node state to ready
       if (node.role?("crowbar-upgrade") || node.role?("crowbar-db-dump")) &&
-          node.crowbar_wall["crowbar_upgrade"]
+          node.crowbar_wall["crowbar_upgrade_step"]
         node.set_state("crowbar_upgrade")
       end
     end
