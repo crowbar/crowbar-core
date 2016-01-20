@@ -43,9 +43,11 @@ module Crowbar
               file = Pathname.new(file)
               next unless file.extname == ".json"
               record = JSON.load(file.read)
-              if file.basename.to_s.include?("-default.json") && type == :databags
-                bc_name = file.basename.to_s.split("-").first
-                Proposal.create(barclamp: bc_name, name: "default", properties: record)
+              filename = file.basename.to_s
+              if proposal?(filename) && type == :databags
+                bc_name, prop = filename.split("-")
+                prop.gsub!(/.json$/, "")
+                Proposal.create(barclamp: bc_name, name: prop, properties: record.raw_data)
                 SchemaMigration.run_for_bc(bc_name)
               else
                 record.save
@@ -97,6 +99,10 @@ module Crowbar
         Crowbar::Migrate.migrate!
 
         true
+      end
+
+      def proposal?(filename)
+        !filename.match(/(_network\.json$)|(^template-(.*).json$)/)
       end
     end
   end
