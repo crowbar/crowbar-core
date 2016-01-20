@@ -25,7 +25,8 @@ describe Backup do
         it "is valid" do
           bu = Backup.new(name: "testbackup", created_at: created_at)
           allow_any_instance_of(Crowbar::Backup::Export).to receive(:export).and_return(true)
-          allow_any_instance_of(Backup).to receive(:validate_file_extension).and_return(true)
+          allow_any_instance_of(Backup).to receive(:validate_chef_file_extension).and_return(true)
+          allow_any_instance_of(Backup).to receive(:validate_upload_file_extension).and_return(true)
           allow_any_instance_of(Backup).to receive(:validate_version).and_return(true)
           allow_any_instance_of(Backup).to receive(:validate_hostname).and_return(true)
           expect(bu.save).to be true
