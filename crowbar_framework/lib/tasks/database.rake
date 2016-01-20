@@ -21,16 +21,12 @@ namespace :db do
 
     ActiveRecord::Migrator.tap do |migrator|
       proxies = migrator.migrations(paths)
-      reversed = proxies.reverse
 
-      reversed.each do |proxy|
-        next if proxy.name == "CreateSessions"
-        proxy.migrate(:down)
-      end
-
-      proxies.each do |proxy|
-        next if proxy.name == "CreateSessions"
-        proxy.migrate(:up)
+      if migrator.get_all_versions.empty?
+        migrator.up(paths, proxies.last.version)
+      else
+        migrator.down(paths, proxies.first.version)
+        migrator.up(paths, proxies.last.version)
       end
     end
   end
