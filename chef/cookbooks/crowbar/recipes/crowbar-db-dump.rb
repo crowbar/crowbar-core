@@ -49,8 +49,12 @@ when "openstack_shutdown"
       available = `df #{path} | tail -n 1 | sed "s/ \\+/ /g" | cut -d " " -f 4`
       db_size = `su - postgres -c 'pg_dumpall | wc -c'`
       if db_size.to_i > available.to_i
-        Chef::Log.fatal("DB size is: #{db_size}, available space on #{path} is #{available}")
-        raise "Not enough space on #{path} for the Database dump!"
+        message = "Not enough space for the Database dump on node #{node.name}!\n" \
+          "Database size is: #{db_size}B, available space on #{path} is only #{available}B."
+        Chef::Log.fatal(message)
+        node["crowbar_wall"]["chef_error"] = message
+        node.save
+        raise message
       end
     end
   end
