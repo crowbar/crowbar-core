@@ -27,7 +27,10 @@
 
 return unless node[:platform_family] == "suse"
 
-if node["crowbar_wall"]["crowbar_openstack_shutdown"]
+upgrade_step = node["crowbar_wall"]["crowbar_upgrade_step"] || "none"
+
+case upgrade_step
+when "openstack_shutdown"
 
   include_recipe "crowbar::stop-services-before-upgrade"
 
@@ -61,7 +64,7 @@ if node["crowbar_wall"]["crowbar_openstack_shutdown"]
     EOF
   end
 
-elsif node["crowbar_wall"]["crowbar_db_shutdown"]
+when "db_shutdown"
 
   # Stop remaining pacemaker resources
   bash "stop pacemaker resources" do
@@ -89,5 +92,6 @@ elsif node["crowbar_wall"]["crowbar_db_shutdown"]
       done
     EOF
   end
-
+else
+  Chef::Log.warn("Invalid upgrade step given: #{upgrade_step}")
 end
