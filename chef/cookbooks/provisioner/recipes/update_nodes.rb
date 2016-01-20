@@ -119,11 +119,18 @@ if not nodes.nil? and not nodes.empty?
         end
       end
 
-      [pxefile, uefifile, grubfile, windows_tftp_file].each do |f|
+      [pxefile, uefifile, windows_tftp_file].each do |f|
         file f do
           action :delete
         end unless f.nil?
       end
+
+      file grubfile do
+        action :delete
+        # Do not backup binary files
+        backup false
+      end
+
       [grubdir].each do |d|
         directory d do
           recursive true
@@ -148,11 +155,18 @@ if not nodes.nil? and not nodes.empty?
         end
       end
 
-      [pxefile, grubfile, uefifile].each do |f|
+      [pxefile, uefifile].each do |f|
         file f do
           action :delete
         end unless f.nil?
       end
+
+      file grubfile do
+        action :delete
+        # Do not backup binary files
+        backup false
+      end
+
       [grubdir].each do |d|
         directory d do
           recursive true
