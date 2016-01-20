@@ -30,7 +30,7 @@ if node["crowbar_wall"]["crowbar_openstack_shutdown"]
 
   # Stop DRBD and corosync.
   # (Note that this node is not running database)
-  bash "stop HA and openstack services" do
+  bash "stop HA services" do
     code <<-EOF
       for i in /etc/init.d/drbd \
                /etc/init.d/openais;

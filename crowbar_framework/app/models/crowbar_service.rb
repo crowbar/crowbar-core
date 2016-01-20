@@ -94,7 +94,7 @@ class CrowbarService < ServiceObject
     # is resolved
     commit_and_check_proposal
 
-    # If the function succeedes, we need to tell user where to find the database dump
+    # If the function succeeds, we need to tell user where to find the database dump
   end
 
   # Finish shut down of openstack + HA services on DB nodes.

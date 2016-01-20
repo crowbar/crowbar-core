@@ -63,17 +63,23 @@ if node["crowbar_wall"]["crowbar_openstack_shutdown"]
 
 elsif node["crowbar_wall"]["crowbar_db_shutdown"]
 
-  # Now, stop the database.
-  # In case of HA setup, also stop remaining pacemaker resources and HA services.
+  # Stop remaining pacemaker resources
+  bash "stop pacemaker resources" do
+    code <<-EOF
+      for type in clone ms primitive; do
+        for resource in $(crm configure show | grep ^$type | cut -d " " -f2);
+        do
+          crm resource stop $resource
+        done
+      done
+    EOF
+    only_if { ::File.exist?("/usr/sbin/crm") }
+  end
+
+  # Stop the database and corosync
   bash "stop the database" do
     code <<-EOF
-      if test -e /usr/sbin/crm; then
-        crm resource stop postgresql
-        crm resource stop fs-postgresql
-        crm resource stop vip-admin-database-default-data
-      fi
-      for i in /etc/init.d/openstack-* \
-               /etc/init.d/drbd \
+      for i in /etc/init.d/drbd \
                /etc/init.d/openais \
                /etc/init.d/postgresql;
       do
