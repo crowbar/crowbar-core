@@ -736,8 +736,10 @@ class NodeObject < ChefObject
     # Ruby 1.8 vs. 1.9 compatibility. Select returns Hash in 1.9 instead of
     # an array, so map it back to [key, val] pairs.
     map = map.to_a if map.is_a?(Hash)
-    # Sort map
-    vals = map.sort { |a,b| a[1]["priority"] <=> b[1]["priority"] }
+    # Sort map (by priority, then name)
+    vals = map.sort do |a, b|
+      [a[1]["priority"], a[0]] <=> [b[1]["priority"], b[0]]
+    end
     Rails.logger.debug("rebuilt run_list will be #{vals.inspect}")
 
     # Rebuild list
