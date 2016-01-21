@@ -45,18 +45,29 @@
     .row
       .panel.panel-default
         .panel-heading
+          %h4 Upgrade Nodes to SLE12
+        .panel-body
+          %p Click button to reboot all nodes an upgrade them to SLE-12-SP1
+          = button_to "Upgrade Nodes to SLE12-SP1", nodes_os_upgrade_setup_path, class: "btn btn-primary center-block", method: :get
+%section
+  .container
+    %p Step 8:
+    .row
+      .panel.panel-default
+        .panel-heading
           %h4 Upgrading Nodes
         .panel-body
           %dl.dl-horizontal
+            Wait for all nodes to come back to "ready".
             %dt Upgrading node:
             %dd 134
             %dt Nodes left to update:
             %dd 89
           %p The button below should be class btn-default until the nodes are succesfully upgraded, then is should have the class btn-success
-          = button_to "Continue Upgrade Process", nodes_setup_path, class: "btn btn-primary center-block", method: :get
+          = button_to "Continue Upgrade Process", setup_path, class: "btn btn-primary center-block", method: :get
 %section
   .container
-    %p Step 8:
+    %p Step 9:
     .row
       .panel.panel-default
         .panel-heading
