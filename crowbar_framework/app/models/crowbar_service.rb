@@ -42,7 +42,7 @@ class CrowbarService < ServiceObject
   def commit_and_check_proposal
     proposal_commit("default", false, false)
 
-    proposal = ProposalObject.find_proposal("crowbar", "default")
+    proposal = Proposal.where(barclamp: "crowbar", name: "default").first
     if proposal["deployment"]["crowbar"]["crowbar-status"] == "failed"
       raise proposal["deployment"]["crowbar"]["crowbar-failed"]
     end
@@ -65,7 +65,7 @@ class CrowbarService < ServiceObject
 
     # Adapt current proposal, so only non-db nodes have crowbar-upgrade role
     # (crowbar-upgrade role is currently assigned to all nodes)
-    proposal = ProposalObject.find_proposal("crowbar", "default")
+    proposal = Proposal.where(barclamp: "crowbar", name: "default").first
     proposal["deployment"]["crowbar"]["elements"]["crowbar-upgrade"] -= db_nodes
     proposal.save
 
@@ -82,7 +82,7 @@ class CrowbarService < ServiceObject
 
     raise "There does not seem to exist any node running the database." if db_nodes.empty?
 
-    proposal = ProposalObject.find_proposal("crowbar", "default")
+    proposal = Proposal.where(barclamp: "crowbar", name: "default").first
     # After all non-DB services are shut down, adapt the proposal again and
     # commit it with DB nodes only (and the special role for them)
     proposal["deployment"]["crowbar"]["elements"]["crowbar-upgrade"] = []
