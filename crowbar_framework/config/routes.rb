@@ -142,5 +142,12 @@ Rails.application.routes.draw do
     end
   end
 
+  resource :setup, only: [:show] do
+    collection do
+      get :stop
+      get :nodes
+    end
+  end
+
   match "/:controller/:action/*(:.format)", via: [:get, :post, :put, :patch, :delete]
 end
