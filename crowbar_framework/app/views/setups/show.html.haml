@@ -37,8 +37,8 @@
           %h4 Data Backup
         .panel-body
           %p Now is the time to backup all the other data in your system.
-          %p Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam at porttitor sem. Aliquam erat volutpat. Donec placerat nisl magna, et faucibus arcu condimentum sed.Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-          %button.btn.btn-success.center-block{:type => "button"} Continue Upgrade Process
+          %p You can find dump of your OpenStack database at node XXX, file YYY
+          = button_to "Continue Upgrade Process", finalize_setup_path, class: "btn btn-success center-block", method: :get
 %section
   .container
     %p Step 7:
