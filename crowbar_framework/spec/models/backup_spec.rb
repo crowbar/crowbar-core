@@ -2,6 +2,14 @@ require "spec_helper"
 
 describe Backup do
   let(:created_at) { Time.zone.now.strftime("%Y%m%d-%H%M%S") }
+  let!(:stub_methods) do
+    [
+      :validate_chef_file_extension,
+      :validate_upload_file_extension,
+      :validate_version,
+      :validate_hostname
+    ]
+  end
 
   describe "Backup creation" do
     let(:backup) { Backup.new(name: "testbackup", created_at: created_at) }
@@ -25,10 +33,9 @@ describe Backup do
         it "is valid" do
           bu = Backup.new(name: "testbackup", created_at: created_at)
           allow_any_instance_of(Crowbar::Backup::Export).to receive(:export).and_return(true)
-          allow_any_instance_of(Backup).to receive(:validate_chef_file_extension).and_return(true)
-          allow_any_instance_of(Backup).to receive(:validate_upload_file_extension).and_return(true)
-          allow_any_instance_of(Backup).to receive(:validate_version).and_return(true)
-          allow_any_instance_of(Backup).to receive(:validate_hostname).and_return(true)
+          stub_methods.each do |stub_method|
+            allow_any_instance_of(Backup).to receive(stub_method).and_return(true)
+          end
           expect(bu.save).to be true
         end
       end
@@ -36,9 +43,9 @@ describe Backup do
       context "not valid" do
         it "already exists" do
           allow_any_instance_of(Crowbar::Backup::Export).to receive(:export).and_return(true)
-          allow_any_instance_of(Backup).to receive(:validate_file_extension).and_return(true)
-          allow_any_instance_of(Backup).to receive(:validate_version).and_return(true)
-          allow_any_instance_of(Backup).to receive(:validate_hostname).and_return(true)
+          stub_methods.each do |stub_method|
+            allow_any_instance_of(Backup).to receive(stub_method).and_return(true)
+          end
           Backup.new(name: "testbackup", created_at: created_at).save
           bu = Backup.new(name: "testbackup", created_at: created_at)
           expect(bu.save).to be false
@@ -48,9 +55,9 @@ describe Backup do
           [" white space", "$%§&$%"].each do |filename|
             bu = Backup.new(name: filename, created_at: created_at)
             allow_any_instance_of(Crowbar::Backup::Export).to receive(:export).and_return(true)
-            allow_any_instance_of(Backup).to receive(:validate_file_extension).and_return(true)
-            allow_any_instance_of(Backup).to receive(:validate_version).and_return(true)
-            allow_any_instance_of(Backup).to receive(:validate_hostname).and_return(true)
+            stub_methods.each do |stub_method|
+              allow_any_instance_of(Backup).to receive(stub_method).and_return(true)
+            end
             expect(bu.save).to be false
           end
         end
