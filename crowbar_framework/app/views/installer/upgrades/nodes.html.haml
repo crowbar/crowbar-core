@@ -1,0 +1,49 @@
+.row
+  .col-lg-12
+    = form_tag nodes_upgrade_path, method: "post" do
+      .panel.panel-default
+        .panel-heading
+          %h2
+            = t("installer.upgrades.header", product: branding_config.page_title)
+
+        .panel-plain.wizard
+          = render partial: "nav", locals: { active: :nodes }
+
+          .wizard-body.col-lg-9
+            %h2
+              = t(".header")
+
+            %p
+              = t(".description")
+
+            .col-lg-4.text-center.text-success
+              %h2
+                %strong
+                  = total_nodes_count
+              %p
+                Nodes in total
+
+            .col-lg-4.text-center.text-info
+              %h2
+                %strong
+                  = upgrading_nodes_count
+              %p
+                Left to upgrade
+
+            .col-lg-4.text-center.text-danger
+              %h2
+                %strong
+                  = failed_nodes_count
+              %p
+                Failed to upgrade
+
+
+        .panel-footer
+          .row
+            .col-lg-3
+              = progress_steps 7, 1, 8
+
+            .col-lg-9.text-right
+              .btn-group{ role: "group" }
+                = button_tag icon_tag(:chevron_right, t(".continue")), |
+                  class: "btn btn-primary"

@@ -33,6 +33,47 @@
       margin-bottom: 0;
     }
   }
+
+  .panel-plain {
+    @include clearfix;
+  }
+
+  .panel-footer {
+    .progress {
+      margin: 6px 0;
+      background-color: lighten(#f5f5f5, 50%);
+    }
+  }
+}
+
+.wizard {
+  .wizard-nav {
+    background-color: #f5f5f5;
+    margin: 0;
+    padding: 0;
+
+    li {
+      line-height: 40px;
+
+      &.active {
+        a {
+          background-color: #08C;
+          color: #fff;
+        }
+      }
+
+      a {
+        background-color: #f5f5f5;
+        color: #b4b4b4;
+        padding: 3px 15px 3px 20px;
+        cursor: default;
+      }
+    }
+  }
+
+  .wizard-body {
+    padding: 30px;
+  }
 }
 
 h1,

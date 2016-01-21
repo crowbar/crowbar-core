@@ -538,6 +538,76 @@ en:
       active_repo_tooltip: 'Managed nodes will be automatically configured to use repositories only if they are marked as active'
 
   installer:
+    title: 'Installer'
+    index:
+      header: 'What do you want to do?'
+      install: 'Install from scratch'
+      restore: 'Restore from backup'
+      upgrade: 'Upgrade from backup'
+    upgrades:
+      title: 'Upgrade'
+      header: '%{product}: Upgrade from backup'
+      nav:
+        prepare: 'Prepare upgrade'
+        download: 'Data download'
+        start: 'Start upgrade'
+        repos: 'Repositories'
+        services: 'Stop services'
+        backup: 'Data backup'
+        nodes: 'Upgrading nodes'
+        finish: 'Upgrade finished'
+      start:
+        cancel: 'Back to selection'
+        continue: 'Continue upgrade process'
+        header: 'Start upgrade'
+        description: |
+          Lorem Ipsum is simply dummy text of the printing and typesetting
+          industry. Lorem Ipsum has been the industry's standard dummy text ever
+          since the 1500s, when an unknown printer took a galley of type and
+          scrambled it to make a type specimen book.
+      repos:
+        continue: 'Recheck repositories'
+        header: 'Missing Repositories'
+        description: |
+          The software repository for "SUSE Linux Enterprise High Availability
+          Extension" and "SUSE Linux Enterprise Storage" are missing. Please
+          configure these by hand and click recheck below when the repositories
+          are available.
+      services:
+        continue: 'Continue upgrade process'
+        header: 'Stop OpenStack Services'
+        description: |
+          Lorem Ipsum is simply dummy text of the printing and typesetting
+          industry. Lorem Ipsum has been the industry's standard dummy text ever
+          since the 1500s, when an unknown printer took a galley of type and
+          scrambled it to make a type specimen book.
+      backup:
+        continue: 'Continue upgrade process'
+        header: 'Data backup'
+        description: |
+          Lorem Ipsum is simply dummy text of the printing and typesetting
+          industry. Lorem Ipsum has been the industry's standard dummy text ever
+          since the 1500s, when an unknown printer took a galley of type and
+          scrambled it to make a type specimen book.
+      nodes:
+        continue: 'Continue upgrade process'
+        header: 'Upgrading nodes'
+        description: |
+          Lorem Ipsum is simply dummy text of the printing and typesetting
+          industry. Lorem Ipsum has been the industry's standard dummy text ever
+          since the 1500s, when an unknown printer took a galley of type and
+          scrambled it to make a type specimen book.
+        total_nodes: 'Nodes in total'
+        left_nodes: 'Left to upgrade'
+        failed_nodes: 'Failed to upgrade'
+      finish:
+        continue: 'Go to your barclamps now'
+        header: 'Upgrade finished'
+        description: |
+          The upgrade is finished and SUSE OpenStack Cloud is now running. Please
+          re-apply all your barclamps in the proper order for the upgrade to
+          take effect. or whatever the heck this text should say.
+
     installers:
       status:
         installation_failed: 'Installation failed. Please check the log at /var/log/crowbar/install.log'
