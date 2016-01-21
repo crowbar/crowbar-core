@@ -633,6 +633,9 @@ en:
   next: 'Next'
   prev: 'Previous'
 
+  progress:
+    steps: '%{curr} of %{total}'
+
   # node.raid_set
   raid:
     JBODOnly: 'JBOD'
