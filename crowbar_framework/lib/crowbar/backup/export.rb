@@ -66,7 +66,7 @@ module Crowbar
 
         Chef::DataBag.list.each do |name, url|
           bag_dir = data_dir.join(name)
-          bag_dir.mkpath unless bag_dir.directory?
+          bag_dir.mkpath
 
           Chef::DataBag.load(name).each do |item, item_url|
             next if item.match(/\Atemplate-.*/)
@@ -114,7 +114,7 @@ module Crowbar
 
         self.class.export_files.each do |filemap|
           source, destination = filemap
-          if source =~ /resolv.conf/
+          if source =~ /resolv.conf/ && File.exist?(source)
             data_dir.join(destination).open("w") do |file|
               forwarders.each do |forwarder|
                 file.write("nameserver #{forwarder}")
@@ -174,11 +174,6 @@ module Crowbar
           logger.debug "Backing up #{component} #{name}"
 
           record = klass.load(name)
-
-          unless record
-            logger.error "Faild to load #{component} #{name}"
-            next
-          end
 
           data_dir.join("#{name}.json").open("w") do |file|
             file.write(

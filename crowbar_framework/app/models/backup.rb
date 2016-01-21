@@ -36,10 +36,13 @@ class Backup < ActiveRecord::Base
   validates :size,
     presence: true
 
-  validate :validate_file_extension, :validate_version, :validate_hostname
+  validate :validate_chef_file_extension,
+    :validate_version,
+    :validate_hostname,
+    :validate_upload_file_extension
 
   def path
-    self.class.image_dir.join("#{name}.tar.gz")
+    self.class.image_dir.join(filename)
   end
 
   def filename
@@ -114,10 +117,10 @@ class Backup < ActiveRecord::Base
   end
 
   def save_archive
-    self.name = file.original_filename.split(".").first
+    self.name = file.original_filename.remove(".tar.gz")
 
     if path.exist?
-      errors.add(:filename, I18n.t(".invalid_filename", scope: "backups.index"))
+      errors.add(:filename, I18n.t(".invalid_filename_exists", scope: "backups.index"))
       return false
     end
 
@@ -135,7 +138,7 @@ class Backup < ActiveRecord::Base
     path.delete if path.exist?
   end
 
-  def validate_file_extension
+  def validate_chef_file_extension
     Dir.glob(data.join("knife", "**", "*")).each do |file|
       next if Pathname.new(file).directory?
       next if File.extname(file) == ".json"
@@ -158,5 +161,11 @@ class Backup < ActiveRecord::Base
     unless system_hostname == backup_hostname
       errors.add(:base, I18n.t("backups.validation.hostnames_not_identical"))
     end
+  end
+
+  def validate_upload_file_extension
+    return if !file || (file && file.original_filename.match(/tar\.gz$/))
+
+    errors.add(:base, I18n.t("backups.validation.invalid_file_extension"))
   end
 end
