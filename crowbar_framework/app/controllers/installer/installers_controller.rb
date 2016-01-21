@@ -93,6 +93,10 @@ module Installer
       end
     end
 
+    def meta_title
+      "Installer"
+    end
+
     protected
 
     def hide_navigation
