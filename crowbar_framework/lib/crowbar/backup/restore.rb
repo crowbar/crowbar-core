@@ -86,8 +86,9 @@ module Crowbar
 
           system(
             "sudo", "-i",
-            "cp", "-r", "--no-preserve=mode,ownership",
+            "cp", "-a",
             src_string,
+            @data.join("crowbar", source).to_s,
             destination
           )
         end
