@@ -168,4 +168,20 @@ class Backup < ActiveRecord::Base
 
     errors.add(:base, I18n.t("backups.validation.invalid_file_extension"))
   end
+
+  class << self
+    def find_using_id_or_name(name)
+      name = name.to_s
+
+      if name =~ /\A\d+\Z/
+        find_by(id: name.to_i)
+      else
+        find_by(name: name)
+      end
+    end
+
+    def find_using_id_or_name!(name)
+      find_using_id_or_name(name) || fail(ActiveRecord::RecordNotFound)
+    end
+  end
 end

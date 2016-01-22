@@ -160,7 +160,7 @@ class BackupsController < ApplicationController
   protected
 
   def set_backup
-    @backup = Backup.find(params[:id])
+    @backup = Backup.find_using_id_or_name!(params[:id])
   end
 
   def backup_params
