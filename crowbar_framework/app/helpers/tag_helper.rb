@@ -63,7 +63,6 @@ module TagHelper
   end
 
   def progress_steps(current, min, max)
-
     width = if current == max
       100
     else

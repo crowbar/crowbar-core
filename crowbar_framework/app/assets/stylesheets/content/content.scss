@@ -40,8 +40,8 @@
 
   .panel-footer {
     .progress {
-      margin: 6px 0;
       background-color: lighten(#f5f5f5, 50%);
+      margin: 6px 0;
     }
   }
 }
@@ -57,7 +57,7 @@
 
       &.active {
         a {
-          background-color: #08C;
+          background-color: #08c;
           color: #fff;
         }
       }
@@ -65,8 +65,8 @@
       a {
         background-color: #f5f5f5;
         color: #b4b4b4;
-        padding: 3px 15px 3px 20px;
         cursor: default;
+        padding: 3px 15px 3px 20px;
       }
     }
   }
