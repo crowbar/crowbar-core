@@ -13,6 +13,18 @@
 # limitations under the License.
 #
 
+def find_node_boot_mac_addresses(node, admin_data_net)
+  result = []
+  admin_interfaces = admin_data_net.interface_list
+  admin_interfaces.each do |interface|
+    node["network"]["interfaces"][interface]["addresses"].each do |addr, addr_data|
+      next if addr_data["family"] != "lladdr"
+      result << addr unless result.include? addr
+    end
+  end
+  result
+end
+
 states = node["provisioner"]["dhcp"]["state_machine"]
 tftproot = node["provisioner"]["root"]
 timezone = (node["provisioner"]["timezone"] rescue "UTC") || "UTC"
@@ -103,6 +115,7 @@ if not nodes.nil? and not nodes.empty?
 
     # needed for dhcp
     admin_data_net = Chef::Recipe::Barclamp::Inventory.get_network_by_type(mnode, "admin")
+    admin_mac_addresses = find_node_boot_mac_addresses(mnode, admin_data_net)
 
     case
     when (new_group == "delete")
@@ -147,7 +160,7 @@ if not nodes.nil? and not nodes.empty?
       mac_list.each_index do |i|
         dhcp_host "#{mnode.name}-#{i}" do
           hostname mnode.name
-          if mnode.macaddress == mac_list[i]
+          if admin_mac_addresses.include?(mac_list[i])
             ipaddress admin_data_net.address
           end
           macaddress mac_list[i]
@@ -180,7 +193,7 @@ if not nodes.nil? and not nodes.empty?
         dhcp_host "#{mnode.name}-#{i}" do
           hostname mnode.name
           macaddress mac_list[i]
-          if mnode.macaddress == mac_list[i]
+          if admin_mac_addresses.include?(mac_list[i])
             ipaddress admin_data_net.address unless admin_data_net.nil?
             options [
               'if exists dhcp-parameter-request-list {
