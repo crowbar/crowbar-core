@@ -40,31 +40,49 @@ module Crowbar
 
     def knife_files
       @data.join("knife", "databags", "barclamps").rmtree
+      knife_path = @data.join("knife")
 
-      crowbar_databags_path = @data.join("knife", "databags", "crowbar")
+      crowbar_databags_path = knife_path.join("databags", "crowbar")
       crowbar_databags_path.children.each do |file|
-        if file == "bc-template-nova_dashboard.json"
-          crowbar_databags_path.join(file).rename(
-            crowbar_databags_path.join(file.sub!("nova_dashboard", "horizon"))
-          )
+        file_path = crowbar_databags_path.join(file)
 
-          file_content = File.read(crowbar_databags_path.join(file))
-          file_content.gsub!("nova_dashboard", "horizon")
-          File.open(crowbar_databags_path.join(file), "w") { |content| content.puts file_content }
+        if file.basename.to_s =~ /^bc-nova_dashboard-(.*)\.json$/
+          new_file = filename_replace(file_path, "nova_dashboard", "horizon")
+          filecontent_replace(new_file, "nova_dashboard", "horizon")
+          file_path = new_file
         end
 
-        next unless file.to_s.match("bc-.*.json")
-        new_file = file.sub("bc-", "")
-        crowbar_databags_path.join(file).rename(new_file)
+        next unless file_path.basename.to_s =~ /^bc-(.*).json$/
+        file_path = filename_replace(file_path, "bc-", "")
+        filecontent_replace(file_path, "bc-", "")
+      end
 
-        file_content = crowbar_databags_path.join(new_file).read
-        file_content.gsub!("bc-", "")
-        File.open(crowbar_databags_path.join(new_file), "w") { |content| content.puts file_content }
+      roles_path = knife_path.join("roles")
+      roles_path.children.each do |file|
+        case file.basename.to_s
+        when /^nova_dashboard-(.*).json$/
+          new_file = filename_replace(file, "nova_dashboard", "horizon")
+          filecontent_replace(new_file, "nova_dashboard", "horizon")
+        when /^crowbar-(.*).json$/
+          filecontent_replace(new_file, "nova_dashboard", "horizon")
+        end
       end
     end
 
     def crowbar_files
       FileUtils.touch(@data.join("crowbar", "production.yml"))
+    end
+
+    def filename_replace(file, search, replace)
+      new_file = file.sub(search, replace)
+      file.rename(new_file)
+      new_file
+    end
+
+    def filecontent_replace(file, search, replace)
+      file_content = file.read
+      file_content.gsub!(search, replace)
+      file.open("w") { |content| content.puts file_content }
     end
   end
 end
