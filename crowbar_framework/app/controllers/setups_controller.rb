@@ -61,6 +61,18 @@ class SetupsController < ApplicationController
     logger.debug("Triggering Operating System Upgrade on all nodes")
     @service_object.prepare_nodes_for_os_upgrade
 
+  end
+
+  # Check if optional repositories are available (if they are needed)
+  # FIXME: this should be called silently, and only if the function fails,
+  # error page (with the option to call the check again) should be shown
+  def repositories
+    begin
+      Openstack::Upgrade.check_additional_repositories_presence logger
+    rescue => e
+      flash[:alert] = e.message
+    end
+
     redirect_to setup_path
   end
 

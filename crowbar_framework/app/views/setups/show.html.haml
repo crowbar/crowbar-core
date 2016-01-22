@@ -17,7 +17,7 @@
           %h4 Missing Repositories
         .panel-body
           %p The software repository for "SUSE Linux Enterprise High Availability Extension" and "SUSE Linux Enterprise Storage" are missing. Please configure these by hand and click recheck below when the repositories are available.
-          = button_to "Recheck Repositories", repositories_path, class: "btn btn-primary center-block", method: :get
+          = button_to "Recheck Repositories", repositories_setup_path, class: "btn btn-primary center-block", method: :get
 %section
   .container
     %p Step 5:
