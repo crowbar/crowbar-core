@@ -16,16 +16,15 @@
 
 module BackupsHelper
   def download_backup_button(backup)
-    button_to(
+    link_to(
       t("download"),
       download_backup_path(backup.id),
-      method: :get,
       class: "btn btn-default"
     )
   end
 
   def delete_backup_button(backup)
-    button_to(
+    link_to(
       t("delete"),
       backup_path(backup.id),
       method: :delete,
@@ -35,7 +34,7 @@ module BackupsHelper
   end
 
   def restore_backup_button(backup)
-    button_to(
+    link_to(
       t(".restore"),
       restore_backup_path(backup.id),
       method: :post,
