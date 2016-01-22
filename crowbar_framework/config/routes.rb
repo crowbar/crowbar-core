@@ -146,6 +146,7 @@ Rails.application.routes.draw do
     collection do
       get :stop
       get :nodes
+      get :finalize
     end
   end
 

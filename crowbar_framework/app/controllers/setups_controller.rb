@@ -22,7 +22,31 @@ class SetupsController < ApplicationController
   end
 
   def stop
-    # TODO: place function call
+    # Stop services at the nodes
+    @service_object = CrowbarService.new logger
+
+    @service_object.shutdown_services_at_non_db_nodes
+
+    # Dump of the database could fail with the message that there's not enough space
+    # We need to show the error to user so he can manually prepare the space on node
+    # and than redo this step.
+    begin
+      @service_object.dump_openstack_database
+    rescue => e
+      flash[:alert] = e.message
+      # FIXME: redirect to previous step?
+    end
+
+    # FIXME: now user needs to be told where is the database dump located in case
+    # he/she wants to manually fetch it
+    redirect_to setup_path
+  end
+
+  def finalize
+    # After database has been dumped, and user had the opportunity to retrieve the dump
+    # we can finally shutdown everything at nodes, including the database
+    @service_object.finalize_openstack_shutdown
+
     redirect_to setup_path
   end
 
