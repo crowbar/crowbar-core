@@ -43,14 +43,15 @@ module Crowbar
 
       crowbar_databags_path = @data.join("knife", "databags", "crowbar")
       crowbar_databags_path.children.each do |file|
-        if file == "bc-template-nova_dashboard.json"
-          crowbar_databags_path.join(file).rename(
-            crowbar_databags_path.join(file.sub!("nova_dashboard", "horizon"))
-          )
-
+        if file.to_s.match("bc-nova_dashboard-default.json$")
           file_content = File.read(crowbar_databags_path.join(file))
           file_content.gsub!("nova_dashboard", "horizon")
           File.open(crowbar_databags_path.join(file), "w") { |content| content.puts file_content }
+
+          crowbar_databags_path.join(file).rename(
+            crowbar_databags_path.join(file.to_s.sub!("bc-nova_dashboard", "horizon"))
+          )
+	  next
         end
 
         next unless file.to_s.match("bc-.*.json")
