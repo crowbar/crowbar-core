@@ -15,6 +15,7 @@
 #
 
 class BackupsController < ApplicationController
+  wrap_parameters :backup, include: [:file]
   skip_before_filter :enforce_installer
   before_action :set_backup, only: [:destroy, :restore, :download]
 
