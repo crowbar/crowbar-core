@@ -145,8 +145,8 @@ Rails.application.routes.draw do
   resource :setup, only: [:show] do
     collection do
       get :stop
-      get :nodes
       get :finalize
+      get :nodes_os_upgrade
     end
   end
 

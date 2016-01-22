@@ -50,8 +50,17 @@ class SetupsController < ApplicationController
     redirect_to setup_path
   end
 
-  def nodes
-    # TODO: place function call
+  def nodes_os_upgrade
+    @service_object = CrowbarService.new(logger)
+
+    # FIXME: uncomment once https://github.com/crowbar/crowbar-core/pull/187
+    # is merged
+    #logger.debug("Disabling all non-core proposals on client nodes")
+    #@service_object.disable_non_core_proposals
+
+    logger.debug("Triggering Operating System Upgrade on all nodes")
+    @service_object.prepare_nodes_for_os_upgrade
+
     redirect_to setup_path
   end
 
