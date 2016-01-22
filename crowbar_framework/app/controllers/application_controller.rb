@@ -20,6 +20,7 @@ require "uri"
 # Filters added to this controller apply to all controllers in the application.
 # Likewise, all the methods added will be available for all controllers.
 class ApplicationController < ActionController::Base
+  rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
   rescue_from Crowbar::Error::NotFound, with: :render_not_found
   rescue_from Crowbar::Error::ChefOffline, with: :chef_is_offline
 
