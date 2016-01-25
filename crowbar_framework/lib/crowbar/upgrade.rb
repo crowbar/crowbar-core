@@ -64,7 +64,7 @@ module Crowbar
           new_file = filename_replace(file, "nova_dashboard", "horizon")
           filecontent_replace(new_file, "nova_dashboard", "horizon")
         when /^crowbar-(.*).json$/
-          filecontent_replace(new_file, "nova_dashboard", "horizon")
+          filecontent_replace(file, "nova_dashboard", "horizon")
         end
       end
     end
