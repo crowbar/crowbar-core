@@ -18,6 +18,11 @@
 class CrowbarService < ServiceObject
   attr_accessor :transition_save_node
 
+  def initialize(thelogger)
+    super(thelogger)
+    @bc_name = "crowbar"
+  end
+
   class << self
     def role_constraints
       {
