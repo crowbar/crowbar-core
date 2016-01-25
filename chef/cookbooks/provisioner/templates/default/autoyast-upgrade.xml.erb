@@ -91,6 +91,16 @@
         </source>
       </script>
     </chroot-scripts>
+    <init-scripts config:type="list">
+      <!-- /bugfix bnc#886238: https://bugzilla.novell.com/show_bug.cgi?id=886238 -->
+      <script>
+        <source>
+<![CDATA[
+/usr/sbin/crowbar_join --setup --debug --verbose
+]]>
+        </source>
+      </script>
+    </init-scripts>
   </scripts>
   <software>
     <packages config:type="list">
