@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+require "tempfile"
+
 module Crowbar
   class Upgrade
     attr_accessor :data
@@ -57,6 +59,21 @@ module Crowbar
           new_file = filename_replace(file_path, "nova_dashboard", "horizon")
           filecontent_replace(new_file, "nova_dashboard", "horizon")
           file_path = new_file
+        when /^bc-network-(.*)\.json$/
+          json = JSON.load(file.read)
+          # override with migrated attributes
+          json["attributes"]["network"] = SchemaMigration.migrated_attributes("network", json)
+          network_proposal = Tempfile.new("network")
+          network_proposal.write JSON.pretty_generate(attributes: json["attributes"])
+          network_proposal.close
+          cmd = [
+            "sudo",
+            "cp",
+            network_proposal.path,
+            "/etc/crowbar/network.json"
+          ]
+          system(*cmd)
+          network_proposal.unlink
         end
 
         next unless file_path.basename.to_s =~ /^bc-(.*).json$/
