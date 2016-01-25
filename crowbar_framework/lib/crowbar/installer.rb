@@ -44,12 +44,8 @@ module Crowbar
       def steps
         [
           :pre_sanity_checks,
-          :run_services,
           :initial_chef_client,
           :barclamp_install,
-          :bootstrap_crowbar_setup,
-          :apply_crowbar_config,
-          :transition_crowbar,
           :chef_client_daemon,
           :post_sanity_checks
         ]
