@@ -114,9 +114,19 @@ module CrowbarPacemakerProxy
     items.each do |item|
       expanded = nil
 
-      if is_cluster?(item) || is_remotes?(item)
+      if is_cluster?(item)
         if defined?(PacemakerServiceObject)
           expanded = PacemakerServiceObject.expand_nodes(item)
+        end
+
+        if expanded.nil?
+          failures << item
+        else
+          nodes.concat(expanded)
+        end
+      elsif is_remotes?(item)
+        if defined?(PacemakerServiceObject)
+          expanded = PacemakerServiceObject.expand_remote_nodes(item)
         end
 
         if expanded.nil?
