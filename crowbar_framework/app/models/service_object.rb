@@ -652,7 +652,7 @@ class ServiceObject
   def violates_admin_constraint?(elements, role, nodes_is_admin = {})
     if role_constraints[role] && !role_constraints[role]["admin"]
       elements[role].each do |element|
-        next if is_cluster? element
+        next if is_cluster?(element) || is_remotes?(element)
         unless nodes_is_admin.key? element
           node = NodeObject.find_node_by_name(element)
           nodes_is_admin[element] = (!node.nil? && node.admin?)
@@ -667,7 +667,7 @@ class ServiceObject
     if role_constraints[role] && role_constraints[role].key?("platform")
       constraints = role_constraints[role]["platform"]
       elements[role].each do |element|
-        next if is_cluster? element
+        next if is_cluster?(element) || is_remotes?(element)
         node = NodeObject.find_node_by_name(element)
 
         return true if !constraints.any? do |platform, version|
@@ -682,7 +682,7 @@ class ServiceObject
     if role_constraints[role] && role_constraints[role].key?("exclude_platform")
       constraints = role_constraints[role]["exclude_platform"]
       elements[role].each do |element|
-        next if is_cluster? element
+        next if is_cluster?(element) || is_remotes?(element)
         node = NodeObject.find_node_by_name(element)
 
         return true if constraints.any? do |platform, version|
