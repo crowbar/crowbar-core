@@ -33,15 +33,6 @@ module CrowbarPacemakerProxy
     end
   end
 
-  # Returns: List of available clusters excluding remotes
-  def available_clusters_excluding_remotes
-    if defined? PacemakerServiceObject
-      PacemakerServiceObject.available_clusters_excluding_remotes
-    else
-      {}
-    end
-  end
-
   # Returns: List of available clusters including remotes
   def available_clusters_including_remotes
     if defined? PacemakerServiceObject

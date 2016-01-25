@@ -24,7 +24,7 @@
 
     .row#nodelist{ "data-constraints" => local_assigns[:constraints].to_json }
       .col-xs-6.dragzone
-        - unless @service_object.available_clusters_excluding_remotes.empty?
+        - unless @service_object.available_clusters.empty?
           %h4
             = t("barclamp.proposal_show.available_clusters")
             = tooltip_tag(t("barclamp.proposal_show.available_clusters_hint"), class: "fa-lg pull-right text-info")
@@ -34,7 +34,7 @@
 
           .form-group
             %ul.clusters
-              - @service_object.available_clusters_excluding_remotes.sort.each do |cluster_name, role|
+              - @service_object.available_clusters.sort.each do |cluster_name, role|
                 - cluster_barclamp, cluster_proposal = @service_object.cluster_get_barclamp_and_proposal(cluster_name)
                 %li.form-control.input-sm.available{ "data-draggable" => "true", "data-id" => cluster_name, "data-alias" => cluster_proposal, "data-cluster" => "true", "data-admin" => "false", :title => cluster_proposal }
                   = icon_tag :cloud, nil, class: "fa-lg fa-fw"

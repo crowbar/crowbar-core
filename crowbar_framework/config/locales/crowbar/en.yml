@@ -137,7 +137,7 @@ en:
       delete_proposal_failure: 'Failed to delete the proposal'
       confirm_delete_proposal: 'Are you sure you wish to delete this proposal?'
       available_clusters: 'Available Clusters'
-      available_clusters_hint: 'Here you can see all available clusters that do not have any additional remote nodes.'
+      available_clusters_hint: 'Here you can see all available clusters.'
       available_remotes: 'Available Remotes'
       available_remotes_hint: 'Here you can see all available clusters that do have additional remote nodes assigned.'
       available_nodes: 'Available Nodes'
