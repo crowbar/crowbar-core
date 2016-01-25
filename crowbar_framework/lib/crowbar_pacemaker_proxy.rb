@@ -73,6 +73,14 @@ module CrowbarPacemakerProxy
     result
   end
 
+  def remotes_remote_nodes_count(element)
+    if defined?(PacemakerServiceObject)
+      PacemakerServiceObject.remotes_remote_nodes_count(element)
+    else
+      0
+    end
+  end
+
   # Returns: name of the cluster, or nil if it's not a cluster
   def cluster_name(element)
     name = nil

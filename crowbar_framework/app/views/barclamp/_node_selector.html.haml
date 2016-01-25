@@ -54,9 +54,11 @@
             %ul.remotes
               - @service_object.available_clusters_including_remotes.sort.each do |cluster_name, role|
                 - cluster_barclamp, cluster_proposal = @service_object.cluster_get_barclamp_and_proposal(cluster_name)
-                %li.form-control.input-sm.available{ "data-draggable" => "true", "data-id" => cluster_name, "data-alias" => cluster_proposal, "data-remotes" => "true", "data-admin" => "false", :title => cluster_proposal }
+                - remotes_count = @service_object.remotes_remote_nodes_count(cluster_name)
+                - remotes_alias = t("barclamp.proposal_show.remotes_alias", name: cluster_proposal, count: remotes_count)
+                %li.form-control.input-sm.available{ "data-draggable" => "true", "data-id" => cluster_name, "data-alias" => remotes_alias, "data-remotes" => "true", "data-admin" => "false", :title => cluster_proposal }
                   = icon_tag :mixcloud, nil, class: "fa-lg fa-fw"
-                  = cluster_proposal
+                  = remotes_alias
                   = link_to icon_tag("link", nil, class: "fa-lg"), url_for_proposal_with_name(cluster_barclamp, cluster_proposal), :title => t(".node_link", :alias => cluster_proposal), :class => "pull-right"
 
         %h4

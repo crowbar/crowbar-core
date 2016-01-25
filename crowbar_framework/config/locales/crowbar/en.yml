@@ -140,6 +140,7 @@ en:
       available_clusters_hint: 'Here you can see all available clusters.'
       available_remotes: 'Available Remotes'
       available_remotes_hint: 'Here you can see all available clusters that do have additional remote nodes assigned.'
+      remotes_alias: '%{name} (%{count} remote nodes)'
       available_nodes: 'Available Nodes'
       ui_advice: 'Drag nodes from Available Nodes into desired deployment list(s).'
       blockui_message: 'Processing, please wait...'
