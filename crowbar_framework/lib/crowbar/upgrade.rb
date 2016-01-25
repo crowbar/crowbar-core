@@ -46,6 +46,14 @@ module Crowbar
       crowbar_databags_path.children.each do |file|
         file_path = crowbar_databags_path.join(file)
 
+        if file.basename.to_s =~ /^bc-crowbar-(.*)\.json$/
+          json = JSON.load(file.read)
+          if json["attributes"]["rails"]
+            json["attributes"].delete("rails")
+            file.open("w") { |content| content.puts JSON.pretty_generate(json) }
+          end
+        end
+
         if file.basename.to_s =~ /^bc-nova_dashboard-(.*)\.json$/
           new_file = filename_replace(file_path, "nova_dashboard", "horizon")
           filecontent_replace(new_file, "nova_dashboard", "horizon")
