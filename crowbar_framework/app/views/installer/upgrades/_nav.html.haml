@@ -1,0 +1,48 @@
+%ul.nav.nav-stacked.wizard-nav.col-lg-3
+  %li
+    %a
+      .pull-right
+        = icon_tag :chevron_right, nil, class: "fa-fw"
+      = t(".prepare")
+
+  %li
+    %a
+      .pull-right
+        = icon_tag :chevron_right, nil, class: "fa-fw"
+      = t(".download")
+
+  %li{ class: active == :start ? "active" : nil }
+    %a
+      .pull-right
+        = icon_tag :chevron_right, nil, class: "fa-fw"
+      = t(".start")
+
+  %li{ class: active == :repos ? "active" : nil }
+    %a
+      .pull-right
+        = icon_tag :chevron_right, nil, class: "fa-fw"
+      = t(".repos")
+
+  %li{ class: active == :services ? "active" : nil }
+    %a
+      .pull-right
+        = icon_tag :chevron_right, nil, class: "fa-fw"
+      = t(".services")
+
+  %li{ class: active == :backup ? "active" : nil }
+    %a
+      .pull-right
+        = icon_tag :chevron_right, nil, class: "fa-fw"
+      = t(".backup")
+
+  %li{ class: active == :nodes ? "active" : nil }
+    %a
+      .pull-right
+        = icon_tag :chevron_right, nil, class: "fa-fw"
+      = t(".nodes")
+
+  %li{ class: active == :finish ? "active" : nil }
+    %a
+      .pull-right
+        = icon_tag :chevron_right, nil, class: "fa-fw"
+      = t(".finish")

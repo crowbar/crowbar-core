@@ -16,6 +16,18 @@
 #
 
 module NodesHelper
+  def total_nodes_count
+    0
+  end
+
+  def upgrading_nodes_count
+    0
+  end
+
+  def failed_nodes_count
+    0
+  end
+
   def nodes_by_role(role)
     NodeObject.find("roles:#{role}").sort_by(&:alias)
   end

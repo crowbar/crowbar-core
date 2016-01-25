@@ -38,8 +38,18 @@ module ApplicationHelper
 
   # Generate the meta title that gets displayed on the page meta information
   def meta_title
-    title = [branding_config[:page_title], branding_config[:page_slogan]].compact.join(" ")
-    "#{title}: #{controller.action_name.titleize}"
+    title = [
+      branding_config[:page_title],
+      branding_config[:page_slogan]
+    ].compact.join(" ")
+
+    sub = if controller.respond_to? :meta_title
+      controller.meta_title
+    else
+      controller.action_name.titleize
+    end
+
+    "#{title}: #{sub}"
   end
 
   # This method gets extended in the future to include anywhere registered
