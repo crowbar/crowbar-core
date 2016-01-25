@@ -548,6 +548,10 @@ class ServiceObject
           unless cluster_exists? element
             raise I18n.t("proposal.failures.unknown_cluster") + " " + cluster_name(element)
           end
+        elsif is_remotes? element
+          unless remotes_exists? element
+            raise I18n.t("proposal.failures.unknown_remotes") + " " + cluster_name(element)
+          end
         else
           nodes = NodeObject.find_nodes_by_name element
           if nodes.nil? || nodes.empty?

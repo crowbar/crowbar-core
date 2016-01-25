@@ -88,6 +88,10 @@ module CrowbarPacemakerProxy
     !available_clusters[element].nil?
   end
 
+  def remotes_exists?(element)
+    !available_clusters_including_remotes[element].nil?
+  end
+
   # Returns: a list with two things:
   #  - the list of all nodes in items; if item contains clusters, these
   #    clusters will be expanded to the list of nodes they're made of
