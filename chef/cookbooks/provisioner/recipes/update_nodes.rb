@@ -14,6 +14,9 @@
 #
 
 def find_node_boot_mac_addresses(node, admin_data_net)
+  # If we don't have an admin IP allocated yet using node.macaddress is
+  # our best guess for the boot macaddress
+  return [node.macaddress] if admin_data_net.nil?
   result = []
   admin_interfaces = admin_data_net.interface_list
   admin_interfaces.each do |interface|
