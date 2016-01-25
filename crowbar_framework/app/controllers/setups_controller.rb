@@ -47,6 +47,9 @@ class SetupsController < ApplicationController
     # we can finally shutdown everything at nodes, including the database
     @service_object.finalize_openstack_shutdown
 
+    # At some point (FIXME: where exactly?) we have to unset db_synced flag
+    Openstack::Upgrade.unset_db_synced
+
     redirect_to setup_path
   end
 
