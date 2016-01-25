@@ -393,7 +393,8 @@ class ServiceObject
     violates_admin_constraint?(elements, role) ||
       violates_platform_constraint?(elements, role) ||
       violates_exclude_platform_constraint?(elements, role) ||
-      violates_cluster_constraint?(elements, role)
+      violates_cluster_constraint?(elements, role) ||
+      violates_remotes_constraint?(elements, role)
   end
 
   # Helper to select nodes that make sense on proposal creation
@@ -680,6 +681,16 @@ class ServiceObject
     false
   end
 
+  def violates_remotes_constraint?(elements, role)
+    if role_constraints[role] && !role_constraints[role]["remotes"]
+      remotes = elements[role].select { |e| is_remotes? e }
+      unless remotes.empty?
+        return true
+      end
+    end
+    false
+  end
+
   #
   # Ensure that the proposal respects constraints defined for the roles
   #
@@ -721,6 +732,10 @@ class ServiceObject
 
       if violates_cluster_constraint?(elements, role)
         validation_error("Role #{role} does not accept clusters.")
+      end
+
+      if violates_remotes_constraint?(elements, role)
+        validation_error("Role #{role} does not accept remotes.")
       end
     end
   end
