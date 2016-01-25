@@ -121,15 +121,23 @@ class ApplicationController < ActionController::Base
 
   def render_not_found
     respond_to do |format|
-      format.html { render "errors/not_found", status: 404 }
-      format.json { render json: { error: "Not found" }, status: 404 }
+      format.html do
+        render "errors/not_found", status: :not_found
+      end
+      format.json do
+        render json: { error: I18n.t("error.not_found") }, status: :not_found
+      end
     end
   end
 
   def chef_is_offline
     respond_to do |format|
-      format.html { render "errors/chef_offline", status: 500 }
-      format.json { render json: { error: "Chef server is not available" }, status: 500 }
+      format.html do
+        render "errors/chef_offline", status: :internal_server_error
+      end
+      format.json do
+        render json: { error: I18n.t("error.chef_server_down") }, status: :internal_server_error
+      end
     end
   end
 
