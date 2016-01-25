@@ -66,7 +66,8 @@ class CrowbarService < ServiceObject
     # Adapt current proposal, so only non-db nodes have crowbar-upgrade role
     # (crowbar-upgrade role is currently assigned to all nodes)
     proposal = Proposal.where(barclamp: "crowbar", name: "default").first
-    proposal["deployment"]["crowbar"]["elements"]["crowbar-upgrade"] -= db_nodes
+    upgrade_elements = proposal["deployment"]["crowbar"]["elements"]["crowbar-upgrade"] || []
+    proposal["deployment"]["crowbar"]["elements"]["crowbar-upgrade"] = upgrade_elements - db_nodes
     proposal.save
 
     return true if proposal["deployment"]["crowbar"]["elements"]["crowbar-upgrade"].empty?
