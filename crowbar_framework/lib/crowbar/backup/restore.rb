@@ -102,7 +102,7 @@ module Crowbar
       end
 
       def proposal?(filename)
-        !filename.match(/(_network\.json$)|(^template-(.*).json$)/)
+        !filename.match(/(_network\.json$)|(^template-(.*).json$)|(^queue\.json$)/)
       end
     end
   end
