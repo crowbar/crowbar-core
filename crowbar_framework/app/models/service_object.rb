@@ -530,6 +530,22 @@ class ServiceObject
     @display_name ||= BarclampCatalog.display_name(@bc_name)
   end
 
+  def accept_clusters
+    accept = false
+    role_constraints.keys.each do |role|
+      accept ||= role_constraints[role]["cluster"]
+    end
+    accept
+  end
+
+  def accept_remotes
+    accept = false
+    role_constraints.keys.each do |role|
+      accept ||= role_constraints[role]["remotes"]
+    end
+    accept
+  end
+
   #
   # This can be overridden.  Specific to node validation.
   #
