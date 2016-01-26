@@ -76,6 +76,12 @@ unless node[:platform_family] == "windows"
       # we need to reset the paths if we can't load cstruct
       Gem.clear_paths
     end
+
+    begin
+      require "cstruct"
+    rescue LoadError
+      Chef::Log.fatal("Unable to load cstruct module - install of #{pkg} failed?")
+    end
   end
 end
 
