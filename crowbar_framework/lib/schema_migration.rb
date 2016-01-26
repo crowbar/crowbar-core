@@ -58,7 +58,7 @@ module SchemaMigration
     end
   end
 
-  def self.migrated_attributes(bc_name, json)
+  def self.migrate_proposal_from_json(bc_name, json)
     template = Proposal.new(barclamp: bc_name)
 
     return if template.nil?
@@ -71,8 +71,8 @@ module SchemaMigration
     attributes = json["attributes"][bc_name]
     deployment = json["deployment"][bc_name]
 
-    # return attributes
-    migrate_object(bc_name, template, all_scripts, attributes, deployment).first
+    # return migrated attributes and deployment
+    migrate_object(bc_name, template, all_scripts, attributes, deployment)
   end
 
   private
