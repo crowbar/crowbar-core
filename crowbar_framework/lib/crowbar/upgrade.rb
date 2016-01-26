@@ -24,6 +24,10 @@ module Crowbar
       @backup = backup
       @data = @backup.data
       @version = @backup.version
+      @status = {
+        status: :ok,
+        errors: []
+      }
     end
 
     def upgrade
@@ -62,7 +66,13 @@ module Crowbar
         when /^bc-network-(.*)\.json$/
           json = JSON.load(file.read)
           # override with migrated attributes
-          json["attributes"]["network"] = SchemaMigration.migrated_attributes("network", json)
+          attributes = SchemaMigration.migrated_attributes("network", json)
+          if attributes.nil?
+            @status[:status] = :internal_server_error
+            @status[:errors].push "Cannot upgrade the network proposal with #{file}"
+            next
+          end
+          json["attributes"]["network"] = attributes
           network_proposal = Tempfile.new("network")
           network_proposal.write JSON.pretty_generate(attributes: json["attributes"])
           network_proposal.close
