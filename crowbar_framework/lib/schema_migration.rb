@@ -58,6 +58,23 @@ module SchemaMigration
     end
   end
 
+  def self.migrate_proposal_from_json(bc_name, json)
+    template = Proposal.new(barclamp: bc_name)
+
+    return if template.nil?
+    return if template["deployment"].nil?
+    return if template["deployment"][bc_name].nil?
+
+    all_scripts = find_scripts_for_bc(bc_name)
+    return if all_scripts.empty?
+
+    attributes = json["attributes"][bc_name]
+    deployment = json["deployment"][bc_name]
+
+    # return migrated attributes and deployment
+    migrate_object(bc_name, template, all_scripts, attributes, deployment)
+  end
+
   private
 
   def self.data_bags_path

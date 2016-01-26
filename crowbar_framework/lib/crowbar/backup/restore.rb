@@ -47,7 +47,14 @@ module Crowbar
               if proposal?(filename) && type == :databags
                 bc_name, prop = filename.split("-")
                 prop.gsub!(/.json$/, "")
-                Proposal.create(barclamp: bc_name, name: prop, properties: record.raw_data)
+                proposal = Proposal.where(
+                  barclamp: bc_name
+                ).first_or_initialize(
+                  barclamp: bc_name,
+                  name: prop
+                )
+                proposal.properties = record.raw_data
+                proposal.save
                 SchemaMigration.run_for_bc(bc_name)
               else
                 record.save

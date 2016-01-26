@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+require "tempfile"
+
 module Crowbar
   class Upgrade
     attr_accessor :data
@@ -22,6 +24,10 @@ module Crowbar
       @backup = backup
       @data = @backup.data
       @version = @backup.version
+      @status = {
+        status: :ok,
+        errors: []
+      }
     end
 
     def upgrade
@@ -57,6 +63,26 @@ module Crowbar
           new_file = filename_replace(file_path, "nova_dashboard", "horizon")
           filecontent_replace(new_file, "nova_dashboard", "horizon")
           file_path = new_file
+        when /^bc-network-(.*)\.json$/
+          json = JSON.load(file.read)
+          attributes_deployment = SchemaMigration.migrate_proposal_from_json("network", json)
+          if attributes_deployment.nil?
+            @status[:status] = :internal_server_error
+            @status[:errors].push "Cannot upgrade the network proposal with #{file}"
+            next
+          end
+          json["attributes"]["network"] = attributes_deployment.first
+          network_proposal = Tempfile.new("network")
+          network_proposal.write JSON.pretty_generate(attributes: json["attributes"])
+          network_proposal.close
+          cmd = [
+            "sudo",
+            "cp",
+            network_proposal.path,
+            "/etc/crowbar/network.json"
+          ]
+          system(*cmd)
+          network_proposal.unlink
         end
 
         next unless file_path.basename.to_s =~ /^bc-(.*).json$/
