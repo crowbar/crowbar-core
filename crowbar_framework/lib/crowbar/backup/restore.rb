@@ -16,7 +16,7 @@
 
 module Crowbar
   class Backup
-    class Restore
+    class Restore < Base
       attr_accessor :backup, :version
 
       def initialize(backup)

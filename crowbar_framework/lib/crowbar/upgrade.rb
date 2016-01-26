@@ -17,7 +17,7 @@
 require "tempfile"
 
 module Crowbar
-  class Upgrade
+  class Upgrade < Crowbar::Backup::Base
     attr_accessor :data
 
     def initialize(backup)
