@@ -201,7 +201,7 @@ module BarclampLibrary
         return [nil, nil] if intf_to_if_map[conduit].nil?
 
         c_info = intf_to_if_map[conduit]
-        interface_list = c_info["if_list"]
+        interface_list = c_info["if_list"] || []
         team_mode = c_info["team_mode"] rescue nil
 
         return [interface_list[0], interface_list, nil] if interface_list.size == 1
