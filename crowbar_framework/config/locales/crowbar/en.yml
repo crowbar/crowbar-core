@@ -741,6 +741,8 @@ en:
     role_not_found: 'Role not found'
     cannot_activate_repo: 'Cannot activate %{id} repo'
     cannot_deactivate_repo: 'Cannot deactivate %{id} repo'
+    not_found: 'Not found'
+    chef_server_down: 'Chef server is not available'
 
   state:
     unknown: 'Unknown'
