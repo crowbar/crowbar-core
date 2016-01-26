@@ -67,13 +67,14 @@ module Crowbar
         Crowbar::Backup::Base.restore_files.each do |source, destination|
           # keep the permissions of the files that are already in place
           src_path = @data.join("crowbar", source)
-          dest_path = Pathname.new(destination)
+          dest_is_dir = system("sudo", "-i", "test", "-d", destination)
+
           # If source and destination are both directories we just need to
           # copy the contents of source, not the directory itself.
-          src_string = if dest_path.directory? && src_path.directory?
-            "#{srcpath}/."
+          src_string = if dest_is_dir && src_path.directory?
+            "#{src_path}/."
           else
-            srcpath.to_s
+            src_path.to_s
           end
 
           system(
