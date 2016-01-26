@@ -100,6 +100,18 @@ module Crowbar
           filecontent_replace(file, "nova_dashboard", "horizon")
         end
       end
+
+      # find admin node and update target_platform
+      nodes_path = knife_path.join("nodes")
+      nodes_path.children.each do |file|
+        json = JSON.load(file.read)
+        next unless json["crowbar"] && json["crowbar"]["admin_node"]
+        json.delete "target_platform"
+        json["provisioner"].delete "default_os"
+        file.open("w") do |node|
+          node.write(JSON.pretty_generate(json))
+        end
+      end
     end
 
     def crowbar_files

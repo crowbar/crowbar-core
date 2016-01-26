@@ -307,8 +307,11 @@ class CrowbarService < ServiceObject
 
   def prepare_nodes_for_os_upgrade
     upgrade_nodes = NodeObject.all.reject { |node| node.admin? || node[:platform] == "windows" }
+    admin_node = NodeObject.admin_node
 
     upgrade_nodes.each do |node|
+      node["target_platform"] = admin_node["provisioner"]["default_os"]
+      node.save
       node.set_state("os-upgrading")
     end
 
