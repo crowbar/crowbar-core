@@ -17,15 +17,15 @@
 
 module NodesHelper
   def total_nodes_count
-    0
+    NodeObject.find("NOT admin_node:true").count
   end
 
   def upgrading_nodes_count
-    0
+    NodeObject.find("state:crowbar_upgrade OR state:os-upgrading OR state:os-upgraded").count
   end
 
   def failed_nodes_count
-    0
+    NodeObject.find("state:problem").count
   end
 
   def nodes_by_role(role)
