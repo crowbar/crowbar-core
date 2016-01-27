@@ -34,9 +34,9 @@ module CrowbarPacemakerProxy
   end
 
   # Returns: List of available clusters including remotes
-  def available_clusters_including_remotes
+  def available_remotes
     if defined? PacemakerServiceObject
-      PacemakerServiceObject.available_clusters_including_remotes
+      PacemakerServiceObject.available_remotes
     else
       {}
     end
@@ -97,7 +97,7 @@ module CrowbarPacemakerProxy
   end
 
   def remotes_exists?(element)
-    !available_clusters_including_remotes[element].nil?
+    !available_remotes[element].nil?
   end
 
   # Returns: a list with two things:

@@ -27,7 +27,7 @@
         - if @service_object.accept_clusters && !@service_object.available_clusters.empty?
           %h4
             = t("barclamp.proposal_show.available_clusters")
-            - if @service_object.accept_remotes && !@service_object.available_clusters_including_remotes.empty?
+            - if @service_object.accept_remotes && !@service_object.available_remotes.empty?
               = tooltip_tag(t("barclamp.proposal_show.available_clusters_hint"), class: "fa-lg pull-right text-info")
 
           .form-group
@@ -42,7 +42,7 @@
                   = cluster_proposal
                   = link_to icon_tag("link", nil, class: "fa-lg"), url_for_proposal_with_name(cluster_barclamp, cluster_proposal), :title => t(".node_link", :alias => cluster_proposal), :class => "pull-right"
 
-        - if @service_object.accept_remotes && !@service_object.available_clusters_including_remotes.empty?
+        - if @service_object.accept_remotes && !@service_object.available_remotes.empty?
           %h4
             = t("barclamp.proposal_show.available_remotes")
             = tooltip_tag(t("barclamp.proposal_show.available_remotes_hint"), class: "fa-lg pull-right text-info")
@@ -52,7 +52,7 @@
 
           .form-group
             %ul.remotes
-              - @service_object.available_clusters_including_remotes.sort.each do |cluster_name, role|
+              - @service_object.available_remotes.sort.each do |cluster_name, role|
                 - cluster_barclamp, cluster_proposal = @service_object.cluster_get_barclamp_and_proposal(cluster_name)
                 - remotes_count = @service_object.remotes_remote_nodes_count(cluster_name)
                 - remotes_alias = t("barclamp.proposal_show.remotes_alias", name: cluster_proposal, count: remotes_count)
