@@ -64,10 +64,6 @@ module Crowbar
               "/etc/chef/certificates/cert.pem"
             ],
             [
-              "keys/crowbar-client.pem",
-              "/opt/dell/crowbar_framework/config/client.pem"
-            ],
-            [
               "keys/tftp-validation.pem",
               "/srv/tftpboot/validation.pem"
             ],

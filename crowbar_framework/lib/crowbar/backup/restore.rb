@@ -48,7 +48,10 @@ module Crowbar
           [:nodes, :roles, :clients, :databags].each do |type|
             Dir.glob(@data.join("knife", type.to_s, "**", "*")).each do |file|
               file = Pathname.new(file)
+              # skip client "crowbar"
+              next if type == :clients && file.basename.to_s =~ /^crowbar.json$/
               next unless file.extname == ".json"
+
               record = JSON.load(file.read)
               filename = file.basename.to_s
               if proposal?(filename) && type == :databags
