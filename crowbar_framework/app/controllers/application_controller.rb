@@ -130,12 +130,13 @@ class ApplicationController < ActionController::Base
       format.json do
         render json: { error: I18n.t("error.param_missing") }, status: :not_acceptable
       end
+      format.any do
+        render plain: I18n.t("error.param_missing"), status: :not_acceptable
+      end
     end
   end
 
-  def render_not_found(exception)
-    Rails.logger.warn exception.message
-
+  def render_not_found
     respond_to do |format|
       format.html do
         render "errors/not_found", status: :not_found
@@ -143,18 +144,22 @@ class ApplicationController < ActionController::Base
       format.json do
         render json: { error: I18n.t("error.not_found") }, status: :not_found
       end
+      format.any do
+        render plain: I18n.t("error.not_found"), status: :not_found
+      end
     end
   end
 
-  def chef_is_offline(exception)
-    Rails.logger.warn exception.message
-
+  def chef_is_offline
     respond_to do |format|
       format.html do
         render "errors/chef_offline", status: :internal_server_error
       end
       format.json do
         render json: { error: I18n.t("error.chef_server_down") }, status: :internal_server_error
+      end
+      format.any do
+        render plain: I18n.t("error.chef_server_down"), status: :internal_server_error
       end
     end
   end
