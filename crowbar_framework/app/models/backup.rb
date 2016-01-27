@@ -51,7 +51,17 @@ class Backup < ActiveRecord::Base
 
   def extract
     backup_dir = Dir.mktmpdir
-    Archive.extract(path.to_s, backup_dir)
+    cmd = [
+      "sudo",
+      "tar",
+      "--same-owner",
+      "--same-permissions",
+      "-xzf",
+      path.to_s,
+      "-C",
+      backup_dir
+    ]
+    system(*cmd)
     Pathname.new(backup_dir)
   end
 
@@ -110,6 +120,7 @@ class Backup < ActiveRecord::Base
       )
       ar.compress(::Find.find(".").select { |f| f.gsub!(/^.\//, "") if ::File.file?(f) })
     end
+
     self.version = ENV["CROWBAR_VERSION"]
     self.size = path.size
   ensure
