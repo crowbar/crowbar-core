@@ -20,6 +20,7 @@ module Installer
   class UpgradesController < ApplicationController
     skip_before_filter :enforce_installer
     before_filter :hide_navigation
+    before_filter :set_progess_values
 
     def show
       respond_to do |format|
@@ -30,6 +31,7 @@ module Installer
     end
 
     def start
+      @current_step = 3
       if request.post?
         respond_to do |format|
           @backup = Backup.new(params.permit(:file))
@@ -50,7 +52,9 @@ module Installer
         end
       end
     end
+
     def install
+      @current_step = 4
       @backup = Backup.all.first
       if request.post?
         respond_to do |format|
@@ -66,6 +70,7 @@ module Installer
     end
 
     def repos
+      @current_step = 5
       if request.post?
         respond_to do |format|
           format.html do
@@ -80,6 +85,8 @@ module Installer
     end
 
     def services
+      @current_step = 6
+
       if request.post?
         respond_to do |format|
           format.html do
@@ -94,6 +101,7 @@ module Installer
     end
 
     def backup
+      @current_step = 7
       if request.post?
         respond_to do |format|
           format.html do
@@ -108,6 +116,7 @@ module Installer
     end
 
     def nodes
+      @current_step = 8
       if request.post?
         respond_to do |format|
           format.html do
@@ -122,6 +131,7 @@ module Installer
     end
 
     def finish
+      @current_step = 9
       respond_to do |format|
         format.html
       end
@@ -132,6 +142,11 @@ module Installer
     end
 
     protected
+
+    def set_progess_values
+      @min_step = 1
+      @max_step = 9
+    end
 
     def hide_navigation
       @hide_navigation = true
