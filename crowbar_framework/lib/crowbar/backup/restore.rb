@@ -44,6 +44,7 @@ module Crowbar
       protected
 
       def restore_chef
+        logger.debug "Restoring chef backup files"
         begin
           [:nodes, :roles, :clients, :databags].each do |type|
             Dir.glob(@data.join("knife", type.to_s, "**", "*")).each do |file|
@@ -55,6 +56,7 @@ module Crowbar
               record = JSON.load(file.read)
               filename = file.basename.to_s
               if proposal?(filename) && type == :databags
+                logger.debug "Restoring proposal #{filename}"
                 bc_name, prop = filename.split("-")
                 prop.gsub!(/.json$/, "")
                 proposal = Proposal.where(
@@ -93,6 +95,7 @@ module Crowbar
           src_path.to_s
         end
 
+        logger.debug "Copying #{src_string} to #{destination}"
         system(
           "sudo",
           "cp", "-a",
@@ -102,6 +105,7 @@ module Crowbar
       end
 
       def restore_crowbar
+        logger.debug "Restoring crowbar backup files"
         Crowbar::Backup::Base.restore_files.each do |source, destination|
           restore_files(source, destination)
         end
@@ -110,6 +114,7 @@ module Crowbar
       end
 
       def restore_chef_keys
+        logger.debug "Restoring chef keys"
         Crowbar::Backup::Base.restore_files_after_install.each do |source, destination|
           restore_files(source, destination)
         end
@@ -118,7 +123,9 @@ module Crowbar
       end
 
       def run_installer
+        logger.debug "Starting Crowbar installation"
         Crowbar::Installer.install!
+        logger.debug "Waiting for installation to be successful"
         sleep(1) until Crowbar::Installer.successful? || Crowbar::Installer.failed?
         return false if Crowbar::Installer.failed?
 
@@ -133,6 +140,7 @@ module Crowbar
       end
 
       def restore_database
+        logger.debug "Restoring Crowbar database"
         SerializationHelper::Base.new(YamlDb::Helper).load(
           @data.join("crowbar", "production.yml")
         )
