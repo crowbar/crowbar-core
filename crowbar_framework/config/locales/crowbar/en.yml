@@ -581,13 +581,16 @@ en:
           since the 1500s, when an unknown printer took a galley of type and
           scrambled it to make a type specimen book.
       repos:
-        continue: 'Recheck repositories'
+        continue: 'Continue upgrade process'
+        recheck: 'Recheck repositories'
         header: 'Missing Repositories'
         description: |
           The software repository for "SUSE Linux Enterprise High Availability
           Extension" and "SUSE Linux Enterprise Storage" are missing. Please
           configure these by hand and click recheck below when the repositories
           are available.
+        ceph_repo: 'Ceph Repositories'
+        ha_repo: 'HA Repositories'
       services:
         continue: 'Continue upgrade process'
         header: 'Stop OpenStack Services'

@@ -16,6 +16,14 @@
             %p
               = t(".description")
 
+            %p
+              - unless check_ceph_repo?.nil?
+                .alert{ class: alert_type(check_ceph_repo?) }
+                  = t(".ceph_repo")
+              - unless check_ha_repo?.nil?
+                .alert{ class: alert_type(check_ha_repo?) }
+                  = t(".ha_repo")
+
         .panel-footer
           .row
             .col-lg-3
@@ -23,5 +31,4 @@
 
             .col-lg-9.text-right
               .btn-group{ role: "group" }
-                = button_tag icon_tag(:refresh, t(".continue")),
-                  class: "btn btn-primary"
+                = check_repos_button

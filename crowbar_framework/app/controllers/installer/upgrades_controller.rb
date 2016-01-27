@@ -73,8 +73,14 @@ module Installer
       @current_step = 5
       if request.post?
         respond_to do |format|
-          format.html do
-            redirect_to services_upgrade_url
+          if view_context.check_repos?
+            format.html do
+              redirect_to services_upgrade_url
+            end
+          else
+            format.html do
+              redirect_to repos_upgrade_url
+            end
           end
         end
       else
