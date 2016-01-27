@@ -39,7 +39,7 @@ openid_dev_pkgs.each do |pkg|
 end
 
 remote_file "#{Chef::Config[:file_cache_path]}/mod_auth_openid-0.4.tar.gz" do
-  source "http://butterfat.net/releases/mod_auth_openid/mod_auth_openid-0.4.tar.gz"
+  source "https://butterfat.net/releases/mod_auth_openid/mod_auth_openid-0.4.tar.gz"
   mode 0644
 end
 
