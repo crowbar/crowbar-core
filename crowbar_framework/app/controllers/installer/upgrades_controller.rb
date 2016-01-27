@@ -21,6 +21,7 @@ module Installer
     skip_before_filter :enforce_installer
     before_filter :hide_navigation
     before_filter :set_progess_values
+    before_filter :set_service_object, only: [:services, :backup]
 
     def show
       respond_to do |format|
@@ -95,8 +96,17 @@ module Installer
 
       if request.post?
         respond_to do |format|
-          format.html do
-            redirect_to backup_upgrade_url
+          begin
+            @service_object.shutdown_services_at_non_db_nodes
+            @service_object.dump_openstack_database
+            format.html do
+              redirect_to backup_upgrade_url
+            end
+          rescue => e
+            format.html do
+              flash[:alert] = e.message
+              redirect_to services_upgrade_url
+            end
           end
         end
       else
@@ -110,8 +120,17 @@ module Installer
       @current_step = 7
       if request.post?
         respond_to do |format|
-          format.html do
-            redirect_to nodes_upgrade_url
+          begin
+            @service_object.finalize_openstack_shutdown
+            Openstack::Upgrade.unset_db_synced
+            format.html do
+              redirect_to nodes_upgrade_url
+            end
+          rescue => e
+            format.html do
+              flash[:alert] = e.message
+              redirect_to backup_upgrade_url
+            end
           end
         end
       else
@@ -148,6 +167,10 @@ module Installer
     end
 
     protected
+
+    def set_service_object
+      @service_object = CrowbarService.new(logger)
+    end
 
     def set_progess_values
       @min_step = 1
