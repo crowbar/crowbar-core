@@ -45,9 +45,25 @@ class CrowbarService < ServiceObject
   # Unfortunatelly we need to explicitely look at crowbar-status of the proposal
   # because apply_role from this model ignores errors from superclass's apply_role.
   def commit_and_check_proposal
-    proposal_commit("default", false, false)
+    answer = proposal_commit("default", false, false)
+    # check if error message is saved in one of the nodes
+    if answer.first != 200
+      found_errors = []
+      NodeObject.find("state:crowbar_upgrade").each do |node|
+        error = node["crowbar_wall"]["chef_error"] || ""
+        next if error.empty?
+        found_errors.push error
+        @logger.error("Chef run ended with an error on the node #{name}: #{error}")
+        node["crowbar_wall"]["chef_error"] = ""
+        node.save
+      end
+      unless found_errors.empty?
+        raise found_errors.join("\n")
+      end
+    end
 
     proposal = Proposal.where(barclamp: "crowbar", name: "default").first
+    # there could be different error than one raised from a recipe
     if proposal["deployment"]["crowbar"]["crowbar-status"] == "failed"
       raise proposal["deployment"]["crowbar"]["crowbar-failed"]
     end
@@ -342,6 +358,10 @@ class CrowbarService < ServiceObject
   def apply_role (role, inst, in_queue)
     @logger.debug("Crowbar apply_role: enter")
     answer = super
+    if answer.first != 200
+      @logger.error("Crowbar apply_role: super apply_role finished with error")
+      return answer
+    end
     @logger.debug("Crowbar apply_role: super apply_role finished")
 
     role = role.default_attributes
