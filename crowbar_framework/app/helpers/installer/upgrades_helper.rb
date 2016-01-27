@@ -18,9 +18,13 @@
 
 module Installer
   module UpgradesHelper
+    def continue_button
+      button_tag icon_tag(:chevron_right, t(".continue")), class: "btn btn-primary"
+    end
+
     def check_repos_button
       if check_repos?
-        button_tag icon_tag(:chevron_right, t(".continue")), class: "btn btn-primary"
+        continue_button
       else
         button_tag icon_tag(:refresh, t(".recheck")), class: "btn btn-primary"
       end
