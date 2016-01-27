@@ -32,6 +32,28 @@ module Installer
     def start
       if request.post?
         respond_to do |format|
+          @backup = Backup.new(params.permit(:file))
+          if @backup.save
+            format.html do
+              redirect_to install_upgrade_url
+            end
+          else
+            format.html do
+              flash[:alert] = @backup.errors.full_messages.first
+              redirect_to start_upgrade_url
+            end
+          end
+        end
+      else
+        respond_to do |format|
+          format.html
+        end
+      end
+    end
+    def install
+      @backup = Backup.all.first
+      if request.post?
+        respond_to do |format|
           format.html do
             redirect_to repos_upgrade_url
           end

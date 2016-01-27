@@ -266,6 +266,14 @@ jQuery(document).ready(function($) {
   .on('fileuploaded', function() {
     location.reload();
   });
+
+  $('body.installer-upgrades input[name="file"]').fileinput({
+    showPreview: false,
+    showUpload: false,
+    uploadAsync: false,
+    allowedFileExtensions: ['tar.gz'],
+    dropZoneEnabled: false
+  });
 });
 
 if (!String.prototype.localize) {

@@ -154,6 +154,8 @@ Rails.application.routes.draw do
       member do
         get :start
         post :start
+        get :install
+        post :install
         get :repos
         post :repos
         get :services

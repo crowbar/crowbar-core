@@ -17,6 +17,12 @@
         = icon_tag :chevron_right, nil, class: "fa-fw"
       = t(".start")
 
+  %li{ class: active == :install ? "active" : nil }
+    %a
+      .pull-right
+        = icon_tag :chevron_right, nil, class: "fa-fw"
+      = t(".install")
+
   %li{ class: active == :repos ? "active" : nil }
     %a
       .pull-right
