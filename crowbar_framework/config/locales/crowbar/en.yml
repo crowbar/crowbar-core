@@ -137,6 +137,10 @@ en:
       delete_proposal_failure: 'Failed to delete the proposal'
       confirm_delete_proposal: 'Are you sure you wish to delete this proposal?'
       available_clusters: 'Available Clusters'
+      available_clusters_hint: 'Here you can see all available clusters.'
+      available_remotes: 'Available Remotes'
+      available_remotes_hint: 'Here you can see all available clusters that do have additional remote nodes assigned.'
+      remotes_alias: '%{name} (%{count} remote nodes)'
       available_nodes: 'Available Nodes'
       ui_advice: 'Drag nodes from Available Nodes into desired deployment list(s).'
       blockui_message: 'Processing, please wait...'
@@ -236,6 +240,7 @@ en:
       duplicate_elements_in_role: 'Duplicate elements detected in role'
       unknown_node: 'Unable to find any node named'
       unknown_cluster: 'Unable to find any cluster named'
+      unknown_remotes: 'Unable to find any remotes named'
       unsaved_changes: 'You might have unsaved changes; do you really want to switch to another page?'
 
   docs:

@@ -393,7 +393,8 @@ class ServiceObject
     violates_admin_constraint?(elements, role) ||
       violates_platform_constraint?(elements, role) ||
       violates_exclude_platform_constraint?(elements, role) ||
-      violates_cluster_constraint?(elements, role)
+      violates_cluster_constraint?(elements, role) ||
+      violates_remotes_constraint?(elements, role)
   end
 
   # Helper to select nodes that make sense on proposal creation
@@ -529,6 +530,22 @@ class ServiceObject
     @display_name ||= BarclampCatalog.display_name(@bc_name)
   end
 
+  def accept_clusters
+    accept = false
+    role_constraints.keys.each do |role|
+      accept ||= role_constraints[role]["cluster"]
+    end
+    accept
+  end
+
+  def accept_remotes
+    accept = false
+    role_constraints.keys.each do |role|
+      accept ||= role_constraints[role]["remotes"]
+    end
+    accept
+  end
+
   #
   # This can be overridden.  Specific to node validation.
   #
@@ -547,6 +564,12 @@ class ServiceObject
           unless cluster_exists? element
             raise I18n.t("proposal.failures.unknown_cluster") + " " + cluster_name(element)
           end
+        elsif is_remotes? element
+          unless remotes_exists? element
+            raise I18n.t("proposal.failures.unknown_remotes") + " " + cluster_name(element)
+          end
+        elsif element.include? ":"
+          raise I18n.t("proposal.failures.unknown_node") + " " + element
         else
           nodes = NodeObject.find_nodes_by_name element
           if nodes.nil? || nodes.empty?
@@ -629,7 +652,7 @@ class ServiceObject
   def violates_admin_constraint?(elements, role, nodes_is_admin = {})
     if role_constraints[role] && !role_constraints[role]["admin"]
       elements[role].each do |element|
-        next if is_cluster? element
+        next if is_cluster?(element) || is_remotes?(element)
         unless nodes_is_admin.key? element
           node = NodeObject.find_node_by_name(element)
           nodes_is_admin[element] = (!node.nil? && node.admin?)
@@ -644,7 +667,7 @@ class ServiceObject
     if role_constraints[role] && role_constraints[role].key?("platform")
       constraints = role_constraints[role]["platform"]
       elements[role].each do |element|
-        next if is_cluster? element
+        next if is_cluster?(element) || is_remotes?(element)
         node = NodeObject.find_node_by_name(element)
 
         return true if !constraints.any? do |platform, version|
@@ -659,7 +682,7 @@ class ServiceObject
     if role_constraints[role] && role_constraints[role].key?("exclude_platform")
       constraints = role_constraints[role]["exclude_platform"]
       elements[role].each do |element|
-        next if is_cluster? element
+        next if is_cluster?(element) || is_remotes?(element)
         node = NodeObject.find_node_by_name(element)
 
         return true if constraints.any? do |platform, version|
@@ -674,6 +697,16 @@ class ServiceObject
     if role_constraints[role] && !role_constraints[role]["cluster"]
       clusters = elements[role].select { |e| is_cluster? e }
       unless clusters.empty?
+        return true
+      end
+    end
+    false
+  end
+
+  def violates_remotes_constraint?(elements, role)
+    if role_constraints[role] && !role_constraints[role]["remotes"]
+      remotes = elements[role].select { |e| is_remotes? e }
+      unless remotes.empty?
         return true
       end
     end
@@ -721,6 +754,10 @@ class ServiceObject
 
       if violates_cluster_constraint?(elements, role)
         validation_error("Role #{role} does not accept clusters.")
+      end
+
+      if violates_remotes_constraint?(elements, role)
+        validation_error("Role #{role} does not accept remotes.")
       end
     end
   end

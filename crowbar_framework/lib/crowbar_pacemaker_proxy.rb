@@ -26,11 +26,20 @@ module CrowbarPacemakerProxy
 
   # Returns: list of available clusters
   def available_clusters
-    clusters = {}
-    if defined?(PacemakerServiceObject)
-      clusters.merge!(PacemakerServiceObject.available_clusters)
+    if defined? PacemakerServiceObject
+      PacemakerServiceObject.available_clusters
+    else
+      {}
     end
-    clusters
+  end
+
+  # Returns: List of available clusters including remotes
+  def available_remotes
+    if defined? PacemakerServiceObject
+      PacemakerServiceObject.available_remotes
+    else
+      {}
+    end
   end
 
   # Returns: name of the barclamp and of the proposal for this cluster
@@ -54,6 +63,24 @@ module CrowbarPacemakerProxy
     result
   end
 
+  def is_remotes?(element)
+    result = false
+
+    if defined?(PacemakerServiceObject)
+      result ||= PacemakerServiceObject.is_remotes?(element)
+    end
+
+    result
+  end
+
+  def remotes_remote_nodes_count(element)
+    if defined?(PacemakerServiceObject)
+      PacemakerServiceObject.remotes_remote_nodes_count(element)
+    else
+      0
+    end
+  end
+
   # Returns: name of the cluster, or nil if it's not a cluster
   def cluster_name(element)
     name = nil
@@ -67,6 +94,10 @@ module CrowbarPacemakerProxy
 
   def cluster_exists?(element)
     !available_clusters[element].nil?
+  end
+
+  def remotes_exists?(element)
+    !available_remotes[element].nil?
   end
 
   # Returns: a list with two things:
@@ -83,9 +114,19 @@ module CrowbarPacemakerProxy
     items.each do |item|
       expanded = nil
 
-      if is_cluster? item
+      if is_cluster?(item)
         if defined?(PacemakerServiceObject)
           expanded = PacemakerServiceObject.expand_nodes(item)
+        end
+
+        if expanded.nil?
+          failures << item
+        else
+          nodes.concat(expanded)
+        end
+      elsif is_remotes?(item)
+        if defined?(PacemakerServiceObject)
+          expanded = PacemakerServiceObject.expand_remote_nodes(item)
         end
 
         if expanded.nil?

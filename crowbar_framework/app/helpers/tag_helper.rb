@@ -45,11 +45,37 @@ module TagHelper
     )
   end
 
-  # Directly generate a tag for the fontawesome web font icons
+  def tooltip_tag(text, options = {})
+    options[:data] = {
+      tooltip: true,
+      title: text
+    }.deep_merge(
+      options.fetch(
+        :data,
+        {}
+      )
+    )
+
+    icon_tag(
+      :question,
+      nil,
+      options
+    )
+  end
+
   def icon_tag(icon, text = nil, options = {})
-    options[:class] = [options[:class], "fa", "fa-#{icon.to_s.tr("_", "-")}"].compact.join(" ")
+    options[:class] = [
+      options[:class],
+      "fa",
+      "fa-#{icon.to_s.tr("_", "-")}"
+    ].compact.join(" ")
+
     [
-      content_tag(:span, "", options),
+      content_tag(
+        :span,
+        "",
+        options
+      ),
       text
     ].flatten.join("\n").html_safe
   end
