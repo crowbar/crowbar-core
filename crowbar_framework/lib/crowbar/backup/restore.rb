@@ -26,7 +26,14 @@ module Crowbar
       end
 
       def restore
-        [:restore_crowbar, :run_installer, :restore_chef, :restore_database].each do |component|
+        actions = [
+          :restore_crowbar,
+          :run_installer,
+          :restore_chef_keys,
+          :restore_chef,
+          :restore_database
+        ]
+        actions.each do |component|
           ret = send(component)
           return ret unless ret == true
         end
@@ -70,27 +77,38 @@ module Crowbar
         true
       end
 
+      def restore_files(source, destination)
+        # keep the permissions of the files that are already in place
+        src_path = @data.join("crowbar", source)
+        dest_is_dir = system("sudo", "-i", "test", "-d", destination)
+
+        # If source and destination are both directories we just need to
+        # copy the contents of source, not the directory itself.
+        src_string = if dest_is_dir && src_path.directory?
+          "#{src_path}/."
+        else
+          src_path.to_s
+        end
+
+        system(
+          "sudo", "-i",
+          "cp", "-a",
+          src_string,
+          destination
+        )
+      end
+
       def restore_crowbar
         Crowbar::Backup::Base.restore_files.each do |source, destination|
-          # keep the permissions of the files that are already in place
-          src_path = @data.join("crowbar", source)
-          dest_is_dir = system("sudo", "-i", "test", "-d", destination)
+          restore_files(source, destination)
+        end
 
-          # If source and destination are both directories we just need to
-          # copy the contents of source, not the directory itself.
-          src_string = if dest_is_dir && src_path.directory?
-            "#{src_path}/."
-          else
-            src_path.to_s
-          end
+        true
+      end
 
-          system(
-            "sudo", "-i",
-            "cp", "-a",
-            src_string,
-            @data.join("crowbar", source).to_s,
-            destination
-          )
+      def restore_chef_keys
+        Crowbar::Backup::Base.restore_files_after_install.each do |source, destination|
+          restore_files(source, destination)
         end
 
         true
