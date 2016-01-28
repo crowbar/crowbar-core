@@ -1,6 +1,7 @@
 require "spec_helper"
 
 describe Backup do
+  let(:fixture) { Rails.root.join("spec", "fixtures", "crowbar_backup.tar.gz") }
   let(:created_at) { Time.zone.now.strftime("%Y%m%d-%H%M%S") }
   let!(:stub_methods) do
     [
@@ -33,6 +34,9 @@ describe Backup do
         it "is valid" do
           bu = Backup.new(name: "testbackup", created_at: created_at)
           allow_any_instance_of(Crowbar::Backup::Export).to receive(:export).and_return(true)
+          allow_any_instance_of(Kernel).to receive(:system).and_return(true)
+          allow_any_instance_of(Backup).to receive(:path).and_return(fixture)
+          allow_any_instance_of(Backup).to receive(:delete_archive).and_return(true)
           stub_methods.each do |stub_method|
             allow_any_instance_of(Backup).to receive(stub_method).and_return(true)
           end
@@ -43,6 +47,9 @@ describe Backup do
       context "not valid" do
         it "already exists" do
           allow_any_instance_of(Crowbar::Backup::Export).to receive(:export).and_return(true)
+          allow_any_instance_of(Kernel).to receive(:system).and_return(true)
+          allow_any_instance_of(Backup).to receive(:path).and_return(fixture)
+          allow_any_instance_of(Backup).to receive(:delete_archive).and_return(true)
           stub_methods.each do |stub_method|
             allow_any_instance_of(Backup).to receive(stub_method).and_return(true)
           end
@@ -55,6 +62,9 @@ describe Backup do
           [" white space", "$%§&$%"].each do |filename|
             bu = Backup.new(name: filename, created_at: created_at)
             allow_any_instance_of(Crowbar::Backup::Export).to receive(:export).and_return(true)
+            allow_any_instance_of(Kernel).to receive(:system).and_return(true)
+            allow_any_instance_of(Backup).to receive(:path).and_return(fixture)
+            allow_any_instance_of(Backup).to receive(:delete_archive).and_return(true)
             stub_methods.each do |stub_method|
               allow_any_instance_of(Backup).to receive(stub_method).and_return(true)
             end
