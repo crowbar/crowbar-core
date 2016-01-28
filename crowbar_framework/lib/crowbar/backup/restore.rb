@@ -83,7 +83,7 @@ module Crowbar
       def restore_files(source, destination)
         # keep the permissions of the files that are already in place
         src_path = @data.join("crowbar", source)
-        dest_is_dir = system("sudo", "-i", "test", "-d", destination)
+        dest_is_dir = system("sudo", "test", "-d", destination)
 
         # If source and destination are both directories we just need to
         # copy the contents of source, not the directory itself.
@@ -94,7 +94,7 @@ module Crowbar
         end
 
         system(
-          "sudo", "-i",
+          "sudo",
           "cp", "-a",
           src_string,
           destination
