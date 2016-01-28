@@ -88,8 +88,13 @@ module Crowbar
         end
 
         next unless file_path.basename.to_s =~ /^bc-(.*).json$/
+        # better determination of bc-<barclamp_name> to replace in the file
+        # it could be that some other unrelated string in the json contains "bc-"
+        bc_name_search = file_path.basename.to_s.rpartition("-").first
+        bc_name_replace = bc_name_search.split("-").last
+
         file_path = filename_replace(file_path, "bc-", "")
-        filecontent_replace(file_path, "bc-", "")
+        filecontent_replace(file_path, bc_name_search, bc_name_replace)
       end
 
       roles_path = knife_path.join("roles")
