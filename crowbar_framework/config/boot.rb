@@ -70,7 +70,7 @@ else
   gem "mime-types", version: "~> 1.25.0"
   require "mime/types"
 
-  gem "redcarpet", version: "~> 3.2.0"
+  gem "redcarpet", version: "~> 3.2.3"
   require "redcarpet"
 
   gem "simple-navigation", version: "~> 3.12.2"
