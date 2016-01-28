@@ -303,9 +303,9 @@ class UcsController < ApplicationController
   def sendXML(xmlString = "")
     uri = URI.parse(@ucs_url)
     http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = False
+    http.use_ssl = false
     if uri.scheme == "https"
-      http.use_ssl = True
+      http.use_ssl = true
       ### Make configurable
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE
     end
