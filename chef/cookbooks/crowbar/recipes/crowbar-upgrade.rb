@@ -44,6 +44,8 @@ when "openstack_shutdown"
       done
     EOF
   end
+when "done_openstack_shutdown", "wait_for_openstack_shutdown"
+  Chef::Log.debug("Nothing to do on this node, waiting for others to finish their work...")
 else
   Chef::Log.warn("Invalid upgrade step given: #{upgrade_step}")
 end
