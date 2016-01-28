@@ -3,13 +3,21 @@ require "spec_helper"
 describe Backup do
   let(:fixture) { Rails.root.join("spec", "fixtures", "crowbar_backup.tar.gz") }
   let(:created_at) { Time.zone.now.strftime("%Y%m%d-%H%M%S") }
-  let!(:stub_methods) do
+  let!(:stub_validations) do
     [
       :validate_chef_file_extension,
       :validate_upload_file_extension,
       :validate_version,
       :validate_hostname
-    ]
+    ].each do |validation|
+      allow_any_instance_of(Backup).to receive(validation).and_return(true)
+    end
+  end
+  let!(:stub_methods) do
+    allow_any_instance_of(Crowbar::Backup::Export).to receive(:export).and_return(true)
+    allow_any_instance_of(Kernel).to receive(:system).and_return(true)
+    allow_any_instance_of(Backup).to receive(:path).and_return(fixture)
+    allow_any_instance_of(Backup).to receive(:delete_archive).and_return(true)
   end
 
   describe "Backup creation" do
@@ -33,26 +41,15 @@ describe Backup do
       context "validation" do
         it "is valid" do
           bu = Backup.new(name: "testbackup", created_at: created_at)
-          allow_any_instance_of(Crowbar::Backup::Export).to receive(:export).and_return(true)
-          allow_any_instance_of(Kernel).to receive(:system).and_return(true)
-          allow_any_instance_of(Backup).to receive(:path).and_return(fixture)
-          allow_any_instance_of(Backup).to receive(:delete_archive).and_return(true)
-          stub_methods.each do |stub_method|
-            allow_any_instance_of(Backup).to receive(stub_method).and_return(true)
-          end
+          stub_methods
+          stub_validations
           expect(bu.save).to be true
         end
       end
 
       context "not valid" do
         it "already exists" do
-          allow_any_instance_of(Crowbar::Backup::Export).to receive(:export).and_return(true)
-          allow_any_instance_of(Kernel).to receive(:system).and_return(true)
-          allow_any_instance_of(Backup).to receive(:path).and_return(fixture)
-          allow_any_instance_of(Backup).to receive(:delete_archive).and_return(true)
-          stub_methods.each do |stub_method|
-            allow_any_instance_of(Backup).to receive(stub_method).and_return(true)
-          end
+          stub_validations
           Backup.new(name: "testbackup", created_at: created_at).save
           bu = Backup.new(name: "testbackup", created_at: created_at)
           expect(bu.save).to be false
@@ -61,13 +58,8 @@ describe Backup do
         it "has an invalid filename" do
           [" white space", "$%§&$%"].each do |filename|
             bu = Backup.new(name: filename, created_at: created_at)
-            allow_any_instance_of(Crowbar::Backup::Export).to receive(:export).and_return(true)
-            allow_any_instance_of(Kernel).to receive(:system).and_return(true)
-            allow_any_instance_of(Backup).to receive(:path).and_return(fixture)
-            allow_any_instance_of(Backup).to receive(:delete_archive).and_return(true)
-            stub_methods.each do |stub_method|
-              allow_any_instance_of(Backup).to receive(stub_method).and_return(true)
-            end
+            stub_methods
+            stub_validations
             expect(bu.save).to be false
           end
         end
