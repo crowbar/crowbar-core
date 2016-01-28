@@ -575,6 +575,7 @@ en:
         continue: 'Continue upgrade process'
         header: 'Install Crowbar'
         install_button: 'Start Installer'
+        success: 'Installation was successful.'
         description: |
           Lorem Ipsum is simply dummy text of the printing and typesetting
           industry. Lorem Ipsum has been the industry's standard dummy text ever

@@ -56,7 +56,6 @@ module Installer
 
     def install
       @current_step = 4
-      @backup = Backup.all.first
       if request.post?
         respond_to do |format|
           format.html do
@@ -64,8 +63,22 @@ module Installer
           end
         end
       else
+        @steps = Crowbar::Installer.steps
+        @backup = Backup.all.first
+        @backup.restore
         respond_to do |format|
           format.html
+        end
+      end
+    end
+
+    def status
+      respond_to do |format|
+        format.json do
+          render json: Crowbar::Installer.status
+        end
+        format.html do
+          redirect_to install_upgrade_url
         end
       end
     end

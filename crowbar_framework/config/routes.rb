@@ -155,6 +155,7 @@ Rails.application.routes.draw do
         get :start
         post :start
         get :install
+        get :status
         post :install
         get :repos
         post :repos

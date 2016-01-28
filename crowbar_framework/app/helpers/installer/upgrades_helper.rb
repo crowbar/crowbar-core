@@ -18,8 +18,12 @@
 
 module Installer
   module UpgradesHelper
-    def continue_button
-      button_tag icon_tag(:chevron_right, t(".continue")), class: "btn btn-primary"
+    def continue_button(disabled = false)
+      if disabled
+        button_tag icon_tag(:chevron_right, t(".continue")), class: "btn btn-primary disabled"
+      else
+        button_tag icon_tag(:chevron_right, t(".continue")), class: "btn btn-primary"
+      end
     end
 
     def check_repos_button

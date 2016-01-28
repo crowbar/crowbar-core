@@ -1,3 +1,6 @@
+- content_for :javascripts do
+  = javascript_include_tag "upgrader"
+
 .row
   .col-lg-12
     = form_tag install_upgrade_path, method: "post" do
@@ -16,8 +19,15 @@
             %p
               = t(".description")
 
-            %p
-              = @backup.name
+            - @steps.each do |step|
+              .alert.alert-info{ step: step, style: "display:none;" }
+                = icon_tag "spin fa-spinner", t("installer.installers.show.#{step}")
+
+            .alert.alert-danger{ style: "display:none;" }
+              = t("installer.installers.status.installation_failed")
+
+            .alert.alert-success{ style: "display:none;" }
+              = t(".success")
 
         .panel-footer
           .row
@@ -26,4 +36,4 @@
 
             .col-lg-9.text-right
               .btn-group{ role: "group" }
-                = continue_button
+                = continue_button(true)
