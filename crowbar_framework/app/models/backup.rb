@@ -121,12 +121,9 @@ class Backup < ActiveRecord::Base
 
     Crowbar::Backup::Export.new(dir).export
     Dir.chdir(dir) do
-      ar = Archive::Compress.new(
-        path.to_s,
-        type: :tar,
-        compression: :gzip
+      system(
+        "sudo tar czf #{path} *"
       )
-      ar.compress(::Find.find(".").select { |f| f.gsub!(/^.\//, "") if ::File.file?(f) })
     end
 
     self.version = ENV["CROWBAR_VERSION"]
