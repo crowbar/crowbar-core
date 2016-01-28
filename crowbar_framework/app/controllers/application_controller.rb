@@ -20,6 +20,7 @@ require "uri"
 # Filters added to this controller apply to all controllers in the application.
 # Likewise, all the methods added will be available for all controllers.
 class ApplicationController < ActionController::Base
+  rescue_from ActionController::ParameterMissing, with: :render_param_missing
   rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
   rescue_from Crowbar::Error::NotFound, with: :render_not_found
   rescue_from Crowbar::Error::ChefOffline, with: :chef_is_offline
@@ -119,6 +120,22 @@ class ApplicationController < ActionController::Base
     Rails.logger.warn lines.join("\n")
   end
 
+  def render_param_missing(exception)
+    Rails.logger.warn exception.message
+
+    respond_to do |format|
+      format.html do
+        render "errors/param_missing", status: :not_acceptable
+      end
+      format.json do
+        render json: { error: I18n.t("error.param_missing") }, status: :not_acceptable
+      end
+      format.any do
+        render plain: I18n.t("error.param_missing"), status: :not_acceptable
+      end
+    end
+  end
+
   def render_not_found
     respond_to do |format|
       format.html do
@@ -126,6 +143,9 @@ class ApplicationController < ActionController::Base
       end
       format.json do
         render json: { error: I18n.t("error.not_found") }, status: :not_found
+      end
+      format.any do
+        render plain: I18n.t("error.not_found"), status: :not_found
       end
     end
   end
@@ -137,6 +157,9 @@ class ApplicationController < ActionController::Base
       end
       format.json do
         render json: { error: I18n.t("error.chef_server_down") }, status: :internal_server_error
+      end
+      format.any do
+        render plain: I18n.t("error.chef_server_down"), status: :internal_server_error
       end
     end
   end

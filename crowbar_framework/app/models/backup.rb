@@ -96,6 +96,14 @@ class Backup < ActiveRecord::Base
         Rails.root.join("storage")
       end
     end
+
+    def attribute_names
+      super.tap do |values|
+        unless values.include?("file")
+          values.push("file")
+        end
+      end
+    end
   end
 
   protected
