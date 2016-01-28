@@ -288,21 +288,20 @@ class CrowbarService < ServiceObject
     # Find all non-core proposals and remove all roles that belong
     # to those proposals from the nodes
     active_non_core_roles = RoleObject.find_roles_by_name("*-config-*").reject(&:core_role?)
-    active_non_core_roles.each do |role|
-      @logger.debug("deactivating proposal #{role.name}")
-
-      roles_to_remove = role.elements.keys
-      roles_to_remove << role.name
-
-      roles_to_remove.each do |delete_role|
-        nodes = NodeObject.find("roles:#{delete_role}")
-        nodes.each do |node|
+    upgrade_nodes = NodeObject.all.reject(&:admin?)
+    upgrade_nodes.each do |node|
+      active_non_core_roles.each do |role|
+        roles_to_remove = role.elements.keys
+        roles_to_remove << role.name
+        roles_to_remove.each do |delete_role|
           node.delete_from_run_list(delete_role)
-          node.save
         end
       end
-      role.destroy
+      node.save
     end
+
+    # and finally delete the roles itself
+    active_non_core_roles.each(&:destroy)
   end
 
   def prepare_nodes_for_os_upgrade
