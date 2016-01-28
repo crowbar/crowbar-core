@@ -75,13 +75,28 @@ All troubleshooting should be done within the Cisco UCS Manager interface.
 
 The UCS Platform Emulator can be [downloaded from Cisco's
 website](http://developer.cisco.com/web/unifiedcomputing/ucsemulatordownload)
-after registering for a free account.  This barclamp has been tested
-with version 2.1(2aPE1) of the emulator.  However at the time of writing, 
-the emulator does not honour power commands, so do not expect this 
-functionality to work.
+after registering for a free account.
 
 The Emulator was designed to run as a VMware virtual machine.
 However, it has been shown to work fine as an `x86_64` VM running
-under KVM on openSUSE 12.3, with `.vmdk` file as a separate disk
-device, and 3 `pcnet` virtual interfaces configured on the same
-network as the Crowbar admin node.
+under KVM on openSUSE 13.1 or Leap 42.1, by converting to `.qcow2` file,
+a separate disk device, and 3 `pcnet` virtual interfaces configured
+on the same network as the Crowbar admin node.
+
+Here are the steps to start the UCS Platform Emulator using KVM with virtual 
+cloud on cloud-admin network:
+
+* Extract the downloaded .ova file.
+  `tar xvf UCSPE_$Version.ova`
+  This results in 3 files: UCSPE_$Version-disk1.vmdk, UCSPE_$Version.ovf
+  UCSPE_$Version.mf .
+* Convert the VMDK image to qcow2 (Because image created by VMDK version 3
+  is ReadOnly).
+  `qemu-convert -O qcow2 UCSPE_Version-disk1.vmdk UCSPE_$Version-disk1.qcow2`
+* Create a virtual disk with at least 20GB.
+* Start the VM using ucs_vm1.xml file after updating the correct Image paths.
+  * Replace `$PATH_TO_UCSPE_QCOW2_IMAGE` with UCSPE image path
+  * Replace `$PATH_TO_QCOW2_DISKIMAGE` with additional 20GB disk device
+
+This barclamp has been tested with version 3.0(2cPE1) of the emulator.
+
