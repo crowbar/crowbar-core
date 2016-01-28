@@ -40,6 +40,10 @@ module Crowbar
               "/root/.ssh"
             ],
             [
+              "root/.chef",
+              "/root/.chef"
+            ],
+            [
               "data",
               "/var/lib/crowbar"
             ],
@@ -56,34 +60,43 @@ module Crowbar
               "/etc/resolv.conf"
             ],
             [
-              "keys/crowbar-client.pem",
-              "/opt/dell/crowbar_framework/config/client.pem"
+              "keys/cert.pem",
+              "/etc/chef/certificates/cert.pem"
             ],
             [
-              "keys/webui.pem",
-              "/etc/chef/webui.pem"
+              "keys/tftp-validation.pem",
+              "/srv/tftpboot/validation.pem"
+            ],
+            [
+              "keys/key.pem",
+              "/etc/chef/certificates/key.pem"
+            ]
+          ]
+        end
+
+        def restore_files_after_install
+          [
+            [
+              "keys/crowbar.install.key",
+              "/etc/crowbar.install.key"
             ],
             [
               "keys/chef-client.pem",
               "/etc/chef/client.pem"
             ],
             [
-              "keys/crowbar.install.key",
-              "/etc/crowbar.install.key"
+              "keys/webui.pem",
+              "/etc/chef/webui.pem"
             ],
             [
               "keys/chef-validation.pem",
               "/etc/chef/validation.pem"
-            ],
-            [
-              "keys/tftp-validation.pem",
-              "/srv/tftpboot/validation.pem"
             ]
           ]
         end
 
         def export_files
-          restore_files.map(&:reverse)
+          restore_files.push(restore_files_after_install.first).map(&:reverse)
         end
       end
     end
