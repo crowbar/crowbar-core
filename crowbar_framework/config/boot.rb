@@ -91,9 +91,6 @@ else
   gem "easy_diff", version: "~> 0.0.5"
   require "easy_diff"
 
-  gem "archive", version: "~> 0.0.6"
-  require "archive"
-
   # chef related
   gem "mixlib-shellout", version: "~> 1.3.0"
   require "mixlib/shellout"
