@@ -20,6 +20,8 @@ module Installer
   class UpgradesController < ApplicationController
     skip_before_filter :enforce_installer
     before_filter :hide_navigation
+    before_filter :set_progess_values
+    before_filter :set_service_object, only: [:services, :backup]
 
     def show
       respond_to do |format|
@@ -30,10 +32,19 @@ module Installer
     end
 
     def start
+      @current_step = 3
       if request.post?
         respond_to do |format|
-          format.html do
-            redirect_to repos_upgrade_url
+          @backup = Backup.new(params.permit(:file))
+          if @backup.save
+            format.html do
+              redirect_to restore_upgrade_url
+            end
+          else
+            format.html do
+              flash[:alert] = @backup.errors.full_messages.first
+              redirect_to start_upgrade_url
+            end
           end
         end
       else
@@ -43,11 +54,47 @@ module Installer
       end
     end
 
-    def repos
+    def restore
+      @current_step = 4
       if request.post?
         respond_to do |format|
           format.html do
-            redirect_to services_upgrade_url
+            redirect_to repos_upgrade_url
+          end
+        end
+      else
+        @steps = Crowbar::Installer.steps
+        @backup = Backup.all.first
+        @backup.restore
+        respond_to do |format|
+          format.html
+        end
+      end
+    end
+
+    def status
+      respond_to do |format|
+        format.json do
+          render json: Crowbar::Installer.status
+        end
+        format.html do
+          redirect_to install_upgrade_url
+        end
+      end
+    end
+
+    def repos
+      @current_step = 5
+      if request.post?
+        respond_to do |format|
+          if view_context.check_repos?
+            format.html do
+              redirect_to services_upgrade_url
+            end
+          else
+            format.html do
+              redirect_to repos_upgrade_url
+            end
           end
         end
       else
@@ -58,10 +105,21 @@ module Installer
     end
 
     def services
+      @current_step = 6
+
       if request.post?
         respond_to do |format|
-          format.html do
-            redirect_to backup_upgrade_url
+          begin
+            @service_object.shutdown_services_at_non_db_nodes
+            @service_object.dump_openstack_database
+            format.html do
+              redirect_to backup_upgrade_url
+            end
+          rescue => e
+            format.html do
+              flash[:alert] = e.message
+              redirect_to services_upgrade_url
+            end
           end
         end
       else
@@ -72,10 +130,20 @@ module Installer
     end
 
     def backup
+      @current_step = 7
       if request.post?
         respond_to do |format|
-          format.html do
-            redirect_to nodes_upgrade_url
+          begin
+            @service_object.finalize_openstack_shutdown
+            Openstack::Upgrade.unset_db_synced
+            format.html do
+              redirect_to nodes_upgrade_url
+            end
+          rescue => e
+            format.html do
+              flash[:alert] = e.message
+              redirect_to backup_upgrade_url
+            end
           end
         end
       else
@@ -86,6 +154,7 @@ module Installer
     end
 
     def nodes
+      @current_step = 8
       if request.post?
         respond_to do |format|
           format.html do
@@ -100,6 +169,7 @@ module Installer
     end
 
     def finish
+      @current_step = 9
       respond_to do |format|
         format.html
       end
@@ -110,6 +180,15 @@ module Installer
     end
 
     protected
+
+    def set_service_object
+      @service_object = CrowbarService.new(logger)
+    end
+
+    def set_progess_values
+      @min_step = 1
+      @max_step = 9
+    end
 
     def hide_navigation
       @hide_navigation = true

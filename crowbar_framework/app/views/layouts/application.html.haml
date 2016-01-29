@@ -22,7 +22,7 @@
 
     = favicon_tag
 
-  %body{ :class => params[:controller] }
+  %body{ class: params[:controller].tr("/", "-") }
     %header
       = render :partial => "shared/header"
 

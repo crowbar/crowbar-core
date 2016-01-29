@@ -169,6 +169,6 @@ class ApplicationController < ActionController::Base
   end
 
   def enforce_installer
-    redirect_to installer_path
+    redirect_to installer_root_path
   end
 end

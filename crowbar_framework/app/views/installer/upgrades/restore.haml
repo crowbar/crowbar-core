@@ -1,0 +1,39 @@
+- content_for :javascripts do
+  = javascript_include_tag "upgrader"
+
+.row
+  .col-lg-12
+    = form_tag restore_upgrade_path, method: "post" do
+      .panel.panel-default
+        .panel-heading
+          %h2
+            = t("installer.upgrades.header", product: branding_config.page_title)
+
+        .panel-plain.wizard
+          = render partial: "nav", locals: { active: :install }
+
+          .wizard-body.col-lg-9
+            %h2
+              = t(".header")
+
+            %p
+              = t(".description")
+
+            - @steps.each do |step|
+              .alert.alert-info{ step: step, style: "display:none;" }
+                = icon_tag "spin fa-spinner", t("installer.installers.show.#{step}")
+
+            .alert.alert-danger{ style: "display:none;" }
+              = t(".failed")
+
+            .alert.alert-success{ style: "display:none;" }
+              = t(".success")
+
+        .panel-footer
+          .row
+            .col-lg-3
+              = progress_steps @current_step, @min_step, @max_step
+
+            .col-lg-9.text-right
+              .btn-group{ role: "group" }
+                = continue_button(true)

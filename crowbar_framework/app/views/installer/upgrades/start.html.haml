@@ -1,6 +1,6 @@
 .row
   .col-lg-12
-    = form_tag start_upgrade_path, method: "post" do
+    = form_tag start_upgrade_path, multipart: true, method: "post" do
       .panel.panel-default
         .panel-heading
           %h2
@@ -16,15 +16,17 @@
             %p
               = t(".description")
 
+            %p
+              = file_field_tag "file"
+
         .panel-footer
           .row
             .col-lg-3
-              = progress_steps 3, 1, 8
+              = progress_steps @current_step, @min_step, @max_step
 
             .col-lg-9.text-right
               .btn-group{ role: "group" }
                 = link_to icon_tag(:chevron_left, t(".cancel")),
                   installer_root_path,
                   class: "btn btn-default"
-                = button_tag icon_tag(:chevron_right, t(".continue")),
-                  class: "btn btn-primary"
+                = continue_button
