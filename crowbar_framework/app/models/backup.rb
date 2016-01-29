@@ -117,6 +117,7 @@ class Backup < ActiveRecord::Base
   end
 
   def create_archive
+    logger.debug "Creating backup #{filename} in #{self.class.image_dir}"
     dir = Dir.mktmpdir
 
     Crowbar::Backup::Export.new(dir).export
@@ -133,6 +134,7 @@ class Backup < ActiveRecord::Base
   end
 
   def save_archive
+    logger.debug "Saving #{file.original_filename} to #{self.class.image_dir}"
     self.name = file.original_filename.remove(".tar.gz")
 
     if path.exist?
@@ -151,6 +153,7 @@ class Backup < ActiveRecord::Base
   end
 
   def delete_archive
+    logger.debug "Deleting #{filename} from #{self.class.image_dir}"
     path.delete if path.exist?
   end
 

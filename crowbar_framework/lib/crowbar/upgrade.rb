@@ -17,7 +17,7 @@
 require "tempfile"
 
 module Crowbar
-  class Upgrade
+  class Upgrade < Crowbar::Backup::Base
     attr_accessor :data
 
     def initialize(backup)
@@ -45,11 +45,13 @@ module Crowbar
     protected
 
     def knife_files
+      logger.debug "Upgrading chef backup files"
       @data.join("knife", "databags", "barclamps").rmtree
       knife_path = @data.join("knife")
 
       crowbar_databags_path = knife_path.join("databags", "crowbar")
       crowbar_databags_path.children.each do |file|
+        logger.debug "Upgrading #{file}"
         file_path = crowbar_databags_path.join(file)
 
         case file.basename.to_s
@@ -92,6 +94,7 @@ module Crowbar
 
       roles_path = knife_path.join("roles")
       roles_path.children.each do |file|
+        logger.debug "Upgrading #{file}"
         case file.basename.to_s
         when /^nova_dashboard-(.*).json$/
           new_file = filename_replace(file, "nova_dashboard", "horizon")
