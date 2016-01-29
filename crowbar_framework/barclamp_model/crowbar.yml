@@ -77,7 +77,7 @@ debs:
   # sources.list format.
   repos:
     # pull from internet: 
-    # - deb http://www.rabbitmq.com/debian/ testing main
+    # - deb https://www.rabbitmq.com/debian/ testing main
   # ppas allows you to declare Ubuntu personal package archives that 
   # the build should try to pull from.
   ppas:
@@ -113,7 +113,7 @@ rpms:
     # does not allow easy installation via rpm.
     # It has a slightly more complex declaration:
     # bare repo_name numeric_repo_priority repo_url
-    - bare epel5-nagios3 10 http://repos.fedorapeople.org/repos/peter/nagios3/epel-5/x86_64/ 
+    - bare epel5-nagios3 10 https://repos.fedorapeople.org/repos/peter/nagios3/epel-5/x86_64/ 
   pkgs:
     # put your rpms here
     # - httpd
