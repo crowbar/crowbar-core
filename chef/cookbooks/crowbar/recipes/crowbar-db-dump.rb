@@ -36,7 +36,13 @@ when "openstack_shutdown"
 
   # If postgres is not running here, it means we're in the DB cluster and database runs
   # on the other node: let the other node take care of the rest.
-  return unless ::Kernel.system("service postgresql status")
+  unless ::Kernel.system("service postgresql status")
+    if node[:crowbar][:upgrade][:db_dumped_here]
+      node[:crowbar][:upgrade].delete :db_dumped_here
+      node.save
+    end
+    return
+  end
 
   # Check the available space before the dump
 
@@ -67,6 +73,10 @@ when "openstack_shutdown"
       su - postgres -c 'pg_dumpall > #{dump_location}'
     EOF
   end
+
+  # we have to indicate the node where the dump is actually located
+  node.set[:crowbar][:upgrade][:db_dumped_here] = true
+  node.save
 
 when "db_shutdown"
 
