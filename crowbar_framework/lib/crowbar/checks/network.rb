@@ -67,19 +67,11 @@ module Crowbar
       end
 
       def firewall_disabled?
-        if system("sudo LANG=C iptables -n -L | grep -qvE '^$|^Chain [^ ]|^target     prot'")
-          return false
-        end
-
-        true
+        !system("sudo LANG=C iptables -n -L | grep -qvE '^$|^Chain [^ ]|^target     prot'")
       end
 
       def ping_succeeds?
-        unless system("ping -c 1 #{fqdn} > /dev/null 2>&1")
-          return false
-        end
-
-        true
+        system("ping -c 1 #{fqdn} > /dev/null 2>&1")
       end
 
       def hostname
