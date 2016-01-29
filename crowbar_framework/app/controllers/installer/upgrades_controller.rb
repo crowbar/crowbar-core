@@ -38,7 +38,7 @@ module Installer
           @backup = Backup.new(params.permit(:file))
           if @backup.save
             format.html do
-              redirect_to install_upgrade_url
+              redirect_to restore_upgrade_url
             end
           else
             format.html do
@@ -54,7 +54,7 @@ module Installer
       end
     end
 
-    def install
+    def restore
       @current_step = 4
       if request.post?
         respond_to do |format|

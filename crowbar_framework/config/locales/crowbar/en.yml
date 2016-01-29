@@ -556,7 +556,7 @@ en:
         prepare: 'Prepare upgrade'
         download: 'Data download'
         start: 'Start upgrade'
-        install: 'Install Crowbar'
+        restore: 'Restore Crowbar'
         repos: 'Repositories'
         services: 'Stop services'
         backup: 'Data backup'
@@ -571,11 +571,12 @@ en:
           industry. Lorem Ipsum has been the industry's standard dummy text ever
           since the 1500s, when an unknown printer took a galley of type and
           scrambled it to make a type specimen book.
-      install:
+      restore:
         continue: 'Continue upgrade process'
-        header: 'Install Crowbar'
+        header: 'Restore Crowbar'
         install_button: 'Start Installer'
-        success: 'Installation was successful.'
+        success: 'Restore was successful.'
+        failed: 'Restore failed. Please check the log at /var/log/crowbar/install.log'
         description: |
           Lorem Ipsum is simply dummy text of the printing and typesetting
           industry. Lorem Ipsum has been the industry's standard dummy text ever
