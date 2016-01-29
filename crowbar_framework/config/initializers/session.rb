@@ -16,5 +16,5 @@
 #
 
 Rails.application.config.tap do |config|
-  config.session_store :active_record_store, key: "crowbar"
+  config.session_store :active_record_store, key: "crowbar", expire_after: 4.hours
 end
