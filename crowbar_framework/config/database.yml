@@ -17,8 +17,8 @@
 
 default: &default
   adapter: sqlite3
-  pool: 5
-  timeout: 5000
+  pool: 3
+  timeout: 30000
 
 development:
   <<: *default
