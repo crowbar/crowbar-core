@@ -39,7 +39,8 @@ bash "stop OpenStack services" do
   code <<-EOF
     for i in /etc/init.d/openstack-* \
              /etc/init.d/openvswitch-switch \
-             /etc/init.d/ovs-usurp-config-*;
+             /etc/init.d/ovs-usurp-config-* \
+             /etc/init.d/hawk;
     do
       if test -e $i; then
         $i stop
