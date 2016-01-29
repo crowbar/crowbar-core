@@ -30,7 +30,7 @@ return unless node[:platform_family] == "suse"
 upgrade_step = node["crowbar_wall"]["crowbar_upgrade_step"] || "none"
 
 case upgrade_step
-when "openstack_shutdown"
+when "dump_openstack_database"
 
   include_recipe "crowbar::stop-services-before-upgrade"
 
