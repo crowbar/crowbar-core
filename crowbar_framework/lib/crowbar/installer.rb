@@ -24,7 +24,7 @@ module Crowbar
         else
           return {
             status: 501,
-            msg: I18n.t(".installers.show.system_not_supported")
+            msg: I18n.t("installer.installers.show.system_not_supported")
           }
         end
 
@@ -106,9 +106,9 @@ module Crowbar
       def error_msg
         errors = ""
         if failed?
-          errors += I18n.t(".installers.status.installation_failed")
+          errors += I18n.t("installer.installers.status.installation_failed")
         elsif !network_status[:valid]
-          errors += I18n.t(".installers.status.invalid_network")
+          errors += I18n.t("installer.installers.status.invalid_network")
           errors += " "
           errors += network_status[:msg]
         end
@@ -116,11 +116,11 @@ module Crowbar
       end
 
       def success_msg
-        I18n.t(".installers.show.installation_successful") if successful?
+        I18n.t("installer.installers.show.installation_successful") if successful?
       end
 
       def notice_msg
-        I18n.t(".installers.show.reinstall_notice")
+        I18n.t("installer.installers.show.reinstall_notice")
       end
     end
   end
