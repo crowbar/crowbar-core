@@ -31,19 +31,16 @@
       "schema-revision": 11,
       "element_states": {
         "crowbar": [ "all" ],
-        "crowbar-upgrade": [ "crowbar_upgrade" ],
-        "crowbar-db-dump": [ "crowbar_upgrade" ]
+        "crowbar-upgrade": [ "crowbar_upgrade" ]
       },
       "elements": {},
       "element_order": [
         [ "crowbar" ],
-        [ "crowbar-upgrade" ],
-        [ "crowbar-db-dump" ]
+        [ "crowbar-upgrade" ]
       ],
       "element_run_list_order": {
         "crowbar": 10,
-        "crowbar-upgrade": 2000,
-        "crowbar-db-dump": 2001
+        "crowbar-upgrade": 2000
       },
       "config": {
         "environment": "crowbar-config-test",
