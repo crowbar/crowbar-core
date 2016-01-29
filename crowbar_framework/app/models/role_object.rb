@@ -71,14 +71,8 @@ class RoleObject < ChefObject
     end
   end
 
-  def proposal(proposals = nil)
-    @associated_proposal ||= begin
-      if proposals
-        proposals.find { |p| p.barclamp == barclamp && p.name == inst }
-      else
-        Proposal.find_by(barclamp: barclamp, name: inst)
-      end
-    end
+  def proposal
+    Proposal.find_by(barclamp: barclamp, name: inst)
   end
 
   def self.assigned(roles = self.all)
