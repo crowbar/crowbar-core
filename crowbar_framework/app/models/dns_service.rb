@@ -67,7 +67,7 @@ class DnsService < ServiceObject
     #
     if state == "discovered"
       @logger.debug("DNS transition: handling for #{name} for #{state}: discovered")
-      db = Proposal.where(barclamp: "dns", name: inst).first
+      db = Proposal.find_by(barclamp: "dns", name: inst)
       role = RoleObject.find_role_by_name "dns-config-#{inst}"
 
       if role.default_attributes["dns"]["auto_assign_server"]

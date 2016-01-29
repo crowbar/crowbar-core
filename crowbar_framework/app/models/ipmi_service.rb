@@ -48,7 +48,7 @@ class IpmiService < ServiceObject
     #
     if state == "discovering"
       @logger.debug("IPMI transition: discovering state for #{name}")
-      db = Proposal.where(barclamp: "ipmi", name: inst).first
+      db = Proposal.find_by(barclamp: "ipmi", name: inst)
       role = RoleObject.find_role_by_name "ipmi-config-#{inst}"
       result = add_role_to_instance_and_node("ipmi", inst, name, db, role, "ipmi-discover")
       @logger.debug("ipmi transition: leaving from discovering state for #{name}")
@@ -62,7 +62,7 @@ class IpmiService < ServiceObject
     #
     if state == "discovered"
       @logger.debug("IPMI transition: discovered state for #{name}")
-      db = Proposal.where(barclamp: "ipmi", name: inst).first
+      db = Proposal.find_by(barclamp: "ipmi", name: inst)
       role = RoleObject.find_role_by_name "ipmi-config-#{inst}"
       result = add_role_to_instance_and_node("ipmi", inst, name, db, role, "ipmi-configure")
 

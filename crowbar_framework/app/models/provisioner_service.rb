@@ -72,7 +72,7 @@ class ProvisionerService < ServiceObject
     #
     if state == "discovered"
       @logger.debug("Provisioner transition: discovered state for #{name} for #{state}")
-      db = Proposal.where(barclamp: "provisioner", name: inst).first
+      db = Proposal.find_by(barclamp: "provisioner", name: inst)
 
       #
       # Add the first node as the provisioner server
@@ -126,7 +126,7 @@ class ProvisionerService < ServiceObject
     end
     if state == "hardware-installing"
       role = RoleObject.find_role_by_name "provisioner-config-#{inst}"
-      db = Proposal.where(barclamp: "provisioner", name: inst).first
+      db = Proposal.find_by(barclamp: "provisioner", name: inst)
       add_role_to_instance_and_node("provisioner",inst,name,db,role,"provisioner-bootdisk-finder")
 
       # ensure target platform is set before we claim a disk for boot OS
@@ -219,7 +219,7 @@ class ProvisionerService < ServiceObject
   end
 
   def enable_repository(platform, arch, repo)
-    repo_object = Crowbar::Repository.where(platform: platform, arch: arch, repo: repo).first
+    repo_object = Crowbar::Repository.find_by(platform: platform, arch: arch, repo: repo)
     if repo_object.nil?
       message = "#{repo} repository for #{platform} / #{arch} does not exist."
       @logger.debug(message)
@@ -257,7 +257,7 @@ class ProvisionerService < ServiceObject
   end
 
   def disable_repository(platform, arch, repo)
-    repo_object = Crowbar::Repository.where(platform: platform, arch: arch, repo: repo).first
+    repo_object = Crowbar::Repository.find_by(platform: platform, arch: arch, repo: repo)
     if repo_object.nil?
       message = "#{repo} repository for #{platform} / #{arch} does not exist."
       @logger.debug(message)

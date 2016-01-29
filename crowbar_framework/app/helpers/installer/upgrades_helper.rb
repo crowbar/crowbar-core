@@ -43,7 +43,7 @@ module Installer
     end
 
     def check_ha_repo?
-      return nil unless Proposal.where(barclamp: "pacemaker").first
+      return nil unless Proposal.find_by(barclamp: "pacemaker")
       return false unless Crowbar::Repository.provided?("ha")
 
       unless Crowbar::Repository.provided_and_enabled?("ha")
@@ -54,7 +54,7 @@ module Installer
     end
 
     def check_ceph_repo?
-      return nil unless Proposal.where(barclamp: "ceph").first
+      return nil unless Proposal.find_by(barclamp: "ceph")
       return false unless Crowbar::Repository.provided?("ceph")
 
       unless Crowbar::Repository.provided_and_enabled?("ceph")

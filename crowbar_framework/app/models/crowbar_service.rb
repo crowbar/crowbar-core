@@ -62,7 +62,7 @@ class CrowbarService < ServiceObject
       end
     end
 
-    proposal = Proposal.where(barclamp: "crowbar", name: "default").first
+    proposal = Proposal.find_by(barclamp: "crowbar", name: "default")
     # there could be different error than one raised from a recipe
     if proposal["deployment"]["crowbar"]["crowbar-status"] == "failed"
       raise proposal["deployment"]["crowbar"]["crowbar-failed"]
@@ -205,7 +205,7 @@ class CrowbarService < ServiceObject
       #
       if state == "discovering" and node.admin?
         crole = RoleObject.find_role_by_name("crowbar-config-#{inst}")
-        db = Proposal.where(barclamp: "crowbar", name: inst).first
+        db = Proposal.find_by(barclamp: "crowbar", name: inst)
         add_role_to_instance_and_node("crowbar", inst, name, db, crole, "crowbar")
       end
 
@@ -466,13 +466,13 @@ class CrowbarService < ServiceObject
 
   def self.read_options
     # read in default proposal, to make some vaules avilable
-    proposals = Proposal.where(barclamp: "crowbar")
-    raise "Can't find any crowbar proposal" if proposals.nil? or proposals[0].nil?
+    proposal = Proposal.find_by(barclamp: "crowbar")
+    raise "Can't find any crowbar proposal" if proposal.nil?
     # populate options from attributes/crowbar/*-settings
     options = { raid: {}, bios: {}, show: [] }
-    unless proposals[0]["attributes"].nil? or proposals[0]["attributes"]["crowbar"].nil?
-      options[:raid] = proposals[0]["attributes"]["crowbar"]["raid-settings"]
-      options[:bios] = proposals[0]["attributes"]["crowbar"]["bios-settings"]
+    unless proposal["attributes"].nil? || proposal["attributes"]["crowbar"].nil?
+      options[:raid] = proposal["attributes"]["crowbar"]["raid-settings"]
+      options[:bios] = proposal["attributes"]["crowbar"]["bios-settings"]
       options[:raid] = {} if options[:raid].nil?
       options[:bios] = {} if options[:bios].nil?
 

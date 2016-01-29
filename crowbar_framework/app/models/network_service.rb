@@ -274,7 +274,7 @@ class NetworkService < ServiceObject
 
     if state == "discovered"
 
-      db = Proposal.where(barclamp: "network", name: inst).first
+      db = Proposal.find_by(barclamp: "network", name: inst)
       role = RoleObject.find_role_by_name "network-config-#{inst}"
       if NodeObject.find_node_by_name(name).try(:[], "crowbar").try(:[], "admin_node")
         @logger.info("Admin node transitioning to discovered state.  Adding switch_config role.")

@@ -76,7 +76,7 @@ class RoleObject < ChefObject
       if proposals
         proposals.find { |p| p.barclamp == barclamp && p.name == inst }
       else
-        Proposal.where(barclamp: barclamp, name: inst).first
+        Proposal.find_by(barclamp: barclamp, name: inst)
       end
     end
   end

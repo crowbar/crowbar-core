@@ -40,7 +40,7 @@ EOF
     bc="$1" proposal="${2:-default}"
     data_bag="${bc}-${proposal}"
 
-    cmd="p = Proposal.where(barclamp: '"$bc"', name: '"$proposal"').first;
+    cmd="p = Proposal.find_by(barclamp: '"$bc"', name: '"$proposal"');
          raise(ActiveRecord::RecordNotFound.new) unless p;
          p['deployment']['"$bc"']['crowbar-committing'] = false;
          p.save;"
