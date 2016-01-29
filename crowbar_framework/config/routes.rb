@@ -170,13 +170,5 @@ Rails.application.routes.draw do
     end
   end
 
-  resource :setup, only: [:show] do
-    collection do
-      get :stop
-      get :finalize
-      get :nodes_os_upgrade
-    end
-  end
-
   match "/:controller/:action/*(:.format)", via: [:get, :post, :put, :patch, :delete]
 end
