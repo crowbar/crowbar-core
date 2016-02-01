@@ -26,17 +26,26 @@ module Crowbar
       end
 
       def restore
-        actions = [
+        thread = Thread.new
+          steps.each do |component|
+            ret = send(component)
+            Thread.exit unless ret == true
+          end
+          Rails.cache.write(:restore_thread, nil)
+        end
+        Rails.cache.write(:restore_thread, thread)
+        { status: :ok, msg: "" }
+      end
+
+      def steps
+        [
           :restore_crowbar,
           :run_installer,
           :restore_chef_keys,
           :restore_chef,
           :restore_database
         ]
-        actions.each do |component|
-          ret = send(component)
-          return ret unless ret == true
-        end
+      end
 
         { status: :ok, msg: "" }
       end
