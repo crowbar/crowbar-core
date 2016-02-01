@@ -180,11 +180,12 @@ module ProposalsHelper
   end
 
   def link_to_proposal_with_name(barclamp, proposal)
+    display_name = display_name_for(barclamp)
     if proposal.nil?
-      t("proposal.actions.link", name: display_name_for(barclamp))
+      t("proposal.actions.link", name: display_name)
     else
       link_to(
-        t("proposal.actions.link", name: proposal),
+        t("proposal.actions.link_with_proposal", name: display_name, proposal: proposal),
         url_for_proposal_with_name(barclamp, proposal),
         class: "proposal #{barclamp}"
       )

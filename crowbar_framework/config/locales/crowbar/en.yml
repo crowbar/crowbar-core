@@ -211,6 +211,7 @@ en:
       default: 'proposal'
     actions:
       link: '%{name} barclamp'
+      link_with_proposal: '%{name} barclamp (%{proposal})'
       apply: 'Apply'
       save: 'Save'
       edit: 'Edit'
