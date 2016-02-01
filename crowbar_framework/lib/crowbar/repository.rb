@@ -197,9 +197,10 @@ module Crowbar
             next unless provided_features.include? feature
             found = true
 
-            break unless check_enabled
-
             r = new(platform, arch, repo)
+            answer &&= r.available?
+
+            break unless check_enabled
             answer &&= r.active?
           end
 
