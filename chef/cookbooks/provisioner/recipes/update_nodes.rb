@@ -359,12 +359,19 @@ if not nodes.nil? and not nodes.empty?
           else
             raise "Unsupported version of Windows Server / Hyper-V Server"
           end
+          if os =~ /^hyperv/
+            # hyper-v server doesn't need one, and having one might actually
+            # result in broken installation
+            license_key = ""
+          else
+            license_key = mnode[:license_key] || ""
+          end
           template "#{os_dir_win}/unattend/unattended.xml" do
             mode 0644
             owner "root"
             group "root"
             source "unattended.xml.erb"
-            variables(license_key: mnode[:license_key] || "",
+            variables(license_key: license_key,
                       os_name: os,
                       image_name: image_name,
                       admin_ip: admin_ip,
