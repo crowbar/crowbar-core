@@ -87,7 +87,7 @@ class RoleObject < ChefObject
         # Resolve clusters. We do not use the Pacemaker helper as that means
         # another call to Chef. Obvious FIXME is to patch that method to accept
         # cache param and fallback to proposal look up.
-        if ServiceObject.is_cluster?(node_name)
+        if ServiceObject.is_cluster?(node_name) || ServiceObject.is_remotes?(node_name)
           cluster = roles.find { |r| r.name == "pacemaker-config-#{ServiceObject.cluster_name(node_name)}" }
           cluster_roles_nodes = cluster.proposal_nodes(nodes)
 
