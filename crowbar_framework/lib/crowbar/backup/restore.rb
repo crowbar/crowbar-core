@@ -47,12 +47,33 @@ module Crowbar
         ]
       end
 
-        { status: :ok, msg: "" }
+      def status
+        {
+          steps: steps_done,
+          status: status?
+        }
       end
 
       protected
 
+      def steps_done
+        thread = Rails.cache.read(:restore_thread)
+        return false unless thread
+
+        steps_done = []
+        step.each do |step|
+          steps_done.push(step, thread.hread_variable_get(step))
+        end
+      end
+
+      def status?
+        thread = Rails.cache.read(:restore_thread)
+        return "running" if thread
+        return "failed" if thread.status = false
+      end
+
       def restore_chef
+        Thread.current.thread_variable_set(:restore_chef, true)
         logger.debug "Restoring chef backup files"
         begin
           [:nodes, :roles, :clients, :databags].each do |type|
@@ -92,6 +113,7 @@ module Crowbar
       end
 
       def restore_files(source, destination)
+        Thread.current.thread_variable_set(:restore_files, true)
         # keep the permissions of the files that are already in place
         src_path = @data.join("crowbar", source)
         dest_is_dir = system("sudo", "test", "-d", destination)
@@ -114,6 +136,7 @@ module Crowbar
       end
 
       def restore_crowbar
+        Thread.current.thread_variable_set(:restore_crowbar, true)
         logger.debug "Restoring crowbar backup files"
         Crowbar::Backup::Base.restore_files.each do |source, destination|
           restore_files(source, destination)
@@ -123,6 +146,7 @@ module Crowbar
       end
 
       def restore_chef_keys
+        Thread.current.thread_variable_set(:restore_chef_keys, true)
         logger.debug "Restoring chef keys"
         Crowbar::Backup::Base.restore_files_after_install.each do |source, destination|
           restore_files(source, destination)
@@ -132,6 +156,7 @@ module Crowbar
       end
 
       def run_installer
+        Thread.current.thread_variable_set(:run_installer, true)
         logger.debug "Starting Crowbar installation"
         Crowbar::Installer.install!
         logger.debug "Waiting for installation to be successful"
@@ -149,6 +174,7 @@ module Crowbar
       end
 
       def restore_database
+        Thread.current.thread_variable_set(:restore_database, true)
         logger.debug "Restoring Crowbar database"
         SerializationHelper::Base.new(YamlDb::Helper).load(
           @data.join("crowbar", "production.yml")
