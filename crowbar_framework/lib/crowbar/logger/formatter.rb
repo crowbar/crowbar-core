@@ -18,20 +18,57 @@ module Crowbar
   module Logger
     class Formatter < ::Logger::Formatter
       include ActiveSupport::TaggedLogging::Formatter
+      FORMAT = "%s, [%s#%d] %5s -- %s\n"
+      THREAD_FORMAT = "%s, [%s#%d:%s] %5s -- %s\n"
 
-      def call(severity, timestamp, progname, msg)
-        final_message = if msg.is_a? String
+      def call(severity, time, progname, msg)
+        threads = ENV["CROWBAR_THREADS"]
+        # if env var is not set, default is multi-threaded
+        if threads.to_s.empty? || threads.to_i > 1
+          # there's no API to get an id from a thread object, so let's cheat
+          thread_id = Thread.current.inspect.gsub(/^#<Thread:([^ ]*) .*/, "\\1")
+          format(
+            THREAD_FORMAT,
+            severity[0..0],
+            format_datetime(time),
+            $$,
+            thread_id,
+            severity,
+            msg2str(msg)
+          )
+        else
+          format(
+            FORMAT,
+            severity[0..0],
+            format_datetime(time),
+            $$,
+            severity,
+            msg2str(msg)
+          )
+        end
+      end
+
+      private
+
+      # Comes from ruby/logger.rb
+      def format_datetime(time)
+        if @datetime_format.nil?
+          time.strftime("%Y-%m-%dT%H:%M:%S.#{format("%06d ", time.usec)}")
+        else
+          time.strftime(@datetime_format)
+        end
+      end
+
+      def msg2str(msg)
+        case msg
+        when ::String
           msg
+        when ::Exception
+          "#{msg.message} (#{msg.class})\n" <<
+            (msg.backtrace || []).join("\n")
         else
           msg.inspect
         end
-
-        super(
-          severity,
-          timestamp,
-          progname,
-          final_message
-        )
       end
     end
   end
