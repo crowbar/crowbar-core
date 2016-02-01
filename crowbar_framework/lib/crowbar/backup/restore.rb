@@ -26,6 +26,8 @@ module Crowbar
       end
 
       def restore
+        return { status: :too_many_requests, msg: "" } if status? == "running"
+
         thread = Thread.new
           steps.each do |component|
             ret = send(component)
