@@ -11,4 +11,4 @@
     - @clusters.sort_by { |element, cluster| element }.each do |element, cluster|
       .row
         .col-xs-12
-          = render :partial => "cluster", :locals => { :element => element, :cluster => cluster, :cluster_roles => cluster.cluster_roles(@roles), :cluster_nodes => cluster.cluster_nodes(@nodes), :all_proposals => @proposals }
+          = render :partial => "cluster", :locals => { :element => element, :cluster => cluster, :cluster_roles => cluster.cluster_roles(@roles), :cluster_remote_roles => cluster.cluster_remote_roles(@roles), :cluster_nodes => cluster.cluster_nodes(@nodes), :cluster_remote_nodes => cluster.cluster_remote_nodes(@nodes), :all_proposals => @proposals }

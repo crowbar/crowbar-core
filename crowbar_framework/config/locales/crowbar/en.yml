@@ -50,9 +50,13 @@ en:
       current_revision_not_applied: 'The proposal has been changed since last deployment.'
     cluster:
       roles: 'Roles'
+      remote_roles: 'Roles for Remote Nodes'
       nodes: 'Nodes'
+      remote_nodes: 'Remote Nodes'
       no_cluster_roles: 'No roles have been assigned to this cluster.'
+      no_cluster_remote_roles: 'No roles have been assigned to remote nodes of this cluster.'
       no_cluster_nodes: 'No nodes have been assigned to this cluster.'
+      no_cluster_remote_nodes: 'This cluster does not contain any remote nodes.'
     clusters:
       title: 'HA Clusters'
       simple_clusters:

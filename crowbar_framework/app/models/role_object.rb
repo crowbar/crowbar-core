@@ -28,9 +28,23 @@ class RoleObject < ChefObject
     end
   end
 
+  def cluster_remote_roles(roles = RoleObject.all)
+    @cluster_remote_roles ||= begin
+      roles.select do |role|
+        role.elements.values.flatten.compact.uniq.include?("remotes:#{inst}")
+      end
+    end
+  end
+
   def cluster_nodes(nodes = NodeObject.all)
     @cluster_nodes ||= begin
-      proposal_nodes(nodes).values.flatten.uniq
+      proposal_nodes(nodes, nil, ["pacemaker-remote"]).values.flatten.uniq
+    end
+  end
+
+  def cluster_remote_nodes(nodes = NodeObject.all)
+    @cluster_remote_nodes ||= begin
+      proposal_nodes(nodes, ["pacemaker-remote"], nil).values.flatten.uniq
     end
   end
 
