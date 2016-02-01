@@ -308,6 +308,7 @@ class CrowbarService < ServiceObject
   def prepare_nodes_for_os_upgrade
     upgrade_nodes = NodeObject.all.reject { |node| node.admin? || node[:platform] == "windows" }
     admin_node = NodeObject.admin_node
+    upgrade_nodes_failed = []
 
     upgrade_nodes.each do |node|
       node["target_platform"] = admin_node["provisioner"]["default_os"]
@@ -339,10 +340,18 @@ class CrowbarService < ServiceObject
       end
       if ready_for_reboot
         @logger.debug("Rebooting node #{node.name} for operating system upgrade")
-        node.ssh_cmd("/sbin/reboot")
+        ssh_status = node.ssh_cmd("/sbin/reboot")
+        if ssh_status[0] != 200
+          @logger.error("Upgrade failed for machine #{node.name}. Could not ssh.")
+          upgrade_nodes_failed.push(node.name)
+        end
+      else
+        @logger.error("Upgrade failed for #{node.name}. Node not ready for reboot")
+        upgrade_nodes_failed.push(node.name)
       end
     end
-    true
+    # If list is empty, this method was successful.
+    upgrade_nodes_failed
   end
 
   def apply_role_pre_chef_call(old_role, role, all_nodes)
