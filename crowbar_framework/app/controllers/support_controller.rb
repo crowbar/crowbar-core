@@ -103,22 +103,29 @@ class SupportController < ApplicationController
 
   def export_chef
     begin
-      Rails.root.join("db").children.each do |file|
-        file.unlink if file.extname == ".json"
-      end
-
-      NodeObject.all.each { |n| n.export }
-      RoleObject.all.each { |r| r.export }
-      Proposal.all.each { |p| p.export }
-
       filename = "crowbar-chef-#{Time.now.strftime("%Y%m%d-%H%M%S")}.tgz"
 
-      pid = Process.fork do
-        exports = Dir.glob(Rails.root.join("db", "*.json").to_s)
-        cmd     = ["tar", "-czf", Rails.root.join("tmp", filename).to_s, *exports]
+      tmpdir = Dir.mktmpdir
+      tmpdirpath = Pathname.new(tmpdir)
+      tmpfile_path = tmpdirpath.join(filename)
 
-        ok = system(*cmd)
-        File.rename(Rails.root.join("tmp", filename), export_dir.join(filename)) if ok
+      begin
+        NodeObject.all.each { |n| n.export(tmpdirpath) }
+        RoleObject.all.each { |r| r.export(tmpdirpath) }
+        Proposal.all.each { |p| p.export(tmpdirpath) }
+      rescue StandardError => e
+        FileUtils.remove_entry_secure tmpdir
+        raise e
+      end
+
+      pid = Process.fork do
+        begin
+          cmd = ["tar", "czf", tmpfile_path.to_s, "*"]
+          _stdout, ok = Open3.capture2(*cmd, chdir: tmpdir)
+          File.rename(tmpfile_path, export_dir.join(filename)) if ok
+        ensure
+          FileUtils.remove_entry tmpdir
+        end
       end
 
       Process.detach(pid)
