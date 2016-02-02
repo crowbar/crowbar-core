@@ -26,14 +26,10 @@ module Crowbar
       end
 
       def restore
-        actions = [
-          :restore_crowbar,
-          :run_installer,
-          :restore_chef_keys,
-          :restore_chef,
-          :restore_database
-        ]
-        actions.each do |component|
+        restore_steps_path.delete if restore_steps_path.exist?
+
+        steps.each do |component|
+          set_step(component)
           ret = send(component)
           return ret unless ret == true
         end
@@ -41,7 +37,37 @@ module Crowbar
         { status: :ok, msg: "" }
       end
 
+      def steps
+        [
+          :restore_crowbar,
+          :run_installer,
+          :restore_chef_keys,
+          :restore_chef,
+          :restore_database
+        ]
+      end
+
+      def status
+        {
+          steps: steps_done
+        }
+      end
+
       protected
+
+      def set_step(step)
+        restore_steps_path.open("a") do |f|
+          f.write "#{Time.zone.now.iso8601} #{step}\n"
+        end
+      end
+
+      def steps_done
+        steps = []
+        restore_steps_path.readlines.map(&:chomp).each do |step|
+          steps.push step.last
+        end
+        steps
+      end
 
       def restore_chef
         logger.debug "Restoring chef backup files"
@@ -154,6 +180,14 @@ module Crowbar
 
       def proposal?(filename)
         !filename.match(/(_network\.json$)|(^template-(.*).json$)|(^queue\.json$)/)
+      end
+
+      def install_dir_path
+        Pathname.new("/var/lib/crowbar/install")
+      end
+
+      def restore_steps_path
+        install_dir_path.join("restore_steps")
       end
     end
   end
