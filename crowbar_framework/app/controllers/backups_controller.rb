@@ -157,6 +157,12 @@ class BackupsController < ApplicationController
     end
   end
 
+  def restore_status
+    respond_to do |format|
+      format.any { render json: Crowbar::Backup::Restore.status }
+    end
+  end
+
   protected
 
   def set_backup
