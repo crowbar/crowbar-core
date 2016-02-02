@@ -31,7 +31,7 @@ module TagHelper
         if value.is_a? Hash
           content.push hash_to_ul(value)
         else
-          content.push value == nil ? "" : ": #{value}"
+          content.push value.nil? ? "" : ": #{value}"
         end
 
         content_tag(
