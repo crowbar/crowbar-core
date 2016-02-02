@@ -369,6 +369,11 @@ template "#{node[:apache][:dir]}/vhosts.d/crowbar.conf" do
   notifies :reload, resources(service: "apache2")
 end
 
+cookbook_file "/etc/cron.hourly/crowbar-sessions-sweep" do
+  source "crowbar-sessions-sweep.cron"
+  mode 0755
+end
+
 # The below code swiped from:
 # https://github.com/opscode-cookbooks/chef-server/blob/chef10/recipes/default.rb
 # It will automaticaly compact the couchdb database when it gets too large.
