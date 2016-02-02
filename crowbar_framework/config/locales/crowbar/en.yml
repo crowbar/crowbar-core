@@ -50,9 +50,13 @@ en:
       current_revision_not_applied: 'The proposal has been changed since last deployment.'
     cluster:
       roles: 'Roles'
+      remote_roles: 'Roles for Remote Nodes'
       nodes: 'Nodes'
+      remote_nodes: 'Remote Nodes'
       no_cluster_roles: 'No roles have been assigned to this cluster.'
+      no_cluster_remote_roles: 'No roles have been assigned to remote nodes of this cluster.'
       no_cluster_nodes: 'No nodes have been assigned to this cluster.'
+      no_cluster_remote_nodes: 'This cluster does not contain any remote nodes.'
     clusters:
       title: 'HA Clusters'
       simple_clusters:
@@ -138,7 +142,7 @@ en:
       confirm_delete_proposal: 'Are you sure you wish to delete this proposal?'
       available_clusters: 'Available Clusters'
       available_clusters_hint: 'Here you can see all available clusters.'
-      available_remotes: 'Available Remotes'
+      available_remotes: 'Available Clusters with Remote Nodes'
       available_remotes_hint: 'Here you can see all available clusters that do have additional remote nodes assigned.'
       remotes_alias: '%{name} (%{count} remote nodes)'
       available_nodes: 'Available Nodes'
@@ -240,7 +244,7 @@ en:
       duplicate_elements_in_role: 'Duplicate elements detected in role'
       unknown_node: 'Unable to find any node named'
       unknown_cluster: 'Unable to find any cluster named'
-      unknown_remotes: 'Unable to find any remotes named'
+      unknown_remotes: 'Unable to find any cluster with remote nodes named'
       unsaved_changes: 'You might have unsaved changes; do you really want to switch to another page?'
 
   docs:

@@ -28,22 +28,36 @@ class RoleObject < ChefObject
     end
   end
 
-  def cluster_nodes(nodes = NodeObject.all)
-    @cluster_nodes ||= begin
-      proposal_nodes(nodes).values.flatten.uniq
+  def cluster_remote_roles(roles = RoleObject.all)
+    @cluster_remote_roles ||= begin
+      roles.select do |role|
+        role.elements.values.flatten.compact.uniq.include?("remotes:#{inst}")
+      end
     end
   end
 
-  def proposal_nodes(nodes = NodeObject.all)
-    @proposal_nodes ||= begin
-      assigned_nodes = {}
-      elements.each do |role_name, node_names|
-        assigned_nodes[role_name] = node_names.map do |node_name|
-          nodes.find { |n| n.name == node_name }
-        end.compact
-      end
-      assigned_nodes
+  def cluster_nodes(nodes = NodeObject.all)
+    @cluster_nodes ||= begin
+      proposal_nodes(nodes, nil, ["pacemaker-remote"]).values.flatten.uniq
     end
+  end
+
+  def cluster_remote_nodes(nodes = NodeObject.all)
+    @cluster_remote_nodes ||= begin
+      proposal_nodes(nodes, ["pacemaker-remote"], nil).values.flatten.uniq
+    end
+  end
+
+  def proposal_nodes(nodes = NodeObject.all, include_roles = nil, exclude_roles = nil)
+    assigned_nodes = {}
+    elements.each do |role_name, node_names|
+      next if !include_roles.nil? && !include_roles.include?(role_name)
+      next if !exclude_roles.nil? && exclude_roles.include?(role_name)
+      assigned_nodes[role_name] = node_names.map do |node_name|
+        nodes.find { |n| n.name == node_name }
+      end.compact
+    end
+    assigned_nodes
   end
 
   # Returns all proposal roles where this role is mentioned
@@ -87,9 +101,16 @@ class RoleObject < ChefObject
         # Resolve clusters. We do not use the Pacemaker helper as that means
         # another call to Chef. Obvious FIXME is to patch that method to accept
         # cache param and fallback to proposal look up.
-        if ServiceObject.is_cluster?(node_name)
+        if ServiceObject.is_cluster?(node_name) || ServiceObject.is_remotes?(node_name)
           cluster = roles.find { |r| r.name == "pacemaker-config-#{ServiceObject.cluster_name(node_name)}" }
-          cluster_roles_nodes = cluster.proposal_nodes(nodes)
+          if ServiceObject.is_remotes?(node_name)
+            include_roles = ["pacemaker-remote"]
+            exclude_roles = nil
+          else
+            include_roles = nil
+            exclude_roles = ["pacemaker-remote"]
+          end
+          cluster_roles_nodes = cluster.proposal_nodes(nodes, include_roles, exclude_roles)
 
           obj = OpenStruct.new(
             cluster: true,
