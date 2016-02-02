@@ -18,31 +18,28 @@
 module TagHelper
   # Convert a hash into a multidimensional unordered list
   def hash_to_ul(hash)
-    content_tag(
-      :ul,
-      [].tap do |output|
-        hash.each do |key, value|
-          content = []
+    content_tag :ul do
+      hash.collect do |key, value|
+        content = []
 
-          if key.is_a? Hash
-            content.push hash_to_ul(key)
-          else
-            content.push content_tag(:em, key)
-          end
-
-          if value.is_a? Hash
-            content.push hash_to_ul(value)
-          else
-            content.push value == nil ? "" : ": #{value}"
-          end
-
-          output.push content_tag(
-            :li,
-            content.join("\n")
-          )
+        if key.is_a? Hash
+          content.push hash_to_ul(key)
+        else
+          content.push content_tag(:em, key)
         end
-      end
-    )
+
+        if value.is_a? Hash
+          content.push hash_to_ul(value)
+        else
+          content.push value.nil? ? "" : ": #{value}"
+        end
+
+        content_tag(
+          :li,
+          content.join("\n").html_safe
+        )
+      end.join("").html_safe
+    end
   end
 
   def tooltip_tag(text, options = {})
