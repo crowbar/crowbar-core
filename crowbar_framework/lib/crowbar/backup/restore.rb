@@ -156,7 +156,6 @@ module Crowbar
         Crowbar::Installer.install!
         logger.debug "Waiting for installation to be successful"
         sleep(1) until Crowbar::Installer.successful? || Crowbar::Installer.failed?
-        return false if Crowbar::Installer.failed?
 
         if Crowbar::Installer.failed?
           return {
