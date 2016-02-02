@@ -23,6 +23,7 @@ module Crowbar
         @backup = backup
         @data = @backup.data
         @version = @backup.version
+        @status = {}
       end
 
       def restore
@@ -31,10 +32,8 @@ module Crowbar
         steps.each do |component|
           set_step(component)
           ret = send(component)
-          return ret unless ret == true
+          return @status if any_errors?
         end
-
-        { status: :ok, msg: "" }
       end
 
       def steps
@@ -54,6 +53,10 @@ module Crowbar
       end
 
       protected
+
+      def any_errors?
+        !@status.select { |k, v| v[:status] != :ok }.empty?
+      end
 
       def set_step(step)
         restore_steps_path.open("a") do |f|
@@ -99,6 +102,8 @@ module Crowbar
               end
             end
           end
+
+          @status[:restore_chef] ||= { status: :ok, msg: "" }
         rescue Errno::ECONNREFUSED
           raise Crowbar::Error::ChefOffline.new
         rescue Net::HTTPServerException
@@ -107,8 +112,6 @@ module Crowbar
 
         Rails.logger.info("Re-runnig chef-client locally to apply changes from imported proposals")
         system("sudo", "-i", "/opt/dell/bin/single_chef_client.sh")
-
-        true
       end
 
       def restore_files(source, destination)
@@ -139,7 +142,7 @@ module Crowbar
           restore_files(source, destination)
         end
 
-        true
+        @status[:restore_crowbar] ||= { status: :ok, msg: "" }
       end
 
       def restore_chef_keys
@@ -148,7 +151,7 @@ module Crowbar
           restore_files(source, destination)
         end
 
-        true
+        @status[:restore_chef_keys] ||= { status: :ok, msg: "" }
       end
 
       def run_installer
@@ -158,13 +161,13 @@ module Crowbar
         sleep(1) until Crowbar::Installer.successful? || Crowbar::Installer.failed?
 
         if Crowbar::Installer.failed?
-          return {
+          @status[:run_installer] = {
             status: :not_acceptable,
             msg: I18n.t(".installation_failed", scope: "installers.status")
           }
         end
 
-        true
+        @status[:run_installer] ||= { status: :ok, msg: "" }
       end
 
       def restore_database
@@ -174,7 +177,7 @@ module Crowbar
         )
         Crowbar::Migrate.migrate!
 
-        true
+        @status[:restore_database] ||= { status: :ok, msg: "" }
       end
 
       def proposal?(filename)
