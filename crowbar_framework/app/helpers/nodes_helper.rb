@@ -394,7 +394,7 @@ module NodesHelper
 
     list_items = ActiveSupport::OrderedHash.new.tap do |listing|
       node_barclamps(node).map do |role|
-        proposal = all_proposals.find { |p| p.id == role_to_proposal_name(role) }
+        proposal = all_proposals.find { |p| p.key == role_to_proposal_name(role) }
 
         if proposal.nil?
           listing["Unknown"] ||= []
@@ -478,7 +478,7 @@ module NodesHelper
           end.first
 
           unless barclamp.nil?
-            proposal = all_proposals.find { |p| p.id == role_to_proposal_name(barclamp) }
+            proposal = all_proposals.find { |p| p.key == role_to_proposal_name(barclamp) }
           end
 
           if proposal.nil?
