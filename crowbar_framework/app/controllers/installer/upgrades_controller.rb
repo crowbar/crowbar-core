@@ -56,19 +56,15 @@ module Installer
 
     def restore
       @current_step = 4
+      @steps = Crowbar::Installer.steps
+
       if request.post?
-        respond_to do |format|
-          format.html do
-            redirect_to repos_upgrade_url
-          end
-        end
-      else
-        @steps = Crowbar::Installer.steps
         @backup = Backup.all.first
         @backup.restore
-        respond_to do |format|
-          format.html
-        end
+      end
+
+      respond_to do |format|
+        format.html
       end
     end
 
