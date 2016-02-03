@@ -33,7 +33,7 @@ module Crowbar
           steps.each do |component|
             set_step(component)
             send(component)
-            set_success if component == :restore_database
+            set_success && self.class.restore_steps_path.delete if component == :restore_database
             return @status && set_failed && Thread.exit if any_errors?
           end
         end
