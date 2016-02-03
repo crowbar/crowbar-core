@@ -30,23 +30,13 @@ module Crowbar
         self.class.restore_steps_path.delete if self.class.restore_steps_path.exist?
 
         Thread.new do
-          steps.each do |component|
+          self.class.steps.each do |component|
             set_step(component)
             send(component)
             set_success && self.class.restore_steps_path.delete if component == :restore_database
             return @status && set_failed && Thread.exit if any_errors?
           end
         end
-      end
-
-      def steps
-        [
-          :restore_crowbar,
-          :run_installer,
-          :restore_chef_keys,
-          :restore_chef,
-          :restore_database
-        ]
       end
 
       class << self
@@ -57,6 +47,16 @@ module Crowbar
             failed: failed?,
             restoring: restoring?
           }
+        end
+
+        def steps
+          [
+            :restore_crowbar,
+            :run_installer,
+            :restore_chef_keys,
+            :restore_chef,
+            :restore_database
+          ]
         end
 
         def restore_steps_path

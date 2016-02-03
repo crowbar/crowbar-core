@@ -3,18 +3,22 @@ $(document).ready(function() {
     $.ajax({
       type: "GET",
       dataType: "json",
-      url: Routes.status_upgrade_path(),
+      url: Routes.restore_status_backups_path(),
       success: function(data) {
-        if (data.installing) {
+        if (data.restoring) {
           current_step = data.steps[data.steps.length - 1];
           $("[step]").hide();
           $("[step="+current_step+"]").show();
           setTimeout(statusCheck, 3000);
         } else if (data.success) {
           $(":button").removeClass("disabled");
+          $(".restore_button").addClass("disabled");
+          $(".alert-info").hide();
           $(".alert-success").show();
         } else if (data.failed) {
+          $(".alert-info").hide();
           $(".alert-danger").show();
+          $(".restore_button").addClass("disabled");
         }
       },
       error: function() {

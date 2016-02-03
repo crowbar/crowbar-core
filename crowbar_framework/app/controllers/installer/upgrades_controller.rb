@@ -56,7 +56,7 @@ module Installer
 
     def restore
       @current_step = 4
-      @steps = Crowbar::Installer.steps
+      @steps = Crowbar::Backup::Restore.steps
 
       if request.post?
         if Crowbar::Backup::Restore.restore_steps_path.exist?
