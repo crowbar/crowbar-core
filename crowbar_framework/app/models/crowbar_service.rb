@@ -105,13 +105,6 @@ class CrowbarService < ServiceObject
 
     raise "There does not seem to exist any node running the database." if db_nodes.empty?
 
-    proposal = Proposal.where(barclamp: "crowbar", name: "default").first
-    # After all non-DB services are shut down, adapt the proposal again and
-    # commit it with real actions for DB nodes only (and the special role for them)
-    proposal["deployment"]["crowbar"]["elements"]["crowbar-upgrade"] -= db_nodes
-    proposal["deployment"]["crowbar"]["elements"]["crowbar-db-dump"] = db_nodes
-    proposal.save
-
     # This proposal could return some error if there's not enough space for DB dump
     # Controller must show the error and be able to call the function again once the problem
     # is resolved
@@ -124,13 +117,13 @@ class CrowbarService < ServiceObject
   # This needs to be done in separate step because user might want
   # to download DB dump before the database is shut down.
   def finalize_openstack_shutdown
-    NodeObject.find("roles:crowbar-db-dump").each do |node|
+    NodeObject.find("state:crowbar_upgrade AND roles:database-config-default").each do |node|
       # mark the position in the upgrade process
       node["crowbar_wall"]["crowbar_upgrade_step"] = "db_shutdown"
       node.save
     end
 
-    # Commit the same proposal, we have only crowbar-db-dump role non-empty now
+    # Commit the same proposal, we have changed the upgrade step for DB nodes
     commit_and_check_proposal
   end
 
@@ -360,8 +353,7 @@ class CrowbarService < ServiceObject
       node = NodeObject.find_node_by_name n
       # value of crowbar_wall["crowbar_upgrade"] indicates that the role should be executed
       # but node state should not be changed: this is needed when reverting node state to ready
-      if (node.role?("crowbar-upgrade") || node.role?("crowbar-db-dump")) &&
-          node.crowbar_wall["crowbar_upgrade_step"]
+      if node.role?("crowbar-upgrade") && node.crowbar_wall["crowbar_upgrade_step"]
         node.set_state("crowbar_upgrade")
       end
     end
