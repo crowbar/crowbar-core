@@ -34,6 +34,11 @@ module Installer
       end
     end
 
+    def restore_button
+      return if restored?
+      button_tag t(".restore_button"), class: "btn btn-primary restore_button"
+    end
+
     def alert_type(boolean)
       if boolean
         "alert-success"
@@ -66,6 +71,10 @@ module Installer
 
     def check_repos?
       check_ha_repo? != false && check_ceph_repo? != false
+    end
+
+    def restored?
+      Crowbar::Backup::Restore.status[:success]
     end
 
     def database_node

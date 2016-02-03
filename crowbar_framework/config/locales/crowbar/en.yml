@@ -584,6 +584,7 @@ en:
         install_button: 'Start Installer'
         success: 'Restore was successful.'
         failed: 'Restore failed. Please check the log at /var/log/crowbar/install.log'
+        restore_button: 'Restore'
         description: |
           Lorem Ipsum is simply dummy text of the printing and typesetting
           industry. Lorem Ipsum has been the industry's standard dummy text ever
