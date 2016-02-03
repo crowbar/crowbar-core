@@ -59,8 +59,12 @@ module Installer
       @steps = Crowbar::Backup::Restore.steps
 
       if request.post?
+        url = restore_upgrade_url
+
         if Crowbar::Backup::Restore.restore_steps_path.exist?
           flash[:info] = t(".multiple_restore")
+        elsif Crowbar::Backup::Restore.status[:success]
+          url = repos_upgrade_url
         else
           @backup = Backup.all.first
           @backup.restore
@@ -68,7 +72,7 @@ module Installer
 
         respond_to do |format|
           format.html do
-            redirect_to restore_upgrade_url
+            redirect_to url
           end
         end
       else
