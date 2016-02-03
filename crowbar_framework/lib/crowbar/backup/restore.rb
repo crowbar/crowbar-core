@@ -29,12 +29,14 @@ module Crowbar
       def restore
         self.class.restore_steps_path.delete if self.class.restore_steps_path.exist?
 
-        steps.each do |component|
-          set_step(component)
-          ret = send(component)
-          return @status && set_failed if any_errors?
+        Thread.new do
+          steps.each do |component|
+            set_step(component)
+            send(component)
+            set_success if component == :restore_database
+            return @status && set_failed && Thread.exit if any_errors?
+          end
         end
-        set_success
       end
 
       def steps
