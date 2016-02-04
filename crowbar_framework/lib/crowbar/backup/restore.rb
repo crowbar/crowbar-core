@@ -147,7 +147,12 @@ module Crowbar
                 )
                 proposal.properties = record.raw_data
                 proposal.save
-                SchemaMigration.run_for_bc(bc_name)
+                begin
+                  Rails.logger.debug "Migrating #{bc_name} schema"
+                  SchemaMigration.run_for_bc(bc_name)
+                rescue StandardError => e
+                  Rails.logger.error(e.message)
+                end
               else
                 record.save
               end
