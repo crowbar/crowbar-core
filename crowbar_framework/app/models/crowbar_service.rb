@@ -125,6 +125,13 @@ class CrowbarService < ServiceObject
 
     # Commit the same proposal, we have changed the upgrade step for DB nodes
     commit_and_check_proposal
+
+    # Finally, set the upgrade step to the point where no further action is done
+    # even when the upgrade recipes are accidentally executed
+    NodeObject.find("state:crowbar_upgrade AND roles:database-config-default").each do |node|
+      node["crowbar_wall"]["crowbar_upgrade_step"] = "done_openstack_shutdown"
+      node.save
+    end
   end
 
   #
