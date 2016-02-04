@@ -33,17 +33,14 @@ when "openstack_shutdown"
 
   # Stop DRBD and corosync.
   # (Note that this node is not running database)
-  bash "stop HA services" do
-    code <<-EOF
-      for i in /etc/init.d/drbd \
-               /etc/init.d/openais \
-               /etc/init.d/openais-shutdown;
-      do
-        if test -e $i; then
-          $i stop
-        fi
-      done
-    EOF
+  service "drbd" do
+    action :stop
+  end
+  service "openais" do
+    action :stop
+  end
+  service "openais-shutdown" do
+    action :stop
   end
 
 when "dump_openstack_database"
@@ -110,17 +107,14 @@ when "db_shutdown"
   end
 
   # Stop the database and corosync
-  bash "stop the database" do
-    code <<-EOF
-      for i in /etc/init.d/drbd \
-               /etc/init.d/openais \
-               /etc/init.d/postgresql;
-      do
-        if test -e $i; then
-          $i stop
-        fi
-      done
-    EOF
+  service "drbd" do
+    action :stop
+  end
+  service "openais" do
+    action :stop
+  end
+  service "postgresql" do
+    action :stop
   end
   service "openais-shutdown" do
     action :stop
