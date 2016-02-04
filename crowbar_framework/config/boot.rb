@@ -36,8 +36,8 @@ else
   gem "sass-rails", version: "~> 5.0.3"
   require "sass-rails"
 
-  gem "puma", version: "~> 2.11.3"
-  require "puma"
+  gem "passenger", version: "~> 5.0.18"
+  require "passenger"
 
   # general stuff
   gem "activerecord-session_store", version: "~> 0.1.0"

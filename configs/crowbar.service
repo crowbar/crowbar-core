@@ -13,18 +13,12 @@ TimeoutStopSec=10
 
 WorkingDirectory=/opt/dell/crowbar_framework
 
-Environment="CROWBAR_ENV=production"
-Environment="CROWBAR_THREADS=10"
-Environment="CROWBAR_WORKERS=5"
-Environment="CROWBAR_LISTEN=127.0.0.1"
-Environment="CROWBAR_PORT=3000"
-EnvironmentFile=-/etc/sysconfig/crowbar
-
 ExecStartPre=/usr/bin/rm -f /var/run/crowbar/looper-chef-client.lock /var/run/crowbar/chef-client.lock
-ExecStart=/usr/bin/puma -C /opt/dell/crowbar_framework/config/puma.rb
-ExecStop=/usr/bin/pumactl -S /opt/dell/crowbar_framework/tmp/pids/puma.state stop
-ExecReload=/usr/bin/pumactl -S /opt/dell/crowbar_framework/tmp/pids/puma.state restart
-
+ExecStartPre=/usr/bin/mkdir -p /opt/dell/crowbar_framework/tmp/pids/
+ExecStartPre=/usr/bin/chown crowbar. /opt/dell/crowbar_framework/tmp/pids/
+ExecStart=/usr/bin/passenger start
+ExecStop=/usr/bin/passenger stop
+ExecReload=/usr/bin/passenger-config restart-app /opt/dell/crowbar_framework
 
 [Install]
 WantedBy=multi-user.target

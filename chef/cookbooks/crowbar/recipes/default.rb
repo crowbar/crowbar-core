@@ -17,10 +17,6 @@
 # limitations under the License.
 #
 
-unless node[:platform_family] == "suse"
-  include_recipe "bluepill"
-end
-
 pkglist = ()
 logdir = "/var/log/crowbar"
 crowbar_home = "/var/lib/crowbar"
@@ -52,6 +48,7 @@ when "rhel"
 when "suse"
   pkglist = %w(
     curl
+    rubygem-passenger
     sudo
     sqlite3
 
@@ -69,7 +66,6 @@ when "suse"
     ruby2.1-rubygem-mixlib-shellout
     ruby2.1-rubygem-ohai-6
     ruby2.1-rubygem-rails-4_2
-    ruby2.1-rubygem-puma
     ruby2.1-rubygem-redcarpet
     ruby2.1-rubygem-ruby-shadow
     ruby2.1-rubygem-sass-rails
@@ -112,7 +108,7 @@ unless node[:platform_family] == "suse"
     simple_navigation_renderers
     sqlite3
     syslogger
-    puma
+    passenger
   )
 
   gemlist.each do |g|
@@ -256,13 +252,13 @@ else
   realm = nil
 end
 
-# Remove rainbows configuration, dating from before the switch to puma
+# Remove rainbows configuration, dating from before the switch to puma & passenger
 file "/opt/dell/crowbar_framework/rainbows.cfg" do
   action :delete
 end
 
-template "/etc/sysconfig/crowbar" do
-  source "sysconfig.crowbar.erb"
+template "/opt/dell/crowbar_framework/Passengerfile.json" do
+  source "Passengerfile.json.erb"
   owner "root"
   group "root"
   mode "0644"
@@ -320,15 +316,6 @@ else
 
   cookbook_file "/etc/logrotate.d/chef-server"
 
-  template "/etc/bluepill/crowbar-webserver.pill" do
-    source "crowbar-webserver.pill.erb"
-    variables(logdir: logdir, crowbar_home: crowbar_home)
-  end
-
-  bluepill_service "crowbar-webserver" do
-    action [:load, :start]
-  end
-
   cookbook_file "/etc/init.d/crowbar" do
     owner "root"
     group "root"
@@ -348,9 +335,7 @@ end
 
 include_recipe "apache2"
 include_recipe "apache2::mod_proxy"
-include_recipe "apache2::mod_proxy_balancer"
 include_recipe "apache2::mod_proxy_http"
-include_recipe "apache2::mod_rewrite"
 include_recipe "apache2::mod_slotmem_shm"
 include_recipe "apache2::mod_socache_shmcb"
 include_recipe "apache2::mod_auth_digest"

@@ -33,10 +33,17 @@ post_state() {
   curl "${curlargs[@]}" "http://$IP/crowbar/crowbar/1.0/transition/default"
 }
 
+cd /opt/dell/crowbar_framework
+
 case $1 in
     start|'')
         # clean up files just in case
         rm -rf /var/run/crowbar/looper-chef-client.lock /var/run/crowbar/chef-client.run /var/run/crowbar/chef-client.lock
+
+        mkdir -p tmp/pids
+        chown crowbar. tmp/pids
+
+        passenger --user crowbar start
 
         # Mark us as readying, and get our cert.
 	post_state $HOSTNAME "readying"
@@ -47,8 +54,8 @@ case $1 in
 	post_state $HOSTNAME "ready"
 
 	echo "Done";;
-    stop) bluepill crowbar-webserver stop;;
-    status) bluepill crowbar-webserver status;;
-    restart) /usr/bin/pumactl -S /opt/dell/crowbar_framework/tmp/pids/puma.state restart;;
+    stop) passenger stop;;
+    status) passenger status;;
+    restart) passenger stop && passenger --user crowbar start;;
     *) echo "Unknown action $1";;
 esac
