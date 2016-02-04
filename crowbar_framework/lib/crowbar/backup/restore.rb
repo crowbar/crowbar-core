@@ -27,18 +27,20 @@ module Crowbar
       end
 
       def restore
-        self.class.restore_steps_path.delete if self.class.restore_steps_path.exist?
+        cleanup if self.class.restore_steps_path.exist?
 
         Thread.new do
           self.class.steps.each do |component|
             set_step(component)
             send(component)
-            return @status && Thread.exit if any_errors?
+            return @status && cleanup && Thread.exit if any_errors?
             # set_failed is called directly after the fail
             if component == :restore_database && !self.class.failed_path.exist?
-              set_success && self.class.restore_steps_path.delete
+              set_success
             end
           end
+
+          cleanup
         end
       end
 
@@ -103,6 +105,10 @@ module Crowbar
       end
 
       protected
+
+      def cleanup
+        self.class.restore_steps_path.delete
+      end
 
       def any_errors?
         !@status.select { |k, v| v[:status] != :ok }.empty?
