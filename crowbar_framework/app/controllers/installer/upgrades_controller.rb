@@ -21,7 +21,7 @@ module Installer
     skip_before_filter :enforce_installer
     before_filter :hide_navigation
     before_filter :set_progess_values
-    before_filter :set_service_object, only: [:services, :backup]
+    before_filter :set_service_object, only: [:services, :backup, :nodes]
 
     def show
       respond_to do |format|
@@ -157,8 +157,17 @@ module Installer
       @current_step = 8
       if request.post?
         respond_to do |format|
-          format.html do
-            redirect_to finish_upgrade_url
+          begin
+            @service_object.disable_non_core_proposals
+            @service_object.prepare_nodes_for_os_upgrade
+            format.html do
+              redirect_to finish_upgrade_url
+            end
+          rescue => e
+            format.html do
+              flash[:alert] = e.message
+              redirect_to nodes_upgrade_url
+            end
           end
         end
       else
