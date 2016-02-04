@@ -99,6 +99,7 @@ Rails.application.routes.draw do
   get "crowbar/:controller/1.0/proposals/status(/:id)(/:name)(.:format)", action: "proposal_status", as: "status_proposals_barclamp"
   delete "crowbar/:controller/1.0/proposals/:id(.:format)", action: "proposal_delete", as: "delete_proposal_barclamp"
   delete "crowbar/:controller/1.0/proposals/dequeue/:id(.:format)", action: "proposal_dequeue", as: "dequeue_barclamp"
+  post "crowbar/:controller/1.0/proposals/reset/:id(.:format)", action: "proposal_reset", as: "reset_barclamp"
   post "crowbar/:controller/1.0/proposals/:id(.:format)", action: "proposal_update", as: "update_proposal_barclamp"
   get "crowbar/:controller/1.0/proposals/:id(.:format)", action: "proposal_show", as: "proposal_barclamp"
 
@@ -122,6 +123,7 @@ Rails.application.routes.draw do
   post "crowbar/:barclamp/1.0/proposals/commit/:id(.:format)", action: "proposal_commit", controller: "barclamp"
   get "crowbar/:barclamp/1.0/proposals/status(.:format)", action: "proposal_status", controller: "barclamp"
   delete "crowbar/:barclamp/1.0/proposals/:id(.:format)", action: "proposal_delete", controller: "barclamp"
+  post "crowbar/:barclamp/1.0/proposals/reset/:id(.:format)", action: "proposal_reset", controller: "barclamp"
   post "crowbar/:barclamp/1.0/proposals/:id(.:format)", action: "proposal_update", controller: "barclamp"
   get "crowbar/:barclamp/1.0/proposals/:id(.:format)", action: "proposal_show", controller: "barclamp"
   get "crowbar/:barclamp/1.0/elements(.:format)", action: "elements", controller: "barclamp"
@@ -170,5 +172,7 @@ Rails.application.routes.draw do
     end
   end
 
-  match "/:controller/:action/*(:.format)", via: [:get, :post, :put, :patch, :delete]
+  # TODO(must): Get rid of this wildcard route
+  match "/:controller/:action/*(:.format)",
+    via: [:get, :post, :put, :patch, :delete]
 end

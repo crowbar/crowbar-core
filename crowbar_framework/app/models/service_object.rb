@@ -196,6 +196,61 @@ class ServiceObject
     end
   end
 
+  def reset_proposal(inst, bc = @bc_name)
+    ::Proposal.find_by(
+      barclamp: bc,
+      name: inst
+    ).tap do |proposal|
+      if proposal.nil?
+        return [
+          404,
+          I18n.t("model.service.cannot_find")
+        ]
+      end
+
+      unless proposal["deployment"][bc]["crowbar-committing"]
+        proposal["deployment"][bc]["crowbar-committing"] = false
+
+        unless proposal.save
+          return [
+            422,
+            I18n.t("proposal.failures.proposal_reset")
+          ]
+        end
+      end
+
+      nodes = NodeObject.find("roles:#{bc}-config-#{inst}").map do |node|
+        if node.role.nil?
+          false
+        else
+          node.role.tap do |role|
+            return true if role.default_attributes["state"] == "ready"
+
+            role.default_attributes["state"] = "ready"
+            role.save
+          end
+        end
+      end
+
+      unless nodes.all?
+        return [
+          422,
+          I18n.t("proposal.failures.nodes_reset")
+        ]
+      end
+    end
+
+    [
+      200,
+      ""
+    ]
+  rescue => e
+    [
+      500,
+      e.message
+    ]
+  end
+
 #
 # Queuing routines:
 #   queue_proposal - attempts to queue proposal returns delay otherwise.

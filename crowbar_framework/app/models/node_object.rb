@@ -767,6 +767,8 @@ class NodeObject < ChefObject
     @role.default_attributes = value
   end
 
+  attr_reader :role
+
   # This include a map walk
   def role?(role_name)
     return false if @node.nil?
