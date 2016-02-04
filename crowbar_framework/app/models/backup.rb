@@ -31,8 +31,10 @@ class Backup < ActiveRecord::Base
       with: /\A[a-zA-Z0-9\-_]+\z/,
       message: "allows only letters and numbers"
     }
+
   validates :version,
     presence: true
+
   validates :size,
     presence: true
 
@@ -117,7 +119,7 @@ class Backup < ActiveRecord::Base
   end
 
   def create_archive
-    logger.debug "Creating backup #{filename} in #{self.class.image_dir}"
+    logger.debug "Creating backup in #{self.class.image_dir}"
     dir = Dir.mktmpdir
 
     Crowbar::Backup::Export.new(dir).export
@@ -134,7 +136,12 @@ class Backup < ActiveRecord::Base
   end
 
   def save_archive
-    logger.debug "Saving #{file.original_filename} to #{self.class.image_dir}"
+    if file.nil?
+      errors.add_on_blank :file
+      return false
+    end
+
+    logger.debug "Saving backup to #{self.class.image_dir}"
     self.name = file.original_filename.remove(".tar.gz")
 
     if path.exist?
