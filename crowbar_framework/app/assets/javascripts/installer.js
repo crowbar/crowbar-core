@@ -30,6 +30,25 @@ $(document).ready(function() {
               .removeClass("fa-hourglass-o")
               .addClass("fa-circle-o-notch fa-spin");
           }
+          // if we fail early before the first step is done, we have to report
+          // back to the UI https://bugzilla.suse.com/show_bug.cgi?id=958766
+          if (data.failed) {
+            $("li.pre_sanity_checks")
+              .removeClass("list-group-item-success")
+              .addClass("list-group-item-danger")
+              .children("span")
+              .removeClass("fa-hourglass-o fa-circle-o-notch fa-spin")
+              .addClass("fa-times");
+            $(".panel")
+              .parent()
+              .parent()
+              .prepend("<div id='network-alert' class='col-lg-12'>" +
+                          "<div class='alert alert-danger'>" +
+                            "<span>" + data.errorMsg + "</span>" +
+                          "</div>" +
+                        "</div>");
+            return;
+          }
           setTimeout(statusCheck, 3000);
           return;
         }
