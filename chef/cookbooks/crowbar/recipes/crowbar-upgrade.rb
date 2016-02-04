@@ -33,16 +33,11 @@ when "openstack_shutdown"
 
   # Stop DRBD and corosync.
   # (Note that this node is not running database)
-  bash "stop HA services" do
-    code <<-EOF
-      for i in /etc/init.d/drbd \
-               /etc/init.d/openais;
-      do
-        if test -e $i; then
-          $i stop
-        fi
-      done
-    EOF
+  service "drbd" do
+    action :stop
+  end
+  service "openais" do
+    action :stop
   end
 
 when "dump_openstack_database"
@@ -99,7 +94,7 @@ when "db_shutdown"
   if File.exist?("/usr/sbin/crm")
     bash "Stop postgresql" do
       code <<-EOF
-        crm stop postgresql
+        crm resource stop postgresql
       EOF
     end
   else
