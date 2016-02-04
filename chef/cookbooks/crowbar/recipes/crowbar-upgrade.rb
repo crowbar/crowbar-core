@@ -36,7 +36,8 @@ when "openstack_shutdown"
   bash "stop HA services" do
     code <<-EOF
       for i in /etc/init.d/drbd \
-               /etc/init.d/openais;
+               /etc/init.d/openais \
+               /etc/init.d/openais-shutdown;
       do
         if test -e $i; then
           $i stop
@@ -132,6 +133,9 @@ when "db_shutdown"
     action :stop
   end
   service "openais" do
+    action :stop
+  end
+  service "openais-shutdown" do
     action :stop
   end
 when "done_openstack_shutdown", "wait_for_openstack_shutdown"
