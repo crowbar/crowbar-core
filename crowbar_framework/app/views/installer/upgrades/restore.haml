@@ -10,7 +10,7 @@
             = t("installer.upgrades.header", product: branding_config.page_title)
 
         .panel-plain.wizard
-          = render partial: "nav", locals: { active: :install }
+          = render partial: "nav", locals: { active: :restore }
 
           .wizard-body.col-lg-9
             %h2
@@ -19,15 +19,22 @@
             %p
               = t(".description")
 
-            - @steps.each do |step|
-              .alert.alert-info{ step: step, style: "display:none;" }
-                = icon_tag "spin fa-spinner", t("installer.installers.show.#{step}")
+            .upgrade{ data: { status_check: true } }
+              - @steps.each do |step|
+                .alert.alert-info.hidden{ data: { step: step } }
+                  = icon_tag "spin",
+                    t("installer.installers.show.#{step}"),
+                    class: "fa-fw fa-spinner"
 
-            .alert.alert-danger{ style: "display:none;" }
-              = t(".failed")
+              .alert.alert-danger.hidden
+                = icon_tag "exclamation",
+                  t(".failed"),
+                  class: "fa-fw"
 
-            .alert.alert-success{ style: "display:none;" }
-              = t(".success")
+              .alert.alert-success.hidden
+                = icon_tag "check",
+                  t(".success"),
+                  class: "fa-fw"
 
         .panel-footer
           .row
@@ -36,4 +43,4 @@
 
             .col-lg-9.text-right
               .btn-group{ role: "group" }
-                = continue_button(true)
+                = upgrade_continue_button(true)

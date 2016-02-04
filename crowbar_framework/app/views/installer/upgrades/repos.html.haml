@@ -16,13 +16,27 @@
             %p
               = t(".description")
 
-            %p
-              - unless check_ceph_repo?.nil?
-                .alert{ class: alert_type(check_ceph_repo?) }
-                  = t(".ceph_repo")
-              - unless check_ha_repo?.nil?
-                .alert{ class: alert_type(check_ha_repo?) }
-                  = t(".ha_repo")
+            - if upgrade_ha_repo?
+              .alert.alert-success
+                = icon_tag "check",
+                  t(".ceph_repo_present"),
+                  class: "fa-fw"
+            - else
+              .alert.alert-danger
+                = icon_tag "exclamation",
+                  t(".ceph_repo_missing"),
+                  class: "fa-fw"
+
+            - if upgrade_ceph_repo?
+              .alert.alert-success
+                = icon_tag "check",
+                  t(".ha_repo_present"),
+                  class: "fa-fw"
+            - else
+              .alert.alert-danger
+                = icon_tag "exclamation",
+                  t(".ha_repo_missing"),
+                  class: "fa-fw"
 
         .panel-footer
           .row
@@ -31,4 +45,4 @@
 
             .col-lg-9.text-right
               .btn-group{ role: "group" }
-                = check_repos_button
+                = upgrade_repocheck_button

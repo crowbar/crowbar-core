@@ -41,11 +41,17 @@
         = icon_tag :chevron_right, nil, class: "fa-fw"
       = t(".backup")
 
-  %li{ class: active == :nodes ? "active" : nil }
+  %li{ class: active == :infos ? "active" : nil }
     %a
       .pull-right
         = icon_tag :chevron_right, nil, class: "fa-fw"
-      = t(".nodes")
+      = t(".infos")
+
+  %li{ class: active == :processing ? "active" : nil }
+    %a
+      .pull-right
+        = icon_tag :chevron_right, nil, class: "fa-fw"
+      = t(".processing")
 
   %li{ class: active == :finish ? "active" : nil }
     %a

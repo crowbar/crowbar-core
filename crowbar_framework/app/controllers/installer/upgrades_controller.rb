@@ -33,9 +33,11 @@ module Installer
 
     def start
       @current_step = 3
+
       if request.post?
         respond_to do |format|
           @backup = Backup.new(params.permit(:file))
+
           if @backup.save
             format.html do
               redirect_to restore_upgrade_url
@@ -56,6 +58,7 @@ module Installer
 
     def restore
       @current_step = 4
+
       if request.post?
         respond_to do |format|
           format.html do
@@ -63,31 +66,28 @@ module Installer
           end
         end
       else
-        @steps = Crowbar::Installer.steps
-        @backup = Backup.all.first
-        @backup.restore
         respond_to do |format|
-          format.html
-        end
-      end
-    end
+          @steps = Crowbar::Installer.steps
+          @backup = Backup.all.first
 
-    def status
-      respond_to do |format|
-        format.json do
-          render json: Crowbar::Installer.status
-        end
-        format.html do
-          redirect_to install_upgrade_url
+          if @backup.present?
+            @backup.restore
+            format.html
+          else
+            format.html do
+              redirect_to start_upgrade_url
+            end
+          end
         end
       end
     end
 
     def repos
       @current_step = 5
+
       if request.post?
         respond_to do |format|
-          if view_context.check_repos?
+          if view_context.upgrade_repos_present?
             format.html do
               redirect_to services_upgrade_url
             end
@@ -112,6 +112,7 @@ module Installer
           begin
             @service_object.shutdown_services_at_non_db_nodes
             @service_object.dump_openstack_database
+
             format.html do
               redirect_to backup_upgrade_url
             end
@@ -131,13 +132,15 @@ module Installer
 
     def backup
       @current_step = 7
+
       if request.post?
         respond_to do |format|
           begin
             @service_object.finalize_openstack_shutdown
             Openstack::Upgrade.unset_db_synced
+
             format.html do
-              redirect_to nodes_upgrade_url
+              redirect_to infos_upgrade_url
             end
           rescue => e
             format.html do
@@ -153,20 +156,23 @@ module Installer
       end
     end
 
-    def nodes
+    def infos
       @current_step = 8
+
       if request.post?
         respond_to do |format|
           begin
-            @service_object.disable_non_core_proposals
-            @service_object.prepare_nodes_for_os_upgrade
+            # TODO(must): Do the following actions async in background
+            # @service_object.disable_non_core_proposals
+            # @service_object.prepare_nodes_for_os_upgrade
+
             format.html do
-              redirect_to finish_upgrade_url
+              redirect_to processing_upgrade_url
             end
           rescue => e
             format.html do
               flash[:alert] = e.message
-              redirect_to nodes_upgrade_url
+              redirect_to infos_upgrade_url
             end
           end
         end
@@ -177,10 +183,51 @@ module Installer
       end
     end
 
-    def finish
+    def processing
       @current_step = 9
+
+      if request.post?
+        respond_to do |format|
+          format.html do
+            redirect_to finish_upgrade_url
+          end
+        end
+      else
+        respond_to do |format|
+          format.html
+        end
+      end
+    end
+
+    def finish
+      @current_step = 10
+
       respond_to do |format|
         format.html
+      end
+    end
+
+    def status
+      respond_to do |format|
+        format.json do
+          render json: Crowbar::Installer.status
+        end
+      end
+    end
+
+    def nodes
+      respond_to do |format|
+        format.json do
+          render json: {
+            total: view_context.total_nodes_count,
+            left: view_context.upgrading_nodes_count,
+            failed: view_context.failed_nodes_count,
+            error: I18n.t(
+              "installer.upgrades.nodes.failed",
+              nodes: NodeObject.find("state:problem").map(&:name).join(", ")
+            )
+          }
+        end
       end
     end
 
