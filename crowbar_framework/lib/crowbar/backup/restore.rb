@@ -151,7 +151,15 @@ module Crowbar
                   Rails.logger.debug "Migrating #{bc_name} schema"
                   SchemaMigration.run_for_bc(bc_name)
                 rescue StandardError => e
-                  Rails.logger.error(e.message)
+                  msg = I18n.t(
+                    ".installer.upgrades.restore.schema_migration_failed",
+                    bc_name: bc_name
+                  )
+                  Rails.logger.error("#{msg} -- #{e.message}")
+                  @status[:restore_chef] = {
+                    status: :conflict,
+                    msg: msg
+                  }
                 end
               else
                 record.save
