@@ -252,9 +252,15 @@ else
   realm = nil
 end
 
-# Remove rainbows configuration, dating from before the switch to puma & passenger
-file "/opt/dell/crowbar_framework/rainbows.cfg" do
-  action :delete
+# Remove rainbows & puma config files, dating from before the switch to passenger
+[
+  "/opt/dell/crowbar_framework/rainbows.cfg",
+  "/etc/sysconfig/crowbar",
+  "/etc/bluepill/crowbar-webserver.pill"
+].each do |old_config|
+  file old_config do
+    action :delete
+  end
 end
 
 template "/opt/dell/crowbar_framework/Passengerfile.json" do
