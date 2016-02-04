@@ -96,25 +96,6 @@ when "dump_openstack_database"
 
 when "db_shutdown"
 
-  # Stopping postgresql service in HA and non-HA
-  if File.exist?("/usr/sbin/crm")
-    bash "Stop postgresql" do
-      code <<-EOF
-        crm stop postgresql
-      EOF
-    end
-  else
-    service "postgresql" do
-      action :stop
-    end
-  end
-
-  bash "Rename data directory of postgres" do
-    code <<-EOF
-      mv /var/lib/pgsql/data /var/lib/pgsql/data.old
-    EOF
-  end
-
   # Stop remaining pacemaker resources
   bash "stop pacemaker resources" do
     code <<-EOF
@@ -128,12 +109,18 @@ when "db_shutdown"
     only_if { ::File.exist?("/usr/sbin/crm") }
   end
 
-  # Stop other services
-  service "drbd" do
-    action :stop
-  end
-  service "openais" do
-    action :stop
+  # Stop the database and corosync
+  bash "stop the database" do
+    code <<-EOF
+      for i in /etc/init.d/drbd \
+               /etc/init.d/openais \
+               /etc/init.d/postgresql;
+      do
+        if test -e $i; then
+          $i stop
+        fi
+      done
+    EOF
   end
   service "openais-shutdown" do
     action :stop
