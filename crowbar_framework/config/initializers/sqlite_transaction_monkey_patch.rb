@@ -24,7 +24,16 @@ module ActiveRecord
   module ConnectionAdapters
     class SQLite3Adapter < AbstractAdapter
       def begin_db_transaction
-        log("begin transaction",nil) { @connection.transaction(:immediate) }
+        log("begin transaction", nil) do
+          5.times do
+            begin
+              @connection.transaction(:immediate)
+              break
+            rescue SQLite3::BusyException => e
+              logger.info "begin transaction fails #{e}"
+            end
+          end
+        end
       end
     end
   end
