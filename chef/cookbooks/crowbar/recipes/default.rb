@@ -263,6 +263,15 @@ end
   end
 end
 
+bash "stop old puma process" do
+  code <<-EOF
+    /usr/bin/pumactl -S /opt/dell/crowbar_framework/tmp/pids/puma.state stop
+    rm -f /opt/dell/crowbar_framework/tmp/pids/puma.state
+  EOF
+  ignore_failure true
+  only_if { File.exists?("/opt/dell/crowbar_framework/tmp/pids/puma.state") }
+end
+
 template "/opt/dell/crowbar_framework/Passengerfile.json" do
   source "Passengerfile.json.erb"
   owner "root"
