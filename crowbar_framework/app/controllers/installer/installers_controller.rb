@@ -69,7 +69,7 @@ module Installer
         else
           if status[:installing]
             header = :im_used
-            msg = I18n.t(".installers.start.installation_ongoing")
+            msg = I18n.t("installer.installers.start.installation_ongoing")
             msg_type = :notice
           else
             ret = Crowbar::Installer.install
