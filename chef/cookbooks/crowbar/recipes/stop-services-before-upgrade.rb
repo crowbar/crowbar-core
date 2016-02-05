@@ -38,6 +38,7 @@ end
 bash "stop OpenStack services" do
   code <<-EOF
     for i in /etc/init.d/openstack-* \
+             /etc/init.d/rabbitmq-server \
              /etc/init.d/openvswitch-switch \
              /etc/init.d/ovs-usurp-config-* \
              /etc/init.d/hawk;
