@@ -184,7 +184,7 @@ module Crowbar
           raise "Restore failed"
         end
 
-        Rails.logger.info("Re-runnig chef-client locally to apply changes from imported proposals")
+        Rails.logger.info("Re-running chef-client locally to apply changes from imported proposals")
         system("sudo", "-i", "/opt/dell/bin/single_chef_client.sh")
       end
 
