@@ -6,6 +6,31 @@ $(document).ready(function() {
       .prepend(message);
   }
 
+  function setInMotion(selector) {
+    selector
+      .addClass("list-group-item-success");
+    selector.find("span.fa")
+      .removeClass("fa-hourglass-o")
+      .addClass("fa-circle-o-notch fa-spin");
+  }
+
+  function setFailed(selector) {
+    selector
+      .removeClass("list-group-item-success")
+      .addClass("list-group-item-danger")
+      .children("span")
+      .removeClass("fa-hourglass-o fa-circle-o-notch fa-spin")
+      .addClass("fa-times");
+  }
+
+  function setSuccess(selector) {
+    selector
+      .removeClass("list-group-item-success")
+      .children("span")
+      .removeClass("fa-hourglass-o fa-circle-o-notch fa-spin")
+      .addClass("fa-check");
+  }
+
   function statusCheck() {
     $.ajax({
       type: "GET",
@@ -29,20 +54,12 @@ $(document).ready(function() {
           // indicate first step after triggering installation
           // otherwise the UI will take 3 seconds to catch up
           if (data.installing) {
-            $("li.pre_sanity_checks").addClass("list-group-item-success");
-            $("li.pre_sanity_checks span.fa")
-              .removeClass("fa-hourglass-o")
-              .addClass("fa-circle-o-notch fa-spin");
+            setInMotion($("li.pre_sanity_checks"));
           }
           // if we fail early before the first step is done, we have to report
           // back to the UI https://bugzilla.suse.com/show_bug.cgi?id=958766
           if (data.failed) {
-            $("li.pre_sanity_checks")
-              .removeClass("list-group-item-success")
-              .addClass("list-group-item-danger")
-              .children("span")
-              .removeClass("fa-hourglass-o fa-circle-o-notch fa-spin")
-              .addClass("fa-times");
+            setFailed($("li.pre_sanity_checks"));
             flash("<div id='network-alert' class='col-lg-12'>" +
                     "<div class='alert alert-danger'>" +
                       "<span>" + data.errorMsg + "</span>" +
@@ -57,28 +74,14 @@ $(document).ready(function() {
         var mostRecentIcon = mostRecent.children();
 
         $.each(data.steps, function (index, value) {
-          $("li." + value)
-            .removeClass("list-group-item-success")
-            .children("span")
-            .removeClass("fa-hourglass-o fa-circle-o-notch fa-spin")
-            .addClass("fa-check");
+          setSuccess($("li." + value));
         });
         mostRecentIcon.addClass("fa-check");
 
         if (data.failed) {
-          mostRecent
-            .next("li")
-            .addClass("list-group-item-danger")
-            .children("span")
-            .removeClass("fa-hourglass-o fa-circle-o-notch fa-spin")
-            .addClass("fa-times");
+          setFailed(mostRecent.next("li"));
         } else {
-          mostRecent
-            .next("li")
-            .addClass("list-group-item-success")
-            .children("span")
-            .removeClass("fa-hourglass-o")
-            .addClass("fa-circle-o-notch fa-spin");
+          setInMotion(mostRecent.next("li"));
         }
 
         if (data.failed) {
