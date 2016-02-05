@@ -36,9 +36,6 @@ else
   gem "sass-rails", version: "~> 5.0.3"
   require "sass-rails"
 
-  gem "passenger", version: "~> 5.0.18"
-  require "passenger"
-
   # general stuff
   gem "activerecord-session_store", version: "~> 0.1.0"
   require "activerecord/session_store"
