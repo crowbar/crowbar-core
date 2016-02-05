@@ -1,4 +1,11 @@
 $(document).ready(function() {
+  function flash(message) {
+    $(".panel")
+      .parent()
+      .parent()
+      .prepend(message);
+  }
+
   function statusCheck() {
     $.ajax({
       type: "GET",
@@ -9,14 +16,11 @@ $(document).ready(function() {
         $("#network-alert").remove();
         if (!data.network.valid) {
           $(".button_to").find("input").prop("disabled", true);
-          $(".panel")
-            .parent()
-            .parent()
-            .prepend("<div id='network-alert' class='col-lg-12'>" +
-                        "<div class='alert alert-danger'>" +
-                          "<span>" + data.errorMsg + "</span>" +
-                        "</div>" +
-                      "</div>");
+          flash("<div id='network-alert' class='col-lg-12'>" +
+                  "<div class='alert alert-danger'>" +
+                    "<span>" + data.errorMsg + "</span>" +
+                  "</div>" +
+                "</div>");
         } else {
           $(".button_to").find("input").prop("disabled", false);
         }
@@ -39,14 +43,11 @@ $(document).ready(function() {
               .children("span")
               .removeClass("fa-hourglass-o fa-circle-o-notch fa-spin")
               .addClass("fa-times");
-            $(".panel")
-              .parent()
-              .parent()
-              .prepend("<div id='network-alert' class='col-lg-12'>" +
-                          "<div class='alert alert-danger'>" +
-                            "<span>" + data.errorMsg + "</span>" +
-                          "</div>" +
-                        "</div>");
+            flash("<div id='network-alert' class='col-lg-12'>" +
+                    "<div class='alert alert-danger'>" +
+                      "<span>" + data.errorMsg + "</span>" +
+                    "</div>" +
+                  "</div>");
             return;
           }
           setTimeout(statusCheck, 3000);
@@ -81,28 +82,22 @@ $(document).ready(function() {
         }
 
         if (data.failed) {
-          $(".panel")
-            .parent()
-            .parent()
-            .prepend("<div class='col-lg-12'>" +
-                        "<div class='alert alert-danger'>" +
-                          "<span>" + data.errorMsg + "</span>" +
-                        "</div>" +
-                      "</div>");
+          flash("<div class='col-lg-12'>" +
+                  "<div class='alert alert-danger'>" +
+                    "<span>" + data.errorMsg + "</span>" +
+                  "</div>" +
+                "</div>");
         } else if (!data.success) {
           setTimeout(statusCheck, 3000);
         } else {
-          $(".panel")
-            .parent()
-            .parent()
-            .prepend("<div class='col-lg-12'>" +
-                       "<div class='alert alert-success'>" +
-                         "<span>" + data.successMsg + "</span>" +
-                       "</div>" +
-                       "<div class='alert alert-info'>" +
-                         "<span>" + data.noticeMsg + "</span>" +
-                       "</div>" +
-                     "</div>");
+            flash("<div class='col-lg-12'>" +
+                    "<div class='alert alert-success'>" +
+                      "<span>" + data.successMsg + "</span>" +
+                    "</div>" +
+                    "<div class='alert alert-info'>" +
+                      "<span>" + data.noticeMsg + "</span>" +
+                    "</div>" +
+                  "</div>");
           setTimeout(function(){
             window.location.replace(Routes.root_path());
           }, 10000);
