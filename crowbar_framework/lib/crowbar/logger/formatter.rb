@@ -24,7 +24,7 @@ module Crowbar
       def call(severity, time, progname, msg)
         threads = ENV["CROWBAR_THREADS"]
         # if env var is not set, default is multi-threaded
-        if threads.to_s.empty? || threads.to_i > 1
+        if !threads.to_s.empty? || threads.to_i > 1
           # there's no API to get an id from a thread object, so let's cheat
           thread_id = Thread.current.inspect.gsub(/^#<Thread:([^ ]*) .*/, "\\1")
           format(
