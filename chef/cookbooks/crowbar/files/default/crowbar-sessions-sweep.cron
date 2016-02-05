@@ -1,0 +1,2 @@
+#!/bin/bash
+su -s /bin/sh - crowbar sh -c "cd /opt/dell/crowbar_framework && RAILS_ENV=production ./bin/rake sessions:sweep" || :
