@@ -31,6 +31,11 @@ when "openstack_shutdown"
 
   include_recipe "crowbar::stop-services-before-upgrade"
 
+  execute "delete pacemaker resources in non-DB cluster" do
+    command "cibadmin -E -f"
+    only_if { ::File.exist?("/usr/sbin/cibadmin") }
+  end
+
   # Stop DRBD and corosync.
   # (Note that this node is not running database)
   service "drbd" do
@@ -104,6 +109,11 @@ when "db_shutdown"
       done
     EOF
     only_if { ::File.exist?("/usr/sbin/crm") }
+  end
+
+  execute "delete pacemaker resources in DB cluster" do
+    command "cibadmin -E -f"
+    only_if { ::File.exist?("/usr/sbin/cibadmin") }
   end
 
   # Stop the database and corosync
