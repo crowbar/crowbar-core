@@ -59,9 +59,10 @@ module Crowbar
         unless ipv4_configured || ipv4_addrs.empty?
           return false
         end
-        unless ipv6_configured || ipv6_addrs.empty?
-          return false
-        end
+        # we don't really depend on IPv6, so no big deal
+        #unless ipv6_configured || ipv6_addrs.empty?
+        #  return false
+        #end
 
         true
       end
