@@ -145,7 +145,7 @@ if not nodes.nil? and not nodes.empty?
         action :delete
         # Do not backup binary files
         backup false
-      end
+      end unless grubfile.nil?
 
       [grubdir].each do |d|
         directory d do
@@ -181,7 +181,7 @@ if not nodes.nil? and not nodes.empty?
         action :delete
         # Do not backup binary files
         backup false
-      end
+      end unless grubfile.nil?
 
       [grubdir].each do |d|
         directory d do
