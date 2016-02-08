@@ -103,7 +103,11 @@ class CrowbarService < ServiceObject
       node.save
     end
 
-    raise "There does not seem to exist any node running the database." if db_nodes.empty?
+    # Check if database proposal exists in case when somebody is
+    # trying to upgrade undeployed nodes or only with Ceph cluster
+    db_proposal = Proposal.where(barclamp: "database").first
+    msg = "There does not seem to exist any node running the database."
+    raise msg if db_proposal && db_nodes.empty?
 
     # This proposal could return some error if there's not enough space for DB dump
     # Controller must show the error and be able to call the function again once the problem

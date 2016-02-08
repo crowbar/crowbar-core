@@ -622,6 +622,7 @@ en:
         description: |
           The SQL dump of the database was created. This will be reimported later when reapplying
           the OpenStack barclamps. It is strongly recommended to download that dump.
+        no_database: 'There is no database to backup and restore.'
       nodes:
         continue: 'Continue Upgrade Process'
         header: 'Upgrading Nodes'
