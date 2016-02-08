@@ -24,24 +24,33 @@ module Crowbar
         @data = @backup.data
         @version = @backup.version
         @status = {}
+        @thread = nil
+      end
+
+      def restore_background
+        @thread = Thread.new do
+          restore
+        end
       end
 
       def restore
         cleanup if self.class.restore_steps_path.exist?
 
-        Thread.new do
-          self.class.steps.each do |component|
-            set_step(component)
-            send(component)
-            return @status && cleanup && Thread.exit if any_errors?
-            # set_failed is called directly after the fail
-            if component == :restore_database && !self.class.failed_path.exist?
-              set_success
-            end
+        self.class.steps.each do |component|
+          set_step(component)
+          send(component)
+          if any_errors?
+            cleanup
+            Thread.exit if @thread
+            return @status
           end
-
-          cleanup
+          # set_failed is called directly after the fail
+          if component == :restore_database && !self.class.failed_path.exist?
+            set_success
+          end
         end
+
+        cleanup
       end
 
       class << self

@@ -71,9 +71,14 @@ class Backup < ActiveRecord::Base
     @data ||= extract
   end
 
-  def restore
+  def restore(options = {})
+    background = options.fetch(:background, false)
     upgrade if upgrade?
-    Crowbar::Backup::Restore.new(self).restore
+    if background
+      Crowbar::Backup::Restore.new(self).restore_background
+    else
+      Crowbar::Backup::Restore.new(self).restore
+    end
   end
 
   def upgrade?
