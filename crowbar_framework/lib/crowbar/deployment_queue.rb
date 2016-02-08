@@ -80,7 +80,7 @@ module Crowbar
       end
 
       # Mark the proposal as in the queue
-      prop = Proposal.where(barclamp: bc, name: inst).first
+      prop = Proposal.find_by(barclamp: bc, name: inst)
       prop["deployment"][bc]["crowbar-queued"] = true
       prop.save
       logger.debug("queue proposal: exit #{inst} #{bc}")
@@ -139,7 +139,7 @@ module Crowbar
           # Test for ready
           remove_list = []
           ProposalQueue.ordered.all.each do |item|
-            prop = Proposal.where(barclamp: item.barclamp, name: item.name).first
+            prop = Proposal.find_by(barclamp: item.barclamp, name: item.name)
 
             if prop.nil?
               remove_list << { barclamp: item.barclamp, inst: item.name }
@@ -221,7 +221,7 @@ module Crowbar
     # Deps are satisfied if all exist, have been deployed and are not in the queue ATM.
     def dependencies_satisfied?(deps)
       deps.all? do |dep|
-        depprop = Proposal.where(barclamp: dep["barclamp"], name: dep["inst"]).first
+        depprop = Proposal.find_by(barclamp: dep["barclamp"], name: dep["inst"])
         depprop_queued   = depprop["deployment"][dep["barclamp"]]["crowbar-queued"] rescue false
         depprop_deployed = (depprop["deployment"][dep["barclamp"]]["crowbar-status"] == "success") rescue false
 
@@ -254,7 +254,7 @@ module Crowbar
         end
 
         # Mark the proposal as not in the queue
-        prop = Proposal.where(barclamp: bc, name: inst).first
+        prop = Proposal.find_by(barclamp: bc, name: inst)
         unless prop.nil?
           prop["deployment"][bc]["crowbar-queued"] = false
           prop.save

@@ -72,12 +72,12 @@ class ServiceObject
   end
 
   def simple_proposal_ui?
-    proposals = Proposal.where(barclamp: "crowbar")
+    proposal = Proposal.find_by(barclamp: "crowbar")
 
     result = false
-    unless proposals[0].nil? or proposals[0]["attributes"].nil? or proposals[0]["attributes"]["crowbar"].nil?
-      if not proposals[0]["attributes"]["crowbar"]["simple_proposal_ui"].nil?
-        result = proposals[0]["attributes"]["crowbar"]["simple_proposal_ui"]
+    unless proposal.nil? || proposal["attributes"].nil? || proposal["attributes"]["crowbar"].nil?
+      unless proposal["attributes"]["crowbar"]["simple_proposal_ui"].nil?
+        result = proposal["attributes"]["crowbar"]["simple_proposal_ui"]
       end
     end
     return result
@@ -276,7 +276,7 @@ class ServiceObject
   def update_proposal_status(inst, status, message, bc = @bc_name)
     @logger.debug("update_proposal_status: enter #{inst} #{bc} #{status} #{message}")
 
-    prop = Proposal.where(barclamp: bc, name: inst).first
+    prop = Proposal.find_by(barclamp: bc, name: inst)
     unless prop.nil?
       prop["deployment"][bc]["crowbar-status"] = status
       prop["deployment"][bc]["crowbar-failed"] = message
@@ -406,7 +406,7 @@ class ServiceObject
   end
 
   def proposal_show(inst)
-    prop = Proposal.where(barclamp: @bc_name, name: inst).first
+    prop = Proposal.find_by(barclamp: @bc_name, name: inst)
     if prop.nil?
       [404, I18n.t("model.service.cannot_find")]
     else
@@ -493,7 +493,7 @@ class ServiceObject
       return [403,I18n.t("model.service.illegal_name", names: FORBIDDEN_PROPOSAL_NAMES.to_sentence)]
     end
 
-    prop = Proposal.where(barclamp: @bc_name, name: base_id).first
+    prop = Proposal.find_by(barclamp: @bc_name, name: base_id)
     return [400, I18n.t("model.service.name_exists")] unless prop.nil?
     return [400, I18n.t("model.service.too_short")] if base_id.to_s.length == 0
     return [400, I18n.t("model.service.illegal_chars")] if base_id =~ /[^A-Za-z0-9_]/
@@ -527,7 +527,7 @@ class ServiceObject
   end
 
   def proposal_delete(inst)
-    prop = Proposal.where(barclamp: @bc_name, name: inst).first
+    prop = Proposal.find_by(barclamp: @bc_name, name: inst)
     if prop.nil?
       [404, I18n.t("model.service.cannot_find")]
     else
@@ -551,7 +551,7 @@ class ServiceObject
   # is computed (in apply_role) and chef client gets called on the nodes.
   # Hopefully, this will get moved into a background job.
   def proposal_commit(inst, in_queue = false, validate_after_save = true)
-    prop = Proposal.where(barclamp: @bc_name, name: inst).first
+    prop = Proposal.find_by(barclamp: @bc_name, name: inst)
 
     if prop.nil?
       [404, "#{I18n.t('.cannot_find', scope: 'model.service')}: #{@bc_name}.#{inst}"]
@@ -1037,7 +1037,7 @@ class ServiceObject
     run_order = []
 
     # get proposal to remember potential removal of a role
-    proposal = Proposal.where(barclamp: @bc_name, name: inst).first
+    proposal = Proposal.find_by(barclamp: @bc_name, name: inst)
     save_proposal = false
 
     # element_order is an Array where each item represents a batch of roles and

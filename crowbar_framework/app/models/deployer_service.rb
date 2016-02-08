@@ -55,7 +55,7 @@ class DeployerService < ServiceObject
     if state == "discovering"
       @logger.debug("Deployer transition: leaving #{name} for #{state}: discovering mode")
 
-      db = Proposal.where(barclamp: "deployer", name: inst).first
+      db = Proposal.find_by(barclamp: "deployer", name: inst)
       role = RoleObject.find_role_by_name "deployer-config-#{inst}"
       unless add_role_to_instance_and_node("deployer", inst, name, db, role, "deployer-client")
         @logger.debug("Deployer transition: leaving #{name} for #{state}: discovering failed.")

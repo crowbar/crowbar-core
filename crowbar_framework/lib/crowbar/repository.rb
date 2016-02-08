@@ -165,7 +165,7 @@ module Crowbar
       end
 
       def web_port
-        @web_port ||= Proposal.where(barclamp: "provisioner").first.raw_attributes["web_port"]
+        @web_port ||= Proposal.find_by(barclamp: "provisioner").raw_attributes["web_port"]
       end
 
       private
