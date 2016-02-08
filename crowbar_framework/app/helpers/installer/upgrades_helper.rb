@@ -27,7 +27,7 @@ module Installer
     end
 
     def check_repos_button
-      if check_repos?
+      if upgrade_repos_present?
         upgrade_continue_button
       else
         button_tag icon_tag(:refresh, t(".recheck")), class: "btn btn-primary"
@@ -47,8 +47,13 @@ module Installer
       end
     end
 
-    def check_ha_repo?
-      return nil unless Proposal.where(barclamp: "pacemaker").first
+    def upgrade_ha_repo_needed?
+      return true if Proposal.where(barclamp: "pacemaker").first
+
+      false
+    end
+
+    def upgrade_ha_repo?
       return false unless Crowbar::Repository.provided?("ha")
 
       unless Crowbar::Repository.provided_and_enabled?("ha")
@@ -58,8 +63,13 @@ module Installer
       true
     end
 
-    def check_ceph_repo?
-      return nil unless Proposal.where(barclamp: "ceph").first
+    def upgrade_ceph_repo_needed?
+      return true if Proposal.where(barclamp: "ceph").first
+
+      false
+    end
+
+    def upgrade_ceph_repo?
       return false unless Crowbar::Repository.provided?("ceph")
 
       unless Crowbar::Repository.provided_and_enabled?("ceph")
@@ -69,8 +79,14 @@ module Installer
       true
     end
 
-    def check_repos?
-      check_ha_repo? != false && check_ceph_repo? != false
+    def upgrade_repos_present?
+      if upgrade_ha_repo_needed?
+        return false unless upgrade_ha_repo?
+      end
+
+      if upgrade_ceph_repo_needed?
+        return false unless upgrade_ceph_repo?
+      end
     end
 
     def restored?

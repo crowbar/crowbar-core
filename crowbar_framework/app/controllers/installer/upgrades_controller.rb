@@ -97,7 +97,7 @@ module Installer
       @current_step = 5
       if request.post?
         respond_to do |format|
-          if view_context.check_repos?
+          if view_context.upgrade_repos_present?
             format.html do
               redirect_to services_upgrade_url
             end
