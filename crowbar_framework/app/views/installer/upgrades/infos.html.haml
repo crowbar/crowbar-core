@@ -1,13 +1,13 @@
 .row
   .col-lg-12
-    = form_tag services_upgrade_path, method: "post" do
+    = form_tag infos_upgrade_path, method: "post" do
       .panel.panel-default
         .panel-heading
           %h2
             = t("installer.upgrades.header", product: branding_config.page_title)
 
         .panel-plain.wizard
-          = render partial: "nav", locals: { active: :services }
+          = render partial: "nav", locals: { active: :infos }
 
           .wizard-body.col-lg-9
             %h2

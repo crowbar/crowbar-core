@@ -565,14 +565,16 @@ en:
         confirm: 'Confirm upgrade'
         start: 'Start upgrade'
         restore: 'Restore Crowbar'
-        repos: 'Repositories'
+        repos: 'Add-On Products'
         services: 'Stop services'
-        backup: 'Data backup'
-        nodes: 'Upgrading nodes'
+        backup: 'Database dump'
+        infos: 'Informations'
+        processing: 'Upgrading nodes'
         finish: 'Upgrade finished'
       start:
-        cancel: 'Back to selection'
-        continue: 'Continue upgrade process'
+        cancel: 'Abort upgrade'
+        continue: 'Upload and continue'
+        blockui: 'Uploading backup...'
         header: 'Start upgrade'
         description: |
           Lorem Ipsum is simply dummy text of the printing and typesetting
@@ -581,6 +583,7 @@ en:
           scrambled it to make a type specimen book.
       restore:
         continue: 'Continue upgrade process'
+        blockui: 'Continue upgrade process...'
         header: 'Restore Crowbar'
         install_button: 'Start Installer'
         success: 'Restore was successful.'
@@ -592,6 +595,8 @@ en:
           scrambled it to make a type specimen book.
       repos:
         continue: 'Continue upgrade process'
+        blockui: 'Uploading backup...'
+        recheck_blockui: 'Rechecking Add-On Products...'
         recheck: 'Recheck repositories'
         header: 'Missing Repositories'
         description: |
@@ -599,10 +604,13 @@ en:
           Extension" and "SUSE Linux Enterprise Storage" are missing. Please
           configure these by hand and click recheck below when the repositories
           are available.
-        ceph_repo: 'Ceph Repositories'
-        ha_repo: 'HA Repositories'
+        ceph_repo_present: 'Ceph Repositories are available'
+        ceph_repo_missing: 'Ceph Repositories are missing, please provide them'
+        ha_repo_present: 'HA Repositories are available'
+        ha_repo_missing: 'HA Repositories are missing, please provide them'
       services:
         continue: 'Continue upgrade process'
+        blockui: 'Stopping OpenStack services...'
         header: 'Stop OpenStack Services'
         description: |
           Lorem Ipsum is simply dummy text of the printing and typesetting
@@ -611,14 +619,28 @@ en:
           scrambled it to make a type specimen book.
       backup:
         continue: 'Continue upgrade process'
-        header: 'Data backup'
+        blockui: 'Continue upgrade process...'
+        header: 'Database dump'
+        download: |
+          You can download your backup from your node <b>%{node}</b>, you can
+          find the file at <b>%{path}</b>.
         description: |
           Lorem Ipsum is simply dummy text of the printing and typesetting
           industry. Lorem Ipsum has been the industry's standard dummy text ever
           since the 1500s, when an unknown printer took a galley of type and
           scrambled it to make a type specimen book.
-      nodes:
+      infos:
+        continue: 'Upgrade nodes now'
+        blockui: 'Initializing node upgrade...'
+        header: 'Informations'
+        description: |
+          Lorem Ipsum is simply dummy text of the printing and typesetting
+          industry. Lorem Ipsum has been the industry's standard dummy text ever
+          since the 1500s, when an unknown printer took a galley of type and
+          scrambled it to make a type specimen book.
+      processing:
         continue: 'Continue upgrade process'
+        blockui: 'Finishing upgrade now...'
         header: 'Upgrading nodes'
         description: |
           Lorem Ipsum is simply dummy text of the printing and typesetting
@@ -635,6 +657,10 @@ en:
           The upgrade is finished and SUSE OpenStack Cloud is now running. Please
           re-apply all your barclamps in the proper order for the upgrade to
           take effect. or whatever the heck this text should say.
+      nodes:
+        failed: |
+          Those nodes failed to upgrade, please fix the issues before you can
+          proceed: <b>%{nodes}</b>
 
     installers:
       status:
