@@ -93,12 +93,14 @@ module Installer
       Crowbar::Backup::Restore.status[:success]
     end
 
-    def database_node
-      @node ||= NodeObject.find("crowbar_upgrade_db_dumped_here:true").first
+    def upgrade_database_node
+      @node ||= NodeObject.find(
+        "crowbar_upgrade_db_dumped_here:true"
+      ).first
     end
 
-    def database_backup_path
-      database_node[:crowbar][:upgrade][:db_dump_location]
+    def upgrade_database_backup
+      upgrade_database_node[:crowbar][:upgrade][:db_dump_location]
     end
   end
 end
