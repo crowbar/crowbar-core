@@ -584,7 +584,15 @@ en:
         header: 'Restore Crowbar'
         install_button: 'Start Installer'
         success: 'Restore was successful.'
-        failed: 'Restore failed. Please check the log at /var/log/crowbar/install.log'
+        failed: 'Restore failed. Please check the log at /var/log/crowbar/production.log and /var/log/crowbar/install.log'
+        schema_migration_failed: 'Schema migration for %{bc_name} failed'
+        restore_button: 'Restore'
+        multiple_restore: 'Restore process is already running'
+        restore_crowbar: 'Restoring Crowbar'
+        run_installer: 'Installing Crowbar'
+        restore_chef_keys: 'Restoring Chef keys'
+        restore_chef: 'Restoring Chef server'
+        restore_database: 'Restoring Crowbar database'
         description: |
           Lorem Ipsum is simply dummy text of the printing and typesetting
           industry. Lorem Ipsum has been the industry's standard dummy text ever
