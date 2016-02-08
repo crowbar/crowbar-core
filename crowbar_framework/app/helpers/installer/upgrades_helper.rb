@@ -18,7 +18,7 @@
 
 module Installer
   module UpgradesHelper
-    def continue_button(disabled = false)
+    def upgrade_continue_button(disabled = false)
       if disabled
         button_tag icon_tag(:chevron_right, t(".continue")), class: "btn btn-primary disabled"
       else
@@ -28,7 +28,7 @@ module Installer
 
     def check_repos_button
       if check_repos?
-        continue_button
+        upgrade_continue_button
       else
         button_tag icon_tag(:refresh, t(".recheck")), class: "btn btn-primary"
       end
