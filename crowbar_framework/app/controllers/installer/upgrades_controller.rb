@@ -33,9 +33,11 @@ module Installer
 
     def start
       @current_step = 3
+
       if request.post?
         respond_to do |format|
           @backup = Backup.new(params.permit(:file))
+
           if @backup.save
             format.html do
               redirect_to restore_upgrade_url
@@ -95,9 +97,10 @@ module Installer
 
     def repos
       @current_step = 5
+
       if request.post?
         respond_to do |format|
-          if view_context.check_repos?
+          if view_context.upgrade_repos_present?
             format.html do
               redirect_to services_upgrade_url
             end
@@ -122,6 +125,7 @@ module Installer
           begin
             @service_object.shutdown_services_at_non_db_nodes
             @service_object.dump_openstack_database
+
             format.html do
               redirect_to backup_upgrade_url
             end
@@ -141,11 +145,13 @@ module Installer
 
     def backup
       @current_step = 7
+
       if request.post?
         respond_to do |format|
           begin
             @service_object.finalize_openstack_shutdown
             Openstack::Upgrade.unset_db_synced
+
             format.html do
               redirect_to nodes_upgrade_url
             end
@@ -165,11 +171,13 @@ module Installer
 
     def nodes
       @current_step = 8
+
       if request.post?
         respond_to do |format|
           begin
             @service_object.disable_non_core_proposals
             @service_object.prepare_nodes_for_os_upgrade
+
             format.html do
               redirect_to finish_upgrade_url
             end
@@ -189,6 +197,7 @@ module Installer
 
     def finish
       @current_step = 9
+
       respond_to do |format|
         format.html
       end

@@ -17,8 +17,8 @@
               = t(".description")
 
             %p
-              = database_node.name
-              = database_backup_path
+              = upgrade_database_node.name
+              = upgrade_database_backup
 
         .panel-footer
           .row
@@ -27,4 +27,4 @@
 
             .col-lg-9.text-right
               .btn-group{ role: "group" }
-                = continue_button
+                = upgrade_continue_button

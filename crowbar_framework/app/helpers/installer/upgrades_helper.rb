@@ -18,7 +18,7 @@
 
 module Installer
   module UpgradesHelper
-    def continue_button(disabled = false)
+    def upgrade_continue_button(disabled = false)
       if disabled
         button_tag icon_tag(:chevron_right, t(".continue")), class: "btn btn-primary disabled"
       else
@@ -26,9 +26,9 @@ module Installer
       end
     end
 
-    def check_repos_button
-      if check_repos?
-        continue_button
+    def upgrade_repocheck_button
+      if upgrade_repos_present?
+        upgrade_continue_button
       else
         button_tag icon_tag(:refresh, t(".recheck")), class: "btn btn-primary"
       end
@@ -47,8 +47,13 @@ module Installer
       end
     end
 
-    def check_ha_repo?
-      return nil unless Proposal.where(barclamp: "pacemaker").first
+    def upgrade_ha_repo_needed?
+      return true if Proposal.where(barclamp: "pacemaker").first
+
+      false
+    end
+
+    def upgrade_ha_repo?
       return false unless Crowbar::Repository.provided?("ha")
 
       unless Crowbar::Repository.provided_and_enabled?("ha")
@@ -58,8 +63,13 @@ module Installer
       true
     end
 
-    def check_ceph_repo?
-      return nil unless Proposal.where(barclamp: "ceph").first
+    def upgrade_ceph_repo_needed?
+      return true if Proposal.where(barclamp: "ceph").first
+
+      false
+    end
+
+    def upgrade_ceph_repo?
       return false unless Crowbar::Repository.provided?("ceph")
 
       unless Crowbar::Repository.provided_and_enabled?("ceph")
@@ -69,20 +79,28 @@ module Installer
       true
     end
 
-    def check_repos?
-      check_ha_repo? != false && check_ceph_repo? != false
+    def upgrade_repos_present?
+      if upgrade_ha_repo_needed?
+        return false unless upgrade_ha_repo?
+      end
+
+      if upgrade_ceph_repo_needed?
+        return false unless upgrade_ceph_repo?
+      end
     end
 
     def restored?
       Crowbar::Backup::Restore.status[:success]
     end
 
-    def database_node
-      @node ||= NodeObject.find("crowbar_upgrade_db_dumped_here:true").first
+    def upgrade_database_node
+      @node ||= NodeObject.find(
+        "crowbar_upgrade_db_dumped_here:true"
+      ).first
     end
 
-    def database_backup_path
-      database_node[:crowbar][:upgrade][:db_dump_location]
+    def upgrade_database_backup
+      upgrade_database_node[:crowbar][:upgrade][:db_dump_location]
     end
   end
 end

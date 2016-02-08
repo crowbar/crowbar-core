@@ -17,11 +17,11 @@
               = t(".description")
 
             %p
-              - unless check_ceph_repo?.nil?
-                .alert{ class: alert_type(check_ceph_repo?) }
+              - if upgrade_ceph_repo_needed?
+                .alert{ class: alert_type(upgrade_ceph_repo?) }
                   = t(".ceph_repo")
-              - unless check_ha_repo?.nil?
-                .alert{ class: alert_type(check_ha_repo?) }
+              - if upgrade_ha_repo_needed?
+                .alert{ class: alert_type(upgrade_ha_repo?) }
                   = t(".ha_repo")
 
         .panel-footer
@@ -31,4 +31,4 @@
 
             .col-lg-9.text-right
               .btn-group{ role: "group" }
-                = check_repos_button
+                = upgrade_repocheck_button
