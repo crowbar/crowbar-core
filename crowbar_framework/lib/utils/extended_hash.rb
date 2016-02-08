@@ -168,17 +168,59 @@ class Hash
     mash
   end
 
-  def stringify_keys
-    dup.stringify_keys!
+  def symbolize_keys(recursive = false)
+    dup.symbolize_keys!(recursive)
   end
 
-  def stringify_keys!
-    keys.each do |k|
-      v = delete(k)
-      self[k.to_s] = v
+  def symbolize_keys!(recursive = false)
+    keys.each do |key|
+      value = delete(key)
+      key = key.respond_to?(:to_sym) ? key.to_sym : key
 
-      v.stringify_keys! if v.is_a?(Hash)
-      v.each{ |p| p.stringify_keys! if p.is_a?(Hash) } if v.is_a?(Array)
+      if value.is_a?(Array)
+        value = value.map do |sub_value|
+          if recursive && sub_value.is_a?(Hash)
+            sub_value.dup.symbolize_keys!(recursive)
+          else
+            sub_value
+          end
+        end
+      end
+
+      self[key] = if recursive && value.is_a?(Hash)
+        value.dup.symbolize_keys! recursive
+      else
+        value
+      end
+    end
+
+    self
+  end
+
+  def stringify_keys(recursive = false)
+    dup.stringify_keys!(recursive)
+  end
+
+  def stringify_keys!(recursive = false)
+    keys.each do |key|
+      value = delete(key)
+      key = key.respond_to?(:to_s) ? key.to_s : key
+
+      if value.is_a?(Array)
+        value = value.map do |sub_value|
+          if recursive && sub_value.is_a?(Hash)
+            sub_value.dup.stringify_keys!(recursive)
+          else
+            sub_value
+          end
+        end
+      end
+
+      self[key] = if recursive && value.is_a?(Hash)
+        value.dup.stringify_keys!(recursive)
+      else
+        value
+      end
     end
 
     self

@@ -88,6 +88,15 @@ Rails.application.routes.draw do
         get :download
       end
     end
+
+    resource :batch,
+      only: [],
+      controller: "utils/batch" do
+      member do
+        post :build
+        post :export
+      end
+    end
   end
 
   # barclamps
