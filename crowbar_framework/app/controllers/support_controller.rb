@@ -70,25 +70,24 @@ class SupportController < ApplicationController
 
   def export_supportconfig
     begin
-      base = "supportconfig-#{Time.now.strftime("%Y%m%d-%H%M%S")}"
-      filename = "#{base}.tbz"
+      filename = "supportconfig-#{Time.now.strftime("%Y%m%d-%H%M%S")}.tbz"
 
       pid = Process.fork do
         begin
-          tmp = Rails.root.join("tmp", base).to_s
+          tmpdir = Dir.mktmpdir
 
-          supportconfig = ["sudo", "-i", "supportconfig", "-Q", "-R", tmp]
-          chown = ["sudo", "-i", "chown", "-R", "#{Process.uid}:#{Process.gid}", tmp]
+          supportconfig = ["sudo", "-i", "supportconfig", "-Q", "-R", tmpdir]
+          chown = ["sudo", "-i", "chown", "-R", "#{Process.uid}:#{Process.gid}", tmpdir]
 
           ok  = system(*supportconfig)
           ok &= system(*chown)
 
-          tarball = Dir.glob("#{tmp}/*.tbz").first
+          tarball = Dir.glob("#{tmpdir}/*.tbz").first
           File.rename tarball, export_dir.join(filename) if tarball && ok
         rescue => e
           Rails.logger.warn(e.message)
         ensure
-          FileUtils.rm_rf(tmp)
+          FileUtils.remove_entry_secure tmpdir
         end
       end
 
