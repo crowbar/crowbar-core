@@ -26,7 +26,7 @@ module Installer
       end
     end
 
-    def check_repos_button
+    def upgrade_repocheck_button
       if upgrade_repos_present?
         upgrade_continue_button
       else
