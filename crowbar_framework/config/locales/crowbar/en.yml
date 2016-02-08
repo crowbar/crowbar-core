@@ -562,6 +562,7 @@ en:
       nav:
         prepare: 'Prepare upgrade'
         download: 'Data download'
+        confirm: 'Confirm upgrade'
         start: 'Start upgrade'
         restore: 'Restore Crowbar'
         repos: 'Repositories'
