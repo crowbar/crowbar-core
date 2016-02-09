@@ -163,7 +163,7 @@ module Crowbar
 
               record = JSON.load(file.read)
               filename = file.basename.to_s
-              if proposal?(filename) && type == :databags
+              if proposal?(file) && type == :databags
                 Rails.logger.debug "Restoring proposal #{filename}"
                 bc_name, prop = filename.split("-")
                 prop.gsub!(/.json$/, "")
@@ -274,8 +274,9 @@ module Crowbar
         @status[:restore_database] ||= { status: :ok, msg: "" }
       end
 
-      def proposal?(filename)
-        !filename.match(/(_network\.json$)|(^template-(.*).json$)|(^queue\.json$)/)
+      def proposal?(file)
+        !file.basename.to_s.match(/(_network\.json$)|(^template-(.*).json$)|(^queue\.json$)/) && \
+          file.to_s =~ /knife\/databags\/crowbar/
       end
     end
   end
