@@ -81,7 +81,7 @@ en:
     utils:
       title: 'Utilities'
       queue: 'Deployment Queue'
-      logs: 'Exported Items'
+      logs: 'Exported Files'
       repositories: 'Repositories'
       backup: 'Backup & Restore'
     help: 'Help'
