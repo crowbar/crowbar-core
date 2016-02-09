@@ -20,11 +20,16 @@ $brand-warning: #f0ad4e;
 $brand-danger: #d9534f;
 $brand-info: #5bc0de;
 
-
 // Scaffolding
 // -------------------------
 $body-bg: #fff;
 $text-color: $gray-dark;
+$border-gray: #ddd;
+$status-border-gray: $border-gray;
+$status-border-yellow: #f8e71c;
+$status-border-blue: #4a90e2;
+$status-border-red: #ff001f;
+$status-border-green: #599517;
 
 
 // Links
@@ -451,7 +456,7 @@ $list-group-link-heading-color: #333;
 
 // Panels
 // -------------------------
-$panel-bg: #fff;
+$panel-bg: #f5f5f5;
 $panel-inner-border: #ddd;
 $panel-border-radius: $border-radius-base;
 $panel-footer-bg: #f5f5f5;

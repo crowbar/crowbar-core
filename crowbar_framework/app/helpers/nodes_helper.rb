@@ -32,48 +32,20 @@ module NodesHelper
     NodeObject.find("roles:#{role}").sort_by(&:alias)
   end
 
-  def piechart_for(group)
-    values = piechart_values(group)
-    tooltip = piechart_tooltip(values)
+  def node_icon(node)
+    return icon_tag "rocket" if node[:admin]
 
-    content_tag(
-      :span,
-      "",
-      :title => tooltip,
-      "data-piechart" => values.join(","),
-      "data-tooltip" => "true"
-    )
-  end
-
-  def piechart_tooltip(values)
-    [].tap do |result|
-      result.push content_tag(
-        :strong,
-        t("total", count: values.sum, scope: "nodes.index.status_pie")
-      )
-
-      result.push t("ready", count: values[0], scope: "nodes.index.status_pie") if values[0] > 0
-      result.push t("unknown", count: values[1], scope: "nodes.index.status_pie") if values[1] > 0
-      result.push t("unready", count: values[2], scope: "nodes.index.status_pie") if values[2] > 0
-      result.push t("pending", count: values[3], scope: "nodes.index.status_pie") if values[3] > 0
-      result.push t("crowbar_upgrade",
-                    count: values[4],
-                    scope: "nodes.index.status_pie") if values[4] > 0
-    end.join(tag(:br))
-  end
-
-  def piechart_values(group)
-    [].tap do |result|
-      result.push group[:status]["ready"]
-      result.push group[:status]["failed"]
-      result.push group[:status]["unknown"]
-
-      if group[:status]["building"]
-        result.push group[:status]["unready"] + group[:status]["pending"] + group[:status]["building"]
-      else
-        result.push group[:status]["unready"] + group[:status]["pending"]
-      end
-      result.push group[:status]["crowbar_upgrade"]
+    case node[:role]
+    when "controller"
+      icon_tag "cogs"
+    when "compute"
+      icon_tag "desktop"
+    when "network"
+      icon_tag "wifi"
+    when "storage"
+      icon_tag "cube"
+    else
+      icon_tag "question-circle"
     end
   end
 
