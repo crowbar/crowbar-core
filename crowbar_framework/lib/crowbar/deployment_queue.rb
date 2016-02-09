@@ -17,11 +17,10 @@ module Crowbar
   class DeploymentQueue
     include CrowbarPacemakerProxy
 
-    attr_reader :logger, :proposal_queue
+    attr_reader :logger
 
     def initialize(logger: Rails.logger)
-      @logger         = logger
-      @proposal_queue = ::ProposalQueue.ordered.first
+      @logger = logger
     end
 
     # Receives proposal info (name, barclamp), list of nodes (elements), on which the proposal
@@ -33,9 +32,8 @@ module Crowbar
       pre_cached_nodes = {}
       begin
         lock = acquire_lock("queue")
-        if @proposal_queue.barclamp == bc && @proposal_queue.name == inst
-          preexisting_queued_item = @proposal_queue.properties
-        end unless @proposal_queue.nil?
+
+        queued_proposal = ProposalQueue.find_by(barclamp: bc, name: inst)
 
         # If queue_me is true, the delay contains all elements, otherwise, only
         # nodes that are not ready.
@@ -55,7 +53,7 @@ module Crowbar
           #
           # remove from queue if it was queued before; might not be in the queue
           # because the proposal got changed since it got added to the queue
-          unless preexisting_queued_item.nil?
+          unless queued_proposal.nil?
             logger.debug("queue proposal: dequeuing already queued #{inst} #{bc}")
             dequeue_proposal_no_lock(bc, inst)
           end
@@ -65,13 +63,13 @@ module Crowbar
 
         # Delay not empty, we're missing some nodes.
         # And proposal is not in queue
-        if preexisting_queued_item.nil?
+        if queued_proposal.nil?
           ProposalQueue.create(barclamp: bc, name: inst, properties: { "elements" => elements, "deps" => deps })
         else
           # Update (overwrite) item that is already in queue
-          @proposal_queue.properties["elements"] = elements
-          @proposal_queue.properties["deps"] = deps
-          @proposal_queue.save
+          queued_proposal.properties["elements"] = elements
+          queued_proposal.properties["deps"] = deps
+          queued_proposal.save
         end
       rescue StandardError => e
         logger.error("Error queuing proposal for #{bc}:#{inst}: #{e.message} #{e.backtrace.join("\n")}")
@@ -93,12 +91,6 @@ module Crowbar
       dequeued = false
       begin
         lock = acquire_lock("queue")
-
-        if @proposal_queue.nil?
-          logger.debug("dequeue proposal: exit #{inst} #{bc}: no entry")
-          return [200, {}]
-        end
-
         dequeued = dequeue_proposal_no_lock(bc, inst)
       rescue StandardError => e
         logger.error("Error dequeuing proposal for #{bc}:#{inst}: #{e.message} #{e.backtrace.join("\n")}")
@@ -129,16 +121,18 @@ module Crowbar
         begin
           lock = acquire_lock("queue")
 
-          if @proposal_queue.nil?
+          queued_proposals = ProposalQueue.ordered.all
+
+          if queued_proposals.empty?
             logger.debug("process queue: exit: empty queue")
             return
           end
 
-          logger.debug("process queue: queue: #{@proposal_queue.inspect}")
+          logger.debug("process queue: queue: #{queued_proposals.inspect}")
 
           # Test for ready
           remove_list = []
-          ProposalQueue.ordered.all.each do |item|
+          queued_proposals.each do |item|
             prop = Proposal.where(barclamp: item.barclamp, name: item.name).first
 
             if prop.nil?
