@@ -1,31 +1,77 @@
 $(document).ready(function() {
-  function statusCheck() {
-    $.ajax({
-      type: "GET",
-      dataType: "json",
-      url: Routes.restore_status_backups_path(),
-      success: function(data) {
-        if (data.restoring) {
-          current_step = data.steps[data.steps.length - 1];
-          $("[step]").hide();
-          $("[step="+current_step+"]").show();
-          setTimeout(statusCheck, 3000);
-        } else if (data.success) {
-          $(":button").removeClass("disabled");
-          $(".restore_button").addClass("disabled");
-          $(".alert-info").hide();
-          $(".alert-success").show();
-        } else if (data.failed) {
-          $(".alert-info").hide();
-          $(".alert-danger").show();
-          $(".restore_button").addClass("disabled");
-        }
-      },
-      error: function() {
-        setTimeout(statusCheck, 3000);
+  if ($("body.installer-upgrades").length > 0) {
+    $("[data-status-check]").each(function() {
+      function statusCheck() {
+        $.ajax({
+          type: "GET",
+          dataType: "json",
+          url: Routes.restore_status_upgrade_path(),
+          success: function(data) {
+            if (data.restoring) {
+              current_step = data.steps[data.steps.length - 1];
+
+              $("[data-step]").addClass("hidden");
+              $("[data-step=" + current_step + "]").removeClass("hidden");
+
+              setTimeout(statusCheck, 3000);
+            } else if (data.success) {
+              $(":button").removeClass("disabled");
+              $("[data-step]").addClass("hidden");
+              $(".alert-success").removeClass("hidden");
+            } else if (data.failed) {
+              $(".alert-danger").removeClass("hidden");
+            }
+          },
+          error: function() {
+            setTimeout(statusCheck, 3000);
+          }
+        });
       }
+
+      statusCheck();
+    });
+
+    $("[data-nodes-check]").each(function() {
+      function nodesCheck() {
+        $.ajax({
+          type: "GET",
+          dataType: "json",
+          url: Routes.nodes_status_upgrade_path(),
+          success: function(data) {
+            $("[data-total]")
+              .html(data.total);
+
+            $("[data-left]")
+              .html(data.left);
+
+            $("[data-failed]")
+              .html(data.failed);
+
+            if (data.left > 0 || data.failed > 0) {
+              setTimeout(nodesCheck, 3000);
+
+              if (data.failed > 0) {
+                $(".alert-danger")
+                  .find(".message")
+                    .html(data.error)
+                  .end()
+                  .removeClass("hidden");
+              } else {
+                $(".alert-danger").addClass("hidden");
+              }
+            } else {
+              $(".alert-danger").addClass("hidden");
+              $(".alert-success").removeClass("hidden");
+              $(".btn-group").removeClass("hidden");
+            }
+          },
+          error: function() {
+            setTimeout(nodesCheck, 3000);
+          }
+        });
+      }
+
+      nodesCheck();
     });
   }
-
-  statusCheck();
 });

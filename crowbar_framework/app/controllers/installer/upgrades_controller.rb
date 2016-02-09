@@ -73,17 +73,6 @@ module Installer
       end
     end
 
-    def status
-      respond_to do |format|
-        format.json do
-          render json: Crowbar::Installer.status
-        end
-        format.html do
-          redirect_to install_upgrade_url
-        end
-      end
-    end
-
     def repos
       @current_step = 5
 
@@ -168,7 +157,7 @@ module Installer
             @service_object.prepare_nodes_for_os_upgrade
 
             format.html do
-              redirect_to finish_upgrade_url
+              redirect_to finishing_upgrade_url
             end
           rescue => e
             format.html do
@@ -184,11 +173,41 @@ module Installer
       end
     end
 
-    def finish
+    def finishing
       @current_step = 9
 
       respond_to do |format|
         format.html
+      end
+    end
+
+    def restore_status
+      respond_to do |format|
+        format.json do
+          render json: Crowbar::Backup::Restore.status
+        end
+        format.html do
+          redirect_to install_upgrade_url
+        end
+      end
+    end
+
+    def nodes_status
+      respond_to do |format|
+        format.json do
+          render json: {
+            total: view_context.total_nodes_count,
+            left: view_context.upgrading_nodes_count,
+            failed: view_context.failed_nodes_count,
+            error: I18n.t(
+              "installer.upgrades.nodes.failed",
+              nodes: NodeObject.find("state:problem").map(&:name).join(", ")
+            )
+          }
+        end
+        format.html do
+          redirect_to finishing_upgrade_url
+        end
       end
     end
 

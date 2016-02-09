@@ -53,8 +53,8 @@
         = icon_tag :chevron_right, nil, class: "fa-fw"
       = t(".nodes")
 
-  %li{ class: active == :finish ? "active" : nil }
+  %li{ class: active == :finishing ? "active" : nil }
     %a
       .pull-right
         = icon_tag :chevron_right, nil, class: "fa-fw"
-      = t(".finish")
+      = t(".finishing")

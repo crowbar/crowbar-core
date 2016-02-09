@@ -167,7 +167,6 @@ Rails.application.routes.draw do
         get :start
         post :start
         get :restore
-        get :status
         post :restore
         get :repos
         post :repos
@@ -177,7 +176,10 @@ Rails.application.routes.draw do
         post :backup
         get :nodes
         post :nodes
-        get :finish
+        get :finishing
+
+        get :restore_status
+        get :nodes_status
       end
     end
   end

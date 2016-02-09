@@ -569,18 +569,20 @@ en:
         repos: 'Verify Repositories'
         services: 'Stop OpenStack Services'
         backup: 'Data Backup'
-        nodes: 'Upgrading Nodes'
-        finish: 'Upgrade Finished'
+        nodes: 'Upgrading Nodes OS'
+        finishing: 'Finishing Upgrade'
       start:
-        cancel: 'Back to selection'
-        continue: 'Upload and continue'
+        cancel: 'Abort Upgrade'
+        continue: 'Upload and Restore'
+        blockui: 'Uploading...'
         header: 'Continue Upgrade'
         description: |
           Select the location of the upgrade data archive that you downloaded from the SUSE
           OpenStack Cloud 5 Administration server where you started the upgrade wizard. Upload it by
-          clicking 'Upload and continue'.
+          clicking 'Upload and Restore'.
       restore:
         continue: 'Continue Upgrade Process'
+        blockui: 'Continue Upgrade Process...'
         header: 'Restore'
         success: 'Restore was successful.'
         failed: |
@@ -600,21 +602,24 @@ en:
           upgrade data archive and runs the install script in the background.
       repos:
         continue: 'Continue Upgrade Process'
-        recheck: 'Recheck Repositories'
-        header: 'Verify Add On Product Repositories'
+        blockui: 'Continue Upgrade Process...'
+        recheck: 'Check Repositories Again'
+        recheck_blockui: 'Checking Repositories Again...'
+        header: 'Verify Add On Product repositories'
         description: |
           This step verifies that the software repositories for
           "SUSE Linux Enterprise High Availability Extension" and "SUSE Enterprise Storage" are
           available if your setup requires them.
         ceph_repo: 'Ceph Repositories'
         ha_repo: 'HA Repositories'
-        ceph_repo_present: 'Ceph Repositories are available.'
-        ceph_repo_missing: 'Ceph Repositories are missing, please provide them.'
-        ha_repo_present: 'HA Repositories are available.'
-        ha_repo_missing: 'HA Repositories are missing, please provide them.'
-        no_additional_repos: 'No additional Repositories needed.'
+        ceph_repo_present: 'Ceph repositories are available.'
+        ceph_repo_missing: 'Ceph repositories are missing, please provide them.'
+        ha_repo_present: 'HA repositories are available.'
+        ha_repo_missing: 'HA repositories are missing, please provide them.'
+        no_additional_repos: 'No additional repositories needed.'
       services:
         continue: 'Stop OpenStack Services'
+        blockui: 'Stopping OpenStack services...'
         header: 'Stop OpenStack Services'
         description: |
           After continuing the Upgrade by pressing 'Stop OpenStack Services' all services on the
@@ -623,29 +628,40 @@ en:
           everything you need to use OpenStack APIs.
       backup:
         continue: 'Continue Upgrade Process'
+        blockui: 'Continue Upgrade Process...'
         header: 'Database Dump'
         download: |
           You can download the database dump from your node <b>%{node}</b>, you can find the file at
           <b>%{path}</b>.
         description: |
-          The SQL dump of the database was created. This will be reimported later when reapplying
+          The SQL dump of the database was created. This will be re-imported later when re-applying
           the OpenStack barclamps. It is strongly recommended to download that dump.
         no_database: 'There is no database to backup and restore.'
       nodes:
-        continue: 'Continue Upgrade Process'
-        header: 'Upgrading Nodes'
+        continue: 'Upgrade Nodes now'
+        blockui: 'Initializing Node upgrade...'
+        header: 'Upgrading Nodes OS'
+        description: |
+          All service on the client nodes have been stopped now. As the next step, the client nodes
+          will be upgraded to SLES 12 SP1. To start that process, click 'Upgrade Nodes now'. This
+          process will take a long time, please be patient.
+      finishing:
+        continue: 'Go to your barclamps now'
+        blockui: 'Finishing Upgrade now...'
+        header: 'Finishing Upgrade'
         description: |
           Please wait while the nodes are being upgraded. This can take a long time.
         total_nodes: 'Nodes in total'
         left_nodes: 'Left to upgrade'
         failed_nodes: 'Failed to upgrade'
-      finish:
-        continue: 'Go to your barclamps now'
-        header: 'Upgrade Finished'
-        description: |
+        finished: |
           All nodes have been upgraded to SLES 12 SP1. This wizard is finished.
           As a final step of the upgrade you need to re-apply all openstack
           barclamps now in the proper order.
+      nodes_status:
+        failed: |
+          These nodes failed to upgrade, please fix the issues before you can proceed:
+          <b>%{nodes}</b>
 
     installers:
       status:
