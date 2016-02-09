@@ -249,7 +249,7 @@ module Crowbar
           set_failed
           @status[:run_installer] = {
             status: :not_acceptable,
-            msg: I18n.t("installers.status.installation_failed")
+            msg: I18n.t("installer.installers.status.installation_failed")
           }
         end
 
