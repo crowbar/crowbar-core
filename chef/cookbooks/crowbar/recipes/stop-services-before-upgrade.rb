@@ -49,3 +49,15 @@ bash "stop OpenStack services" do
     done
   EOF
 end
+
+# On SLE11 the startup and shutdown logs are created as root, adjust
+# ownership so that rabbitmq on SLE12 can write to them after upgrade. They
+# are created by the rabbitmq user there. We're not deleting them here, cause
+# the could still contain helpful information for debugging.
+["shutdown_log", "shutdown_err", "startup_log", "startup_err"].each do |logfile|
+  file "/var/log/rabbitmq/#{logfile}" do
+    user "rabbitmq"
+    group "rabbitmq"
+    only_if { File.exist? "/var/log/rabbitmq/#{logfile}" }
+  end
+end
