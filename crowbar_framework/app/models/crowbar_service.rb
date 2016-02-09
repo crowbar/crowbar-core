@@ -516,6 +516,16 @@ class CrowbarService < ServiceObject
     ]
   end
 
+  def self.support_default_fs
+    [
+      "opensuse-42.1",
+      "suse-12.1",
+      "suse-12.0",
+      "suse-11.4",
+      "suse-11.3"
+    ]
+  end
+
   protected
 
   def transition_to_readying(inst, name, state, node = nil)
