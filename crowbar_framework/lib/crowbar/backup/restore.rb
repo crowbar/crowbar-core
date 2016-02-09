@@ -41,7 +41,7 @@ module Crowbar
           send(component)
           if any_errors?
             cleanup
-            @backup.errors.add(:restore, @status)
+            @backup.errors.add(:restore, error_messages.join(" - "))
             Thread.exit if @thread
             return false
           end
@@ -122,7 +122,15 @@ module Crowbar
       end
 
       def any_errors?
-        !@status.select { |k, v| v[:status] != :ok }.empty?
+        !errors.empty?
+      end
+
+      def errors
+        @status.select { |k, v| v[:status] != :ok }
+      end
+
+      def error_messages
+        errors.values.map { |e| e[:msg] }
       end
 
       def set_step(step)
