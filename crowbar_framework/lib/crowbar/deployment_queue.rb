@@ -117,11 +117,11 @@ module Crowbar
       while loop_again
         loop_again = false
 
-        # List contains proposals in the queue that can be applied
+        # We try to find the next proposal to commit.
         # Remove list contains proposals that were either deleted
         # or should be re-queued?
         # Proposals which reference non-ready nodes are also skipped.
-        list = []
+        proposal_to_commit = nil
         begin
           lock = acquire_lock("queue")
 
@@ -151,7 +151,7 @@ module Crowbar
               prop["deployment"][item.barclamp]["element_order"]
             )
             delay, pre_cached_nodes = elements_not_ready(nodes_map.keys)
-            list << { barclamp: item.barclamp, inst: item.name } if delay.empty?
+            proposal_to_commit = { barclamp: item.barclamp, inst: item.name } if delay.empty?
           end
 
           # Update the queue. Drop all proposals that we can process now (list) and those
@@ -159,12 +159,10 @@ module Crowbar
           # which are still waiting for nodes (delay not empty), or for which deps are not
           # ready/created/deployed (queue_me = true).
           remove_list.each do |iii|
-            dequeue_proposal_no_lock(iii["barclamp"], iii["inst"])
+            dequeue_proposal_no_lock(iii[:barclamp], iii[:inst])
           end
 
-          list.each do |iii|
-            dequeue_proposal_no_lock(iii["barclamp"], iii["inst"])
-          end
+          dequeue_proposal_no_lock(proposal_to_commit[:barclamp], proposal_to_commit[:inst])
         rescue StandardError => e
           logger.error("Error processing queue: #{e.message} #{e.backtrace.join("\n")}")
           logger.debug("process queue: exit: error")
@@ -173,19 +171,19 @@ module Crowbar
           lock.release
         end
 
-        logger.debug("process queue: list: #{list.inspect}")
+        unless proposal_to_commit.nil?
+          result = commit_proposal(proposal_to_commit[:barclamp], proposal_to_commit[:inst])
 
-        results = commit_proposals(list)
-
-        # 202 means some nodes are not ready, bail out in that case
-        # We're re-running the whole apply continuously, until there
-        # are no items left in the queue.
-        # We also ignore proposals who can't be committed due to some error
-        # (4xx) with the proposal or some internal error (5xx).
-        # FIXME: This is lame, because from the user perspective, we're still
-        # applying the first barclamp, while this part was in fact already
-        # completed and we're applying next item(s) in the queue.
-        loop_again = true if results.any? { |state| state != 202 && state < 400 }
+          # 202 means some nodes are not ready, bail out in that case
+          # We're re-running the whole apply continuously, until there
+          # are no items left in the queue.
+          # We also ignore proposals who can't be committed due to some error
+          # (4xx) with the proposal or some internal error (5xx).
+          # FIXME: This is lame, because from the user perspective, we're still
+          # applying the first barclamp, while this part was in fact already
+          # completed and we're applying next item(s) in the queue.
+          loop_again = result != 202 && result < 400
+        end
 
         # For each ready item, apply it.
         logger.debug("process queue: loop again") if loop_again
@@ -195,25 +193,21 @@ module Crowbar
 
     private
 
-    def commit_proposals(list)
-      list.map do |item|
-        logger.debug("process queue: committing item: #{item.inspect}")
-        bc = item[:barclamp]
-        inst = item[:inst]
+    def commit_proposal(bc, inst)
+      logger.debug("process queue: committing item: #{bc}:#{inst}")
 
-        service = eval("#{bc.camelize}Service.new logger")
+      service = eval("#{bc.camelize}Service.new logger")
 
-        # This will call apply_role and chef-client.
-        # Params: (inst, in_queue, validate_after_save)
-        status, message = service.proposal_commit(inst, true, false)
+      # This will call apply_role and chef-client.
+      # Params: (inst, in_queue, validate_after_save)
+      status, message = service.proposal_commit(inst, true, false)
 
-        logger.debug("process queue: committed item #{item.inspect}: results = #{message.inspect}")
+      logger.debug("process queue: committed item #{bc}:#{inst}: results = #{message.inspect}")
 
-        # FIXME: this is perhaps no longer needed
-        $htdigest_reload = true
+      # FIXME: this is perhaps no longer needed
+      $htdigest_reload = true
 
-        status
-      end
+      status
     end
 
     # Deps are satisfied if all exist, have been deployed and are not in the queue ATM.
