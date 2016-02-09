@@ -254,6 +254,7 @@ module Crowbar
         sleep(1) until Crowbar::Installer.successful? || Crowbar::Installer.failed?
 
         if Crowbar::Installer.failed?
+          Rails.logger.debug "Crowbar Installation Failed"
           set_failed
           @status[:run_installer] = {
             status: :not_acceptable,
