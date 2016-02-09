@@ -18,8 +18,9 @@
 
             %p
               - if upgrade_database_node
-                = upgrade_database_node.name
-                = upgrade_database_backup
+                = raw t(".download",
+                  node: upgrade_database_node.name,
+                  path: upgrade_database_backup)
               - else
                 = t("installer.upgrades.backup.no_database")
 

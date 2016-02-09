@@ -624,7 +624,10 @@ en:
           everything you need to use OpenStack APIs.
       backup:
         continue: 'Continue Upgrade Process'
-        header: 'Data Backup'
+        header: 'Database Dump'
+        download: |
+          You can download the database dump from your node <b>%{node}</b>, you can find the file at
+          <b>%{path}</b>.
         description: |
           The SQL dump of the database was created. This will be reimported later when reapplying
           the OpenStack barclamps. It is strongly recommended to download that dump.
