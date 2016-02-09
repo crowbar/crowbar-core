@@ -38,7 +38,7 @@ module Installer
         respond_to do |format|
           @backup = Backup.new(params.permit(:file))
 
-          if @backup.save
+          if save_and_restore
             format.html do
               redirect_to restore_upgrade_url
             end
@@ -61,20 +61,9 @@ module Installer
       @steps = Crowbar::Backup::Restore.steps
 
       if request.post?
-        url = restore_upgrade_url
-
-        if Crowbar::Backup::Restore.restore_steps_path.exist?
-          flash[:info] = t(".multiple_restore")
-        elsif Crowbar::Backup::Restore.status[:success]
-          url = repos_upgrade_url
-        else
-          @backup = Backup.all.first
-          @backup.restore(background: true)
-        end
-
         respond_to do |format|
           format.html do
-            redirect_to url
+            redirect_to repos_upgrade_url
           end
         end
       else
@@ -208,6 +197,16 @@ module Installer
     end
 
     protected
+
+    def save_and_restore
+      return false unless @backup.save
+      if Crowbar::Backup::Restore.restore_steps_path.exist?
+        flash[:info] = t(".multiple_restore")
+        true
+      else
+        @backup.restore(background: true)
+      end
+    end
 
     def set_service_object
       @service_object = CrowbarService.new(logger)

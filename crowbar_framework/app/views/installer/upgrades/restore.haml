@@ -19,15 +19,22 @@
             %p
               = t(".description")
 
-            - @steps.each do |step|
-              .alert.alert-info{ step: step, style: "display:none;" }
-                = icon_tag "spin fa-spinner", t("installer.upgrades.restore.#{step}")
+            .upgrade{ data: { status_check: true } }
+              - @steps.each do |step|
+                .alert.alert-info.hidden{ data: { step: step } }
+                  = icon_tag "spin",
+                    t("installer.upgrades.restore.#{step}"),
+                    class: "fa-fw fa-spinner"
 
-            .alert.alert-danger{ style: "display:none;" }
-              = t(".failed")
+              .alert.alert-danger.hidden
+                = icon_tag "exclamation",
+                  t(".failed"),
+                  class: "fa-fw"
 
-            .alert.alert-success{ style: "display:none;" }
-              = t(".success")
+              .alert.alert-success.hidden
+                = icon_tag "check",
+                  t(".success"),
+                  class: "fa-fw"
 
         .panel-footer
           .row
@@ -35,7 +42,5 @@
               = progress_steps @current_step, @min_step, @max_step
 
             .col-lg-9.text-right
-              .btn-group{ role: "group" }
-                = restore_button
               .btn-group{ role: "group" }
                 = upgrade_continue_button(true)

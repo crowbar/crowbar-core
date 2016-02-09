@@ -34,11 +34,6 @@ module Installer
       end
     end
 
-    def restore_button
-      return if restored?
-      button_tag t(".restore_button"), class: "btn btn-primary restore_button"
-    end
-
     def upgrade_ha_repo_needed?
       return true if Proposal.where(barclamp: "pacemaker").first
 

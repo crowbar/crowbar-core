@@ -595,10 +595,9 @@ en:
         restore_chef: 'Restoring Chef Server'
         restore_database: 'Restoring Crowbar Database'
         description: |
-          The upgrade data was uploaded successfully. Start the restore process by clicking
-          'Restore'. This process can take a long time. It imports all required data of the old
-          SUSE OpenStack Cloud 5 Administration server from the upgrade data archive and runs the
-          install script in the background.
+          The upgrade data was uploaded successfully. The restore process can take a long time. It
+          imports all required data of the old SUSE OpenStack Cloud 5 Administration server from the
+          upgrade data archive and runs the install script in the background.
       repos:
         continue: 'Continue Upgrade Process'
         recheck: 'Recheck Repositories'
