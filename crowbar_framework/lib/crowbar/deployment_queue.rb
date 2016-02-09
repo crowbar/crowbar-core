@@ -27,7 +27,7 @@ module Crowbar
     # should be applied, and list of dependencies - a list of {barclamp, name/inst} hashes.
     # It adds them to the queue, if possible.
     def queue_proposal(bc, inst, elements, element_order, deps)
-      logger.debug("queue proposal: enter #{inst} #{bc}")
+      logger.debug("queue proposal: enter for #{bc}:#{inst}")
       delay = []
       pre_cached_nodes = {}
       begin
@@ -50,11 +50,13 @@ module Crowbar
           # (queue_me = false) and nodes (delay.empty?) are still in that state
           # by the time we want to apply. So if that is the case, we just drop
           # proposal from the queue and exit.
-          #
+
+          logger.debug("queue proposal: not queuing #{bc}:#{inst}")
+
           # remove from queue if it was queued before; might not be in the queue
           # because the proposal got changed since it got added to the queue
           unless queued_proposal.nil?
-            logger.debug("queue proposal: dequeuing already queued #{inst} #{bc}")
+            logger.debug("queue proposal: dequeuing already queued #{bc}:#{inst}")
             dequeue_proposal_no_lock(bc, inst)
           end
 
@@ -64,8 +66,10 @@ module Crowbar
         # Delay not empty, we're missing some nodes.
         # And proposal is not in queue
         if queued_proposal.nil?
+          logger.debug("queue proposal: adding #{bc}:#{inst} to the queue")
           ProposalQueue.create(barclamp: bc, name: inst, properties: { "elements" => elements, "deps" => deps })
         else
+          logger.debug("queue proposal: updating #{bc}:#{inst} in the queue")
           # Update (overwrite) item that is already in queue
           queued_proposal.properties["elements"] = elements
           queued_proposal.properties["deps"] = deps
@@ -81,25 +85,25 @@ module Crowbar
       prop = Proposal.where(barclamp: bc, name: inst).first
       prop["deployment"][bc]["crowbar-queued"] = true
       prop.save
-      logger.debug("queue proposal: exit #{inst} #{bc}")
+      logger.debug("queue proposal: exit for #{bc}:#{inst}")
       [delay, pre_cached_nodes]
     end
 
     # Locking wrapper around dequeue_proposal_no_lock
     def dequeue_proposal(bc, inst)
-      logger.debug("dequeue proposal: enter #{inst} #{bc}")
+      logger.debug("dequeue proposal: enter for #{bc}:#{inst}")
       dequeued = false
       begin
         lock = acquire_lock("queue")
         dequeued = dequeue_proposal_no_lock(bc, inst)
       rescue StandardError => e
         logger.error("Error dequeuing proposal for #{bc}:#{inst}: #{e.message} #{e.backtrace.join("\n")}")
-        logger.debug("dequeue proposal: exit #{inst} #{bc}: error")
+        logger.debug("dequeue proposal: exit for #{bc}:#{inst}: error")
         return [400, e.message]
       ensure
         lock.release
       end
-      logger.debug("dequeue proposal: exit #{inst} #{bc}")
+      logger.debug("dequeue proposal: exit for #{bc}:#{inst}")
       dequeued ? [200, {}] : [400, I18n.t("barclamp.proposal_show.dequeue_proposal_failure")]
     end
 
@@ -193,7 +197,7 @@ module Crowbar
 
     def commit_proposals(list)
       list.map do |item|
-        logger.debug("process queue: item to do: #{item.inspect}")
+        logger.debug("process queue: committing item: #{item.inspect}")
         bc = item[:barclamp]
         inst = item[:inst]
 
@@ -203,7 +207,7 @@ module Crowbar
         # Params: (inst, in_queue, validate_after_save)
         status, message = service.proposal_commit(inst, true, false)
 
-        logger.debug("process queue: item #{item.inspect}: results #{message.inspect}")
+        logger.debug("process queue: committed item #{item.inspect}: results = #{message.inspect}")
 
         # FIXME: this is perhaps no longer needed
         $htdigest_reload = true
@@ -234,17 +238,21 @@ module Crowbar
     # Removes the proposal reference from the queue, updates the proposal as not queued
     # and drops the 'pending roles' from the affected nodes.
     def dequeue_proposal_no_lock(bc, inst)
-      logger.debug("dequeue_proposal_no_lock: enter #{inst} #{bc}")
+      logger.debug("dequeue_proposal_no_lock: enter for #{bc}:#{inst}")
       begin
         # Find the proposal to delete, get its elements (nodes)
         item = ProposalQueue.find_by(barclamp: bc, name: inst)
 
         if item
+          logger.debug("dequeue_proposal_no_lock: found queued item for #{bc}:#{inst}; removing")
+
           elements = item.properties["elements"]
           item.destroy
 
           # Remove the pending roles for the current proposal from the node records.
           remove_pending_elements(bc, inst, elements) if elements
+        else
+          logger.debug("dequeue_proposal_no_lock: item for #{bc}:#{inst} not in the queue")
         end
 
         # Mark the proposal as not in the queue
@@ -255,10 +263,10 @@ module Crowbar
         end
       rescue StandardError => e
         logger.error("Error dequeuing proposal for #{bc}:#{inst}: #{e.message} #{e.backtrace.join("\n")}")
-        logger.debug("dequeue proposal_no_lock: exit #{inst} #{bc}: error")
+        logger.debug("dequeue proposal_no_lock: exit for #{bc}:#{inst}: error")
         return false
       end
-      logger.debug("dequeue proposal_no_lock: exit #{inst} #{bc}")
+      logger.debug("dequeue proposal_no_lock: exit for #{bc}:#{inst}")
       true
     end
 
