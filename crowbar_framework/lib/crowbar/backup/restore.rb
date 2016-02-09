@@ -24,24 +24,35 @@ module Crowbar
         @data = @backup.data
         @version = @backup.version
         @status = {}
+        @thread = nil
+      end
+
+      def restore_background
+        @thread = Thread.new do
+          restore
+        end
       end
 
       def restore
         cleanup if self.class.restore_steps_path.exist?
 
-        Thread.new do
-          self.class.steps.each do |component|
-            set_step(component)
-            send(component)
-            return @status && cleanup && Thread.exit if any_errors?
-            # set_failed is called directly after the fail
-            if component == :restore_database && !self.class.failed_path.exist?
-              set_success
-            end
+        self.class.steps.each do |component|
+          set_step(component)
+          send(component)
+          if any_errors?
+            cleanup
+            @backup.errors.add(:restore, error_messages.join(" - "))
+            Thread.exit if @thread
+            return false
           end
-
-          cleanup
+          # set_failed is called directly after the fail
+          if component == :restore_database && !self.class.failed_path.exist?
+            set_success
+          end
         end
+
+        cleanup
+        true
       end
 
       class << self
@@ -111,7 +122,15 @@ module Crowbar
       end
 
       def any_errors?
-        !@status.select { |k, v| v[:status] != :ok }.empty?
+        !errors.empty?
+      end
+
+      def errors
+        @status.select { |k, v| v[:status] != :ok }
+      end
+
+      def error_messages
+        errors.values.map { |e| e[:msg] }
       end
 
       def set_step(step)
@@ -238,7 +257,7 @@ module Crowbar
           set_failed
           @status[:run_installer] = {
             status: :not_acceptable,
-            msg: I18n.t(".installation_failed", scope: "installers.status")
+            msg: I18n.t("installer.installers.status.installation_failed")
           }
         end
 

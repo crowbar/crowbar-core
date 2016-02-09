@@ -69,7 +69,7 @@ module Installer
           url = repos_upgrade_url
         else
           @backup = Backup.all.first
-          @backup.restore
+          @backup.restore(background: true)
         end
 
         respond_to do |format|

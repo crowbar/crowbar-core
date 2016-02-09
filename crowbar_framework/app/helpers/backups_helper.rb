@@ -39,7 +39,7 @@ module BackupsHelper
       restore_backup_path(backup.id),
       method: :post,
       class: "btn btn-success",
-      data: { confirm: t(".restore_warning") }
+      data: { confirm: t(".restore_warning"), blockui: t(".blockui_message") }
     )
   end
 
