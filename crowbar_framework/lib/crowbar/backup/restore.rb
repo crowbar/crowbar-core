@@ -267,7 +267,7 @@ module Crowbar
       def restore_database
         Rails.logger.debug "Restoring Crowbar database"
         SerializationHelper::Base.new(YamlDb::Helper).load(
-          @data.join("crowbar", "production.yml")
+          @data.join("crowbar", "database.yml")
         )
         Crowbar::Migrate.migrate!
 
