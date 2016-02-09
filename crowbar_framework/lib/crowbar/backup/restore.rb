@@ -41,8 +41,9 @@ module Crowbar
           send(component)
           if any_errors?
             cleanup
+            @backup.errors.add(:restore, @status)
             Thread.exit if @thread
-            return @status
+            return false
           end
           # set_failed is called directly after the fail
           if component == :restore_database && !self.class.failed_path.exist?
@@ -51,6 +52,7 @@ module Crowbar
         end
 
         cleanup
+        true
       end
 
       class << self
@@ -247,7 +249,7 @@ module Crowbar
           set_failed
           @status[:run_installer] = {
             status: :not_acceptable,
-            msg: I18n.t(".installation_failed", scope: "installers.status")
+            msg: I18n.t("installers.status.installation_failed")
           }
         end
 
