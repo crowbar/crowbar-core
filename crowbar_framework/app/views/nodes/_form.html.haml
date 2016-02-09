@@ -26,7 +26,7 @@
       - else
         .form-group
           = f.label :target_platform, t('.target_platform')
-          = select_tag :target_platform, platforms_for_select(@node.target_platform, @node.architecture), :class => "form-control", "data-showit" => [crowbar_service.require_license_platforms.join(","), crowbar_service.support_software_raid.join(",")].join(";"), "data-showit-target" => "#license_key_container;#raid_type,#raid_disks"
+          = select_tag :target_platform, platforms_for_select(@node.target_platform, @node.architecture), :class => "form-control", "data-showit" => [crowbar_service.require_license_platforms.join(","), crowbar_service.support_software_raid.join(","), crowbar_service.support_default_fs.join(",")].join(";"), "data-showit-target" => "#license_key_container;#raid_type,#raid_disks;#default_fs_container"
           %span.help-block
             = raw t(".repo_hint", url: repositories_url)
 
@@ -107,9 +107,11 @@
         %span.help-block
           = t('.intended_role_hint')
 
-      .form-group
-        = f.label :default_fs , t('.default_fs')
-        = select_tag :default_fs, fs_for_select(@node.default_fs), :class => "form-control"
+      - if crowbar_service.support_default_fs.include?(@node.target_platform) or not @node.allocated?
+        .form-group
+          #default_fs_container
+            = f.label :default_fs , t('.default_fs')
+            = select_tag :default_fs, fs_for_select(@node.default_fs), :class => "form-control", :disabled => @node.allocated?
 
       - if have_openstack
         .form-group
