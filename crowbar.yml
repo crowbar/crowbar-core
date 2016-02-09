@@ -70,15 +70,15 @@ nav:
   utils:
     order: 60
     route: 'utils_path'
-    logs:
-      order: 10
-      route: 'utils_path'
     repositories:
-      order: 15
+      order: 10
       route: 'repositories_path'
     backup:
-      order: 20
+      order: 15
       route: 'backups_path'
+    logs:
+      order: 20
+      route: 'utils_path'
   help:
     order: 80
     route: 'docs_path'
