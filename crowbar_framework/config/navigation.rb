@@ -33,9 +33,9 @@ SimpleNavigation::Configuration.run do |navigation|
     level1.item :barclamps, t("nav.barclamps.title"), barclamp_modules_path do |level2|
       level2.item :all, t("nav.barclamps.all"), barclamp_modules_path
       level2.item :crowbar, t("nav.barclamps.crowbar"), index_barclamp_path(controller: "crowbar")
-      level2.item :queue, t("nav.barclamps.queue"), deployment_queue_path
     end
     level1.item :utils, t("nav.utils.title"), utils_path do |level2|
+      level2.item :queue, t("nav.utils.queue"), deployment_queue_path
       level2.item :logs, t("nav.utils.logs"), utils_path
     end
   end

@@ -74,9 +74,9 @@ en:
       title: 'Barclamps'
       all: 'All Barclamps'
       crowbar: 'Crowbar'
-      queue: 'Deployment Queue'
     utils:
       title: 'Utilities'
+      queue: 'Deployment Queue'
       logs: 'Exported Items'
       repositories: 'Repositories'
       backup: 'Backup & Restore'
