@@ -39,14 +39,6 @@ module Installer
       button_tag t(".restore_button"), class: "btn btn-primary restore_button"
     end
 
-    def alert_type(boolean)
-      if boolean
-        "alert-success"
-      else
-        "alert-danger"
-      end
-    end
-
     def upgrade_ha_repo_needed?
       return true if Proposal.where(barclamp: "pacemaker").first
 

@@ -609,6 +609,11 @@ en:
           available if your setup requires them.
         ceph_repo: 'Ceph Repositories'
         ha_repo: 'HA Repositories'
+        ceph_repo_present: 'Ceph Repositories are available.'
+        ceph_repo_missing: 'Ceph Repositories are missing, please provide them.'
+        ha_repo_present: 'HA Repositories are available.'
+        ha_repo_missing: 'HA Repositories are missing, please provide them.'
+        no_additional_repos: 'No additional Repositories needed.'
       services:
         continue: 'Stop OpenStack Services'
         header: 'Stop OpenStack Services'
