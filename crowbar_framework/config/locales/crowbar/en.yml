@@ -555,94 +555,88 @@ en:
       header: 'What do you want to do?'
       install: 'Install from scratch'
       restore: 'Restore from backup'
-      upgrade: 'Upgrade from backup'
+      upgrade: 'Continue Upgrade from SUSE OpenStack Cloud 5'
     upgrades:
       title: 'Upgrade'
-      header: '%{product}: Upgrade from backup'
+      header: '%{product}: Upgrade from SUSE OpenStack Cloud 5'
       nav:
-        prepare: 'Prepare upgrade'
-        download: 'Data download'
-        confirm: 'Confirm upgrade'
-        start: 'Start upgrade'
-        restore: 'Restore Crowbar'
-        repos: 'Repositories'
-        services: 'Stop services'
-        backup: 'Data backup'
-        nodes: 'Upgrading nodes'
-        finish: 'Upgrade finished'
+        prepare: 'Prepare Client Nodes'
+        download: 'Download Upgrade Data'
+        confirm: 'Reinstall Admin Server'
+        start: 'Continue Upgrade'
+        restore: 'Restore'
+        repos: 'Verify Repositories'
+        services: 'Stop OpenStack Services'
+        backup: 'Data Backup'
+        nodes: 'Upgrading Nodes'
+        finish: 'Upgrade Finished'
       start:
         cancel: 'Back to selection'
-        continue: 'Continue upgrade process'
-        header: 'Start upgrade'
+        continue: 'Upload and continue'
+        header: 'Continue Upgrade'
         description: |
-          Lorem Ipsum is simply dummy text of the printing and typesetting
-          industry. Lorem Ipsum has been the industry's standard dummy text ever
-          since the 1500s, when an unknown printer took a galley of type and
-          scrambled it to make a type specimen book.
+          Select the location of the upgrade data archive that you downloaded from the SUSE
+          OpenStack Cloud 5 Administration server where you started the upgrade wizard. Upload it by
+          clicking 'Upload and continue'.
       restore:
-        continue: 'Continue upgrade process'
-        header: 'Restore Crowbar'
-        install_button: 'Start Installer'
+        continue: 'Continue Upgrade Process'
+        header: 'Restore'
         success: 'Restore was successful.'
-        failed: 'Restore failed. Please check the log at /var/log/crowbar/production.log and /var/log/crowbar/install.log'
+        failed: |
+          'Restore failed. Please check the logs at /var/log/crowbar/production.log and
+          /var/log/crowbar/install.log'
         schema_migration_failed: 'Schema migration for %{bc_name} failed'
         restore_button: 'Restore'
         multiple_restore: 'Restore process is already running'
         restore_crowbar: 'Restoring Crowbar'
         run_installer: 'Installing Crowbar'
         restore_chef_keys: 'Restoring Chef keys'
-        restore_chef: 'Restoring Chef server'
-        restore_database: 'Restoring Crowbar database'
+        restore_chef: 'Restoring Chef Server'
+        restore_database: 'Restoring Crowbar Database'
         description: |
-          Lorem Ipsum is simply dummy text of the printing and typesetting
-          industry. Lorem Ipsum has been the industry's standard dummy text ever
-          since the 1500s, when an unknown printer took a galley of type and
-          scrambled it to make a type specimen book.
+          The upgrade data was uploaded successfully. Start the restore process by clicking
+          'Restore'. This process can take a long time. It imports all required data of the old
+          SUSE OpenStack Cloud 5 Administration server from the upgrade data archive and runs the
+          install script in the background.
       repos:
-        continue: 'Continue upgrade process'
-        recheck: 'Recheck repositories'
-        header: 'Missing Repositories'
+        continue: 'Continue Upgrade Process'
+        recheck: 'Recheck Repositories'
+        header: 'Verify Add On Product Repositories'
         description: |
-          The software repository for "SUSE Linux Enterprise High Availability
-          Extension" and "SUSE Linux Enterprise Storage" are missing. Please
-          configure these by hand and click recheck below when the repositories
-          are available.
+          This step verifies that the software repositories for
+          "SUSE Linux Enterprise High Availability Extension" and "SUSE Enterprise Storage" are
+          available if your setup requires them.
         ceph_repo: 'Ceph Repositories'
         ha_repo: 'HA Repositories'
       services:
-        continue: 'Continue upgrade process'
+        continue: 'Stop OpenStack Services'
         header: 'Stop OpenStack Services'
         description: |
-          Lorem Ipsum is simply dummy text of the printing and typesetting
-          industry. Lorem Ipsum has been the industry's standard dummy text ever
-          since the 1500s, when an unknown printer took a galley of type and
-          scrambled it to make a type specimen book.
+          After continuing the Upgrade by pressing 'Stop OpenStack Services' all services on the
+          client nodes will be stopped. This is the last chance to access any OpenStack Service. If
+          not done yet, please shut down all running VM instances in your cloud and backup
+          everything you need to use OpenStack APIs.
       backup:
-        continue: 'Continue upgrade process'
-        header: 'Data backup'
+        continue: 'Continue Upgrade Process'
+        header: 'Data Backup'
         description: |
-          Lorem Ipsum is simply dummy text of the printing and typesetting
-          industry. Lorem Ipsum has been the industry's standard dummy text ever
-          since the 1500s, when an unknown printer took a galley of type and
-          scrambled it to make a type specimen book.
+          The SQL dump of the database was created. This will be reimported later when reapplying
+          the OpenStack barclamps. It is strongly recommended to download that dump.
       nodes:
-        continue: 'Continue upgrade process'
-        header: 'Upgrading nodes'
+        continue: 'Continue Upgrade Process'
+        header: 'Upgrading Nodes'
         description: |
-          Lorem Ipsum is simply dummy text of the printing and typesetting
-          industry. Lorem Ipsum has been the industry's standard dummy text ever
-          since the 1500s, when an unknown printer took a galley of type and
-          scrambled it to make a type specimen book.
+          Please wait while the nodes are being upgraded. This can take a long time.
         total_nodes: 'Nodes in total'
         left_nodes: 'Left to upgrade'
         failed_nodes: 'Failed to upgrade'
       finish:
         continue: 'Go to your barclamps now'
-        header: 'Upgrade finished'
+        header: 'Upgrade Finished'
         description: |
-          The upgrade is finished and SUSE OpenStack Cloud is now running. Please
-          re-apply all your barclamps in the proper order for the upgrade to
-          take effect. or whatever the heck this text should say.
+          All nodes have been upgraded to SLES 12 SP1. This wizard is finished.
+          As a final step of the upgrade you need to re-apply all openstack
+          barclamps now in the proper order.
 
     installers:
       status:
