@@ -64,21 +64,21 @@ nav:
       route: 'index_barclamp_path'
       params:
         controller: 'crowbar'
-    queue:
-      order: 90
-      route: 'deployment_queue_path'
   utils:
     order: 60
     route: 'utils_path'
-    logs:
-      order: 10
-      route: 'utils_path'
+    queue:
+      order: 5
+      route: 'deployment_queue_path'
     repositories:
-      order: 15
+      order: 10
       route: 'repositories_path'
     backup:
-      order: 20
+      order: 15
       route: 'backups_path'
+    logs:
+      order: 20
+      route: 'utils_path'
   help:
     order: 80
     route: 'docs_path'
