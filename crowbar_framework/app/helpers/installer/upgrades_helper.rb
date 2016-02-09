@@ -87,6 +87,8 @@ module Installer
       if upgrade_ceph_repo_needed?
         return false unless upgrade_ceph_repo?
       end
+
+      true
     end
 
     def restored?
