@@ -686,6 +686,7 @@ en:
       openstack: 'OpenStack'
       restore: 'Restore'
       restore_warning: 'By pressing OK, you will start the restore of the system. Are you sure?'
+      blockui_message: 'Restoring from backup. Please wait...'
       upload_image: 'Upload Backup Image'
       create_image: 'Create Backup Image'
       download_image: 'Click to download image'
