@@ -36,6 +36,8 @@ SimpleNavigation::Configuration.run do |navigation|
     end
     level1.item :utils, t("nav.utils.title"), utils_path do |level2|
       level2.item :queue, t("nav.utils.queue"), deployment_queue_path
+      level2.item :queue, t("nav.utils.repositories"), repositories_path
+      level2.item :queue, t("nav.utils.backup"), backups_path
       level2.item :logs, t("nav.utils.logs"), utils_path
     end
   end
