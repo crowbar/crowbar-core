@@ -103,7 +103,7 @@ class CrowbarService < ServiceObject
       node.save
     end
 
-    raise "There does not seem to exist any node running the database." if db_nodes.empty?
+    raise I18n.t("model.service.database_missing") if db_nodes.empty?
 
     # This proposal could return some error if there's not enough space for DB dump
     # Controller must show the error and be able to call the function again once the problem

@@ -281,6 +281,7 @@ en:
       would_break_dependency: 'Cannot deactivate a proposal for %{name}, as it breaks dependencies of %{dependson}.'
       template_missing: 'Template for %{name} does not exist'
       unknown_error: 'An unknown error occured'
+      database_missing: 'Database service isn't running on any node.'
     attributes:
       node:
         name: 'Full Name'
