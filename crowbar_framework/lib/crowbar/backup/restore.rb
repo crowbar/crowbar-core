@@ -285,8 +285,9 @@ module Crowbar
       end
 
       def proposal?(file)
-        !file.basename.to_s.match(/(_network\.json$)|(^template-(.*).json$)|(^queue\.json$)/) && \
-          file.to_s =~ /knife\/databags\/crowbar/
+        !file.basename.to_s.match(
+          /(_network\.json$)|(^template-(.*).json$)|(^queue\.json$)|(^swift\.json$)/
+        ) && file.to_s =~ /knife\/databags\/crowbar/
       end
     end
   end
