@@ -17,8 +17,11 @@
               = t(".description")
 
             %p
-              = upgrade_database_node.name
-              = upgrade_database_backup
+              - if upgrade_database_node
+                = upgrade_database_node.name
+                = upgrade_database_backup
+              - else
+                = t("installer.upgrades.backup.no_database")
 
         .panel-footer
           .row

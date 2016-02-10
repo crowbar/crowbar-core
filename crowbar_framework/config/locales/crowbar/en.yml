@@ -281,6 +281,7 @@ en:
       would_break_dependency: 'Cannot deactivate a proposal for %{name}, as it breaks dependencies of %{dependson}.'
       template_missing: 'Template for %{name} does not exist'
       unknown_error: 'An unknown error occured'
+      database_missing: 'Database service is not running on any node.'
     attributes:
       node:
         name: 'Full Name'
@@ -622,6 +623,7 @@ en:
         description: |
           The SQL dump of the database was created. This will be reimported later when reapplying
           the OpenStack barclamps. It is strongly recommended to download that dump.
+        no_database: 'There is no database to backup and restore.'
       nodes:
         continue: 'Continue Upgrade Process'
         header: 'Upgrading Nodes'
