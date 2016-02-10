@@ -123,7 +123,7 @@ module Crowbar
     end
 
     def crowbar_files
-      FileUtils.touch(@data.join("crowbar", "production.yml"))
+      FileUtils.touch(@data.join("crowbar", "database.yml"))
     end
 
     def filename_replace(file, search, replace)
