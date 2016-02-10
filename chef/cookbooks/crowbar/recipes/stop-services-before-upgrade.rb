@@ -26,7 +26,7 @@ bash "stop pacemaker resources" do
     for type in clone ms primitive; do
       for resource in $(crm configure show | grep ^$type | grep -Ev "postgresql|vip-admin-database" | cut -d " " -f2);
       do
-        crm resource stop $resource
+        crm --force --wait resource stop $resource
       done
     done
   EOF
