@@ -24,10 +24,20 @@
 bash "stop pacemaker resources" do
   code <<-EOF
     for type in clone ms primitive; do
-      for resource in $(crm configure show | grep ^$type | grep -Ev "postgresql|vip-admin-database" | cut -d " " -f2);
+      for resource in $(crm configure show | grep ^$type | grep -Ev "postgresql|vip-admin-database|rabbitmq" | cut -d " " -f2);
       do
         crm --force --wait resource stop $resource
       done
+    done
+  EOF
+  only_if { ::File.exist?("/usr/sbin/crm") }
+end
+
+bash "stop pacemake resources for rabbitmq" do
+  code <<-EOF
+    for resource in g-rabbitmq rabbitmq fs-rabbitmq ms-drbd-rabbitmq drbd-rabbitmq;
+    do
+      crm --force --wait resource stop $resource
     done
   EOF
   only_if { ::File.exist?("/usr/sbin/crm") }

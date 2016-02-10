@@ -98,8 +98,7 @@ when "dump_openstack_database"
 
 when "db_shutdown"
 
-  # Stop remaining pacemaker resources
-  bash "stop pacemaker resources" do
+  bash "stop remaining pacemaker resources" do
     code <<-EOF
       for type in clone ms primitive; do
         for resource in $(crm configure show | grep ^$type | cut -d " " -f2);
