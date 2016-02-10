@@ -681,6 +681,7 @@ en:
       restore: 'Restore'
       restore_warning: 'By pressing OK, you will start the restore of the system. Are you sure?'
       restore_database_failed: 'Failed to restore database'
+      migrate_database_failed: 'Failed to migrate database'
       blockui_message: 'Restoring from backup. Please wait...'
       upload_image: 'Upload Backup Image'
       create_image: 'Create Backup Image'
