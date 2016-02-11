@@ -267,11 +267,13 @@ module Crowbar
 
       def restore_database
         Rails.logger.debug "Restoring Crowbar database"
+        migrate_database(:before)
+
         begin
           SerializationHelper::Base.new(YamlDb::Helper).load(
             @data.join("crowbar", "database.yml")
           )
-        rescue SQLite3::SQLException => e
+        rescue StandardError => e
           Rails.logger.debug "Failed to load database.yml: #{e}"
           set_failed
           @status[:restore_database] = {
@@ -279,7 +281,8 @@ module Crowbar
             msg: I18n.t("backups.index.restore_database_failed")
           }
         end
-        Crowbar::Migrate.migrate!
+
+        migrate_database(:after)
 
         @status[:restore_database] ||= { status: :ok, msg: "" }
       end
@@ -290,6 +293,17 @@ module Crowbar
         raw_data = JSON.parse(file.read)["raw_data"]
         return false if raw_data.nil?
         raw_data.key?("attributes") && raw_data.key?("deployment")
+      end
+
+      def migrate_database(time)
+        Crowbar::Migrate.migrate!
+      rescue SQLite3::SQLException => e
+        Rails.logger.debug "Failed to migrate database #{time} loading: #{e}"
+        set_failed
+        @status[:restore_database] = {
+          status: :not_acceptable,
+          msg: I18n.t("backups.index.migrate_database_failed")
+        }
       end
     end
   end
