@@ -56,7 +56,12 @@
             = progress_steps @current_step, @min_step, @max_step
 
           .col-lg-9.text-right
-            .btn-group.hidden{ role: "group" }
-              = link_to icon_tag(:check, t(".continue")),
-                index_barclamp_path(controller: "openstack"),
-                class: "btn btn-success"
+            .btn-group{ role: "group" }
+              .processing
+                = link_to icon_tag(:spin, t(".processing"), class: "fa-fw fa-spinner"),
+                  "#",
+                  class: "btn btn-primary disabled"
+              .continue
+                = link_to icon_tag(:check, t(".continue")),
+                  index_barclamp_path(controller: "openstack"),
+                  class: "btn btn-success"

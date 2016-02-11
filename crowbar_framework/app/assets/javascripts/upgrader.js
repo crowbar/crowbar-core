@@ -62,7 +62,8 @@ $(document).ready(function() {
             } else {
               $(".alert-danger").addClass("hidden");
               $(".alert-success").removeClass("hidden");
-              $(".btn-group").removeClass("hidden");
+              $(".btn-group .processing").addClass("hidden");
+              $(".btn-group .continue").removeClass("hidden");
             }
           },
           error: function() {

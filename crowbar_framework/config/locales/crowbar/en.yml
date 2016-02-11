@@ -647,6 +647,7 @@ en:
           process will take a long time, please be patient.
       finishing:
         continue: 'Go to your barclamps now'
+        processing: 'Upgrading Nodes...'
         blockui: 'Finishing Upgrade now...'
         header: 'Finishing Upgrade'
         description: |
