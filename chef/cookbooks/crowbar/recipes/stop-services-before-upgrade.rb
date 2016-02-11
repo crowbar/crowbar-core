@@ -40,7 +40,9 @@ bash "stop pacemaker resources for rabbitmq" do
   code <<-EOF
     for resource in g-rabbitmq rabbitmq fs-rabbitmq ms-drbd-rabbitmq drbd-rabbitmq;
     do
-      crm --force --wait resource stop $resource
+      if crm configure show $resource >/dev/null 2>&1; then
+        crm --force --wait resource stop $resource
+      fi
     done
   EOF
   only_if { ::File.exist?("/usr/sbin/crm") }
