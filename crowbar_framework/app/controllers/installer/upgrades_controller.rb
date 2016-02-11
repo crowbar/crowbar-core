@@ -32,7 +32,7 @@ module Installer
     end
 
     def start
-      @current_step = 3
+      @current_step = 4
 
       if request.post?
         respond_to do |format|
@@ -57,7 +57,7 @@ module Installer
     end
 
     def restore
-      @current_step = 4
+      @current_step = 5
       @steps = Crowbar::Backup::Restore.steps
 
       if request.post?
@@ -74,7 +74,7 @@ module Installer
     end
 
     def repos
-      @current_step = 5
+      @current_step = 6
 
       if request.post?
         respond_to do |format|
@@ -96,7 +96,7 @@ module Installer
     end
 
     def services
-      @current_step = 6
+      @current_step = 7
 
       if request.post?
         respond_to do |format|
@@ -122,7 +122,7 @@ module Installer
     end
 
     def backup
-      @current_step = 7
+      @current_step = 8
 
       if request.post?
         respond_to do |format|
@@ -148,7 +148,7 @@ module Installer
     end
 
     def nodes
-      @current_step = 8
+      @current_step = 9
 
       if request.post?
         respond_to do |format|
@@ -174,7 +174,7 @@ module Installer
     end
 
     def finishing
-      @current_step = 9
+      @current_step = 10
 
       respond_to do |format|
         format.html
@@ -233,7 +233,7 @@ module Installer
 
     def set_progess_values
       @min_step = 1
-      @max_step = 9
+      @max_step = 10
     end
 
     def hide_navigation
