@@ -718,15 +718,20 @@ class BarclampController < ApplicationController
   def proposal_create
     params[:id] = params[:id] || params[:name]
 
-    code, message = @service_object.proposal_create(
-      params.slice(
-        :id,
-        :description,
-        :attributes,
-        :deployment,
-        "crowbar-deep-merge-template"
+    begin
+      code, message = @service_object.proposal_create(
+        params.slice(
+          :id,
+          :description,
+          :attributes,
+          :deployment,
+          "crowbar-deep-merge-template"
+        )
       )
-    )
+    rescue RuntimeError => e
+      code = 412
+      message = e.to_s
+    end
 
     respond_to do |format|
       case code
