@@ -178,9 +178,11 @@ class NetworkController < BarclampController
         status: {
           "ready" => 0,
           "failed" => 0,
-          "unknown" => 0,
+          "pending" => 0,
           "unready" => 0,
-          "pending" => 0
+          "building" => 0,
+          "crowbar_upgrade" => 0,
+          "unknown" => 0
         }
       } unless @groups.key? node.group
 
@@ -195,9 +197,11 @@ class NetworkController < BarclampController
             status: {
               "ready" => 0,
               "failed" => 0,
-              "unknown" => 0,
+              "pending" => 0,
               "unready" => 0,
-              "pending" => 0
+              "building" => 0,
+              "crowbar_upgrade" => 0,
+              "unknown" => 0
             }
           } unless @switches.key? switch[:switch]
 
