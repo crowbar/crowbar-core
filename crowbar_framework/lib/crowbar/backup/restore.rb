@@ -285,8 +285,11 @@ module Crowbar
       end
 
       def proposal?(file)
-        !file.basename.to_s.match(/(_network\.json$)|(^template-(.*).json$)|(^queue\.json$)/) && \
-          file.to_s =~ /knife\/databags\/crowbar/
+        return false if file.basename.to_s =~ /^template-(.*).json$/ || \
+            !file.to_s =~ /knife\/databags\/crowbar/
+        raw_data = JSON.parse(file.read)["raw_data"]
+        return false if raw_data.nil?
+        raw_data.key?("attributes") && raw_data.key?("deployment")
       end
     end
   end
