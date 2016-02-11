@@ -70,11 +70,14 @@ when "dump_openstack_database"
     block do
       require "pathname"
       path = Pathname.new(dump_location).split.first.to_s
-      available = `df #{path} | tail -n 1 | sed "s/ \\+/ /g" | cut -d " " -f 4`
+      available = `df -m #{path} | tail -n 1 | sed "s/ \\+/ /g" | cut -d " " -f 4`
       db_size = `su - postgres -c 'pg_dumpall | wc -c'`
+      # Use Megabytes and add some reserve (30 MiB)
+      db_size = db_size.to_i / 1024 / 1024 + 30
       if db_size.to_i > available.to_i
         message = "Not enough space for the Database dump on node #{node.name}!\n" \
-          "Database size is: #{db_size}B, available space on #{path} is only #{available}B."
+          "Database size is: #{db_size}MiB, available space on #{path} " \
+          "is only #{available.to_i}MiB."
         Chef::Log.fatal(message)
         node["crowbar_wall"]["chef_error"] = message
         node.save
