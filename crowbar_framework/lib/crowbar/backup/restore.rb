@@ -168,7 +168,8 @@ module Crowbar
                 bc_name, prop = filename.split("-")
                 prop.gsub!(/.json$/, "")
                 proposal = Proposal.where(
-                  barclamp: bc_name
+                  barclamp: bc_name,
+                  name: prop
                 ).first_or_initialize(
                   barclamp: bc_name,
                   name: prop
