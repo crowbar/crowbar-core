@@ -72,6 +72,11 @@ class Backup < ActiveRecord::Base
   end
 
   def restore(options = {})
+    if Crowbar::Backup::Restore.restore_steps_path.exist?
+      errors.add(:base, I18n.t("backups.index.multiple_restore"))
+      return false
+    end
+
     background = options.fetch(:background, false)
     upgrade if upgrade?
     if background
