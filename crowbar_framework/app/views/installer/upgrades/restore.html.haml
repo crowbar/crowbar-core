@@ -19,6 +19,9 @@
             %p
               = t(".description")
 
+            %p
+              = t(".password")
+
             .upgrade{ data: { status_check: true } }
               - @steps.each do |step|
                 .alert.alert-info.hidden{ data: { step: step } }

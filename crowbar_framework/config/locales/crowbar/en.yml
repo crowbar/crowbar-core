@@ -600,6 +600,10 @@ en:
           The upgrade data was uploaded successfully. The restore process can take a long time. It
           imports all required data of the old SUSE OpenStack Cloud 5 Administration server from the
           upgrade data archive and runs the install script in the background.
+        password: |
+          The crowbar admin password will be required, possibly more than once. The password is either
+          the default password or, depending on whether the password was changed in SUSE OpenStack
+          Cloud 5, the one set by the user.
       repos:
         continue: 'Continue Upgrade Process'
         blockui: 'Continue Upgrade Process...'
