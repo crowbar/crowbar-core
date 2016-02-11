@@ -33,7 +33,10 @@ bash "stop pacemaker resources" do
   only_if { ::File.exist?("/usr/sbin/crm") }
 end
 
-bash "stop pacemake resources for rabbitmq" do
+# we deal with rabbitmq differently because of drbd; here we want to be more
+# careful about how we stop things as experience showed that it's easy to get
+# fenced if we're stopping things blindly
+bash "stop pacemaker resources for rabbitmq" do
   code <<-EOF
     for resource in g-rabbitmq rabbitmq fs-rabbitmq ms-drbd-rabbitmq drbd-rabbitmq;
     do
