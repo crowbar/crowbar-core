@@ -1,7 +1,7 @@
 //= require_self
 
 function setBlockUI(events, selector) {
-  selector.live(events, function(event) {
+  $(selector).live(events, function(event) {
     $.blockUI({
       css: {
         border: 'none',
@@ -95,9 +95,9 @@ jQuery(document).ready(function($) {
     ]
   });
 
-  setBlockUI('submit', $('[data-blockui]'));
-  setBlockUI('click', $('body.backups, [data-blockui]'));
-  setBlockUI('click', $('installer-upgrades, [data-blockui]'));
+  setBlockUI('submit', '[data-blockui]');
+  setBlockUI('click', 'body.backups, [data-blockui]');
+  setBlockUI('click', 'installer-upgrades, [data-blockui]');
 
   $('[data-checkall]').live('change', function(event) {
     var checker = $(event.target).data('checkall');
