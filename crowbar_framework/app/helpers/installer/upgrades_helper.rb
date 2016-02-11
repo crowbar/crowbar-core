@@ -20,9 +20,21 @@ module Installer
   module UpgradesHelper
     def upgrade_continue_button(disabled = false)
       if disabled
-        button_tag icon_tag(:chevron_right, t(".continue")), class: "btn btn-primary disabled"
+        button_tag(
+          icon_tag(:chevron_right, t(".continue")),
+          class: "btn btn-primary disabled",
+          data: {
+            blockui: t(".blockui")
+          }
+        )
       else
-        button_tag icon_tag(:chevron_right, t(".continue")), class: "btn btn-primary"
+        button_tag(
+          icon_tag(:chevron_right, t(".continue")),
+          class: "btn btn-primary",
+          data: {
+            blockui: t(".blockui")
+          }
+        )
       end
     end
 
@@ -30,20 +42,13 @@ module Installer
       if upgrade_repos_present?
         upgrade_continue_button
       else
-        button_tag icon_tag(:refresh, t(".recheck")), class: "btn btn-primary"
-      end
-    end
-
-    def restore_button
-      return if restored?
-      button_tag t(".restore_button"), class: "btn btn-primary restore_button"
-    end
-
-    def alert_type(boolean)
-      if boolean
-        "alert-success"
-      else
-        "alert-danger"
+        button_tag(
+          icon_tag(:refresh, t(".recheck")),
+          class: "btn btn-primary",
+          data: {
+            blockui: t(".recheck_blockui")
+          }
+        )
       end
     end
 

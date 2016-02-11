@@ -32,13 +32,13 @@ module Installer
     end
 
     def start
-      @current_step = 3
+      @current_step = 4
 
       if request.post?
         respond_to do |format|
           @backup = Backup.new(params.permit(:file))
 
-          if @backup.save
+          if save_and_restore
             format.html do
               redirect_to restore_upgrade_url
             end
@@ -57,24 +57,13 @@ module Installer
     end
 
     def restore
-      @current_step = 4
+      @current_step = 5
       @steps = Crowbar::Backup::Restore.steps
 
       if request.post?
-        url = restore_upgrade_url
-
-        if Crowbar::Backup::Restore.restore_steps_path.exist?
-          flash[:info] = t(".multiple_restore")
-        elsif Crowbar::Backup::Restore.status[:success]
-          url = repos_upgrade_url
-        else
-          @backup = Backup.all.first
-          @backup.restore(background: true)
-        end
-
         respond_to do |format|
           format.html do
-            redirect_to url
+            redirect_to repos_upgrade_url
           end
         end
       else
@@ -84,19 +73,8 @@ module Installer
       end
     end
 
-    def status
-      respond_to do |format|
-        format.json do
-          render json: Crowbar::Installer.status
-        end
-        format.html do
-          redirect_to install_upgrade_url
-        end
-      end
-    end
-
     def repos
-      @current_step = 5
+      @current_step = 6
 
       if request.post?
         respond_to do |format|
@@ -118,7 +96,7 @@ module Installer
     end
 
     def services
-      @current_step = 6
+      @current_step = 7
 
       if request.post?
         respond_to do |format|
@@ -144,7 +122,7 @@ module Installer
     end
 
     def backup
-      @current_step = 7
+      @current_step = 8
 
       if request.post?
         respond_to do |format|
@@ -170,7 +148,7 @@ module Installer
     end
 
     def nodes
-      @current_step = 8
+      @current_step = 9
 
       if request.post?
         respond_to do |format|
@@ -179,7 +157,7 @@ module Installer
             @service_object.prepare_nodes_for_os_upgrade
 
             format.html do
-              redirect_to finish_upgrade_url
+              redirect_to finishing_upgrade_url
             end
           rescue => e
             format.html do
@@ -195,11 +173,41 @@ module Installer
       end
     end
 
-    def finish
-      @current_step = 9
+    def finishing
+      @current_step = 10
 
       respond_to do |format|
         format.html
+      end
+    end
+
+    def restore_status
+      respond_to do |format|
+        format.json do
+          render json: Crowbar::Backup::Restore.status
+        end
+        format.html do
+          redirect_to install_upgrade_url
+        end
+      end
+    end
+
+    def nodes_status
+      respond_to do |format|
+        format.json do
+          render json: {
+            total: view_context.total_nodes_count,
+            left: view_context.upgrading_nodes_count,
+            failed: view_context.failed_nodes_count,
+            error: I18n.t(
+              "installer.upgrades.nodes.failed",
+              nodes: NodeObject.find("state:problem").map(&:name).join(", ")
+            )
+          }
+        end
+        format.html do
+          redirect_to finishing_upgrade_url
+        end
       end
     end
 
@@ -209,13 +217,23 @@ module Installer
 
     protected
 
+    def save_and_restore
+      return false unless @backup.save
+      if Crowbar::Backup::Restore.restore_steps_path.exist?
+        flash[:info] = t(".multiple_restore")
+        true
+      else
+        @backup.restore(background: true)
+      end
+    end
+
     def set_service_object
       @service_object = CrowbarService.new(logger)
     end
 
     def set_progess_values
       @min_step = 1
-      @max_step = 9
+      @max_step = 10
     end
 
     def hide_navigation

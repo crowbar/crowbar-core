@@ -96,7 +96,8 @@ jQuery(document).ready(function($) {
   });
 
   setBlockUI('submit', $('[data-blockui]'));
-  setBlockUI('click', $('body.backups [data-blockui]'));
+  setBlockUI('click', $('body.backups, [data-blockui]'));
+  setBlockUI('click', $('installer-upgrades, [data-blockui]'));
 
   $('[data-checkall]').live('change', function(event) {
     var checker = $(event.target).data('checkall');
