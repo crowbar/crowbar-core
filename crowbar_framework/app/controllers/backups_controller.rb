@@ -63,16 +63,17 @@ class BackupsController < ApplicationController
   # /utils/backup/restore   POST   Trigger a restore
   def restore
     respond_to do |format|
-      if @backup.restore(background: false)
-        format.json { head :ok }
-        format.html { redirect_to backups_path }
-      else
-        format.json do
-          render json: { error: @backup.errors.full_messages.first }, status: :unprocessable_entity
-        end
-        format.html do
+      format.html do
+        unless @backup.restore(background: false)
           flash[:alert] = @backup.errors.full_messages.first
-          redirect_to backups_path
+        end
+        redirect_to backups_path
+      end
+      format.json do
+        if @backup.restore(background: true)
+          head :ok
+        else
+          render json: { error: @backup.errors.full_messages.first }, status: :unprocessable_entity
         end
       end
     end
