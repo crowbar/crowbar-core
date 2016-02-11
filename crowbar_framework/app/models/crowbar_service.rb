@@ -53,7 +53,7 @@ class CrowbarService < ServiceObject
         error = node["crowbar_wall"]["chef_error"] || ""
         next if error.empty?
         found_errors.push error
-        @logger.error("Chef run ended with an error on the node #{name}: #{error}")
+        @logger.error("Chef run ended with an error on the node #{node.name}: #{error}")
         node["crowbar_wall"]["chef_error"] = ""
         node.save
       end
