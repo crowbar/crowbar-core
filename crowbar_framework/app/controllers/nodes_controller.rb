@@ -304,22 +304,38 @@ class NodesController < ApplicationController
   end
 
   def hit
-    action = params[:req]
     name = params[:name] || params[:id]
     machine = NodeObject.find_node_by_name name
-    if machine.nil?
-      render text: "Could not find node '#{name}'", status: 404 and return
-    else
-      case action
-      when "reinstall", "reset", "update", "delete"
-        machine.set_state(action)
-      when "reboot", "shutdown", "poweron", "powercycle", "poweroff", "identify", "allocate"
-        machine.send(action)
-      else
-        render text: "Invalid hit request '#{action}'", status: 500 and return
+
+    respond_to do |format|
+      format.json do
+        if machine.nil?
+          render json: {
+            error: I18n.t("nodes.hit.not_found", name: name)
+          }, status: :not_found
+        elsif machine.actions.include? params[:req].to_s
+          machine.send params[:req].to_sym
+          head :ok
+        else
+          render json: {
+            error: I18n.t("nodes.hit.invalid_req", req: params[:req])
+          }, status: :internal_server_error
+        end
+      end
+
+      format.html do
+        if machine.nil?
+          flash[:alert] = I18n.t("nodes.hit.not_found", name: name)
+          redirect_to dashboard_url, status: :not_found
+        elsif machine.actions.include? params[:req].to_s
+          machine.send params[:req].to_sym
+          redirect_to node_url(machine.handle)
+        else
+          flash[:alert] = I18n.t("nodes.hit.invalid_req", req: params[:req])
+          redirect_to dashboard_url, status: :internal_server_error
+        end
       end
     end
-    render text: "Attempting '#{action}' for node '#{machine.name}'", status: 200
   end
 
   # GET /nodes/1
