@@ -48,6 +48,10 @@ module Crowbar
               "/var/lib/crowbar"
             ],
             [
+              "configs/crowbar",
+              "/etc/crowbar"
+            ],
+            [
               "configs/hosts",
               "/etc/hosts"
             ],
