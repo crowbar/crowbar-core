@@ -96,7 +96,7 @@ module Crowbar
         end
 
         def export_files
-          restore_files.push(restore_files_after_install.first).map(&:reverse)
+          restore_files.concat(restore_files_after_install).map(&:reverse)
         end
       end
     end
