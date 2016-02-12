@@ -90,6 +90,24 @@
           ]]>
         </source>
       </script>
+<% if @needs_openvswitch -%>
+      <script>
+        <chrooted config:type="boolean">true</chrooted>
+        <debug config:type="boolean">true</debug>
+        <filename>openvswitch_upgrade</filename>
+        <source>
+          <![CDATA[
+          # Remove the stuff that is not needed any more on SLE12
+          chkconfig -d openvswitch-switch
+          rm -f /etc/init.d/ovs-ifup-br-*
+
+          systemctl enable openvswitch
+
+          rm -f /etc/openvswitch/conf.db* /etc/openvswitch/.conf.db*
+          ]]>
+        </source>
+      </script>
+<% end -%>
     </chroot-scripts>
     <init-scripts config:type="list">
       <!-- /bugfix bnc#886238: https://bugzilla.novell.com/show_bug.cgi?id=886238 -->

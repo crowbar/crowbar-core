@@ -341,7 +341,10 @@ if not nodes.nil? and not nodes.empty?
                       architecture: arch,
                       is_ses: storage_available && !cloud_available,
                       crowbar_join: "#{os_url}/crowbar_join.sh",
-                      default_fs: mnode[:crowbar_wall][:default_fs] || "ext4")
+                      default_fs: mnode[:crowbar_wall][:default_fs] || "ext4",
+                      needs_openvswitch:
+                        (mnode[:network] && mnode[:network][:needs_openvswitch]) || false
+            )
           end
 
         when os =~ /^(hyperv|windows)/
