@@ -36,7 +36,6 @@
   LedUpdate.prototype.init = function() {
     var self = this;
 
-    self.animate();
     self.process();
 
     if ($.queryString['nopoll'] == undefined) {
@@ -213,9 +212,6 @@
       self.processProposals(response, ignores);
     }
 
-    self.destroy();
-    self.animate();
-
     if ($.isFunction(self.options.afterProcess)) {
       self.options.afterProcess.call(this, response);
     }
@@ -223,9 +219,6 @@
 
   LedUpdate.prototype.process = function() {
     var self = this;
-
-    self.destroy();
-    self.animate();
 
     var ignores = [];
     if (this.$el.data('ledignore')) {
@@ -257,17 +250,6 @@
         callback.call();
       }
     }
-  };
-
-  LedUpdate.prototype.animate = function() {
-    $('.led.unready, .led.in_process, .led.spin').sprite({
-      fps: 6,
-      no_of_frames: 8
-    }).active();
-  };
-
-  LedUpdate.prototype.destroy = function() {
-    $('.led.unready, .led.in_process, .led.spin').destroy();
   };
 
   $.fn.ledUpdate = function(options) {
