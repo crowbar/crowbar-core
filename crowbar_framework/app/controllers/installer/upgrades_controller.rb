@@ -200,7 +200,7 @@ module Installer
             left: view_context.upgrading_nodes_count,
             failed: view_context.failed_nodes_count,
             error: I18n.t(
-              "installer.upgrades.nodes.failed",
+              "installer.upgrades.nodes_status.failed",
               nodes: NodeObject.find("state:problem").map(&:name).join(", ")
             )
           }
