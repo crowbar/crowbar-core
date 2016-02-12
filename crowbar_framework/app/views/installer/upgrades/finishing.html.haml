@@ -61,7 +61,7 @@
                 = link_to icon_tag(:spin, t(".processing"), class: "fa-fw fa-spinner"),
                   "#",
                   class: "btn btn-primary disabled"
-              .continue
+              .continue.hidden
                 = link_to icon_tag(:check, t(".continue")),
                   index_barclamp_path(controller: "openstack"),
                   class: "btn btn-success"
