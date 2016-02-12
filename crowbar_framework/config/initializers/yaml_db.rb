@@ -19,7 +19,7 @@ module SerializationHelper
   class Dump
     def self.tables
       ActiveRecord::Base.connection.tables.reject do |table|
-        ["schema_info", "schema_migrations", "sessions"].include?(table)
+        ["schema_info", "schema_migrations", "sessions", "backups"].include?(table)
       end
     end
   end

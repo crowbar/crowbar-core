@@ -123,7 +123,13 @@ module Crowbar
           else
             # copy files with higher permissions
             dest = data_dir.join(destination).to_s
-            system("sudo", "cp", "-a", source, dest)
+            if source == "/var/lib/crowbar"
+              # avoid doing an export of the existing backups, to avoid growing
+              # size of backups
+              system("sudo", "rsync", "-a", "#{source}/", "--exclude", "backup", dest)
+            else
+              system("sudo", "cp", "-a", source, dest)
+            end
           end
         end
       end
