@@ -20,7 +20,7 @@ class LoggingController < BarclampController
     ctime=Time.now.strftime("%Y%m%d-%H%M%S")
     @file = "crowbar-logs-#{ctime}.tar.bz2"
     pid = fork do
-      system("sudo -i /opt/dell/bin/gather_logs.sh #{@file}")
+      system("sudo", "-i", "/opt/dell/bin/gather_logs.sh", @file)
     end
     Process.detach(pid) # reap child process automatically; don't leave running
     redirect_to "/utils?waiting=true&file=#{@file.gsub(/\./,'-DOT-')}"
