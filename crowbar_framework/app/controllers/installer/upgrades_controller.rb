@@ -231,6 +231,8 @@ module Installer
         Crowbar::Backup::Restore.purge
         @backup.restore(background: true, from_upgrade: true)
       end
+    ensure
+      @backup.cleanup unless @backup.nil?
     end
 
     def set_service_object
