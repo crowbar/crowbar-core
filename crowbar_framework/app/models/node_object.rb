@@ -1329,6 +1329,22 @@ class NodeObject < ChefObject
     result
   end
 
+  def actions
+    [
+      "allocate",
+      "delete",
+      "identify",
+      "poweron",
+      "powercycle",
+      "poweroff",
+      "reinstall",
+      "reboot",
+      "reset",
+      "shutdown",
+      "update"
+    ]
+  end
+
   def update
     set_state("update")
   end
