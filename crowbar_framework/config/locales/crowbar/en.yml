@@ -554,8 +554,8 @@ en:
     title: 'Installer'
     index:
       header: 'What do you want to do?'
-      install: 'Install from scratch'
-      restore: 'Restore from backup'
+      install: 'Install from Scratch'
+      restore: 'Restore from Backup'
       upgrade: 'Continue Upgrade from SUSE OpenStack Cloud 5'
     upgrades:
       title: 'Upgrade'
@@ -577,16 +577,16 @@ en:
         blockui: 'Uploading...'
         header: 'Continue Upgrade'
         description: |
-          Select the location of the upgrade data archive that you downloaded from the SUSE
-          OpenStack Cloud 5 Administration server where you started the upgrade wizard. Upload it by
-          clicking 'Upload and Restore'.
+          Select the upgrade data archive that you downloaded from the SUSE OpenStack Cloud 5
+          Administration server when you started the upgrade wizard. Upload it by clicking
+          'Upload and Restore'.
       restore:
         continue: 'Continue Upgrade Process'
         blockui: 'Continue Upgrade Process...'
         header: 'Restore'
-        success: 'Restore was successful.'
+        success: 'Restoration successful.'
         failed: |
-          'Restore failed. Please check the logs at /var/log/crowbar/production.log and
+          'Restoration failed. Please check the logs at /var/log/crowbar/production.log and
           /var/log/crowbar/install.log'
         schema_migration_failed: 'Schema migration for %{bc_name} failed'
         restore_button: 'Restore'
@@ -597,9 +597,9 @@ en:
         restore_chef: 'Restoring Chef Server'
         restore_database: 'Restoring Crowbar Database'
         description: |
-          The upgrade data was uploaded successfully. The restore process can take a long time. It
-          imports all required data of the old SUSE OpenStack Cloud 5 Administration server from the
-          upgrade data archive and runs the install script in the background.
+          The upgrade-data was uploaded successfully. The restore process may take a long time to
+          import the required data from the SUSE OpenStack Cloud 5 Administration Server while the
+          installation process runs in the background.
         password: |
           The crowbar admin password will be required, possibly more than once. The password is either
           the default password or, depending on whether the password was changed in SUSE OpenStack
@@ -609,63 +609,62 @@ en:
         blockui: 'Continue Upgrade Process...'
         recheck: 'Check Repositories Again'
         recheck_blockui: 'Checking Repositories Again...'
-        header: 'Verify Add On Product repositories'
+        header: 'Verify Add-On Product Repositories'
         description: |
           This step verifies that the software repositories for
           "SUSE Linux Enterprise High Availability Extension" and "SUSE Enterprise Storage" are
-          available if your setup requires them.
+          available if they were previously installed on SUSE OpenStack Cloud 5.
         ceph_repo: 'Ceph Repositories'
         ha_repo: 'HA Repositories'
         ceph_repo_present: 'Ceph repositories are available.'
         ceph_repo_missing: 'Ceph repositories are missing, please provide them.'
         ha_repo_present: 'HA repositories are available.'
         ha_repo_missing: 'HA repositories are missing, please provide them.'
-        no_additional_repos: 'No additional repositories needed.'
+        no_additional_repos: 'No Add-On Products Installed.'
       services:
         continue: 'Stop OpenStack Services'
-        blockui: 'Stopping OpenStack services...'
+        blockui: 'Stopping OpenStack Services...'
         header: 'Stop OpenStack Services'
         description: |
-          After continuing the Upgrade by pressing 'Stop OpenStack Services' all services on the
-          client nodes will be stopped. This is the last chance to access any OpenStack Service. If
-          not done yet, please shut down all running VM instances in your cloud and backup
-          everything you need to use OpenStack APIs.
+          Continuing the upgrade process by clicking 'Stop OpenStack Services' below will stop all
+          services on the client nodes. This is the last chance to access any OpenStack service. If
+          you haven't done so yet, please shut down all VM instances in your cloud and backup
+          everything needed which uses OpenStack APIs.
       backup:
         continue: 'Continue Upgrade Process'
         blockui: 'Continue Upgrade Process...'
         header: 'Database Dump'
         download: |
-          You can download the database dump from your node <b>%{node}</b>, you can find the file at
-          <b>%{path}</b>.
+          Download the database dump from node <b>%{node}</b>.
+          <br>
+          The file can be found here: <b>%{path}</b>.
         description: |
           The SQL dump of the database was created. This will be re-imported later when re-applying
-          the OpenStack barclamps. It is strongly recommended to download that dump.
+          the OpenStack barclamps. It is strongly recommended to download this dump.
         no_database: 'There is no database to backup and restore.'
       nodes:
-        continue: 'Upgrade Nodes now'
-        blockui: 'Initializing Node upgrade...'
+        continue: 'Upgrade Nodes Now'
+        blockui: 'Initializing Node Upgrade...'
         header: 'Upgrading Nodes OS'
         description: |
-          All service on the client nodes have been stopped now. As the next step, the client nodes
-          will be upgraded to SLES 12 SP1. To start that process, click 'Upgrade Nodes now'. This
-          process will take a long time, please be patient.
+          All services on the client nodes have now been stopped. Next, the client nodes will be
+          upgraded to SLES 12 SP1. To begin this process click 'Upgrade Nodes Now'. This process
+          will take a long time, so please be patient.
       finishing:
-        continue: 'Go to your barclamps now'
+        continue: 'Go to Your Barclamps Now'
         processing: 'Upgrading Nodes...'
-        blockui: 'Finishing Upgrade now...'
+        blockui: 'Finishing Upgrade Now...'
         header: 'Finishing Upgrade'
-        description: |
-          Please wait while the nodes are being upgraded. This can take a long time.
-        total_nodes: 'Nodes in total'
-        left_nodes: 'Left to upgrade'
-        failed_nodes: 'Failed to upgrade'
+        description: 'Please wait until all nodes are upgraded. This may take a long time.'
+        total_nodes: 'Nodes in Total'
+        left_nodes: 'Nodes Left'
+        failed_nodes: 'Nodes Failed'
         finished: |
-          All nodes have been upgraded to SLES 12 SP1. This wizard is finished.
-          As a final step of the upgrade you need to re-apply all openstack
-          barclamps now in the proper order.
+          All nodes have been upgraded to SLES 12 SP1. This wizard is finished. In order to finish
+          the upgrade process please re-apply all OpenStack barclamps in the proper order.
       nodes_status:
         failed: |
-          These nodes failed to upgrade, please fix the issues before you can proceed:
+          The following nodes failed to upgrade, please fix the issues before you can proceed:
           <b>%{nodes}</b>
 
     installers:
