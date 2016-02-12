@@ -135,7 +135,7 @@ class Backup < ActiveRecord::Base
     Crowbar::Backup::Export.new(dir).export
     Dir.chdir(dir) do
       system(
-        "sudo tar czf #{path} *"
+        "sudo", "tar", "czf", path.to_s, "."
       )
     end
 
