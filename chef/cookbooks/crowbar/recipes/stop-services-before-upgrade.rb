@@ -76,3 +76,11 @@ end
     only_if { File.exist? "/var/log/rabbitmq/#{logfile}" }
   end
 end
+
+# The vhost file for the dashboard causes apache to fail to start when reapplying
+# the horzion barclamp. Apache is started before that file is refresh. After
+# the config file refresh only a reload is done, which doesn't do anything
+# when the service is not running.
+file "/etc/apache2/vhosts.d/openstack-dashboard.conf" do
+  action :delete
+end
