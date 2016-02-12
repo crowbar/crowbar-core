@@ -32,7 +32,7 @@ when "openstack_shutdown"
   include_recipe "crowbar::stop-services-before-upgrade"
 
   execute "delete pacemaker resources in non-DB cluster" do
-    command "cibadmin -E -f"
+    command "/etc/init.d/openais status && cibadmin -E -f"
     only_if { ::File.exist?("/usr/sbin/cibadmin") }
   end
 
@@ -111,7 +111,7 @@ when "db_shutdown"
   end
 
   execute "delete pacemaker resources in DB cluster" do
-    command "cibadmin -E -f"
+    command "/etc/init.d/openais status && cibadmin -E -f"
     only_if { ::File.exist?("/usr/sbin/cibadmin") }
   end
 
