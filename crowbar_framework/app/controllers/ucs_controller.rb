@@ -427,7 +427,7 @@ class UcsController < ApplicationController
   end
 
   def write_credentials(ucs_url, username, password)
-    File.open( CREDENTIALS_XML_PATH, "w" ) do |file|
+    File.open(CREDENTIALS_XML_PATH, "w", 0640) do |file|
       file.puts "<ucs><cloud url='#{ucs_url}' username='#{username}' password='#{password}' /></ucs>"
     end
   end
