@@ -71,6 +71,16 @@ class IpmiService < ServiceObject
       bmc_role = node.admin? ? "bmc-nat-router" : "bmc-nat-client"
       result = add_role_to_instance_and_node("ipmi", inst, name, db, role, bmc_role)
 
+      @logger.debug("IPMI transition: leaving from discovered state for #{name}")
+      a = [200, { name: name }] if result
+      a = [400, "Failed to add role to node"] unless result
+      return a
+    end
+
+    # node got allocated, ensure that node can use BMC network by allocating an
+    # IP / enabling the interface
+    if state == "hardware-installing"
+      @logger.debug("IPMI transition: hardware-installing state for #{name}")
       ns = NetworkService.new @logger
       if role and !role.default_attributes["ipmi"]["use_dhcp"]
         @logger.debug("IPMI transition: Allocate bmc address for #{name}")
@@ -89,7 +99,7 @@ class IpmiService < ServiceObject
         result = result[0] == 200
       end
 
-      @logger.debug("IPMI transition: leaving from discovered state for #{name}")
+      @logger.debug("IPMI transition: leaving from hardware-installing state for #{name}")
       a = [200, { name: name }] if result
       a = [400, "Failed to add role to node"] unless result
       return a
