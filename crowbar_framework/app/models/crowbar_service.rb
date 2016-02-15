@@ -135,6 +135,11 @@ class CrowbarService < ServiceObject
       node["crowbar_wall"]["crowbar_upgrade_step"] = "done_openstack_shutdown"
       node.save
     end
+
+    # ... and remove all nodes from the "crowbar-upgrade" role in proposal
+    proposal = Proposal.where(barclamp: "crowbar", name: "default").first
+    proposal["deployment"]["crowbar"]["elements"]["crowbar-upgrade"] = []
+    proposal.save
   end
 
   #
@@ -292,9 +297,19 @@ class CrowbarService < ServiceObject
     # Find all non-core proposals and remove all roles that belong
     # to those proposals from the nodes
     active_non_core_roles = RoleObject.find_roles_by_name("*-config-*").reject(&:core_role?)
+
+    # Add crowbar-upgrade role and crowbar-config-default roles to handle
+    # crowbar-upgrade removal from nodes
+    upgrade_role = RoleObject.find_role_by_name("crowbar-upgrade")
+    crowbar_config_role = RoleObject.find_role_by_name("crowbar-config-default")
+
+    roles_to_disable = active_non_core_roles
+    roles_to_disable << upgrade_role unless upgrade_role.nil?
+    roles_to_disable << crowbar_config_role
+
     upgrade_nodes = NodeObject.all.reject(&:admin?)
     upgrade_nodes.each do |node|
-      active_non_core_roles.each do |role|
+      roles_to_disable.each do |role|
         roles_to_remove = role.elements.keys
         roles_to_remove << role.name
         roles_to_remove.each do |delete_role|
@@ -304,8 +319,10 @@ class CrowbarService < ServiceObject
       node.save
     end
 
-    # and finally delete the roles itself
+    # finally delete the roles itself
     active_non_core_roles.each(&:destroy)
+    crowbar_config_role.elements["crowbar-upgrade"] = []
+    crowbar_config_role.save
   end
 
   def prepare_nodes_for_os_upgrade
