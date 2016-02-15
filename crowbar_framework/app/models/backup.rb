@@ -186,7 +186,8 @@ class Backup < ActiveRecord::Base
     self.version = meta["version"].to_s
     self.size = path.size
     self.created_at = Time.zone.parse(meta["created_at"])
-    self.migration_level = meta["migration_level"]
+    # 20151222144602_create_backups.rb
+    self.migration_level = meta["migration_level"] || 20151222144602
   end
 
   def delete_archive
