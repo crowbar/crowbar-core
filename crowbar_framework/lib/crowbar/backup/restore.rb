@@ -23,6 +23,7 @@ module Crowbar
         @backup = backup
         @data = @backup.data
         @version = @backup.version
+        @migration_level = @backup.migration_level
         @status = {}
         @thread = nil
       end
@@ -287,7 +288,7 @@ module Crowbar
 
       def restore_database
         Rails.logger.debug "Restoring Crowbar database"
-        migrate_database(:before)
+        migrate_database(:before, @migration_level)
 
         begin
           SerializationHelper::Base.new(YamlDb::Helper).load(
@@ -315,8 +316,12 @@ module Crowbar
         raw_data.key?("attributes") && raw_data.key?("deployment")
       end
 
-      def migrate_database(time)
-        Crowbar::Migrate.migrate!
+      def migrate_database(time, migration_level = nil)
+        if migration_level
+          Crowbar::Migrate.migrate_to(migration_level)
+        else
+          Crowbar::Migrate.migrate!
+        end
       rescue SQLite3::SQLException => e
         Rails.logger.debug "Failed to migrate database #{time} loading: #{e}"
         set_failed
