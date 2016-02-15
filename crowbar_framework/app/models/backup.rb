@@ -33,6 +33,9 @@ class Backup < ActiveRecord::Base
       message: "allows only letters and numbers"
     }
 
+  validates :migration_level,
+    presence: true
+
   validate :validate_chef_file_extension,
     :validate_version,
     :validate_hostname,
@@ -158,6 +161,7 @@ class Backup < ActiveRecord::Base
     @data = Pathname.new(dir)
     self.version = ENV["CROWBAR_VERSION"]
     self.size = path.size
+    self.migration_level = ActiveRecord::Migrator.current_version
   end
 
   def save_archive
@@ -182,6 +186,7 @@ class Backup < ActiveRecord::Base
     self.version = meta["version"].to_s
     self.size = path.size
     self.created_at = Time.zone.parse(meta["created_at"])
+    self.migration_level = meta["migration_level"]
   end
 
   def delete_archive
