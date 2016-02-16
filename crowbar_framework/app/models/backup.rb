@@ -178,10 +178,6 @@ class Backup < ActiveRecord::Base
       return false
     end
 
-    path.open("wb") do |f|
-      f.write(file.read)
-    end
-
     if data.join("meta.yml").exist?
       meta = YAML.load_file(data.join("meta.yml"))
       self.version = meta["version"].to_s
@@ -192,6 +188,10 @@ class Backup < ActiveRecord::Base
     else
       errors.add(:file_content, I18n.t("backups.index.invalid_file_content"))
       return false
+    end
+
+    path.open("wb") do |f|
+      f.write(file.read)
     end
   end
 
