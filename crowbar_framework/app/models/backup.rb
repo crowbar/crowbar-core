@@ -189,12 +189,17 @@ class Backup < ActiveRecord::Base
       f.write(file.read)
     end
 
-    meta = YAML.load_file(data.join("meta.yml"))
-    self.version = meta["version"].to_s
-    self.size = path.size
-    self.created_at = Time.zone.parse(meta["created_at"])
-    # 20151222144602_create_backups.rb
-    self.migration_level = meta["migration_level"] || 20151222144602
+    if data.join("meta.yml").exist?
+      meta = YAML.load_file(data.join("meta.yml"))
+      self.version = meta["version"].to_s
+      self.size = path.size
+      self.created_at = Time.zone.parse(meta["created_at"])
+      # 20151222144602_create_backups.rb
+      self.migration_level = meta["migration_level"] || 20151222144602
+    else
+      errors.add(:file_content, I18n.t("backups.index.invalid_file_content"))
+      return false
+    end
   end
 
   def delete_archive
