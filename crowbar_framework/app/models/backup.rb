@@ -20,7 +20,8 @@ require "find"
 class Backup < ActiveRecord::Base
   attr_accessor :file
 
-  before_validation :save_or_create_archive, on: :create
+  before_validation :save_archive, on: :create, if: :upload?
+  before_save :create_archive, on: :create, unless: :upload?
   after_validation :delete_archive, unless: -> { errors.empty? }
   after_destroy :delete_archive
 
@@ -32,16 +33,11 @@ class Backup < ActiveRecord::Base
       message: "allows only letters and numbers"
     }
 
-  validates :version,
-    presence: true
-
-  validates :size,
-    presence: true
-
   validate :validate_chef_file_extension,
     :validate_version,
     :validate_hostname,
-    :validate_upload_file_extension
+    :validate_upload_file_extension,
+    if: :upload?
 
   def path
     self.class.image_dir.join(filename)
@@ -120,11 +116,11 @@ class Backup < ActiveRecord::Base
 
   protected
 
-  def save_or_create_archive
-    if name.blank?
-      save_archive
+  def upload?
+    if file.present?
+      true
     else
-      create_archive
+      false
     end
   end
 
