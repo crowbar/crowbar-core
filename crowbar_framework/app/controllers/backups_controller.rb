@@ -64,7 +64,9 @@ class BackupsController < ApplicationController
   def restore
     respond_to do |format|
       format.html do
-        unless @backup.restore(background: false)
+        if @backup.restore(background: false)
+          flash[:success] = I18n.t("backups.index.restore_successful")
+        else
           flash[:alert] = @backup.errors.full_messages.first
         end
         redirect_to backups_path
