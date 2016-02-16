@@ -6,7 +6,6 @@
 //= require jquery/hideShowPassword
 //= require jquery/hideShowClusterConf
 //= require jquery/sparkline
-//= require jquery/spritely
 //= require jquery/ledUpdate
 //= require jquery/queryString
 //= require jquery/listSearch
