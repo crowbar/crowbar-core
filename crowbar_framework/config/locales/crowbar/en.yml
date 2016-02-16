@@ -723,6 +723,7 @@ en:
       upgrade_not_supported: 'Upgrade from %{backup_version} to %{system_version} not supported'
       multiple_restore: 'Restore process is already running'
       version_conflict: 'Cannot restore from different Crowbar version'
+      restore_successful: 'Successfully restored Crowbar'
     validation:
       hostnames_not_identical: 'Hostnames not identical'
       version_too_low: 'Backup version too low'
