@@ -275,7 +275,7 @@ module Crowbar
         sleep(1) until Crowbar::Installer.successful? || Crowbar::Installer.failed?
 
         if Crowbar::Installer.failed?
-          Rails.logger.debug "Crowbar Installation Failed"
+          Rails.logger.error "Crowbar Installation Failed"
           set_failed
           @status[:run_installer] = {
             status: :not_acceptable,
@@ -305,7 +305,7 @@ module Crowbar
             @data.join("crowbar", "database.yml")
           )
         rescue StandardError => e
-          Rails.logger.debug "Failed to load database.yml: #{e}"
+          Rails.logger.error "Failed to load database.yml: #{e}"
           set_failed
           @status[:restore_database] = {
             status: :not_acceptable,
@@ -333,7 +333,7 @@ module Crowbar
           Crowbar::Migrate.migrate!
         end
       rescue SQLite3::SQLException => e
-        Rails.logger.debug "Failed to migrate database #{time} loading: #{e}"
+        Rails.logger.error "Failed to migrate database #{time} loading: #{e}"
         set_failed
         @status[:restore_database] = {
           status: :not_acceptable,
