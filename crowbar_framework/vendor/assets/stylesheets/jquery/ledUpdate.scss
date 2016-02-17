@@ -1,9 +1,9 @@
 .led {
   display: inline-block;
-  width: 17px;
-  height: 17px;
+  width: 16px;
+  height: 16px;
   vertical-align: middle;
-  background: image-url("jquery/ledUpdate/off.png");
+  background: image-url("jquery/ledUpdate/grey.png");
 
   &.ready,
   &.active,
@@ -18,12 +18,12 @@
 
   &.unknown,
   &.off {
-    background: image-url("jquery/ledUpdate/off.png");
+    background: image-url("jquery/ledUpdate/grey.png");
   }
 
   &.none,
   &.diamond {
-    background: image-url("jquery/ledUpdate/none.png");
+    background: image-url("jquery/ledUpdate/white.png");
   }
 
   &.pending,
@@ -45,7 +45,7 @@
   &.unready,
   &.spin,
   &.in_process {
-    background: image-url("jquery/ledUpdate/yellow-green-spin.png");
+    background: image-url("jquery/ledUpdate/animation.png");
   }
 
   &.crowbar_upgrade,
