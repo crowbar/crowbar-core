@@ -1,6 +1,6 @@
 #
 # Copyright 2011-2013, Dell
-# Copyright 2013-2015, SUSE LINUX GmbH
+# Copyright 2013-2016, SUSE LINUX GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,43 +16,56 @@
 #
 
 module Crowbar
-  class Lock::LocalBlocking < Lock
-    def acquire
-      logger.debug("Acquire #{name} lock enter as uid #{Process.uid}")
-      begin
-        @file ||= File.new(path, File::RDWR | File::CREAT, 0644)
-      rescue
-        logger.error("Couldn't open #{path} for locking: #$!")
-        logger.error("cwd was #{Dir.getwd})")
-        raise "Couldn't open #{path} for locking: #$!"
-      end
-      logger.debug("Acquiring #{name} lock")
-      count = 0
-      loop do
-        count += 1
-        logger.debug("Lock #{path} attempt #{count}")
-        if @file.flock(File::LOCK_EX | File::LOCK_NB)
-          break
-        end
-        sleep 1
-      end
-      logger.debug("Acquire #{name} lock exit: #{@file.inspect}")
-      @locked = true
-      self
-    end
+  module Lock
+    class LocalBlocking < Base
+      def acquire
+        logger.debug("Acquire #{name} lock enter as uid #{Process.uid}")
 
-    def release
-      logger.debug("Release #{name} lock enter: #{@file.inspect}")
-      if @file
-        @file.flock(File::LOCK_UN) if locked?
-        @file.close unless @file.closed?
-        @file = nil
-      else
-        logger.warn("release called without valid file")
+        begin
+          @file ||= File.new(path, File::RDWR | File::CREAT, 0644)
+        rescue
+          logger.error("Couldn't open #{path} for locking: #$!")
+          logger.error("cwd was #{Dir.getwd})")
+
+          raise "Couldn't open #{path} for locking: #$!"
+        end
+
+        logger.debug("Acquiring #{name} lock")
+        count = 0
+
+        loop do
+          count += 1
+          logger.debug("Lock #{path} attempt #{count}")
+
+          if @file.flock(File::LOCK_EX | File::LOCK_NB)
+            break
+          end
+
+          sleep 1
+        end
+
+        logger.debug("Acquire #{name} lock exit: #{@file.inspect}")
+        @locked = true
+
+        self
       end
-      logger.debug("Release #{name} lock exit")
-      @locked = false
-      self
+
+      def release
+        logger.debug("Release #{name} lock enter: #{@file.inspect}")
+
+        if @file
+          @file.flock(File::LOCK_UN) if locked?
+          @file.close unless @file.closed?
+          @file = nil
+        else
+          logger.warn("release called without valid file")
+        end
+
+        logger.debug("Release #{name} lock exit")
+        @locked = false
+
+        self
+      end
     end
   end
 end
