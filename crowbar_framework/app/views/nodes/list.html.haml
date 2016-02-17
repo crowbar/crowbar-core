@@ -37,12 +37,6 @@
               = t(".group")
             %th
               = t(".intended_role")
-            - if crowbar_options[:show].include? :bios
-              %th
-                = t(".bios")
-            - if crowbar_options[:show].include? :raid
-              %th
-                = t(".raid")
             %th
               = t(".target_platform")
             %th
@@ -66,12 +60,6 @@
                   = text_field_tag "node[#{node.handle}][group]", node.group, :class => "form-control"
                 %td
                   = t("na")
-                - if crowbar_options[:show].include? :bios
-                  %td
-                    = t("na")
-                - if crowbar_options[:show].include? :raid
-                  %td
-                    = t("na")
                 %td
                   = node.pretty_target_platform
                 %td
@@ -86,12 +74,6 @@
                   = text_field_tag "node[#{node.handle}][group]", node.group(true), :class => "form-control"
                 %td
                   = select_tag "node[#{node.handle}][intended_role]", roles_for_select(node.intended_role), :class => "form-control"
-                - if crowbar_options[:show].include? :bios
-                  %td
-                    = select_tag "node[#{node.handle}][bios]", options_for_select(crowbar_options[:bios], node.bios_set), :class => "form-control"
-                - if crowbar_options[:show].include? :raid
-                  %td
-                    = select_tag "node[#{node.handle}][raid]", options_for_select(crowbar_options[:raid], node.raid_set), :class => "form-control"
                 - if node.allocated?
                   %td
                     = node.pretty_target_platform
