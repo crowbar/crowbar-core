@@ -210,6 +210,11 @@ nodes.each do |n|
       !cluster_zone[:hosts].key?(base_name_no_net) &&
       Chef::Recipe::Barclamp::Inventory.get_network_by_type(n, "admin").nil?
     address = n[:ipaddress]
+    if address.nil?
+      # no ohai can result in this
+      Chef::Log.warn("#{n[:hostname]} in discovered state has no IP address (missing ohai data?); not adding to DNS zone")
+      next
+    end
     time = n[:ohai_time]
     use_temporary = true
 
