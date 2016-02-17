@@ -311,6 +311,7 @@ module Crowbar
             status: :not_acceptable,
             msg: I18n.t("backups.index.restore_database_failed")
           }
+          return
         end
 
         migrate_database(:after)
