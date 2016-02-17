@@ -42,6 +42,20 @@ module TagHelper
     end
   end
 
+  def hidetext_tag(text, options = {})
+    placeholder = "&#149;" * text.length
+
+    content_tag(
+      :span,
+      placeholder.html_safe,
+      data: {
+        hidetext: true,
+        hidetext_secret: text,
+        hidetext_class: options.delete(:class)
+      }
+    )
+  end
+
   def tooltip_tag(text, options = {})
     options[:data] = {
       tooltip: true,
