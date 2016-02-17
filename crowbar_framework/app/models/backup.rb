@@ -72,12 +72,17 @@ class Backup < ActiveRecord::Base
   end
 
   def restore(options = {})
+    background = options.fetch(:background, false)
+    from_upgrade = options.fetch(:from_upgrade, false)
+
     if Crowbar::Backup::Restore.restore_steps_path.exist?
       errors.add(:base, I18n.t("backups.index.multiple_restore"))
       return false
+    elsif !from_upgrade && version != ENV["CROWBAR_VERSION"]
+      errors.add(:base, I18n.t("backups.index.version_conflict"))
+      return false
     end
 
-    background = options.fetch(:background, false)
     upgrade if upgrade?
     if background
       Crowbar::Backup::Restore.new(self).restore_background

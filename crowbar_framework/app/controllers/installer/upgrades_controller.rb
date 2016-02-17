@@ -223,7 +223,7 @@ module Installer
         flash[:info] = t(".multiple_restore")
         true
       else
-        @backup.restore(background: true)
+        @backup.restore(background: true, from_upgrade: true)
       end
     end
 

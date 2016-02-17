@@ -722,6 +722,7 @@ en:
       missing_backup: 'Backup does not exist'
       upgrade_not_supported: 'Upgrade not supported'
       multiple_restore: 'Restore process is already running'
+      version_conflict: 'Cannot restore from different Crowbar version'
     validation:
       hostnames_not_identical: 'Hostnames not identical'
       version_too_low: 'Backup version too low'
