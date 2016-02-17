@@ -384,7 +384,7 @@ en:
       all: 'Show all'
       nochange: 'No Changes'
       license_key: 'License'
-      target_platform: 'Platform'
+      target_platform: 'Target OS'
       target_platform_not_set: 'Not set'
       hint: 'Note: <i>group italics</i> indicates group is set automatically by system'
       allocate_all: 'Allocate?'
