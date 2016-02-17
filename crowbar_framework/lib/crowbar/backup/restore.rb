@@ -288,7 +288,17 @@ module Crowbar
 
       def restore_database
         Rails.logger.debug "Restoring Crowbar database"
-        migrate_database(:before, @migration_level)
+        if ActiveRecord::Migrator.get_all_versions.include? @migration_level
+          migrate_database(:before, @migration_level)
+        else
+          Rails.logger.error "Cannot migrate to #{@migration_level}. Migration unknown"
+          set_failed
+          @status[:restore_database] = {
+            status: :not_acceptable,
+            msg: I18n.t("backups.index.restore_database_failed")
+          }
+          return
+        end
 
         begin
           SerializationHelper::Base.new(YamlDb::Helper).load(
