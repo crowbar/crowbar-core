@@ -22,7 +22,6 @@ gem "haml-rails", "~> 0.9.0"
 gem "sass-rails", "~> 5.0.3"
 gem "puma", "~> 2.11.3"
 gem "active_model_serializers", "~> 0.9.0"
-gem "activeresource", "~> 4.0.0"
 gem "closure-compiler", "~> 1.1.10"
 gem "dotenv", "~> 1.0.2"
 gem "hashie", "~> 3.4.1"
@@ -48,6 +47,9 @@ gem "activerecord-session_store", "~> 0.1.0",
 
 gem "mime-types", "~> 1.25.0",
     require: "mime/types"
+
+gem "activeresource", "~> 4.0.0",
+    require: "active_resource"
 
 unless ENV["PACKAGING"] && ENV["PACKAGING"] == "yes"
   gem "rack-mini-profiler", "~> 0.9.1",
