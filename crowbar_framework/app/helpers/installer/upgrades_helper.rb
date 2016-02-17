@@ -24,7 +24,7 @@ module Installer
           icon_tag(:chevron_right, t(".continue")),
           class: "btn btn-primary disabled",
           data: {
-            blockui: t(".blockui")
+            blockui_click: t(".blockui")
           }
         )
       else
@@ -32,7 +32,7 @@ module Installer
           icon_tag(:chevron_right, t(".continue")),
           class: "btn btn-primary",
           data: {
-            blockui: t(".blockui")
+            blockui_click: t(".blockui")
           }
         )
       end
@@ -46,7 +46,7 @@ module Installer
           icon_tag(:refresh, t(".recheck")),
           class: "btn btn-primary",
           data: {
-            blockui: t(".recheck_blockui")
+            blockui_click: t(".recheck_blockui")
           }
         )
       end

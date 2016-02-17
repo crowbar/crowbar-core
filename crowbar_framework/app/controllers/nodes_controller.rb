@@ -307,19 +307,45 @@ class NodesController < ApplicationController
     action = params[:req]
     name = params[:name] || params[:id]
     machine = NodeObject.find_node_by_name name
-    if machine.nil?
-      render text: "Could not find node '#{name}'", status: 404 and return
-    else
-      case action
-      when "reinstall", "reset", "update", "delete"
-        machine.set_state(action)
-      when "reboot", "shutdown", "poweron", "powercycle", "poweroff", "identify", "allocate"
-        machine.send(action)
-      else
-        render text: "Invalid hit request '#{action}'", status: 500 and return
+    respond_to do |format|
+      format.json do
+        if machine.nil?
+          render json: { error: "Could not find node '#{name}'" }, status: 404
+          return
+        else
+          case action
+          when "reinstall", "reset", "update", "delete"
+            machine.set_state(action)
+          when "reboot", "shutdown", "poweron", "powercycle", "poweroff", "identify", "allocate"
+            machine.send(action)
+          else
+            render json: { error: "Invalid hit request '#{action}'" }, status: 500
+            return
+          end
+          head :ok
+        end
+      end
+
+      format.html do
+        if machine.nil?
+          flash[:alert] = "Could not find node '#{name}'"
+          redirect_to dashboard_url, status: 404
+        else
+          case action
+          when "reinstall", "reset", "update", "delete"
+            machine.set_state(action)
+          when "reboot", "shutdown", "poweron", "powercycle", "poweroff", "identify", "allocate"
+            machine.send(action)
+          else
+            flash[:alert] = "Invalid hit request '#{action}'"
+            redirect_to dashboard_url, status: 500
+            return
+          end
+          flash[:info] = "Attempting '#{action}' for node '#{machine.name}'"
+          redirect_to node_url(machine.handle)
+        end
       end
     end
-    render text: "Attempting '#{action}' for node '#{machine.name}'", status: 200
   end
 
   # GET /nodes/1
