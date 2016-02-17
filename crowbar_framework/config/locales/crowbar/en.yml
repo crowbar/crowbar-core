@@ -708,7 +708,7 @@ en:
       crowbar: 'Crowbar'
       openstack: 'OpenStack'
       restore: 'Restore'
-      restore_warning: 'By pressing OK, you will start the restoration process for the system. Are you sure?'
+      restore_warning: 'Before pressing OK, it is advised to download the Backup(s) as they will not be restored. By pressing OK, you will start the restoration process for the system. Are you sure?'
       restore_database_failed: 'Failed to restore database'
       migrate_database_failed: 'Failed to migrate database'
       blockui_message: 'Restoring from backup. Please wait...'
