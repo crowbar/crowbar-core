@@ -1,6 +1,6 @@
 #
 # Copyright 2011-2013, Dell
-# Copyright 2013-2015, SUSE LINUX GmbH
+# Copyright 2013-2016, SUSE LINUX GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,14 +16,14 @@
 #
 
 module Crowbar
-  class Backup
-    autoload :Base,
-      File.expand_path("../backup/base", __FILE__)
+  module Error
+    autoload :ChefOffline,
+      File.expand_path("../error/chef_offline", __FILE__)
 
-    autoload :Export,
-      File.expand_path("../backup/export", __FILE__)
+    autoload :LockingFailure,
+      File.expand_path("../error/locking_failure", __FILE__)
 
-    autoload :Restore,
-      File.expand_path("../backup/restore", __FILE__)
+    autoload :NotFound,
+      File.expand_path("../error/not_found", __FILE__)
   end
 end

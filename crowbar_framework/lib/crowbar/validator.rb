@@ -1,6 +1,6 @@
 #
 # Copyright 2011-2013, Dell
-# Copyright 2013-2015, SUSE LINUX GmbH
+# Copyright 2013-2016, SUSE LINUX GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,14 +16,11 @@
 #
 
 module Crowbar
-  class Backup
-    autoload :Base,
-      File.expand_path("../backup/base", __FILE__)
+  module Validator
+    autoload :NetworkValidator,
+      File.expand_path("../validator/network_validator", __FILE__)
 
-    autoload :Export,
-      File.expand_path("../backup/export", __FILE__)
-
-    autoload :Restore,
-      File.expand_path("../backup/restore", __FILE__)
+    autoload :PackageNameValidator,
+      File.expand_path("../validator/package_name_validator", __FILE__)
   end
 end
