@@ -366,7 +366,6 @@ en:
       group: 'Group'
       alias: 'Alias'
       public_name: 'Public Name'
-      hw_description: 'Hardware'
       description: 'Description'
       bios: 'BIOS'
       intended_role: 'Intended Role'

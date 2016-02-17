@@ -30,8 +30,6 @@
             %th
               = t(".name")
             %th
-              = t(".hw_description")
-            %th
               = t(".alias")
             %th
               = t(".public_name")
@@ -58,11 +56,8 @@
           - @nodes.sort_by{ |handle, n| n.name }.each do |handle, node|
             %tr
               %td.alias
-                = link_to node.handle, node_path(node.handle), :title => node.ip
-
+                = node_title(node)
               - if node.admin?
-                %td.nowrap
-                  = "#{node.hardware}, #{format_memory(node.memory)}, #{node.nics} Nics"
                 %td
                   = text_field_tag "node[#{node.handle}][alias]", node.alias(true) || t(".admin"), :class => "form-control"
                 %td
@@ -81,12 +76,8 @@
                   = node.pretty_target_platform
                 %td
                   = t "na"
-                %td
-                  = t "na"
 
               - else
-                %td.nowrap
-                  = "#{node.hardware}, #{format_memory(node.memory)}, #{node.nics} Nics"
                 %td
                   = text_field_tag "node[#{node.handle}][alias]", node.alias(true), :class => "form-control"
                 %td
