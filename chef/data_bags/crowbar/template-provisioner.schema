@@ -22,6 +22,13 @@
             "web_port": { "type": "int", "required": true },
             "keep_existing_hostname": { "type": "bool", "required": true },
             "timezone": { "type": "str", "required": true },
+            "discovery": {
+              "type": "map",
+              "required": true,
+              "mapping": {
+                "append": { "type": "str", "required": true }
+              }
+            },
 	    "default_os": { "type": "str", "required": false },
 	    "supported_oses": {
 	      "type": "map",
