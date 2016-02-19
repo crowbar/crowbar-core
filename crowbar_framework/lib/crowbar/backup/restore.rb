@@ -119,6 +119,7 @@ module Crowbar
 
       def cleanup
         self.class.restore_steps_path.delete if self.class.restore_steps_path.exist?
+        @backup.path.delete if @backup.path.exist?
       end
 
       def any_errors?
