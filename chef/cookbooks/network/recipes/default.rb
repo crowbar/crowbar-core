@@ -437,7 +437,7 @@ node.set["crowbar_wall"]["network"] ||= Mash.new
 saved_ifs = Mash.new
 ifs.each {|k,v|
   addrs = v["addresses"].map{ |a|a.to_s }.sort
-  saved_ifs[k]=v
+  saved_ifs[k] = v.dup
   saved_ifs[k]["addresses"] = addrs
 }
 Chef::Log.info("Saving interfaces to crowbar_wall: #{saved_ifs.inspect}")
