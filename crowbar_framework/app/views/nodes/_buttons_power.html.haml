@@ -5,26 +5,24 @@
   - if @node[:platform] != 'windows' || @node.bmc_set?
 
     .dropdown
-      %button.btn.btn-default.dropdown-toggle{ "aria-expanded" => "true", "aria-haspopup" => "true",
-        "data-toggle" => "dropdown", :type => "button", role: "menu" }
+      %button.btn.btn-default.dropdown-toggle{ "aria-expanded" => "true", "aria-haspopup" => "true", "data-toggle" => "dropdown", :type => "button", role: "menu" }
         = t(".actions")
         %span.caret
-      %ul.dropdown-menu{ "aria-labelledby" => "dropdownMenu1" }
+      %ul.dropdown-menu{"aria-labelledby" => "dropdownMenu1"}
         %li{ role: "presentation" }
-          %a{ :href => hit_node_path(@node.handle, "reboot"), role: "menuitem",
-            data: { blockui_click: t(".blockui_message") } }
+          %a{:href => hit_node_path(@node.handle, "reboot"), role: "menuitem", data: { blockui_click: t(".blockui_message_reboot") } }
             = t(".reboot")
         %li{ role: "presentation" }
-          %a{ :href => hit_node_path(@node.handle, "shutdown"), role: "menuitem" }
+          %a{:href => hit_node_path(@node.handle, "shutdown"), role: "menuitem", data: { blockui_click: t(".blockui_message_shutdown") } }
             = t(".shutdown")
-        %li.divider{ :role => "separator" }
+        %li.divider{:role => "separator"}
         - if @node.bmc_set?
           %li{ role: "presentation" }
-            %a{ :href => hit_node_path(@node.handle, "poweron"), role: "menuitem", "data-confirm" => t("are_you_sure") }
+            %a{:href => hit_node_path(@node.handle, "poweron"), role: "menuitem", "data-confirm" => t("are_you_sure") }
               = t(".poweron")
           %li{ role: "presentation" }
-            %a{ :href => hit_node_path(@node.handle, "powercycle"), role: "menuitem" }
-               = t(".powercycle")
+            %a{:href => hit_node_path(@node.handle, "powercycle"), role: "menuitem",  data: { blockui_click: t(".blockui_message_powercycle") } }
+              = t(".powercycle")
           %li{ role: "presentation" }
-            %a{ :href => hit_node_path(@node.handle, "poweroff"), role: "menuitem" }
+            %a{:href => hit_node_path(@node.handle, "poweroff"), role: "menuitem", data: { blockui_click: t(".blockui_message_poweroff") } }
               = t(".poweroff")
