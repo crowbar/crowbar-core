@@ -78,7 +78,7 @@ class Backup < ActiveRecord::Base
     if Crowbar::Backup::Restore.restore_steps_path.exist?
       errors.add(:base, I18n.t("backups.index.multiple_restore"))
       return false
-    elsif !from_upgrade && version != ENV["CROWBAR_VERSION"]
+    elsif !from_upgrade && backup_version != system_version
       errors.add(:base, I18n.t("backups.index.version_conflict"))
       return false
     end
@@ -92,7 +92,7 @@ class Backup < ActiveRecord::Base
   end
 
   def upgrade?
-    ENV["CROWBAR_VERSION"].to_f > version
+    system_version > backup_version
   end
 
   def upgrade
@@ -169,7 +169,7 @@ class Backup < ActiveRecord::Base
     end
 
     meta = YAML.load_file(data.join("meta.yml"))
-    self.version = meta["version"]
+    self.version = meta["version"].to_s
     self.size = path.size
     self.created_at = Time.zone.parse(meta["created_at"])
   end
@@ -177,6 +177,14 @@ class Backup < ActiveRecord::Base
   def delete_archive
     logger.debug "Deleting #{filename} from #{self.class.image_dir}"
     path.delete if path.exist?
+  end
+
+  def backup_version
+    PlatformVersion.new(version)
+  end
+
+  def system_version
+    PlatformVersion.new(ENV["CROWBAR_VERSION"])
   end
 
   def validate_chef_file_extension
@@ -188,9 +196,10 @@ class Backup < ActiveRecord::Base
   end
 
   def validate_version
-    if version < 1.9
+    min_version = PlatformVersion.new("1.9")
+    if backup_version < min_version
       errors.add(:base, I18n.t("backups.validation.version_too_low"))
-    elsif version > ENV["CROWBAR_VERSION"].to_f
+    elsif backup_version > system_version
       errors.add(:base, I18n.t("backups.validation.version_too_high"))
     end
   end
