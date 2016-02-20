@@ -9,6 +9,9 @@
       "access_keys": "",
       "shell_prompt": "USER@HOST:CWD SUFFIX",
       "enable_pxe": true,
+      "discovery": {
+        "append": ""
+      },
       "supported_oses": {
 	"ubuntu-12.04": {
           "x86_64": {
@@ -169,7 +172,7 @@
     "provisioner": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 34,
+      "schema-revision": 35,
       "element_states": {
         "provisioner-bootdisk-finder": [ "hardware-installing" ],
         "provisioner-server": [ "readying", "ready", "applying" ],

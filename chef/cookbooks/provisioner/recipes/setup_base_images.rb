@@ -21,7 +21,7 @@ admin_broadcast = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "a
 domain_name = node[:dns].nil? ? node[:domain] : (node[:dns][:domain] || node[:domain])
 web_port = node[:provisioner][:web_port]
 provisioner_web="http://#{admin_ip}:#{web_port}"
-append_line = ""
+append_line = node[:provisioner][:discovery][:append].dup # We'll modify it inline
 
 tftproot = node[:provisioner][:root]
 
