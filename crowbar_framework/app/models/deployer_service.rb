@@ -70,14 +70,12 @@ class DeployerService < ServiceObject
     # After installation, there is also no client available
     #
     if [
-      "delete",
       "discovering", "discovered",
       "hardware-installing", "hardware-installed",
       "hardware-updating", "hardware-updated",
-      "reset", "reinstall",
-      "burnin-starting", "burnin-finished",
-      "completing", "completed",
       "installing", "installed",
+      "delete",
+      "reset", "reinstall",
       "update"
     ].member?(state) && !node.admin?
       @logger.debug("Deployer transition: should be deleting a client entry for #{node.name}")
