@@ -71,7 +71,7 @@ class DeployerService < ServiceObject
     #
     if [
       "delete",
-      "discovered",
+      "discovering", "discovered",
       "hardware-installing", "hardware-installed",
       "hardware-updating", "hardware-updated",
       "reset", "reinstall",
