@@ -79,7 +79,7 @@ class DeployerService < ServiceObject
       "completing", "completed",
       "installing", "installed",
       "update"
-    ].member?(state) and !node.admin?
+    ].member?(state) && !node.admin?
       @logger.debug("Deployer transition: should be deleting a client entry for #{node.name}")
       client = ClientObject.find_client_by_name node.name
       @logger.debug("Deployer transition: found and trying to delete a client entry for #{node.name}") unless client.nil?
