@@ -106,7 +106,7 @@ ovs_bridge_created = false
 ::Kernel.system("killall -w -q -r '^dhclient'")
 
 # Silly little helper for sorting Crowbar networks.
-# Netowrks that use vlans and bridges will be handled later
+# Networks that use vlans and bridges will be handled later
 def net_weight(net)
   res = 0
   if node["crowbar"]["network"][net]["use_vlan"] then res += 1 end
