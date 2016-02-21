@@ -69,17 +69,24 @@ class DeployerService < ServiceObject
     # The temp booting images need to have clients cleared.
     # After installation, there is also no client available
     #
-    if ["delete","discovered","hardware-installed","hardware-updated",
-        "hardware-installing","hardware-updating","reset","reinstall",
-        "burnin-starting","burnin-finished","completing","completed",
-        "installing","installed","update"].member?(state) and !node.admin?
+    if [
+      "delete",
+      "discovered",
+      "hardware-installing", "hardware-installed",
+      "hardware-updating", "hardware-updated",
+      "reset", "reinstall",
+      "burnin-starting", "burnin-finished",
+      "completing", "completed",
+      "installing", "installed",
+      "update"
+    ].member?(state) and !node.admin?
       @logger.debug("Deployer transition: should be deleting a client entry for #{node.name}")
       client = ClientObject.find_client_by_name node.name
       @logger.debug("Deployer transition: found and trying to delete a client entry for #{node.name}") unless client.nil?
       client.destroy unless client.nil?
 
       # Make sure that the node can be accessed by knife ssh or ssh
-      if ["reset","reinstall","update","delete"].member?(state)
+      if ["reset", "reinstall", "update", "delete"].member?(state)
         system("sudo rm -f /root/.ssh/known_hosts")
       end
     end
