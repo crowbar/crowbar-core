@@ -30,8 +30,11 @@ dhcp_subnet admin_net["subnet"] do
   network admin_net
   pools ["dhcp","host"]
   pool_options pool_opts
-  options ["option domain-name \"#{domain_name}\"",
-            "option domain-name-servers #{admin_ip}",
-            "default-lease-time #{lease_time}",
-            "max-lease-time #{lease_time}"]
+  options [
+    "server-identifier #{admin_ip}",
+    "option domain-name \"#{domain_name}\"",
+    "option domain-name-servers #{admin_ip}",
+    "default-lease-time #{lease_time}",
+    "max-lease-time #{lease_time}"
+  ]
 end
