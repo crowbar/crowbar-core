@@ -34,8 +34,6 @@
             %th
               = t(".public_name")
             %th
-              = t(".group")
-            %th
               = t(".intended_role")
             %th
               = t(".target_platform")
@@ -57,8 +55,6 @@
                 %td
                   = text_field_tag "node[#{node.handle}][public_name]", node.public_name, :class => "form-control"
                 %td
-                  = text_field_tag "node[#{node.handle}][group]", node.group, :class => "form-control"
-                %td
                   = t("na")
                 %td
                   = node.pretty_target_platform
@@ -70,8 +66,6 @@
                   = text_field_tag "node[#{node.handle}][alias]", node.alias(true), :class => "form-control"
                 %td
                   = text_field_tag "node[#{node.handle}][public_name]", node.public_name, :class => "form-control"
-                %td
-                  = text_field_tag "node[#{node.handle}][group]", node.group(true), :class => "form-control"
                 %td
                   = select_tag "node[#{node.handle}][intended_role]", roles_for_select(node.intended_role), :class => "form-control"
                 - if node.allocated?
