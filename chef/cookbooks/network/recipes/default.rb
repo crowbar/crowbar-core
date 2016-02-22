@@ -106,7 +106,7 @@ ovs_bridge_created = false
 ::Kernel.system("killall -w -q -r '^dhclient'")
 
 # Silly little helper for sorting Crowbar networks.
-# Netowrks that use vlans and bridges will be handled later
+# Networks that use vlans and bridges will be handled later
 def net_weight(net)
   res = 0
   if node["crowbar"]["network"][net]["use_vlan"] then res += 1 end
@@ -437,7 +437,7 @@ node.set["crowbar_wall"]["network"] ||= Mash.new
 saved_ifs = Mash.new
 ifs.each {|k,v|
   addrs = v["addresses"].map{ |a|a.to_s }.sort
-  saved_ifs[k]=v
+  saved_ifs[k] = v.dup
   saved_ifs[k]["addresses"] = addrs
 }
 Chef::Log.info("Saving interfaces to crowbar_wall: #{saved_ifs.inspect}")
