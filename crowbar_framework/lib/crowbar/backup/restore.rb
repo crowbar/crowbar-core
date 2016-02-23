@@ -205,7 +205,13 @@ module Crowbar
         end
 
         Rails.logger.info("Re-running chef-client locally to apply changes from imported proposals")
-        system("sudo", "-i", "/opt/dell/bin/single_chef_client.sh")
+        system(
+          "sudo",
+          "-i",
+          "/usr/bin/chef-client",
+          "-L",
+          "#{ENV["CROWBAR_LOG_DIR"]}/chef-client/#{NodeObject.admin_node.name}.log"
+        )
       end
 
       def restore_files(source, destination)
