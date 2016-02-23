@@ -1,0 +1,3362 @@
+
+<methodVessel>
+<inStimuli>
+
+<apeConfiguration ha="0" persistence="0" switch="UCS-FI-M-6324" iom_links="1"/>
+
+
+
+
+<configConfMo
+    dn=""
+    cookie="59"
+    inHierarchical="true">
+
+    <inConfig>
+    <apeManager>
+        <apeNicAgManager>
+            <apePalo
+                mac1="00:FF:D1:01:01:01"
+                mac2="00:FF:D1:01:01:02"
+                name="blade"
+                type="2"
+                fruId="1111"
+                description="Palo Card"
+                serial="QCI1230164011G"
+                hwVersion="1.0"
+                swVersion="3.0(2c)"
+                swBackupVersion="3.0(2c)"
+                swStartupVersion="3.0(2c)"
+            />            
+        </apeNicAgManager>
+    </apeManager>
+    </inConfig>
+</configConfMo>
+
+<configConfMo
+    dn=""
+    cookie="59"
+    inHierarchical="true">
+
+    <inConfig>
+    <apeManager>
+        <apeNicAgManager>
+            <apePalo
+                mac1="00:FF:D2:01:01:01"
+                mac2="00:FF:D2:01:01:02"
+                name="blade"
+                type="2"
+                fruId="1111"
+                description="Palo Card"
+                serial="QCI1230164012G"
+                hwVersion="1.0"
+                swVersion="3.0(2c)"
+                swBackupVersion="3.0(2c)"
+                swStartupVersion="3.0(2c)"
+            />            
+        </apeNicAgManager>
+    </apeManager>
+    </inConfig>
+</configConfMo>
+
+<configConfMo
+    dn=""
+    cookie="59"
+    inHierarchical="true">
+
+    <inConfig>
+    <apeManager>
+        <apeNicAgManager>
+            <apePalo
+                mac1="00:FF:D1:01:02:01"
+                mac2="00:FF:D1:01:02:02"
+                name="blade"
+                type="2"
+                fruId="1111"
+                description="Palo Card"
+                serial="QCI1230164021G"
+                hwVersion="1.0"
+                swVersion="3.0(2c)"
+                swBackupVersion="3.0(2c)"
+                swStartupVersion="3.0(2c)"
+            />            
+        </apeNicAgManager>
+    </apeManager>
+    </inConfig>
+</configConfMo>
+
+<configConfMo
+    dn=""
+    cookie="59"
+    inHierarchical="true">
+
+    <inConfig>
+    <apeManager>
+        <apeNicAgManager>
+            <apePalo
+                mac1="00:FF:D2:01:02:01"
+                mac2="00:FF:D2:01:02:02"
+                name="blade"
+                type="2"
+                fruId="1111"
+                description="Palo Card"
+                serial="QCI1230164022G"
+                hwVersion="1.0"
+                swVersion="3.0(2c)"
+                swBackupVersion="3.0(2c)"
+                swStartupVersion="3.0(2c)"
+            />            
+        </apeNicAgManager>
+    </apeManager>
+    </inConfig>
+</configConfMo>
+
+<configConfMo
+    dn=""
+    cookie="59"
+    inHierarchical="true">
+
+    <inConfig>
+    <apeManager>
+        <apeNicAgManager>
+            <apePalo
+                mac1="00:FF:D1:01:03:01"
+                mac2="00:FF:D1:01:03:02"
+                name="blade"
+                type="2"
+                fruId="1111"
+                description="Palo Card"
+                serial="QCI1230164031G"
+                hwVersion="1.0"
+                swVersion="3.0(2c)"
+                swBackupVersion="3.0(2c)"
+                swStartupVersion="3.0(2c)"
+            />            
+        </apeNicAgManager>
+    </apeManager>
+    </inConfig>
+</configConfMo>
+
+<configConfMo
+    dn=""
+    cookie="59"
+    inHierarchical="true">
+
+    <inConfig>
+    <apeManager>
+        <apeNicAgManager>
+            <apePalo
+                mac1="00:FF:D2:01:03:01"
+                mac2="00:FF:D2:01:03:02"
+                name="blade"
+                type="2"
+                fruId="1111"
+                description="Palo Card"
+                serial="QCI1230164032G"
+                hwVersion="1.0"
+                swVersion="3.0(2c)"
+                swBackupVersion="3.0(2c)"
+                swStartupVersion="3.0(2c)"
+            />            
+        </apeNicAgManager>
+    </apeManager>
+    </inConfig>
+</configConfMo>
+
+<configConfMo
+    dn=""
+    cookie="59"
+    inHierarchical="true">
+
+    <inConfig>
+    <apeManager>
+        <apeNicAgManager>
+            <apePalo
+                mac1="00:FF:D1:01:04:01"
+                mac2="00:FF:D1:01:04:02"
+                name="blade"
+                type="2"
+                fruId="1111"
+                description="Palo Card"
+                serial="QCI1230164041G"
+                hwVersion="1.0"
+                swVersion="3.0(2c)"
+                swBackupVersion="3.0(2c)"
+                swStartupVersion="3.0(2c)"
+            />            
+        </apeNicAgManager>
+    </apeManager>
+    </inConfig>
+</configConfMo>
+
+<configConfMo
+    dn=""
+    cookie="59"
+    inHierarchical="true">
+
+    <inConfig>
+    <apeManager>
+        <apeNicAgManager>
+            <apePalo
+                mac1="00:FF:D2:01:04:01"
+                mac2="00:FF:D2:01:04:02"
+                name="blade"
+                type="2"
+                fruId="1111"
+                description="Palo Card"
+                serial="QCI1230164042G"
+                hwVersion="1.0"
+                swVersion="3.0(2c)"
+                swBackupVersion="3.0(2c)"
+                swStartupVersion="3.0(2c)"
+            />            
+        </apeNicAgManager>
+    </apeManager>
+    </inConfig>
+</configConfMo>
+
+<configConfMo
+    dn=""
+    cookie="59"
+    inHierarchical="true">
+
+    <inConfig>
+    <apeManager>
+        <apeNicAgManager>
+            <apePalo
+                mac1="00:FF:D1:01:05:01"
+                mac2="00:FF:D1:01:05:02"
+                name="blade"
+                type="2"
+                fruId="1111"
+                description="Palo Card"
+                serial="QCI1230164051G"
+                hwVersion="1.0"
+                swVersion="3.0(2c)"
+                swBackupVersion="3.0(2c)"
+                swStartupVersion="3.0(2c)"
+            />            
+        </apeNicAgManager>
+    </apeManager>
+    </inConfig>
+</configConfMo>
+
+<configConfMo
+    dn=""
+    cookie="59"
+    inHierarchical="true">
+
+    <inConfig>
+    <apeManager>
+        <apeNicAgManager>
+            <apePalo
+                mac1="00:FF:D2:01:05:01"
+                mac2="00:FF:D2:01:05:02"
+                name="blade"
+                type="2"
+                fruId="1111"
+                description="Palo Card"
+                serial="QCI1230164052G"
+                hwVersion="1.0"
+                swVersion="3.0(2c)"
+                swBackupVersion="3.0(2c)"
+                swStartupVersion="3.0(2c)"
+            />            
+        </apeNicAgManager>
+    </apeManager>
+    </inConfig>
+</configConfMo>
+
+
+
+
+<apeInsertNewChassis
+    inSwId="A"
+    inSwSlotId="1"
+    inSwPortId="1"
+>
+
+<inConfig>
+   <equipmentChassis id="1" model="UCSB-5108-AC2" vendor="Cisco Systems Inc" serial="1640-1" usrLbl="chassis1">
+
+   
+
+    <equipmentSwitchIOCard id="1" model="UCS-FI-M-6324" vendor="Cisco Systems, Inc." serial="1640-1"  usrLbl="chassis1">
+                     
+        <portGroup type="host">
+            <etherServerIntFIo portId="1" chassisId="1" operState="up" name="dummy"/>
+        </portGroup>
+        
+        <mgmtController model="UCS-FI-M-6324" serial="1" vendor="Cisco Systems Inc" subject="chassis">
+            <mgmtIf id="1">
+            </mgmtIf>
+            <firmwareRunning
+                deployment="system"
+                version="2.3(1a)"/>
+            <firmwareUpdatable
+                version="2.3(1a)"/>
+            <firmwareBootDefinition>
+                <firmwareBootUnit
+                    type="combined"
+                    version="2.3(1a)"/>
+            </firmwareBootDefinition>
+        </mgmtController>
+        
+    </equipmentSwitchIOCard>
+   
+   
+
+    <equipmentFanModule tray="1" id="1" model="N20-FAN5" vendor="Cisco Systems Inc" serial="SAD12144671">
+         <equipmentFan  tray="1" module="1" id="1" model="N20-FAN5" serial="SAD12144671"  vendor="Cisco Systems Inc"/>
+         <equipmentFan  tray="1" module="1" id="2" model="N20-FAN5" serial="SAD12144671"  vendor="Cisco Systems Inc"/>
+    </equipmentFanModule>
+    <equipmentFanModule tray="1" id="2" model="N20-FAN5" vendor="Cisco Systems Inc" serial="SAD12144672">
+         <equipmentFan  tray="1" module="2" id="1" model="N20-FAN5" serial="SAD12144672"  vendor="Cisco Systems Inc"/>
+         <equipmentFan  tray="1" module="2" id="2" model="N20-FAN5" serial="SAD12144672"  vendor="Cisco Systems Inc"/>
+    </equipmentFanModule>
+    <equipmentFanModule tray="1" id="3" model="N20-FAN5" vendor="Cisco Systems Inc" serial="SAD12144673">
+         <equipmentFan  tray="1" module="3" id="1" model="N20-FAN5" serial="SAD12144673"  vendor="Cisco Systems Inc"/>
+         <equipmentFan  tray="1" module="3" id="2" model="N20-FAN5" serial="SAD12144673"  vendor="Cisco Systems Inc"/>
+    </equipmentFanModule>
+    <equipmentFanModule tray="1" id="4" model="N20-FAN5" vendor="Cisco Systems Inc" serial="SAD12144674">
+         <equipmentFan  tray="1" module="4" id="1" model="N20-FAN5" serial="SAD12144674"  vendor="Cisco Systems Inc"/>
+         <equipmentFan  tray="1" module="4" id="2" model="N20-FAN5" serial="SAD12144674"  vendor="Cisco Systems Inc"/>
+    </equipmentFanModule>
+    <equipmentFanModule tray="1" id="5" model="N20-FAN5" vendor="Cisco Systems Inc" serial="SAD12144675">
+         <equipmentFan  tray="1" module="5" id="1" model="N20-FAN5" serial="SAD12144675"  vendor="Cisco Systems Inc"/>
+         <equipmentFan  tray="1" module="5" id="2" model="N20-FAN5" serial="SAD12144675"  vendor="Cisco Systems Inc"/>
+    </equipmentFanModule>
+    <equipmentFanModule tray="1" id="6" model="N20-FAN5" vendor="Cisco Systems Inc" serial="SAD12144676">
+         <equipmentFan  tray="1" module="6" id="1" model="N20-FAN5" serial="SAD12144676"  vendor="Cisco Systems Inc"/>
+         <equipmentFan  tray="1" module="6" id="2" model="N20-FAN5" serial="SAD12144676"  vendor="Cisco Systems Inc"/>
+    </equipmentFanModule>
+    <equipmentFanModule tray="1" id="7" model="N20-FAN5" vendor="Cisco Systems Inc" serial="SAD12144677">
+         <equipmentFan  tray="1" module="7" id="1" model="N20-FAN5" serial="SAD12144677"  vendor="Cisco Systems Inc"/>
+         <equipmentFan  tray="1" module="7" id="2" model="N20-FAN5" serial="SAD12144677"  vendor="Cisco Systems Inc"/>
+    </equipmentFanModule>
+    <equipmentFanModule tray="1" id="8" model="N20-FAN5" vendor="Cisco Systems Inc" serial="SAD12144678">
+         <equipmentFan  tray="1" module="8" id="1" model="N20-FAN5" serial="SAD12144678"  vendor="Cisco Systems Inc"/>
+         <equipmentFan  tray="1" module="8" id="2" model="N20-FAN5" serial="SAD12144678"  vendor="Cisco Systems Inc"/>
+    </equipmentFanModule>
+
+    <equipmentPsu id="1" model="N20-PAC5-2500W" serial="DTH12182264" vendor="Cisco Systems Inc"/>
+    <equipmentPsu id="2" model="N20-PAC5-2500W" serial="DTH12182265" vendor="Cisco Systems Inc"/>
+    <equipmentPsu id="3" model="N20-PAC5-2500W" serial="DTH12182266" vendor="Cisco Systems Inc"/>
+    <equipmentPsu id="4" model="N20-PAC5-2500W" serial="DTH12182267" vendor="Cisco Systems Inc"/>
+
+
+    <computeBlade
+        slotId="1"
+        vendor="Cisco Systems Inc"
+        model="UCSB-B22-M3"
+        serial="3610"
+        operability="operable"
+        adminPower="policy"
+        totalMemory="196608"
+        availableMemory="196608"
+        originalUuid="FFFFFFFF-FFFF-FFDD-DDDD-DDDEEEEE3610"
+        >
+        
+        
+        
+        <mgmtController>
+            <firmwareRunning
+                deployment="system"
+                packageVersion="3.0(2c)"
+                type="blade-controller"
+                version="3.0(2c)"/>
+            <firmwareUpdatable
+                version="3.0(2c)"/>
+            <firmwareBootDefinition>
+                <firmwareBootUnit
+                    type="combined"
+                    version="3.0(2c)"/>
+            </firmwareBootDefinition>
+            <cimcvmediaActualMountList>
+            <cimcvmediaActualMountEntry
+            virtualDiskId = "4"
+            deviceType = "1"
+            imageFileName = "image"
+            imagePath = "path"
+             operMountStatus="4"
+            mountProtocol = "0"
+            userId = "user"
+            password = "pwd"
+            />
+            <cimcvmediaActualMountEntry
+            virtualDiskId = "5"
+            deviceType = "2"
+            imageFileName = "image"
+            imagePath = "path"
+            operMountStatus="4"
+            mountProtocol = "0"
+            userId = "user"
+            password = "pwd"
+            />
+            </cimcvmediaActualMountList>
+
+        </mgmtController>
+
+        <biosUnit
+         rn="bios"
+         model="UCSB-B22-M3"
+         revision=""
+         serial="123"
+
+         vendor="Cisco Systems, Inc.">
+            <firmwareRunning
+             deployment="boot-loader"
+             rn="fw-boot-loader"
+             type="blade-bios"
+             packageVersion="3.0(2c)"
+             version="B00.3.0.2.b.477390817263"/>
+        </biosUnit>
+
+        <computeBoard
+                id="1"
+                vendor="Cisco Systems Inc"
+                model="UCSB-B22-M3"
+                serial="3610">
+        
+    
+            <processorUnit
+                id="1"
+                arch="Xeon"
+                socketDesignation="CPU1"
+                speed="2930"
+                stepping="4"
+                cores="4"
+                coresEnabled="4"
+                threads="8"
+                vendor="Intel(R) Corporation"
+                model="Intel(R) Xeon(R) CPU E5-2470 0 @ 2.30GHz"
+                serial="4706"
+                operability="operable"
+                />
+            <processorUnit
+                id="2"
+                arch="Xeon"
+                socketDesignation="CPU2"
+                speed="2930"
+                stepping="4"
+                cores="4"
+                coresEnabled="4"
+                threads="8"
+                vendor="Intel(R) Corporation"
+                model="Intel(R) Xeon(R) CPU E5-2470 0 @ 2.30GHz"
+                serial="4707"
+                operability="operable"
+                />
+    
+
+    
+
+            <memoryArray
+                     id="1"
+                     maxCapacity="12288"
+                     maxDevices="12"
+                    >
+            
+        
+                <memoryUnit
+                        array="1"
+                        id="1"
+                        bank="1"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="B0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B11"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="2"
+                        bank="2"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="B1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B21"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="3"
+                        bank="3"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="C0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B31"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="4"
+                        bank="4"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="C1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B41"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="5"
+                        bank="5"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="D0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B51"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="6"
+                        bank="6"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="D1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B61"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="7"
+                        bank="7"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="F0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B71"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="8"
+                        bank="8"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="F1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B81"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="9"
+                        bank="9"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="G0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B91"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="10"
+                        bank="10"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="G1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B101"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="11"
+                        bank="11"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="H0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B111"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="12"
+                        bank="12"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="H1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B121"
+                />
+            </memoryArray>
+    
+  
+    
+               <storageController
+                   id = "1"
+                   vendor = "LSI Logic   Symbios Logic"
+                   model = "SAS1064E PCI-Express Fusion-MPT SAS"
+                   type = "SAS"
+                   serial = "315"
+                   pciAddr = "02:05.01" 
+                   >     
+                <storageLocalDisk
+                     id="1"
+                     vendor="TOSHIBA"
+                     model="MBF2600RC"
+                     serial="3857"
+                     size="600127266816"
+                     blockSize="512"
+                     numberOfBlocks="1172123568"
+                     />
+                <storageLocalDisk
+                     id="2"
+                     vendor="TOSHIBA"
+                     model="MBF2600RC"
+                     serial="3858"
+                     size="600127266816"
+                     blockSize="512"
+                     numberOfBlocks="1172123568"
+                     />
+
+            <firmwareRunning
+                deployment="system"
+                packageVersion="3.0(2c)"
+                type="storage-controller"
+                version="3.0(2c)"/>
+            <firmwareRunning
+                deployment="boot-loader"
+                packageVersion="3.0(2c)"
+                type="storage-controller"
+                version="3.0(2c)"/>
+            <firmwareBootDefinition>
+                <firmwareBootUnit
+                    type="combined"
+                    version="3.0(2c)"/>
+            </firmwareBootDefinition>
+
+            </storageController>
+    
+            
+            <storageFlexFlashController
+                id="1"
+                controllerHealth="FFCH_OK"
+                controllerState="FFC_USB_DISCONNECTED"
+                flexFlashType="0"
+                model="FlexFlash-0"
+                operState="operable"
+                physicalDriveCount="2"
+                presence="equipped"
+                virtualDriveCount="1"
+                serial="1234"
+                primarySlotNumber="1"
+                raidSyncSupport="no"
+                readErrorThreshold="0"
+                revision="3.0(2c)"
+                vendor="Cypress"
+                >
+                <storageFlexFlashCard
+                    blockSize="512"
+                    cardHealth="FF_PHY_HEALTH_OK"
+                    cardType="SD253 card"
+                    cardMode="FF_PHY_DRIVE_SECONDARY_ACT"
+                    controllerIndex="1"
+                    id="2"
+                    mfgId="111"
+                    mfgDate="7/12"
+                    model="DST"
+                    operability="operable"
+                    presence="equipped"
+                    readIOErrorCount="0"
+                    revision="1.0"
+                    serial="0x33a5"
+                    size="15806"
+                    slotNumber="2"
+                    vendor="DST"
+                    writeEnable="yes">
+                    <storageFlexFlashDrive
+                        controllerIndex="1"
+                        driveState="RAID"
+                        driveType="HV"
+                        id="1"
+                        name="HV"
+                        operability="operable"
+                        presence="equipped"
+                        size="15806"
+                        slotNumber="255"
+                        visible="yes"/>
+               </storageFlexFlashCard>
+               <storageFlexFlashCard
+                    blockSize="512"
+                    cardHealth="FF_PHY_HEALTH_OK"
+                    cardType="SD253 card"
+                    cardMode="FF_PHY_DRIVE_PRIMARY"
+                    controllerIndex="1"
+                    id="1"
+                    mfgId="111"
+                    mfgDate="7/12"
+                    model="DST"
+                    operability="operable"
+                    presence="equipped"
+                    readIOErrorCount="0"
+                    revision="1.0"
+                    serial="0x33a4"
+                    size="15806"
+                    slotNumber="1"
+                    vendor="DST"
+                    writeEnable="yes" >
+                    <storageFlexFlashDrive
+                        controllerIndex="1"
+                        driveState="RAID"
+                        driveType="HV"
+                        id="1"
+                        name="HV"
+                        operability="operable"
+                        presence="equipped"
+                        size="15806"
+                        slotNumber="255"
+                        visible="yes"/>
+             </storageFlexFlashCard>
+             <firmwareRunning
+                deployment="system"
+                type="flexflash-controller"
+                version="3.0(2c)"
+            />
+            <storageFlexFlashVirtualDrive
+                id="1"
+                raidHealth="FFR_HEALTH_NOT_REPORTING"
+                raidState="FFR_STATE_ENABLED_NOT_PAIRED"
+                revision="0"
+            />               
+            </storageFlexFlashController>        
+        </computeBoard>
+
+        <adaptorUnit
+                id="1"
+                pciSlot="1"
+                operability="operable"
+                vendor="Cisco Systems Inc"
+                model="UCSB-MLOM-40G-01"
+                serial="QCI1230164011G">
+            <!-- IMPORTANT: ExtEthIf and HostEthIf macs should be sequential, e.g. xx:xx:...:01, ...:02, ...:03, ...:04 -->
+            <!--            ExtEthIf.mac should also match with mac1 & mac2 of apeMenlo -->
+            <adaptorExtEthIf
+                id="0"
+                purpose="general"
+                mac="00:FF:D1:01:01:01"/>
+            <adaptorExtEthIf
+                id="1"
+                purpose="general"
+                mac="00:FF:D1:01:01:02"/>
+            <mgmtController>
+                <firmwareRunning
+                    deployment="system"
+                    type="adaptor"
+                    packageVersion="3.0(2c)"
+                    version="3.0(2c)"/>
+                <firmwareUpdatable
+                    version="3.0(2c)"/>
+                <firmwareBootDefinition>
+                    <firmwareBootUnit
+                        type="combined"
+                        version="3.0(2c)"/>
+                </firmwareBootDefinition>
+            </mgmtController>
+        </adaptorUnit>
+        <adaptorUnit
+                id="2"
+                pciSlot="2"
+                operability="operable"
+                vendor="Cisco Systems Inc"
+                model="UCS-VIC-M82-8P"
+                serial="QCI1230164012G">
+            <!-- IMPORTANT: ExtEthIf and HostEthIf macs should be sequential, e.g. xx:xx:...:01, ...:02, ...:03, ...:04 -->
+            <!--            ExtEthIf.mac should also match with mac1 & mac2 of apeMenlo -->
+            <adaptorExtEthIf
+                id="0"
+                purpose="general"
+                mac="00:FF:D2:01:01:01"/>
+            <adaptorExtEthIf
+                id="1"
+                purpose="general"
+                mac="00:FF:D2:01:01:02"/>
+            <mgmtController>
+                <firmwareRunning
+                    deployment="system"
+                    type="adaptor"
+                    packageVersion="3.0(2c)"
+                    version="3.0(2c)"/>
+                <firmwareUpdatable
+                    version="3.0(2c)"/>
+                <firmwareBootDefinition>
+                    <firmwareBootUnit
+                        type="combined"
+                        version="3.0(2c)"/>
+                </firmwareBootDefinition>
+            </mgmtController>
+        </adaptorUnit>
+
+        <osAgent
+            lastCmd="none"
+            lastEvt="none"
+            prevCmd="none"
+            prevEvt="none"
+            type="pnuosAgent"
+        />
+
+        <osInstance rn="os"
+            hostname="localhost"
+            name="GNU-Linux"
+            type="PnuOS"
+            kernelName="Linux"
+            kernelRelease="2.6.9-34.0.2.EL"
+            kernelVersion="SMP"
+            />
+
+        <equipmentLocatorLed id="1"/>
+    </computeBlade>
+
+
+    <computeBlade
+        slotId="2"
+        vendor="Cisco Systems Inc"
+        model="UCSB-B22-M3"
+        serial="3611"
+        operability="operable"
+        adminPower="policy"
+        totalMemory="196608"
+        availableMemory="196608"
+        originalUuid="FFFFFFFF-FFFF-FFDD-DDDD-DDDEEEEE3611"
+        >
+        
+        
+        
+        <mgmtController>
+            <firmwareRunning
+                deployment="system"
+                packageVersion="3.0(2c)"
+                type="blade-controller"
+                version="3.0(2c)"/>
+            <firmwareUpdatable
+                version="3.0(2c)"/>
+            <firmwareBootDefinition>
+                <firmwareBootUnit
+                    type="combined"
+                    version="3.0(2c)"/>
+            </firmwareBootDefinition>
+            <cimcvmediaActualMountList>
+            <cimcvmediaActualMountEntry
+            virtualDiskId = "4"
+            deviceType = "1"
+            imageFileName = "image"
+            imagePath = "path"
+             operMountStatus="4"
+            mountProtocol = "0"
+            userId = "user"
+            password = "pwd"
+            />
+            <cimcvmediaActualMountEntry
+            virtualDiskId = "5"
+            deviceType = "2"
+            imageFileName = "image"
+            imagePath = "path"
+            operMountStatus="4"
+            mountProtocol = "0"
+            userId = "user"
+            password = "pwd"
+            />
+            </cimcvmediaActualMountList>
+
+        </mgmtController>
+
+        <biosUnit
+         rn="bios"
+         model="UCSB-B22-M3"
+         revision=""
+         serial="123"
+
+         vendor="Cisco Systems, Inc.">
+            <firmwareRunning
+             deployment="boot-loader"
+             rn="fw-boot-loader"
+             type="blade-bios"
+             packageVersion="3.0(2c)"
+             version="B00.3.0.2.b.477390817263"/>
+        </biosUnit>
+
+        <computeBoard
+                id="1"
+                vendor="Cisco Systems Inc"
+                model="UCSB-B22-M3"
+                serial="3611">
+        
+    
+            <processorUnit
+                id="1"
+                arch="Xeon"
+                socketDesignation="CPU1"
+                speed="2930"
+                stepping="4"
+                cores="4"
+                coresEnabled="4"
+                threads="8"
+                vendor="Intel(R) Corporation"
+                model="Intel(R) Xeon(R) CPU E5-2470 0 @ 2.30GHz"
+                serial="4708"
+                operability="operable"
+                />
+            <processorUnit
+                id="2"
+                arch="Xeon"
+                socketDesignation="CPU2"
+                speed="2930"
+                stepping="4"
+                cores="4"
+                coresEnabled="4"
+                threads="8"
+                vendor="Intel(R) Corporation"
+                model="Intel(R) Xeon(R) CPU E5-2470 0 @ 2.30GHz"
+                serial="4709"
+                operability="operable"
+                />
+    
+
+    
+
+            <memoryArray
+                     id="1"
+                     maxCapacity="12288"
+                     maxDevices="12"
+                    >
+            
+        
+                <memoryUnit
+                        array="1"
+                        id="1"
+                        bank="1"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="B0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B11"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="2"
+                        bank="2"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="B1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B21"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="3"
+                        bank="3"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="C0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B31"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="4"
+                        bank="4"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="C1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B41"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="5"
+                        bank="5"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="D0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B51"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="6"
+                        bank="6"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="D1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B61"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="7"
+                        bank="7"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="F0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B71"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="8"
+                        bank="8"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="F1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B81"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="9"
+                        bank="9"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="G0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B91"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="10"
+                        bank="10"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="G1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B101"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="11"
+                        bank="11"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="H0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B111"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="12"
+                        bank="12"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="H1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B121"
+                />
+            </memoryArray>
+    
+  
+    
+               <storageController
+                   id = "1"
+                   vendor = "LSI Logic   Symbios Logic"
+                   model = "SAS1064E PCI-Express Fusion-MPT SAS"
+                   type = "SAS"
+                   serial = "316"
+                   pciAddr = "02:05.01" 
+                   >     
+                <storageLocalDisk
+                     id="1"
+                     vendor="TOSHIBA"
+                     model="MBF2600RC"
+                     serial="3859"
+                     size="600127266816"
+                     blockSize="512"
+                     numberOfBlocks="1172123568"
+                     />
+                <storageLocalDisk
+                     id="2"
+                     vendor="TOSHIBA"
+                     model="MBF2600RC"
+                     serial="3860"
+                     size="600127266816"
+                     blockSize="512"
+                     numberOfBlocks="1172123568"
+                     />
+
+            <firmwareRunning
+                deployment="system"
+                packageVersion="3.0(2c)"
+                type="storage-controller"
+                version="3.0(2c)"/>
+            <firmwareRunning
+                deployment="boot-loader"
+                packageVersion="3.0(2c)"
+                type="storage-controller"
+                version="3.0(2c)"/>
+            <firmwareBootDefinition>
+                <firmwareBootUnit
+                    type="combined"
+                    version="3.0(2c)"/>
+            </firmwareBootDefinition>
+
+            </storageController>
+    
+            
+            <storageFlexFlashController
+                id="1"
+                controllerHealth="FFCH_OK"
+                controllerState="FFC_USB_DISCONNECTED"
+                flexFlashType="0"
+                model="FlexFlash-0"
+                operState="operable"
+                physicalDriveCount="2"
+                presence="equipped"
+                virtualDriveCount="1"
+                serial="1234"
+                primarySlotNumber="1"
+                raidSyncSupport="no"
+                readErrorThreshold="0"
+                revision="3.0(2c)"
+                vendor="Cypress"
+                >
+                <storageFlexFlashCard
+                    blockSize="512"
+                    cardHealth="FF_PHY_HEALTH_OK"
+                    cardType="SD253 card"
+                    cardMode="FF_PHY_DRIVE_SECONDARY_ACT"
+                    controllerIndex="1"
+                    id="2"
+                    mfgId="111"
+                    mfgDate="7/12"
+                    model="DST"
+                    operability="operable"
+                    presence="equipped"
+                    readIOErrorCount="0"
+                    revision="1.0"
+                    serial="0x33a5"
+                    size="15806"
+                    slotNumber="2"
+                    vendor="DST"
+                    writeEnable="yes">
+                    <storageFlexFlashDrive
+                        controllerIndex="1"
+                        driveState="RAID"
+                        driveType="HV"
+                        id="1"
+                        name="HV"
+                        operability="operable"
+                        presence="equipped"
+                        size="15806"
+                        slotNumber="255"
+                        visible="yes"/>
+               </storageFlexFlashCard>
+               <storageFlexFlashCard
+                    blockSize="512"
+                    cardHealth="FF_PHY_HEALTH_OK"
+                    cardType="SD253 card"
+                    cardMode="FF_PHY_DRIVE_PRIMARY"
+                    controllerIndex="1"
+                    id="1"
+                    mfgId="111"
+                    mfgDate="7/12"
+                    model="DST"
+                    operability="operable"
+                    presence="equipped"
+                    readIOErrorCount="0"
+                    revision="1.0"
+                    serial="0x33a4"
+                    size="15806"
+                    slotNumber="1"
+                    vendor="DST"
+                    writeEnable="yes" >
+                    <storageFlexFlashDrive
+                        controllerIndex="1"
+                        driveState="RAID"
+                        driveType="HV"
+                        id="1"
+                        name="HV"
+                        operability="operable"
+                        presence="equipped"
+                        size="15806"
+                        slotNumber="255"
+                        visible="yes"/>
+             </storageFlexFlashCard>
+             <firmwareRunning
+                deployment="system"
+                type="flexflash-controller"
+                version="3.0(2c)"
+            />
+            <storageFlexFlashVirtualDrive
+                id="1"
+                raidHealth="FFR_HEALTH_NOT_REPORTING"
+                raidState="FFR_STATE_ENABLED_NOT_PAIRED"
+                revision="0"
+            />               
+            </storageFlexFlashController>        
+        </computeBoard>
+
+        <adaptorUnit
+                id="1"
+                pciSlot="1"
+                operability="operable"
+                vendor="Cisco Systems Inc"
+                model="UCSB-MLOM-40G-01"
+                serial="QCI1230164021G">
+            <!-- IMPORTANT: ExtEthIf and HostEthIf macs should be sequential, e.g. xx:xx:...:01, ...:02, ...:03, ...:04 -->
+            <!--            ExtEthIf.mac should also match with mac1 & mac2 of apeMenlo -->
+            <adaptorExtEthIf
+                id="0"
+                purpose="general"
+                mac="00:FF:D1:01:02:01"/>
+            <adaptorExtEthIf
+                id="1"
+                purpose="general"
+                mac="00:FF:D1:01:02:02"/>
+            <mgmtController>
+                <firmwareRunning
+                    deployment="system"
+                    type="adaptor"
+                    packageVersion="3.0(2c)"
+                    version="3.0(2c)"/>
+                <firmwareUpdatable
+                    version="3.0(2c)"/>
+                <firmwareBootDefinition>
+                    <firmwareBootUnit
+                        type="combined"
+                        version="3.0(2c)"/>
+                </firmwareBootDefinition>
+            </mgmtController>
+        </adaptorUnit>
+        <adaptorUnit
+                id="2"
+                pciSlot="2"
+                operability="operable"
+                vendor="Cisco Systems Inc"
+                model="UCS-VIC-M82-8P"
+                serial="QCI1230164022G">
+            <!-- IMPORTANT: ExtEthIf and HostEthIf macs should be sequential, e.g. xx:xx:...:01, ...:02, ...:03, ...:04 -->
+            <!--            ExtEthIf.mac should also match with mac1 & mac2 of apeMenlo -->
+            <adaptorExtEthIf
+                id="0"
+                purpose="general"
+                mac="00:FF:D2:01:02:01"/>
+            <adaptorExtEthIf
+                id="1"
+                purpose="general"
+                mac="00:FF:D2:01:02:02"/>
+            <mgmtController>
+                <firmwareRunning
+                    deployment="system"
+                    type="adaptor"
+                    packageVersion="3.0(2c)"
+                    version="3.0(2c)"/>
+                <firmwareUpdatable
+                    version="3.0(2c)"/>
+                <firmwareBootDefinition>
+                    <firmwareBootUnit
+                        type="combined"
+                        version="3.0(2c)"/>
+                </firmwareBootDefinition>
+            </mgmtController>
+        </adaptorUnit>
+
+        <osAgent
+            lastCmd="none"
+            lastEvt="none"
+            prevCmd="none"
+            prevEvt="none"
+            type="pnuosAgent"
+        />
+
+        <osInstance rn="os"
+            hostname="localhost"
+            name="GNU-Linux"
+            type="PnuOS"
+            kernelName="Linux"
+            kernelRelease="2.6.9-34.0.2.EL"
+            kernelVersion="SMP"
+            />
+
+        <equipmentLocatorLed id="1"/>
+    </computeBlade>
+
+
+    <computeBlade
+        slotId="3"
+        vendor="Cisco Systems Inc"
+        model="UCSB-B22-M3"
+        serial="3612"
+        operability="operable"
+        adminPower="policy"
+        totalMemory="196608"
+        availableMemory="196608"
+        originalUuid="FFFFFFFF-FFFF-FFDD-DDDD-DDDEEEEE3612"
+        >
+        
+        
+        
+        <mgmtController>
+            <firmwareRunning
+                deployment="system"
+                packageVersion="3.0(2c)"
+                type="blade-controller"
+                version="3.0(2c)"/>
+            <firmwareUpdatable
+                version="3.0(2c)"/>
+            <firmwareBootDefinition>
+                <firmwareBootUnit
+                    type="combined"
+                    version="3.0(2c)"/>
+            </firmwareBootDefinition>
+            <cimcvmediaActualMountList>
+            <cimcvmediaActualMountEntry
+            virtualDiskId = "4"
+            deviceType = "1"
+            imageFileName = "image"
+            imagePath = "path"
+             operMountStatus="4"
+            mountProtocol = "0"
+            userId = "user"
+            password = "pwd"
+            />
+            <cimcvmediaActualMountEntry
+            virtualDiskId = "5"
+            deviceType = "2"
+            imageFileName = "image"
+            imagePath = "path"
+            operMountStatus="4"
+            mountProtocol = "0"
+            userId = "user"
+            password = "pwd"
+            />
+            </cimcvmediaActualMountList>
+
+        </mgmtController>
+
+        <biosUnit
+         rn="bios"
+         model="UCSB-B22-M3"
+         revision=""
+         serial="123"
+
+         vendor="Cisco Systems, Inc.">
+            <firmwareRunning
+             deployment="boot-loader"
+             rn="fw-boot-loader"
+             type="blade-bios"
+             packageVersion="3.0(2c)"
+             version="B00.3.0.2.b.477390817263"/>
+        </biosUnit>
+
+        <computeBoard
+                id="1"
+                vendor="Cisco Systems Inc"
+                model="UCSB-B22-M3"
+                serial="3612">
+        
+    
+            <processorUnit
+                id="1"
+                arch="Xeon"
+                socketDesignation="CPU1"
+                speed="2930"
+                stepping="4"
+                cores="4"
+                coresEnabled="4"
+                threads="8"
+                vendor="Intel(R) Corporation"
+                model="Intel(R) Xeon(R) CPU E5-2470 0 @ 2.30GHz"
+                serial="4710"
+                operability="operable"
+                />
+            <processorUnit
+                id="2"
+                arch="Xeon"
+                socketDesignation="CPU2"
+                speed="2930"
+                stepping="4"
+                cores="4"
+                coresEnabled="4"
+                threads="8"
+                vendor="Intel(R) Corporation"
+                model="Intel(R) Xeon(R) CPU E5-2470 0 @ 2.30GHz"
+                serial="4711"
+                operability="operable"
+                />
+    
+
+    
+
+            <memoryArray
+                     id="1"
+                     maxCapacity="12288"
+                     maxDevices="12"
+                    >
+            
+        
+                <memoryUnit
+                        array="1"
+                        id="1"
+                        bank="1"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="B0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B11"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="2"
+                        bank="2"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="B1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B21"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="3"
+                        bank="3"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="C0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B31"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="4"
+                        bank="4"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="C1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B41"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="5"
+                        bank="5"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="D0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B51"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="6"
+                        bank="6"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="D1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B61"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="7"
+                        bank="7"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="F0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B71"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="8"
+                        bank="8"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="F1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B81"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="9"
+                        bank="9"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="G0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B91"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="10"
+                        bank="10"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="G1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B101"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="11"
+                        bank="11"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="H0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B111"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="12"
+                        bank="12"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="H1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B121"
+                />
+            </memoryArray>
+    
+  
+    
+               <storageController
+                   id = "1"
+                   vendor = "LSI Logic   Symbios Logic"
+                   model = "SAS1064E PCI-Express Fusion-MPT SAS"
+                   type = "SAS"
+                   serial = "317"
+                   pciAddr = "02:05.01" 
+                   >     
+                <storageLocalDisk
+                     id="1"
+                     vendor="TOSHIBA"
+                     model="MBF2600RC"
+                     serial="3861"
+                     size="600127266816"
+                     blockSize="512"
+                     numberOfBlocks="1172123568"
+                     />
+                <storageLocalDisk
+                     id="2"
+                     vendor="TOSHIBA"
+                     model="MBF2600RC"
+                     serial="3862"
+                     size="600127266816"
+                     blockSize="512"
+                     numberOfBlocks="1172123568"
+                     />
+
+            <firmwareRunning
+                deployment="system"
+                packageVersion="3.0(2c)"
+                type="storage-controller"
+                version="3.0(2c)"/>
+            <firmwareRunning
+                deployment="boot-loader"
+                packageVersion="3.0(2c)"
+                type="storage-controller"
+                version="3.0(2c)"/>
+            <firmwareBootDefinition>
+                <firmwareBootUnit
+                    type="combined"
+                    version="3.0(2c)"/>
+            </firmwareBootDefinition>
+
+            </storageController>
+    
+            
+            <storageFlexFlashController
+                id="1"
+                controllerHealth="FFCH_OK"
+                controllerState="FFC_USB_DISCONNECTED"
+                flexFlashType="0"
+                model="FlexFlash-0"
+                operState="operable"
+                physicalDriveCount="2"
+                presence="equipped"
+                virtualDriveCount="1"
+                serial="1234"
+                primarySlotNumber="1"
+                raidSyncSupport="no"
+                readErrorThreshold="0"
+                revision="3.0(2c)"
+                vendor="Cypress"
+                >
+                <storageFlexFlashCard
+                    blockSize="512"
+                    cardHealth="FF_PHY_HEALTH_OK"
+                    cardType="SD253 card"
+                    cardMode="FF_PHY_DRIVE_SECONDARY_ACT"
+                    controllerIndex="1"
+                    id="2"
+                    mfgId="111"
+                    mfgDate="7/12"
+                    model="DST"
+                    operability="operable"
+                    presence="equipped"
+                    readIOErrorCount="0"
+                    revision="1.0"
+                    serial="0x33a5"
+                    size="15806"
+                    slotNumber="2"
+                    vendor="DST"
+                    writeEnable="yes">
+                    <storageFlexFlashDrive
+                        controllerIndex="1"
+                        driveState="RAID"
+                        driveType="HV"
+                        id="1"
+                        name="HV"
+                        operability="operable"
+                        presence="equipped"
+                        size="15806"
+                        slotNumber="255"
+                        visible="yes"/>
+               </storageFlexFlashCard>
+               <storageFlexFlashCard
+                    blockSize="512"
+                    cardHealth="FF_PHY_HEALTH_OK"
+                    cardType="SD253 card"
+                    cardMode="FF_PHY_DRIVE_PRIMARY"
+                    controllerIndex="1"
+                    id="1"
+                    mfgId="111"
+                    mfgDate="7/12"
+                    model="DST"
+                    operability="operable"
+                    presence="equipped"
+                    readIOErrorCount="0"
+                    revision="1.0"
+                    serial="0x33a4"
+                    size="15806"
+                    slotNumber="1"
+                    vendor="DST"
+                    writeEnable="yes" >
+                    <storageFlexFlashDrive
+                        controllerIndex="1"
+                        driveState="RAID"
+                        driveType="HV"
+                        id="1"
+                        name="HV"
+                        operability="operable"
+                        presence="equipped"
+                        size="15806"
+                        slotNumber="255"
+                        visible="yes"/>
+             </storageFlexFlashCard>
+             <firmwareRunning
+                deployment="system"
+                type="flexflash-controller"
+                version="3.0(2c)"
+            />
+            <storageFlexFlashVirtualDrive
+                id="1"
+                raidHealth="FFR_HEALTH_NOT_REPORTING"
+                raidState="FFR_STATE_ENABLED_NOT_PAIRED"
+                revision="0"
+            />               
+            </storageFlexFlashController>        
+        </computeBoard>
+
+        <adaptorUnit
+                id="1"
+                pciSlot="1"
+                operability="operable"
+                vendor="Cisco Systems Inc"
+                model="UCSB-MLOM-40G-01"
+                serial="QCI1230164031G">
+            <!-- IMPORTANT: ExtEthIf and HostEthIf macs should be sequential, e.g. xx:xx:...:01, ...:02, ...:03, ...:04 -->
+            <!--            ExtEthIf.mac should also match with mac1 & mac2 of apeMenlo -->
+            <adaptorExtEthIf
+                id="0"
+                purpose="general"
+                mac="00:FF:D1:01:03:01"/>
+            <adaptorExtEthIf
+                id="1"
+                purpose="general"
+                mac="00:FF:D1:01:03:02"/>
+            <mgmtController>
+                <firmwareRunning
+                    deployment="system"
+                    type="adaptor"
+                    packageVersion="3.0(2c)"
+                    version="3.0(2c)"/>
+                <firmwareUpdatable
+                    version="3.0(2c)"/>
+                <firmwareBootDefinition>
+                    <firmwareBootUnit
+                        type="combined"
+                        version="3.0(2c)"/>
+                </firmwareBootDefinition>
+            </mgmtController>
+        </adaptorUnit>
+        <adaptorUnit
+                id="2"
+                pciSlot="2"
+                operability="operable"
+                vendor="Cisco Systems Inc"
+                model="UCS-VIC-M82-8P"
+                serial="QCI1230164032G">
+            <!-- IMPORTANT: ExtEthIf and HostEthIf macs should be sequential, e.g. xx:xx:...:01, ...:02, ...:03, ...:04 -->
+            <!--            ExtEthIf.mac should also match with mac1 & mac2 of apeMenlo -->
+            <adaptorExtEthIf
+                id="0"
+                purpose="general"
+                mac="00:FF:D2:01:03:01"/>
+            <adaptorExtEthIf
+                id="1"
+                purpose="general"
+                mac="00:FF:D2:01:03:02"/>
+            <mgmtController>
+                <firmwareRunning
+                    deployment="system"
+                    type="adaptor"
+                    packageVersion="3.0(2c)"
+                    version="3.0(2c)"/>
+                <firmwareUpdatable
+                    version="3.0(2c)"/>
+                <firmwareBootDefinition>
+                    <firmwareBootUnit
+                        type="combined"
+                        version="3.0(2c)"/>
+                </firmwareBootDefinition>
+            </mgmtController>
+        </adaptorUnit>
+
+        <osAgent
+            lastCmd="none"
+            lastEvt="none"
+            prevCmd="none"
+            prevEvt="none"
+            type="pnuosAgent"
+        />
+
+        <osInstance rn="os"
+            hostname="localhost"
+            name="GNU-Linux"
+            type="PnuOS"
+            kernelName="Linux"
+            kernelRelease="2.6.9-34.0.2.EL"
+            kernelVersion="SMP"
+            />
+
+        <equipmentLocatorLed id="1"/>
+    </computeBlade>
+
+
+    <computeBlade
+        slotId="4"
+        vendor="Cisco Systems Inc"
+        model="UCSB-B22-M3"
+        serial="3613"
+        operability="operable"
+        adminPower="policy"
+        totalMemory="196608"
+        availableMemory="196608"
+        originalUuid="FFFFFFFF-FFFF-FFDD-DDDD-DDDEEEEE3613"
+        >
+        
+        
+        
+        <mgmtController>
+            <firmwareRunning
+                deployment="system"
+                packageVersion="3.0(2c)"
+                type="blade-controller"
+                version="3.0(2c)"/>
+            <firmwareUpdatable
+                version="3.0(2c)"/>
+            <firmwareBootDefinition>
+                <firmwareBootUnit
+                    type="combined"
+                    version="3.0(2c)"/>
+            </firmwareBootDefinition>
+            <cimcvmediaActualMountList>
+            <cimcvmediaActualMountEntry
+            virtualDiskId = "4"
+            deviceType = "1"
+            imageFileName = "image"
+            imagePath = "path"
+             operMountStatus="4"
+            mountProtocol = "0"
+            userId = "user"
+            password = "pwd"
+            />
+            <cimcvmediaActualMountEntry
+            virtualDiskId = "5"
+            deviceType = "2"
+            imageFileName = "image"
+            imagePath = "path"
+            operMountStatus="4"
+            mountProtocol = "0"
+            userId = "user"
+            password = "pwd"
+            />
+            </cimcvmediaActualMountList>
+
+        </mgmtController>
+
+        <biosUnit
+         rn="bios"
+         model="UCSB-B22-M3"
+         revision=""
+         serial="123"
+
+         vendor="Cisco Systems, Inc.">
+            <firmwareRunning
+             deployment="boot-loader"
+             rn="fw-boot-loader"
+             type="blade-bios"
+             packageVersion="3.0(2c)"
+             version="B00.3.0.2.b.477390817263"/>
+        </biosUnit>
+
+        <computeBoard
+                id="1"
+                vendor="Cisco Systems Inc"
+                model="UCSB-B22-M3"
+                serial="3613">
+        
+    
+            <processorUnit
+                id="1"
+                arch="Xeon"
+                socketDesignation="CPU1"
+                speed="2930"
+                stepping="4"
+                cores="4"
+                coresEnabled="4"
+                threads="8"
+                vendor="Intel(R) Corporation"
+                model="Intel(R) Xeon(R) CPU E5-2470 0 @ 2.30GHz"
+                serial="4712"
+                operability="operable"
+                />
+            <processorUnit
+                id="2"
+                arch="Xeon"
+                socketDesignation="CPU2"
+                speed="2930"
+                stepping="4"
+                cores="4"
+                coresEnabled="4"
+                threads="8"
+                vendor="Intel(R) Corporation"
+                model="Intel(R) Xeon(R) CPU E5-2470 0 @ 2.30GHz"
+                serial="4713"
+                operability="operable"
+                />
+    
+
+    
+
+            <memoryArray
+                     id="1"
+                     maxCapacity="12288"
+                     maxDevices="12"
+                    >
+            
+        
+                <memoryUnit
+                        array="1"
+                        id="1"
+                        bank="1"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="B0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B11"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="2"
+                        bank="2"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="B1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B21"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="3"
+                        bank="3"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="C0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B31"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="4"
+                        bank="4"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="C1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B41"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="5"
+                        bank="5"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="D0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B51"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="6"
+                        bank="6"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="D1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B61"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="7"
+                        bank="7"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="F0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B71"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="8"
+                        bank="8"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="F1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B81"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="9"
+                        bank="9"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="G0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B91"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="10"
+                        bank="10"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="G1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B101"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="11"
+                        bank="11"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="H0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B111"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="12"
+                        bank="12"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="H1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xCE00"
+                        model="M393B2G70BH0-YK0"
+                        serial="0x06044B121"
+                />
+            </memoryArray>
+    
+  
+    
+               <storageController
+                   id = "1"
+                   vendor = "LSI Logic   Symbios Logic"
+                   model = "SAS1064E PCI-Express Fusion-MPT SAS"
+                   type = "SAS"
+                   serial = "318"
+                   pciAddr = "02:05.01" 
+                   >     
+                <storageLocalDisk
+                     id="1"
+                     vendor="TOSHIBA"
+                     model="MBF2600RC"
+                     serial="3863"
+                     size="600127266816"
+                     blockSize="512"
+                     numberOfBlocks="1172123568"
+                     />
+                <storageLocalDisk
+                     id="2"
+                     vendor="TOSHIBA"
+                     model="MBF2600RC"
+                     serial="3864"
+                     size="600127266816"
+                     blockSize="512"
+                     numberOfBlocks="1172123568"
+                     />
+
+            <firmwareRunning
+                deployment="system"
+                packageVersion="3.0(2c)"
+                type="storage-controller"
+                version="3.0(2c)"/>
+            <firmwareRunning
+                deployment="boot-loader"
+                packageVersion="3.0(2c)"
+                type="storage-controller"
+                version="3.0(2c)"/>
+            <firmwareBootDefinition>
+                <firmwareBootUnit
+                    type="combined"
+                    version="3.0(2c)"/>
+            </firmwareBootDefinition>
+
+            </storageController>
+    
+            
+            <storageFlexFlashController
+                id="1"
+                controllerHealth="FFCH_OK"
+                controllerState="FFC_USB_DISCONNECTED"
+                flexFlashType="0"
+                model="FlexFlash-0"
+                operState="operable"
+                physicalDriveCount="2"
+                presence="equipped"
+                virtualDriveCount="1"
+                serial="1234"
+                primarySlotNumber="1"
+                raidSyncSupport="no"
+                readErrorThreshold="0"
+                revision="3.0(2c)"
+                vendor="Cypress"
+                >
+                <storageFlexFlashCard
+                    blockSize="512"
+                    cardHealth="FF_PHY_HEALTH_OK"
+                    cardType="SD253 card"
+                    cardMode="FF_PHY_DRIVE_SECONDARY_ACT"
+                    controllerIndex="1"
+                    id="2"
+                    mfgId="111"
+                    mfgDate="7/12"
+                    model="DST"
+                    operability="operable"
+                    presence="equipped"
+                    readIOErrorCount="0"
+                    revision="1.0"
+                    serial="0x33a5"
+                    size="15806"
+                    slotNumber="2"
+                    vendor="DST"
+                    writeEnable="yes">
+                    <storageFlexFlashDrive
+                        controllerIndex="1"
+                        driveState="RAID"
+                        driveType="HV"
+                        id="1"
+                        name="HV"
+                        operability="operable"
+                        presence="equipped"
+                        size="15806"
+                        slotNumber="255"
+                        visible="yes"/>
+               </storageFlexFlashCard>
+               <storageFlexFlashCard
+                    blockSize="512"
+                    cardHealth="FF_PHY_HEALTH_OK"
+                    cardType="SD253 card"
+                    cardMode="FF_PHY_DRIVE_PRIMARY"
+                    controllerIndex="1"
+                    id="1"
+                    mfgId="111"
+                    mfgDate="7/12"
+                    model="DST"
+                    operability="operable"
+                    presence="equipped"
+                    readIOErrorCount="0"
+                    revision="1.0"
+                    serial="0x33a4"
+                    size="15806"
+                    slotNumber="1"
+                    vendor="DST"
+                    writeEnable="yes" >
+                    <storageFlexFlashDrive
+                        controllerIndex="1"
+                        driveState="RAID"
+                        driveType="HV"
+                        id="1"
+                        name="HV"
+                        operability="operable"
+                        presence="equipped"
+                        size="15806"
+                        slotNumber="255"
+                        visible="yes"/>
+             </storageFlexFlashCard>
+             <firmwareRunning
+                deployment="system"
+                type="flexflash-controller"
+                version="3.0(2c)"
+            />
+            <storageFlexFlashVirtualDrive
+                id="1"
+                raidHealth="FFR_HEALTH_NOT_REPORTING"
+                raidState="FFR_STATE_ENABLED_NOT_PAIRED"
+                revision="0"
+            />               
+            </storageFlexFlashController>        
+        </computeBoard>
+
+        <adaptorUnit
+                id="1"
+                pciSlot="1"
+                operability="operable"
+                vendor="Cisco Systems Inc"
+                model="UCSB-MLOM-40G-01"
+                serial="QCI1230164041G">
+            <!-- IMPORTANT: ExtEthIf and HostEthIf macs should be sequential, e.g. xx:xx:...:01, ...:02, ...:03, ...:04 -->
+            <!--            ExtEthIf.mac should also match with mac1 & mac2 of apeMenlo -->
+            <adaptorExtEthIf
+                id="0"
+                purpose="general"
+                mac="00:FF:D1:01:04:01"/>
+            <adaptorExtEthIf
+                id="1"
+                purpose="general"
+                mac="00:FF:D1:01:04:02"/>
+            <mgmtController>
+                <firmwareRunning
+                    deployment="system"
+                    type="adaptor"
+                    packageVersion="3.0(2c)"
+                    version="3.0(2c)"/>
+                <firmwareUpdatable
+                    version="3.0(2c)"/>
+                <firmwareBootDefinition>
+                    <firmwareBootUnit
+                        type="combined"
+                        version="3.0(2c)"/>
+                </firmwareBootDefinition>
+            </mgmtController>
+        </adaptorUnit>
+        <adaptorUnit
+                id="2"
+                pciSlot="2"
+                operability="operable"
+                vendor="Cisco Systems Inc"
+                model="UCS-VIC-M82-8P"
+                serial="QCI1230164042G">
+            <!-- IMPORTANT: ExtEthIf and HostEthIf macs should be sequential, e.g. xx:xx:...:01, ...:02, ...:03, ...:04 -->
+            <!--            ExtEthIf.mac should also match with mac1 & mac2 of apeMenlo -->
+            <adaptorExtEthIf
+                id="0"
+                purpose="general"
+                mac="00:FF:D2:01:04:01"/>
+            <adaptorExtEthIf
+                id="1"
+                purpose="general"
+                mac="00:FF:D2:01:04:02"/>
+            <mgmtController>
+                <firmwareRunning
+                    deployment="system"
+                    type="adaptor"
+                    packageVersion="3.0(2c)"
+                    version="3.0(2c)"/>
+                <firmwareUpdatable
+                    version="3.0(2c)"/>
+                <firmwareBootDefinition>
+                    <firmwareBootUnit
+                        type="combined"
+                        version="3.0(2c)"/>
+                </firmwareBootDefinition>
+            </mgmtController>
+        </adaptorUnit>
+
+        <osAgent
+            lastCmd="none"
+            lastEvt="none"
+            prevCmd="none"
+            prevEvt="none"
+            type="pnuosAgent"
+        />
+
+        <osInstance rn="os"
+            hostname="localhost"
+            name="GNU-Linux"
+            type="PnuOS"
+            kernelName="Linux"
+            kernelRelease="2.6.9-34.0.2.EL"
+            kernelVersion="SMP"
+            />
+
+        <equipmentLocatorLed id="1"/>
+    </computeBlade>
+
+
+    <computeBlade
+        slotId="5"
+        vendor="Cisco Systems Inc"
+        model="UCSB-B200-M3"
+        serial="3614"
+        operability="operable"
+        adminPower="policy"
+        totalMemory="393216"
+        availableMemory="393216"
+        originalUuid="FFFFFFFF-FFFF-FFDD-DDDD-DDDEEEEE3614"
+        >
+        
+        
+        
+        <mgmtController>
+            <firmwareRunning
+                deployment="system"
+                packageVersion="3.0(2c)"
+                type="blade-controller"
+                version="3.0(2c)"/>
+            <firmwareUpdatable
+                version="3.0(2c)"/>
+            <firmwareBootDefinition>
+                <firmwareBootUnit
+                    type="combined"
+                    version="3.0(2c)"/>
+            </firmwareBootDefinition>
+            <cimcvmediaActualMountList>
+            <cimcvmediaActualMountEntry
+            virtualDiskId = "4"
+            deviceType = "1"
+            imageFileName = "image"
+            imagePath = "path"
+             operMountStatus="4"
+            mountProtocol = "0"
+            userId = "user"
+            password = "pwd"
+            />
+            <cimcvmediaActualMountEntry
+            virtualDiskId = "5"
+            deviceType = "2"
+            imageFileName = "image"
+            imagePath = "path"
+            operMountStatus="4"
+            mountProtocol = "0"
+            userId = "user"
+            password = "pwd"
+            />
+            </cimcvmediaActualMountList>
+
+        </mgmtController>
+
+        <biosUnit
+         rn="bios"
+         model="UCSB-B200-M3"
+         revision=""
+         serial="123"
+
+         vendor="Cisco Systems, Inc.">
+            <firmwareRunning
+             deployment="boot-loader"
+             rn="fw-boot-loader"
+             type="blade-bios"
+             packageVersion="3.0(2c)"
+             version="B00.3.0.2.b.477390817263"/>
+        </biosUnit>
+
+        <computeBoard
+                id="1"
+                vendor="Cisco Systems Inc"
+                model="UCSB-B200-M3"
+                serial="3614">
+        
+    
+            <processorUnit
+                id="1"
+                arch="Xeon"
+                socketDesignation="CPU1"
+                speed="2930"
+                stepping="4"
+                cores="4"
+                coresEnabled="4"
+                threads="8"
+                vendor="Intel(R) Corporation"
+                model="Intel(R) Xeon(R) CPU E5-2680 0 @ 2.70GHz"
+                serial="4714"
+                operability="operable"
+                />
+            <processorUnit
+                id="2"
+                arch="Xeon"
+                socketDesignation="CPU2"
+                speed="2930"
+                stepping="4"
+                cores="4"
+                coresEnabled="4"
+                threads="8"
+                vendor="Intel(R) Corporation"
+                model="Intel(R) Xeon(R) CPU E5-2680 0 @ 2.70GHz"
+                serial="4715"
+                operability="operable"
+                />
+    
+
+    
+
+            <memoryArray
+                     id="1"
+                     maxCapacity="12288"
+                     maxDevices="12"
+                    >
+            
+        
+                <memoryUnit
+                        array="1"
+                        id="1"
+                        bank="1"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="A0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xAD00"
+                        model="HMT42GR7MFR4A-PB"
+                        serial="0x06044B11"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="2"
+                        bank="2"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="A1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xAD00"
+                        model="HMT42GR7MFR4A-PB"
+                        serial="0x06044B21"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="3"
+                        bank="3"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="A2"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xAD00"
+                        model="HMT42GR7MFR4A-PB"
+                        serial="0x06044B31"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="4"
+                        bank="4"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="B0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xAD00"
+                        model="HMT42GR7MFR4A-PB"
+                        serial="0x06044B41"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="5"
+                        bank="5"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="B1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xAD00"
+                        model="HMT42GR7MFR4A-PB"
+                        serial="0x06044B51"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="6"
+                        bank="6"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="B2"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xAD00"
+                        model="HMT42GR7MFR4A-PB"
+                        serial="0x06044B61"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="7"
+                        bank="7"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="C0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xAD00"
+                        model="HMT42GR7MFR4A-PB"
+                        serial="0x06044B71"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="8"
+                        bank="8"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="C1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xAD00"
+                        model="HMT42GR7MFR4A-PB"
+                        serial="0x06044B81"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="9"
+                        bank="9"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="C2"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xAD00"
+                        model="HMT42GR7MFR4A-PB"
+                        serial="0x06044B91"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="10"
+                        bank="10"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="D0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xAD00"
+                        model="HMT42GR7MFR4A-PB"
+                        serial="0x06044B101"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="11"
+                        bank="11"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="D1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xAD00"
+                        model="HMT42GR7MFR4A-PB"
+                        serial="0x06044B111"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="12"
+                        bank="12"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="D2"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xAD00"
+                        model="HMT42GR7MFR4A-PB"
+                        serial="0x06044B121"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="13"
+                        bank="13"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="E0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xAD00"
+                        model="HMT42GR7MFR4A-PB"
+                        serial="0x06044B131"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="14"
+                        bank="14"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="E1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xAD00"
+                        model="HMT42GR7MFR4A-PB"
+                        serial="0x06044B141"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="15"
+                        bank="15"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="E2"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xAD00"
+                        model="HMT42GR7MFR4A-PB"
+                        serial="0x06044B151"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="16"
+                        bank="16"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="F0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xAD00"
+                        model="HMT42GR7MFR4A-PB"
+                        serial="0x06044B161"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="17"
+                        bank="17"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="F1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xAD00"
+                        model="HMT42GR7MFR4A-PB"
+                        serial="0x06044B171"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="18"
+                        bank="18"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="F2"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xAD00"
+                        model="HMT42GR7MFR4A-PB"
+                        serial="0x06044B181"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="19"
+                        bank="19"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="G0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xAD00"
+                        model="HMT42GR7MFR4A-PB"
+                        serial="0x06044B191"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="20"
+                        bank="20"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="G1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xAD00"
+                        model="HMT42GR7MFR4A-PB"
+                        serial="0x06044B201"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="21"
+                        bank="21"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="G2"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xAD00"
+                        model="HMT42GR7MFR4A-PB"
+                        serial="0x06044B211"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="22"
+                        bank="22"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="H0"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xAD00"
+                        model="HMT42GR7MFR4A-PB"
+                        serial="0x06044B221"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="23"
+                        bank="23"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="H1"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xAD00"
+                        model="HMT42GR7MFR4A-PB"
+                        serial="0x06044B231"
+                />
+
+        
+                <memoryUnit
+                        array="1"
+                        id="24"
+                        bank="24"
+                        capacity="16384"
+                        width="64"
+                        clock="1600"
+                        set="1"
+                        formFactor="FB-DIMM"
+                        location="H2"
+                        type="Other"
+                        latency="1.2"
+                        vendor="0xAD00"
+                        model="HMT42GR7MFR4A-PB"
+                        serial="0x06044B241"
+                />
+            </memoryArray>
+    
+  
+    
+               <storageController
+                   id = "1"
+                   vendor = "LSI Logic   Symbios Logic"
+                   model = "SAS1064E PCI-Express Fusion-MPT SAS"
+                   type = "SAS"
+                   serial = "319"
+                   pciAddr = "02:05.01" 
+                   >     
+                <storageLocalDisk
+                     id="1"
+                     vendor="ATA"
+                     model="SAMSUNG MCCOE1HG5MXP-0VB03"
+                     serial="3865"
+                     size="100030242816"
+                     blockSize="512"
+                     numberOfBlocks="195371568"
+                     />
+                <storageLocalDisk
+                     id="2"
+                     vendor="ATA"
+                     model="SAMSUNG MCCOE1HG5MXP-0VB03"
+                     serial="3866"
+                     size="100030242816"
+                     blockSize="512"
+                     numberOfBlocks="195371568"
+                     />
+
+            <firmwareRunning
+                deployment="system"
+                packageVersion="3.0(2c)"
+                type="storage-controller"
+                version="3.0(2c)"/>
+            <firmwareRunning
+                deployment="boot-loader"
+                packageVersion="3.0(2c)"
+                type="storage-controller"
+                version="3.0(2c)"/>
+            <firmwareBootDefinition>
+                <firmwareBootUnit
+                    type="combined"
+                    version="3.0(2c)"/>
+            </firmwareBootDefinition>
+
+            </storageController>
+    
+            
+            <storageFlexFlashController
+                id="1"
+                controllerHealth="FFCH_OK"
+                controllerState="FFC_USB_DISCONNECTED"
+                flexFlashType="0"
+                model="FlexFlash-0"
+                operState="operable"
+                physicalDriveCount="2"
+                presence="equipped"
+                virtualDriveCount="1"
+                serial="1234"
+                primarySlotNumber="1"
+                raidSyncSupport="no"
+                readErrorThreshold="0"
+                revision="3.0(2c)"
+                vendor="Cypress"
+                >
+                <storageFlexFlashCard
+                    blockSize="512"
+                    cardHealth="FF_PHY_HEALTH_OK"
+                    cardType="SD253 card"
+                    cardMode="FF_PHY_DRIVE_SECONDARY_ACT"
+                    controllerIndex="1"
+                    id="2"
+                    mfgId="111"
+                    mfgDate="7/12"
+                    model="DST"
+                    operability="operable"
+                    presence="equipped"
+                    readIOErrorCount="0"
+                    revision="1.0"
+                    serial="0x33a5"
+                    size="15806"
+                    slotNumber="2"
+                    vendor="DST"
+                    writeEnable="yes">
+                    <storageFlexFlashDrive
+                        controllerIndex="1"
+                        driveState="RAID"
+                        driveType="HV"
+                        id="1"
+                        name="HV"
+                        operability="operable"
+                        presence="equipped"
+                        size="15806"
+                        slotNumber="255"
+                        visible="yes"/>
+               </storageFlexFlashCard>
+               <storageFlexFlashCard
+                    blockSize="512"
+                    cardHealth="FF_PHY_HEALTH_OK"
+                    cardType="SD253 card"
+                    cardMode="FF_PHY_DRIVE_PRIMARY"
+                    controllerIndex="1"
+                    id="1"
+                    mfgId="111"
+                    mfgDate="7/12"
+                    model="DST"
+                    operability="operable"
+                    presence="equipped"
+                    readIOErrorCount="0"
+                    revision="1.0"
+                    serial="0x33a4"
+                    size="15806"
+                    slotNumber="1"
+                    vendor="DST"
+                    writeEnable="yes" >
+                    <storageFlexFlashDrive
+                        controllerIndex="1"
+                        driveState="RAID"
+                        driveType="HV"
+                        id="1"
+                        name="HV"
+                        operability="operable"
+                        presence="equipped"
+                        size="15806"
+                        slotNumber="255"
+                        visible="yes"/>
+             </storageFlexFlashCard>
+             <firmwareRunning
+                deployment="system"
+                type="flexflash-controller"
+                version="3.0(2c)"
+            />
+            <storageFlexFlashVirtualDrive
+                id="1"
+                raidHealth="FFR_HEALTH_NOT_REPORTING"
+                raidState="FFR_STATE_ENABLED_NOT_PAIRED"
+                revision="0"
+            />               
+            </storageFlexFlashController>        
+        </computeBoard>
+
+        <adaptorUnit
+                id="1"
+                pciSlot="1"
+                operability="operable"
+                vendor="Cisco Systems Inc"
+                model="UCSB-MLOM-40G-01"
+                serial="QCI1230164051G">
+            <!-- IMPORTANT: ExtEthIf and HostEthIf macs should be sequential, e.g. xx:xx:...:01, ...:02, ...:03, ...:04 -->
+            <!--            ExtEthIf.mac should also match with mac1 & mac2 of apeMenlo -->
+            <adaptorExtEthIf
+                id="0"
+                purpose="general"
+                mac="00:FF:D1:01:05:01"/>
+            <adaptorExtEthIf
+                id="1"
+                purpose="general"
+                mac="00:FF:D1:01:05:02"/>
+            <mgmtController>
+                <firmwareRunning
+                    deployment="system"
+                    type="adaptor"
+                    packageVersion="3.0(2c)"
+                    version="3.0(2c)"/>
+                <firmwareUpdatable
+                    version="3.0(2c)"/>
+                <firmwareBootDefinition>
+                    <firmwareBootUnit
+                        type="combined"
+                        version="3.0(2c)"/>
+                </firmwareBootDefinition>
+            </mgmtController>
+        </adaptorUnit>
+        <adaptorUnit
+                id="2"
+                pciSlot="2"
+                operability="operable"
+                vendor="Cisco Systems Inc"
+                model="UCS-VIC-M82-8P"
+                serial="QCI1230164052G">
+            <!-- IMPORTANT: ExtEthIf and HostEthIf macs should be sequential, e.g. xx:xx:...:01, ...:02, ...:03, ...:04 -->
+            <!--            ExtEthIf.mac should also match with mac1 & mac2 of apeMenlo -->
+            <adaptorExtEthIf
+                id="0"
+                purpose="general"
+                mac="00:FF:D2:01:05:01"/>
+            <adaptorExtEthIf
+                id="1"
+                purpose="general"
+                mac="00:FF:D2:01:05:02"/>
+            <mgmtController>
+                <firmwareRunning
+                    deployment="system"
+                    type="adaptor"
+                    packageVersion="3.0(2c)"
+                    version="3.0(2c)"/>
+                <firmwareUpdatable
+                    version="3.0(2c)"/>
+                <firmwareBootDefinition>
+                    <firmwareBootUnit
+                        type="combined"
+                        version="3.0(2c)"/>
+                </firmwareBootDefinition>
+            </mgmtController>
+        </adaptorUnit>
+
+        <osAgent
+            lastCmd="none"
+            lastEvt="none"
+            prevCmd="none"
+            prevEvt="none"
+            type="pnuosAgent"
+        />
+
+        <osInstance rn="os"
+            hostname="localhost"
+            name="GNU-Linux"
+            type="PnuOS"
+            kernelName="Linux"
+            kernelRelease="2.6.9-34.0.2.EL"
+            kernelVersion="SMP"
+            />
+
+        <equipmentLocatorLed id="1"/>
+    </computeBlade>
+
+
+
+    <equipmentLocatorLed id="1"/>
+
+  </equipmentChassis>
+ </inConfig>
+
+</apeInsertNewChassis>
+
+
+
+
+
+
+
+
+
+
+</inStimuli>
+</methodVessel>
