@@ -442,6 +442,11 @@ en:
       powercycle: 'Power Cycle'
       poweroff: 'Power Off'
       identify: 'Identify'
+      blockui_message_reboot: 'Rebooting node...'
+      blockui_message_shutdown: 'Shutting down node...'
+      blockui_message_powercycle: 'Starting power cycle...'
+      blockui_message_poweroff: 'Power off node...'
+
     form:
       allocate: 'Allocate'
       repo_hint: 'To find out why a platform is disabled, check the <a href="%{url}">status of repositories</a>.'
