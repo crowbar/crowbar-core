@@ -288,6 +288,9 @@ if not nodes.nil? and not nodes.empty?
 
         when os =~ /^(open)?suse/
           append << "install=#{install_url} autoyast=#{node_url}/autoyast.xml"
+          if node[:provisioner][:use_serial_console]
+            append << "textmode=1"
+          end
           append << "ifcfg=dhcp4 netwait=60"
           append << "squash=0" # workaround bsc#962397
           append << "autoupgrade=1" if mnode[:state] == "os-upgrading"
