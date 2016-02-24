@@ -83,7 +83,10 @@ class Backup < ActiveRecord::Base
       return false
     end
 
-    upgrade if upgrade?
+    if upgrade? && !upgrade
+      return false
+    end
+
     if background
       Crowbar::Backup::Restore.new(self).restore_background
     else
@@ -100,7 +103,9 @@ class Backup < ActiveRecord::Base
     if upgrade.supported?
       upgrade.upgrade
     else
-      errors.add(:base, I18n.t("backups.index.upgrade_not_supported"))
+      errors.add(:base, I18n.t("backups.index.upgrade_not_supported",
+                               backup_version: version,
+                               system_version: ENV["CROWBAR_VERSION"]))
       return false
     end
   end
