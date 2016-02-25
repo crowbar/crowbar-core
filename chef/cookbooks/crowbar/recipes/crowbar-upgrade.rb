@@ -56,20 +56,22 @@ when "dump_openstack_database"
 
   include_recipe "crowbar::stop-services-before-upgrade"
 
+  dump_location = node[:crowbar][:upgrade][:db_dump_location]
+
+  # Ensure the dump_location is saved in DB nodes even after we later drop the role
+  node.set[:crowbar][:upgrade][:db_dump_location] = dump_location
+
   # If postgres is not running here, it means we're in the DB cluster and database runs
   # on the other node: let the other node take care of the rest.
   unless ::Kernel.system("service postgresql status")
     if node[:crowbar][:upgrade][:db_dumped_here]
       node[:crowbar][:upgrade].delete :db_dumped_here
-      node.save
     end
+    node.save
     return
   end
 
   # Check the available space before the dump
-
-  dump_location = node[:crowbar][:upgrade][:db_dump_location]
-
   ruby_block "check available space" do
     block do
       require "pathname"
