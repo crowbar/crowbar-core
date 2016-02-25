@@ -220,7 +220,7 @@ module Installer
     def save_and_restore
       return false unless @backup.save
       if Crowbar::Backup::Restore.restore_steps_path.exist?
-        flash[:info] = t(".multiple_restore")
+        flash[:info] = t("installer.upgrades.restore.multiple_restore")
         true
       else
         @backup.restore(background: true, from_upgrade: true)
