@@ -356,12 +356,10 @@ admin_addr = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin"
 # When we're restoring the admin node from backup or upgrade data,
 # reject incoming DNS traffic to avoid sending wrong results to running
 # clients.
-# FIXME: A cleaner approach would be to restrict the listener address of
-# the nameserver to just the loopback interface while restoring. That however
-# needs coordination with dnsmasq which might be listening there already.
-if node["crowbar"]["admin_node"] && ::File.exist?("/var/lib/crowbar/install/restore_steps")
+if node["crowbar"]["admin_node"] && ::File.exist?("/var/lib/crowbar/install/disable_dns")
   admin_addr = "127.0.0.1"
-  service "dnsmasq" do
+  service "stop dnsmasq during restore" do
+    service_name "dnsmasq"
     action [:stop, :disable]
   end
 end
