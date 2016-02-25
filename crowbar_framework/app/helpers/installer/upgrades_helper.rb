@@ -107,7 +107,7 @@ module Installer
     end
 
     def upgrade_database_backup
-      upgrade_database_node[:crowbar][:upgrade][:db_dump_location]
+      upgrade_database_node[:database][:upgrade][:db_dump_location]
     end
   end
 end
