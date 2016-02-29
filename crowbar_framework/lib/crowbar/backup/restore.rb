@@ -91,6 +91,13 @@ module Crowbar
           install_dir_path.join("crowbar-restore-ok")
         end
 
+        def purge
+          [:restore_steps, :failed, :success].each do |p|
+            send("#{p}_path").delete if send("#{p}_path").exist?
+          end
+          Crowbar::Installer.failed_path.delete if Crowbar::Installer.failed_path.exist?
+        end
+
         protected
 
         def steps_done
