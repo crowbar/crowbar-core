@@ -441,6 +441,8 @@ en:
       identify: 'Identify'
     form:
       allocate: 'Allocate'
+      confirm_allocate: 'Allocating the node will format all the disks attached to this node, including shared disks. Do you want to proceed and allocate this node?'
+      allocate_tooltip: 'Allocate this node according to the parameters in this form'
       repo_hint: 'To find out why a platform is disabled, check the <a href="%{url}">status of repositories</a>.'
       save: 'Save'
       raid: 'RAID'
