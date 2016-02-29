@@ -19,7 +19,7 @@ $(document).ready(function() {
               $("[data-step]").addClass("hidden");
               $(".alert-success").removeClass("hidden");
             } else if (data.failed) {
-              $(".alert-danger").removeClass("hidden");
+              window.location = Routes.start_upgrade_path();
             }
           },
           error: function() {
