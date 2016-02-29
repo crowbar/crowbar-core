@@ -182,9 +182,14 @@ module Installer
     end
 
     def restore_status
+      @status = Crowbar::Backup::Restore.status
+
       respond_to do |format|
         format.json do
-          render json: Crowbar::Backup::Restore.status
+          if @status[:failed]
+            flash[:alert] = t("installer.upgrades.restore.failed")
+          end
+          render json: @status
         end
         format.html do
           redirect_to install_upgrade_url
