@@ -228,6 +228,7 @@ module Installer
         flash[:info] = t("installer.upgrades.restore.multiple_restore")
         true
       else
+        Crowbar::Backup::Restore.purge
         @backup.restore(background: true, from_upgrade: true)
       end
     end
