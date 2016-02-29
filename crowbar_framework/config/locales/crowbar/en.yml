@@ -444,6 +444,8 @@ en:
       identify: 'Identify'
     form:
       allocate: 'Allocate'
+      confirm_allocate: 'WARNING! Allocating the node will wipe all the disks attached to the node including the shared disks. Proceed?'
+      allocate_tooltip: 'Cleanup and Allocate node with the intended role'
       repo_hint: 'To find out why a platform is disabled, check the <a href="%{url}">status of repositories</a>.'
       save: 'Save'
       raid: 'RAID'
