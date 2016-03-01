@@ -1451,6 +1451,35 @@ class NodeObject < ChefObject
     disk_release(device, owner) and save
   end
 
+  def verify_claimed_disks
+    unreferenced_disks = Array.new
+    crowbar_wall[:claimed_disks].each do |disk, _claim|
+      path, device_name = disk.split("/")[-2..-1]
+
+      # For raid controllers where disk devices are like /dev/cciss
+      # which have the format cciss![filename] in the node attributes.
+      if path == "cciss"
+        unreferenced_disks.push(disk) if node[:block_device]["#{path}!#{device_name}"].nil?
+        next
+      end
+
+      # For disk devices like /dev/diskname
+      unless disk =~ /^\/dev\/disk\//
+        unreferenced_disks.push(disk) if node[:block_device][device_name].nil?
+        next
+      end
+
+      # For disk devices like /dev/disks/by-something/something-else
+      devices = node[:block_device].map do |device, _attr|
+        next if node[:block_device][device]["disks"].nil? ||
+            node[:block_device][device]["disks"][path].nil?
+        node[:block_device][device]["disks"][path]
+      end.compact.flatten
+      unreferenced_disks.push(disk) unless devices.include?(device_name)
+    end
+    unreferenced_disks
+  end
+
   def boot_device(device)
     if device
       Rails.logger.debug "Set boot device to #{device}"
