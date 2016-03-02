@@ -69,10 +69,24 @@ class CrowbarService < ServiceObject
     end
   end
 
-  def shutdown_services_at_non_db_nodes
-    db_nodes = []
-    NodeObject.find("state:crowbar_upgrade").each do |node|
+  # Ensure the nodes are reachable before trying to apply the proposals
+  def check_if_nodes_are_available(upgrade_nodes)
+    unavailable_nodes = []
+    upgrade_nodes.each do |node|
+      ssh_status = node.ssh_cmd("")
+      if ssh_status[0] != 200
+        unavailable_nodes.push node.name
+      end
+    end
+    unless unavailable_nodes.empty?
+      raise I18n.t("model.service.nodes_not_available", names: unavailable_nodes.join(", "))
+    end
+  end
 
+  def shutdown_services_at_non_db_nodes
+    upgrade_nodes = NodeObject.find("state:crowbar_upgrade")
+    check_if_nodes_are_available upgrade_nodes
+    upgrade_nodes.each do |node|
       # Find the nodes with Database role.
       # In this step, database nodes need to wait until everything is shut down at the other nodes.
       step = "openstack_shutdown"
@@ -120,6 +134,8 @@ class CrowbarService < ServiceObject
   # This needs to be done in separate step because user might want
   # to download DB dump before the database is shut down.
   def finalize_openstack_shutdown
+    check_if_nodes_are_available NodeObject.find("state:crowbar_upgrade")
+
     NodeObject.find("state:crowbar_upgrade AND roles:database-config-default").each do |node|
       # mark the position in the upgrade process
       node["crowbar_wall"]["crowbar_upgrade_step"] = "db_shutdown"
@@ -294,6 +310,9 @@ class CrowbarService < ServiceObject
   end
 
   def disable_non_core_proposals
+    upgrade_nodes = NodeObject.all.reject(&:admin?)
+    check_if_nodes_are_available upgrade_nodes
+
     # Find all non-core proposals and remove all roles that belong
     # to those proposals from the nodes
     active_non_core_roles = RoleObject.find_roles_by_name("*-config-*").reject(&:core_role?)
@@ -307,7 +326,6 @@ class CrowbarService < ServiceObject
     roles_to_disable << upgrade_role unless upgrade_role.nil?
     roles_to_disable << crowbar_config_role
 
-    upgrade_nodes = NodeObject.all.reject(&:admin?)
     upgrade_nodes.each do |node|
       roles_to_disable.each do |role|
         roles_to_remove = role.elements.keys
@@ -327,6 +345,7 @@ class CrowbarService < ServiceObject
 
   def prepare_nodes_for_os_upgrade
     upgrade_nodes = NodeObject.all.reject { |node| node.admin? || node[:platform] == "windows" }
+    check_if_nodes_are_available upgrade_nodes
     admin_node = NodeObject.admin_node
     upgrade_nodes_failed = []
 
