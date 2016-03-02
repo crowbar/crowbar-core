@@ -282,6 +282,7 @@ en:
       template_missing: 'Template for %{name} does not exist'
       unknown_error: 'An unknown error occured'
       database_missing: 'Database service is not running on any node.'
+      nodes_not_available: 'Problems while connecting to nodes %{names}. Check if the nodes are running and reachable before you continue with the upgrade.'
     attributes:
       node:
         name: 'Full Name'
