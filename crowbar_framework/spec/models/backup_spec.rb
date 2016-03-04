@@ -44,7 +44,7 @@ describe Backup do
           stub_methods
           # this is necessary because we have the fixtures already on the Filesystem
           # usually the backup gets written to disk after save
-          allow_any_instance_of(Backup).to receive(:save_or_create_archive).and_return(true)
+          allow_any_instance_of(Backup).to receive(:create_archive).and_return(true)
           stub_validations
           expect(bu.save).to be true
         end

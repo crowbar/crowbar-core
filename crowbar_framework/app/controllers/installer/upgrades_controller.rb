@@ -225,6 +225,8 @@ module Installer
       else
         @backup.restore(background: true, from_upgrade: true)
       end
+    ensure
+      @backup.cleanup unless @backup.nil?
     end
 
     def set_service_object
