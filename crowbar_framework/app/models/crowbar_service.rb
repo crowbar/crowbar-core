@@ -103,7 +103,10 @@ class CrowbarService < ServiceObject
 
   def dump_openstack_database
     db_nodes = []
-    NodeObject.find("state:crowbar_upgrade").each do |node|
+    upgrade_nodes = NodeObject.find("state:crowbar_upgrade")
+    check_if_nodes_are_available upgrade_nodes
+
+    upgrade_nodes.each do |node|
 
       # In this step, we need to run action only for database nodes, others will have dummy run.
       step = "done_openstack_shutdown"
