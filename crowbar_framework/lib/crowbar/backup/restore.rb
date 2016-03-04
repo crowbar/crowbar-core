@@ -29,6 +29,7 @@ module Crowbar
 
       def restore_background
         @thread = Thread.new do
+          Rails.logger.debug("Starting restore in background thread")
           restore
         end
       end
@@ -42,7 +43,11 @@ module Crowbar
           if any_errors?
             cleanup
             @backup.errors.add(:restore, error_messages.join(" - "))
-            Thread.exit if @thread
+            Rails.logger.error("Restore failed: #{@backup.errors.full_messages.first}")
+            if @thread
+              Rails.logger.debug("Exiting restore thread due to failure")
+              Thread.exit
+            end
             return false
           end
           # set_failed is called directly after the fail
