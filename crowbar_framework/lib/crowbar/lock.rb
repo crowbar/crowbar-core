@@ -1,6 +1,6 @@
 #
 # Copyright 2011-2013, Dell
-# Copyright 2013-2015, SUSE LINUX GmbH
+# Copyright 2013-2016, SUSE LINUX GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,33 +16,14 @@
 #
 
 module Crowbar
-  class Lock
-    attr_accessor :logger, :path, :name
-    attr_reader :path, :name, :file
+  module Lock
+    autoload :Base,
+      File.expand_path("../lock/base", __FILE__)
 
-    def initialize(options = {})
-      @logger = options.fetch :logger, Rails.logger
-      @name = options.fetch :name, "default.lock"
-      @path = options.fetch :path, Rails.root.join("tmp", @name) # full path to lockfile
-      @locked = false
-      @file = nil
-    end
+    autoload :SharedNonBlocking,
+      File.expand_path("../lock/shared_non_blocking", __FILE__)
 
-    def self.with_lock(options = {})
-      new(options).with_lock do
-        yield
-      end
-    end
-
-    def with_lock
-      acquire
-      yield if block_given?
-    ensure
-      release
-    end
-
-    def locked?
-      @locked
-    end
+    autoload :LocalBlocking,
+      File.expand_path("../lock/local_blocking", __FILE__)
   end
 end
