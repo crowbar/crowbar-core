@@ -18,7 +18,7 @@
 
 module Batch
   class Base < Tableless
-    ALIAS_REGEXP = /"(@@[^ @]+@@)"/
+    ALIAS_REGEXP = /(@@[^ @]+@@)/
     ALIAS_TEMPLATE = "@@%s@@".freeze
 
     attr_accessor(
