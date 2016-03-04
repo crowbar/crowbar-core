@@ -68,7 +68,7 @@ when "dump_openstack_database"
 
   # Check the available space before the dump
 
-  dump_location = node[:crowbar][:upgrade][:db_dump_location]
+  dump_location = node[:database][:upgrade][:db_dump_location]
 
   ruby_block "check available space" do
     block do
