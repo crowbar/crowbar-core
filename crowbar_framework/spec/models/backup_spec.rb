@@ -40,8 +40,11 @@ describe Backup do
     context "backup object validation" do
       context "validation" do
         it "is valid" do
-          bu = Backup.new(name: "testbackup", created_at: created_at)
+          bu = Backup.new(name: "testing", version: "3.0", size: 30)
           stub_methods
+          # this is necessary because we have the fixtures already on the Filesystem
+          # usually the backup gets written to disk after save
+          allow_any_instance_of(Backup).to receive(:save_or_create_archive).and_return(true)
           stub_validations
           expect(bu.save).to be true
         end
