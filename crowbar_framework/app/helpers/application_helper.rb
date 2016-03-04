@@ -41,7 +41,7 @@ module ApplicationHelper
     title = [
       branding_config[:page_title],
       branding_config[:page_slogan]
-    ].compact.join(" ")
+    ].compact.join(" ").strip
 
     sub = if controller.respond_to? :meta_title
       controller.meta_title
@@ -49,7 +49,7 @@ module ApplicationHelper
       controller.action_name.titleize
     end
 
-    "#{title}: #{sub}"
+    "#{sub} | #{title}"
   end
 
   # This method gets extended in the future to include anywhere registered
