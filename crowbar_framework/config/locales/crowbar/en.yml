@@ -586,8 +586,9 @@ en:
         header: 'Restore'
         success: 'Restoration successful.'
         failed: |
-          'Restoration failed. Please check the logs at /var/log/crowbar/production.log and
-          /var/log/crowbar/install.log'
+          Restoration failed. Please check the logs at /var/log/crowbar/production.log and
+          /var/log/crowbar/install.log. Please repeat the 'Upload and Restore' process after
+          the conflict is resolved.
         schema_migration_failed: 'Schema migration for %{bc_name} failed'
         restore_button: 'Restore'
         multiple_restore: 'Restore process is already running'
