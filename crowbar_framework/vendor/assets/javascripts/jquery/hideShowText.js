@@ -20,15 +20,13 @@
 ;(function($) {
   function HideShowText(el, options) {
     this.$el = $(el);
-     
+
     this.defaults = {
-      hidden: false,
-      secret: '',
-      target: 'hidetext-secret',
-      classes: this.$el.data('hidetext'),
+      secretTarget: 'hidetext-secret',
+      classTarget: 'hidetext-class',
       firstToggle: true
     };
-     
+
     this.options = $.extend(
       this.defaults,
       options
@@ -36,52 +34,89 @@
 
     this.init();
   }
-   
+
   HideShowText.prototype.init = function() {
     var self = this;
-    
-    this.$el.data(this.options.target, this.$el.text());
-    self.createSecretString();
-    self.toggleText();
-     
-    this.$el.on('click', 'div.toggle-text', function(e) {
+    var secret;
+    var placeholder;
+
+    if (self.$el.data(self.options.secretTarget) === undefined) {
+      secret = self.$el.text();
+      placeholder = self.createSecret(secret);
+    } else {
+      secret = self.$el.data(self.options.secretTarget);
+      placeholder = self.createSecret(secret);
+    }
+
+    self.$el.data(
+      self.options.secretTarget,
+      secret
+    );
+
+    self.writeContent(
+      placeholder
+    );
+
+    self.$el.on('click', 'div.toggle-text', function(e) {
       e.preventDefault();
       self.toggleText();
     });
   };
 
-  HideShowText.prototype.createSecretString = function() {
-    for (var i = 0; i < this.$el.text().length; i++)  {
-      this.options.secret += "&#149;";
-    }
-  }
-   
   HideShowText.prototype.toggleText = function() {
-    if (this.options.firstToggle) {
-      this.$el.text("");
-      this.$el.append("<span class=\"hidetext-text\">" + this.options.secret + "</span> <div class=\"toggle-text toggle-text-show " + this.options.classes + "\">&nbsp;</div>");
-      this.options.firstToggle = false;
-      this.options.hidden = true;
-    } else {
-      var text;
+    var self = this;
 
-      if (this.options.hidden) {
-        text = this.$el.data(this.options.target);
-        this.options.hidden = false;
-      } else {
-        text = this.options.secret;
-        this.options.hidden = true;
-      }
+    var inner = self.$el
+      .find('.hidetext-text')
+      .text();
 
-      this.$el
-        .children('.hidetext-text')
-          .html(text)
-        .end()
-        .children('.toggle-text')
-          .toggleClass('toggle-text-show toggle-text-hide');
-    }
+    var outer = self.$el
+      .data(self.options.secretTarget);
+
+    self.$el
+      .data(self.options.secretTarget, inner)
+      .children('.hidetext-text')
+        .html(outer)
+      .end()
+      .children('.toggle-text')
+        .toggleClass('toggle-text-show toggle-text-hide');
   };
-   
+
+  HideShowText.prototype.createSecret = function(secret) {
+    var self = this;
+    var placeholder = '';
+
+    for (var i = 0; i < secret.length; i++)  {
+      placeholder += "&#149;";
+    }
+
+    return placeholder;
+  };
+
+  HideShowText.prototype.writeContent = function(secret) {
+    var self = this;
+
+    self.$el
+      .text("")
+      .append(
+        [
+          '<span class="hidetext-text">',
+            '{0}',
+          '</span>',
+          '<div class="toggle-text toggle-text-show {1}">',
+            '&nbsp;',
+          '</div>'
+        ].join(
+          ''
+        ).format(
+          secret,
+          self.$el.data(
+            self.options.classTarget
+          )
+        )
+      );
+  };
+
   $.fn.hideShowText = function(options) {
     return this.each(function() {
       new HideShowText(this, options);
