@@ -68,16 +68,28 @@ module Crowbar
         }
       end
 
+      def failed_path
+        lib_path.join("crowbar-install-failed")
+      end
+
+      def success_path
+        lib_path.join("crowbar-installed-ok")
+      end
+
+      def installing_path
+        lib_path.join("crowbar_installing")
+      end
+
       def failed?
-        lib_path.join("crowbar-install-failed").exist?
+        failed_path.exist?
       end
 
       def successful?
-        lib_path.join("crowbar-installed-ok").exist?
+        success_path.exist?
       end
 
       def installing?
-        lib_path.join("crowbar_installing").exist?
+        installing_path.exist?
       end
 
       def initial_chef_client?
