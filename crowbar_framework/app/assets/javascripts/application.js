@@ -240,11 +240,11 @@ jQuery(document).ready(function($) {
   $('[data-listsearch]').listSearch();
   $('[data-ledupdate]').ledUpdate();
   $('[data-show-for-clusters-only="true"]').hideShowClusterConf();
+  $('[data-hidetext]').hideShowText();
 
   $('#proposal_attributes, #proposal_deployment').changedState();
   $('#nodelist').nodeList();
   $('input[type=password]').hideShowPassword();
-  $('[data-hidetext]').hideShowText();
 
   setInterval(
     function() {
