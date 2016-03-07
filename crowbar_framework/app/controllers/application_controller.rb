@@ -26,7 +26,15 @@ class ApplicationController < ActionController::Base
   rescue_from Crowbar::Error::ChefOffline, with: :chef_is_offline
 
   before_filter :enable_profiler, if: proc { ENV["ENABLE_PROFILER"] == "true" }
-  before_filter :enforce_installer, unless: proc { Crowbar::Installer.successful? || ENV["RAILS_ENV"] == "test" }
+  before_filter :enforce_installer, unless: proc {
+    Crowbar::Installer.successful? || \
+    ENV["RAILS_ENV"] == "test" || \
+    Rails.cache.fetch(:sanity_check_errors).any?
+  }
+  before_filter :sanity_checks, unless: proc {
+    Rails.cache.fetch(:sanity_check_errors).empty? || \
+    ENV["RAILS_ENV"] == "test"
+  }
 
   # Basis for the reflection/help system.
 
@@ -177,5 +185,9 @@ class ApplicationController < ActionController::Base
         render json: { error: I18n.t("error.before_install") }, status: :unprocessable_entity
       end
     end
+  end
+
+  def sanity_checks
+    redirect_to sanity_path
   end
 end
