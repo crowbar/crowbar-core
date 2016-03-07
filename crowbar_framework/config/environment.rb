@@ -18,3 +18,4 @@
 require File.expand_path("../application", __FILE__)
 
 Rails.application.initialize!
+Rails.cache.write(:sanity_check_errors, Crowbar::Sanity.check)
