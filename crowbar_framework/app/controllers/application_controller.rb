@@ -169,6 +169,13 @@ class ApplicationController < ActionController::Base
   end
 
   def enforce_installer
-    redirect_to installer_root_path
+    respond_to do |format|
+      format.html do
+        redirect_to installer_root_path
+      end
+      format.json do
+        render json: { error: I18n.t("error.before_install") }, status: :unprocessable_entity
+      end
+    end
   end
 end
