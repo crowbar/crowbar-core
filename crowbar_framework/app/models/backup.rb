@@ -140,6 +140,11 @@ class Backup < ActiveRecord::Base
 
   def create_archive
     logger.debug "Creating backup in #{self.class.image_dir}"
+    if path.exist?
+      errors.add(:filename, I18n.t("backups.index.invalid_filename_exists"))
+      return false
+    end
+
     dir = Dir.mktmpdir
 
     Crowbar::Backup::Export.new(dir).export
@@ -152,7 +157,7 @@ class Backup < ActiveRecord::Base
     self.version = ENV["CROWBAR_VERSION"]
     self.size = path.size
   ensure
-    FileUtils.rm_rf(dir)
+    FileUtils.rm_rf(dir) if dir
   end
 
   def save_archive
