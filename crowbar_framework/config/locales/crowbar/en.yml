@@ -709,7 +709,7 @@ en:
       crowbar: 'Crowbar'
       openstack: 'OpenStack'
       restore: 'Restore'
-      restore_warning: 'By pressing OK, you will start the restoration process for the system. Are you sure?'
+      restore_warning: 'Before pressing OK, it is advised to download the Backup(s) as they will not be restored. By pressing OK, you will start the restoration process for the system. Are you sure?'
       restore_database_failed: 'Failed to restore database'
       migrate_database_failed: 'Failed to migrate database'
       blockui_message: 'Restoring from backup. Please wait...'
@@ -724,6 +724,7 @@ en:
       upgrade_not_supported: 'Upgrade from %{backup_version} to %{system_version} not supported'
       multiple_restore: 'Restore process is already running'
       version_conflict: 'Cannot restore from different Crowbar version'
+      restore_successful: 'Successfully restored Crowbar'
     validation:
       hostnames_not_identical: 'Hostnames not identical'
       version_too_low: 'Backup version too low'
