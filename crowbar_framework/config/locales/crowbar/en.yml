@@ -383,7 +383,7 @@ en:
       target_platform: 'Target OS'
       target_platform_not_set: 'Not set'
       hint: 'Note: <i>group italics</i> indicates group is set automatically by system'
-      allocate_all: 'Allocate?'
+      allocate_all: 'Allocate'
       save: 'Save'
     families:
       title: 'Node Hardware Families'
