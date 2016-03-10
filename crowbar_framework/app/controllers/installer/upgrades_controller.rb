@@ -109,7 +109,7 @@ module Installer
             end
           rescue => e
             format.html do
-              flash[:alert] = e.message
+              flash[:alert] = view_context.upgrade_error_flash(e.message)
               redirect_to services_upgrade_url
             end
           end
@@ -135,7 +135,7 @@ module Installer
             end
           rescue => e
             format.html do
-              flash[:alert] = e.message
+              flash[:alert] = view_context.upgrade_error_flash(e.message)
               redirect_to backup_upgrade_url
             end
           end
@@ -161,7 +161,7 @@ module Installer
             end
           rescue => e
             format.html do
-              flash[:alert] = e.message
+              flash[:alert] = view_context.upgrade_error_flash(e.message)
               redirect_to nodes_upgrade_url
             end
           end
