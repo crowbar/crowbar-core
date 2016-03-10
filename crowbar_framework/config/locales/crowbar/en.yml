@@ -561,6 +561,7 @@ en:
     upgrades:
       title: 'Upgrade'
       header: '%{product}: Upgrade from SUSE OpenStack Cloud 5'
+      repeat_after_error: 'Repeat this step after resolving the error(s).'
       nav:
         prepare: 'Prepare Client Nodes'
         download: 'Download Upgrade Data'
