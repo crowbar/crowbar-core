@@ -356,30 +356,11 @@ admin_addr = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin"
 # When we're restoring the admin node from backup or upgrade data,
 # reject incoming DNS traffic to avoid sending wrong results to running
 # clients.
-# FIXME: A cleaner approach would be to restrict the listener address of
-# the nameserver to just the loopback interface while restoring. That however
-# needs coordination with dnsmasq which might be listening there already.
-if node["crowbar"]["admin_node"] && ::File.exist?("/var/lib/crowbar/install/restore_steps")
-  admin_if = node[:crowbar_wall][:network][:nets][:admin].first
-  bash "block incoming DNS request during install/upgrade" do
-    code <<-EOH
-      iptables -I INPUT -i #{admin_if} -p udp -m udp --dport 53 \
-        -j REJECT -m comment --comment "UPGRADE_DNSBLOCK"
-      iptables -I INPUT -i #{admin_if} -p tcp -m tcp --dport 53 \
-        -j REJECT -m comment --comment "UPGRADE_DNSBLOCK"
-    EOH
-    not_if "iptables -L INPUT | grep -q UPGRADE_DNSBLOCK"
-  end
-elsif node["crowbar"]["admin_node"]
-  admin_if = node[:crowbar_wall][:network][:nets][:admin].first
-  bash "remove upgrade dns block" do
-    code <<-EOH
-      iptables -D INPUT -i #{admin_if} -p udp -m udp --dport 53 \
-        -j REJECT -m comment --comment "UPGRADE_DNSBLOCK"
-      iptables -D INPUT -i #{admin_if} -p tcp -m tcp --dport 53 \
-        -j REJECT -m comment --comment "UPGRADE_DNSBLOCK"
-    EOH
-    only_if "iptables -L INPUT | grep -q UPGRADE_DNSBLOCK"
+if node["crowbar"]["admin_node"] && ::File.exist?("/var/lib/crowbar/install/disable_dns")
+  admin_addr = "127.0.0.1"
+  service "stop dnsmasq during restore" do
+    service_name "dnsmasq"
+    action [:stop, :disable]
   end
 end
 
