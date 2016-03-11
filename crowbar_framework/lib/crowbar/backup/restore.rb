@@ -56,12 +56,9 @@ module Crowbar
             end
             return false
           end
-          # set_failed is called directly after the fail
-          if component == :restore_database && !self.class.failed_path.exist?
-            set_success
-          end
         end
 
+        set_success
         cleanup
         true
       end
@@ -163,12 +160,14 @@ module Crowbar
       end
 
       def set_failed
+        return if self.class.success_path.exist?
         ::FileUtils.touch(
           self.class.failed_path.to_s
         )
       end
 
       def set_success
+        return if self.class.failed_path.exist?
         ::FileUtils.touch(
           self.class.success_path.to_s
         )
