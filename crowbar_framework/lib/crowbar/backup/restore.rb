@@ -37,6 +37,12 @@ module Crowbar
       def restore
         cleanup if self.class.restore_steps_path.exist?
 
+        # restrict dns-server to not answer requests from other nodes to
+        # avoid wrong results to clients.
+        self.class.disable_dns_path.open("w") do |f|
+          f.write "#{Time.zone.now.iso8601}\n #{@backup.path}"
+        end
+
         self.class.steps.each do |component|
           set_step(component)
           send(component)
@@ -82,6 +88,10 @@ module Crowbar
 
         def restore_steps_path
           install_dir_path.join("restore_steps")
+        end
+
+        def disable_dns_path
+          install_dir_path.join("disable_dns")
         end
 
         def install_dir_path
@@ -166,6 +176,7 @@ module Crowbar
 
       def restore_chef
         Rails.logger.debug "Restoring chef backup files"
+
         begin
           [:nodes, :roles, :clients, :databags].each do |type|
             Dir.glob(@data.join("knife", type.to_s, "**", "*")).each do |file|
@@ -216,6 +227,9 @@ module Crowbar
         rescue Net::HTTPServerException
           raise "Restore failed"
         end
+
+        # now that restore is done, dns server can answer requests from other nodes.
+        disable_dns_path.delete if disable_dns_path.exist?
 
         Rails.logger.info("Re-running chef-client locally to apply changes from imported proposals")
         system(
