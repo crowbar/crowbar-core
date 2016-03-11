@@ -807,6 +807,7 @@ en:
     not_found: 'Not found'
     chef_server_down: 'Chef server is not available'
     param_missing: 'A required parameter is missing'
+    before_install: 'This API is not available before installation'
 
   state:
     unknown: 'Unknown'
