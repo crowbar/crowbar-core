@@ -178,16 +178,28 @@ class Backup < ActiveRecord::Base
       return false
     end
 
-    path.open("wb") do |f|
-      f.write(file.read)
+    meta_file = data.join("meta.yml")
+    unless meta_file.exist?
+      errors.add(:file_content, I18n.t("backups.index.meta_missing"))
+      return false
     end
 
-    meta = YAML.load_file(data.join("meta.yml"))
+    begin
+      meta = YAML.load_file(meta_file)
+    rescue Psych::SyntaxError
+      errors.add(:file_content, I18n.t("backups.index.invalid_file_content"))
+      return false
+    end
+
     self.version = meta["version"].to_s
     self.size = path.size
     self.created_at = Time.zone.parse(meta["created_at"])
     # 20151222144602_create_backups.rb
     self.migration_level = meta["migration_level"] || 20151222144602
+
+    path.open("wb") do |f|
+      f.write(file.read)
+    end
   end
 
   def delete_archive
