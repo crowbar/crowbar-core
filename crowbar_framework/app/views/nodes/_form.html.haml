@@ -9,7 +9,8 @@
           %input.btn.btn-default{ :type => "submit", :name => "submit", :value => t(".save") }
 
           - unless @node.allocated? or @node.admin?
-            %input.btn.btn-default{ :type => "submit", :name => "submit", :value => t(".allocate") }
+            .btn.btn-default{ data: { toggle: "modal", target: "#node_allocate_modal" } }
+              = t(".allocate")
 
     .panel-body
       - if @node.allocated?
@@ -127,4 +128,23 @@
         %input.btn.btn-default{ :type => "submit", :name => "submit", :value => t(".save") }
 
         - unless @node.allocated? or @node.admin?
-          %input.btn.btn-default{ :type => "submit", :name => "submit", :value => t(".allocate") }
+          .btn.btn-default{ data: { toggle: "modal", target: "#node_allocate_modal" } }
+            = t(".allocate")
+
+.modal.fade{ id: "node_allocate_modal" }
+  .modal-dialog
+    .modal-content
+      .modal-header
+        .btn.close{ data: {dismiss: "modal" } }
+          &times
+        %h2
+          = t(".allocate_node")
+      = form_for :node, :url => update_node_path(@node.handle), class: "btn btn-danger", "data-remote" => true, :html => { :role => "form", "data-type" => "html", "data-method" => "put" } do |f|
+        .modal-body
+          %h3
+            = t(".confirm_allocate")
+        .modal-footer
+          .row
+            .btn.btn-default{ data: { dismiss: "modal" } }
+              = t("cancel")
+            = f.submit(class: "btn btn-danger", value: t(".allocate"))

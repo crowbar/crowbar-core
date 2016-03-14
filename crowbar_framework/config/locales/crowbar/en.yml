@@ -450,6 +450,8 @@ en:
       invalid_req: 'Invalid hit request %{req}'
     form:
       allocate: 'Allocate'
+      allocate_node: 'Allocate Node'
+      confirm_allocate: 'WARNING! Allocating the node will wipe all the disks attached to the node including the shared disks. Proceed?'
       repo_hint: 'To find out why a platform is disabled, check the <a href="%{url}">status of repositories</a>.'
       save: 'Save'
       raid: 'RAID'
