@@ -110,7 +110,14 @@ class Backup < ActiveRecord::Base
   end
 
   def cleanup
-    @data.rmtree if @data
+    return unless @data
+
+    system(
+      "sudo",
+      "rm",
+      "-rf",
+      @data.to_s
+    )
     @data = nil
   end
 
