@@ -439,6 +439,15 @@ en:
       powercycle: 'Power Cycle'
       poweroff: 'Power Off'
       identify: 'Identify'
+      blockui_reboot: 'Triggering Reboot...'
+      blockui_shutdown: 'Triggering Shutdown...'
+      blockui_poweron: 'Triggering Power On...'
+      blockui_powercycle: 'Triggering Power Cycle...'
+      blockui_poweroff: 'Triggering Power Off...'
+      blockui_identify: 'Triggering Identify...'
+    hit:
+      not_found: 'Could not find node %{name}'
+      invalid_req: 'Invalid hit request %{req}'
     form:
       allocate: 'Allocate'
       repo_hint: 'To find out why a platform is disabled, check the <a href="%{url}">status of repositories</a>.'
