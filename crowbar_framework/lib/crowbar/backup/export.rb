@@ -138,6 +138,8 @@ module Crowbar
         workdir.join("meta.yml").open("w") do |file|
           file.write(meta.to_yaml)
         end
+
+        meta
       end
 
       protected
