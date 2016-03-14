@@ -23,6 +23,7 @@ module Crowbar
         @backup = backup
         @data = @backup.data
         @version = @backup.version
+        @migration_level = @backup.migration_level
         @status = {}
         @thread = nil
       end
@@ -287,7 +288,7 @@ module Crowbar
         sleep(1) until Crowbar::Installer.successful? || Crowbar::Installer.failed?
 
         if Crowbar::Installer.failed?
-          Rails.logger.debug "Crowbar Installation Failed"
+          Rails.logger.error "Crowbar Installation Failed"
           set_failed
           @status[:run_installer] = {
             status: :not_acceptable,
@@ -300,19 +301,30 @@ module Crowbar
 
       def restore_database
         Rails.logger.debug "Restoring Crowbar database"
-        migrate_database(:before)
+        if ActiveRecord::Migrator.get_all_versions.include? @migration_level
+          migrate_database(:before, @migration_level)
+        else
+          Rails.logger.error "Cannot migrate to #{@migration_level}. Migration unknown"
+          set_failed
+          @status[:restore_database] = {
+            status: :not_acceptable,
+            msg: I18n.t("backups.index.restore_database_failed")
+          }
+          return
+        end
 
         begin
           SerializationHelper::Base.new(YamlDb::Helper).load(
             @data.join("crowbar", "database.yml")
           )
         rescue StandardError => e
-          Rails.logger.debug "Failed to load database.yml: #{e}"
+          Rails.logger.error "Failed to load database.yml: #{e}"
           set_failed
           @status[:restore_database] = {
             status: :not_acceptable,
             msg: I18n.t("backups.index.restore_database_failed")
           }
+          return
         end
 
         migrate_database(:after)
@@ -328,10 +340,14 @@ module Crowbar
         raw_data.key?("attributes") && raw_data.key?("deployment")
       end
 
-      def migrate_database(time)
-        Crowbar::Migrate.migrate!
+      def migrate_database(time, migration_level = nil)
+        if migration_level
+          Crowbar::Migrate.migrate_to(migration_level)
+        else
+          Crowbar::Migrate.migrate!
+        end
       rescue SQLite3::SQLException => e
-        Rails.logger.debug "Failed to migrate database #{time} loading: #{e}"
+        Rails.logger.error "Failed to migrate database #{time} loading: #{e}"
         set_failed
         @status[:restore_database] = {
           status: :not_acceptable,
