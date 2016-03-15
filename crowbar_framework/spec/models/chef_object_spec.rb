@@ -18,28 +18,28 @@
 require "spec_helper"
 
 describe ChefObject do
-  let(:chef_object) { ChefObject }
+  subject { ChefObject }
 
   before do
-    if chef_object
-      chef_object.class_eval { class_variable_set(:@@CrowbarDomain, nil) }
+    if subject
+      subject.class_eval { class_variable_set(:@@CrowbarDomain, nil) }
     end
   end
 
   after do
-    if chef_object
-      chef_object.class_eval { class_variable_set(:@@CrowbarDomain, nil) }
+    if subject
+      subject.class_eval { class_variable_set(:@@CrowbarDomain, nil) }
     end
   end
 
   describe "query chef" do
     it "returns new query" do
-      expect(chef_object.query_chef).to be_a(Chef::Search::Query)
+      expect(subject.query_chef).to be_a(Chef::Search::Query)
     end
 
     it "returns empty node on failure" do
       allow(Chef::Search::Query).to receive(:new) { raise StandardError }
-      expect(chef_object.query_chef).to be_a(Chef::Node)
+      expect(subject.query_chef).to be_a(Chef::Node)
     end
   end
 end
