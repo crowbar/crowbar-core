@@ -110,7 +110,7 @@ class Backup < ActiveRecord::Base
   end
 
   def cleanup
-    return unless @data || @data.to_s =~ /\A#{Rails.root.join("tmp").to_s}/
+    return unless @data || @data.to_s =~ /\A#{Dir.tmpdir}/
 
     system(
       "sudo",
