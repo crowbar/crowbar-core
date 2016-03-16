@@ -585,6 +585,7 @@ en:
         continue: 'Upload and Restore'
         blockui: 'Uploading...'
         header: 'Continue Upgrade'
+        success: 'Successfully uploaded backup and triggered restore'
         description: |
           Select the upgrade data archive that you downloaded from the SUSE OpenStack Cloud 5
           Administration server when you started the upgrade wizard. Upload it by clicking
