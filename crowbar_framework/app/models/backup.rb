@@ -75,9 +75,11 @@ class Backup < ActiveRecord::Base
     from_upgrade = options.fetch(:from_upgrade, false)
 
     if Crowbar::Backup::Restore.restore_steps_path.exist?
+      logger.debug "Restore process is already running"
       errors.add(:base, I18n.t("backups.index.multiple_restore"))
       return false
     elsif !from_upgrade && backup_version != system_version
+      logger.debug "Restoring from different Crowbar version is not allowed"
       errors.add(:base, I18n.t("backups.index.version_conflict"))
       return false
     end
