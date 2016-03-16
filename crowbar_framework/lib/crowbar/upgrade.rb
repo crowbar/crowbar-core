@@ -31,8 +31,11 @@ module Crowbar
     end
 
     def upgrade
-      knife_files
-      crowbar_files
+      case @version
+      when "1.9"
+        knife_files
+        crowbar_files
+      end
     end
 
     def supported?
