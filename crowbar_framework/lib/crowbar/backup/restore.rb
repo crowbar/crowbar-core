@@ -33,6 +33,8 @@ module Crowbar
           Rails.logger.debug("Starting restore in background thread")
           restore
         end
+
+        @thread.alive? ? true : false
       end
 
       def restore
