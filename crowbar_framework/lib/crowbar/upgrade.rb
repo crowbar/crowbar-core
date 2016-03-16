@@ -37,7 +37,8 @@ module Crowbar
 
     def supported?
       upgrades = [
-        ["1.9", "3.0"]
+        ["1.9", "3.0"],
+        ["3.0", "4.0"]
       ]
       upgrades.include?([@version, ENV["CROWBAR_VERSION"]])
     end
