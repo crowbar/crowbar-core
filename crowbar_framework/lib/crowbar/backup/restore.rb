@@ -49,13 +49,7 @@ module Crowbar
           set_step(component)
           send(component)
           if any_errors?
-            cleanup
-            @backup.errors.add(:restore, error_messages.join(" - "))
-            Rails.logger.error("Restore failed: #{@backup.errors.full_messages.first}")
-            if @thread
-              Rails.logger.debug("Exiting restore thread due to failure")
-              Thread.exit
-            end
+            cleanup_after_error(error_messages.join(" - "))
             return false
           end
         end
@@ -63,6 +57,8 @@ module Crowbar
         set_success
         cleanup
         true
+      rescue StandardError => e
+        cleanup_after_error(e)
       end
 
       class << self
@@ -141,6 +137,16 @@ module Crowbar
       def cleanup
         self.class.restore_steps_path.delete if self.class.restore_steps_path.exist?
         @backup.path.delete if @backup.path.exist?
+      end
+
+      def cleanup_after_error(error)
+        cleanup
+        @backup.errors.add(:restore, error)
+        Rails.logger.error("Restore failed: #{@backup.errors.full_messages.first}")
+        if @thread
+          Rails.logger.debug("Exiting restore thread due to failure")
+          Thread.exit
+        end
       end
 
       def any_errors?
