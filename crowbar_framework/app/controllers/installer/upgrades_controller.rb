@@ -23,6 +23,25 @@ module Installer
     before_filter :set_progess_values
     before_filter :set_service_object, only: [:services, :backup, :nodes]
 
+    def prepare
+      status = :ok
+
+      begin
+        service_object = CrowbarService.new(Rails.logger)
+
+        service_object.prepare_nodes_for_crowbar_upgrade
+      rescue => e
+        Rails.logger.error e.message
+        status = :unprocessable_entity
+      end
+
+      respond_to do |format|
+        format.html do
+          head :no_content, status: status
+        end
+      end
+    end
+
     def show
       respond_to do |format|
         format.html do

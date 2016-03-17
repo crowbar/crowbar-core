@@ -312,6 +312,44 @@ class CrowbarService < ServiceObject
     base
   end
 
+  def prepare_nodes_for_crowbar_upgrade
+    proposal = Proposal.find_by(barclamp: "crowbar", name: "default")
+
+    # To all nodes, add a new role which prepares them for the upgrade
+    nodes_to_upgrade = []
+    not_ready_for_upgrade = []
+    all_nodes = NodeObject.all
+    all_nodes.each do |n|
+      next if n.admin? && ["ready", "crowbar_upgrade"].include?(n.state)
+      not_ready_for_upgrade.push(n.name)
+    end
+
+    unless not_ready_for_upgrade.empty?
+      raise I18n.t(
+        "installer.upgrades.prepare.nodes_not_ready", nodes: not_ready_for_upgrade.join(", ")
+      )
+    end
+
+    all_nodes.each do |node|
+      next if node.admin?
+
+      if node[:platform] == "windows"
+        # for Hyper-V nodes, only change the state, but do not run chef-client
+        node.set_state("crowbar_upgrade")
+      else
+        node["crowbar_wall"]["crowbar_upgrade_step"] = "crowbar_upgrade"
+        node.save
+        nodes_to_upgrade.push node.name
+      end
+    end
+
+    # adapt current proposal, so the nodes get crowbar-upgrade role
+    proposal.raw_data["deployment"]["crowbar"]["elements"]["crowbar-upgrade"] = nodes_to_upgrade
+    proposal.save
+    # commit the proposal so chef recipe get executed
+    proposal_commit("default", false, false)
+  end
+
   def disable_non_core_proposals
     upgrade_nodes = NodeObject.all.reject(&:admin?)
     check_if_nodes_are_available upgrade_nodes
