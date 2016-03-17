@@ -236,7 +236,7 @@ module Crowbar
         end
 
         # now that restore is done, dns server can answer requests from other nodes.
-        disable_dns_path.delete if disable_dns_path.exist?
+        self.class.disable_dns_path.delete if self.class.disable_dns_path.exist?
 
         Rails.logger.info("Re-running chef-client locally to apply changes from imported proposals")
         system(
