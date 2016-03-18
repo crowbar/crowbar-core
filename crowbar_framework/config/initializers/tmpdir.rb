@@ -19,7 +19,7 @@ class Dir
   class << self
     def mktmpdir_with_rails_context(prefix_suffix = nil, tmp_dir = nil, *rest)
       # set tmp dir to application tmp dir
-      tmp_dir = Rails.root.join("tmp").to_s if tmp_dir.nil?
+      tmp_dir = tmpdir_with_rails_context if tmp_dir.nil?
       # determine the caller
       call = caller_locations(1, 1).first.label
       # set caller prefix to the directory name
@@ -31,5 +31,15 @@ class Dir
     end
 
     alias_method_chain :mktmpdir, :rails_context
+
+    def tmpdir_with_rails_context(systemdir = false)
+      if systemdir
+        tmpdir_without_rails_context
+      else
+        Rails.root.join("tmp").to_s
+      end
+    end
+
+    alias_method_chain :tmpdir, :rails_context
   end
 end
