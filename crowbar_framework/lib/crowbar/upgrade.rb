@@ -36,6 +36,8 @@ module Crowbar
         knife_files
         crowbar_files
       end
+
+      @status[:status] == :ok
     end
 
     def supported?
