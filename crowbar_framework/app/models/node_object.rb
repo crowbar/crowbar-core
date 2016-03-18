@@ -299,7 +299,7 @@ class NodeObject < ChefObject
   end
 
   def default_fs
-    crowbar_wall["default_fs"] || "ext4"
+    crowbar_wall["default_fs"] || "btrfs"
   end
 
   def default_fs=(value)
