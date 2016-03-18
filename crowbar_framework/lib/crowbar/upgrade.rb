@@ -37,6 +37,8 @@ module Crowbar
       if @status[:errors].any?
         @backup.errors.add(:upgrade, @status[:errors])
       end
+
+      @status[:status] == :ok
     end
 
     def supported?
