@@ -33,6 +33,10 @@ module Crowbar
     def upgrade
       knife_files
       crowbar_files
+
+      if @status[:errors].any?
+        @backup.errors.add(:upgrade, @status[:errors])
+      end
     end
 
     def supported?
