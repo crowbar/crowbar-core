@@ -11,6 +11,7 @@
 
     ProxyPass / http://127.0.0.1:<%= @port %>/ timeout=1500 Keepalive=On
     ProxyPassReverse / http://127.0.0.1:<%= @port %>/
+    ProxyPreserveHost on
     SetEnv proxy-initial-not-pooled 1
 
     <Location />

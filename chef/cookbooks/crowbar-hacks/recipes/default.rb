@@ -41,9 +41,9 @@ if states.include?(node[:state])
       owner "root"
       group "root"
       mode "0644"
-      variables(logfiles: "/var/log/crowbar/*.log /var/log/crowbar/*.out /var/log/crowbar/chef-client/*.log",
+      variables(logfiles: "/var/log/crowbar/*.log /var/log/crowbar/chef-client/*.log",
                   action: "create 644 crowbar crowbar",
-                postrotate: "/usr/bin/pumactl -S /opt/dell/crowbar_framework/tmp/pids/puma.state phased-restart")
+                postrotate: "passenger-config reopen-logs")
     end if node[:recipes].include?("crowbar")
     template "/etc/logrotate.d/node-logs" do
       source "logrotate.erb"

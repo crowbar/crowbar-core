@@ -1,0 +1,6 @@
+{
+  "environment": "production",
+  "address": "127.0.0.1",
+  "port": 3000,
+  "log_file": "/var/log/crowbar/passenger.log"
+}
