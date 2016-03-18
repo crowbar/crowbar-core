@@ -37,6 +37,9 @@ module Crowbar
         crowbar_files
       end
 
+      if @status[:errors].any?
+        @backup.errors.add(:upgrade, @status[:errors])
+      end
       @status[:status] == :ok
     end
 
