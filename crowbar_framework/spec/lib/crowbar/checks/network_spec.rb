@@ -17,10 +17,8 @@
 require "spec_helper"
 
 describe Crowbar::Checks::Network do
-  subject { ::Crowbar::Checks::Network }
-
   before :each do
-    allow_any_instance_of(subject).to receive_messages(
+    allow(subject).to receive_messages(
       hostname: "crowbar",
       domain: "cloud.com",
       fqdn: "crowbar.cloud.com",
@@ -30,55 +28,81 @@ describe Crowbar::Checks::Network do
   end
 
   describe "#fqdn_detected?" do
-    it "returns true if fqnd is detectable" do
-      networkchecks = subject.new
-
-      expect(networkchecks.fqdn_detected?).to be true
+    it "returns true if fqdn is detectable" do
+      expect(subject.fqdn_detected?).to be true
     end
 
     it "returns false if the hostname is nil" do
-      allow_any_instance_of(subject).to receive(:hostname).and_return(nil)
-      networkchecks = subject.new
-
-      expect(networkchecks.fqdn_detected?).to be false
+      allow(subject).to receive(:hostname).and_return(nil)
+      expect(subject.fqdn_detected?).to be false
     end
 
     it "returns false if the domain is nil" do
-      allow_any_instance_of(subject).to receive(:domain).and_return(nil)
-      networkchecks = subject.new
-
-      expect(networkchecks.fqdn_detected?).to be false
+      allow(subject).to receive(:domain).and_return(nil)
+      expect(subject.fqdn_detected?).to be false
     end
   end
 
   describe "#ip_resolved?" do
     it "returns true if the ip address is resolvable" do
-      networkchecks = subject.new
-
-      expect(networkchecks.ip_resolved?).to be true
+      expect(subject.ip_resolved?).to be true
     end
 
     it "retuns false if no ip address is resolvable" do
-      allow_any_instance_of(subject).to receive(:ipv4_addrs).and_return([])
-      allow_any_instance_of(subject).to receive(:ipv6_addrs).and_return([])
-      networkchecks = subject.new
-
-      expect(networkchecks.ip_resolved?).to be false
+      allow(subject).to receive(:ipv4_addrs).and_return([])
+      allow(subject).to receive(:ipv6_addrs).and_return([])
+      expect(subject.ip_resolved?).to be false
     end
   end
 
   describe "#loopback_unresolved?" do
     it "returns true if the ip is not a loopback address" do
-      networkchecks = subject.new
-
-      expect(networkchecks.loopback_unresolved?).to be true
+      expect(subject.loopback_unresolved?).to be true
     end
 
     it "retuns false if the hostnames resolves to an loopback" do
-      allow_any_instance_of(subject).to receive(:ipv4_addrs).and_return(["127.0.0.1"])
-      networkchecks = subject.new
+      allow(subject).to receive(:ipv4_addrs).and_return(["127.0.0.1"])
+      expect(subject.loopback_unresolved?).to be false
+    end
+  end
 
-      expect(networkchecks.loopback_unresolved?).to be false
+  describe "#firewall_disabled?" do
+    it "returns false if firewall is enabled" do
+      allow_any_instance_of(Kernel).to(
+        receive(:system).with(
+          "sudo LANG=C iptables -n -L | grep -qvE '^$|^Chain [^ ]|^target     prot'"
+        ).and_return(true)
+      )
+      expect(subject.firewall_disabled?).to be false
+    end
+
+    it "returns true if firewall is disabled" do
+      allow_any_instance_of(Kernel).to(
+        receive(:system).with(
+          "sudo LANG=C iptables -n -L | grep -qvE '^$|^Chain [^ ]|^target     prot'"
+        ).and_return(false)
+      )
+      expect(subject.firewall_disabled?).to be true
+    end
+  end
+
+  describe "#ping_succeeds?" do
+    it "returns true if fqdn is pingable" do
+      allow_any_instance_of(Kernel).to(
+        receive(:system).with(
+          "ping -c 1 #{subject.fqdn} > /dev/null 2>&1"
+        ).and_return(true)
+      )
+      expect(subject.ping_succeeds?).to be true
+    end
+
+    it "returns palse if fqdn is not pingable" do
+      allow_any_instance_of(Kernel).to(
+        receive(:system).with(
+          "ping -c 1 #{subject.fqdn} > /dev/null 2>&1"
+        ).and_return(false)
+      )
+      expect(subject.ping_succeeds?).to be false
     end
   end
 end
