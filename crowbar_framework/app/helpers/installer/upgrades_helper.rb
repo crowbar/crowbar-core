@@ -52,6 +52,11 @@ module Installer
       end
     end
 
+    def upgrade_error_flash(message)
+      message += "<p>#{I18n.t("installer.upgrades.repeat_after_error")}</p>"
+      message.html_safe
+    end
+
     def upgrade_ha_repo_needed?
       return true if Proposal.where(barclamp: "pacemaker").first
 
