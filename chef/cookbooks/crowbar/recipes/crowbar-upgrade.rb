@@ -37,17 +37,11 @@ when "crowbar_upgrade"
 
   bash "disable_openstack_services" do
     code <<-EOF
-      for i in /etc/init.d/openstack-* \
-               /etc/init.d/openvswitch-switch \
-               /etc/init.d/ovs-usurp-config-* \
-               /etc/init.d/drbd \
-               /etc/init.d/openais;
+      for i in $(systemctl list-units openstack* --no-legend | cut -d" " -f1) \
+               drbd.service \
+               pacemaker.service;
       do
-        if test -e $i
-        then
-          initscript=`basename $i`
-          chkconfig -d $initscript
-        fi
+        systemctl disable $i
       done
     EOF
   end
