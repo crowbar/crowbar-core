@@ -585,6 +585,7 @@ en:
         continue: 'Upload and Restore'
         blockui: 'Uploading...'
         header: 'Continue Upgrade'
+        success: 'Successfully uploaded backup and triggered restore'
         description: |
           Select the upgrade data archive that you downloaded from the SUSE OpenStack Cloud 5
           Administration server when you started the upgrade wizard. Upload it by clicking
@@ -732,9 +733,9 @@ en:
       meta_missing: 'meta.yml metadata file is missing in the backup'
       invalid_backup: 'Cannot restore from invalid backup'
       missing_backup: 'Backup does not exist'
-      upgrade_not_supported: 'Upgrade from %{backup_version} to %{system_version} not supported'
+      upgrade_not_supported: 'Upgrade from %{backup_version} to %{system_version} is not supported'
       multiple_restore: 'Restore process is already running'
-      version_conflict: 'Cannot restore from different Crowbar version'
+      version_conflict: 'Restoring from different Crowbar version is not allowed'
       restore_successful: 'Successfully restored Crowbar'
     validation:
       hostnames_not_identical: 'Hostnames not identical'

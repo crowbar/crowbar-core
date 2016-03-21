@@ -42,10 +42,17 @@ module Installer
             format.html do
               redirect_to restore_upgrade_url
             end
+            format.json do
+              render json: t(".success"), status: :ok
+            end
           else
+            msg = @backup.errors.full_messages.first
             format.html do
-              flash[:alert] = @backup.errors.full_messages.first
+              flash[:alert] = msg
               redirect_to start_upgrade_url
+            end
+            format.json do
+              render json: msg, status: :unprocessable_entity
             end
           end
         end

@@ -31,13 +31,22 @@ module Crowbar
     end
 
     def upgrade
-      knife_files
-      crowbar_files
+      case @version
+      when "1.9"
+        knife_files
+        crowbar_files
+      end
+
+      if @status[:errors].any?
+        @backup.errors.add(:upgrade, @status[:errors])
+      end
+      @status[:status] == :ok
     end
 
     def supported?
       upgrades = [
-        ["1.9", "3.0"]
+        ["1.9", "3.0"],
+        ["3.0", "4.0"]
       ]
       upgrades.include?([@version, ENV["CROWBAR_VERSION"]])
     end

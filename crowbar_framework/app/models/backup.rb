@@ -75,9 +75,11 @@ class Backup < ActiveRecord::Base
     from_upgrade = options.fetch(:from_upgrade, false)
 
     if Crowbar::Backup::Restore.restore_steps_path.exist?
+      logger.debug "Restore process is already running"
       errors.add(:base, I18n.t("backups.index.multiple_restore"))
       return false
     elsif !from_upgrade && backup_version != system_version
+      logger.debug "Restoring from different Crowbar version is not allowed"
       errors.add(:base, I18n.t("backups.index.version_conflict"))
       return false
     end
@@ -185,9 +187,14 @@ class Backup < ActiveRecord::Base
       return false
     end
 
+    path.open("wb") do |f|
+      f.write(file.read)
+    end
+
     meta_file = data.join("meta.yml")
     unless meta_file.exist?
       errors.add(:file_content, I18n.t("backups.index.meta_missing"))
+      path.delete
       return false
     end
 
@@ -195,6 +202,7 @@ class Backup < ActiveRecord::Base
       meta = YAML.load_file(meta_file)
     rescue Psych::SyntaxError
       errors.add(:file_content, I18n.t("backups.index.invalid_file_content"))
+      path.delete
       return false
     end
 
@@ -203,10 +211,6 @@ class Backup < ActiveRecord::Base
     self.created_at = Time.zone.parse(meta["created_at"])
     # 20151222144602_create_backups.rb
     self.migration_level = meta["migration_level"] || 20151222144602
-
-    path.open("wb") do |f|
-      f.write(file.read)
-    end
   end
 
   def delete_archive
