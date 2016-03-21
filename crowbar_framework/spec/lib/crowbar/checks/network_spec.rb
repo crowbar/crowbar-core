@@ -28,7 +28,7 @@ describe Crowbar::Checks::Network do
   end
 
   describe "#fqdn_detected?" do
-    it "returns true if fqnd is detectable" do
+    it "returns true if fqdn is detectable" do
       expect(subject.fqdn_detected?).to be true
     end
 
