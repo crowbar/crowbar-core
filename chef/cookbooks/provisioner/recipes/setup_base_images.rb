@@ -452,7 +452,7 @@ node.set[:provisioner][:available_oses] = Mash.new
 node[:provisioner][:supported_oses].each do |os, arches|
   arches.each do |arch, params|
     web_path = "#{provisioner_web}/#{os}/#{arch}"
-    admin_web = "#{web_path}/install"
+    install_url = "#{web_path}/install"
     crowbar_repo_web = "#{web_path}/crowbar-extra"
     os_dir = "#{tftproot}/#{os}/#{arch}"
     os_codename = node[:lsb][:codename]
@@ -507,7 +507,7 @@ node[:provisioner][:supported_oses].each do |os, arches|
     case
     when /^(open)?suse/ =~ os
       # Add base OS install repo for suse
-      node.set[:provisioner][:repositories][os][arch]["base"] = { "baseurl=#{admin_web}" => true }
+      node.set[:provisioner][:repositories][os][arch]["base"] = { "baseurl=#{install_url}" => true }
 
       ntp_servers = search(:node, "roles:ntp-server")
       ntp_servers_ips = ntp_servers.map { |n| Chef::Recipe::Barclamp::Inventory.get_network_by_type(n, "admin").address }
@@ -557,9 +557,9 @@ node[:provisioner][:supported_oses].each do |os, arches|
     when /^(redhat|centos)/ =~ os
       # Add base OS install repo for redhat/centos
       if ::File.exist? "#{tftproot}/#{os}/#{arch}/install/repodata"
-        node.set[:provisioner][:repositories][os][arch]["base"] = { "baseurl=#{admin_web}" => true }
+        node.set[:provisioner][:repositories][os][arch]["base"] = { "baseurl=#{install_url}" => true }
       else
-        node.set[:provisioner][:repositories][os][arch]["base"] = { "baseurl=#{admin_web}/Server" => true }
+        node.set[:provisioner][:repositories][os][arch]["base"] = { "baseurl=#{install_url}/Server" => true }
       end
       # Default kickstarts and crowbar_join scripts for redhat.
 
@@ -568,7 +568,7 @@ node[:provisioner][:supported_oses].each do |os, arches|
         owner "root"
         group "root"
         source "crowbar_join.redhat.sh.erb"
-        variables(admin_web: admin_web,
+        variables(admin_web: install_url,
                   os_codename: os_codename,
                   crowbar_repo_web: crowbar_repo_web,
                   admin_ip: admin_ip,
@@ -577,14 +577,14 @@ node[:provisioner][:supported_oses].each do |os, arches|
       end
 
     when /^ubuntu/ =~ os
-      node.set[:provisioner][:repositories][os][arch]["base"] = { admin_web => true }
+      node.set[:provisioner][:repositories][os][arch]["base"] = { install_url => true }
       # Default files needed for Ubuntu.
 
       template "#{os_dir}/net-post-install.sh" do
         mode 0644
         owner "root"
         group "root"
-        variables(admin_web: admin_web,
+        variables(admin_web: install_url,
                   os_codename: os_codename,
                   repos: node[:provisioner][:repositories][os][arch],
                   admin_ip: admin_ip,
@@ -597,7 +597,7 @@ node[:provisioner][:supported_oses].each do |os, arches|
         owner "root"
         group "root"
         source "crowbar_join.ubuntu.sh.erb"
-        variables(admin_web: admin_web,
+        variables(admin_web: install_url,
                   os_codename: os_codename,
                   crowbar_repo_web: crowbar_repo_web,
                   admin_ip: admin_ip,
