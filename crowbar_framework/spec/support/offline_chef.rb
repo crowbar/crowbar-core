@@ -133,7 +133,11 @@ class OfflineChef < Sinatra::Base
   end
 
   def read_fixtures(type)
-    fixtures = Dir.glob(Rails.root.join("spec", "fixtures", "offline_chef", "#{type}*.json"))
+    fixtures = Dir.glob(
+      Rails.root.join(
+        "spec", "fixtures", "offline_chef", "#{type}*.json"
+      )
+    ).reject { |r| r.match /(nodes_crowbar.json$)|(roles_crowbar.json$)/ }
     fixtures.map do |f|
       JSON.parse(File.read(f), create_additions: false)
     end
