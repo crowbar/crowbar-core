@@ -21,7 +21,6 @@ module Crowbar
 
       def initialize(backup)
         @backup = backup
-        @data = @backup.data
         @version = @backup.version
         @migration_level = @backup.migration_level
         @status = {}
@@ -33,6 +32,8 @@ module Crowbar
           Rails.logger.debug("Starting restore in background thread")
           restore
         end
+
+        @thread.alive? ? true : false
       end
 
       def restore
@@ -48,13 +49,7 @@ module Crowbar
           set_step(component)
           send(component)
           if any_errors?
-            cleanup
-            @backup.errors.add(:restore, error_messages.join(" - "))
-            Rails.logger.error("Restore failed: #{@backup.errors.full_messages.first}")
-            if @thread
-              Rails.logger.debug("Exiting restore thread due to failure")
-              Thread.exit
-            end
+            cleanup_after_error(error_messages.join(" - "))
             return false
           end
         end
@@ -62,6 +57,8 @@ module Crowbar
         set_success
         cleanup
         true
+      rescue StandardError => e
+        cleanup_after_error(e)
       end
 
       class << self
@@ -142,6 +139,16 @@ module Crowbar
         @backup.path.delete if @backup.path.exist?
       end
 
+      def cleanup_after_error(error)
+        cleanup
+        @backup.errors.add(:restore, error)
+        Rails.logger.error("Restore failed: #{@backup.errors.full_messages.first}")
+        if @thread
+          Rails.logger.debug("Exiting restore thread due to failure")
+          Thread.exit
+        end
+      end
+
       def any_errors?
         !errors.empty?
       end
@@ -179,7 +186,7 @@ module Crowbar
 
         begin
           [:nodes, :roles, :clients, :databags].each do |type|
-            Dir.glob(@data.join("knife", type.to_s, "**", "*")).each do |file|
+            Dir.glob(@backup.data.join("knife", type.to_s, "**", "*")).each do |file|
               file = Pathname.new(file)
               # skip client "crowbar"
               next if type == :clients && file.basename.to_s =~ /^crowbar.json$/
@@ -229,7 +236,7 @@ module Crowbar
         end
 
         # now that restore is done, dns server can answer requests from other nodes.
-        disable_dns_path.delete if disable_dns_path.exist?
+        self.class.disable_dns_path.delete if self.class.disable_dns_path.exist?
 
         Rails.logger.info("Re-running chef-client locally to apply changes from imported proposals")
         system(
@@ -243,7 +250,7 @@ module Crowbar
 
       def restore_files(source, destination)
         # keep the permissions of the files that are already in place
-        src_path = @data.join("crowbar", source)
+        src_path = @backup.data.join("crowbar", source)
         dest_is_dir = system("sudo", "test", "-d", destination)
 
         # If source and destination are both directories we just need to
@@ -315,7 +322,7 @@ module Crowbar
 
         begin
           SerializationHelper::Base.new(YamlDb::Helper).load(
-            @data.join("crowbar", "database.yml")
+            @backup.data.join("crowbar", "database.yml")
           )
         rescue StandardError => e
           Rails.logger.error "Failed to load database.yml: #{e}"
