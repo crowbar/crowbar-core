@@ -320,7 +320,7 @@ class CrowbarService < ServiceObject
     not_ready_for_upgrade = []
     all_nodes = NodeObject.all
     all_nodes.each do |n|
-      next if n.admin? && ["ready", "crowbar_upgrade"].include?(n.state)
+      next if n.admin? || ["ready", "crowbar_upgrade"].include?(n.state)
       not_ready_for_upgrade.push(n.name)
     end
 
