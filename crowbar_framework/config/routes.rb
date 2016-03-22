@@ -164,6 +164,7 @@ Rails.application.routes.draw do
       only: [:show],
       controller: "installer/upgrades" do
       member do
+        post :prepare
         get :start
         post :start
         get :restore
