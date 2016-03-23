@@ -90,7 +90,7 @@ else
   service "ntp" do
     service_name "ntpd" if node[:platform_family] == "rhel"
     service_name "ntpd" if node[:platform] == "opensuse" || (node[:platform] == "suse" && node[:platform_version].to_f >= 12.0)
-    supports restart: true, status: true, reload: true
+    supports restart: true, status: true, reload: false
     action [:enable, :start]
   end
   utils_systemd_service_restart "ntp"
