@@ -109,6 +109,11 @@ class Backup < ActiveRecord::Base
                                system_version: ENV["CROWBAR_VERSION"]))
       return false
     end
+  rescue StandardError => e
+    logger.error "Upgrade failed: #{e}"
+    errors.add(:base, e)
+    cleanup
+    return false
   end
 
   def cleanup
