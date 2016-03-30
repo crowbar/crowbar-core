@@ -21,6 +21,7 @@ module Crowbar
 
       def initialize(backup)
         @backup = backup
+        @data = @backup.data
         @version = @backup.version
         @migration_level = @backup.migration_level
         @status = {}
@@ -186,7 +187,7 @@ module Crowbar
 
         begin
           [:nodes, :roles, :clients, :databags].each do |type|
-            Dir.glob(@backup.data.join("knife", type.to_s, "**", "*")).each do |file|
+            Dir.glob(@data.join("knife", type.to_s, "**", "*")).each do |file|
               file = Pathname.new(file)
               # skip client "crowbar"
               next if type == :clients && file.basename.to_s =~ /^crowbar.json$/
@@ -250,7 +251,7 @@ module Crowbar
 
       def restore_files(source, destination)
         # keep the permissions of the files that are already in place
-        src_path = @backup.data.join("crowbar", source)
+        src_path = @data.join("crowbar", source)
         dest_is_dir = system("sudo", "test", "-d", destination)
 
         # If source and destination are both directories we just need to
@@ -322,7 +323,7 @@ module Crowbar
 
         begin
           SerializationHelper::Base.new(YamlDb::Helper).load(
-            @backup.data.join("crowbar", "database.yml")
+            @data.join("crowbar", "database.yml")
           )
         rescue StandardError => e
           Rails.logger.error "Failed to load database.yml: #{e}"
