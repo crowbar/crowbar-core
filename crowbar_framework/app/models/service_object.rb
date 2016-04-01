@@ -919,6 +919,10 @@ class ServiceObject
   def apply_role(role, inst, in_queue)
     @logger.debug "apply_role(#{role.name}, #{inst}, #{in_queue})"
 
+    # Variables used in the global ensure
+    apply_locks = []
+    applying_nodes = []
+
     # Part I: Looking up data & checks
     #
     # we look up the role in the database (if there is one), the new one is
@@ -949,9 +953,13 @@ class ServiceObject
     #
     deps = proposal_dependencies(role)
     delay, pre_cached_nodes = queue_proposal(inst, element_order, new_elements, deps)
-    # FIXME: this breaks the convention that we return a string; but really,
-    # we should return a hash everywhere, to avoid this...
-    return [202, delay] unless delay.empty?
+    unless delay.empty?
+      # force not processing the queue further
+      in_queue = true
+      # FIXME: this breaks the convention that we return a string; but really,
+      # we should return a hash everywhere, to avoid this...
+      return [202, delay]
+    end
 
     @logger.debug "delay empty - running proposal"
 
@@ -963,7 +971,6 @@ class ServiceObject
         @logger.fatal("apply_role: Failed to expand items #{failures.inspect} for role \"#{role_name}\"")
         message = "Failed to apply the proposal: cannot expand list of nodes for role \"#{role_name}\", following items do not exist: #{failures.join(", ")}"
         update_proposal_status(inst, "failed", message)
-        process_queue unless in_queue
         return [405, message]
       end
     end
@@ -1185,8 +1192,6 @@ class ServiceObject
     rescue Crowbar::Error::LockingFailure => e
       message = "Failed to apply the proposal: #{e.message}"
       update_proposal_status(inst, "failed", message)
-      restore_to_ready(applying_nodes)
-      process_queue unless in_queue
       return [409, message] # 409 is 'Conflict'
     end
 
@@ -1273,8 +1278,6 @@ class ServiceObject
       @logger.fatal("apply_role: Exception #{e.message} #{e.backtrace.join("\n")}")
       message = "Failed to apply the proposal: exception before calling chef (#{e.message})"
       update_proposal_status(inst, "failed", message)
-      restore_to_ready(applying_nodes)
-      process_queue unless in_queue
       return [405, message]
     end
 
@@ -1342,8 +1345,6 @@ class ServiceObject
               message = message + "#{pids[baddie[0]]} \n"+ get_log_lines("#{pids[baddie[0]]}")
             end
             update_proposal_status(inst, "failed", message)
-            restore_to_ready(applying_nodes)
-            process_queue unless in_queue
             return [405, message]
           end
         end
@@ -1380,8 +1381,6 @@ class ServiceObject
               message = message + "#{pids[baddie[0]]} \n "+ get_log_lines("#{pids[baddie[0]]}")
             end
             update_proposal_status(inst, "failed", message)
-            restore_to_ready(applying_nodes)
-            process_queue unless in_queue
             return [405, message]
           end
         end
@@ -1398,8 +1397,6 @@ class ServiceObject
       @logger.fatal("apply_role: Exception #{e.message} #{e.backtrace.join("\n")}")
       message = "Failed to apply the proposal: exception after calling chef (#{e.message})"
       update_proposal_status(inst, "failed", message)
-      restore_to_ready(applying_nodes)
-      process_queue unless in_queue
       return [405, message]
     end
 
@@ -1434,11 +1431,11 @@ class ServiceObject
     proposal.save unless roles_to_remove.empty?
 
     update_proposal_status(inst, "success", "")
-    restore_to_ready(applying_nodes)
-    process_queue unless in_queue
     [200, {}]
   ensure
-    apply_locks.each(&:release) if apply_locks
+    apply_locks.each(&:release) if apply_locks.any?
+    restore_to_ready(applying_nodes) if applying_nodes.any?
+    process_queue unless in_queue
   end
 
   def apply_role_pre_chef_call(old_role, role, all_nodes)
