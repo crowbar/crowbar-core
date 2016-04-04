@@ -82,8 +82,6 @@ class BackupsController < ApplicationController
         end
       end
     end
-  ensure
-    @backup.cleanup unless @backup.nil?
   end
 
   #
