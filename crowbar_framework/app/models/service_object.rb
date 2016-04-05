@@ -1309,9 +1309,6 @@ class ServiceObject
         non_admin_nodes << node_name
       end
 
-      @logger.debug("AR: Calling chef-client for #{role.name} on non-admin nodes #{non_admin_nodes.join(" ")}")
-      @logger.debug("AR: Calling chef-client for #{role.name} on admin nodes #{admin_list.join(" ")}")
-
       #
       # XXX: We used to do this twice - do we really need twice???
       # Yes! We do!  The system has some transient issues that are hidden
@@ -1320,6 +1317,9 @@ class ServiceObject
       #
       pids = {}
       unless non_admin_nodes.empty?
+        @logger.debug(
+          "AR: Calling chef-client for #{role.name} on non-admin nodes #{non_admin_nodes.join(" ")}"
+        )
         non_admin_nodes.each do |node|
           pre_cached_nodes[node] ||= NodeObject.find_node_by_name(node)
           nobj = pre_cached_nodes[node]
@@ -1359,6 +1359,9 @@ class ServiceObject
       end
 
       unless admin_list.empty?
+        @logger.debug(
+          "AR: Calling chef-client for #{role.name} on admin nodes #{admin_list.join(" ")}"
+        )
         admin_list.each do |node|
           filename = "#{ENV['CROWBAR_LOG_DIR']}/chef-client/#{node}.log"
           pid = run_remote_chef_client(node, Rails.root.join("..", "bin", "single_chef_client.sh").expand_path.to_s, filename)
