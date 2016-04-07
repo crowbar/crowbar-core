@@ -28,11 +28,11 @@ class ApplicationController < ActionController::Base
   before_filter :enable_profiler, if: proc { ENV["ENABLE_PROFILER"] == "true" }
   before_filter :enforce_installer, unless: proc {
     Crowbar::Installer.successful? || \
-    ENV["RAILS_ENV"] == "test"
+    Rails.env.test?
   }
   before_filter :sanity_checks, unless: proc {
-    Rails.cache.fetch(:sanity_check_errors).empty? || \
-    ENV["RAILS_ENV"] == "test"
+    Rails.env.test? || \
+    Rails.cache.fetch(:sanity_check_errors).empty?
   }
 
   # Basis for the reflection/help system.
