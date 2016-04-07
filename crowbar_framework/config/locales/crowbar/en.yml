@@ -759,6 +759,8 @@ en:
       ip_configured: 'No local interface is configured with a correct IP address.'
       firewall_disabled: 'Firewall is not completely disabled.'
       ping_succeeds: 'Failed to ping %{fqdn}; please check your network configuration.'
+    check:
+      cache_error: 'Failed to cache sanity checks'
 
   # Global
   overview: 'Overview'
