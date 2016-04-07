@@ -24,6 +24,9 @@ class SanitiesController < ApplicationController
 
     respond_to do |format|
       if @errors.empty?
+        format.json do
+          head :ok
+        end
         format.html do
           if Crowbar::Installer.successful?
             redirect_to root_url
@@ -32,6 +35,9 @@ class SanitiesController < ApplicationController
           end
         end
       else
+        format.json do
+          render json: @errors
+        end
         format.html
       end
     end
@@ -39,8 +45,18 @@ class SanitiesController < ApplicationController
 
   def check
     respond_to do |format|
+      format.json do
+        if Crowbar::Sanity.refresh_cache
+          head :ok
+        else
+          render json: { error: I18n.t("sanities.check.cache_error") }, status: :conflict
+        end
+      end
       format.html do
-        Crowbar::Sanity.refresh_cache
+        unless Crowbar::Sanity.refresh_cache
+          flash[:alert] = I18n.t("sanities.check.cache_error")
+        end
+
         redirect_to sanity_url
       end
     end
