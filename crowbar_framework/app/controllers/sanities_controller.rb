@@ -25,14 +25,23 @@ class SanitiesController < ApplicationController
     respond_to do |format|
       if @errors.empty?
         format.html do
-          begin
-            redirect_to :back
-          rescue ActionController::RedirectBackError
+          if Crowbar::Installer.successful?
             redirect_to root_url
+          else
+            redirect_to installer_root_url
           end
         end
       else
         format.html
+      end
+    end
+  end
+
+  def check
+    respond_to do |format|
+      format.html do
+        Crowbar::Sanity.refresh_cache
+        redirect_to sanity_url
       end
     end
   end

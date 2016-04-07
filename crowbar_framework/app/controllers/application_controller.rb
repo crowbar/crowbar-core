@@ -28,8 +28,7 @@ class ApplicationController < ActionController::Base
   before_filter :enable_profiler, if: proc { ENV["ENABLE_PROFILER"] == "true" }
   before_filter :enforce_installer, unless: proc {
     Crowbar::Installer.successful? || \
-    ENV["RAILS_ENV"] == "test" || \
-    Rails.cache.fetch(:sanity_check_errors).any?
+    ENV["RAILS_ENV"] == "test"
   }
   before_filter :sanity_checks, unless: proc {
     Rails.cache.fetch(:sanity_check_errors).empty? || \
@@ -188,6 +187,8 @@ class ApplicationController < ActionController::Base
   end
 
   def sanity_checks
+    Crowbar::Sanity.cache! unless Rails.cache.exist?(:sanity_check_errors)
+
     respond_to do |format|
       format.html do
         redirect_to sanity_path

@@ -33,9 +33,9 @@ module Crowbar
 
       def cache!
         if Rails.cache.write(:sanity_check_errors, check, expires_in: 24.hours)
-          return Rails.cache.fetch(:sanity_check_errors)
+          Rails.cache.fetch(:sanity_check_errors)
         else
-          return false
+          false
         end
       end
 

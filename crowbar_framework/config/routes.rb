@@ -185,7 +185,13 @@ Rails.application.routes.draw do
     end
   end
 
-  resource :sanity, only: [:show]
+  resource :sanity,
+    only: [:show],
+    controller: "sanities" do
+    member do
+      post :check
+    end
+  end
 
   # TODO(must): Get rid of this wildcard route
   match "/:controller/:action/*(:.format)",
