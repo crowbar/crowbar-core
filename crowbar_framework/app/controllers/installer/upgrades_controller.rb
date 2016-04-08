@@ -25,17 +25,26 @@ module Installer
 
     def prepare
       status = :ok
+      msg = ""
 
       begin
         service_object = CrowbarService.new(Rails.logger)
 
         service_object.prepare_nodes_for_crowbar_upgrade
       rescue => e
-        Rails.logger.error e.message
+        msg = e.message
+        Rails.logger.error msg
         status = :unprocessable_entity
       end
 
       respond_to do |format|
+        format.json do
+          if status == :ok
+            head status
+          else
+            render json: msg, status: status
+          end
+        end
         format.html do
           head :no_content, status: status
         end
@@ -123,6 +132,7 @@ module Installer
 
     def services
       @current_step = 7
+      status = :ok
 
       if request.post?
         respond_to do |format|
@@ -130,10 +140,17 @@ module Installer
             @service_object.shutdown_services_at_non_db_nodes
             @service_object.dump_openstack_database
 
+            format.json do
+              head status
+            end
             format.html do
               redirect_to backup_upgrade_url
             end
           rescue => e
+            status = :unprocessable_entity
+            format.json do
+              render json: e.message, status: status
+            end
             format.html do
               flash[:alert] = view_context.upgrade_error_flash(e.message)
               redirect_to services_upgrade_url
@@ -149,6 +166,7 @@ module Installer
 
     def backup
       @current_step = 8
+      status = :ok
 
       if request.post?
         respond_to do |format|
@@ -156,10 +174,17 @@ module Installer
             @service_object.finalize_openstack_shutdown
             Openstack::Upgrade.unset_db_synced
 
+            format.json do
+              head status
+            end
             format.html do
               redirect_to nodes_upgrade_url
             end
           rescue => e
+            status = :unprocessable_entity
+            format.json do
+              render json: e.message, status: status
+            end
             format.html do
               flash[:alert] = view_context.upgrade_error_flash(e.message)
               redirect_to backup_upgrade_url
@@ -175,6 +200,7 @@ module Installer
 
     def nodes
       @current_step = 9
+      status = :ok
 
       if request.post?
         respond_to do |format|
@@ -182,10 +208,17 @@ module Installer
             @service_object.disable_non_core_proposals
             @service_object.prepare_nodes_for_os_upgrade
 
+            format.json do
+              head status
+            end
             format.html do
               redirect_to finishing_upgrade_url
             end
           rescue => e
+            status = :unprocessable_entity
+            format.json do
+              render json: e.message, status: status
+            end
             format.html do
               flash[:alert] = view_context.upgrade_error_flash(e.message)
               redirect_to nodes_upgrade_url
@@ -203,6 +236,9 @@ module Installer
       @current_step = 10
 
       respond_to do |format|
+        format.json do
+          head :ok
+        end
         format.html
       end
     end
