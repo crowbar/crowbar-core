@@ -25,6 +25,10 @@ class ApplicationController < ActionController::Base
   rescue_from Crowbar::Error::NotFound, with: :render_not_found
   rescue_from Crowbar::Error::ChefOffline, with: :chef_is_offline
 
+  before_action do |c|
+    Crowbar::Sanity.cache! unless Rails.cache.exist?(:sanity_check_errors)
+  end
+
   before_filter :enable_profiler, if: proc { ENV["ENABLE_PROFILER"] == "true" }
   before_filter :enforce_installer, unless: proc {
     Crowbar::Installer.successful? || \
@@ -187,8 +191,6 @@ class ApplicationController < ActionController::Base
   end
 
   def sanity_checks
-    Crowbar::Sanity.cache! unless Rails.cache.exist?(:sanity_check_errors)
-
     respond_to do |format|
       format.html do
         redirect_to sanity_path
