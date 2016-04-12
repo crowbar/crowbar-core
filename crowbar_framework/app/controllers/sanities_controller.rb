@@ -47,7 +47,7 @@ class SanitiesController < ApplicationController
     respond_to do |format|
       format.json do
         if Crowbar::Sanity.refresh_cache
-          head :ok
+          render json: Rails.cache.fetch(:sanity_check_errors)
         else
           render json: { error: I18n.t("sanities.check.cache_error") }, status: :conflict
         end
