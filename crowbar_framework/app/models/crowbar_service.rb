@@ -385,7 +385,9 @@ class CrowbarService < ServiceObject
   end
 
   def prepare_nodes_for_os_upgrade
-    upgrade_nodes = NodeObject.all.reject { |node| node.admin? || node[:platform] == "windows" }
+    upgrade_nodes = NodeObject.all.reject do |node|
+      node.admin? || node[:platform] == "windows" || node.state != "crowbar_upgrade"
+    end
     check_if_nodes_are_available upgrade_nodes
     admin_node = NodeObject.admin_node
     upgrade_nodes_failed = []
