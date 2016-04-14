@@ -748,6 +748,20 @@ en:
       non_json_file: 'Unprocessable chef file found'
       invalid_file_extension: 'Filename needs to be a valid tarball with a .tar.gz file extension'
 
+  sanities:
+    show:
+      header: 'Sanity Check Failures'
+      notice: |
+        There are errors that must be resolved. Please click the Refresh button after solving the errors.
+      fqdn_detected: 'Could not detect fully-qualified hostname.'
+      ip_resolved: 'Could not resolve %{fqdn} to an IPv4 or IPv6 address.'
+      loopback_unresolved: '%{fqdn} resolves to a loopback address.'
+      ip_configured: 'No local interface is configured with a correct IP address.'
+      firewall_disabled: 'Firewall is not completely disabled.'
+      ping_succeeds: 'Failed to ping %{fqdn}; please check your network configuration.'
+    check:
+      cache_error: 'Failed to cache sanity checks'
+
   # Global
   overview: 'Overview'
   show: 'View'
