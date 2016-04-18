@@ -97,11 +97,12 @@ module Crowbar
             logger.info("Uploading data_bag item #{data_bag_item_path}...")
 
             begin
-              bag.save
+              return false unless bag.save
             rescue Net::HTTPServerException => e
               logger.error(
                 "Uploading data_bag item #{data_bag_item_path} failed (#{e.response.code})"
               )
+              return false
             end
           end
         end
@@ -116,9 +117,10 @@ module Crowbar
           logger.info("Uploading role #{file.basename}")
 
           begin
-            role.save
+            return false unless role.save
           rescue Net::HTTPServerException => e
             logger.error("Uploading role #{file.basename} failed (#{e.response.code})")
+            return false
           end
         end
         true
