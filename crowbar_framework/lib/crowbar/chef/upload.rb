@@ -43,7 +43,7 @@ module Crowbar
 
         logger.info("Checking existing cookbooks...")
         cookbooks_for_upload.reject! do |cookbook|
-          next unless api_coobbooks.include?(cookbook.name.to_s)
+          next unless api_cookbooks.include?(cookbook.name.to_s)
           cookbook_exist?(cookbook)
         end
 
@@ -167,8 +167,8 @@ module Crowbar
         @api ||= ::Chef::REST.new("http://localhost:4000")
       end
 
-      def api_coobbooks
-        @api_coobbooks ||= api.get_rest("cookbooks").map(&:first)
+      def api_cookbooks
+        @api_cookbooks ||= api.get_rest("cookbooks").map(&:first)
       end
 
       def validate_dependencies(cookbook)
