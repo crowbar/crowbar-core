@@ -1,0 +1,11 @@
+{
+  "crowbar": {
+    "url":"http://localhost:4000/cookbooks/crowbar",
+    "versions": [
+      {
+        "url":"http://localhost:4000/cookbooks/crowbar/0.9.5",
+        "version":"0.9.5"
+      }
+    ]
+  }
+}

@@ -32,6 +32,10 @@ class OfflineChef < Sinatra::Base
     render_json(:data_bag, :crowbar)
   end
 
+  post "/data" do
+    empty_json
+  end
+
   get "/data/*" do |bag|
     render_json(:data_bag_item, bag.gsub("/", "-"))
   end
@@ -78,6 +82,18 @@ class OfflineChef < Sinatra::Base
 
   get "/clients/*" do |client|
     render_json(:api_client, client)
+  end
+
+  get "/cookbooks" do
+    render_json(:cookbooks, :crowbar)
+  end
+
+  get "/cookbooks/:name/" do |name|
+    render_json(:cookbook, name)
+  end
+
+  get "/cookbooks/:name/_latest" do |name|
+    render_json(:cookbook, "#{name}_latest")
   end
 
   private
