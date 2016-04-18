@@ -21,22 +21,22 @@ namespace :chef do
 
     desc "Upload the complete chef data to the server"
     task all: [:environment] do
-      Crowbar::Chef::Upload.all
+      Crowbar::Chef::Upload.new.all
     end
 
     desc "Upload chef cookbooks to the server"
     task cookbooks: [:environment] do
-      Crowbar::Chef::Upload.cookbooks
+      Crowbar::Chef::Upload.new.cookbooks
     end
 
     desc "Upload chef data_bags to the server"
     task data_bags: [:environment] do
-      Crowbar::Chef::Upload.data_bags
+      Crowbar::Chef::Upload.new.data_bags
     end
 
     desc "Upload chef roles to the server"
     task roles: [:environment] do
-      Crowbar::Chef::Upload.roles
+      Crowbar::Chef::Upload.new.roles
     end
 
     task default: :all
