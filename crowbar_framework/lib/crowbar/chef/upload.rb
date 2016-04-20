@@ -43,7 +43,7 @@ module Crowbar
 
         logger.info("Checking existing cookbooks...")
         cookbooks_for_upload.reject! do |cookbook|
-          next unless api_coobbooks.include?(cookbook.name.to_s)
+          next unless api_cookbooks.include?(cookbook.name.to_s)
           cookbook_exist?(cookbook)
         end
 
@@ -97,11 +97,12 @@ module Crowbar
             logger.info("Uploading data_bag item #{data_bag_item_path}...")
 
             begin
-              bag.save
+              return false unless bag.save
             rescue Net::HTTPServerException => e
               logger.error(
                 "Uploading data_bag item #{data_bag_item_path} failed (#{e.response.code})"
               )
+              return false
             end
           end
         end
@@ -116,9 +117,10 @@ module Crowbar
           logger.info("Uploading role #{file.basename}")
 
           begin
-            role.save
+            return false unless role.save
           rescue Net::HTTPServerException => e
             logger.error("Uploading role #{file.basename} failed (#{e.response.code})")
+            return false
           end
         end
         true
@@ -167,8 +169,8 @@ module Crowbar
         @api ||= ::Chef::REST.new("http://localhost:4000")
       end
 
-      def api_coobbooks
-        @api_coobbooks ||= api.get_rest("cookbooks").map(&:first)
+      def api_cookbooks
+        @api_cookbooks ||= api.get_rest("cookbooks").map(&:first)
       end
 
       def validate_dependencies(cookbook)

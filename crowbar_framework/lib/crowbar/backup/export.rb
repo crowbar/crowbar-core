@@ -64,15 +64,15 @@ module Crowbar
         data_dir = workdir.join("knife", "databags")
         data_dir.mkpath
 
-        Chef::DataBag.list.each do |name, url|
+        ::Chef::DataBag.list.each do |name, url|
           bag_dir = data_dir.join(name)
           bag_dir.mkpath
 
-          Chef::DataBag.load(name).each do |item, item_url|
+          ::Chef::DataBag.load(name).each do |item, item_url|
             next if item.match(/\Atemplate-.*/)
             logger.debug "Backing up databag #{name}/#{item}"
 
-            record = Chef::DataBagItem.load(
+            record = ::Chef::DataBagItem.load(
               name,
               item
             )

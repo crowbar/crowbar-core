@@ -1,0 +1,207 @@
+{
+  "recipes": [
+    {
+      "name": "crowbar-upgrade.rb",
+      "path": "recipes/crowbar-upgrade.rb",
+      "checksum": "2da1cc26be0ee4edbbd1aa6db37ab594",
+      "specificity": "default",
+      "url": "http://localhost:4000/cookbooks/crowbar/0.9.5/files/2da1cc26be0ee4edbbd1aa6db37ab594"
+    },
+    {
+      "name": "default.rb",
+      "path": "recipes/default.rb",
+      "checksum": "a2ffcf76f961231891dd5815285e3fc1",
+      "specificity": "default",
+      "url": "http://localhost:4000/cookbooks/crowbar/0.9.5/files/a2ffcf76f961231891dd5815285e3fc1"
+    },
+    {
+      "name": "stop-services-before-upgrade.rb",
+      "path": "recipes/stop-services-before-upgrade.rb",
+      "checksum": "ad636d907e40072e5b02e6840e0860be",
+      "specificity": "default",
+      "url": "http://localhost:4000/cookbooks/crowbar/0.9.5/files/ad636d907e40072e5b02e6840e0860be"
+    }
+  ],
+  "definitions": [
+
+  ],
+  "libraries": [
+
+  ],
+  "attributes": [
+    {
+      "name": "default.rb",
+      "path": "attributes/default.rb",
+      "checksum": "f98a2b65dd7156d58491cb1891ebe94a",
+      "specificity": "default",
+      "url": "http://localhost:4000/cookbooks/crowbar/0.9.5/files/f98a2b65dd7156d58491cb1891ebe94a"
+    }
+  ],
+  "files": [
+    {
+      "name": "crowbar",
+      "path": "files/default/crowbar",
+      "checksum": "513a464e3b11e1063b14e27c0a17b7e5",
+      "specificity": "default",
+      "url": "http://localhost:4000/cookbooks/crowbar/0.9.5/files/513a464e3b11e1063b14e27c0a17b7e5"
+    },
+    {
+      "name": "chef-server",
+      "path": "files/default/chef-server",
+      "checksum": "fb8653e1535a1c31fbf395db561253eb",
+      "specificity": "default",
+      "url": "http://localhost:4000/cookbooks/crowbar/0.9.5/files/fb8653e1535a1c31fbf395db561253eb"
+    },
+    {
+      "name": "knife.rb",
+      "path": "files/default/knife.rb",
+      "checksum": "34be25abad43991dcda5779ad4348068",
+      "specificity": "default",
+      "url": "http://localhost:4000/cookbooks/crowbar/0.9.5/files/34be25abad43991dcda5779ad4348068"
+    },
+    {
+      "name": "crowbar-sessions-sweep.cron",
+      "path": "files/default/crowbar-sessions-sweep.cron",
+      "checksum": "b3cca547c477fd59932274a24b638e37",
+      "specificity": "default",
+      "url": "http://localhost:4000/cookbooks/crowbar/0.9.5/files/b3cca547c477fd59932274a24b638e37"
+    },
+    {
+      "name": "sudoers.crowbar",
+      "path": "files/default/sudoers.crowbar",
+      "checksum": "8018637bca06d59f1cc02186b0413f18",
+      "specificity": "default",
+      "url": "http://localhost:4000/cookbooks/crowbar/0.9.5/files/8018637bca06d59f1cc02186b0413f18"
+    },
+    {
+      "name": "crowbar.service",
+      "path": "files/default/crowbar.service",
+      "checksum": "43b09906ce295c49f12dc5f7b2c736e5",
+      "specificity": "default",
+      "url": "http://localhost:4000/cookbooks/crowbar/0.9.5/files/43b09906ce295c49f12dc5f7b2c736e5"
+    },
+    {
+      "name": "crowbar.sh",
+      "path": "files/default/crowbar.sh",
+      "checksum": "220e91644f01eab74bdc1c4b45ca4524",
+      "specificity": "default",
+      "url": "http://localhost:4000/cookbooks/crowbar/0.9.5/files/220e91644f01eab74bdc1c4b45ca4524"
+    },
+    {
+      "name": "crowbar.tmpfiles",
+      "path": "files/default/crowbar.tmpfiles",
+      "checksum": "1b5a50a041b1e36754aa9b2c274c717b",
+      "specificity": "default",
+      "url": "http://localhost:4000/cookbooks/crowbar/0.9.5/files/1b5a50a041b1e36754aa9b2c274c717b"
+    }
+  ],
+  "templates": [
+    {
+      "name": "crowbar-webserver.pill.erb",
+      "path": "templates/default/crowbar-webserver.pill.erb",
+      "checksum": "cc50f4e899129c7fd2da7af5f4af9850",
+      "specificity": "default",
+      "url": "http://localhost:4000/cookbooks/crowbar/0.9.5/files/cc50f4e899129c7fd2da7af5f4af9850"
+    },
+    {
+      "name": "sysconfig.crowbar.erb",
+      "path": "templates/default/sysconfig.crowbar.erb",
+      "checksum": "a6272966dfc55861e67d70ab0971cd0b",
+      "specificity": "default",
+      "url": "http://localhost:4000/cookbooks/crowbar/0.9.5/files/a6272966dfc55861e67d70ab0971cd0b"
+    },
+    {
+      "name": "apache.conf.erb",
+      "path": "templates/default/apache.conf.erb",
+      "checksum": "9550a53bd3c68fc58e18458832c3970e",
+      "specificity": "default",
+      "url": "http://localhost:4000/cookbooks/crowbar/0.9.5/files/9550a53bd3c68fc58e18458832c3970e"
+    },
+    {
+      "name": "htdigest.erb",
+      "path": "templates/default/htdigest.erb",
+      "checksum": "6a1bfed7369af21b56c023c205a98deb",
+      "specificity": "default",
+      "url": "http://localhost:4000/cookbooks/crowbar/0.9.5/files/6a1bfed7369af21b56c023c205a98deb"
+    }
+  ],
+  "resources": [
+
+  ],
+  "providers": [
+
+  ],
+  "root_files": [
+    {
+      "name": "metadata.json",
+      "path": "metadata.json",
+      "checksum": "2eb304aa9ecb649468895d41b9adc5f7",
+      "specificity": "default",
+      "url": "http://localhost:4000/cookbooks/crowbar/0.9.5/files/2eb304aa9ecb649468895d41b9adc5f7"
+    },
+    {
+      "name": "README.rdoc",
+      "path": "README.rdoc",
+      "checksum": "3c6f6ee04232a9d18287abac149e3760",
+      "specificity": "default",
+      "url": "http://localhost:4000/cookbooks/crowbar/0.9.5/files/3c6f6ee04232a9d18287abac149e3760"
+    }
+  ],
+  "cookbook_name": "crowbar",
+  "metadata": {
+    "name": "crowbar",
+    "description": "Installs crowbar",
+    "long_description": "",
+    "maintainer": "Dell, Inc.",
+    "maintainer_email": "crowbar@dell.com",
+    "license": "Apache 2.0",
+    "platforms": {
+      "debian": [
+
+      ],
+      "fedora": [
+
+      ],
+      "centos": [
+
+      ],
+      "ubuntu": [
+
+      ],
+      "redhat": [
+
+      ]
+    },
+    "dependencies": {
+      "apache2": [
+
+      ],
+      "bluepill": [
+
+      ]
+    },
+    "recommendations": {
+    },
+    "suggestions": {
+    },
+    "conflicting": {
+    },
+    "providing": {
+    },
+    "replacing": {
+    },
+    "attributes": {
+    },
+    "groupings": {
+    },
+    "recipes": {
+      "crowbar": "Installs crowbar"
+    },
+    "version": "0.9.5"
+  },
+  "version": "0.9.5",
+  "name": "crowbar-0.9.5",
+  "frozen?": false,
+  "chef_type": "cookbook_version",
+  "json_class": "Chef::CookbookVersion"
+}
