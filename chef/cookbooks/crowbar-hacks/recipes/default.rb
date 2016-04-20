@@ -76,7 +76,7 @@ if states.include?(node[:state])
   end
 end
 
-if node["uefi"]
+if node["uefi"] && File.exist?("/sys/firmware/efi")
   node["uefi"]["boot"]["order"].each do |order|
     entry = node["uefi"]["entries"][order]
     next if entry[:active]
