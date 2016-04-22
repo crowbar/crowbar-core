@@ -117,7 +117,7 @@ module Crowbar
           if source =~ /resolv.conf/ && File.exist?(source)
             data_dir.join(destination).open("w") do |file|
               forwarders.each do |forwarder|
-                file.write("nameserver #{forwarder}")
+                file.write("nameserver #{forwarder}\n")
               end
             end
           else
