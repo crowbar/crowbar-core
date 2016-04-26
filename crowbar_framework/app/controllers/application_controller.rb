@@ -76,8 +76,7 @@ class ApplicationController < ActionController::Base
 
   protect_from_forgery with: :exception
 
-  # TODO: Disable it only for API calls
-  skip_before_action :verify_authenticity_token
+  skip_before_action :verify_authenticity_token, if: :json_request?
 
   def self.set_layout(template = "application")
     layout proc { |controller|
@@ -120,6 +119,10 @@ class ApplicationController < ActionController::Base
   # private stuff below.
 
   private
+
+  def json_request?
+    request.format.json?
+  end
 
   def flash_and_log_exception(e)
     flash[:alert] = e.message
