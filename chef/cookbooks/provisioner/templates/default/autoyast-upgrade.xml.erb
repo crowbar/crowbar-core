@@ -115,8 +115,10 @@
         <source>
           <![CDATA[
           # python-related alternatives are not updated, even though the binary
-          # names changed (2.6 to 2.7); fix that
-          yes '' | update-alternatives --force --all
+          # names changed (2.6 to 2.7); find all broken links and fix/update them
+          for i in $(find /etc/alternatives -type l ! -readable -printf "%f\n") ; do
+              update-alternatives --auto "$i"
+          done
           ]]>
         </source>
       </script>
