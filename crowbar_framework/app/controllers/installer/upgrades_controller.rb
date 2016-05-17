@@ -267,9 +267,10 @@ module Installer
       respond_to do |format|
         format.json do
           render json: {
-            total: view_context.total_nodes_count,
+            total: view_context.all_non_admin_nodes.count,
             left: view_context.upgrading_nodes_count,
             failed: view_context.failed_nodes_count,
+            ready: view_context.nodes_ready?,
             error: I18n.t(
               "installer.upgrades.nodes_status.failed",
               nodes: NodeObject.find("state:problem").map(&:name).join(", ")

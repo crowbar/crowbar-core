@@ -59,7 +59,7 @@ $(document).ready(function() {
               } else {
                 $(".alert-danger").addClass("hidden");
               }
-            } else {
+            } else if (data.ready) {
               $(".alert-danger").addClass("hidden");
               $(".alert-success").removeClass("hidden");
               $(".btn-group .processing").addClass("hidden");
