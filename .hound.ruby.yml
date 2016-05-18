@@ -8,7 +8,7 @@ AllCops:
 
 Style/RedundantReturn:
   Exclude:
-    - "chef/data_bags/crowbar/migrate/*"
+    - "chef/data_bags/crowbar/migrate/**/*"
 
 Style/FileName:
   Exclude:
