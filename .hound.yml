@@ -9,3 +9,5 @@ javascript:
 
 scss:
   config_file: .hound.scss.yml
+
+fail_on_violations: true
