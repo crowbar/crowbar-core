@@ -65,7 +65,7 @@ module Installer
       if request.post?
         respond_to do |format|
           # make sure to remove any existing backup with the same name
-          old_backup = Backup.find(name: params[:file].original_filename.remove(".tar.gz"))
+          old_backup = Backup.find_by(name: params[:file].original_filename.remove(".tar.gz"))
           old_backup.destroy if old_backup
 
           @backup = Backup.new(params.permit(:file))
