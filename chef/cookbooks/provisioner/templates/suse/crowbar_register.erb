@@ -322,7 +322,7 @@ zypper --non-interactive install -t pattern $PATTERNS_INSTALL
 # Auto-agree with the license since it was already agreed on for the admin server
 <% if @platform == "suse" && @target_platform_version.to_f < 12.0 -%>
 zypper --non-interactive install --auto-agree-with-licenses suse-sle11-openstack-cloud-release
-<% elsif @platform == "suse" && @target_platform_version == "12.1" -%>
+<% elsif @platform == "suse" && @target_platform_version.to_f >= 12.1 -%>
 zypper --non-interactive install --auto-agree-with-licenses suse-openstack-cloud-release supportutils-plugin-suse-openstack-cloud
 <% end -%>
 zypper --non-interactive install $PACKAGES_INSTALL<%= " '#{@packages.join("' '")}'" unless @packages.empty? %>
