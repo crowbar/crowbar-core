@@ -566,6 +566,7 @@ class CrowbarService < ServiceObject
 
   def self.pretty_target_platform(target_platform)
     return "openSUSE Leap 42.1" if target_platform == "opensuse-42.1"
+    return "SLES 12 SP2" if target_platform == "suse-12.2"
     return "SLES 12 SP1" if target_platform == "suse-12.1"
     return "SLES 12" if target_platform == "suse-12.0"
     return "SLES 11 SP4" if target_platform == "suse-11.4"
@@ -591,6 +592,7 @@ class CrowbarService < ServiceObject
   def self.support_software_raid
     [
       "opensuse-42.1",
+      "suse-12.2",
       "suse-12.1",
       "suse-12.0",
       "suse-11.4",
@@ -601,6 +603,7 @@ class CrowbarService < ServiceObject
   def self.support_default_fs
     [
       "opensuse-42.1",
+      "suse-12.2",
       "suse-12.1",
       "suse-12.0",
       "suse-11.4",
