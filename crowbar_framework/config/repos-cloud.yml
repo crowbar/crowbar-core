@@ -96,44 +96,6 @@ suse-12.1:
       required: "recommended"
       url:
       ask_on_error: false
-  s390x:
-    sles12-sp1-pool:
-      name: "SLES12-SP1-Pool"
-      required: "optional"
-      features: ["os"]
-      repomd:
-        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP1:GA/SLES/12.1/POOL/s390x"
-        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
-      url:
-      smt_path: "SUSE/Products/SLE-SERVER/12-SP1/s390x/product"
-      ask_on_error: false
-    sles12-sp1-updates:
-      name: "SLES12-SP1-Updates"
-      required: "optional"
-      features: ["os"]
-      repomd:
-        tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-SERVER:12-SP1:s390x/update"
-        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
-      url:
-      smt_path: "SUSE/Updates/SLE-SERVER/12-SP1/s390x/update"
-      ask_on_error: false
-    cloud:
-      name: "Cloud"
-      required: "mandatory"
-      features: ["openstack"]
-      repomd:
-        tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP2:Update:Products:Cloud7/suse-openstack-cloud/7/cd/s390x",
-              "obsproduct://build.suse.de/Devel:Cloud:7:Staging/suse-openstack-cloud/7/cd/s390x",
-              "obsproduct://build.suse.de/Devel:Cloud:7/suse-openstack-cloud/7/cd/s390x"]
-        fingerprint: ["FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82",
-                      "BBB0 A65B 9E2D 41F4 5575 4979 4726 6566 F990 41E1"]
-      url:
-      ask_on_error: false
-    ptf:
-      name: "PTF"
-      required: "recommended"
-      url:
-      ask_on_error: false
 suse-12.2:
   aarch64:
     sles12-sp2-pool:
