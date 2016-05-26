@@ -25,59 +25,6 @@ suse-12.1:
       url:
       smt_path: "SUSE/Updates/SLE-SERVER/12-SP1/aarch64/update"
       ask_on_error: false
-    cloud:
-      name: "Cloud"
-#      required: "mandatory"
-      features: ["openstack"]
-      repomd:
-        tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP2:Update:Products:Cloud7/suse-openstack-cloud/7/cd/aarch64",
-              "obsproduct://build.suse.de/Devel:Cloud:7:Mitaka/suse-openstack-cloud/7/cd/aarch64",
-              "obsproduct://build.suse.de/Devel:Cloud:7:Staging/suse-openstack-cloud/7/cd/aarch64",
-              "obsproduct://build.suse.de/Devel:Cloud:7/suse-openstack-cloud/7/cd/aarch64"]
-        fingerprint: ["FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82",
-                      "BBB0 A65B 9E2D 41F4 5575 4979 4726 6566 F990 41E1"]
-      url:
-      ask_on_error: false
-    suse-openstack-cloud-7-pool:
-      name: "SUSE-OpenStack-Cloud-7-Pool"
-#      required: "mandatory"
-      features: ["openstack"]
-      repomd:
-        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP2:Update:Products:Cloud7/suse-openstack-cloud/7/POOL/aarch64"
-        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
-      url:
-      smt_path: "SUSE/Products/OpenStack-Cloud/7/aarch64/product"
-      ask_on_error: false
-    suse-openstack-cloud-7-updates:
-      name: "SUSE-OpenStack-Cloud-7-Updates"
-#      required: "mandatory"
-      features: ["openstack"]
-      repomd:
-        tag: "obsrepository://build.suse.de/SUSE:Updates:OpenStack-Cloud:7:aarch64/update"
-        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
-      url:
-      smt_path: "SUSE/Updates/OpenStack-Cloud/7/aarch64/update"
-      ask_on_error: false
-    sle12-sp1-ha-pool:
-      name: "SLE12-SP1-HA-Pool"
-      required: "optional"
-      features: ["ha"]
-      repomd:
-        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP1:GA/sle-ha/12.1/POOL/aarch64"
-        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
-      url:
-      smt_path: "SUSE/Products/SLE-HA/12-SP1/aarch64/product"
-      ask_on_error: false
-    sle12-sp1-ha-updates:
-      name: "SLE12-SP1-HA-Updates"
-      required: "optional"
-      features: ["ha"]
-      repomd:
-        tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-HA:12-SP1:aarch64/update"
-        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
-      url:
-      smt_path: "SUSE/Updates/SLE-HA/12-SP1/aarch64/update"
-      ask_on_error: false
     suse-enterprise-storage-3-pool:
       name: "SUSE-Enterprise-Storage-3-Pool"
       required: "optional"
@@ -123,59 +70,6 @@ suse-12.1:
         fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Updates/SLE-SERVER/12-SP1/x86_64/update"
-      ask_on_error: false
-    cloud:
-      name: "Cloud"
-#      required: "mandatory"
-      features: ["openstack"]
-      repomd:
-        tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP2:Update:Products:Cloud7/suse-openstack-cloud/7/cd/x86_64",
-              "obsproduct://build.suse.de/Devel:Cloud:7:Mitaka/suse-openstack-cloud/7/cd/x86_64",
-              "obsproduct://build.suse.de/Devel:Cloud:7:Staging/suse-openstack-cloud/7/cd/x86_64",
-              "obsproduct://build.suse.de/Devel:Cloud:7/suse-openstack-cloud/7/cd/x86_64"]
-        fingerprint: ["FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82",
-                      "BBB0 A65B 9E2D 41F4 5575 4979 4726 6566 F990 41E1"]
-      url:
-      ask_on_error: false
-    suse-openstack-cloud-7-pool:
-      name: "SUSE-OpenStack-Cloud-7-Pool"
-#      required: "mandatory"
-      features: ["openstack"]
-      repomd:
-        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP2:Update:Products:Cloud7/suse-openstack-cloud/7/POOL/x86_64"
-        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
-      url:
-      smt_path: "SUSE/Products/OpenStack-Cloud/7/x86_64/product"
-      ask_on_error: false
-    suse-openstack-cloud-7-updates:
-      name: "SUSE-OpenStack-Cloud-7-Updates"
-#      required: "mandatory"
-      features: ["openstack"]
-      repomd:
-        tag: "obsrepository://build.suse.de/SUSE:Updates:OpenStack-Cloud:7:x86_64/update"
-        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
-      url:
-      smt_path: "SUSE/Updates/OpenStack-Cloud/7/x86_64/update"
-      ask_on_error: false
-    sle12-sp1-ha-pool:
-      name: "SLE12-SP1-HA-Pool"
-      required: "optional"
-      features: ["ha"]
-      repomd:
-        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP1:GA/sle-ha/12.1/POOL/x86_64"
-        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
-      url:
-      smt_path: "SUSE/Products/SLE-HA/12-SP1/x86_64/product"
-      ask_on_error: false
-    sle12-sp1-ha-updates:
-      name: "SLE12-SP1-HA-Updates"
-      required: "optional"
-      features: ["ha"]
-      repomd:
-        tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-HA:12-SP1:x86_64/update"
-        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
-      url:
-      smt_path: "SUSE/Updates/SLE-HA/12-SP1/x86_64/update"
       ask_on_error: false
     suse-enterprise-storage-3-pool:
       name: "SUSE-Enterprise-Storage-3-Pool"
