@@ -14,16 +14,8 @@
 # limitations under the License.
 #
 
-barclamp = "deployer"
-role = "deployer-client"
-
-# if nil, then this means all states are valid
-states_for_role = node[barclamp]["element_states"][role]
-
-if states_for_role.nil? || states_for_role.include?("all") || states_for_role.include?(node[:state])
-  include_recipe "barclamp::default"
-  include_recipe "repos::default"
-  include_recipe "crowbar-hacks::default"
-  include_recipe "ohai::default"
-  include_recipe "kernel-panic::default"
-end
+include_recipe "barclamp::default"
+include_recipe "repos::default"
+include_recipe "crowbar-hacks::default"
+include_recipe "ohai::default"
+include_recipe "kernel-panic::default"

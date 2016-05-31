@@ -14,12 +14,4 @@
 # limitations under the License.
 #
 
-barclamp = "ipmi"
-role = "ipmi-discover"
-
-# if nil, then this means all states are valid
-states_for_role = node[barclamp]["element_states"][role]
-
-if states_for_role.nil? || states_for_role.include?("all") || states_for_role.include?(node[:state])
-  include_recipe "ipmi::ipmi-discover"
-end
+include_recipe "ipmi::ipmi-discover"

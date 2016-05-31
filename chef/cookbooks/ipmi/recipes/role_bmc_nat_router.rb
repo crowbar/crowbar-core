@@ -14,12 +14,4 @@
 # limitations under the License.
 #
 
-barclamp = "ipmi"
-role = "bmc-nat-router"
-
-# if nil, then this means all states are valid
-states_for_role = node[barclamp]["element_states"][role]
-
-if states_for_role.nil? || states_for_role.include?("all") || states_for_role.include?(node[:state])
-  include_recipe "bmc-nat::router"
-end
+include_recipe "bmc-nat::router"

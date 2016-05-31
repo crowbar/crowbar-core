@@ -14,17 +14,9 @@
 # limitations under the License.
 #
 
-barclamp = "provisioner"
-role = "provisioner-server"
-
-# if nil, then this means all states are valid
-states_for_role = node[barclamp]["element_states"][role]
-
-if states_for_role.nil? || states_for_role.include?("all") || states_for_role.include?(node[:state])
-  include_recipe "utils::default"
-  include_recipe "dhcp::default"
-  include_recipe "nfs-server::default"
-  include_recipe "provisioner::setup_base_images"
-  include_recipe "provisioner::dhcp_update"
-  include_recipe "provisioner::update_nodes"
-end
+include_recipe "utils::default"
+include_recipe "dhcp::default"
+include_recipe "nfs-server::default"
+include_recipe "provisioner::setup_base_images"
+include_recipe "provisioner::dhcp_update"
+include_recipe "provisioner::update_nodes"
