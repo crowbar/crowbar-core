@@ -334,12 +334,12 @@ module Crowbar
           set_failed
           msg = I18n.t(
             ".installer.upgrades.restore.schema_migration_failed",
-            bc_name: bc_name
+            migration_error: e.message
           )
-          Rails.logger.error("#{msg} -- #{e.message}")
+          Rails.logger.error(msg.to_s)
           @status[:restore_chef] = {
             status: :conflict,
-            msg: msg
+            msg: e.message
           }
         end
       end
