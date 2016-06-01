@@ -194,38 +194,7 @@ module Crowbar
               next unless file.extname == ".json"
 
               record = JSON.load(file.read)
-              filename = file.basename.to_s
-              if proposal?(file) && type == :databags
-                Rails.logger.debug "Restoring proposal #{filename}"
-                bc_name, prop = filename.split("-")
-                prop.gsub!(/.json$/, "")
-                proposal = Proposal.where(
-                  barclamp: bc_name,
-                  name: prop
-                ).first_or_initialize(
-                  barclamp: bc_name,
-                  name: prop
-                )
-                proposal.properties = record.raw_data
-                proposal.save
-                begin
-                  Rails.logger.debug "Migrating #{bc_name} schema"
-                  SchemaMigration.run_for_bc(bc_name)
-                rescue StandardError => e
-                  set_failed
-                  msg = I18n.t(
-                    ".installer.upgrades.restore.schema_migration_failed",
-                    bc_name: bc_name
-                  )
-                  Rails.logger.error("#{msg} -- #{e.message}")
-                  @status[:restore_chef] = {
-                    status: :conflict,
-                    msg: msg
-                  }
-                end
-              else
-                record.save
-              end
+              record.save
             end
           end
 
@@ -337,15 +306,9 @@ module Crowbar
 
         migrate_database(:after)
 
-        @status[:restore_database] ||= { status: :ok, msg: "" }
-      end
+        schema_migrate_proposals
 
-      def proposal?(file)
-        return false if file.basename.to_s =~ /^template-(.*).json$/ || \
-            !file.to_s =~ /knife\/databags\/crowbar/
-        raw_data = JSON.parse(file.read)["raw_data"]
-        return false if raw_data.nil?
-        raw_data.key?("attributes") && raw_data.key?("deployment")
+        @status[:restore_database] ||= { status: :ok, msg: "" }
       end
 
       def migrate_database(time, migration_level = nil)
@@ -361,6 +324,24 @@ module Crowbar
           status: :not_acceptable,
           msg: I18n.t("backups.index.migrate_database_failed")
         }
+      end
+
+      def schema_migrate_proposals
+        Rails.logger.debug "Migrating barclamp schemas"
+        begin
+          SchemaMigration.run
+        rescue StandardError => e
+          set_failed
+          msg = I18n.t(
+            ".installer.upgrades.restore.schema_migration_failed",
+            bc_name: bc_name
+          )
+          Rails.logger.error("#{msg} -- #{e.message}")
+          @status[:restore_chef] = {
+            status: :conflict,
+            msg: msg
+          }
+        end
       end
     end
   end
