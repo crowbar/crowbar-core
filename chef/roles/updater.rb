@@ -20,6 +20,4 @@
 name "updater"
 description "Updater role"
 
-run_list(
-  "recipe[updater::default]"
-)
+run_list("recipe[updater::role_updater]")

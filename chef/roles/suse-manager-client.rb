@@ -20,6 +20,4 @@
 name "suse-manager-client"
 description "SUSE Manager Client Role - Node registered as a SUSE Manager client"
 
-run_list(
-  "recipe[suse-manager-client::default]"
-)
+run_list("recipe[suse-manager-client::role_suse_manager_client]")
