@@ -23,7 +23,7 @@ suse-12.1:
       ask_on_error: false
     cloud:
       name: "Cloud"
-      required: "mandatory"
+#      required: "mandatory"
       features: ["openstack"]
       repomd:
         tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP2:Update:Products:Cloud7/suse-openstack-cloud/7/cd/x86_64",
@@ -35,7 +35,7 @@ suse-12.1:
       ask_on_error: false
     suse-openstack-cloud-7-pool:
       name: "SUSE-OpenStack-Cloud-7-Pool"
-      required: "mandatory"
+#      required: "mandatory"
       features: ["openstack"]
 #      repomd:
 #        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP2:Update:Products:Cloud7/suse-openstack-cloud/7/POOL/x86_64"
@@ -45,7 +45,7 @@ suse-12.1:
       ask_on_error: false
     suse-openstack-cloud-7-updates:
       name: "SUSE-OpenStack-Cloud-7-Updates"
-      required: "mandatory"
+#      required: "mandatory"
       features: ["openstack"]
 #      repomd:
 #        tag: "obsrepository://build.suse.de/SUSE:Updates:OpenStack-Cloud:7:x86_64/update"
