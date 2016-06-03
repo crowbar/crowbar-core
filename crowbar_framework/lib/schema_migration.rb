@@ -27,7 +27,7 @@ module SchemaMigration
   def self.run_for_bc bc_name
     begin
       template = Proposal.new(barclamp: bc_name)
-    rescue TemplateMissing
+    rescue Proposal::TemplateMissing
       return
     end
 
