@@ -28,7 +28,6 @@ module Crowbar
 
       def all
         cookbooks
-        data_bags
         roles
       end
 
@@ -69,46 +68,6 @@ module Crowbar
         true
       end
 
-      def data_bags
-        loader = ::Chef::Knife::Core::ObjectLoader.new(::Chef::DataBagItem, logger)
-        data_bags = loader.find_all_object_dirs(chef_data_bags_path) || []
-        data_bags.each do |data_bag|
-          begin
-            logger.info("Creating data_bag #{data_bag}...")
-            api.post_rest("data", name: data_bag)
-          rescue Net::HTTPServerException => e
-            if e.response.code == "409"
-              logger.info("Data_bag #{data_bag} already exists")
-            else
-              logger.error("Creating data_bag #{data_bag} failed (#{e.response.code})")
-              return false
-            end
-          end
-
-          data_bag_items = loader.find_all_objects(chef_data_bags_path.join(data_bag))
-          data_bag_item_paths = normalize_data_bag_item_paths(data_bag_items) || []
-          data_bag_item_paths.each do |data_bag_item_path|
-            # Workaround for a strange chef behavior
-            relative_path = chef_data_bags_path.relative_path_from(Pathname.new(Dir.pwd))
-            data_bag_item = loader.load_from(relative_path, data_bag, data_bag_item_path)
-            bag = ::Chef::DataBagItem.new
-            bag.data_bag(data_bag)
-            bag.raw_data = data_bag_item
-            logger.info("Uploading data_bag item #{data_bag_item_path}...")
-
-            begin
-              return false unless bag.save
-            rescue Net::HTTPServerException => e
-              logger.error(
-                "Uploading data_bag item #{data_bag_item_path} failed (#{e.response.code})"
-              )
-              return false
-            end
-          end
-        end
-        true
-      end
-
       def roles
         loader = ::Chef::Knife::Core::ObjectLoader.new(::Chef::Role, logger)
         chef_roles_path.each_child do |file|
@@ -139,10 +98,6 @@ module Crowbar
 
       def chef_cookbooks_path
         chef_data_path.join("cookbooks")
-      end
-
-      def chef_data_bags_path
-        chef_data_path.join("data_bags")
       end
 
       def chef_roles_path
