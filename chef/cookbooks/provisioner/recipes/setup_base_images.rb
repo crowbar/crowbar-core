@@ -32,7 +32,7 @@ uefi_subdir = "efi"
 
 # This is what we could support, but this requires validation
 #discovery_arches = ["x86_64", "ppc64le", "ia32"]
-discovery_arches = ["x86_64", "ppc64le"]
+discovery_arches = ["aarch64", "x86_64", "ppc64le"]
 discovery_arches.select! do |arch|
   File.exist?("#{discovery_dir}/#{arch}/initrd0.img") && File.exist?("#{discovery_dir}/#{arch}/vmlinuz0")
 end
@@ -62,7 +62,7 @@ end
 
 # PXE config
 # ppc64le bootloader can parse pxelinux config files
-%w(x86_64 ppc64le).each do |arch|
+%w(aarch64 x86_64 ppc64le).each do |arch|
   # Make it easy to totally disable/enable an architecture
   next unless discovery_arches.include? arch
 
@@ -101,14 +101,16 @@ end
 
 # UEFI config
 use_elilo = true
-%w(x86_64 ia32).each do |arch|
+%w(aarch64 x86_64 ia32).each do |arch|
   # Make it easy to totally disable/enable an architecture
   next unless discovery_arches.include? arch
 
   uefi_dir = "#{discovery_dir}/#{arch}/#{uefi_subdir}"
 
   short_arch = arch
-  if arch == "x86_64"
+  if arch == "aarch64"
+    short_arch = "aa64"
+  elsif arch == "x86_64"
     short_arch = "x64"
   end
 
@@ -140,8 +142,12 @@ EOC
       # we use grub2; steps taken from
       # https://github.com/openSUSE/kiwi/wiki/Setup-PXE-boot-with-EFI-using-grub2
       use_elilo = false
+      grub2arch = arch
+      if arch == "aarch64"
+        grub2arch = "arm64"
+      end
 
-      package "grub2-#{arch}-efi"
+      package "grub2-#{grub2arch}-efi"
 
       # grub.cfg has to be in boot/grub/ subdirectory
       directory "#{uefi_dir}/default/boot/grub" do
@@ -164,9 +170,9 @@ EOC
                   kernel: "discovery/#{arch}/vmlinuz0")
       end
 
-      bash "Build UEFI netboot loader with grub" do
+      bash "Build UEFI netboot loader with grub2" do
         cwd "#{uefi_dir}/default"
-        code "grub2-mkstandalone -d /usr/lib/grub2/#{arch}-efi/ -O #{arch}-efi --fonts=\"unicode\" -o #{uefi_dir}/boot#{short_arch}.efi boot/grub/grub.cfg"
+        code "grub2-mkstandalone -d /usr/lib/grub2/#{grub2arch}-efi/ -O #{grub2arch}-efi --fonts=\"unicode\" -o #{uefi_dir}/boot#{short_arch}.efi boot/grub/grub.cfg"
         action :nothing
         subscribes :run, resources("template[#{uefi_dir}/default/boot/grub/grub.cfg]"), :immediately
       end

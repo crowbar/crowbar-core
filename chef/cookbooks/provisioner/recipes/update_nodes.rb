@@ -209,6 +209,8 @@ if not nodes.nil? and not nodes.empty?
     filename = \"discovery/x86_64/efi/#{boot_ip_hex}.efi\";
   } else if option arch = 00:09 {
     filename = \"discovery/x86_64/efi/#{boot_ip_hex}.efi\";
+  } else if option arch = 00:0b {
+    filename = \"discovery/aarch64/efi/#{boot_ip_hex}.efi\";
   } else if option arch = 00:0e {
     option path-prefix \"discovery/ppc64le/bios/\";
     filename = \"\";
@@ -456,9 +458,14 @@ if not nodes.nil? and not nodes.empty?
                     kernel: "#{relative_to_tftpboot}#{kernel}")
         end
 
-        bash "Build UEFI netboot loader with grub for #{mnode[:fqdn]} (#{new_group})" do
+        grub2arch = arch
+        if arch == "aarch64"
+          grub2arch = "arm64"
+        end
+
+        bash "Build UEFI netboot loader with grub2 for #{mnode[:fqdn]} (#{new_group})" do
           cwd grubdir
-          code "grub2-mkstandalone -d /usr/lib/grub2/#{arch}-efi/ -O #{arch}-efi --fonts=\"unicode\" -o #{grubfile} boot/grub/grub.cfg"
+          code "grub2-mkstandalone -d /usr/lib/grub2/#{grub2arch}-efi/ -O #{grub2arch}-efi --fonts=\"unicode\" -o #{grubfile} boot/grub/grub.cfg"
           action :nothing
           subscribes :run, resources("template[#{grubcfgfile}]"), :immediately
         end
