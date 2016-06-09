@@ -468,11 +468,11 @@ class CrowbarService < ServiceObject
       ordered_bcs = order_instances role["crowbar"]["instances"]
 #      role["crowbar"]["instances"].each do |k,plist|
       ordered_bcs.each do |k, plist |
-        @logger.fatal("Deploying proposal - barclamp: #{k}, name: #{plist[:instances].join(',')}")
+        @logger.info("Deploying proposal - barclamp: #{k}, name: #{plist[:instances].join(',')}")
         plist[:instances].each do |v|
           id = "default"
           data = {"id" => id}
-          @logger.fatal("Deploying proposal - id: #{id}, name: #{v.inspect}")
+          @logger.info("Deploying proposal - id: #{id}, name: #{v.inspect}")
 
           if v != "default"
             data = JSON.parse(
@@ -547,7 +547,7 @@ class CrowbarService < ServiceObject
     #sort by the order value (x,y are an array with the value of
     #the hash entry
     t = tmp.sort{ |x,y| x[1][:order] <=> y[1][:order] }
-    @logger.fatal("ordered instances: #{t.inspect}")
+    @logger.debug("ordered instances: #{t.inspect}")
     t
   end
 
