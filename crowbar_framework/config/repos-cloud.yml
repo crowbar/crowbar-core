@@ -6,18 +6,20 @@ suse-12.1:
       required: "mandatory"
       features: ["os"]
       repomd:
-        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP1:GA/SLES/12.1/POOL/aarch64"
-        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+        tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP1:GA/SLES/12.1/POOL/aarch64",
+              "obsproduct://build.suse.de/Devel:ARM:SLE-12-SP1:Update/SLES/12.1/POOL/aarch64"]
+        key_md5: ["9a62177e1c6852d48453ed3909956d6b", "c4a27581cec772c6dc641825d41c63d2"]
       url:
       smt_path: "SUSE/Products/SLE-SERVER/12-SP1/aarch64/product"
       ask_on_error: false
     sles12-sp1-updates:
       name: "SLES12-SP1-Updates"
-      required: "mandatory"
+#       required: "mandatory"
       features: ["os"]
       repomd:
-        tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-SERVER:12-SP1:aarch64/update"
-        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+        tag: ["obsrepository://build.suse.de/SUSE:Updates:SLE-SERVER:12-SP1:aarch64/update",
+              "obsproduct://build.suse.de/Devel:ARM:SLE-12-SP1:Update/SLES/12.1/POOL/aarch64"]
+        key_md5: ["9a62177e1c6852d48453ed3909956d6b", "c4a27581cec772c6dc641825d41c63d2"]
       url:
       smt_path: "SUSE/Updates/SLE-SERVER/12-SP1/aarch64/update"
       ask_on_error: false
