@@ -75,6 +75,11 @@
           }
         },
         "suse-12.1": {
+          "aarch64": {
+            "initrd": "boot/aarch64/initrd",
+            "kernel": "boot/aarch64/linux",
+            "append": " "
+          },
           "x86_64": {
             "initrd": "boot/x86_64/loader/initrd",
             "kernel": "boot/x86_64/loader/linux",
@@ -92,6 +97,11 @@
           }
         },
         "suse-12.2": {
+          "aarch64": {
+            "initrd": "boot/aarch64/initrd",
+            "kernel": "boot/aarch64/linux",
+            "append": " "
+          },
           "x86_64": {
             "initrd": "boot/x86_64/loader/initrd",
             "kernel": "boot/x86_64/loader/linux",
