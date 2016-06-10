@@ -49,8 +49,8 @@ else
   gem "activeresource", version: "~> 4.0.0"
   require "active_resource"
 
-  gem "closure-compiler", version: "~> 1.1.10"
-  require "closure-compiler"
+  gem "uglifier", version: "~> 2.7.2"
+  require "uglifier"
 
   gem "dotenv", version: "~> 1.0.2"
   require "dotenv"

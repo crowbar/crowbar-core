@@ -59,7 +59,7 @@ when "suse"
     ruby2.1-rubygem-activeresource
     ruby2.1-rubygem-active_model_serializers
     ruby2.1-rubygem-chef
-    ruby2.1-rubygem-closure-compiler
+    ruby2.1-rubygem-uglifier
     ruby2.1-rubygem-dotenv
     ruby2.1-rubygem-haml-rails
     ruby2.1-rubygem-hashie
@@ -95,7 +95,7 @@ unless node[:platform_family] == "suse"
     activerecord-session_store
     activeresource
     chef
-    closure-compiler
+    uglifier
     dotenv
     dotenv-deployment
     haml-rails
