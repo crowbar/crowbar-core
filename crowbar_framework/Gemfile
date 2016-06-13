@@ -52,9 +52,6 @@ gem "activeresource", "~> 4.0.0",
     require: "active_resource"
 
 unless ENV["PACKAGING"] && ENV["PACKAGING"] == "yes"
-  gem "rack-mini-profiler", "~> 0.9.1",
-      require: false
-
   group :development, :test do
     gem "brakeman", "~> 2.6.3"
     gem "rspec-rails", "~> 3.3.0"
