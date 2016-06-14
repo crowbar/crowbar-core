@@ -16,8 +16,8 @@
 #
 
 module NodesHelper
-  def total_nodes_count
-    NodeObject.find("NOT admin_node:true").count
+  def all_non_admin_nodes
+    NodeObject.find("NOT admin_node:true")
   end
 
   def upgrading_nodes_count
@@ -26,6 +26,10 @@ module NodesHelper
 
   def failed_nodes_count
     NodeObject.find("state:problem").count
+  end
+
+  def nodes_ready?
+    all_non_admin_nodes.select { |n| n.status != "ready" }.empty?
   end
 
   def nodes_by_role(role)
