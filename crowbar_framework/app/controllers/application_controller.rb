@@ -29,7 +29,6 @@ class ApplicationController < ActionController::Base
     Crowbar::Sanity.cache! unless Rails.cache.exist?(:sanity_check_errors)
   end
 
-  before_filter :enable_profiler, if: proc { ENV["ENABLE_PROFILER"] == "true" }
   before_filter :enforce_installer, unless: proc {
     Crowbar::Installer.successful? || \
     Rails.env.test?
@@ -173,10 +172,6 @@ class ApplicationController < ActionController::Base
         render plain: I18n.t("error.chef_server_down"), status: :internal_server_error
       end
     end
-  end
-
-  def enable_profiler
-    Rack::MiniProfiler.authorize_request
   end
 
   def enforce_installer
