@@ -123,35 +123,6 @@ describe Crowbar::Chef::Upload do
     end
   end
 
-  context "databag" do
-    it "uploads successfully" do
-      stub_databag_positive
-      expect(subject.data_bags).to be true
-    end
-
-    it "fails to upload databag item" do
-      stub_databag_negative
-      expect(subject.data_bags).to be false
-    end
-
-    context "fails to be created" do
-      it "when it already exists on the server" do
-        stub_databag_negative
-        expect(subject.data_bags).to be false
-      end
-
-      it "when it raises a Net::HTTPServerException" do
-        stub_databag_negative
-        allow_any_instance_of(OfflineChef).to(
-          receive(:post_rest).with(
-            "data", name: "crowbar"
-          ).and_raise(Net::HTTPServerException)
-        )
-        expect(subject.data_bags).to be false
-      end
-    end
-  end
-
   context "role" do
     it "uploads successfully" do
       stub_role_positive

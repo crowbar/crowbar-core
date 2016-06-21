@@ -256,8 +256,19 @@ class NetworkService < ServiceObject
       db = Chef::DataBag.load("crowbar/#{k}_network") rescue nil
       if db.nil?
         @logger.debug("Network: creating #{k} in the network")
+
+        # ensure that crowbar data bag exists
+        databag_name = "crowbar"
+        begin
+          Chef::DataBag.load(databag_name)
+        rescue Net::HTTPServerException
+          crowbar_bag = Chef::DataBag.new
+          crowbar_bag.name databag_name
+          crowbar_bag.save
+        end
+
         db = Chef::DataBagItem.new
-        db.data_bag "crowbar"
+        db.data_bag databag_name
         db["id"] = "#{k}_network"
         db["network"] = net
         db["allocated"] = {}
