@@ -118,6 +118,16 @@
         <type config:type="symbol">CT_DISK</type>
         <disklabel>gpt</disklabel>
         <partitions config:type="list">
+          <% if node["uefi"] %>
+          <partition>
+            <create config:type="boolean">true</create>
+            <format config:type="boolean">true</format>
+            <filesystem config:type="symbol">vfat</filesystem>
+            <partition_id config:type="integer">259</partition_id>
+            <mount>/boot/efi</mount>
+            <size>128M</size>
+          </partition>
+          <% end %>
           <partition>
             <create config:type="boolean">true</create>
             <partition_id config:type="integer">263</partition_id>
@@ -146,6 +156,16 @@
           <type config:type="symbol">CT_DISK</type>
           <initialize config:type="boolean">true</initialize>
           <partitions config:type="list">
+            <% if node["uefi"] %>
+            <partition>
+              <create config:type="boolean">true</create>
+              <format config:type="boolean">true</format>
+              <filesystem config:type="symbol">vfat</filesystem>
+              <partition_id config:type="integer">259</partition_id>
+              <mount>/boot/efi</mount>
+              <size>128M</size>
+            </partition>
+            <% end %>
             <partition>
               <create config:type="boolean">true</create>
               <partition_id config:type="integer">263</partition_id>
