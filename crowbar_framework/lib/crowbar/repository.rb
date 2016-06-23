@@ -168,6 +168,11 @@ module Crowbar
         @web_port ||= Proposal.where(barclamp: "provisioner").first.raw_attributes["web_port"]
       end
 
+      # workaround for Chef::DataBag.destroy not working
+      def chef_data_bag_destroy(name)
+        Chef::DataBag.chef_server_rest.delete_rest("data/#{name}")
+      end
+
       private
 
       def provided_with_enabled?(feature, platform = nil, arch = nil, check_enabled = true)

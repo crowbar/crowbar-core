@@ -273,19 +273,12 @@ class ProvisionerService < ServiceObject
       repo_in_db.destroy(repo_object.data_bag_name, repo_object.data_bag_item_name)
       db = repo_object.data_bag
       if !db.nil? && db.empty?
-        chef_data_bag_destroy(repo_object.data_bag_name)
+        Crowbar::Repository.chef_data_bag_destroy(repo_object.data_bag_name)
       end
     else
       @logger.debug("#{repo_id} repository for #{platform} / #{arch} is already inactive.")
     end
 
     [200, ""]
-  end
-
-  private
-
-  # workaround for Chef::DataBag.destroy not working
-  def chef_data_bag_destroy(name)
-    Chef::DataBag.chef_server_rest.delete_rest("data/#{name}")
   end
 end
