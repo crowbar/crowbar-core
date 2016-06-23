@@ -20,7 +20,6 @@
 return if node[:crowbar_wall][:suse_manager_client_registered] || false
 
 manager_server = node[:suse_manager_client][:manager_server]
-activation_key = node[:suse_manager_client][:activation_key]
 
 temp_pkg = Mixlib::ShellOut.new("mktemp /tmp/ssl-cert-XXXX.rpm").run_command.stdout.strip
 
