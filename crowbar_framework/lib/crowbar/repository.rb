@@ -217,11 +217,11 @@ module Crowbar
 
     end
 
-    def initialize(platform, arch, repo)
+    def initialize(platform, arch, repo, registered = true)
       @platform = platform
       @arch = arch
       @id = repo
-      @config = Repository.registry[@platform][@arch][@id]
+      @config = registered ? registry_config : {}
       ensure_link_smt_path
     end
 
@@ -356,6 +356,10 @@ module Crowbar
       unless remote? || smt_path.nil? || repo_path.directory? || !smt_path.directory?
         system("sudo", "-i", "ln", "-s", smt_path.to_s, repo_path.to_s)
       end
+    end
+
+    def registry_config
+      Repository.registry[@platform][@arch][@id]
     end
 
     #
