@@ -3,7 +3,7 @@
   "description": "Register systems as SUSE Manager clients",
   "attributes": {
     "suse_manager_client": {
-      "manager_server": ""
+      "bootstrap_script_url": ""
     }
   },
   "deployment": {

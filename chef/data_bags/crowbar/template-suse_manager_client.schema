@@ -12,7 +12,7 @@
           "type": "map",
           "required": true,
           "mapping": {
-            "manager_server": { "type": "str", "required": true }
+            "bootstrap_script_url": { "type": "str", "required": true }
           }
         }
       }
