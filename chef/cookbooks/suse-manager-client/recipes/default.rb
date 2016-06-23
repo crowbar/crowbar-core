@@ -17,6 +17,8 @@
 # limitations under the License.
 #
 
+return if node[:crowbar_wall][:suse_manager_client_registered] || false
+
 manager_server = node[:suse_manager_client][:manager_server]
 activation_key = node[:suse_manager_client][:activation_key]
 
@@ -36,11 +38,10 @@ bash "install SSL certificate" do
   EOH
 end
 
-# XXX requires chef-client with CHEF-4090 fixed otherwise the package
-# provider can't handle the URL
-package "https://#{manager_server}/pub/bootstrap/sm-client-tools.rpm"
-
-execute "sm-client" do
-  command "sm-client --hostname #{manager_server} --activation-keys #{activation_key}"
+bootstap_script = "bootstrap-sles12.#{node[:platform_version].split(".").last}"
+execute "bootstrap SUMA client" do
+  command "curl https://#{manager_server}/pub/bootstrap/#{bootstap_script}.sh | sh"
 end
 
+node.set[:crowbar_wall][:suse_manager_client_registered] = true
+node.save
