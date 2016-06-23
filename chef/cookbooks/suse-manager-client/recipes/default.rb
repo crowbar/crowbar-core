@@ -19,7 +19,8 @@
 
 return if node[:crowbar_wall][:suse_manager_client_registered] || false
 
-manager_server = node[:suse_manager_client][:manager_server]
+bootstrap_script_url = node[:suse_manager_client][:bootstrap_script_url]
+
 
 temp_pkg = Mixlib::ShellOut.new("mktemp /tmp/ssl-cert-XXXX.rpm").run_command.stdout.strip
 
@@ -33,9 +34,8 @@ execute "update-ca-certificates" do
   command "update-ca-certificates"
 end
 
-bootstap_script = "bootstrap-sles12.#{node[:platform_version].split(".").last}"
 execute "bootstrap SUMA client" do
-  command "curl https://#{manager_server}/pub/bootstrap/#{bootstap_script}.sh | sh"
+  command "curl #{bootstrap_script_url} | sh"
 end
 
 node.set[:crowbar_wall][:suse_manager_client_registered] = true
