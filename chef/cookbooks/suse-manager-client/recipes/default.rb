@@ -29,12 +29,8 @@ end
 
 package(temp_pkg)
 
-org_cert = "/usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT"
-bash "install SSL certificate" do
-  code <<-EOH
-  cp #{org_cert} \
-     /etc/ssl/certs/`openssl x509 -noout -hash -in #{org_cert}`.0
-  EOH
+execute "update-ca-certificates" do
+  command "update-ca-certificates"
 end
 
 bootstap_script = "bootstrap-sles12.#{node[:platform_version].split(".").last}"
