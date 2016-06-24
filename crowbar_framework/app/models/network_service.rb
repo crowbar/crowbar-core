@@ -121,8 +121,9 @@ class NetworkService < ServiceObject
     return [404, "No Address Available"] if !found
 
     if type == :node
-      # Save the information.
-      node.crowbar["crowbar"]["network"][network] = net_info
+      # Save the information (only what we override from the network definition).
+      node.crowbar["crowbar"]["network"][network] ||= {}
+      node.crowbar["crowbar"]["network"][network]["address"] = net_info["address"]
       node.save
     end
 
@@ -381,8 +382,8 @@ class NetworkService < ServiceObject
     ensure
     end
 
-    # Save the information.
-    node.crowbar["crowbar"]["network"][network] = net_info
+    # Save the information (only what we override from the network definition).
+    node.crowbar["crowbar"]["network"][network] ||= {}
     node.save
 
     @logger.info("Network enable_interface: Assigned: #{name} #{network}")
