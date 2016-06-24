@@ -60,58 +60,58 @@ class NetworkService < ServiceObject
     end
 
     net_info = {}
+    address = nil
     found = false
+
     begin
       lock = acquire_ip_lock
       db = Chef::DataBag.load("crowbar/#{network}_network") rescue nil
       net_info = build_net_info(role, network)
 
-      rangeH = net_info["ranges"][range]
-      rangeH = net_info["ranges"]["host"] if rangeH.nil?
-
-      index = IPAddr.new(rangeH["start"]) & ~IPAddr.new(net_info["netmask"])
-      index = index.to_i
-      stop_address = IPAddr.new(rangeH["end"]) & ~IPAddr.new(net_info["netmask"])
-      stop_address = IPAddr.new(net_info["subnet"]) | (stop_address.to_i + 1)
-      address = IPAddr.new(net_info["subnet"]) | index
-
-      if suggestion.present?
-        @logger.info("Allocating with suggestion: #{suggestion}")
-        subsug = IPAddr.new(suggestion) & IPAddr.new(net_info["netmask"])
-        subnet = IPAddr.new(net_info["subnet"]) & IPAddr.new(net_info["netmask"])
-        if subnet == subsug
-          if db["allocated"][suggestion].nil?
-            @logger.info("Using suggestion for #{type}: #{name} #{network} #{suggestion}")
-            address = suggestion
-            found = true
+      # Did we already allocate this, but the node lost it?
+      if db["allocated_by_name"].key?(name)
+        address = db["allocated_by_name"][name]["address"]
+        found = true
+      else
+        if suggestion.present?
+          @logger.info("Allocating with suggestion: #{suggestion}")
+          subsug = IPAddr.new(suggestion) & IPAddr.new(net_info["netmask"])
+          subnet = IPAddr.new(net_info["subnet"]) & IPAddr.new(net_info["netmask"])
+          if subnet == subsug
+            if db["allocated"][suggestion].nil?
+              @logger.info("Using suggestion for #{type}: #{name} #{network} #{suggestion}")
+              address = suggestion
+              found = true
+            end
           end
         end
-      end
 
-      unless found
-        # Did we already allocate this, but the node lose it?
-        unless db["allocated_by_name"][name].nil?
-          found = true
-          address = db["allocated_by_name"][name]["address"]
+        unless found
+          # Let's search for an empty one.
+          rangeH = net_info["ranges"][range]
+          rangeH = net_info["ranges"]["host"] if rangeH.nil?
+
+          index = IPAddr.new(rangeH["start"]) & ~IPAddr.new(net_info["netmask"])
+          index = index.to_i
+          stop_address = IPAddr.new(rangeH["end"]) & ~IPAddr.new(net_info["netmask"])
+          stop_address = IPAddr.new(net_info["subnet"]) | (stop_address.to_i + 1)
+
+          while !found do
+            address = IPAddr.new(net_info["subnet"]) | index
+            if db["allocated"][address.to_s].nil?
+              found = true
+              break
+            end
+            index = index + 1
+            break if address == stop_address
+          end
         end
-      end
 
-      # Let's search for an empty one.
-      while !found do
-        if db["allocated"][address.to_s].nil?
-          found = true
-          break
+        if found
+          db["allocated_by_name"][name] = { "machine" => name, "interface" => net_info["conduit"], "address" => address.to_s }
+          db["allocated"][address.to_s] = { "machine" => name, "interface" => net_info["conduit"], "address" => address.to_s }
+          db.save
         end
-        index = index + 1
-        address = IPAddr.new(net_info["subnet"]) | index
-        break if address == stop_address
-      end
-
-      if found
-        net_info["address"] = address.to_s
-        db["allocated_by_name"][name] = { "machine" => name, "interface" => net_info["conduit"], "address" => address.to_s }
-        db["allocated"][address.to_s] = { "machine" => name, "interface" => net_info["conduit"], "address" => address.to_s }
-        db.save
       end
     rescue Exception => e
       @logger.error("Error finding address: Exception #{e.message} #{e.backtrace.join("\n")}")
@@ -121,6 +121,8 @@ class NetworkService < ServiceObject
 
     @logger.info("Network allocate ip for #{type}: no address available: #{name} #{network} #{range}") if !found
     return [404, "No Address Available"] if !found
+
+    net_info["address"] = address.to_s if found
 
     if type == :node
       # Save the information (only what we override from the network definition).
