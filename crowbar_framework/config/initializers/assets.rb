@@ -25,6 +25,7 @@ Rails.application.config.tap do |config|
     /branding\.(css|js)$/,
     /installer\.(css|js)$/,
     /upgrader\.(css|js)$/,
+    /keybindings\.(css|js)$/,
     /\.(jpg|png|gif|svg|ico|eot|woff|woff2|ttf)$/
   ]
 end

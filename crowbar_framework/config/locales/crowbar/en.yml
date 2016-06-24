@@ -89,6 +89,9 @@ en:
   layouts:
     application:
       foo: 'Bar'
+      keybindings: 'Crowbar Keybindings'
+      key: 'Key'
+      description: 'Description'
 
   shared:
     footer:
@@ -874,3 +877,21 @@ en:
     poweron: 'Power On'
     pending: 'Pending'
     building: 'Building'
+
+  keys:
+    h: 'List Crowbar Keybindings'
+    d: 'Go to Node Dashboard'
+    b_e: 'Go to Node Bulk Edit'
+    a_r: 'Go to Node Active Roles'
+    f_g: 'Go to Node Family Groups'
+    n_s: 'Go to Network Switches'
+    v: 'Go to Network VLAN'
+    a_b: 'Go to Barclamps All Barclamps'
+    c_b: 'Go to Barclamps Crowbar Barclamps'
+    o_b: 'Go to Barclamps OpenStack Barclamps'
+    q: 'Go to Utils Deployment Queue'
+    r: 'Go to Utils Repositories'
+    b_r: 'Go to Utils Backups'
+    e: 'Go to Utils Exported Items'
+    s_d: 'Go to Utils Swift Dashboard'
+    c_u: 'Go to Utils Cisco UCS Settings'

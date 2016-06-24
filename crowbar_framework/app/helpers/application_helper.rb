@@ -276,4 +276,9 @@ module ApplicationHelper
   def disabled_platforms(architecture)
     (NodeObject.disabled_platforms(architecture) + Crowbar::Repository.disabled_platforms(architecture)).uniq
   end
+
+  def keybindings
+    translations = I18n.backend.send(:translations)
+    translations[:en][:keys]
+  end
 end
