@@ -84,19 +84,19 @@ class DnsService < ServiceObject
     return if all_nodes.empty?
 
     tnodes = role.override_attributes["dns"]["elements"]["dns-server"]
+    nodes = tnodes.map { |n| NodeObject.find_node_by_name n }
 
-    if tnodes.length == 1
+    if nodes.length == 1
       # remember that this node will stick as master node, in case we add some
       # other dns-server nodes later on
-      node = NodeObject.find_node_by_name tnodes[0]
+      node = nodes[0]
 
       node.set[:dns] = {} if node[:dns].nil?
       unless node[:dns][:master]
         node.set[:dns][:master] = true
         node.save
       end
-    elsif tnodes.length > 1
-      nodes = tnodes.map { |n| NodeObject.find_node_by_name n }
+    elsif nodes.length > 1
       # electing master dns-server
       master = nil
       admin = nil
@@ -116,14 +116,16 @@ class DnsService < ServiceObject
         end
       end
 
-      slave_ips = nodes.map { |n| n[:crowbar][:network][:admin][:address] }
-      slave_ips.delete(master[:crowbar][:network][:admin][:address])
+      master_ip = master.get_network_by_type("admin")["address"]
+
+      slave_ips = nodes.map { |n| n.get_network_by_type("admin")["address"] }
+      slave_ips.delete(master_ip)
       slave_nodes = tnodes.dup
       slave_nodes.delete(master.name)
 
       nodes.each do |node|
         node.set[:dns] = {} if node[:dns].nil?
-        node.set[:dns][:master_ip] = master[:crowbar][:network][:admin][:address]
+        node.set[:dns][:master_ip] = master_ip
         node.set[:dns][:slave_ips] = slave_ips
         node.set[:dns][:slave_names] = slave_nodes
         node.set[:dns][:master] = (master.name == node.name)
