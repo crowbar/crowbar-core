@@ -383,20 +383,12 @@ class NetworkService < ServiceObject
       return [200, net_info]
     end
 
-    net_info={}
-    begin # Rescue block
-      net_info = build_net_info(role, network)
-    rescue Exception => e
-      @logger.error("Error finding address: Exception #{e.message} #{e.backtrace.join("\n")}")
-    ensure
-    end
-
     # Save the information (only what we override from the network definition).
     node.crowbar["crowbar"]["network"][network] ||= {}
     node.save
 
     @logger.info("Network enable_interface: Assigned: #{name} #{network}")
-    [200, net_info]
+    [200, build_net_info(role, network)]
   end
 
   def build_net_info(role, network)
