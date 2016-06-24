@@ -62,7 +62,7 @@ class NetworkService < ServiceObject
     begin
       lock = acquire_ip_lock
       db = Chef::DataBag.load("crowbar/#{network}_network") rescue nil
-      net_info = build_net_info(network, name, db)
+      net_info = build_net_info(network, db)
 
       rangeH = db["network"]["ranges"][range]
       rangeH = db["network"]["ranges"]["host"] if rangeH.nil?
@@ -375,7 +375,7 @@ class NetworkService < ServiceObject
 
     net_info={}
     begin # Rescue block
-      net_info = build_net_info(network, name)
+      net_info = build_net_info(network)
     rescue Exception => e
       @logger.error("Error finding address: #{e.message}")
     ensure
@@ -389,7 +389,7 @@ class NetworkService < ServiceObject
     [200, net_info]
   end
 
-  def build_net_info(network, name, db = nil)
+  def build_net_info(network, db = nil)
     unless db
       db = Chef::DataBag.load("crowbar/#{network}_network") rescue nil
     end
@@ -398,8 +398,6 @@ class NetworkService < ServiceObject
     db["network"].each { |k,v|
       net_info[k] = v unless v.nil?
     }
-    net_info["usage"]= network
-    net_info["node"] = name
     net_info
   end
 end

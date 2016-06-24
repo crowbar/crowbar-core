@@ -835,8 +835,8 @@ class NodeObject < ChefObject
 
   def get_network_by_type(type)
     return nil if @role.nil?
-    networks.each do |intf, data|
-      return data if data["usage"] == type
+    networks.each do |name, data|
+      return data if name == type
     end
     nil
   end

@@ -463,8 +463,8 @@ class NodesController < ApplicationController
       if !["discovering", "discovered"].include?(@node.state)
         intf_if_map = @node.build_node_map
         # build network information (this may need to move into the object)
-        @node.networks.each do |intf, data|
-          if data["usage"] == "bmc"
+        @node.networks.each do |name, data|
+          if name == "bmc"
             ifname = "bmc"
             address = @node["crowbar_wall"]["ipmi"]["address"] rescue nil
           else
@@ -477,8 +477,8 @@ class NodesController < ApplicationController
             address = data["address"]
           end
           if address
-            network[data["usage"]] = {} if network[data["usage"]].nil?
-            network[data["usage"]][ifname] = address
+            network[name] = {} if network[name].nil?
+            network[name][ifname] = address
           end
         end
         @network = network.sort

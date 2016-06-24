@@ -39,7 +39,7 @@ module BarclampLibrary
       def self.get_network_by_type(node, type)
         unless node[:crowbar][:network].nil?
           [type, "admin"].uniq.each do |usage|
-            if found = node[:crowbar][:network].find { |net, data| data[:usage] == usage }
+            if found = node[:crowbar][:network].find { |net, data| net == usage }
               net, data = found
               intf, interface_list, tm = Barclamp::Inventory.lookup_interface_info(node, data["conduit"])
               return Network.new(net, data, intf, interface_list)
@@ -235,7 +235,7 @@ module BarclampLibrary
 
       class Network
         attr_reader :name, :address, :mtu, :broadcast, :mac, :netmask,
-          :subnet, :router, :usage, :vlan, :use_vlan, :interface,
+          :subnet, :router, :vlan, :use_vlan, :interface,
           :interface_list, :add_bridge, :conduit
         def initialize(net, data, rintf, interface_list)
           @name = net
@@ -246,7 +246,6 @@ module BarclampLibrary
           @netmask = data["netmask"]
           @subnet = data["subnet"]
           @router = data["router"]
-          @usage = data["usage"]
           @vlan = data["vlan"]
           @use_vlan = data["use_vlan"]
           @conduit = data["conduit"]
