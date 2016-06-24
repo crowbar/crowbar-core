@@ -23,7 +23,9 @@ else
 end
 ntp_servers = []
 servers.each do |n|
-  ntp_servers.push n[:crowbar][:network][:admin][:address] if n.name != node.name
+  next if n.name == node.name
+  n_admin_net = Barclamp::Inventory.get_network_by_type(n, "admin")
+  ntp_servers.push n_admin_net.address
 end
 if node["roles"].include?("ntp-server")
   ntp_servers += node[:ntp][:external_servers]

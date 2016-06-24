@@ -11,8 +11,10 @@ class Chef
       }.select{ |a|a.kind_of? type }
     end
     def address(net="admin",type=::IP)
+      network_def = Chef::Recipe::Barclamp::Inventory.get_network_by_type(self, net)
+
       self.addresses(net,type).first ||
-        (::IP.coerce("#{self[:crowbar][:network][net][:address]}/#{self[:crowbar][:network][net][:netmask]}") rescue nil) ||
+        (::IP.coerce("#{network_def.address}/#{network_def.netmask}") unless network_def.nil?) ||
         ::IP.coerce(self[:ipaddress])
     end
     def interfaces(net="admin")

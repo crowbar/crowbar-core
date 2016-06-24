@@ -109,8 +109,8 @@ ovs_bridge_created = false
 # Networks that use vlans and bridges will be handled later
 def net_weight(net)
   res = 0
-  if node["crowbar"]["network"][net]["use_vlan"] then res += 1 end
-  if node["crowbar"]["network"][net]["add_bridge"] then res += 1 end
+  if net.use_vlan then res += 1 end
+  if net.add_bridge then res += 1 end
   res
 end
 
@@ -142,26 +142,24 @@ def kill_nic(nic)
 end
 
 # Dynamically create our new local interfaces.
-node["crowbar"]["network"].keys.sort{|a,b|
+Barclamp::Inventory.list_networks(node).sort do |a, b|
   net_weight(a) <=> net_weight(b)
-}.each do |name|
-  next if name == "bmc"
+end.each do |network|
+  next if network.name == "bmc"
+
   net_ifs = Array.new
-  network = node["crowbar"]["network"][name]
-  next if network.empty?
-  addr = if network["address"]
-           IP.coerce("#{network["address"]}/#{network["netmask"]}")
+  addr = if network.address
+           IP.coerce("#{network.address}/#{network.netmask}")
          else
            nil
          end
-  conduit = network["conduit"]
-  base_ifs = conduit_map[conduit]["if_list"]
+  base_ifs = conduit_map[network.conduit]["if_list"]
   # Error out if we were handed an invalid conduit mapping.
   unless base_ifs.all?{ |i|i.is_a?(String) && ::Nic.exists?(i) }
-    raise ::ArgumentError.new("Conduit mapping \"#{conduit}\" for network \"#{name}\" is not sane: #{base_ifs.inspect}")
+    raise ::ArgumentError.new("Conduit mapping \"#{network.conduit}\" for network \"#{network.name}\" is not sane: #{base_ifs.inspect}")
   end
   base_ifs = base_ifs.map{ |i| ::Nic.new(i) }
-  Chef::Log.info("Using base interfaces #{base_ifs.map{ |i|i.name }.inspect} for network #{name}")
+  Chef::Log.info("Using base interfaces #{base_ifs.map{ |i| i.name }.inspect} for network #{network.name}")
   base_ifs.each do |i|
     ifs[i.name] ||= Hash.new
     ifs[i.name]["addresses"] ||= Array.new
@@ -169,20 +167,20 @@ node["crowbar"]["network"].keys.sort{|a,b|
   end
   case base_ifs.length
   when 0
-    Chef::Log.fatal("Conduit #{conduit} does not have any nics. Your config is invalid.")
+    Chef::Log.fatal("Conduit #{network.conduit} does not have any nics. Your config is invalid.")
     raise ::RangeError.new("Invalid conduit mapping #{conduit_map.inspect}")
   when 1
-    Chef::Log.info("Using interface #{base_ifs[0]} for network #{name}")
+    Chef::Log.info("Using interface #{base_ifs[0]} for network #{network.name}")
     our_iface = base_ifs[0]
   else
     # We want a bond.  Figure out what mode it should be.  Default to 5
-    team_mode = conduit_map[conduit]["team_mode"] ||
+    team_mode = conduit_map[network.conduit]["team_mode"] ||
       (node["network"]["teaming"] && node["network"]["teaming"]["mode"]) || 5
     # See if a bond that matches our specifications has already been created,
     # or if there is an empty bond lying around.
     bond = Nic::Bond.find(base_ifs)
     if bond
-      Chef::Log.info("Using bond #{bond.name} for network #{name}")
+      Chef::Log.info("Using bond #{bond.name} for network #{network.name}")
       bond.mode = team_mode if bond.mode != team_mode
     else
       existing_bond_names = Nic.nics.select{ |i| Nic::bond?(i) }.map{ |i| i.name }
@@ -190,7 +188,7 @@ node["crowbar"]["network"].keys.sort{|a,b|
       new_bond_name = (bond_names - existing_bond_names).first
 
       bond = Nic::Bond.create(new_bond_name, team_mode)
-      Chef::Log.info("Creating bond #{bond.name} for network #{name}")
+      Chef::Log.info("Creating bond #{bond.name} for network #{network.name}")
     end
     ifs[bond.name] ||= Hash.new
     ifs[bond.name]["addresses"] ||= Array.new
@@ -210,10 +208,10 @@ node["crowbar"]["network"].keys.sort{|a,b|
   net_ifs << our_iface.name
   # If we want a vlan interface, create one on top of the base physical
   # interface and/or bond that we already have
-  if network["use_vlan"]
-    vlan = "#{our_iface.name}.#{network["vlan"]}"
+  if network.use_vlan
+    vlan = "#{our_iface.name}.#{network.vlan}"
     if Nic.exists?(vlan) && Nic.vlan?(vlan)
-      Chef::Log.info("Using vlan #{vlan} for network #{name}")
+      Chef::Log.info("Using vlan #{vlan} for network #{network.name}")
       our_iface = Nic.new vlan
       have_vlan_iface = true
     else
@@ -225,12 +223,12 @@ node["crowbar"]["network"].keys.sort{|a,b|
       next unless n.kind_of?(Nic::Vlan)
       next if have_vlan_iface && n == our_iface
       next unless n.parent == our_iface.name
-      next unless n.vlan == network["vlan"].to_i
+      next unless n.vlan == network.vlan
       kill_nic(n)
     end
     unless have_vlan_iface
-      Chef::Log.info("Creating vlan #{vlan} for network #{name}")
-      our_iface = Nic::Vlan.create(our_iface,network["vlan"])
+      Chef::Log.info("Creating vlan #{vlan} for network #{network.name}")
+      our_iface = Nic::Vlan.create(our_iface, network.vlan)
     end
     ifs[our_iface.name] ||= Hash.new
     ifs[our_iface.name]["addresses"] ||= Array.new
@@ -240,17 +238,17 @@ node["crowbar"]["network"].keys.sort{|a,b|
     net_ifs << our_iface.name
   end
   # Ditto for a bridge.
-  if network["add_bridge"]
+  if network.add_bridge
     bridge = if our_iface.kind_of?(Nic::Vlan)
                "br#{our_iface.vlan}"
              else
                "br-#{name}"
              end
     br = if Nic.exists?(bridge) && Nic.bridge?(bridge)
-           Chef::Log.info("Using bridge #{bridge} for network #{name}")
+           Chef::Log.info("Using bridge #{bridge} for network #{network.name}")
            Nic.new bridge
          else
-           Chef::Log.info("Creating bridge #{bridge} for network #{name}")
+           Chef::Log.info("Creating bridge #{bridge} for network #{network.name}")
            Nic::Bridge.create(bridge)
          end
     ifs[br.name] ||= Hash.new
@@ -263,17 +261,17 @@ node["crowbar"]["network"].keys.sort{|a,b|
     our_iface = br
     net_ifs << our_iface.name
   end
-  if network["add_ovs_bridge"]
-    bridge = node[:network][:networks][name][:bridge_name] || "br-#{name}"
+  if network.add_ovs_bridge
+    bridge = network.bridge_name || "br-#{name}"
 
     # This flag is used later to enable wicked-nanny (on SUSE platforms)
     ovs_bridge_created = true
 
     br = if Nic.exists?(bridge) && Nic.ovs_bridge?(bridge)
-      Chef::Log.info("Using OVS bridge #{bridge} for network #{name}")
+      Chef::Log.info("Using OVS bridge #{bridge} for network #{network.name}")
       Nic.new bridge
     else
-      Chef::Log.info("Creating OVS bridge #{bridge} for network #{name}")
+      Chef::Log.info("Creating OVS bridge #{bridge} for network #{network.name}")
       Nic::OvsBridge.create(bridge)
     end
     ifs[br.name] ||= Hash.new
@@ -300,26 +298,26 @@ node["crowbar"]["network"].keys.sort{|a,b|
     our_iface = br
     net_ifs << our_iface.name
   end
-  if network["mtu"]
-    if ["admin", "storage", "os_sdn"].include? name
-      Chef::Log.info("Setting mtu #{network['mtu']} for #{name} network on #{our_iface.name}")
-      ifs[our_iface.name]["mtu"] = network["mtu"]
+  if network.mtu
+    if ["admin", "storage", "os_sdn"].include? network.name
+      Chef::Log.info("Setting mtu #{network.mtu} for #{network.name} network on #{our_iface.name}")
+      ifs[our_iface.name]["mtu"] = network.mtu
     else
       Chef::Log.warn("Setting mtu for #{our_iface.name} network is not supported yet, skipping")
     end
   end
   # Make sure our addresses are correct
-  if_mapping[name] = net_ifs
+  if_mapping[network.name] = net_ifs
   ifs[our_iface.name]["addresses"] ||= Array.new
   if addr
     ifs[our_iface.name]["addresses"] << addr
-    addr_mapping[name] ||= Array.new
-    addr_mapping[name] << addr.to_s
+    addr_mapping[network.name] ||= Array.new
+    addr_mapping[network.name] << addr.to_s
     # Ditto for our default route
-    if network["router_pref"] && (network["router_pref"].to_i < route_pref)
-      Chef::Log.info("#{name}: Will use #{network["router"]} as our default route")
-      route_pref = network["router_pref"].to_i
-      default_route = {nic: our_iface.name, gateway: network["router"]}
+    if network.router_pref && (network.router_pref < route_pref)
+      Chef::Log.info("#{network.name}: Will use #{network.router} as our default route")
+      route_pref = network.router_pref
+      default_route = { nic: our_iface.name, gateway: network.router }
     end
   end
 end

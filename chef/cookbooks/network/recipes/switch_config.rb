@@ -35,14 +35,14 @@ def setup_interface(switch_config, a_node, conduit, switch_name, interface_id )
     interfaces = a_switch_config["interfaces"]
 
     # Find the conduit associated with the interface
-    a_node["crowbar"]["network"].each do |network_name, network|
-      next if network["conduit"] != conduit
-      vlan = network["vlan"]
-      unique_vlans[vlan] = network_name
+    Barclamp::Inventory.list_networks(a_node) do |network|
+      next if network.conduit != conduit
+      vlan = network.vlan
+      unique_vlans[vlan] = network.name
 
       interfaces[interface_id] = {} if interfaces[interface_id].nil?
       vlans_for_interface = interfaces[interface_id]
-      vlans_for_interface[vlan] = network["use_vlan"]
+      vlans_for_interface[vlan] = network.use_vlan
     end
 end
 

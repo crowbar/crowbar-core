@@ -17,21 +17,21 @@
 # It intentionally ignores the bios->enable node data flag.
 
 return if node[:platform_family] == "windows"
-nets = node[:crowbar][:network] || return
-nets[:bmc] && nets[:admin] || return
-bmc_subnet    = nets[:bmc][:subnet]
-bmc_netmask   = nets[:bmc][:netmask]
-admin_subnet  = nets[:admin][:subnet]
-admin_netmask = nets[:admin][:netmask]
+
+bmc_net = Barclamp::Inventory.get_network_by_type(node, "bmc")
+admin_net = Barclamp::Inventory.get_network_by_type(node, "admin")
+
+return if bmc_net.nil? || admin_net.nil?
+
 nat_node = search(:node, "roles:bmc-nat-router").first rescue return
 return if nat_node.nil?
-nat_address = nat_node[:crowbar][:network][:admin][:address]
+nat_admin_net = Barclamp::Inventory.get_network_by_type(nat_node, "admin")
 
-return if admin_subnet == bmc_subnet && admin_netmask == bmc_netmask
+return if admin_net.subnet == bmc_net.subnet && admin_net.netmask == bmc_net.netmask
 
-bmc_cidr = IP::IP4.netmask_to_subnet(bmc_netmask)
+bmc_cidr = IP::IP4.netmask_to_subnet(bmc_net.netmask)
 
 bash "Add route to get to our BMC via nat" do
-  code "ip route add #{bmc_subnet}/#{bmc_cidr} via #{nat_address}"
-  not_if "ip route show via #{nat_address} |grep -q #{bmc_subnet}/#{bmc_cidr}"
+  code "ip route add #{bmc_net.subnet}/#{bmc_cidr} via #{nat_admin_net.address}"
+  not_if "ip route show via #{nat_admin_net.address} | grep -q #{bmc_net.subnet}/#{bmc_cidr}"
 end

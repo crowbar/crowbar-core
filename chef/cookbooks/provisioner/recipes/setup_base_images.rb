@@ -16,8 +16,8 @@
 
 # Set up the OS images as well
 # Common to all OSes
-admin_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
-admin_broadcast = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").broadcast
+admin_net = Barclamp::Inventory.get_network_by_type(node, "admin")
+admin_ip = admin_net.address
 domain_name = node[:dns].nil? ? node[:domain] : (node[:dns][:domain] || node[:domain])
 web_port = node[:provisioner][:web_port]
 provisioner_web="http://#{admin_ip}:#{web_port}"
@@ -203,8 +203,8 @@ if node[:platform_family] == "suse"
     variables(docroot: tftproot,
               port: web_port,
               admin_ip: admin_ip,
-              admin_subnet: node["network"]["networks"]["admin"]["subnet"],
-              admin_netmask: node["network"]["networks"]["admin"]["netmask"],
+              admin_subnet: admin_net.subnet,
+              admin_netmask: admin_net.netmask,
               logfile: "/var/log/apache2/provisioner-access_log",
               errorlog: "/var/log/apache2/provisioner-error_log")
     notifies :reload, resources(service: "apache2")
@@ -545,7 +545,7 @@ node[:provisioner][:supported_oses].each do |os, arches|
         group "root"
         source "crowbar_register.erb"
         variables(admin_ip: admin_ip,
-                  admin_broadcast: admin_broadcast,
+                  admin_broadcast: admin_net.broadcast,
                   web_port: web_port,
                   ntp_servers_ips: ntp_servers_ips,
                   os: os,

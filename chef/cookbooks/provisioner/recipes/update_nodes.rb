@@ -232,6 +232,8 @@ if not nodes.nil? and not nodes.empty?
           os = node[:provisioner][:default_os]
         end
 
+        node_ip = Barclamp::Inventory.get_network_by_type(mnode, "admin").address
+
         append << node[:provisioner][:available_oses][os][arch][:append_line]
 
         node_cfg_dir = "#{tftproot}/nodes/#{mnode[:fqdn]}"
@@ -338,7 +340,7 @@ if not nodes.nil? and not nodes.empty?
                       boot_device: (mnode[:crowbar_wall][:boot_device] rescue nil),
                       raid_type: (mnode[:crowbar_wall][:raid_type] || "single"),
                       raid_disks: (mnode[:crowbar_wall][:raid_disks] || []),
-                      node_ip: mnode[:crowbar][:network][:admin][:address],
+                      node_ip: node_ip,
                       node_fqdn: mnode[:fqdn],
                       node_hostname: mnode[:hostname],
                       platform: target_platform_distro,

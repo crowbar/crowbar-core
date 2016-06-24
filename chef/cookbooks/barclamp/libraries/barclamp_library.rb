@@ -239,22 +239,25 @@ module BarclampLibrary
       end
 
       class Network
-        attr_reader :name, :address, :mtu, :broadcast, :netmask,
-          :subnet, :router, :vlan, :use_vlan,
-          :add_bridge, :conduit
+        attr_reader :name, :address, :broadcast, :netmask,
+          :subnet, :router, :router_pref, :mtu, :vlan, :use_vlan,
+          :add_bridge, :add_ovs_bridge, :bridge_name, :conduit
         def initialize(node, net, data)
           @node = node
           @name = net
           @address = data["address"]
-          @mtu = (data["mtu"] || 1500).to_i
           @broadcast = data["broadcast"]
           @netmask = data["netmask"]
           @subnet = data["subnet"]
           @router = data["router"]
-          @vlan = data["vlan"]
+          @router_pref = data["router_pref"].to_i
+          @mtu = (data["mtu"] || 1500).to_i
+          @vlan = data["vlan"].to_i
           @use_vlan = data["use_vlan"]
           @conduit = data["conduit"]
           @add_bridge = data["add_bridge"]
+          @add_ovs_bridge = data["add_ovs_bridge"]
+          @bridge_name = data["bridge_name"]
           # let's resolve this only if needed
           @interface = nil
           @interface_list = nil
