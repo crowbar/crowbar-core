@@ -477,7 +477,7 @@ class NodesController < ApplicationController
             address = data["address"]
           end
           if address
-            network[name] = {} if network[name].nil?
+            network[name] ||= {}
             network[name][ifname] = address
           end
         end

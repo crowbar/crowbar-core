@@ -831,7 +831,7 @@ class NodeObject < ChefObject
 
   def networks
     networks = {}
-    self.crowbar["crowbar"]["network"].each do |name, data|
+    crowbar["crowbar"]["network"].each do |name, data|
       # note that node might not be part of network proposal yet (for instance:
       # if discovered, and IP got allocated by user)
       next if @node["network"]["networks"].nil? || !@node["network"]["networks"].key?(name)
@@ -842,11 +842,11 @@ class NodeObject < ChefObject
 
   def get_network_by_type(type)
     return nil if @role.nil?
-    return nil unless self.crowbar["crowbar"]["network"].key?(type)
+    return nil unless crowbar["crowbar"]["network"].key?(type)
     # note that node might not be part of network proposal yet (for instance:
     # if discovered, and IP got allocated by user)
     return nil if @node["network"]["networks"].nil? || !@node["network"]["networks"].key?(type)
-    @node["network"]["networks"][type].to_hash.merge(self.crowbar["crowbar"]["network"][type].to_hash)
+    @node["network"]["networks"][type].to_hash.merge(crowbar["crowbar"]["network"][type].to_hash)
   end
 
   #

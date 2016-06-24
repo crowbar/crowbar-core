@@ -141,25 +141,27 @@ def kill_nic(nic)
   end
 end
 
-# Dynamically create our new local interfaces.
-Barclamp::Inventory.list_networks(node).sort do |a, b|
+sorted_networks = Barclamp::Inventory.list_networks(node).sort do |a, b|
   net_weight(a) <=> net_weight(b)
-end.each do |network|
+end
+
+# Dynamically create our new local interfaces.
+sorted_networks.each do |network|
   next if network.name == "bmc"
 
   net_ifs = Array.new
   addr = if network.address
-           IP.coerce("#{network.address}/#{network.netmask}")
-         else
-           nil
-         end
+    IP.coerce("#{network.address}/#{network.netmask}")
+  else
+    nil
+  end
   base_ifs = conduit_map[network.conduit]["if_list"]
   # Error out if we were handed an invalid conduit mapping.
-  unless base_ifs.all?{ |i|i.is_a?(String) && ::Nic.exists?(i) }
+  unless base_ifs.all? { |i| i.is_a?(String) && ::Nic.exists?(i) }
     raise ::ArgumentError.new("Conduit mapping \"#{network.conduit}\" for network \"#{network.name}\" is not sane: #{base_ifs.inspect}")
   end
-  base_ifs = base_ifs.map{ |i| ::Nic.new(i) }
-  Chef::Log.info("Using base interfaces #{base_ifs.map{ |i| i.name }.inspect} for network #{network.name}")
+  base_ifs = base_ifs.map { |i| ::Nic.new(i) }
+  Chef::Log.info("Using base interfaces #{base_ifs.map(&:name).inspect} for network #{network.name}")
   base_ifs.each do |i|
     ifs[i.name] ||= Hash.new
     ifs[i.name]["addresses"] ||= Array.new
@@ -240,17 +242,17 @@ end.each do |network|
   # Ditto for a bridge.
   if network.add_bridge
     bridge = if our_iface.kind_of?(Nic::Vlan)
-               "br#{our_iface.vlan}"
-             else
-               "br-#{name}"
-             end
+      "br#{our_iface.vlan}"
+    else
+      "br-#{name}"
+    end
     br = if Nic.exists?(bridge) && Nic.bridge?(bridge)
-           Chef::Log.info("Using bridge #{bridge} for network #{network.name}")
-           Nic.new bridge
-         else
-           Chef::Log.info("Creating bridge #{bridge} for network #{network.name}")
-           Nic::Bridge.create(bridge)
-         end
+      Chef::Log.info("Using bridge #{bridge} for network #{network.name}")
+      Nic.new bridge
+    else
+      Chef::Log.info("Creating bridge #{bridge} for network #{network.name}")
+      Nic::Bridge.create(bridge)
+    end
     ifs[br.name] ||= Hash.new
     ifs[br.name]["addresses"] ||= Array.new
     ifs[our_iface.name]["slave"] = true

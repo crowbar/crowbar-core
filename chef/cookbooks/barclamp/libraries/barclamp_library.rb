@@ -44,11 +44,12 @@ module BarclampLibrary
               # network is not valid if we don't have the full definition
               node[:network][:networks].key?(net) && net == usage
             end
-            unless found.nil?
-              net, data = found
-              network_def = node[:network][:networks][net].to_hash.merge(data.to_hash)
-              return Network.new(node, net, network_def)
-            end
+
+            next if found.nil?
+
+            net, data = found
+            network_def = node[:network][:networks][net].to_hash.merge(data.to_hash)
+            return Network.new(node, net, network_def)
           end
           return nil
         end
@@ -276,7 +277,7 @@ module BarclampLibrary
         protected
 
         def resolve_interface_info
-          intf, @interface_list, tm = Barclamp::Inventory.lookup_interface_info(@node, @conduit)
+          intf, @interface_list, _tm = Barclamp::Inventory.lookup_interface_info(@node, @conduit)
           @interface = @use_vlan ? "#{intf}.#{@vlan}" : intf
         end
       end
