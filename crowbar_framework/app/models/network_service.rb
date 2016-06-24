@@ -64,10 +64,10 @@ class NetworkService < ServiceObject
     begin
       lock = acquire_ip_lock
       db = Chef::DataBag.load("crowbar/#{network}_network") rescue nil
-      net_info = build_net_info(network, db)
+      net_info = build_net_info(role, network)
 
-      rangeH = db["network"]["ranges"][range]
-      rangeH = db["network"]["ranges"]["host"] if rangeH.nil?
+      rangeH = net_info["ranges"][range]
+      rangeH = net_info["ranges"]["host"] if rangeH.nil?
 
       index = IPAddr.new(rangeH["start"]) & ~IPAddr.new(net_info["netmask"])
       index = index.to_i
@@ -263,7 +263,6 @@ class NetworkService < ServiceObject
         db = Chef::DataBagItem.new
         db.data_bag databag_name
         db["id"] = "#{k}_network"
-        db["network"] = net
         db["allocated"] = {}
         db["allocated_by_name"] = {}
         db.save
@@ -306,6 +305,8 @@ class NetworkService < ServiceObject
       if result[0] == 200
         address = result[1]["address"]
         boot_ip_hex = sprintf("%08X", address.split(".").inject(0) { |acc, i| (acc << 8) + i.to_i })
+        # reload object after allocating the IP address, to get attribute info about admin network
+        node = NodeObject.find_node_by_name name
       end
 
       @logger.debug("Deployer transition: Done Allocate admin address for #{name} boot file:#{boot_ip_hex}")
@@ -314,9 +315,10 @@ class NetworkService < ServiceObject
         # If we are the admin node, we may need to add a vlan bmc address.
         # Add the vlan bmc if the bmc network and the admin network are not the same.
         # not great to do it this way, but hey.
-        admin_net = Chef::DataBag.load "crowbar/admin_network" rescue nil
-        bmc_net = Chef::DataBag.load "crowbar/bmc_network" rescue nil
-        if admin_net["network"]["subnet"] != bmc_net["network"]["subnet"]
+        node_networks = node.networks
+        admin_net = node_networks["admin"]
+        bmc_net = node_networks["bmc"]
+        if admin_net["subnet"] != bmc_net["subnet"]
           @logger.debug("Deployer transition: Allocate bmc_vlan address for #{name}")
           result = allocate_ip("default", "bmc_vlan", "host", name)
           @logger.error("Failed to allocate bmc_vlan address for: #{node.name}: #{result[0]}") if result[0] != 200
@@ -325,7 +327,7 @@ class NetworkService < ServiceObject
 
         # Allocate the bastion network ip for the admin node if a bastion
         # network is defined in the network proposal
-        bastion_net = Chef::DataBag.load "crowbar/bastion_network" rescue nil
+        bastion_net = node_networks["bastion"]
         unless bastion_net.nil?
           result = allocate_ip("default", "bastion", range, name)
           if result[0] != 200
@@ -383,7 +385,7 @@ class NetworkService < ServiceObject
 
     net_info={}
     begin # Rescue block
-      net_info = build_net_info(network)
+      net_info = build_net_info(role, network)
     rescue Exception => e
       @logger.error("Error finding address: Exception #{e.message} #{e.backtrace.join("\n")}")
     ensure
@@ -397,13 +399,9 @@ class NetworkService < ServiceObject
     [200, net_info]
   end
 
-  def build_net_info(network, db = nil)
-    unless db
-      db = Chef::DataBag.load("crowbar/#{network}_network") rescue nil
-    end
-
+  def build_net_info(role, network)
     net_info = {}
-    db["network"].each { |k,v|
+    role.default_attributes["network"]["networks"][network].each { |k, v|
       net_info[k] = v unless v.nil?
     }
     net_info
