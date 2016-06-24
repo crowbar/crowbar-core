@@ -234,7 +234,7 @@ module BarclampLibrary
       end
 
       class Network
-        attr_reader :name, :address, :mtu, :broadcast, :mac, :netmask,
+        attr_reader :name, :address, :mtu, :broadcast, :netmask,
           :subnet, :router, :vlan, :use_vlan, :interface,
           :interface_list, :add_bridge, :conduit
         def initialize(net, data, rintf, interface_list)
@@ -242,7 +242,6 @@ module BarclampLibrary
           @address = data["address"]
           @mtu = (data["mtu"] || 1500).to_i
           @broadcast = data["broadcast"]
-          @mac = data["mac"]
           @netmask = data["netmask"]
           @subnet = data["subnet"]
           @router = data["router"]
