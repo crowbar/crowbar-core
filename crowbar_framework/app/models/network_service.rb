@@ -215,12 +215,10 @@ class NetworkService < ServiceObject
 
     if type == :node
       # Save the information.
-      newhash = {}
-      node.crowbar["crowbar"]["network"].each do |k, v|
-        newhash[k] = v unless k == network
+      if node.crowbar["crowbar"]["network"].key? network
+        node.crowbar["crowbar"]["network"].delete network
+        node.save
       end
-      node.crowbar["crowbar"]["network"] = newhash
-      node.save
     end
     @logger.info("Network deallocate_ip: removed: #{name} #{network}")
     [200, nil]
