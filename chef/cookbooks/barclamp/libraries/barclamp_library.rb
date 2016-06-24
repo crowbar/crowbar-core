@@ -28,13 +28,11 @@ module BarclampLibrary
 
       def self.list_networks(node)
         answer = []
-        intf_to_if_map = Barclamp::Inventory.build_node_map(node)
         node[:crowbar][:network].each do |net, data|
           # network is not valid if we don't have the full definition
           next unless node[:network][:networks].key?(net)
           network_def = node[:network][:networks][net].to_hash.merge(data.to_hash)
-          intf, interface_list, tm = Barclamp::Inventory.lookup_interface_info(node, network_def["conduit"], intf_to_if_map)
-          answer << Network.new(net, network_def, intf, interface_list)
+          answer << Network.new(node, net, network_def)
         end unless node[:crowbar].nil? || node[:crowbar][:network].nil? || node[:network][:networks].nil?
         answer
       end
@@ -49,8 +47,7 @@ module BarclampLibrary
             unless found.nil?
               net, data = found
               network_def = node[:network][:networks][net].to_hash.merge(data.to_hash)
-              intf, interface_list, tm = Barclamp::Inventory.lookup_interface_info(node, network_def["conduit"])
-              return Network.new(net, network_def, intf, interface_list)
+              return Network.new(node, net, network_def)
             end
           end
           return nil
@@ -243,9 +240,10 @@ module BarclampLibrary
 
       class Network
         attr_reader :name, :address, :mtu, :broadcast, :netmask,
-          :subnet, :router, :vlan, :use_vlan, :interface,
-          :interface_list, :add_bridge, :conduit
-        def initialize(net, data, rintf, interface_list)
+          :subnet, :router, :vlan, :use_vlan,
+          :add_bridge, :conduit
+        def initialize(node, net, data)
+          @node = node
           @name = net
           @address = data["address"]
           @mtu = (data["mtu"] || 1500).to_i
@@ -256,9 +254,27 @@ module BarclampLibrary
           @vlan = data["vlan"]
           @use_vlan = data["use_vlan"]
           @conduit = data["conduit"]
-          @interface = data["use_vlan"] ? "#{rintf}.#{data["vlan"]}" : rintf
-          @interface_list = interface_list
           @add_bridge = data["add_bridge"]
+          # let's resolve this only if needed
+          @interface = nil
+          @interface_list = nil
+        end
+
+        def interface
+          resolve_interface_info if @interface.nil?
+          @interface
+        end
+
+        def interface_list
+          resolve_interface_info if @interface_list.nil?
+          @interface_list
+        end
+
+        protected
+
+        def resolve_interface_info
+          intf, @interface_list, tm = Barclamp::Inventory.lookup_interface_info(@node, @conduit)
+          @interface = @use_vlan ? "#{intf}.#{@vlan}" : intf
         end
       end
 
