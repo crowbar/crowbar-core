@@ -30,19 +30,27 @@ module BarclampLibrary
         answer = []
         intf_to_if_map = Barclamp::Inventory.build_node_map(node)
         node[:crowbar][:network].each do |net, data|
-          intf, interface_list, tm = Barclamp::Inventory.lookup_interface_info(node, data["conduit"], intf_to_if_map)
-          answer << Network.new(net, data, intf, interface_list)
-        end unless node[:crowbar].nil? or node[:crowbar][:network].nil?
+          # network is not valid if we don't have the full definition
+          next unless node[:network][:networks].key?(net)
+          network_def = node[:network][:networks][net].to_hash.merge(data.to_hash)
+          intf, interface_list, tm = Barclamp::Inventory.lookup_interface_info(node, network_def["conduit"], intf_to_if_map)
+          answer << Network.new(net, network_def, intf, interface_list)
+        end unless node[:crowbar].nil? || node[:crowbar][:network].nil? || node[:network][:networks].nil?
         answer
       end
 
       def self.get_network_by_type(node, type)
-        unless node[:crowbar][:network].nil?
+        unless node[:crowbar][:network].nil? || node[:network][:networks].nil?
           [type, "admin"].uniq.each do |usage|
-            if found = node[:crowbar][:network].find { |net, data| net == usage }
+            found = node[:crowbar][:network].find do |net, data|
+              # network is not valid if we don't have the full definition
+              node[:network][:networks].key?(net) && net == usage
+            end
+            unless found.nil?
               net, data = found
-              intf, interface_list, tm = Barclamp::Inventory.lookup_interface_info(node, data["conduit"])
-              return Network.new(net, data, intf, interface_list)
+              network_def = node[:network][:networks][net].to_hash.merge(data.to_hash)
+              intf, interface_list, tm = Barclamp::Inventory.lookup_interface_info(node, network_def["conduit"])
+              return Network.new(net, network_def, intf, interface_list)
             end
           end
           return nil
