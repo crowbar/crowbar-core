@@ -54,8 +54,10 @@ class NetworkService < ServiceObject
     end
 
     role = RoleObject.find_role_by_name "network-config-#{bc_instance}"
-    @logger.error("Network allocate ip by type: No network data found: #{object} #{network} #{range}") if role.nil?
-    return [404, "No network data found"] if role.nil?
+    if role.nil? || !role.default_attributes["network"]["networks"].key?(network)
+      @logger.error("Network allocate ip by type: No network data found: #{name} #{network}")
+      return [404, "No network data found"]
+    end
 
     net_info = {}
     found = false
@@ -367,8 +369,10 @@ class NetworkService < ServiceObject
 
     # Find an interface based upon config
     role = RoleObject.find_role_by_name "network-config-#{bc_instance}"
-    @logger.error("Network enable_interface: No network data found: #{name} #{network}") if role.nil?
-    return [404, "No network data found"] if role.nil?
+    if role.nil? || !role.default_attributes["network"]["networks"].key?(network)
+      @logger.error("Network enable_interface: No network data found: #{name} #{network}")
+      return [404, "No network data found"]
+    end
 
     # If we already have on allocated, return success
     net_info = node.get_network_by_type(network)
