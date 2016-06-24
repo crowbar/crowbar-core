@@ -216,7 +216,7 @@ class NodeObject < ChefObject
     role = RoleObject.new Chef::Role.new
     role.name = name
     role.default_attributes["crowbar"] = {}
-    role.default_attributes["crowbar"]["network"] = {} if role.default_attributes["crowbar"]["network"].nil?
+    role.default_attributes["crowbar"]["network"] = {}
     role.save
 
     # This run_list call is to add the crowbar tracking role to the node. (SAFE)
@@ -830,15 +830,23 @@ class NodeObject < ChefObject
   end
 
   def networks
-    self.crowbar["crowbar"]["network"] rescue {}
+    networks = {}
+    self.crowbar["crowbar"]["network"].each do |name, data|
+      # note that node might not be part of network proposal yet (for instance:
+      # if discovered, and IP got allocated by user)
+      next if @node["network"]["networks"].nil? || !@node["network"]["networks"].key?(name)
+      networks[name] = @node["network"]["networks"][name].to_hash.merge(data.to_hash)
+    end
+    networks
   end
 
   def get_network_by_type(type)
     return nil if @role.nil?
-    networks.each do |name, data|
-      return data if name == type
-    end
-    nil
+    return nil unless self.crowbar["crowbar"]["network"].key?(type)
+    # note that node might not be part of network proposal yet (for instance:
+    # if discovered, and IP got allocated by user)
+    return nil if @node["network"]["networks"].nil? || !@node["network"]["networks"].key?(type)
+    @node["network"]["networks"][type].to_hash.merge(self.crowbar["crowbar"]["network"][type].to_hash)
   end
 
   #
