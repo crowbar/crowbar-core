@@ -88,21 +88,21 @@ class NetworkService < ServiceObject
 
         unless found
           # Let's search for an empty one.
-          rangeH = net_info["ranges"][range]
-          rangeH = net_info["ranges"]["host"] if rangeH.nil?
+          range_def = net_info["ranges"][range]
+          range_def = net_info["ranges"]["host"] if range_def.nil?
 
-          index = IPAddr.new(rangeH["start"]) & ~IPAddr.new(net_info["netmask"])
+          index = IPAddr.new(range_def["start"]) & ~IPAddr.new(net_info["netmask"])
           index = index.to_i
-          stop_address = IPAddr.new(rangeH["end"]) & ~IPAddr.new(net_info["netmask"])
+          stop_address = IPAddr.new(range_def["end"]) & ~IPAddr.new(net_info["netmask"])
           stop_address = IPAddr.new(net_info["subnet"]) | (stop_address.to_i + 1)
 
-          while !found do
+          until found
             address = IPAddr.new(net_info["subnet"]) | index
             if db["allocated"][address.to_s].nil?
               found = true
               break
             end
-            index = index + 1
+            index += 1
             break if address == stop_address
           end
         end
@@ -395,9 +395,9 @@ class NetworkService < ServiceObject
 
   def build_net_info(role, network)
     net_info = {}
-    role.default_attributes["network"]["networks"][network].each { |k, v|
+    role.default_attributes["network"]["networks"][network].each do |k, v|
       net_info[k] = v unless v.nil?
-    }
+    end
     net_info
   end
 end
