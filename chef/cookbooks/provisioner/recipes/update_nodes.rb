@@ -197,7 +197,11 @@ if not nodes.nil? and not nodes.empty?
           hostname mnode.name
           macaddress mac_list[i]
           if admin_mac_addresses.include?(mac_list[i])
-            ipaddress admin_data_net.address unless admin_data_net.nil?
+            if admin_data_net.nil?
+              ipaddress mnode[:ipaddress]
+            else
+              ipaddress admin_data_net.address unless admin_data_net.nil?
+            end
             options [
               'if exists dhcp-parameter-request-list {
     # Always send the PXELINUX options (specified in hexadecimal)
