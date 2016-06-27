@@ -849,6 +849,12 @@ class NodeObject < ChefObject
     @node["network"]["networks"][type].to_hash.merge(crowbar["crowbar"]["network"][type].to_hash)
   end
 
+  def set_network_attribute(network, attribute, value)
+    # let's assume the caller knows what it's doing and not check if that
+    # network is enabled for that node
+    crowbar["crowbar"]["network"][network][attribute] = value
+  end
+
   #
   # This is from the crowbar role assigned to the admin node at install time.
   # It is not a node.role parameter
