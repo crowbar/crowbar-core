@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
-include_recipe "provisioner::base"
-include_recipe "utils::default"
-include_recipe "barclamp::default"
+if CrowbarRoleRecipe.node_state_valid_for_role?(node, "provisioner", "provisioner-base")
+  include_recipe "provisioner::base"
+  include_recipe "utils::default"
+  include_recipe "barclamp::default"
+end

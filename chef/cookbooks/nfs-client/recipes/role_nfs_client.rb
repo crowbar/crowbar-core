@@ -14,4 +14,6 @@
 # limitations under the License.
 #
 
-include_recipe "nfs-client::default"
+if CrowbarRoleRecipe.node_state_valid_for_role?(node, "nfs_client", "nfs-client")
+  include_recipe "nfs-client::default"
+end

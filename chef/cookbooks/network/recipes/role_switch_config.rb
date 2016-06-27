@@ -14,4 +14,6 @@
 # limitations under the License.
 #
 
-include_recipe "network::switch_config"
+if CrowbarRoleRecipe.node_state_valid_for_role?(node, "network", "switch_config")
+  include_recipe "network::switch_config"
+end

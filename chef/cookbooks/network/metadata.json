@@ -6,6 +6,8 @@
     "replacing": {
     },
     "dependencies": {
+      "barclamp": [],
+      "utils": []
     },
     "groupings": {
     },

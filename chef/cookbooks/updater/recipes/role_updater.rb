@@ -14,4 +14,6 @@
 # limitations under the License.
 #
 
-include_recipe "updater::default"
+if CrowbarRoleRecipe.node_state_valid_for_role?(node, "updater", "updater")
+  include_recipe "updater::default"
+end

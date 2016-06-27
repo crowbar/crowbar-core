@@ -14,4 +14,6 @@
 # limitations under the License.
 #
 
-include_recipe "crowbar::crowbar-upgrade"
+if CrowbarRoleRecipe.node_state_valid_for_role?(node, "crowbar", "crowbar-upgrade")
+  include_recipe "crowbar::crowbar-upgrade"
+end

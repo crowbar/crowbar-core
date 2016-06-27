@@ -14,4 +14,6 @@
 # limitations under the License.
 #
 
-include_recipe "suse-manager-client::default"
+if CrowbarRoleRecipe.node_state_valid_for_role?(node, "suse_manager_client", "suse-manager-client")
+  include_recipe "suse-manager-client::default"
+end

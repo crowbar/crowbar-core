@@ -14,5 +14,7 @@
 # limitations under the License.
 #
 
-include_recipe "utils::default"
-include_recipe "crowbar::default"
+if CrowbarRoleRecipe.node_state_valid_for_role?(node, "crowbar", "crowbar")
+  include_recipe "utils::default"
+  include_recipe "crowbar::default"
+end

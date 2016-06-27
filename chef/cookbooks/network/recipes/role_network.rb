@@ -14,5 +14,7 @@
 # limitations under the License.
 #
 
-include_recipe "network::default"
-include_recipe "network::fast_nics_tune"
+if CrowbarRoleRecipe.node_state_valid_for_role?(node, "network", "network")
+  include_recipe "network::default"
+  include_recipe "network::fast_nics_tune"
+end
