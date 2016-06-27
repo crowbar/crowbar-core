@@ -706,36 +706,32 @@ class NodeObject < ChefObject
   end
 
   def add_to_run_list(rolename, priority, states = nil)
-    states = ["all"] unless states
-    crowbar["run_list_map"] = {} if crowbar["run_list_map"].nil?
-    val = { "states" => states, "priority" => priority }
+    # FIXME: Crowbar 4.0: we keep states parameter for compatibility reason; it
+    # should be removed in Crowbar 5.0
+    crowbar["run_list_map"] ||= {}
+    val = { "priority" => priority }
     crowbar["run_list_map"][rolename] = val
     Rails.logger.debug("crowbar[run_list_map][#{rolename}] = #{val.inspect}")
     Rails.logger.debug("current state is #{self.crowbar['state']}")
 
-    # only rebuild the run_list if it effects the current state.
-    self.rebuild_run_list if states.include?("all") or states.include?(self.crowbar["state"])
+    rebuild_run_list
   end
 
   def delete_from_run_list(rolename)
-    crowbar["run_list_map"] = {} if crowbar["run_list_map"].nil?
-    crowbar["run_list_map"][rolename] = { "states" => ["all"], "priority" => -1001 } unless crowbar["run_list_map"].nil?
+    crowbar["run_list_map"] ||= {}
+    crowbar["run_list_map"].delete(rolename)
     crowbar_run_list.run_list_items.delete "role[#{rolename}]"
   end
 
   def rebuild_run_list
-    crowbar["run_list_map"] = {} if crowbar["run_list_map"].nil?
+    crowbar["run_list_map"] ||= {}
 
-    # Cull by state
-    map = crowbar["run_list_map"].select do |k, v|
-      v["states"].include?("all") || v["states"].include?(crowbar["state"])
-    end
+    # FIXME: Crowbar 4.0: remove this hack to drop old items, which exists only
+    # to allow upgrade from 3.0 to work; should be removed in Crowbar 5.0
+    crowbar["run_list_map"].delete_if { |k, v| v["priority"] == -1001 }
 
-    # Ruby 1.8 vs. 1.9 compatibility. Select returns Hash in 1.9 instead of
-    # an array, so map it back to [key, val] pairs.
-    map = map.to_a if map.is_a?(Hash)
     # Sort map (by priority, then name)
-    vals = map.sort do |a, b|
+    vals = crowbar["run_list_map"].sort do |a, b|
       [a[1]["priority"], a[0]] <=> [b[1]["priority"], b[0]]
     end
     Rails.logger.debug("rebuilt run_list will be #{vals.inspect}")
@@ -743,18 +739,7 @@ class NodeObject < ChefObject
     # Rebuild list
     crowbar_run_list.run_list_items.clear
     vals.each do |item|
-      next if item[1]["priority"] == -1001 # Skip deleted items
       crowbar_run_list.run_list_items << "role[#{item[0]}]"
-    end
-  end
-
-  def run_list_to_roles
-    crowbar["run_list_map"] = {} if crowbar["run_list_map"].nil?
-    a = crowbar["run_list_map"].select { |k,v| v["priority"] != -1001 }
-    if a.is_a?(Hash)
-      a.keys
-    else
-      a.collect! { |x| x[0] }
     end
   end
 
@@ -769,17 +754,9 @@ class NodeObject < ChefObject
 
   attr_reader :role
 
-  # This include a map walk
   def role?(role_name)
     return false if @node.nil?
-    return false if @role.nil?
-    begin
-      crowbar["run_list_map"] = {} if crowbar["run_list_map"].nil?
-      return crowbar["run_list_map"][role_name]["priority"] != -1001 if crowbar["run_list_map"][role_name]
-      @node.role?(role_name)
-    rescue
-      return false
-    end
+    @node.role?(role_name)
   end
 
   def roles
