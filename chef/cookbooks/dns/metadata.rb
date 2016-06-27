@@ -23,3 +23,4 @@ version "0.1"
 
 depends "bind9"
 depends "resolver"
+depends "utils"

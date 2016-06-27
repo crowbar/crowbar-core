@@ -21,4 +21,6 @@ description "Sets up NFS mounts"
 long_description ""
 version "0.0.1"
 
+depends "utils"
+
 recipe "nfs-client", "Sets up NFS mounts"

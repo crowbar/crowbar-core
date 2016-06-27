@@ -21,4 +21,6 @@ description "System Package Updater"
 long_description ""
 version "0.0.1"
 
+depends "utils"
+
 recipe "updater", "System Package Updater"
