@@ -251,9 +251,9 @@ module BarclampLibrary
           @netmask = data["netmask"]
           @subnet = data["subnet"]
           @router = data["router"]
-          @router_pref = data["router_pref"].to_i
+          @router_pref = data["router_pref"].nil? ? nil : data["router_pref"].to_i
           @mtu = (data["mtu"] || 1500).to_i
-          @vlan = data["vlan"].to_i
+          @vlan = data["vlan"].nil? ? nil : data["vlan"].to_i
           @use_vlan = data["use_vlan"]
           @conduit = data["conduit"]
           @add_bridge = data["add_bridge"]
