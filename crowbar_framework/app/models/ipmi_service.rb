@@ -47,7 +47,7 @@ class IpmiService < ServiceObject
   end
 
   def transition(inst, name, state)
-    @logger.debug("IPMI transition: make sure that ipmi role is on all nodes: #{name} for #{state}")
+    @logger.debug("IPMI transition: entering: #{name} for #{state}")
 
     # discovering because mandatory for discovery image
     if ["discovering", "readying"].include? state
@@ -76,36 +76,42 @@ class IpmiService < ServiceObject
       end
     end
 
-    if state == "discovered"
-      role = RoleObject.find_role_by_name "ipmi-config-#{inst}"
-
-      node = NodeObject.find_node_by_name(name)
-
+    # do not allocate an IP address before we reach the state where we
+    # configure the BMC
+    if state == "hardware-installing"
       ns = NetworkService.new @logger
-      if role and !role.default_attributes["ipmi"]["use_dhcp"]
+      role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
+
+      if role && !role.default_attributes["ipmi"]["use_dhcp"]
         @logger.debug("IPMI transition: Allocate bmc address for #{name}")
-        suggestion = node["crowbar_wall"]["ipmi"]["address"] rescue nil
-        suggestion = nil if role and role.default_attributes["ipmi"]["ignore_address_suggestions"]
+        node = NodeObject.find_node_by_name(name)
+        suggestion = if role.default_attributes["ipmi"]["ignore_address_suggestions"]
+          nil
+        else
+          node["crowbar_wall"]["ipmi"]["address"] rescue nil
+        end
+
         result = ns.allocate_ip("default", "bmc", "host", name, suggestion)
-        @logger.error("Failed to allocate bmc address for: #{name}: #{result[0]}") if result[0] != 200
-        @logger.debug("IPMI transition: Done Allocate bmc address for #{name}")
-        result = result[0] == 200
+        if result[0] != 200
+          msg = "Failed to allocate bmc address for: #{name}: #{result[0]}"
+          @logger.error(msg)
+          return [400, msg]
+        end
       else
         # This enables other system to function because the bmc data is on the node,
         # but no address is assigned.
-        result = ns.enable_interface("default", "bmc", name)
-        @logger.error("Failed to enable bmc interface for: #{name}: #{result[0]}") if result[0] != 200
-        @logger.debug("IPMI transition: Done enable interface bmc address for #{name}")
-        result = result[0] == 200
-      end
+        @logger.debug("IPMI transition: Enable bmc interface for #{name}")
 
-      @logger.debug("IPMI transition: leaving from discovered state for #{name}")
-      a = [200, { name: name }] if result
-      a = [400, "Failed to add role to node"] unless result
-      return a
+        result = ns.enable_interface("default", "bmc", name)
+        if result[0] != 200
+          msg = "Failed to enable bmc interface for: #{name}: #{result[0]}"
+          @logger.error(msg)
+          return [400, msg]
+        end
+      end
     end
 
-    @logger.debug("IPMI transition: leaving for #{name} for #{state}")
+    @logger.debug("IPMI transition: leaving: #{name} for #{state}")
     [200, { name: name }]
   end
 end
