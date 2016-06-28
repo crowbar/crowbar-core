@@ -69,27 +69,21 @@ class DnsService < ServiceObject
   end
 
   def transition(inst, name, state)
-    @logger.debug("DNS transition: entering for #{name} for #{state}")
+    @logger.debug("DNS transition: entering: #{name} for #{state}")
 
-    #
-    # If we are discovering the node, make sure that we add the dns client or server to the node
-    #
-    if state == "discovered"
-      @logger.debug("DNS transition: handling for #{name} for #{state}: discovered")
-      db = Proposal.where(barclamp: "dns", name: inst).first
-      role = RoleObject.find_role_by_name "dns-config-#{inst}"
+    node = NodeObject.find_node_by_name name
+    if node.allocated?
+      db = Proposal.where(barclamp: @bc_name, name: inst).first
+      role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
 
-      # Always add the dns client
-      @logger.debug("DNS transition: adding #{name} to dns-client role")
-      result = add_role_to_instance_and_node("dns", inst, name, db, role, "dns-client")
-
-      a = [200, { name: name }] if result
-      a = [400, "Failed to add role to node"] unless result
-      @logger.debug("DNS transition: leaving for #{name} for #{state}: discovered")
-      return a
+      unless add_role_to_instance_and_node(@bc_name, inst, name, db, role, "dns-client")
+        msg = "Failed to add dns-client role to #{name}!"
+        @logger.error(msg)
+        return [400, msg]
+      end
     end
 
-    @logger.debug("DNS transition: leaving for #{name} for #{state}")
+    @logger.debug("DNS transition: leaving: #{name} for #{state}")
     [200, { name: name }]
   end
 

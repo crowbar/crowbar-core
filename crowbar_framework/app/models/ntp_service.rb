@@ -61,28 +61,21 @@ class NtpService < ServiceObject
   end
 
   def transition(inst, name, state)
-    @logger.debug("NTP transition: make sure that network role is on all nodes: #{name} for #{state}")
+    @logger.debug("NTP transition: entering: #{name} for #{state}")
 
-    #
-    # If we are discovering the node, make sure that we add the ntp client or server to the node
-    #
-    if state == "discovered"
-      @logger.debug("NTP transition: discovered state for #{name} for #{state}")
-      db = Proposal.where(barclamp: "ntp", name: inst).first
-      role = RoleObject.find_role_by_name "ntp-config-#{inst}"
+    node = NodeObject.find_node_by_name name
+    if node.allocated? && !node.role?("ntp-server")
+      db = Proposal.where(barclamp: @bc_name, name: inst).first
+      role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
 
-      node = NodeObject.find_node_by_name name
-      unless node.role? "ntp-server"
-        @logger.debug("NTP transition: make sure that ntp-client role is on all nodes but first: #{name} for #{state}")
-        result = add_role_to_instance_and_node("ntp", inst, name, db, role, "ntp-client")
+      unless add_role_to_instance_and_node(@bc_name, inst, name, db, role, "ntp-client")
+        msg = "Failed to add ntp-client role to #{name}!"
+        @logger.error(msg)
+        return [400, msg]
       end
-
-      @logger.debug("NTP transition: leaving from discovered state for #{name} for #{state}")
-      return [200, { name: name }] if result
-      return [400, "Failed to add role to node"] unless result
     end
 
-    @logger.debug("NTP transition: leaving for #{name} for #{state}")
+    @logger.debug("NTP transition: leaving: #{name} for #{state}")
     [200, { name: name }]
   end
 end
