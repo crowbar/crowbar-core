@@ -61,16 +61,25 @@ class IpmiService < ServiceObject
       end
     end
 
+    # hardware-installing because BMC is enabled during that step
+    if ["hardware-installing", "installed", "readying"].include? state
+      node = NodeObject.find_node_by_name(name)
+      unless node.role?("bmc-nat-router")
+        db = Proposal.where(barclamp: @bc_name, name: inst).first
+        role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
+
+        unless add_role_to_instance_and_node(@bc_name, inst, name, db, role, "bmc-nat-client")
+          msg = "Failed to add ipmi role to #{name}!"
+          @logger.error(msg)
+          return [400, msg]
+        end
+      end
+    end
+
     if state == "discovered"
-      db = Proposal.where(barclamp: "ipmi", name: inst).first
       role = RoleObject.find_role_by_name "ipmi-config-#{inst}"
 
       node = NodeObject.find_node_by_name(name)
-
-      unless node.admin?
-        # Add the bmc routing roles as appropriate.
-        result = add_role_to_instance_and_node("ipmi", inst, name, db, role, "bmc-nat-client")
-      end
 
       ns = NetworkService.new @logger
       if role and !role.default_attributes["ipmi"]["use_dhcp"]

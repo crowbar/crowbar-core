@@ -32,6 +32,7 @@
         "transitions": true,
         "transition_list": [
           "discovering",
+          "hardware-installing",
           "installed",
           "readying"
 	]
