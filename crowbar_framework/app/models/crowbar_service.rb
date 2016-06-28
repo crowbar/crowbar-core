@@ -453,7 +453,7 @@ class CrowbarService < ServiceObject
     end
     @logger.debug("Crowbar apply_role: super apply_role finished")
 
-    answer = bootstrap_proposals(role)
+    answer = bootstrap_proposals(role, inst)
 
     if answer[0] != 200
       @logger.error("Crowbar apply_role: #{answer.inspect}")
@@ -546,11 +546,13 @@ class CrowbarService < ServiceObject
     answer
   end
 
-  def bootstrap_proposals(role)
+  def bootstrap_proposals(crowbar_role, inst)
     answer = [200, {}]
 
-    role = role.default_attributes
-    return answer if role["crowbar"].nil? || role["crowbar"]["instances"].nil?
+    role = crowbar_role.default_attributes
+    return answer if role["crowbar"].nil? ||
+        role["crowbar"]["instances"].nil? ||
+        role["crowbar"]["instances"].empty?
 
     @logger.info("Bootstrap: create initial proposals")
 
@@ -561,6 +563,18 @@ class CrowbarService < ServiceObject
         break if answer[0] != 200
       end
       break if answer[0] != 200
+    end
+
+    if answer[0] == 200
+      @logger.info("Bootstrap successful!")
+
+      # removing bootstrap info to not do this anymore
+      proposal = Proposal.where(barclamp: @bc_name, name: inst).first
+      proposal.raw_data["attributes"]["crowbar"]["instances"] = {}
+      proposal.save
+
+      crowbar_role.default_attributes["crowbar"]["instances"] = {}
+      crowbar_role.save
     end
 
     answer
