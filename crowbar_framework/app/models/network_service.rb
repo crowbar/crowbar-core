@@ -288,17 +288,15 @@ class NetworkService < ServiceObject
   def transition(inst, name, state)
     @logger.debug("Network transition: Entering #{name} for #{state}")
 
-    if state == "discovered"
+    if ["installed", "readying"].include? state
+      db = Proposal.where(barclamp: @bc_name, name: inst).first
+      role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
 
-      db = Proposal.where(barclamp: "network", name: inst).first
-      role = RoleObject.find_role_by_name "network-config-#{inst}"
-
-      @logger.debug("Network transition: make sure that network role is on all nodes: #{name} for #{state}")
-      result = add_role_to_instance_and_node("network", inst, name, db, role, "network")
-
-      @logger.debug("Network transition: Exiting #{name} for #{state} discovered path")
-      return [200, { name: name }] if result
-      return [400, "Failed to add role to node"] unless result
+      unless add_role_to_instance_and_node(@bc_name, inst, name, db, role, "network")
+        msg = "Failed to add network role to #{name}!"
+        @logger.error(msg)
+        return [400, msg]
+      end
     end
 
     if state == "delete" or state == "reset"
