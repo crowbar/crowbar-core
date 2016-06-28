@@ -24,7 +24,7 @@ class IpmiService < ServiceObject
   class << self
     def role_constraints
       {
-        "ipmi-configure" => {
+        "ipmi" => {
           "unique" => false,
           "admin" => true,
           "count" => -1
@@ -49,28 +49,21 @@ class IpmiService < ServiceObject
   def transition(inst, name, state)
     @logger.debug("IPMI transition: make sure that ipmi role is on all nodes: #{name} for #{state}")
 
-    #
-    # If we are discovering the node, make sure that we add the ipmi role to the node
-    #
-    if state == "discovering"
-      @logger.debug("IPMI transition: discovering state for #{name}")
-      db = Proposal.where(barclamp: "ipmi", name: inst).first
-      role = RoleObject.find_role_by_name "ipmi-config-#{inst}"
-      result = add_role_to_instance_and_node("ipmi", inst, name, db, role, "ipmi-discover")
-      @logger.debug("ipmi transition: leaving from discovering state for #{name}")
-      a = [200, { name: name }] if result
-      a = [400, "Failed to add role to node"] unless result
-      return a
+    # discovering because mandatory for discovery image
+    if ["discovering", "readying"].include? state
+      db = Proposal.where(barclamp: @bc_name, name: inst).first
+      role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
+
+      unless add_role_to_instance_and_node(@bc_name, inst, name, db, role, "ipmi")
+        msg = "Failed to add ipmi role to #{name}!"
+        @logger.error(msg)
+        return [400, msg]
+      end
     end
 
-    #
-    # If we are discovering the node, make sure that we add the ipmi role to the node
-    #
     if state == "discovered"
-      @logger.debug("IPMI transition: discovered state for #{name}")
       db = Proposal.where(barclamp: "ipmi", name: inst).first
       role = RoleObject.find_role_by_name "ipmi-config-#{inst}"
-      result = add_role_to_instance_and_node("ipmi", inst, name, db, role, "ipmi-configure")
 
       node = NodeObject.find_node_by_name(name)
 

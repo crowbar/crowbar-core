@@ -1,14 +1,11 @@
 #
-# Cookbook Name: ipmi
-# Role: ipmi-install
-#
-# Copyright (c) 2011 Dell Inc.
+# Copyright 2016, SUSE LINUX GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +14,12 @@
 # limitations under the License.
 #
 
-name "ipmi-discover"
-description "IPMI discover - discover the BMC network information"
-run_list("recipe[ipmi::role_ipmi_discover]")
+if CrowbarRoleRecipe.node_state_valid_for_role?(node, "ipmi", "ipmi")
+  if ["discovering", "hardware-installing", "readying"].include? node[:state]
+    include_recipe "ipmi::ipmi-discover"
+  end
+
+  if node[:state] == "hardware-installing"
+    include_recipe "ipmi::ipmi-configure"
+  end
+end

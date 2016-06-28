@@ -1,11 +1,14 @@
 #
-# Copyright 2016, SUSE LINUX GmbH
+# Cookbook Name: ipmi
+# Role: ipmi-install
+#
+# Copyright (c) 2011 Dell Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#   http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,6 +17,6 @@
 # limitations under the License.
 #
 
-if CrowbarRoleRecipe.node_state_valid_for_role?(node, "ipmi", "ipmi-discover")
-  include_recipe "ipmi::ipmi-discover"
-end
+name "ipmi"
+description "IPMI - discover and configure the BMC to allow remote management"
+run_list("recipe[ipmi::role_ipmi]")
