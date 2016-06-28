@@ -477,79 +477,92 @@ class CrowbarService < ServiceObject
     t
   end
 
-  def bootstrap_create_proposal(bc, override_attr_path)
-    id = "default"
-    data = {"id" => id}
+  def bootstrap_ensure_proposal(bc, override_attr_path)
+    @logger.info("Bootstrap: ensure proposal for bc: #{bc}, name: #{override_attr_path.inspect}")
 
-    @logger.info("Deploying proposal - id: #{id}, name: #{override_attr_path.inspect}")
+    unless override_attr_path == "default" || File.exist?(override_attr_path)
+      msg = "Cannot ensure proposal for #{bc} exists: #{override_attr_path} does not exist."
+      @logger.error(msg)
+      return [404, msg]
+    end
+
+    service = eval("#{bc.camelize}Service.new @logger")
+    answer = service.proposals
+
+    if answer[0] != 200
+      @logger.error("Failed to list proposals for #{bc}: #{answer[0]}: #{answer[1]}")
+      return answer
+    end
+    proposals = answer[1]
 
     if override_attr_path != "default"
+      # Fetch overriding attributes for new proposal
       data = JSON.parse(
         File.read(override_attr_path)
       )
 
       id = data["id"].gsub("#{bc}-", "")
-    end
-
-    @logger.debug("Crowbar apply_role: creating #{bc}.#{id}")
-
-    # Create a service to talk to.
-    service = eval("#{bc.camelize}Service.new @logger")
-
-    @logger.debug("Crowbar apply_role: Calling get to see if it already exists: #{bc}.#{id}")
-    answer = service.proposals
-    if answer[0] != 200
-      @logger.error("Failed to list #{bc}: #{answer[0]} : #{answer[1]}")
     else
-      unless answer[1].include?(id)
-        @logger.debug("Crowbar apply_role: didn't already exist, creating proposal for #{bc}.#{id}")
-        answer = service.proposal_create(data)
-        if answer[0] != 200
-          answer[1] = "Failed to create proposal '#{id}' for barclamp '#{bc}' " +
-                      "(The error message was: #{answer[1].strip})"
-          break
-        end
-      end
+      id = "default"
+      data = { "id" => id }
+    end
 
-      @logger.debug("Crowbar apply_role: check to see if it is already active: #{bc}.#{id}")
-      answer = service.list_active
+    unless proposals.include?(id)
+      @logger.debug("Bootstrap: creating proposal for #{bc}.#{id}")
+      answer = service.proposal_create(data)
       if answer[0] != 200
-        answer[1] = "Failed to list active '#{bc}' proposals " +
-                    "(The error message was: #{answer[1].strip})"
-        break
-      else
-        unless answer[1].include?(id)
-          @logger.debug("Crowbar apply_role: #{bc}.#{id} wasn't active: Activating")
-          answer = service.proposal_commit(id, false, false)
-          if answer[0] != 200
-            answer[1] = "Failed to commit proposal '#{id}' for '#{bc}' " +
-                        "(The error message was: #{answer[1].strip})"
-            break
-          end
-        end
+        msg = "Failed to create proposal '#{id}' for barclamp '#{bc}' " +
+          "(The error message was: #{answer[1].strip})"
+        @logger.error(msg)
+        answer[1] = msg
+        return answer
       end
     end
 
-    @logger.info("Crowbar apply_role: Done with creating: #{bc}.#{id}")
+    answer = service.list_active
+    if answer[0] != 200
+      msg = "Failed to list active '#{bc}' proposals " +
+        "(The error message was: #{answer[1].strip})"
+      @logger.error(msg)
+      answer[1] = msg
+      return answer
+    end
+    active_proposals = answer[1]
+
+    unless active_proposals.include?(id)
+      @logger.debug("Bootstrap: applying proposal for #{bc}.#{id}")
+      answer = service.proposal_commit(id, false, false)
+      if answer[0] != 200
+        msg = "Failed to commit proposal '#{id}' for '#{bc}' " +
+          "(The error message was: #{answer[1].strip})"
+        @logger.error(msg)
+        answer[1] = msg
+        return answer
+      end
+    end
+
+    @logger.info("Bootstrap: done ensuring proposal for bc: #{bc}, name: #{override_attr_path.inspect}")
 
     answer
   end
 
   def bootstrap_proposals(role)
+    answer = [200, {}]
+
     role = role.default_attributes
-    @logger.debug("Crowbar apply_role: create initial instances")
-    unless role["crowbar"].nil? or role["crowbar"]["instances"].nil?
-      ordered_bcs = order_instances role["crowbar"]["instances"]
-      ordered_bcs.each do |bc, plist|
-        @logger.info("Deploying proposal - barclamp: #{k}, name: #{plist[:instances].join(',')}")
-        plist[:instances].each do |v|
-          answer = bootstrap_create_proposal(bc, v)
-          break if answer[0] != 200
-        end
-        if answer[0] != 200
-          break
-        end
+    return answer if role["crowbar"].nil? || role["crowbar"]["instances"].nil?
+
+    @logger.info("Bootstrap: create initial proposals")
+
+    ordered_bcs = order_instances role["crowbar"]["instances"]
+    ordered_bcs.each do |bc, plist|
+      plist[:instances].each do |v|
+        answer = bootstrap_ensure_proposal(bc, v)
+        break if answer[0] != 200
       end
+      break if answer[0] != 200
     end
+
+    answer
   end
 end
