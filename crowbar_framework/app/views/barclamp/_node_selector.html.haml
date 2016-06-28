@@ -82,7 +82,7 @@
             .pull-right
               %a.unassign{ :href => "#", "data-id" => element, "data-confirm" => t(".unassign_confirm", :role => element) }
                 = t(".unassign_label")
-            = chef_server_role_link element
+            = element
 
           %ul{ :id => element, "data-droppable" => "true", "data-id" => element }
 

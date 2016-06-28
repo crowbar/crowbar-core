@@ -87,37 +87,8 @@ class ProvisionerService < ServiceObject
         @logger.error("Provisioner transition: existing discovered state for #{name} for #{state}: Failed")
         return [400, "Failed to add role to node"]
       end
-
-      if ENV["HAVE_CHEF_WEBUI"] == "true"
-        # Set up the client url
-        role = RoleObject.find_role_by_name "provisioner-config-#{inst}"
-
-        # Get the server IP address
-        server_ip = nil
-        ["provisioner-server"].each do |element|
-          tnodes = role.override_attributes["provisioner"]["elements"][element]
-          next if tnodes.nil? or tnodes.empty?
-          tnodes.each do |n|
-            next if n.nil?
-            node = NodeObject.find_node_by_name(n)
-            pub = node.get_network_by_type("public")
-            if pub and pub["address"] and pub["address"] != ""
-              server_ip = pub["address"]
-            else
-              server_ip = node.get_network_by_type("admin")["address"]
-            end
-          end
-        end
-
-        unless server_ip.nil?
-          node = NodeObject.find_node_by_name(name)
-          node.crowbar["crowbar"] = {} if node.crowbar["crowbar"].nil?
-          node.crowbar["crowbar"]["links"] = {} if node.crowbar["crowbar"]["links"].nil?
-          node.crowbar["crowbar"]["links"]["Chef"] = "http://#{server_ip}:4040/nodes/#{node.name}"
-          node.save
-        end
-      end
     end
+
     if state == "hardware-installing"
       role = RoleObject.find_role_by_name "provisioner-config-#{inst}"
       db = Proposal.where(barclamp: "provisioner", name: inst).first
