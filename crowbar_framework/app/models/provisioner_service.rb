@@ -69,23 +69,16 @@ class ProvisionerService < ServiceObject
   end
 
   def transition(inst, name, state)
-    @logger.debug("Provisioner transition: entering for #{name} for #{state}")
+    @logger.debug("Provisioner transition: entering:  #{name} for #{state}")
 
-    role = RoleObject.find_role_by_name "provisioner-config-#{inst}"
+    if ["installed", "readying"].include? state
+      db = Proposal.where(barclamp: @bc_name, name: inst).first
+      role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
 
-    #
-    # If the node is discovered, add the provisioner base to the node
-    #
-    if state == "discovered"
-      @logger.debug("Provisioner transition: discovered state for #{name} for #{state}")
-      db = Proposal.where(barclamp: "provisioner", name: inst).first
-
-      @logger.debug("Provisioner transition: Make sure that base is on everything: #{name} for #{state}")
-      result = add_role_to_instance_and_node("provisioner", inst, name, db, role, "provisioner-base")
-
-      if !result
-        @logger.error("Provisioner transition: existing discovered state for #{name} for #{state}: Failed")
-        return [400, "Failed to add role to node"]
+      unless add_role_to_instance_and_node(@bc_name, inst, name, db, role, "provisioner-base")
+        msg = "Failed to add provisioner-base role to #{name}!"
+        @logger.error(msg)
+        return [400, msg]
       end
     end
 
@@ -108,20 +101,22 @@ class ProvisionerService < ServiceObject
     end
 
     if state == "reset"
-      node = NodeObject.find_node_by_name(name)
       # clean up state capturing attributes on the node that are not likely to be the same
       # after a reset.
-      if node["crowbar_wall"]["claimed_disks"]
-        @logger.debug("Provisioner transition: clearing claimed disks for reset")
-        node["crowbar_wall"]["claimed_disks"] = Mash.new
-      else
-        @logger.debug("Provisioner transition: claimed disks for reset node is empty")
+      @logger.debug("Provisioner transition: clearing node data such as claimed disks and boot device")
+
+      node = NodeObject.find_node_by_name(name)
+      save_it = false
+
+      node["crowbar_wall"] ||= {}
+
+      ["boot_device", "claimed_disks"].each do |key|
+        next unless node["crowbar_wall"].key?(key)
+        node["crowbar_wall"].delete(key)
+        save_it = true
       end
 
-      ["boot_device"].each { |key |
-        node["crowbar_wall"][key] = nil if (node["crowbar_wall"][key] rescue nil)
-      }
-      node.save
+      node.save if save_it
     end
 
     if state == "delete"
@@ -131,20 +126,18 @@ class ProvisionerService < ServiceObject
       node.save
     end
 
-    #
     # test state machine and call chef-client if state changes
-    #
     node = NodeObject.find_node_by_name(name)
-    if ! node
-      @logger.error("Provisioner transition: leaving #{name} for #{state}: Node not found")
-      return [404, "Failed to find node"]
-    end
-    unless node.admin? or role.default_attributes["provisioner"]["dhcp"]["state_machine"][state].nil?
+    role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
+
+    unless node.admin? ||
+        role.default_attributes["provisioner"]["dhcp"]["state_machine"][state].nil?
       # All non-admin nodes call single_chef_client if the state machine says to.
       @logger.info("Provisioner transition: Run the chef-client locally")
       system("sudo -i /opt/dell/bin/single_chef_client.sh")
     end
-    @logger.debug("Provisioner transition: exiting for #{name} for #{state}")
+
+    @logger.debug("Provisioner transition: exiting: #{name} for #{state}")
     [200, { name: name }]
   end
 
