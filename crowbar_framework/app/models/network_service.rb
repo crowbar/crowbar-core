@@ -241,14 +241,6 @@ class NetworkService < ServiceObject
     false
   end
 
-  def create_proposal
-    @logger.debug("Network create_proposal: entering")
-    base = super
-
-    @logger.debug("Network create_proposal: exiting")
-    base
-  end
-
   def apply_role_pre_chef_call(old_role, role, all_nodes)
     @logger.debug("Network apply_role_pre_chef_call: entering #{all_nodes.inspect}")
 

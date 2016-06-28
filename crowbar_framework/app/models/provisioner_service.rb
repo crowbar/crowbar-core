@@ -41,13 +41,6 @@ class ProvisionerService < ServiceObject
     end
   end
 
-  def create_proposal
-    @logger.debug("Provisioner create_proposal: entering")
-    base = super
-    @logger.debug("Provisioner create_proposal: exiting")
-    base
-  end
-
   def validate_proposal_after_save proposal
     proposal["attributes"]["provisioner"]["packages"].each do |platform, packages|
       packages.each do |package|

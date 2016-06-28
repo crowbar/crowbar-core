@@ -33,13 +33,6 @@ class DeployerService < ServiceObject
     end
   end
 
-  def create_proposal
-    @logger.debug("Deployer create_proposal: entering")
-    base = super
-    @logger.debug("Deployer create_proposal: leaving")
-    base
-  end
-
   def transition(inst, name, state)
     @logger.debug("Deployer transition: entering #{name} for #{state}")
 

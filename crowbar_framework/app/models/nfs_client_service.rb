@@ -34,13 +34,6 @@ class NfsClientService < ServiceObject
     end
   end
 
-  def create_proposal
-    @logger.debug("NFS_client create_proposal: entering")
-    base = super
-    @logger.debug("NFS_client create_proposal: exiting")
-    base
-  end
-
   def self.allow_multiple_proposals?
     true
   end

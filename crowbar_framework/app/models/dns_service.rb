@@ -41,13 +41,6 @@ class DnsService < ServiceObject
     end
   end
 
-  def create_proposal
-    @logger.debug("DNS create_proposal: entering")
-    base = super
-    @logger.debug("DNS create_proposal: exiting")
-    base
-  end
-
   def validate_proposal_after_save proposal
     server_role = proposal["deployment"]["dns"]["elements"]["dns-server"]
     nameservers = proposal["attributes"]["dns"]["nameservers"]

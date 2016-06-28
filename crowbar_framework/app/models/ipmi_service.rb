@@ -33,13 +33,6 @@ class IpmiService < ServiceObject
     end
   end
 
-  def create_proposal
-    @logger.debug("IPMI create_proposal: entering")
-    base = super
-    @logger.debug("IPMI create_proposal: exiting")
-    base
-  end
-
   def transition(inst, name, state)
     @logger.debug("IPMI transition: make sure that ipmi role is on all nodes: #{name} for #{state}")
 

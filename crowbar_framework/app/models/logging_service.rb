@@ -41,13 +41,6 @@ class LoggingService < ServiceObject
     end
   end
 
-  def create_proposal
-    @logger.debug("Logging create_proposal: entering")
-    base = super
-    @logger.debug("Logging create_proposal: exiting")
-    base
-  end
-
   def validate_proposal_after_save proposal
     validate_one_for_role proposal, "logging-server"
 

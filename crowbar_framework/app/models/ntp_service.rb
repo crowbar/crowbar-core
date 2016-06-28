@@ -41,13 +41,6 @@ class NtpService < ServiceObject
     end
   end
 
-  def create_proposal
-    @logger.debug("NTP create_proposal: entering")
-    base = super
-    @logger.debug("NTP create_proposal: exiting")
-    base
-  end
-
   def validate_proposal_after_save proposal
     validate_at_least_n_for_role proposal, "ntp-server", 1
 

@@ -296,13 +296,6 @@ class CrowbarService < ServiceObject
     [200, { name: name }]
   end
 
-  def create_proposal
-    @logger.debug("Crowbar create_proposal enter")
-    base = super
-    @logger.debug("Crowbar create_proposal exit")
-    base
-  end
-
   def prepare_nodes_for_crowbar_upgrade
     proposal = Proposal.find_by(barclamp: "crowbar", name: "default")
 
