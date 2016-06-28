@@ -71,7 +71,8 @@ class ProvisionerService < ServiceObject
   def transition(inst, name, state)
     @logger.debug("Provisioner transition: entering:  #{name} for #{state}")
 
-    if ["installed", "readying"].include? state
+    # hardware-installing for the bootdisk finder
+    if ["hardware-installing", "installed", "readying"].include? state
       db = Proposal.where(barclamp: @bc_name, name: inst).first
       role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
 
@@ -83,10 +84,6 @@ class ProvisionerService < ServiceObject
     end
 
     if state == "hardware-installing"
-      role = RoleObject.find_role_by_name "provisioner-config-#{inst}"
-      db = Proposal.where(barclamp: "provisioner", name: inst).first
-      add_role_to_instance_and_node("provisioner",inst,name,db,role,"provisioner-bootdisk-finder")
-
       # ensure target platform is set before we claim a disk for boot OS
       node = NodeObject.find_node_by_name(name)
       if node[:target_platform].nil? or node[:target_platform].empty?

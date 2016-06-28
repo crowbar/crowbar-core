@@ -15,9 +15,13 @@
 #
 
 if CrowbarRoleRecipe.node_state_valid_for_role?(node, "provisioner", "provisioner-base")
-  include_recipe "repos::default"
-  include_recipe "provisioner::base"
-  include_recipe "crowbar-hacks::default"
-  include_recipe "crowbar-hacks::uefi"
-  include_recipe "kernel-panic::default"
+  if node[:state] == "hardware-installing"
+    include_recipe "provisioner::bootdisk"
+  else
+    include_recipe "repos::default"
+    include_recipe "provisioner::base"
+    include_recipe "crowbar-hacks::default"
+    include_recipe "crowbar-hacks::uefi"
+    include_recipe "kernel-panic::default"
+  end
 end

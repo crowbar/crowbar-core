@@ -127,9 +127,6 @@
          "crowbar-applied":true,
          "schema-revision":24,
          "element_states":{
-            "provisioner-bootdisk-finder":[
-               "hardware-installing"
-            ],
             "provisioner-server":[
                "readying",
                "ready",
@@ -149,17 +146,9 @@
                "crowbar.crowbar.testing.com",
                "d52-54-01-77-77-01.crowbar.testing.com",
                "d52-54-02-77-77-02.crowbar.testing.com"
-            ],
-            "provisioner-bootdisk-finder":[
-               "crowbar.crowbar.testing.com",
-               "d52-54-01-77-77-01.crowbar.testing.com",
-               "d52-54-02-77-77-02.crowbar.testing.com"
             ]
          },
          "element_order":[
-            [
-               "provisioner-bootdisk-finder"
-            ],
             [
                "provisioner-server"
             ],
