@@ -272,6 +272,19 @@ class NetworkService < ServiceObject
     @logger.debug("Network apply_role_pre_chef_call: leaving")
   end
 
+  def proposal_create_bootstrap(params)
+    if params["deployment"].nil? ||
+        params["deployment"][@bc_name].nil? ||
+        params["deployment"][@bc_name]["elements"].nil?
+      params["crowbar-deep-merge-template"] = true
+    end
+    params["deployment"] ||= {}
+    params["deployment"][@bc_name] ||= {}
+    params["deployment"][@bc_name]["elements"] ||= {}
+    params["deployment"][@bc_name]["elements"]["switch_config"] = [NodeObject.admin_node.name]
+    super(params)
+  end
+
   def transition(inst, name, state)
     @logger.debug("Network transition: Entering #{name} for #{state}")
 
@@ -279,10 +292,6 @@ class NetworkService < ServiceObject
 
       db = Proposal.where(barclamp: "network", name: inst).first
       role = RoleObject.find_role_by_name "network-config-#{inst}"
-      if NodeObject.find_node_by_name(name).try(:[], "crowbar").try(:[], "admin_node")
-        @logger.info("Admin node transitioning to discovered state.  Adding switch_config role.")
-        result = add_role_to_instance_and_node("network", inst, name, db, role, "switch_config")
-      end
 
       @logger.debug("Network transition: make sure that network role is on all nodes: #{name} for #{state}")
       result = add_role_to_instance_and_node("network", inst, name, db, role, "network")

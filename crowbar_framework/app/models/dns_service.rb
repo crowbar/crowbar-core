@@ -52,6 +52,22 @@ class DnsService < ServiceObject
     super
   end
 
+  def proposal_create_bootstrap(params)
+    # nil means "default value", which is "true"
+    if params.fetch("attributes", {}).fetch(@bc_name, {})["auto_assign_server"] != false
+      if params["deployment"].nil? ||
+          params["deployment"][@bc_name].nil? ||
+          params["deployment"][@bc_name]["elements"].nil?
+        params["crowbar-deep-merge-template"] = true
+      end
+      params["deployment"] ||= {}
+      params["deployment"][@bc_name] ||= {}
+      params["deployment"][@bc_name]["elements"] ||= {}
+      params["deployment"][@bc_name]["elements"]["dns-server"] = [NodeObject.admin_node.name]
+    end
+    super(params)
+  end
+
   def transition(inst, name, state)
     @logger.debug("DNS transition: entering for #{name} for #{state}")
 
@@ -62,14 +78,6 @@ class DnsService < ServiceObject
       @logger.debug("DNS transition: handling for #{name} for #{state}: discovered")
       db = Proposal.where(barclamp: "dns", name: inst).first
       role = RoleObject.find_role_by_name "dns-config-#{inst}"
-
-      if role.default_attributes["dns"]["auto_assign_server"]
-        if role.override_attributes["dns"]["elements"]["dns-server"].nil? or
-           role.override_attributes["dns"]["elements"]["dns-server"].empty?
-          @logger.debug("DNS transition: adding #{name} to dns-server role")
-          result = add_role_to_instance_and_node("dns", inst, name, db, role, "dns-server")
-        end
-      end
 
       # Always add the dns client
       @logger.debug("DNS transition: adding #{name} to dns-client role")

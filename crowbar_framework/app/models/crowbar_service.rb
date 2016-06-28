@@ -502,7 +502,7 @@ class CrowbarService < ServiceObject
 
     unless proposals.include?(id)
       @logger.debug("Bootstrap: creating proposal for #{bc}.#{id}")
-      answer = service.proposal_create(data)
+      answer = service.proposal_create_bootstrap(data)
       if answer[0] != 200
         msg = "Failed to create proposal '#{id}' for barclamp '#{bc}' " +
           "(The error message was: #{answer[1].strip})"

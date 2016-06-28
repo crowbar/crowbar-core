@@ -55,6 +55,19 @@ class ProvisionerService < ServiceObject
     super
   end
 
+  def proposal_create_bootstrap(params)
+    if params["deployment"].nil? ||
+        params["deployment"][@bc_name].nil? ||
+        params["deployment"][@bc_name]["elements"].nil?
+      params["crowbar-deep-merge-template"] = true
+    end
+    params["deployment"] ||= {}
+    params["deployment"][@bc_name] ||= {}
+    params["deployment"][@bc_name]["elements"] ||= {}
+    params["deployment"][@bc_name]["elements"]["provisioner-server"] = [NodeObject.admin_node.name]
+    super(params)
+  end
+
   def transition(inst, name, state)
     @logger.debug("Provisioner transition: entering for #{name} for #{state}")
 
@@ -66,18 +79,6 @@ class ProvisionerService < ServiceObject
     if state == "discovered"
       @logger.debug("Provisioner transition: discovered state for #{name} for #{state}")
       db = Proposal.where(barclamp: "provisioner", name: inst).first
-
-      #
-      # Add the first node as the provisioner server
-      #
-      if role.override_attributes["provisioner"]["elements"]["provisioner-server"].nil?
-        @logger.debug("Provisioner transition: if we have no provisioner add one: #{name} for #{state}")
-        add_role_to_instance_and_node("provisioner", inst, name, db, role, "provisioner-server")
-
-        # Reload the roles
-        db.reload
-        role = RoleObject.find_role_by_name "provisioner-config-#{inst}"
-      end
 
       @logger.debug("Provisioner transition: Make sure that base is on everything: #{name} for #{state}")
       result = add_role_to_instance_and_node("provisioner", inst, name, db, role, "provisioner-base")

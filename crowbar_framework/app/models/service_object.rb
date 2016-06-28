@@ -506,6 +506,11 @@ class ServiceObject
     _proposal_update(@bc_name, base_id, proposal, false)
   end
 
+  # Used when creating a proposal during the bootstrap process
+  def proposal_create_bootstrap(params)
+    proposal_create(params)
+  end
+
   def proposal_edit(params, validate_after_save = true)
     base_id = params["id"] || params[:name]
     params["id"] = "#{@bc_name}-#{base_id}"

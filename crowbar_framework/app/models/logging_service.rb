@@ -47,6 +47,19 @@ class LoggingService < ServiceObject
     super
   end
 
+  def proposal_create_bootstrap(params)
+    if params["deployment"].nil? ||
+        params["deployment"][@bc_name].nil? ||
+        params["deployment"][@bc_name]["elements"].nil?
+      params["crowbar-deep-merge-template"] = true
+    end
+    params["deployment"] ||= {}
+    params["deployment"][@bc_name] ||= {}
+    params["deployment"][@bc_name]["elements"] ||= {}
+    params["deployment"][@bc_name]["elements"]["logging-server"] = [NodeObject.admin_node.name]
+    super(params)
+  end
+
   def transition(inst, name, state)
     @logger.debug("Logging transition: entering: #{name} for #{state}")
 
@@ -58,16 +71,10 @@ class LoggingService < ServiceObject
       db = Proposal.where(barclamp: "logging", name: inst).first
       role = RoleObject.find_role_by_name "logging-config-#{inst}"
 
-      if role.override_attributes["logging"]["elements"]["logging-server"].nil? or
-         role.override_attributes["logging"]["elements"]["logging-server"].empty?
-        @logger.debug("Logging transition: make sure that logging-server role is on first: #{name} for #{state}")
-        result = add_role_to_instance_and_node("logging", inst, name, db, role, "logging-server")
-      else
-        node = NodeObject.find_node_by_name name
-        unless node.role? "logging-server"
-          @logger.debug("Logging transition: make sure that logging-client role is on all nodes but first: #{name} for #{state}")
-          result = add_role_to_instance_and_node("logging", inst, name, db, role, "logging-client")
-        end
+      node = NodeObject.find_node_by_name name
+      unless node.role? "logging-server"
+        @logger.debug("Logging transition: make sure that logging-client role is on all nodes but first: #{name} for #{state}")
+        result = add_role_to_instance_and_node("logging", inst, name, db, role, "logging-client")
       end
 
       @logger.debug("Logging transition: leaving from discovered state for #{name} for #{state}")

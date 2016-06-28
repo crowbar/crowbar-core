@@ -33,6 +33,19 @@ class IpmiService < ServiceObject
     end
   end
 
+  def proposal_create_bootstrap(params)
+    if params["deployment"].nil? ||
+        params["deployment"][@bc_name].nil? ||
+        params["deployment"][@bc_name]["elements"].nil?
+      params["crowbar-deep-merge-template"] = true
+    end
+    params["deployment"] ||= {}
+    params["deployment"][@bc_name] ||= {}
+    params["deployment"][@bc_name]["elements"] ||= {}
+    params["deployment"][@bc_name]["elements"]["bmc-nat-router"] = [NodeObject.admin_node.name]
+    super(params)
+  end
+
   def transition(inst, name, state)
     @logger.debug("IPMI transition: make sure that ipmi role is on all nodes: #{name} for #{state}")
 
@@ -60,9 +73,11 @@ class IpmiService < ServiceObject
       result = add_role_to_instance_and_node("ipmi", inst, name, db, role, "ipmi-configure")
 
       node = NodeObject.find_node_by_name(name)
-      # Add the bmc routing roles as appropriate.
-      bmc_role = node.admin? ? "bmc-nat-router" : "bmc-nat-client"
-      result = add_role_to_instance_and_node("ipmi", inst, name, db, role, bmc_role)
+
+      unless node.admin?
+        # Add the bmc routing roles as appropriate.
+        result = add_role_to_instance_and_node("ipmi", inst, name, db, role, "bmc-nat-client")
+      end
 
       ns = NetworkService.new @logger
       if role and !role.default_attributes["ipmi"]["use_dhcp"]

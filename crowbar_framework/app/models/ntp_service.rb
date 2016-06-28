@@ -47,6 +47,19 @@ class NtpService < ServiceObject
     super
   end
 
+  def proposal_create_bootstrap(params)
+    if params["deployment"].nil? ||
+        params["deployment"][@bc_name].nil? ||
+        params["deployment"][@bc_name]["elements"].nil?
+      params["crowbar-deep-merge-template"] = true
+    end
+    params["deployment"] ||= {}
+    params["deployment"][@bc_name] ||= {}
+    params["deployment"][@bc_name]["elements"] ||= {}
+    params["deployment"][@bc_name]["elements"]["ntp-server"] = [NodeObject.admin_node.name]
+    super(params)
+  end
+
   def transition(inst, name, state)
     @logger.debug("NTP transition: make sure that network role is on all nodes: #{name} for #{state}")
 
@@ -58,16 +71,10 @@ class NtpService < ServiceObject
       db = Proposal.where(barclamp: "ntp", name: inst).first
       role = RoleObject.find_role_by_name "ntp-config-#{inst}"
 
-      if role.override_attributes["ntp"]["elements"]["ntp-server"].nil? or
-         role.override_attributes["ntp"]["elements"]["ntp-server"].empty?
-        @logger.debug("NTP transition: make sure that ntp-server role is on first: #{name} for #{state}")
-        result = add_role_to_instance_and_node("ntp", inst, name, db, role, "ntp-server")
-      else
-        node = NodeObject.find_node_by_name name
-        unless node.role? "ntp-server"
-          @logger.debug("NTP transition: make sure that ntp-client role is on all nodes but first: #{name} for #{state}")
-          result = add_role_to_instance_and_node("ntp", inst, name, db, role, "ntp-client")
-        end
+      node = NodeObject.find_node_by_name name
+      unless node.role? "ntp-server"
+        @logger.debug("NTP transition: make sure that ntp-client role is on all nodes but first: #{name} for #{state}")
+        result = add_role_to_instance_and_node("ntp", inst, name, db, role, "ntp-client")
       end
 
       @logger.debug("NTP transition: leaving from discovered state for #{name} for #{state}")
