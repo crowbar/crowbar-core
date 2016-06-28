@@ -36,26 +36,24 @@ class DeployerService < ServiceObject
   def transition(inst, name, state)
     @logger.debug("Deployer transition: entering #{name} for #{state}")
 
+    save_it = false
+
     node = NodeObject.find_node_by_name(name)
     if node.nil?
       @logger.error("Deployer transition: leaving #{name} for #{state}: Node not found")
       return [404, "Failed to find node"]
     end
 
-    #
-    # If we are discovering the node, make sure that we add the deployer client to the node
-    #
-    if state == "discovering"
-      @logger.debug("Deployer transition: leaving #{name} for #{state}: discovering mode")
+    # discovering because mandatory for discovery image
+    if ["discovering", "readying"].include? state
+      db = Proposal.where(barclamp: @bc_name, name: inst).first
+      role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
 
-      db = Proposal.where(barclamp: "deployer", name: inst).first
-      role = RoleObject.find_role_by_name "deployer-config-#{inst}"
-      unless add_role_to_instance_and_node("deployer", inst, name, db, role, "deployer-client")
-        @logger.debug("Deployer transition: leaving #{name} for #{state}: discovering failed.")
-        return [404, "Failed to add role to node"]
+      unless add_role_to_instance_and_node(@bc_name, inst, name, db, role, "deployer-client")
+        msg = "Failed to add deployer-client role to #{name}!"
+        @logger.error(msg)
+        return [400, msg]
       end
-      @logger.debug("Deployer transition: leaving #{name} for #{state}: discovering passed.")
-      return [200, { name: name }]
     end
 
     #
@@ -87,8 +85,6 @@ class DeployerService < ServiceObject
       # Do more work here - one day.
       return [200, { name: name }]
     end
-
-    save_it = false
 
     #
     # Decide on the nodes role for the cloud
