@@ -153,7 +153,7 @@ module NodesHelper
           dash_or(@node.pretty_target_platform)
         ]
 
-        if CrowbarService.require_license_key? @node.target_platform
+        if Crowbar::Platform.require_license_key? @node.target_platform
           value = if @node.license_key
             hidetext_tag(@node.license_key, class: "pull-right")
           else
@@ -220,7 +220,7 @@ module NodesHelper
           format_memory(@node.memory)
         ]
 
-        if crowbar_service.support_software_raid.include? @node.target_platform
+        if Crowbar::Platform.support_software_raid.include? @node.target_platform
           unless crowbar_options[:show].include?(:raid) or @node.raid_type == "single"
             result.push [
               t("model.attributes.node.raid_type"),

@@ -210,17 +210,9 @@ module ApplicationHelper
 
   # Build a wrapper for the crowbar service options, feels much better
   # within the views to simply call a method for getting the hash
-  def crowbar_service
-    @crowbar_service ||= begin
-      CrowbarService
-    end
-  end
-
-  # Build a wrapper for the crowbar service options, feels much better
-  # within the views to simply call a method for getting the hash
   def crowbar_options
     @crowbar_options ||= begin
-      crowbar_service.read_options
+      CrowbarService.read_options
     end
   end
 

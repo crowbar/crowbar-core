@@ -18,7 +18,7 @@
           %span.form-control{ :disabled => "disabled" }
             = @node.pretty_target_platform
 
-        - if crowbar_service.require_license_key? @node.target_platform
+        - if Crowbar::Platform.require_license_key? @node.target_platform
           .form-group
             = f.label :license_key, t('.license_key')
             %span.form-control{ :disabled => "disabled" }
@@ -26,7 +26,7 @@
       - else
         .form-group
           = f.label :target_platform, t('.target_platform')
-          = select_tag :target_platform, platforms_for_select(@node.target_platform, @node.architecture), :class => "form-control", "data-showit" => [crowbar_service.require_license_platforms.join(","), crowbar_service.support_software_raid.join(","), crowbar_service.support_default_fs.join(",")].join(";"), "data-showit-target" => "#license_key_container;#raid_type,#raid_disks;#default_fs_container"
+          = select_tag :target_platform, platforms_for_select(@node.target_platform, @node.architecture), :class => "form-control", "data-showit" => [Crowbar::Platform.require_license_platforms.join(","), Crowbar::Platform.support_software_raid.join(","), Crowbar::Platform.support_default_fs.join(",")].join(";"), "data-showit-target" => "#license_key_container;#raid_type,#raid_disks;#default_fs_container"
           %span.help-block
             = raw t(".repo_hint", url: repositories_url)
 
@@ -53,7 +53,7 @@
           - else
             = select_tag :raid, options_for_select(crowbar_options[:raid], @node.raid_set), :class => "form-control"
       - else
-        - if crowbar_service.support_software_raid.include?(@node.target_platform) or not @node.allocated?
+        - if Crowbar::Platform.support_software_raid.include?(@node.target_platform) or not @node.allocated?
           .form-group
             = f.label :raid_type, t('.raid_type')
             - if @node.admin?
@@ -107,7 +107,7 @@
         %span.help-block
           = t('.intended_role_hint')
 
-      - if crowbar_service.support_default_fs.include?(@node.target_platform) or not @node.allocated?
+      - if Crowbar::Platform.support_default_fs.include?(@node.target_platform) or not @node.allocated?
         .form-group
           #default_fs_container
             = f.label :default_fs , t('.default_fs')

@@ -75,13 +75,13 @@ describe NodeObject do
       let(:key) { "a key" }
 
       it "sets the key if the platform requires one" do
-        allow(CrowbarService).to receive(:require_license_key?).and_return(true)
+        allow(Crowbar::Platform).to receive(:require_license_key?).and_return(true)
         node.license_key = key
         expect(node.license_key).to be == key
       end
 
       it "leaves it blank if platform does not need a key" do
-        allow(CrowbarService).to receive(:require_license_key?).and_return(false)
+        allow(Crowbar::Platform).to receive(:require_license_key?).and_return(false)
         node.license_key = key
         expect(node.license_key).to be_blank
       end
