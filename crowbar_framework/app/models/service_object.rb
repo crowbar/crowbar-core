@@ -949,7 +949,7 @@ class ServiceObject
     #
     deps = proposal_dependencies(role)
     delay, pre_cached_nodes = queue_proposal(inst, element_order, new_elements, deps)
-    return [202, delay] unless delay.empty?
+    return [202, "Queued: waiting for #{delay.join(", ")}"] unless delay.empty?
 
     @logger.debug "delay empty - running proposal"
 
