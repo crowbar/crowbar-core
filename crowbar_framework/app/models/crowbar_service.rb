@@ -572,7 +572,7 @@ class CrowbarService < ServiceObject
   protected
 
   def transition_to_readying(inst, name, state, node = nil)
-    only_unless_admin node do
+    unless node.admin?
       node.process_raid_claims
     end
   end

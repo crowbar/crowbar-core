@@ -1616,12 +1616,4 @@ class ServiceObject
       [400, e2.message]
     end
   end
-
-  def only_if_admin(node)
-    yield if node.admin?
-  end
-
-  def only_unless_admin(node)
-    yield unless node.admin?
-  end
 end
