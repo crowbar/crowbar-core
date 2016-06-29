@@ -190,10 +190,6 @@ class CrowbarService < ServiceObject
         return [404, "Node not found"]
       end
 
-      if state == "readying"
-        transition_to_readying inst, name, state, node
-      end
-
       if %w(hardware-installing hardware-updating update).include? state
         @logger.debug("Crowbar transition: force run because of state #{name} to #{state}")
         pop_it = true
@@ -567,14 +563,6 @@ class CrowbarService < ServiceObject
       options[:show] << :bios if options[:bios].length > 0
     end
     options
-  end
-
-  protected
-
-  def transition_to_readying(inst, name, state, node = nil)
-    unless node.admin?
-      node.process_raid_claims
-    end
   end
 
 end
