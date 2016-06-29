@@ -34,6 +34,18 @@ module Crowbar
         end
       end
 
+      def simple_proposal_ui?
+        proposal = Proposal.where(barclamp: "crowbar").first
+
+        result = false
+        unless proposal.nil? or proposal["attributes"].nil? or proposal["attributes"]["crowbar"].nil?
+          if not proposal["attributes"]["crowbar"]["simple_proposal_ui"].nil?
+            result = proposal["attributes"]["crowbar"]["simple_proposal_ui"]
+          end
+        end
+        return result
+      end
+
       def bios_raid_options
         # read in default proposal, to make some vaules avilable
         proposals = Proposal.where(barclamp: "crowbar")

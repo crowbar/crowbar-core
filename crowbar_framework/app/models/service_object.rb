@@ -71,18 +71,6 @@ class ServiceObject
     @validation_errors << message
   end
 
-  def simple_proposal_ui?
-    proposals = Proposal.where(barclamp: "crowbar")
-
-    result = false
-    unless proposals[0].nil? or proposals[0]["attributes"].nil? or proposals[0]["attributes"]["crowbar"].nil?
-      if not proposals[0]["attributes"]["crowbar"]["simple_proposal_ui"].nil?
-        result = proposals[0]["attributes"]["crowbar"]["simple_proposal_ui"]
-      end
-    end
-    return result
-  end
-
   def self.barclamp_catalog
     BarclampCatalog.catalog
   end
