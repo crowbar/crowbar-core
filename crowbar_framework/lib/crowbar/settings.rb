@@ -16,51 +16,51 @@
 
 module Crowbar
   class Settings
-
     @@domain = nil
 
     class << self
       def domain
-        # NOTE: We are using a global here to avoid lookups.  We need to consider some better cache/expiration strategy
+        # FIXME: We are using a global here to avoid lookups. We need to
+        # consider some better cache/expiration strategy.
         if @@domain.nil?
           dns_proposal = Proposal.where(barclamp: "dns", name: "default").first
           @@domain = dns_proposal[:attributes][:dns][:domain] unless dns_proposal.nil?
         end
 
         if @@domain.nil?
-          return %x{dnsdomainname}.strip
-        else
-          return @@domain
+          return `dnsdomainname`.strip
         end
+
+        @@domain
       end
 
       def simple_proposal_ui?
         proposal = Proposal.where(barclamp: "crowbar").first
 
-        result = false
-        unless proposal.nil? or proposal["attributes"].nil? or proposal["attributes"]["crowbar"].nil?
-          if not proposal["attributes"]["crowbar"]["simple_proposal_ui"].nil?
-            result = proposal["attributes"]["crowbar"]["simple_proposal_ui"]
-          end
+        unless proposal.nil? ||
+            proposal["attributes"]["crowbar"]["simple_proposal_ui"].nil?
+          return proposal["attributes"]["crowbar"]["simple_proposal_ui"]
         end
-        return result
+
+        false
       end
 
       def bios_raid_options
         # read in default proposal, to make some vaules avilable
-        proposals = Proposal.where(barclamp: "crowbar")
-        raise "Can't find any crowbar proposal" if proposals.nil? or proposals[0].nil?
-        # populate options from attributes/crowbar/*-settings
-        options = { raid: {}, bios: {}, show: [] }
-        unless proposals[0]["attributes"].nil? or proposals[0]["attributes"]["crowbar"].nil?
-          options[:raid] = proposals[0]["attributes"]["crowbar"]["raid-settings"]
-          options[:bios] = proposals[0]["attributes"]["crowbar"]["bios-settings"]
-          options[:raid] = {} if options[:raid].nil?
-          options[:bios] = {} if options[:bios].nil?
+        proposal = Proposal.where(barclamp: "crowbar").first
+        raise "Can't find the crowbar proposal" if proposal.nil?
 
-          options[:show] << :raid if options[:raid].length > 0
-          options[:show] << :bios if options[:bios].length > 0
-        end
+        options = { raid: {}, bios: {}, show: [] }
+
+        # populate options from attributes/crowbar/*-settings
+        options[:raid] = proposal["attributes"]["crowbar"]["raid-settings"]
+        options[:bios] = proposal["attributes"]["crowbar"]["bios-settings"]
+        options[:raid] = {} if options[:raid].nil?
+        options[:bios] = {} if options[:bios].nil?
+
+        options[:show] << :raid unless options[:raid].empty?
+        options[:show] << :bios unless options[:bios].empty?
+
         options
       end
     end

@@ -12,7 +12,7 @@
   .panel.panel-default
     .panel-heading
       %h2
-        - if Crowbar::Settings.simple_proposal_ui? and not @proposal.allow_multiple_proposals?
+        - if Crowbar::Settings.simple_proposal_ui? && !@proposal.allow_multiple_proposals?
           = link_to @proposal.display_name, barclamp_modules_path(:id => @proposal.barclamp)
         - else
           = link_to "#{@proposal.display_name}: #{@proposal.name.titlecase}", barclamp_modules_path(:id => @proposal.barclamp)

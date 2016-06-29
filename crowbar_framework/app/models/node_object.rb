@@ -330,10 +330,10 @@ class NodeObject < ChefObject
   end
 
   def license_key=(value)
-    if Crowbar::Platform.require_license_key?(self.target_platform)
-      @node.set[:license_key] = value
+    @node.set[:license_key] = if Crowbar::Platform.require_license_key?(target_platform)
+      value
     else
-      @node.set[:license_key] = ""
+      ""
     end
   end
 
@@ -395,9 +395,9 @@ class NodeObject < ChefObject
 
     domain = Crowbar::Settings.domain
 
-    if value.length>63 || value.length+domain.length>254
+    if value.length > 63 || value.length + domain.length > 254
       Rails.logger.warn "Alias #{value}.#{domain} FQDN not saved because it exceeded the 63 character length limit or it's length (#{value.length}) will cause the total DNS max of 255 to be exeeded."
-      raise "#{I18n.t('too_long_dns_alias', scope: 'model.node')}: #{value}.#{domain}"
+      raise "#{I18n.t("too_long_dns_alias", scope: "model.node")}: #{value}.#{domain}"
     end
 
     if unique_check
@@ -1638,7 +1638,7 @@ class NodeObject < ChefObject
       end
     end
 
-    return false
+    false
   end
 
   def process_raid_member(device, attributes)
@@ -1656,7 +1656,7 @@ class NodeObject < ChefObject
       end
     end
 
-    return false
+    false
   end
 
   def process_raid_boot
@@ -1673,7 +1673,7 @@ class NodeObject < ChefObject
       return true
     end
 
-    return false
+    false
   end
 
   private
@@ -1741,5 +1741,4 @@ class NodeObject < ChefObject
     end
     {}
   end
-
 end

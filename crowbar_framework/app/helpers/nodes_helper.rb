@@ -117,7 +117,7 @@ module NodesHelper
             platform: node[:platform],
             platform_version: node[:platform_version],
             cluster: false
-          } if node.group == group or group.nil?
+          } if node.group == group || group.nil?
         end
       end.sort_by{ |k, v| v[:alias] }
     end
@@ -221,7 +221,7 @@ module NodesHelper
         ]
 
         if Crowbar::Platform.support_software_raid.include? @node.target_platform
-          unless bios_raid_options[:show].include?(:raid) or @node.raid_type == "single"
+          unless bios_raid_options[:show].include?(:raid) || @node.raid_type == "single"
             result.push [
               t("model.attributes.node.raid_type"),
               value_for(t(@node.raid_type, scope: "nodes.form.raid_types"), t("unknown"))
@@ -386,7 +386,7 @@ module NodesHelper
   end
 
   def node_barclamps(node)
-    return [] if node.roles.nil? or node.roles.empty?
+    return [] if node.roles.nil? || node.roles.empty?
 
     node.roles.delete_if do |role|
       not role =~ /^.*-config-/
@@ -456,7 +456,7 @@ module NodesHelper
   end
 
   def node_roles(node)
-    return [] if node.roles.nil? or node.roles.empty?
+    return [] if node.roles.nil? || node.roles.empty?
 
     node.roles.delete_if do |role|
       role =~ /^.*-config-/
@@ -471,7 +471,7 @@ module NodesHelper
       node_roles(node).map do |role|
         object = all_roles.find { |r| r.name == role }
 
-        next if role =~ /^crowbar-.*_#{Crowbar::Settings.domain.gsub(".", "_")}/
+        next if role =~ /^crowbar-.*_#{Crowbar::Settings.domain.tr(".", "_")}/
 
         if object.nil?
           listing["Unknown"] ||= []

@@ -53,7 +53,7 @@
           - else
             = select_tag :raid, options_for_select(bios_raid_options[:raid], @node.raid_set), :class => "form-control"
       - else
-        - if Crowbar::Platform.support_software_raid.include?(@node.target_platform) or not @node.allocated?
+        - if Crowbar::Platform.support_software_raid.include?(@node.target_platform) || !@node.allocated?
           .form-group
             = f.label :raid_type, t('.raid_type')
             - if @node.admin?
@@ -62,7 +62,7 @@
             - else
               = select_tag :raid_type, raids_for_select(@node.raid_type), :class => "form-control", :disabled => @node.allocated?, "data-disabler" => "single", "data-disabler-target" => "#raid_disks"
 
-          - if @node.raid_type != "single" or not @node.allocated?
+          - if @node.raid_type != "single" || !@node.allocated?
             .form-group
               = f.label :raid_disks, t('.raid_disks')
               - if @node.admin?
@@ -107,7 +107,7 @@
         %span.help-block
           = t('.intended_role_hint')
 
-      - if Crowbar::Platform.support_default_fs.include?(@node.target_platform) or not @node.allocated?
+      - if Crowbar::Platform.support_default_fs.include?(@node.target_platform) || !@node.allocated?
         .form-group
           #default_fs_container
             = f.label :default_fs , t('.default_fs')
