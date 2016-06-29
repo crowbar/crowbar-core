@@ -139,12 +139,12 @@ class NodesController < ApplicationController
               dirty = true
             end
 
-            if view_context.crowbar_options[:show].include?(:bios) and not [node.bios_set, "not_set"].include? node_attributes["bios"]
+            if view_context.bios_raid_options[:show].include?(:bios) and not [node.bios_set, "not_set"].include? node_attributes["bios"]
               node.bios_set = node_attributes["bios"]
               dirty = true
             end
 
-            if view_context.crowbar_options[:show].include?(:raid) and not [node.raid_set, "not_set"].include? node_attributes["raid"]
+            if view_context.bios_raid_options[:show].include?(:raid) and not [node.raid_set, "not_set"].include? node_attributes["raid"]
               node.raid_set = node_attributes["raid"]
               dirty = true
             end

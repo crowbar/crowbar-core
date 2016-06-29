@@ -210,9 +210,9 @@ module ApplicationHelper
 
   # Build a wrapper for the crowbar service options, feels much better
   # within the views to simply call a method for getting the hash
-  def crowbar_options
-    @crowbar_options ||= begin
-      CrowbarService.read_options
+  def bios_raid_options
+    @bios_raid_options ||= begin
+      Crowbar::Settings.bios_raid_options
     end
   end
 

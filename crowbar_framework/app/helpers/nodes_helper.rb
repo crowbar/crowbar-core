@@ -190,7 +190,7 @@ module NodesHelper
 
   def node_detail_hardware
     @node_detail_hardware ||= begin
-      raid_data = if crowbar_options[:show].include?(:raid)
+      raid_data = if bios_raid_options[:show].include?(:raid)
         content_tag(
           :em,
           t(@node.raid_set, scope: "raid")
@@ -221,7 +221,7 @@ module NodesHelper
         ]
 
         if Crowbar::Platform.support_software_raid.include? @node.target_platform
-          unless crowbar_options[:show].include?(:raid) or @node.raid_type == "single"
+          unless bios_raid_options[:show].include?(:raid) or @node.raid_type == "single"
             result.push [
               t("model.attributes.node.raid_type"),
               value_for(t(@node.raid_type, scope: "nodes.form.raid_types"), t("unknown"))

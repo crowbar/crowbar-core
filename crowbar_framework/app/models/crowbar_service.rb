@@ -547,22 +547,4 @@ class CrowbarService < ServiceObject
     t
   end
 
-  def self.read_options
-    # read in default proposal, to make some vaules avilable
-    proposals = Proposal.where(barclamp: "crowbar")
-    raise "Can't find any crowbar proposal" if proposals.nil? or proposals[0].nil?
-    # populate options from attributes/crowbar/*-settings
-    options = { raid: {}, bios: {}, show: [] }
-    unless proposals[0]["attributes"].nil? or proposals[0]["attributes"]["crowbar"].nil?
-      options[:raid] = proposals[0]["attributes"]["crowbar"]["raid-settings"]
-      options[:bios] = proposals[0]["attributes"]["crowbar"]["bios-settings"]
-      options[:raid] = {} if options[:raid].nil?
-      options[:bios] = {} if options[:bios].nil?
-
-      options[:show] << :raid if options[:raid].length > 0
-      options[:show] << :bios if options[:bios].length > 0
-    end
-    options
-  end
-
 end
