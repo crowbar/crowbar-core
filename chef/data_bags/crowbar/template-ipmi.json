@@ -17,11 +17,14 @@
       "crowbar-applied": false,
       "schema-revision": 100,
       "element_states": {
-        "ipmi": [ "discovering", "hardware-installing", "readying" ]
+        "ipmi": [ "discovering", "hardware-installing", "readying" ],
+        "bmc-nat-router": [ "readying", "ready", "applying" ],
+        "bmc-nat-client": [ "readying", "ready", "applying" ]
       },
       "elements": {},
       "element_order": [
-        [ "ipmi" ]
+        [ "ipmi" ],
+        [ "bmc-nat-router", "bmc-nat-client" ]
       ],
       "element_run_list_order": {
         "ipmi": 15
