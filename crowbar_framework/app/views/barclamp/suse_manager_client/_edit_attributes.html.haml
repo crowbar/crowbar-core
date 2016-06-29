@@ -6,10 +6,6 @@
     %span.help-block.alert.alert-info
       = t(".manual_steps", manager_url: suse_manager_client_url, rpm_path: suse_manager_client_rpm, install_command: suse_manager_client_install).html_safe
 
-    = string_field :activation_key
+    = string_field :bootstrap_script_url
     %span.help-block
-      = t(".activation_key_hint")
-
-    = string_field :manager_server
-    %span.help-block
-      = t(".manager_server_hint", :link => link_to_proposal(:dns))
+      = t('.bootstrap_script_url_hint')

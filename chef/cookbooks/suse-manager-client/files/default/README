@@ -1,0 +1,2 @@
+Copy the rhn-org-trusted-ssl-cert-VERSION-RELEASE.noarch.rpm package you downloaded
+from your SUSE Manager server to this directory as ssl-cert.rpm.
