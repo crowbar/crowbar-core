@@ -36,7 +36,8 @@ module CrowbarRoleRecipe
       # barclamp, then it means the role should not even be there.
       # There's one exception, though: when bootstrapping the admin server,
       # this happens for a couple of roles.
-      return true if ["crowbar", "deployer-client"].include? role
+      return true if node["crowbar"]["admin_node"] &&
+          ["crowbar", "deployer-client"].include?(role)
 
       Chef::Log.info("Skipping role \"#{role}\" because node does not have applied proposal for #{role} in its runlist.")
     end
