@@ -454,7 +454,7 @@ module BarclampLibrary
         def release(old_owner)
           k = self.unique_name
 
-          unless owner == old_owner
+          if old_owner.empty? || owner != old_owner
             return false
           end
 
