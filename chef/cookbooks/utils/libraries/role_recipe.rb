@@ -25,26 +25,22 @@ module CrowbarRoleRecipe
         ["all"]
       end
 
-      valid = states_for_role.nil? ||
-        states_for_role.include?("all") ||
-        states_for_role.include?(node[:state])
+      return true if states_for_role.nil? ||
+          states_for_role.include?("all") ||
+          states_for_role.include?(node[:state])
 
-      unless valid
-        Chef::Log.info("Skipping role \"#{role}\" because node is in state \"#{node[:state]}\". " \
-          "Role \"#{role}\" only applies in the following states: #{states_for_role.join(", ")}.")
-      end
+      Chef::Log.info("Skipping role \"#{role}\" because node is in state \"#{node[:state]}\". " \
+        "Role \"#{role}\" only applies in the following states: #{states_for_role.join(", ")}.")
     else
       # Generally speaking, if we don't even have attributes related to the
       # barclamp, then it means the role should not even be there.
       # There's one exception, though: when bootstrapping the admin server,
       # this happens for a couple of roles.
-      valid = ["crowbar", "deployer-client"].include? role
+      return true if ["crowbar", "deployer-client"].include? role
 
-      unless valid
-        Chef::Log.info("Skipping role \"#{role}\" because node does not have applied proposal for #{role} in its runlist.")
-      end
+      Chef::Log.info("Skipping role \"#{role}\" because node does not have applied proposal for #{role} in its runlist.")
     end
 
-    valid
+    false
   end
 end
