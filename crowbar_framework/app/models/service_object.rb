@@ -543,7 +543,7 @@ class ServiceObject
   # XXX: this is where proposal gets copied into a role, scheduling / ops order
   # is computed (in apply_role) and chef client gets called on the nodes.
   # Hopefully, this will get moved into a background job.
-  def proposal_commit(inst, in_queue = false, validate_after_save = true)
+  def proposal_commit(inst, in_queue = false, validate_after_save = true, bootstrap = false)
     prop = Proposal.where(barclamp: @bc_name, name: inst).first
 
     if prop.nil?
@@ -556,7 +556,7 @@ class ServiceObject
         # Put mark on the wall
         prop["deployment"][@bc_name]["crowbar-committing"] = true
         save_proposal!(prop, validate_after_save: validate_after_save)
-        response = active_update prop.raw_data, inst, in_queue
+        response = active_update prop.raw_data, inst, in_queue, bootstrap
       rescue Chef::Exceptions::ValidationFailed => e
         @logger.error ([e.message] + e.backtrace).join("\n")
         response = [400, "Failed to validate proposal: #{e.message}"]
@@ -913,8 +913,11 @@ class ServiceObject
   #
   # The in_queue signifies if apply_role was called from deployment queue's
   # process_queue, and prevents recursion.
-  def apply_role(role, inst, in_queue)
-    @logger.debug "apply_role(#{role.name}, #{inst}, #{in_queue})"
+  #
+  # The bootstrap parameter tells if we're in bootstrapping mode, in which case
+  # we simply do not run chef.
+  def apply_role(role, inst, in_queue, bootstrap = false)
+    @logger.debug "apply_role(#{role.name}, #{inst}, #{in_queue}, #{bootstrap})"
 
     # Part I: Looking up data & checks
     #
@@ -941,14 +944,19 @@ class ServiceObject
     new_elements = new_deployment["elements"]
     element_order = new_deployment["element_order"]
 
-    #
-    # Attempt to queue the proposal.  If delay is empty, then run it.
-    #
-    deps = proposal_dependencies(role)
-    delay, pre_cached_nodes = queue_proposal(inst, element_order, new_elements, deps)
-    return [202, "Queued: waiting for #{delay.join(", ")}"] unless delay.empty?
+    # When bootstrapping, we don't run chef, so there's no need for queuing
+    if bootstrap
+      pre_cached_nodes = {}
+      # do not try to process the queue in any case
+      in_queue = true
+    else
+      # Attempt to queue the proposal.  If delay is empty, then run it.
+      deps = proposal_dependencies(role)
+      delay, pre_cached_nodes = queue_proposal(inst, element_order, new_elements, deps)
+      return [202, "Queued: waiting for #{delay.join(", ")}"] unless delay.empty?
 
-    @logger.debug "delay empty - running proposal"
+      @logger.debug "delay empty - running proposal"
+    end
 
     # expand items in elements that are not nodes
     expanded_new_elements = {}
@@ -1143,51 +1151,56 @@ class ServiceObject
     # save databag with the role removal intention
     proposal.save if save_proposal
 
-    applying_nodes = batches.flatten.uniq.sort
-
-    # Mark nodes as applying; beware that all_nodes do not contain nodes that
-    # are actually removed.
-    set_to_applying(applying_nodes, inst, pre_cached_nodes)
-
-    # Prevent any intervallic runs from running whilst we apply the
-    # proposal, in order to avoid the orchestration problems described
-    # in https://bugzilla.suse.com/show_bug.cgi?id=857375
-    #
-    # First we pause the chef-client daemons by ensuring a magic
-    # pause-file.lock exists which the daemons will honour due to a
-    # custom patch:
-    nodes_to_lock = applying_nodes.reject do |node_name|
-      pre_cached_nodes[node_name] ||= NodeObject.find_node_by_name(node_name)
-      node = pre_cached_nodes[node_name]
-      node[:platform_family] == "windows" || node.admin?
-    end
-
-    begin
+    if bootstrap
+      applying_nodes = []
       apply_locks = []
-      # do not use a map to set apply_locks: if there's a failure, we need the
-      # variable to contain the locks that were acquired; with a map, the
-      # variable would be empty.
-      nodes_to_lock.each do |node|
-        apply_lock = Crowbar::Lock::SharedNonBlocking.new(
-          logger: @logger,
-          path: "/var/chef/cache/pause-file.lock",
-          node: node,
-          owner: "apply_role-#{role.name}-#{inst}-#{Process.pid}",
-          reason: "apply_role(#{role.name}, #{inst}, #{in_queue}) pid #{Process.pid}"
-        ).acquire
-        apply_locks.push(apply_lock)
-      end
-    rescue Crowbar::Error::LockingFailure => e
-      message = "Failed to apply the proposal: #{e.message}"
-      update_proposal_status(inst, "failed", message)
-      restore_to_ready(applying_nodes)
-      process_queue unless in_queue
-      return [409, message] # 409 is 'Conflict'
-    end
+    else
+      applying_nodes = batches.flatten.uniq.sort
 
-    # Now that we've ensured no new intervallic runs can be started,
-    # wait for any which started before we paused the daemons.
-    wait_for_chef_daemons(applying_nodes)
+      # Mark nodes as applying; beware that all_nodes do not contain nodes that
+      # are actually removed.
+      set_to_applying(applying_nodes, inst, pre_cached_nodes)
+
+      # Prevent any intervallic runs from running whilst we apply the
+      # proposal, in order to avoid the orchestration problems described
+      # in https://bugzilla.suse.com/show_bug.cgi?id=857375
+      #
+      # First we pause the chef-client daemons by ensuring a magic
+      # pause-file.lock exists which the daemons will honour due to a
+      # custom patch:
+      nodes_to_lock = applying_nodes.reject do |node_name|
+        pre_cached_nodes[node_name] ||= NodeObject.find_node_by_name(node_name)
+        node = pre_cached_nodes[node_name]
+        node[:platform_family] == "windows" || node.admin?
+      end
+
+      begin
+        apply_locks = []
+        # do not use a map to set apply_locks: if there's a failure, we need the
+        # variable to contain the locks that were acquired; with a map, the
+        # variable would be empty.
+        nodes_to_lock.each do |node|
+          apply_lock = Crowbar::Lock::SharedNonBlocking.new(
+            logger: @logger,
+            path: "/var/chef/cache/pause-file.lock",
+            node: node,
+            owner: "apply_role-#{role.name}-#{inst}-#{Process.pid}",
+            reason: "apply_role(#{role.name}, #{inst}, #{in_queue}) pid #{Process.pid}"
+          ).acquire
+          apply_locks.push(apply_lock)
+        end
+      rescue Crowbar::Error::LockingFailure => e
+        message = "Failed to apply the proposal: #{e.message}"
+        update_proposal_status(inst, "failed", message)
+        restore_to_ready(applying_nodes)
+        process_queue unless in_queue
+        return [409, message] # 409 is 'Conflict'
+      end
+
+      # Now that we've ensured no new intervallic runs can be started,
+      # wait for any which started before we paused the daemons.
+      wait_for_chef_daemons(applying_nodes)
+    end
 
     # By this point, no intervallic runs should be running, and no
     # more will be able to start running until we release the locks
@@ -1273,7 +1286,13 @@ class ServiceObject
       return [405, message]
     end
 
-    ran_admin = false
+    # When boostrapping, we don't want to run chef.
+    if bootstrap
+      batches = []
+      ran_admin = true
+    else
+      ran_admin = false
+    end
 
     # Invalidate cache as apply_role_pre_chef_call can save nodes
     pre_cached_nodes = {}
@@ -1575,7 +1594,7 @@ class ServiceObject
   def active_update(proposal, inst, in_queue, bootstrap = false)
     begin
       role = ServiceObject.proposal_to_role(proposal, @bc_name)
-      apply_role(role, inst, in_queue)
+      apply_role(role, inst, in_queue, bootstrap)
     rescue Net::HTTPServerException => e
       Rails.logger.error ([e.message] + e.backtrace).join("\n")
       [e.response.code, {}]

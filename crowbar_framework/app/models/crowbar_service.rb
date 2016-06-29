@@ -437,7 +437,7 @@ class CrowbarService < ServiceObject
     end
   end
 
-  def apply_role (role, inst, in_queue)
+  def apply_role(role, inst, in_queue, bootstrap = false)
     @logger.debug("Crowbar apply_role: enter")
     answer = super
     if answer.first != 200
@@ -524,7 +524,7 @@ class CrowbarService < ServiceObject
 
     unless active_proposals.include?(id)
       @logger.debug("Bootstrap: applying proposal for #{bc}.#{id}")
-      answer = service.proposal_commit(id, false, false)
+      answer = service.proposal_commit(id, false, false, true)
       if answer[0] != 200
         msg = "Failed to commit proposal '#{id}' for '#{bc}' " +
           "(The error message was: #{answer[1].strip})"
