@@ -171,7 +171,7 @@ class NodeObject < ChefObject
   end
 
   def self.find_node_by_name(name)
-    name += ".#{ChefObject.cloud_domain}" unless name =~ /(.*)\.(.)/
+    name += ".#{Crowbar::Settings.domain}" unless name =~ /(.*)\.(.)/
     begin
       chef_node = Chef::Node.load(name)
       unless chef_node.nil?
@@ -393,9 +393,11 @@ class NodeObject < ChefObject
       raise "#{I18n.t('model.node.invalid_dns_alias')}: #{value}"
     end
 
-    if value.length>63 || value.length+ChefObject.cloud_domain.length>254
-      Rails.logger.warn "Alias #{value}.#{ChefObject.cloud_domain} FQDN not saved because it exceeded the 63 character length limit or it's length (#{value.length}) will cause the total DNS max of 255 to be exeeded."
-      raise "#{I18n.t('too_long_dns_alias', scope: 'model.node')}: #{value}.#{ChefObject.cloud_domain}"
+    domain = Crowbar::Settings.domain
+
+    if value.length>63 || value.length+domain.length>254
+      Rails.logger.warn "Alias #{value}.#{domain} FQDN not saved because it exceeded the 63 character length limit or it's length (#{value.length}) will cause the total DNS max of 255 to be exeeded."
+      raise "#{I18n.t('too_long_dns_alias', scope: 'model.node')}: #{value}.#{domain}"
     end
 
     if unique_check

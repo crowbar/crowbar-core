@@ -471,7 +471,7 @@ module NodesHelper
       node_roles(node).map do |role|
         object = all_roles.find { |r| r.name == role }
 
-        next if role =~ /^crowbar-.*_#{ChefObject.cloud_domain.gsub(".", "_")}/
+        next if role =~ /^crowbar-.*_#{Crowbar::Settings.domain.gsub(".", "_")}/
 
         if object.nil?
           listing["Unknown"] ||= []

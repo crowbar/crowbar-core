@@ -18,7 +18,7 @@
 class MachinesController < BarclampController
   self.help_contents = Array.new(superclass.help_contents)
 
-  before_filter :set_cloud_domain
+  before_filter :set_domain
 
   before_filter :load_machine_or_render_not_found,
                 only: [
@@ -159,9 +159,9 @@ class MachinesController < BarclampController
 
   protected
 
-  def set_cloud_domain
+  def set_domain
     if session[:domain].nil?
-      session[:domain] = ChefObject.cloud_domain
+      session[:domain] = Crowbar::Settings.domain
     end
   end
 

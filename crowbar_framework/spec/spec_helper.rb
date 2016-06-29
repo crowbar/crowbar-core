@@ -102,7 +102,7 @@ RSpec.configure do |config|
   config.infer_spec_type_from_file_location!
 
   config.before do
-    allow(ChefObject).to receive(:cloud_domain).and_return("crowbar.com")
+    allow(Crowbar::Settings).to receive(:domain).and_return("crowbar.com")
     allow_any_instance_of(Proposal).to receive(:properties_template_dir).
       and_return(Rails.root.join("spec/fixtures/data_bags"))
   end

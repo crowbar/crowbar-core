@@ -16,7 +16,24 @@
 
 module Crowbar
   class Settings
+
+    @@domain = nil
+
     class << self
+      def domain
+        # NOTE: We are using a global here to avoid lookups.  We need to consider some better cache/expiration strategy
+        if @@domain.nil?
+          dns_proposal = Proposal.where(barclamp: "dns", name: "default").first
+          @@domain = dns_proposal[:attributes][:dns][:domain] unless dns_proposal.nil?
+        end
+
+        if @@domain.nil?
+          return %x{dnsdomainname}.strip
+        else
+          return @@domain
+        end
+      end
+
       def bios_raid_options
         # read in default proposal, to make some vaules avilable
         proposals = Proposal.where(barclamp: "crowbar")
