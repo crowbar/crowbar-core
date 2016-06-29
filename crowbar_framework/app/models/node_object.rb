@@ -1601,6 +1601,79 @@ class NodeObject < ChefObject
     end
   end
 
+  def process_raid_claims
+    unless raid_type == "single"
+      save_it = false
+
+      @node["filesystem"].each do |device, attributes|
+        if device =~ /\/dev\/md\d+$/
+          save_it = process_raid_device(device, attributes) || save_it
+        else
+          save_it = process_raid_member(device, attributes) || save_it
+        end
+      end
+
+      save_it = process_raid_boot || save_it
+
+      node.save if save_it
+    end
+  end
+
+  protected
+
+  def process_raid_device(device, attributes)
+    if ["/", "/boot"].include? attributes["mount"]
+      unique_name = unique_device_for(
+        ::File.basename(device.to_s).to_s
+      )
+
+      return false if unique_name.nil?
+
+      unless disk_owner(unique_name) == "OS"
+        disk_release(unique_name, disk_owner(unique_name))
+        disk_claim(unique_name, "OS")
+        return true
+      end
+    end
+
+    return false
+  end
+
+  def process_raid_member(device, attributes)
+    if attributes["fs_type"] == "linux_raid_member"
+      unique_name = unique_device_for(
+        ::File.basename(device.to_s).to_s.gsub(/[0-9]+$/, "")
+      )
+
+      return false if unique_name.nil?
+
+      unless disk_owner(unique_name) == "Raid"
+        disk_release(unique_name, disk_owner(unique_name))
+        disk_claim(unique_name, "Raid")
+        return true
+      end
+    end
+
+    return false
+  end
+
+  def process_raid_boot
+    boot_dev = @node["filesystem"].sort.map do |device, attributes|
+      if ["/", "/boot"].include? attributes["mount"]
+        unique_device_for(
+          ::File.basename(device.to_s)
+        )
+      end
+    end.compact.first
+
+    unless boot_dev == crowbar_wall["boot_device"]
+      boot_device(boot_dev)
+      return true
+    end
+
+    return false
+  end
+
   private
 
   # Used for cloning role's default attributes.
@@ -1666,4 +1739,5 @@ class NodeObject < ChefObject
     end
     {}
   end
+
 end
