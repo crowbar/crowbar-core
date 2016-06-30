@@ -412,17 +412,28 @@ class ::Nic
   end
 
   # Figure out all the interfaces we depend on.
-  def dependents
-    return @dependents.map{ |d|Nic.new(d) } if @dependents
-    res = self.parents
-    res.dup.each do |d|
-      res = res + d.dependents
+  def dependents(loop_breaker = nil)
+    loop_breaker ||= []
+
+    return [] if loop_breaker.include? name
+    loop_breaker.push(name)
+
+    return @dependents.map { |d| Nic.new(d) } if @dependents
+
+    res = []
+
+    parents.each do |d|
+      res.push(d)
+      res.concat(d.dependents(loop_breaker))
     end
-    res = res + slaves
+
     slaves.each do |s|
-      res = res + s.dependents
+      res.push(s)
+      res.concat(s.dependents(loop_breaker))
     end
-    @dependents = res.map{ |d|d.name }
+
+    @dependents = res.map(&:name)
+
     res
   end
 
