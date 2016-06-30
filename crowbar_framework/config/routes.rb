@@ -59,16 +59,19 @@ Rails.application.routes.draw do
   # this route allows any barclamp to extend the nodes view
   get "nodes/:controller/1.0", action: "nodes", as: "nodes_barclamp"
 
-  # this route allows any barclamp to extend the network view
-  get "network/:controller/1.0", action: "network", as: "network_barclamp"
-  # these paths require the network barclamp
-  get "network", controller: "network", action: "switch", as: "network"
-  get "network/switch/:id", controller: "network", action: "switch", constraints: { id: /[^\/]+/ }, defaults: { id: "default" }, as: "switch"
-  get "network/vlan/:id", controller: "network", action: "vlan", constraints: { id: /[^\/]+/ }, defaults: { id: "default" }, as: "vlan"
+  get "network", controller: :network, action: :switch
+  scope :network,
+    controller: :network,
+    defaults: { id: "default" },
+    constraints: { id: /[^\/]+/ } do
+    # this route allows any barclamp to extend the network view
+    get ":controller/1.0", action: :network
+    get "switch/:id", action: :switch, as: "switch"
+    get "vlan/:id", action: :vlan, as: "vlan"
+  end
 
-  # clusters
-  get "clusters",     controller: "dashboard", action: "clusters", as: "clusters"
-  get "active_roles", controller: "dashboard", action: "active_roles", as: "active_roles"
+  get "clusters", controller: :dashboard, action: :clusters
+  get "active_roles", controller: :dashboard, action: :active_roles
 
   resources :deploy_queue, only: [:index], as: :deployment_queue
 
