@@ -327,6 +327,7 @@ class ::Nic
   # They do not return useful information for bonds and bridges.
   # Get this nic's parents based on ifindex -> iflink matching.
   def parents
+    return [] unless is_a?(::Nic::Vlan)
     return [] if self.ifindex == self.iflink
     self.class.__nics.select do |n|
       (n.ifindex == self.iflink) && ! (n == self)
