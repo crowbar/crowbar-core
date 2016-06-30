@@ -70,8 +70,7 @@ Rails.application.routes.draw do
   get "clusters",     controller: "dashboard", action: "clusters", as: "clusters"
   get "active_roles", controller: "dashboard", action: "active_roles", as: "active_roles"
 
-  # deployment queue
-  get "deployment_queue", controller: "deploy_queue", action: "index", as: "deployment_queue"
+  resources :deploy_queue, only: [:index], as: :deployment_queue
 
   # support paths
   get "utils", controller: :support, action: :index, as: "utils"
