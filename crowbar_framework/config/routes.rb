@@ -69,14 +69,18 @@ Rails.application.routes.draw do
   get "utils/:controller/1.0", action: "utils", as: "utils_barclamp"
   get "utils/import/:id", controller: "support", action: "import", constraints: { id: /[^\/]+/ }, as: "utils_import"
   get "utils/upload/:id", controller: "support", action: "upload", constraints: { id: /[^\/]+/ }, as: "utils_upload"
-  get "utils/repositories", controller: "repositories", action: "index", as: "repositories"
-  post "utils/repositories/sync", controller: "repositories", action: "sync", as: "sync_repositories"
-  post "utils/repositories/activate", controller: "repositories", action: "activate", as: "activate_repository"
-  post "utils/repositories/deactivate", controller: "repositories", action: "deactivate", as: "deactivate_repository"
-  post "utils/repositories/activate_all", controller: "repositories", action: "activate_all", as: "activate_all_repositories"
-  post "utils/repositories/deactivate_all", controller: "repositories", action: "deactivate_all", as: "deactivate_all_repositories"
 
   scope :utils do
+    resources :repositories, only: [:index] do
+      collection do
+        post :sync
+        post :activate
+        post :deactivate
+        post :activate_all
+        post :deactivate_all
+      end
+    end
+
     resources :backups, only: [:index, :create, :destroy] do
       collection do
         post :upload
