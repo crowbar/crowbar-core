@@ -60,17 +60,21 @@ Rails.application.routes.draw do
   # deployment queue
   get "deployment_queue", controller: "deploy_queue", action: "index", as: "deployment_queue"
 
-  #support paths
-  get "utils", controller: "support", action: "index", as: "utils"
-  get "utils/files/:id", controller: "support", action: "destroy", constraints: { id: /[^\/]+/ }, as: "utils_files"
-  get "utils/chef", controller: "support", action: "export_chef", as: "export_chef"
-  get "utils/supportconfig", controller: "support", action: "export_supportconfig", as: "export_supportconfig"
-  get "utils/:controller/1.0/export", action: "export", as: "utils_export"
-  get "utils/:controller/1.0", action: "utils", as: "utils_barclamp"
-  get "utils/import/:id", controller: "support", action: "import", constraints: { id: /[^\/]+/ }, as: "utils_import"
-  get "utils/upload/:id", controller: "support", action: "upload", constraints: { id: /[^\/]+/ }, as: "utils_upload"
+  # support paths
+  get "utils", controller: :support, action: :index, as: "utils"
+  scope :utils,
+    constraints: { id: /[^\/]+/ } do
+    get ":controller/1.0/export", action: :export, as: "utils_export"
+    get ":controller/1.0", action: :utils
 
-  scope :utils do
+    scope controller: :support do
+      get "import/:id", action: :import
+      get "upload/:id", action: :upload
+      get "supportconfig", action: :export_supportconfig, as: "export_supportconfig"
+      get "chef", action: :export_chef, as: "export_chef"
+      get "files/:id", action: :destroy, as: "utils_files"
+    end
+
     resources :repositories,
       only: [:index] do
       collection do
