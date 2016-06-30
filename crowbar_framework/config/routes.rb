@@ -27,24 +27,37 @@ Rails.application.routes.draw do
   get "docs", controller: "docs", action: "index", as: "docs"
 
   # nodes
-  resources :nodes, only: [:index]
+  resources :nodes,
+    param: :name,
+    only: [:index, :show, :edit] do
+    collection do
+      get :status
+      get :list
+      get :unallocated
+      get :families
+      post :bulk
+    end
 
-  get "nodes/:name/attribute/*path", controller: "nodes", action: "attribute",
-              constraints: { name: /[^\/]+/, path: /.*/ }
-  get "nodes/status", controller: "nodes", action: "status", as: "nodes_status"
-  get "nodes/list", controller: "nodes", action: "list", as: "nodes_list"
-  get "nodes/unallocated", controller: "nodes", action: "unallocated", as: "unallocated_list"
-  post "nodes/bulk", controller: "nodes", action: "bulk", as: "bulk_nodes"
-  get "nodes/families", controller: "nodes", action: "families", as: "nodes_families"
+    member do
+      post :update, as: "update"
+    end
+  end
+
+  resources :dashboard,
+    only: [:index],
+    param: :name,
+    controller: :nodes do
+
+    member do
+      get :index, as: "detail"
+      get "attribute/*path", action: :attribute
+    end
+  end
+
   get "nodes/:id/hit/:req", controller: "nodes", action: "hit", constraints: { id: /[^\/]+/ }, as: "hit_node"
-  get "nodes/:name/edit", controller: "nodes", action: "edit", constraints: { name: /[^\/]+/ }, as: "edit_node"
-  get "dashboard", controller: "nodes", action: "index", as: "dashboard"
-  get "dashboard/:name", controller: "nodes", action: "index", constraints: { name: /[^\/]+/ }, as: "dashboard_detail"
   post "nodes/groups/1.0/:id/:group", controller: "nodes", action: "group_change", constraints: { id: /[^\/]+/ }, as: "group_change"
   # this route allows any barclamp to extend the nodes view
   get "nodes/:controller/1.0", action: "nodes", as: "nodes_barclamp"
-  post "nodes/:name/update", controller: "nodes", action: "update", constraints: { name: /[^\/]+/ }, as: "update_node"
-  get "nodes/:name", controller: "nodes", action: "show", constraints: { name: /[^\/]+/ }, as: "node"
 
   # this route allows any barclamp to extend the network view
   get "network/:controller/1.0", action: "network", as: "network_barclamp"
