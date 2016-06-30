@@ -23,13 +23,7 @@ module Installer
       @steps = Crowbar::Installer.steps
     end
 
-    #
-    # Perform Crowbar Installation
-    #
-    # Provides the restful api call for
-    # /installer/status 	GET 	return done steps, error and success
-    # returns a hash with an indicator if the installation failed/succeeded
-    # and the steps that are done
+    api :GET, "/installer/installer/status", "Returns a status of the installation"
     def status
       respond_to do |format|
         format.json do
@@ -41,11 +35,8 @@ module Installer
       end
     end
 
-    #
-    # Perform Crowbar Installation
-    #
-    # Provides the restful api call for
-    # /installer/start 	POST 	triggers installation
+    api :POST, "/installer/installer/start", "Trigger Crowbar installation"
+    param :force, [0, 1], desc: "Force installation by removing crowbar-installed-ok"
     def start
       header = :ok
       msg = ""

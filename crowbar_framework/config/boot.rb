@@ -39,6 +39,9 @@ else
   gem "puma", version: "~> 2.11.3"
   require "puma"
 
+  gem "apipie-rails", "~> 0.3.6"
+  require "apipie-rails"
+
   # general stuff
   gem "activerecord-session_store", version: "~> 0.1.0"
   require "activerecord/session_store"

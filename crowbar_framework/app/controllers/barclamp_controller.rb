@@ -25,6 +25,12 @@ class BarclampController < ApplicationController
   before_filter :initialize_service
   before_filter :controller_to_barclamp
 
+  # define parameter groups for apipie
+  def_param_group :proposal do
+    param :id, String, desc: "Proposal name", required: true
+    param :barclamp, String, desc: "Name of the barclamp", required: true
+  end
+
   def controller_to_barclamp
     @bc_name = params[:barclamp] || params[:controller]
     @service_object.bc_name = @bc_name
@@ -32,13 +38,8 @@ class BarclampController < ApplicationController
 
   self.help_contents = Array.new(superclass.help_contents)
 
-  #
-  # Barclamp List (generic)
-  #
-  # Provides the restful api call for
-  # List Barclamps 	/crowbar 	GET 	Returns a json list of string names for barclamps
-  #
   add_help(:barclamp_index)
+  api :GET, "/crowbar", "Returns a list of string names and descriptions for all barclamps"
   def barclamp_index
     @barclamps = ServiceObject.all
     respond_to do |format|
@@ -48,23 +49,22 @@ class BarclampController < ApplicationController
     end
   end
 
-  #
-  # Provides the restful api call for
-  # List Versions 	/crowbar/<barclamp-name> 	GET 	Returns a json list of string names for the versions
-  #
   add_help(:versions)
+  api :GET, "/crowbar/:barclamp_name",
+    "Returns the API version of a barclamp"
   def versions
     ret = @service_object.versions
     return render text: ret[1], status: ret[0] if ret[0] != 200
     render json: ret[1]
   end
 
-  #
-  # Provides the restful api call for
-  # Transition 	/crowbar/<barclamp-name>/<version>/transition/<barclamp-instance-name> 	POST 	Informs the barclamp instance of a change of state in the specified node
-  # Transition 	/crowbar/<barclamp-name>/<version>/transition/<barclamp-instance-name>?state=<state>&name=<hostname> 	GET 	Informs the barclamp instance of a change of state in the specified node - The get is supported here to allow for the limited function environment of the installation system.
-  #
   add_help(:transition, [:id, :name, :state], [:get,:post])
+  api [:GET, :POST], "/crowbar/:barclamp/1.0/transition/:id",
+    "Informs the barclamp instance of a change of state in the specified node - The GET is
+    supported here to allow for the limited function environment of the installation system."
+  param :id, String, desc: "Proposal name", required: true
+  param :name, String, desc: "Name of the node transitioning", required: true
+  param :state, String, desc: "State of the node transitioning", required: true
   def transition
     id = params[:id]       # Provisioner id
     state = params[:state] # State of node transitioning
@@ -88,11 +88,10 @@ class BarclampController < ApplicationController
     end
   end
 
-  #
-  # Provides the restful api call for
-  # Show Instance 	/crowbar/<barclamp-name>/<version>/<barclamp-instance-name> 	GET 	Returns a json document describing the instance
-  #
   add_help(:show,[:id])
+  api :GET, "/crowbar/:barclamp/1.0/:id",
+    "Returns a document describing the instance"
+  param_group :proposal
   def show
     ret = @service_object.show_active params[:id]
     @role = ret[1]
@@ -106,6 +105,7 @@ class BarclampController < ApplicationController
         return render text: @role, status: ret[0] if ret[0] != 200
         render xml: ServiceObject.role_to_proposal(@role, @bc_name)
       }
+      # FIXME: this json endpoint can only be accessed when explicitly sending a json header
       format.json {
         return render text: @role, status: ret[0] if ret[0] != 200
         render json: ServiceObject.role_to_proposal(@role, @bc_name)
@@ -113,11 +113,10 @@ class BarclampController < ApplicationController
     end
   end
 
-  #
-  # Provides the restful api call for
-  # Destroy Instance 	/crowbar/<barclamp-name>/<version>/<barclamp-instance-name> 	DELETE 	Delete will deactivate and remove the instance
-  #
   add_help(:delete,[:id],[:delete])
+  api :DELETE, "/crowbar/:barclamp/1.0/:id",
+    "Delete will deactivate and remove the proposal"
+  param_group :proposal
   def delete
     params[:id] = params[:id] || params[:name]
     ret = [500, "Server Problem"]
@@ -145,10 +144,9 @@ class BarclampController < ApplicationController
     end
   end
 
-  #
-  # Provides the restful api call for
-  # List Elements 	/crowbar/<barclamp-name>/<version>/elements 	GET 	Returns a json list of roles that a node could be assigned to
-  #
+  api :GET, "/crowbar/:controller/1.0/elements",
+    "Returns a list of roles that a node could be assigned to"
+  param :controller, String, desc: "Name of the controller (barclamp)", required: true
   add_help(:elements)
   def elements
     ret = @service_object.elements
@@ -156,22 +154,21 @@ class BarclampController < ApplicationController
     render json: ret[1]
   end
 
-  #
-  # Provides the restful api call for
-  # List Nodes Available for Element 	/crowbar/<barclamp-name>/<version>/elements/<barclamp-instance-name> 	GET 	Returns a json list of nodes that can be assigned to that element
-  #
   add_help(:element_info,[:id])
+  api :GET, "/crowbar/:controller/1.0/elements/:id",
+    "Returns a list of nodes that can be assigned to that element"
+  param :id, String, desc: "Proposal name", required: true
+  param :controller, String, desc: "Name of the controller (barclamp)", required: true
   def element_info
     ret = @service_object.element_info(params[:id])
     return render text: ret[1], status: ret[0] if ret[0] != 200
     render json: ret[1]
   end
 
-  #
-  # Provides the restful api call for
-  # List Instances 	/crowbar/<barclamp-name>/<version> 	GET 	Returns a json list of string names for the ids of instances
-  #
   add_help(:index)
+  api :GET, "/crowbar/:barclamp/1.0",
+    "Returns a list of names for the ids of instances"
+  param :barclamp, String, desc: "Name of the barclamp", required: true
   def index
     respond_to do |format|
       format.html {
@@ -200,10 +197,9 @@ class BarclampController < ApplicationController
     end
   end
 
-  #
-  # Currently, A UI ONLY METHOD
-  #
   add_help(:modules)
+  api :GET, "/crowbar/modules/1.0",
+    "Returns a list of barclamp data mainly used by the UI"
   def modules
     @title = I18n.t("barclamp.modules.title")
     @count = 0
@@ -259,6 +255,9 @@ class BarclampController < ApplicationController
   # GET /crowbar/<barclamp-name>/<version>/proposals
   #
   add_help(:proposals, [], [:get])
+  api :GET, "/crowbar/:barclamp/1.0/proposals",
+    "Returns a list of available proposals"
+  param :barclamp, String, desc: "Name of the barclamp", required: true
   def proposals
     code, message = @service_object.proposals
 
@@ -289,12 +288,10 @@ class BarclampController < ApplicationController
     end
   end
 
-  #
-  # Template proposal
-  # Return the content of a proposal template
-  # GET /crowbar/<barclamp-name>/<version>/proposals/template
-  #
   add_help(:proposal_template, [], [:get])
+  api :GET, "/crowbar/:barclamp/1.0/proposals/template",
+    "Returns the content of a proposal template"
+  param :barclamp, String, desc: "Name of the barclamp", required: true
   def proposal_template
     code, message = @service_object.proposal_template
 
@@ -313,12 +310,10 @@ class BarclampController < ApplicationController
     end
   end
 
-  #
-  # Show proposal
-  # Return the details of a specific proposal
-  # GET /crowbar/<barclamp-name>/<version>/proposals/<barclamp-instance-name>
-  #
   add_help(:proposal_show, [:id], [:get])
+  api :GET, "/crowbar/:barclamp/1.0/proposals/:id",
+    "Returns the details of a specific proposal"
+  param_group :proposal
   def proposal_show
     code, message = @service_object.proposal_show(
       params[:id]
@@ -360,12 +355,10 @@ class BarclampController < ApplicationController
     end
   end
 
-  #
-  # Delete proposal
-  # Remove a specific proposal
-  # DELETE /crowbar/<barclamp-name>/<version>/proposals/<barclamp-instance-name>
-  #
   add_help(:proposal_delete, [:id], [:delete])
+  api :DELETE, "/crowbar/:barclamp/1.0/proposals/:id",
+    "Remove a specific proposal"
+  param_group :proposal
   def proposal_delete
     code, message = @service_object.proposal_delete(
       params[:id]
@@ -402,12 +395,10 @@ class BarclampController < ApplicationController
     end
   end
 
-  #
-  # Commit proposal
-  # Commit a specific proposal to apply it
-  # POST /crowbar/<barclamp-name>/<version>/proposals/commit/<barclamp-instance-name>
-  #
   add_help(:proposal_commit, [:id], [:post])
+  api :POST, "/crowbar/:barclamp/1.0/proposals/commit/:id",
+    "Commit a specific proposal to apply it"
+  param_group :proposal
   def proposal_commit
     code, message = @service_object.proposal_commit(
       params[:id]
@@ -460,12 +451,10 @@ class BarclampController < ApplicationController
     end
   end
 
-  #
-  # Reset proposal
-  # Reset a specific proposal status
-  # POST /crowbar/<barclamp-name>/<version>/proposals/reset/<barclamp-instance-name>
-  #
   add_help(:proposal_reset, [:id], [:post])
+  api :POST, "/crowbar/:barclamp/1.0/proposals/reset/:id",
+    "Reset a specific proposal status"
+  param_group :proposal
   def proposal_reset
     code, message = @service_object.reset_proposal(
       params[:id]
@@ -504,12 +493,10 @@ class BarclampController < ApplicationController
     end
   end
 
-  #
-  # Dequeue proposal
-  # Remove a specific proposal from the queue
-  # DELETE /crowbar/<barclamp-name>/<version>/proposals/dequeue/<barclamp-instance-name>
-  #
   add_help(:proposal_dequeue, [:id], [:delete])
+  api :DELETE, "/crowbar/:barclamp/1.0/proposals/dequeue/:id",
+    "Reset a specific proposal from the queue"
+  param_group :proposal
   def proposal_dequeue
     code, message = @service_object.dequeue_proposal(
       params[:id]
@@ -548,12 +535,10 @@ class BarclampController < ApplicationController
     end
   end
 
-  #
-  # Edit proposal
-  # Update a specific proposal
-  # POST /crowbar/<barclamp-name>/<version>/propsosals/<barclamp-instance-name>
-  #
   add_help(:proposal_update, [:id], [:post])
+  api :POST, "/crowbar/:barclamp/1.0/proposals/:id",
+    "Update a specific proposal"
+  param_group :proposal
   def proposal_update
     if params[:submit].nil?
       #
@@ -709,12 +694,10 @@ class BarclampController < ApplicationController
     end
   end
 
-  #
-  # Create proposal
-  # Create a new specific proposal
-  # PUT /crowbar/<barclamp-name>/<version>/proposals
-  #
   add_help(:proposal_create, [:name], [:put])
+  api :PUT, "/crowbar/:barclamp/1.0/proposals",
+    "Create a new specific proposal"
+  param :barclamp, String, desc: "Name of the barclamp", required: true
   def proposal_create
     params[:id] = params[:id] || params[:name]
 
