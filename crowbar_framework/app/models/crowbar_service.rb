@@ -471,7 +471,7 @@ class CrowbarService < ServiceObject
   end
 
   def bootstrap_ensure_proposal(bc, override_attr_path)
-    @logger.info("Bootstrap: ensure proposal for bc: #{bc}, name: #{override_attr_path.inspect}")
+    @logger.info("Bootstrap: ensure proposal for bc: #{bc}, name: #{override_attr_path}")
 
     unless override_attr_path == "default" || File.exist?(override_attr_path)
       msg = "Cannot ensure proposal for #{bc} exists: #{override_attr_path} does not exist."
@@ -504,8 +504,8 @@ class CrowbarService < ServiceObject
       @logger.debug("Bootstrap: creating proposal for #{bc}.#{id}")
       answer = service.proposal_create_bootstrap(data)
       if answer[0] != 200
-        msg = "Failed to create proposal '#{id}' for barclamp '#{bc}' " +
-          "(The error message was: #{answer[1].strip})"
+        msg = "Failed to create proposal '#{id}' for barclamp '#{bc}' " \
+            "(The error message was: #{answer[1].strip})"
         @logger.error(msg)
         answer[1] = msg
         return answer
@@ -514,8 +514,8 @@ class CrowbarService < ServiceObject
 
     answer = service.list_active
     if answer[0] != 200
-      msg = "Failed to list active '#{bc}' proposals " +
-        "(The error message was: #{answer[1].strip})"
+      msg = "Failed to list active '#{bc}' proposals " \
+          "(The error message was: #{answer[1].strip})"
       @logger.error(msg)
       answer[1] = msg
       return answer
@@ -526,15 +526,15 @@ class CrowbarService < ServiceObject
       @logger.debug("Bootstrap: applying proposal for #{bc}.#{id}")
       answer = service.proposal_commit(id, false, false, true)
       if answer[0] != 200
-        msg = "Failed to commit proposal '#{id}' for '#{bc}' " +
-          "(The error message was: #{answer[1].strip})"
+        msg = "Failed to commit proposal '#{id}' for '#{bc}' " \
+            "(The error message was: #{answer[1].strip})"
         @logger.error(msg)
         answer[1] = msg
         return answer
       end
     end
 
-    @logger.info("Bootstrap: done ensuring proposal for bc: #{bc}, name: #{override_attr_path.inspect}")
+    @logger.info("Bootstrap: done ensuring proposal for bc: #{bc}, name: #{override_attr_path}")
 
     answer
   end

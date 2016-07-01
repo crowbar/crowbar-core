@@ -100,7 +100,7 @@ class ProvisionerService < ServiceObject
     if state == "reset"
       # clean up state capturing attributes on the node that are not likely to be the same
       # after a reset.
-      @logger.debug("Provisioner transition: clearing node data such as claimed disks and boot device")
+      @logger.debug("Provisioner transition: clearing node data (claimed disks, boot device, etc.)")
 
       node = NodeObject.find_node_by_name(name)
       save_it = false
