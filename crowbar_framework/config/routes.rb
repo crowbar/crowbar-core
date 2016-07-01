@@ -89,7 +89,8 @@ Rails.application.routes.draw do
       end
     end
 
-    resources :backups, only: [:index, :create, :destroy] do
+    resources :backups,
+      only: [:index, :create, :destroy] do
       collection do
         post :upload
         get :restore_status
