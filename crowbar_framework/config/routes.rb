@@ -47,15 +47,20 @@ Rails.application.routes.draw do
   get "nodes/:name(.:format)", controller: "nodes", action: "show", constraints: { name: /[^\/]+/ }, as: "node"
 
   # this route allows any barclamp to extend the network view
-  get "network/:controller/1.0(.:format)", action: "network", as: "network_barclamp"
-  # these paths require the network barclamp
-  get "network(.:format)", controller: "network", action: "switch", as: "network"
-  get "network/switch/:id(.:format)", controller: "network", action: "switch", constraints: { id: /[^\/]+/ }, defaults: { id: "default" }, as: "switch"
-  get "network/vlan/:id(.:format)", controller: "network", action: "vlan", constraints: { id: /[^\/]+/ }, defaults: { id: "default" }, as: "vlan"
+  get "network", controller: :network, action: :switch
+  scope :network,
+    controller: :network,
+    defaults: { id: "default" },
+    constraints: { id: /[^\/]+/ } do
+    # this route allows any barclamp to extend the network view
+    get ":controller/1.0", action: :network
+    get "switch/:id", action: :switch, as: "switch"
+    get "vlan/:id", action: :vlan, as: "vlan"
+  end
 
   # clusters
-  get "clusters(.:format)",     controller: "dashboard", action: "clusters", as: "clusters"
-  get "active_roles(.:format)", controller: "dashboard", action: "active_roles", as: "active_roles"
+  get "clusters", controller: :dashboard, action: :clusters
+  get "active_roles", controller: :dashboard, action: :active_roles
 
   # deployment queue
   get "deployment_queue(.:format)", controller: "deploy_queue", action: "index", as: "deployment_queue"
