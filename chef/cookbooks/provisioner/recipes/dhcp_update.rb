@@ -1,9 +1,17 @@
+admin_ip = Barclamp::Inventory.get_network_by_type(node, "admin").address
 
+dns_servers = search(:node, "roles:dns-server").map do |n|
+  Barclamp::Inventory.get_network_by_type(n, "admin").address
+end
+dns_servers.sort!
+dns_servers.concat(node[:dns][:nameservers]) unless node[:dns].nil?
+dns_servers = admin_ip if dns_servers.empty?
 
 domain_name = node[:dns].nil? ? node[:domain] : (node[:dns][:domain] || node[:domain])
-admin_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
+
 admin_net = node[:network][:networks]["admin"]
 lease_time = node[:provisioner][:dhcp]["lease-time"]
+
 pool_opts = {
   "dhcp" => ["allow unknown-clients",
              'if exists dhcp-parameter-request-list {
@@ -27,6 +35,7 @@ pool_opts = {
              "next-server #{admin_ip}"],
   "host" => ["deny unknown-clients"]
 }
+
 dhcp_subnet admin_net["subnet"] do
   action :add
   network admin_net
@@ -35,7 +44,7 @@ dhcp_subnet admin_net["subnet"] do
   options [
     "server-identifier #{admin_ip}",
     "option domain-name \"#{domain_name}\"",
-    "option domain-name-servers #{admin_ip}",
+    "option domain-name-servers #{dns_servers.join(", ")}",
     "default-lease-time #{lease_time}",
     "max-lease-time #{lease_time}"
   ]
