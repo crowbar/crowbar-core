@@ -56,7 +56,7 @@ unless node[:platform_family] == "windows"
       # invalidate dnsmasq cache if local zone changes
       subscribes :reload, "template[/etc/bind/db.#{node[:dns][:domain]}]"
     end
-    not_if { node["crowbar"]["admin_node"] && ::File.exist?("/var/lib/crowbar/install/disable_dns") }
+    not_if { node["crowbar"]["admin_node"] && File.exist?("/var/lib/crowbar/install/disable_dns") }
   end
 
   dns_list = dns_list.insert(0, "127.0.0.1").take(3)
