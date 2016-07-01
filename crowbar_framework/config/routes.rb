@@ -124,28 +124,33 @@ Rails.application.routes.draw do
   get "crowbar/:controller(.:format)", action: "versions", as: "versions_barclamp"
   post "crowbar/:controller/1.0/:action/:id(.:format)", constraints: { id: /[^\/]+/ }, as: "action_barclamp"
   get "crowbar(.:format)", controller: "barclamp", action: "barclamp_index", as: "barclamp_index_barclamp"
-  get "crowbar/modules/1.0(.:format)", controller: "barclamp", action: "modules", as: "barclamp_modules"
 
-  get "crowbar/:barclamp/1.0/help(.:format)", action: "help", controller: "barclamp"
-  get "crowbar/:barclamp/1.0/proposals/nodes(.:format)", controller: "barclamp", action: "nodes"
-  put "crowbar/:barclamp/1.0/proposals(.:format)", action: "proposal_create", controller: "barclamp"
-  get "crowbar/:barclamp/1.0/proposals(.:format)", action: "proposals", controller: "barclamp"
-  post "crowbar/:barclamp/1.0/proposals/commit/:id(.:format)", action: "proposal_commit", controller: "barclamp"
-  get "crowbar/:barclamp/1.0/proposals/status(.:format)", action: "proposal_status", controller: "barclamp"
-  delete "crowbar/:barclamp/1.0/proposals/:id(.:format)", action: "proposal_delete", controller: "barclamp"
-  post "crowbar/:barclamp/1.0/proposals/reset/:id(.:format)", action: "proposal_reset", controller: "barclamp"
-  post "crowbar/:barclamp/1.0/proposals/:id(.:format)", action: "proposal_update", controller: "barclamp"
-  get "crowbar/:barclamp/1.0/proposals/:id(.:format)", action: "proposal_show", controller: "barclamp"
-  get "crowbar/:barclamp/1.0/elements(.:format)", action: "elements", controller: "barclamp"
-  get "crowbar/:barclamp/1.0/elements/:id(.:format)", action: "element_info", controller: "barclamp"
-  post "crowbar/:barclamp/1.0/transition/:id(.:format)", action: "transition", controller: "barclamp"
-  get "crowbar/:barclamp/1.0/transition/:id(.:format)", action: "transition", controller: "barclamp"
-  get "crowbar/:barclamp/1.0(.:format)", action: "index", controller: "barclamp"
-  get "crowbar/:barclamp/1.0/status(.:format)", action: "status", controller: "barclamp"
-  delete "crowbar/:barclamp/1.0/:id(.:format)", action: "delete", controller: "barclamp"
-  get "crowbar/:barclamp/1.0/:id(.:format)", action: "show", controller: "barclamp"
-  get "crowbar/:barclamp(.:format)", action: "versions", controller: "barclamp"
-  post "crowbar/:barclamp/1.0/:action/:id(.:format)", controller: "barclamp"
+  scope :crowbar do
+    scope controller: :barclamp do
+      get ":barclamp/1.0/help", action: :help
+      get ":barclamp/1.0/proposals/nodes", action: :nodes
+      put ":barclamp/1.0/proposals", action: :proposal_create
+      get ":barclamp/1.0/proposals", action: :proposals
+      post ":barclamp/1.0/proposals/commit/:id", action: :proposal_commit
+      get ":barclamp/1.0/proposals/status", action: :proposal_status
+      delete ":barclamp/1.0/proposals/:id", action: :proposal_delete
+      post ":barclamp/1.0/proposals/reset/:id", action: :proposal_reset
+      post ":barclamp/1.0/proposals/:id", action: :proposal_update
+      get ":barclamp/1.0/proposals/:id", action: :proposal_show
+      get ":barclamp/1.0/elements", action: :elements
+      get ":barclamp/1.0/elements/:id", action: :element_info
+      post ":barclamp/1.0/transition/:id", action: :transition
+      get ":barclamp/1.0/transition/:id", action: :transition
+      get ":barclamp/1.0", action: :index
+      get ":barclamp/1.0/status", action: :status
+      delete ":barclamp/1.0/:id", action: :delete
+      get ":barclamp/1.0/:id", action: :show
+      get ":barclamp", action: :versions
+      post ":barclamp/1.0/:action/:id", action: :barclamp
+
+      get "modules/1.0", action: :modules, as: "barclamp_modules"
+    end
+  end
 
   scope :installer do
     root to: "installer#index",
