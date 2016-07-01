@@ -24,7 +24,8 @@ Rails.application.routes.draw do
   # Root route have to be on top of all
   root to: "nodes#index"
 
-  get "docs(.:format)", controller: "docs", action: "index", as: "docs"
+  resources :docs,
+    only: [:index]
 
   # nodes
   resources :nodes, only: [:index]
