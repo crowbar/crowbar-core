@@ -27,8 +27,8 @@ SimpleNavigation::Configuration.run do |navigation|
 
     level1.item :nodes, t("nav.nodes.title"), root_path do |level2|
       level2.item :dashboard, t("nav.nodes.dashboard"), dashboard_index_path
-      level2.item :batch, t("nav.nodes.batch"), nodes_list_path
-      level2.item :families, t("nav.nodes.families"), nodes_families_path, if: proc { Rails.env.development? }
+      level2.item :batch, t("nav.nodes.batch"), list_nodes_path
+      level2.item :families, t("nav.nodes.families"), families_nodes_path, if: proc { Rails.env.development? }
     end
     level1.item :barclamps, t("nav.barclamps.title"), barclamp_modules_path do |level2|
       level2.item :all, t("nav.barclamps.all"), barclamp_modules_path

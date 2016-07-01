@@ -198,7 +198,7 @@ class NodesController < ApplicationController
       flash[:info] = I18n.t("nodes.list.nochange")
     end
 
-    redirect_to params[:return] != "true" ? unallocated_list_path : nodes_list_path
+    redirect_to params[:return] != "true" ? unallocated_nodes_path : list_nodes_path
   end
 
   def families
