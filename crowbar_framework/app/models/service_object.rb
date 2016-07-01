@@ -1016,11 +1016,7 @@ class ServiceObject
 
     # We'll build an Array where each item represents a batch of work,
     # and the batches must be performed sequentially in this order.
-    # This will mirror the ordering specified by element_order below,
-    # but the sub-arrays of run_order will be Arrays of names of the
-    # involved nodes, whereas the sub-arrays of element_order are Arrays
-    # of names of Chef roles.
-    run_order = []
+    batches = []
 
     # get proposal to remember potential removal of a role
     proposal = Proposal.where(barclamp: @bc_name, name: inst).first
@@ -1135,15 +1131,14 @@ class ServiceObject
         end
       end # roles.each
 
-      @logger.debug "nodes_in_batch #{nodes_in_batch.inspect}"
-      run_order << nodes_in_batch unless nodes_in_batch.empty?
-      @logger.debug "run_order #{run_order.inspect}"
+      batches << nodes_in_batch unless nodes_in_batch.empty?
     end
+    @logger.debug "batches: #{batches.inspect}"
 
     # save databag with the role removal intention
     proposal.save if save_proposal
 
-    applying_nodes = run_order.flatten.uniq.sort
+    applying_nodes = batches.flatten.uniq.sort
 
     # Mark nodes as applying; beware that all_nodes do not contain nodes that
     # are actually removed.
@@ -1277,30 +1272,25 @@ class ServiceObject
       return [405, message]
     end
 
+    ran_admin = false
+
     # Invalidate cache as apply_role_pre_chef_call can save nodes
     pre_cached_nodes = {}
 
     # Each batch is a list of nodes that can be done in parallel.
-    ran_admin = false
-    run_order.each do |batch|
-      next if batch.empty?
-      @logger.debug "batch #{batch.inspect}"
+    batches.each do |nodes|
+      @logger.debug "Applying batch: #{nodes.inspect}"
 
-      batch.each do |node_name|
-        # Run admin nodes a different way.
-        if admin_nodes.include?(node_name)
-          @logger.debug "#{node_name} is in admin_nodes #{admin_nodes.inspect}"
-          ran_admin = true
-          next
-        end
+      nodes.each do |node|
+        ran_admin = true if admin_nodes.include?(node)
       end
 
       @logger.debug(
-        "AR: Calling chef-client for #{role.name} on nodes: #{batch.join(" ")}"
+        "AR: Calling chef-client for #{role.name} on nodes: #{nodes.join(" ")}"
       )
 
       pids = {}
-      batch.each do |node|
+      nodes.each do |node|
         pre_cached_nodes[node] ||= NodeObject.find_node_by_name(node)
         next if pre_cached_nodes[node][:platform_family] == "windows"
 
