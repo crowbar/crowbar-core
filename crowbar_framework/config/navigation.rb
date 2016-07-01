@@ -26,7 +26,7 @@ SimpleNavigation::Configuration.run do |navigation|
     level1.dom_class = "nav navbar-nav"
 
     level1.item :nodes, t("nav.nodes.title"), root_path do |level2|
-      level2.item :dashboard, t("nav.nodes.dashboard"), dashboard_path
+      level2.item :dashboard, t("nav.nodes.dashboard"), dashboard_index_path
       level2.item :batch, t("nav.nodes.batch"), nodes_list_path
       level2.item :families, t("nav.nodes.families"), nodes_families_path, if: proc { Rails.env.development? }
     end

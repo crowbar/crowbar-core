@@ -29,8 +29,6 @@ Rails.application.routes.draw do
   # nodes
   resources :nodes, only: [:index]
 
-  get "nodes/:name/attribute/*path(.:format)", controller: "nodes", action: "attribute",
-              constraints: { name: /[^\/]+/, path: /.*/ }
   get "nodes/status(.:format)", controller: "nodes", action: "status", as: "nodes_status"
   get "nodes/list(.:format)", controller: "nodes", action: "list", as: "nodes_list"
   get "nodes/unallocated(.:format)", controller: "nodes", action: "unallocated", as: "unallocated_list"
@@ -38,13 +36,23 @@ Rails.application.routes.draw do
   get "nodes/families(.:format)", controller: "nodes", action: "families", as: "nodes_families"
   get "nodes/:id/hit/:req(.:format)", controller: "nodes", action: "hit", constraints: { id: /[^\/]+/ }, as: "hit_node"
   get "nodes/:name/edit(.:format)", controller: "nodes", action: "edit", constraints: { name: /[^\/]+/ }, as: "edit_node"
-  get "dashboard(.:format)", controller: "nodes", action: "index", as: "dashboard"
-  get "dashboard/:name(.:format)", controller: "nodes", action: "index", constraints: { name: /[^\/]+/ }, as: "dashboard_detail"
   post "nodes/groups/1.0/:id/:group(.:format)", controller: "nodes", action: "group_change", constraints: { id: /[^\/]+/ }, as: "group_change"
   # this route allows any barclamp to extend the nodes view
   get "nodes/:controller/1.0(.:format)", action: "nodes", as: "nodes_barclamp"
   post "nodes/:name/update(.:format)", controller: "nodes", action: "update", constraints: { name: /[^\/]+/ }, as: "update_node"
   get "nodes/:name(.:format)", controller: "nodes", action: "show", constraints: { name: /[^\/]+/ }, as: "node"
+
+  resources :dashboard,
+    only: [:index],
+    param: :name,
+    constraints: { name: /[^\/]+/ },
+    controller: :nodes do
+
+    member do
+      get :index, as: "detail"
+      get "attribute/*path", action: :attribute, constraints: { path: /.*/ }
+    end
+  end
 
   # this route allows any barclamp to extend the network view
   get "network", controller: :network, action: :switch

@@ -28,7 +28,7 @@ module Utils
             head :ok
           end
           format.html do
-            redirect_to dashboard_url
+            redirect_to dashboard_index_url
           end
         else
           format.json do
@@ -38,7 +38,7 @@ module Utils
           end
           format.html do
             flash[:alert] = @batch.errors.full_messages.first
-            redirect_to dashboard_url
+            redirect_to dashboard_index_url
           end
         end
       end
@@ -73,7 +73,7 @@ module Utils
           end
           format.html do
             flash[:alert] = @batch.errors.full_messages.first
-            redirect_to dashboard_url
+            redirect_to dashboard_index_url
           end
         end
       end
