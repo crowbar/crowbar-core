@@ -14,4 +14,6 @@
 # limitations under the License.
 #
 
-include_recipe "logging::client"
+if CrowbarRoleRecipe.node_state_valid_for_role?(node, "logging", "logging-client")
+  include_recipe "logging::client"
+end

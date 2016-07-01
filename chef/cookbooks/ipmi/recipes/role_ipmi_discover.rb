@@ -14,4 +14,6 @@
 # limitations under the License.
 #
 
-include_recipe "ipmi::ipmi-discover"
+if CrowbarRoleRecipe.node_state_valid_for_role?(node, "ipmi", "ipmi-discover")
+  include_recipe "ipmi::ipmi-discover"
+end

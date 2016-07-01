@@ -14,9 +14,11 @@
 # limitations under the License.
 #
 
-include_recipe "utils::default"
-include_recipe "dhcp::default"
-include_recipe "nfs-server::default"
-include_recipe "provisioner::setup_base_images"
-include_recipe "provisioner::dhcp_update"
-include_recipe "provisioner::update_nodes"
+if CrowbarRoleRecipe.node_state_valid_for_role?(node, "provisioner", "provisioner-server")
+  include_recipe "utils::default"
+  include_recipe "dhcp::default"
+  include_recipe "nfs-server::default"
+  include_recipe "provisioner::setup_base_images"
+  include_recipe "provisioner::dhcp_update"
+  include_recipe "provisioner::update_nodes"
+end

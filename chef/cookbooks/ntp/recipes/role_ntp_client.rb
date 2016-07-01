@@ -14,4 +14,6 @@
 # limitations under the License.
 #
 
-include_recipe "ntp::default"
+if CrowbarRoleRecipe.node_state_valid_for_role?(node, "ntp", "ntp-client")
+  include_recipe "ntp::default"
+end

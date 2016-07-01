@@ -14,4 +14,6 @@
 # limitations under the License.
 #
 
-include_recipe "resolver::default"
+if CrowbarRoleRecipe.node_state_valid_for_role?(node, "dns", "dns-client")
+  include_recipe "resolver::default"
+end

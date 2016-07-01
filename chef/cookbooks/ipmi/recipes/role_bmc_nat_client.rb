@@ -14,4 +14,6 @@
 # limitations under the License.
 #
 
-include_recipe "bmc-nat::client"
+if CrowbarRoleRecipe.node_state_valid_for_role?(node, "ipmi", "bmc-nat-client")
+  include_recipe "bmc-nat::client"
+end

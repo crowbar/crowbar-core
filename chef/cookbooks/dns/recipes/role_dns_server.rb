@@ -14,4 +14,6 @@
 # limitations under the License.
 #
 
-include_recipe "bind9::default"
+if CrowbarRoleRecipe.node_state_valid_for_role?(node, "dns", "dns-server")
+  include_recipe "bind9::default"
+end

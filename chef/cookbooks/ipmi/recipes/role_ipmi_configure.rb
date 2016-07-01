@@ -14,4 +14,6 @@
 # limitations under the License.
 #
 
-include_recipe "ipmi::ipmi-configure"
+if CrowbarRoleRecipe.node_state_valid_for_role?(node, "ipmi", "ipmi-configure")
+  include_recipe "ipmi::ipmi-configure"
+end
