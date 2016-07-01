@@ -59,7 +59,9 @@ Rails.application.routes.draw do
   get "active_roles(.:format)", controller: "dashboard", action: "active_roles", as: "active_roles"
 
   # deployment queue
-  get "deployment_queue(.:format)", controller: "deploy_queue", action: "index", as: "deployment_queue"
+  resources :deployment_queue,
+    only: [:index],
+    controller: :deploy_queue
 
   # support paths
   get "utils", controller: :support, action: :index, as: "utils"
@@ -67,8 +69,8 @@ Rails.application.routes.draw do
     get ":controller/1.0/export", action: :export, as: "utils_export"
     get ":controller/1.0", action: :utils
 
-    scope controller: :support,
-      constraints: { id: /[^\/]+/ } do
+    scope constraints: { id: /[^\/]+/ },
+      controller: :support do
       get "import/:id", action: :import
       get "upload/:id", action: :upload
       get "supportconfig", action: :export_supportconfig, as: "export_supportconfig"

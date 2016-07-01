@@ -69,7 +69,7 @@ nav:
     route: 'utils_path'
     queue:
       order: 5
-      route: 'deployment_queue_path'
+      route: 'deployment_queue_index_path'
     repositories:
       order: 10
       route: 'repositories_path'
