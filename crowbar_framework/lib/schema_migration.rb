@@ -79,6 +79,21 @@ module SchemaMigration
     migrate_object(bc_name, template, all_scripts, attributes, deployment)
   end
 
+  def self.get_barclamp_current_deployment_revison(bc_name)
+    begin
+      template = Proposal.new(barclamp: bc_name)
+    rescue Proposal::TemplateMissing
+      return [nil, nil]
+    end
+
+    proposals = Proposal.where(barclamp: bc_name)
+    latest_schema_revision = template["deployment"][bc_name]["schema-revision"]
+    latest_proposals_revision = proposals.collect do |prop|
+      { name: prop.name, revision: prop["deployment"][bc_name]["schema-revision"] }
+    end
+    [latest_schema_revision, latest_proposals_revision]
+  end
+
   private
 
   def self.data_bags_path
