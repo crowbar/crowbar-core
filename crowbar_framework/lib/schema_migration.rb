@@ -25,15 +25,8 @@ module SchemaMigration
   end
 
   def self.run_for_bc bc_name
-    begin
-      template = Proposal.new(barclamp: bc_name)
-    rescue Proposal::TemplateMissing
-      return
-    end
-
+    template = get_template_for_barclamp bc_name
     return if template.nil?
-    return if template["deployment"].nil?
-    return if template["deployment"][bc_name].nil?
 
     all_scripts = find_scripts_for_bc(bc_name)
     return if all_scripts.empty?
@@ -63,11 +56,8 @@ module SchemaMigration
   end
 
   def self.migrate_proposal_from_json(bc_name, json)
-    template = Proposal.new(barclamp: bc_name)
-
+    template = get_template_for_barclamp bc_name
     return if template.nil?
-    return if template["deployment"].nil?
-    return if template["deployment"][bc_name].nil?
 
     all_scripts = find_scripts_for_bc(bc_name)
     return if all_scripts.empty?
@@ -80,11 +70,8 @@ module SchemaMigration
   end
 
   def self.get_barclamp_current_deployment_revison(bc_name)
-    begin
-      template = Proposal.new(barclamp: bc_name)
-    rescue Proposal::TemplateMissing
-      return [nil, nil]
-    end
+    template = get_template_for_barclamp bc_name
+    return [nil, nil] if template.nil?
 
     proposals = Proposal.where(barclamp: bc_name)
     latest_schema_revision = template["deployment"][bc_name]["schema-revision"]
@@ -103,6 +90,23 @@ module SchemaMigration
   def self.get_migrate_dir(bc_name)
     data_bags_path.join("migrate", bc_name)
   end
+
+  # get the template for a given barclamp. the template is content of the
+  # json file from /opt/dell/chef/data_bags/crowbar/template-*bc-name*.json
+  def self.get_template_for_barclamp(bc_name)
+    begin
+      template = Proposal.new(barclamp: bc_name)
+    rescue Proposal::TemplateMissing
+      return nil
+    end
+
+    return nil if template.nil?
+    return nil if template["deployment"].nil?
+    return nil if template["deployment"][bc_name].nil?
+
+    template
+  end
+  private_class_method :get_template_for_barclamp
 
   def self.find_scripts_for_bc(bc_name)
     all_scripts = []
