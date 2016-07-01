@@ -74,8 +74,4 @@ class UpdaterService < ServiceObject
    #end
     @logger.debug("Updater apply_role_post_chef_call: exiting")
   end
-
-  def oneshot?
-    true
-  end
 end

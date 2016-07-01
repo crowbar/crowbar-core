@@ -1313,12 +1313,6 @@ class ServiceObject
         non_admin_nodes << node_name
       end
 
-      #
-      # XXX: We used to do this twice - do we really need twice???
-      # Yes! We do!  The system has some transient issues that are hidden
-      # but the double run for failing nodes.  For now, we will do this.
-      # Make this better one day.
-      #
       pids = {}
       unless non_admin_nodes.empty?
         @logger.debug(
@@ -1337,28 +1331,14 @@ class ServiceObject
         badones = status.select { |x| x[1].exitstatus != 0 }
 
         unless badones.empty?
-          unless oneshot?
-            badones.each do |baddie|
-              node = pids[baddie[0]]
-              @logger.warn("Re-running chef-client again for a failure: #{node} #{@bc_name} #{inst}")
-              filename = "#{ENV['CROWBAR_LOG_DIR']}/chef-client/#{node}.log"
-              pid = run_remote_chef_client(node, "chef-client", filename)
-              pids[pid] = node
-            end
-            status = Process.waitall
-            badones = status.select { |x| x[1].exitstatus != 0 }
+          message = "Failed to apply the proposal to: "
+          badones.each do |baddie|
+            message = message + "#{pids[baddie[0]]} \n"+ get_log_lines("#{pids[baddie[0]]}")
           end
-
-          unless badones.empty?
-            message = "Failed to apply the proposal to: "
-            badones.each do |baddie|
-              message = message + "#{pids[baddie[0]]} \n"+ get_log_lines("#{pids[baddie[0]]}")
-            end
-            update_proposal_status(inst, "failed", message)
-            restore_to_ready(applying_nodes)
-            process_queue unless in_queue
-            return [405, message]
-          end
+          update_proposal_status(inst, "failed", message)
+          restore_to_ready(applying_nodes)
+          process_queue unless in_queue
+          return [405, message]
         end
       end
 
@@ -1375,28 +1355,14 @@ class ServiceObject
         badones = status.select { |x| x[1].exitstatus != 0 }
 
         unless badones.empty?
-          unless oneshot?
-            badones.each do |baddie|
-              node = pids[baddie[0]]
-              @logger.warn("Re-running chef-client (admin) again for a failure: #{node} #{@bc_name} #{inst}")
-              filename = "#{ENV['CROWBAR_LOG_DIR']}/chef-client/#{node}.log"
-              pid = run_remote_chef_client(node, Rails.root.join("..", "bin", "single_chef_client.sh").expand_path.to_s, filename)
-              pids[pid] = node
-            end
-            status = Process.waitall
-            badones = status.select { |x| x[1].exitstatus != 0 }
+          message = "Failed to apply the proposal to: "
+          badones.each do |baddie|
+            message = message + "#{pids[baddie[0]]} \n "+ get_log_lines("#{pids[baddie[0]]}")
           end
-
-          unless badones.empty?
-            message = "Failed to apply the proposal to: "
-            badones.each do |baddie|
-              message = message + "#{pids[baddie[0]]} \n "+ get_log_lines("#{pids[baddie[0]]}")
-            end
-            update_proposal_status(inst, "failed", message)
-            restore_to_ready(applying_nodes)
-            process_queue unless in_queue
-            return [405, message]
-          end
+          update_proposal_status(inst, "failed", message)
+          restore_to_ready(applying_nodes)
+          process_queue unless in_queue
+          return [405, message]
         end
       end
     end
@@ -1460,11 +1426,6 @@ class ServiceObject
 
   def apply_role_post_chef_call(old_role, role, all_nodes)
     # noop by default.
-  end
-
-  def oneshot?
-    # by default, allow running again in case of chef failures
-    return false
   end
 
   #
