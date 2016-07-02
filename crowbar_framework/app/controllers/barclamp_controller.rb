@@ -788,6 +788,7 @@ class BarclampController < ApplicationController
           ).first
         ]
       end
+      result.compact!
 
       result.each do |prop|
         prop_id = "#{prop.barclamp}_#{prop.name}"
