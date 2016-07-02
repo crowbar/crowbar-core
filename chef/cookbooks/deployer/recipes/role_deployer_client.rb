@@ -17,8 +17,9 @@
 if CrowbarRoleRecipe.node_state_valid_for_role?(node, "deployer", "deployer-client")
   include_recipe "barclamp::default"
   include_recipe "utils::default"
-  include_recipe "repos::default"
   include_recipe "crowbar-hacks::default"
   include_recipe "ohai::default"
-  include_recipe "kernel-panic::default"
+  if CrowbarHelper.in_sledgehammer?(node)
+    include_recipe "kernel-panic::default"
+  end
 end

@@ -15,5 +15,7 @@
 #
 
 if CrowbarRoleRecipe.node_state_valid_for_role?(node, "provisioner", "provisioner-base")
+  include_recipe "repos::default"
   include_recipe "provisioner::base"
+  include_recipe "kernel-panic::default"
 end
