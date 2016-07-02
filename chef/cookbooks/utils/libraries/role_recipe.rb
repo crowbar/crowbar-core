@@ -14,9 +14,42 @@
 #
 
 module CrowbarRoleRecipe
+  # Blacklist mechanism which uses role recipes to allow skipping of
+  # recipes in certain situations.
+  def self.skip_role(node, barclamp, role)
+    # If we're applying the nova-ha-compute batch, skip other roles to avoid
+    # chef-client drift between nodes (since sync marks are only reset before
+    # the first batch) - https://bugzilla.suse.com/show_bug.cgi?id=1004758
+    if node["crowbar"]["applying_for"].key?("nova") &&
+        node["crowbar"]["applying_for"]["nova"].include?("nova-ha-compute") &&
+        role != "nova-ha-compute"
+      return "not required in nova-ha-compute batch"
+    end
+
+    nil
+  end
+
   # Helper to decide whether a role should be run for a node, depending on the
   # state of the node.
   def self.node_state_valid_for_role?(node, barclamp, role)
+    # We always want deployer-client, both for heartbeat but also because it
+    # sets up the ability to use the barclamp library
+    return true if role == "deployer-client"
+
+    if node[:state] == "applying"
+      skip_reason = skip_role(node, barclamp, role)
+      if skip_reason
+        roles = node["crowbar"]["applying_for"].map { |k, v| v }.flatten.sort.uniq
+        if roles.include? role
+          raise "BUG: skip_role tried to skip #{role} whilst applying " \
+                "batch #{roles} for #{barclamp}"
+        end
+        Chef::Log.info("Skipping role #{role} whilst applying " \
+                       "batch #{roles} for #{barclamp}: #{skip_reason}")
+        return false
+      end
+    end
+
     if node.key? barclamp
       states_for_role = if node[barclamp].key? "element_states"
         # if nil, then this means all states are valid
