@@ -75,36 +75,3 @@ if states.include?(node[:state])
     end
   end
 end
-
-ruby_block "uefi_boot_order_config" do
-  block do
-    if node["uefi"] && File.exist?("/sys/firmware/efi")
-      node["uefi"]["boot"]["order"].each do |order|
-        entry = node["uefi"]["entries"][order]
-        next if entry[:active]
-
-        Chef::Log.info("Activating UEFI boot entry "\
-                       "#{sprintf("%x", order)}: #{entry["title"]}")
-        ::Kernel.system("efibootmgr --active --bootnum #{format("%x", order)}")
-      end
-
-      neworder = node["uefi"]["boot"]["order"].partition do |order|
-        node["uefi"]["entries"][order]["device"] =~ /[\/)]MAC\(/i rescue false
-      end.flatten
-
-      if neworder != node["uefi"]["boot"]["order"]
-        Chef::Log.info("Change UEFI Boot Order: "\
-                       "#{node[:provisioner_state]} "\
-                       "#{node["uefi"]["boot"]["order"].inspect} "\
-                       "=> #{neworder.inspect}")
-        ::Kernel.system("efibootmgr --bootorder #{neworder.map { |e| format("%x", e) }.join(",")}")
-
-        node["uefi"]["boot"]["order_old"] = node["uefi"]["boot"]["order"]
-        node["uefi"]["boot"]["order"] = neworder
-
-        node.save
-      end
-    end
-  end
-  action :create
-end

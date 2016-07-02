@@ -10,6 +10,7 @@ recipe "provisioner::setup_base_images", "Handles setting up the proper director
 recipe "provisioner::update_nodes", "Handles updating the Chef database for new or removed systems"
 depends "bluepill", ">= 0.2.2"
 depends "barclamp"
+depends "crowbar-hacks"
 depends "dhcp"
 depends "nfs-server"
 depends "kernel-panic"
