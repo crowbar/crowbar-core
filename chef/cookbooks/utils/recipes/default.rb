@@ -14,6 +14,9 @@
 # limitations under the License.
 #
 
-admin = CrowbarHelper.is_admin?(node) ? "admin": ""
+os = "#{node[:platform]}-#{node[:platform_version]}"
+arch = node[:kernel][:machine]
+hardware = node[:dmi][:system][:product_name] rescue "unknown"
+is_admin = CrowbarHelper.is_admin?(node) ? " (admin server)" : ""
 
-log("running on OS:#{node[:platform]} on #{node[:dmi][:system][:product_name] rescue "unknown"} hardware #{admin}")
+Chef::Log.info("Running on #{os} / #{arch} / hardware: #{hardware}#{is_admin}")
