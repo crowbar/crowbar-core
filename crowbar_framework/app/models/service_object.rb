@@ -168,19 +168,23 @@ class ServiceObject
   def restore_node_to_ready(node)
     node.crowbar["state"] = "ready"
     node.crowbar["state_owner"] = ""
-    node.save
   end
 
   def restore_to_ready(nodes)
     with_lock "BA-LOCK" do
       nodes.each do |node_name|
         node = Node.find_by_name(node_name)
+        next if node.nil?
+
         # Nodes with 'crowbar_upgrade' state need to stay in that state
         # even after applying relevant roles. They could be brought back to
         # being ready only by explicit user's action.
-        next if node.nil? || node.crowbar["state"] == "crowbar_upgrade"
+        if node.crowbar["state"] != "crowbar_upgrade"
+          restore_node_to_ready(node)
+        end
 
-        restore_node_to_ready(node)
+        node["crowbar"]["applying_for"] = {}
+        node.save
       end
     end
   end
@@ -1152,7 +1156,7 @@ class ServiceObject
         end
       end # roles.each
 
-      batches << nodes_in_batch unless nodes_in_batch.empty?
+      batches << [roles, nodes_in_batch] unless nodes_in_batch.empty?
     end
     @logger.debug "batches: #{batches.inspect}"
 
@@ -1169,7 +1173,7 @@ class ServiceObject
     proposal.save if save_proposal
 
     unless bootstrap
-      applying_nodes = batches.flatten.uniq.sort
+      applying_nodes = batches.map { |roles, nodes| nodes }.flatten.uniq.sort
 
       # Mark nodes as applying; beware that all_nodes do not contain nodes that
       # are actually removed.
@@ -1283,18 +1287,27 @@ class ServiceObject
     pre_cached_nodes = {}
 
     # Each batch is a list of nodes that can be done in parallel.
-    batches.each do |node_names|
-      @logger.debug "Applying batch: #{node_names.inspect}"
+    batches.each do |roles, node_names|
+      @logger.debug "Applying batch: #{node_names.inspect} for #{roles.inspect}"
 
       threads = {}
       node_names.each do |node_name|
         next if node_attr_cache[node_name]["windows"]
         ran_admin = true if node_attr_cache[node_name]["admin"]
 
+        pre_cached_nodes[node_name] ||= Node.find_by_name(node_name)
+        node = pre_cached_nodes[node_name]
+        node["crowbar"]["applying_for"] = {}
+        node["crowbar"]["applying_for"][@bc_name] = roles
+        node.save
+
         filename = "#{ENV["CROWBAR_LOG_DIR"]}/chef-client/#{node_name}.log"
         thread = run_remote_chef_client(node_name, "chef-client", filename)
         threads[thread] = node_name
       end
+
+      # Invalidate cache as chef might have saved the nodes
+      pre_cached_nodes = {}
 
       # wait for all running threads and collect the ones with a non-zero return value
       bad_nodes = []
