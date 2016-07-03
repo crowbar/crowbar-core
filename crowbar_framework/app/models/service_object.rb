@@ -1316,26 +1316,25 @@ class ServiceObject
       pids = {}
       batch.each do |node|
         pre_cached_nodes[node] ||= NodeObject.find_node_by_name(node)
-        nobj = pre_cached_nodes[node]
-        unless nobj[:platform_family] == "windows"
-          filename = "#{ENV['CROWBAR_LOG_DIR']}/chef-client/#{node}.log"
-          pid = run_remote_chef_client(node, "chef-client", filename)
-          pids[pid] = node
-        end
+        next if pre_cached_nodes[node][:platform_family] == "windows"
+
+        filename = "#{ENV["CROWBAR_LOG_DIR"]}/chef-client/#{node}.log"
+        pid = run_remote_chef_client(node, "chef-client", filename)
+        pids[pid] = node
       end
       status = Process.waitall
       badones = status.select { |x| x[1].exitstatus != 0 }
 
-      unless badones.empty?
-        message = "Failed to apply the proposal to: "
-        badones.each do |baddie|
-          message = message + "#{pids[baddie[0]]}\n" + get_log_lines(pids[baddie[0]])
-        end
-        update_proposal_status(inst, "failed", message)
-        restore_to_ready(applying_nodes)
-        process_queue unless in_queue
-        return [405, message]
+      next if badones.empty?
+
+      message = "Failed to apply the proposal to: "
+      badones.each do |baddie|
+        message = message + "#{pids[baddie[0]]}\n" + get_log_lines(pids[baddie[0]])
       end
+      update_proposal_status(inst, "failed", message)
+      restore_to_ready(applying_nodes)
+      process_queue unless in_queue
+      return [405, message]
     end
 
     # XXX: This should not be done this way.  Something else should request this.
