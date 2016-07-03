@@ -1300,70 +1300,41 @@ class ServiceObject
       next if batch.empty?
       @logger.debug "batch #{batch.inspect}"
 
-      non_admin_nodes = []
-      admin_list = []
       batch.each do |node_name|
         # Run admin nodes a different way.
         if admin_nodes.include?(node_name)
           @logger.debug "#{node_name} is in admin_nodes #{admin_nodes.inspect}"
-          admin_list << node_name
           ran_admin = true
           next
         end
-        non_admin_nodes << node_name
       end
+
+      @logger.debug(
+        "AR: Calling chef-client for #{role.name} on nodes: #{batch.join(" ")}"
+      )
 
       pids = {}
-      unless non_admin_nodes.empty?
-        @logger.debug(
-          "AR: Calling chef-client for #{role.name} on non-admin nodes #{non_admin_nodes.join(" ")}"
-        )
-        non_admin_nodes.each do |node|
-          pre_cached_nodes[node] ||= NodeObject.find_node_by_name(node)
-          nobj = pre_cached_nodes[node]
-          unless nobj[:platform_family] == "windows"
-            filename = "#{ENV['CROWBAR_LOG_DIR']}/chef-client/#{node}.log"
-            pid = run_remote_chef_client(node, "chef-client", filename)
-            pids[pid] = node
-          end
-        end
-        status = Process.waitall
-        badones = status.select { |x| x[1].exitstatus != 0 }
-
-        unless badones.empty?
-          message = "Failed to apply the proposal to: "
-          badones.each do |baddie|
-            message = message + "#{pids[baddie[0]]}\n" + get_log_lines(pids[baddie[0]])
-          end
-          update_proposal_status(inst, "failed", message)
-          restore_to_ready(applying_nodes)
-          process_queue unless in_queue
-          return [405, message]
+      batch.each do |node|
+        pre_cached_nodes[node] ||= NodeObject.find_node_by_name(node)
+        nobj = pre_cached_nodes[node]
+        unless nobj[:platform_family] == "windows"
+          filename = "#{ENV['CROWBAR_LOG_DIR']}/chef-client/#{node}.log"
+          pid = run_remote_chef_client(node, "chef-client", filename)
+          pids[pid] = node
         end
       end
+      status = Process.waitall
+      badones = status.select { |x| x[1].exitstatus != 0 }
 
-      unless admin_list.empty?
-        @logger.debug(
-          "AR: Calling chef-client for #{role.name} on admin nodes #{admin_list.join(" ")}"
-        )
-        admin_list.each do |node|
-          filename = "#{ENV['CROWBAR_LOG_DIR']}/chef-client/#{node}.log"
-          pid = run_remote_chef_client(node, Rails.root.join("..", "bin", "single_chef_client.sh").expand_path.to_s, filename)
-          pids[node] = pid
+      unless badones.empty?
+        message = "Failed to apply the proposal to: "
+        badones.each do |baddie|
+          message = message + "#{pids[baddie[0]]}\n" + get_log_lines(pids[baddie[0]])
         end
-        status = Process.waitall
-        badones = status.select { |x| x[1].exitstatus != 0 }
-
-        unless badones.empty?
-          message = "Failed to apply the proposal to: "
-          badones.each do |baddie|
-            message = message + "#{pids[baddie[0]]}\n " + get_log_lines(pids[baddie[0]])
-          end
-          update_proposal_status(inst, "failed", message)
-          restore_to_ready(applying_nodes)
-          process_queue unless in_queue
-          return [405, message]
-        end
+        update_proposal_status(inst, "failed", message)
+        restore_to_ready(applying_nodes)
+        process_queue unless in_queue
+        return [405, message]
       end
     end
 
