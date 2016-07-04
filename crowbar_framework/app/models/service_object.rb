@@ -1300,105 +1300,41 @@ class ServiceObject
       next if batch.empty?
       @logger.debug "batch #{batch.inspect}"
 
-      non_admin_nodes = []
-      admin_list = []
       batch.each do |node_name|
         # Run admin nodes a different way.
         if admin_nodes.include?(node_name)
           @logger.debug "#{node_name} is in admin_nodes #{admin_nodes.inspect}"
-          admin_list << node_name
           ran_admin = true
           next
         end
-        non_admin_nodes << node_name
       end
 
-      #
-      # XXX: We used to do this twice - do we really need twice???
-      # Yes! We do!  The system has some transient issues that are hidden
-      # but the double run for failing nodes.  For now, we will do this.
-      # Make this better one day.
-      #
+      @logger.debug(
+        "AR: Calling chef-client for #{role.name} on nodes: #{batch.join(" ")}"
+      )
+
       pids = {}
-      unless non_admin_nodes.empty?
-        @logger.debug(
-          "AR: Calling chef-client for #{role.name} on non-admin nodes #{non_admin_nodes.join(" ")}"
-        )
-        non_admin_nodes.each do |node|
-          pre_cached_nodes[node] ||= NodeObject.find_node_by_name(node)
-          nobj = pre_cached_nodes[node]
-          unless nobj[:platform_family] == "windows"
-            filename = "#{ENV['CROWBAR_LOG_DIR']}/chef-client/#{node}.log"
-            pid = run_remote_chef_client(node, "chef-client", filename)
-            pids[pid] = node
-          end
-        end
-        status = Process.waitall
-        badones = status.select { |x| x[1].exitstatus != 0 }
+      batch.each do |node|
+        pre_cached_nodes[node] ||= NodeObject.find_node_by_name(node)
+        next if pre_cached_nodes[node][:platform_family] == "windows"
 
-        unless badones.empty?
-          unless oneshot?
-            badones.each do |baddie|
-              node = pids[baddie[0]]
-              @logger.warn("Re-running chef-client again for a failure: #{node} #{@bc_name} #{inst}")
-              filename = "#{ENV['CROWBAR_LOG_DIR']}/chef-client/#{node}.log"
-              pid = run_remote_chef_client(node, "chef-client", filename)
-              pids[pid] = node
-            end
-            status = Process.waitall
-            badones = status.select { |x| x[1].exitstatus != 0 }
-          end
-
-          unless badones.empty?
-            message = "Failed to apply the proposal to: "
-            badones.each do |baddie|
-              message = message + "#{pids[baddie[0]]} \n"+ get_log_lines("#{pids[baddie[0]]}")
-            end
-            update_proposal_status(inst, "failed", message)
-            restore_to_ready(applying_nodes)
-            process_queue unless in_queue
-            return [405, message]
-          end
-        end
+        filename = "#{ENV["CROWBAR_LOG_DIR"]}/chef-client/#{node}.log"
+        pid = run_remote_chef_client(node, "chef-client", filename)
+        pids[pid] = node
       end
+      status = Process.waitall
+      badones = status.select { |x| x[1].exitstatus != 0 }
 
-      unless admin_list.empty?
-        @logger.debug(
-          "AR: Calling chef-client for #{role.name} on admin nodes #{admin_list.join(" ")}"
-        )
-        admin_list.each do |node|
-          filename = "#{ENV['CROWBAR_LOG_DIR']}/chef-client/#{node}.log"
-          pid = run_remote_chef_client(node, Rails.root.join("..", "bin", "single_chef_client.sh").expand_path.to_s, filename)
-          pids[node] = pid
-        end
-        status = Process.waitall
-        badones = status.select { |x| x[1].exitstatus != 0 }
+      next if badones.empty?
 
-        unless badones.empty?
-          unless oneshot?
-            badones.each do |baddie|
-              node = pids[baddie[0]]
-              @logger.warn("Re-running chef-client (admin) again for a failure: #{node} #{@bc_name} #{inst}")
-              filename = "#{ENV['CROWBAR_LOG_DIR']}/chef-client/#{node}.log"
-              pid = run_remote_chef_client(node, Rails.root.join("..", "bin", "single_chef_client.sh").expand_path.to_s, filename)
-              pids[pid] = node
-            end
-            status = Process.waitall
-            badones = status.select { |x| x[1].exitstatus != 0 }
-          end
-
-          unless badones.empty?
-            message = "Failed to apply the proposal to: "
-            badones.each do |baddie|
-              message = message + "#{pids[baddie[0]]} \n "+ get_log_lines("#{pids[baddie[0]]}")
-            end
-            update_proposal_status(inst, "failed", message)
-            restore_to_ready(applying_nodes)
-            process_queue unless in_queue
-            return [405, message]
-          end
-        end
+      message = "Failed to apply the proposal to: "
+      badones.each do |baddie|
+        message = message + "#{pids[baddie[0]]}\n" + get_log_lines(pids[baddie[0]])
       end
+      update_proposal_status(inst, "failed", message)
+      restore_to_ready(applying_nodes)
+      process_queue unless in_queue
+      return [405, message]
     end
 
     # XXX: This should not be done this way.  Something else should request this.
@@ -1460,11 +1396,6 @@ class ServiceObject
 
   def apply_role_post_chef_call(old_role, role, all_nodes)
     # noop by default.
-  end
-
-  def oneshot?
-    # by default, allow running again in case of chef failures
-    return false
   end
 
   #
