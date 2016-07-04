@@ -105,12 +105,12 @@ describe NodesController do
 
     it "redirects to nodes list on success if return param passed" do
       post :bulk, node: { node.name => { "allocate" => true, "alias" => "newalias" } }, return: "true"
-      expect(response).to redirect_to(nodes_list_path)
+      expect(response).to redirect_to(list_nodes_path)
     end
 
     it "redirects to unallocated nodes list on success" do
       post :bulk, node: { node.name => { "allocate" => true, "alias" => "newalias" } }
-      expect(response).to redirect_to(unallocated_list_path)
+      expect(response).to redirect_to(unallocated_nodes_path)
     end
 
     it "reports successful changes" do

@@ -26,36 +26,58 @@ Rails.application.routes.draw do
 
   get "docs(.:format)", controller: "docs", action: "index", as: "docs"
 
-  # nodes
-  resources :nodes, only: [:index]
-
-  get "nodes/:name/attribute/*path(.:format)", controller: "nodes", action: "attribute",
-              constraints: { name: /[^\/]+/, path: /.*/ }
-  get "nodes/status(.:format)", controller: "nodes", action: "status", as: "nodes_status"
-  get "nodes/list(.:format)", controller: "nodes", action: "list", as: "nodes_list"
-  get "nodes/unallocated(.:format)", controller: "nodes", action: "unallocated", as: "unallocated_list"
-  post "nodes/bulk(.:format)", controller: "nodes", action: "bulk", as: "bulk_nodes"
-  get "nodes/families(.:format)", controller: "nodes", action: "families", as: "nodes_families"
-  get "nodes/:id/hit/:req(.:format)", controller: "nodes", action: "hit", constraints: { id: /[^\/]+/ }, as: "hit_node"
-  get "nodes/:name/edit(.:format)", controller: "nodes", action: "edit", constraints: { name: /[^\/]+/ }, as: "edit_node"
-  get "dashboard(.:format)", controller: "nodes", action: "index", as: "dashboard"
-  get "dashboard/:name(.:format)", controller: "nodes", action: "index", constraints: { name: /[^\/]+/ }, as: "dashboard_detail"
-  post "nodes/groups/1.0/:id/:group(.:format)", controller: "nodes", action: "group_change", constraints: { id: /[^\/]+/ }, as: "group_change"
   # this route allows any barclamp to extend the nodes view
-  get "nodes/:controller/1.0(.:format)", action: "nodes", as: "nodes_barclamp"
-  post "nodes/:name/update(.:format)", controller: "nodes", action: "update", constraints: { name: /[^\/]+/ }, as: "update_node"
-  get "nodes/:name(.:format)", controller: "nodes", action: "show", constraints: { name: /[^\/]+/ }, as: "node"
+  get "nodes/:controller/1.0", action: :nodes, as: "nodes_barclamp"
+
+  # nodes
+  resources :nodes,
+    param: :name,
+    only: [:index, :show, :edit],
+    constraints: { name: /[^\/]+/, id: /[^\/]+/ } do
+    collection do
+      get :status
+      get :list
+      get :unallocated
+      get :families
+      post :bulk
+
+      get ":id/hit/:req", action: :hit, as: "hit"
+      post "groups/1.0/:id/:group", action: :group_change, as: "group_change"
+    end
+
+    member do
+      post :update, as: "update"
+    end
+
+  end
+
+  resources :dashboard,
+    only: [:index],
+    param: :name,
+    constraints: { name: /[^\/]+/ },
+    controller: :nodes do
+
+    member do
+      get :index, as: "detail"
+      get "attribute/*path", action: :attribute, constraints: { path: /.*/ }
+    end
+  end
 
   # this route allows any barclamp to extend the network view
-  get "network/:controller/1.0(.:format)", action: "network", as: "network_barclamp"
-  # these paths require the network barclamp
-  get "network(.:format)", controller: "network", action: "switch", as: "network"
-  get "network/switch/:id(.:format)", controller: "network", action: "switch", constraints: { id: /[^\/]+/ }, defaults: { id: "default" }, as: "switch"
-  get "network/vlan/:id(.:format)", controller: "network", action: "vlan", constraints: { id: /[^\/]+/ }, defaults: { id: "default" }, as: "vlan"
+  get "network", controller: :network, action: :switch
+  scope :network,
+    controller: :network,
+    defaults: { id: "default" },
+    constraints: { id: /[^\/]+/ } do
+    # this route allows any barclamp to extend the network view
+    get ":controller/1.0", action: :network
+    get "switch/:id", action: :switch, as: "switch"
+    get "vlan/:id", action: :vlan, as: "vlan"
+  end
 
   # clusters
-  get "clusters(.:format)",     controller: "dashboard", action: "clusters", as: "clusters"
-  get "active_roles(.:format)", controller: "dashboard", action: "active_roles", as: "active_roles"
+  get "clusters", controller: :dashboard, action: :clusters
+  get "active_roles", controller: :dashboard, action: :active_roles
 
   # deployment queue
   get "deployment_queue(.:format)", controller: "deploy_queue", action: "index", as: "deployment_queue"

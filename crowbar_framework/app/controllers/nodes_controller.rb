@@ -198,7 +198,7 @@ class NodesController < ApplicationController
       flash[:info] = I18n.t("nodes.list.nochange")
     end
 
-    redirect_to params[:return] != "true" ? unallocated_list_path : nodes_list_path
+    redirect_to params[:return] != "true" ? unallocated_nodes_path : list_nodes_path
   end
 
   def families
@@ -247,7 +247,7 @@ class NodesController < ApplicationController
             group: node.group
           )
 
-          redirect_to dashboard_url
+          redirect_to dashboard_index_url
         end
         format.json do
           render json: {
@@ -326,13 +326,13 @@ class NodesController < ApplicationController
       format.html do
         if machine.nil?
           flash[:alert] = I18n.t("nodes.hit.not_found", name: name)
-          redirect_to dashboard_url, status: :not_found
+          redirect_to dashboard_index_url, status: :not_found
         elsif machine.actions.include? params[:req].to_s
           machine.send params[:req].to_sym
           redirect_to node_url(machine.handle)
         else
           flash[:alert] = I18n.t("nodes.hit.invalid_req", req: params[:req])
-          redirect_to dashboard_url, status: :internal_server_error
+          redirect_to dashboard_index_url, status: :internal_server_error
         end
       end
     end
