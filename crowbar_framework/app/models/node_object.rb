@@ -709,11 +709,7 @@ class NodeObject < ChefObject
     # FIXME: Crowbar 4.0: we keep states parameter for compatibility reason; it
     # should be removed in Crowbar 5.0
     crowbar["run_list_map"] ||= {}
-    val = { "priority" => priority }
-    crowbar["run_list_map"][rolename] = val
-    Rails.logger.debug("crowbar[run_list_map][#{rolename}] = #{val.inspect}")
-    Rails.logger.debug("current state is #{self.crowbar['state']}")
-
+    crowbar["run_list_map"][rolename] = { "priority" => priority }
     rebuild_run_list
   end
 
