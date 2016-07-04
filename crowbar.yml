@@ -36,10 +36,10 @@ nav:
     route: 'root_path'
     dashboard:
       order: 10
-      route: 'dashboard_path'
+      route: 'dashboard_index_path'
     batch:
       order: 20
-      route: 'nodes_list_path'
+      route: 'list_nodes_path'
     clusters:
       order: 30
       route: 'clusters_path'
@@ -50,7 +50,7 @@ nav:
       route: 'active_roles_path'
     families:
       order: 50
-      route: 'nodes_families_path'
+      route: 'families_nodes_path'
       options:
         if: 'Rails.env.development?'
   barclamps:
@@ -69,7 +69,7 @@ nav:
     route: 'utils_path'
     queue:
       order: 5
-      route: 'deployment_queue_path'
+      route: 'deployment_queue_index_path'
     repositories:
       order: 10
       route: 'repositories_path'

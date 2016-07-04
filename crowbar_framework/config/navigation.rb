@@ -26,16 +26,16 @@ SimpleNavigation::Configuration.run do |navigation|
     level1.dom_class = "nav navbar-nav"
 
     level1.item :nodes, t("nav.nodes.title"), root_path do |level2|
-      level2.item :dashboard, t("nav.nodes.dashboard"), dashboard_path
-      level2.item :batch, t("nav.nodes.batch"), nodes_list_path
-      level2.item :families, t("nav.nodes.families"), nodes_families_path, if: proc { Rails.env.development? }
+      level2.item :dashboard, t("nav.nodes.dashboard"), dashboard_index_path
+      level2.item :batch, t("nav.nodes.batch"), list_nodes_path
+      level2.item :families, t("nav.nodes.families"), families_nodes_path, if: proc { Rails.env.development? }
     end
     level1.item :barclamps, t("nav.barclamps.title"), barclamp_modules_path do |level2|
       level2.item :all, t("nav.barclamps.all"), barclamp_modules_path
       level2.item :crowbar, t("nav.barclamps.crowbar"), index_barclamp_path(controller: "crowbar")
     end
     level1.item :utils, t("nav.utils.title"), utils_path do |level2|
-      level2.item :queue, t("nav.utils.queue"), deployment_queue_path
+      level2.item :queue, t("nav.utils.queue"), deployment_queue_index_path
       level2.item :repositories, t("nav.utils.repositories"), repositories_path
       level2.item :backup, t("nav.utils.backup"), backups_path
       level2.item :logs, t("nav.utils.logs"), utils_path

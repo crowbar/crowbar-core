@@ -1,6 +1,6 @@
 #
 # Copyright 2011-2013, Dell
-# Copyright 2013-2014, SUSE LINUX Products GmbH
+# Copyright 2013-2016, SUSE LINUX GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,60 +24,85 @@ Rails.application.routes.draw do
   # Root route have to be on top of all
   root to: "nodes#index"
 
-  get "docs(.:format)", controller: "docs", action: "index", as: "docs"
+  resources :docs, only: [:index]
 
   # nodes
-  resources :nodes, only: [:index]
+  resources :nodes,
+    param: :name,
+    only: [:index, :show, :edit] do
+    collection do
+      get :status
+      get :list
+      get :unallocated
+      get :families
+      post :bulk
+    end
 
-  get "nodes/:name/attribute/*path(.:format)", controller: "nodes", action: "attribute",
-              constraints: { name: /[^\/]+/, path: /.*/ }
-  get "nodes/status(.:format)", controller: "nodes", action: "status", as: "nodes_status"
-  get "nodes/list(.:format)", controller: "nodes", action: "list", as: "nodes_list"
-  get "nodes/unallocated(.:format)", controller: "nodes", action: "unallocated", as: "unallocated_list"
-  post "nodes/bulk(.:format)", controller: "nodes", action: "bulk", as: "bulk_nodes"
-  get "nodes/families(.:format)", controller: "nodes", action: "families", as: "nodes_families"
-  get "nodes/:id/hit/:req(.:format)", controller: "nodes", action: "hit", constraints: { id: /[^\/]+/ }, as: "hit_node"
-  get "nodes/:name/edit(.:format)", controller: "nodes", action: "edit", constraints: { name: /[^\/]+/ }, as: "edit_node"
-  get "dashboard(.:format)", controller: "nodes", action: "index", as: "dashboard"
-  get "dashboard/:name(.:format)", controller: "nodes", action: "index", constraints: { name: /[^\/]+/ }, as: "dashboard_detail"
-  post "nodes/groups/1.0/:id/:group(.:format)", controller: "nodes", action: "group_change", constraints: { id: /[^\/]+/ }, as: "group_change"
+    member do
+      post :update, as: "update"
+    end
+  end
+
+  resources :dashboard,
+    only: [:index],
+    param: :name,
+    controller: :nodes do
+
+    member do
+      get :index, as: "detail"
+      get "attribute/*path", action: :attribute
+    end
+  end
+
+  get "nodes/:id/hit/:req", controller: "nodes", action: "hit", constraints: { id: /[^\/]+/ }, as: "hit_node"
+  post "nodes/groups/1.0/:id/:group", controller: "nodes", action: "group_change", constraints: { id: /[^\/]+/ }, as: "group_change"
   # this route allows any barclamp to extend the nodes view
-  get "nodes/:controller/1.0(.:format)", action: "nodes", as: "nodes_barclamp"
-  post "nodes/:name/update(.:format)", controller: "nodes", action: "update", constraints: { name: /[^\/]+/ }, as: "update_node"
-  get "nodes/:name(.:format)", controller: "nodes", action: "show", constraints: { name: /[^\/]+/ }, as: "node"
+  get "nodes/:controller/1.0", action: "nodes", as: "nodes_barclamp"
 
-  # this route allows any barclamp to extend the network view
-  get "network/:controller/1.0(.:format)", action: "network", as: "network_barclamp"
-  # these paths require the network barclamp
-  get "network(.:format)", controller: "network", action: "switch", as: "network"
-  get "network/switch/:id(.:format)", controller: "network", action: "switch", constraints: { id: /[^\/]+/ }, defaults: { id: "default" }, as: "switch"
-  get "network/vlan/:id(.:format)", controller: "network", action: "vlan", constraints: { id: /[^\/]+/ }, defaults: { id: "default" }, as: "vlan"
+  get "network", controller: :network, action: :switch
+  scope :network,
+    controller: :network,
+    defaults: { id: "default" },
+    constraints: { id: /[^\/]+/ } do
+    # this route allows any barclamp to extend the network view
+    get ":controller/1.0", action: :network
+    get "switch/:id", action: :switch, as: "switch"
+    get "vlan/:id", action: :vlan, as: "vlan"
+  end
 
-  # clusters
-  get "clusters(.:format)",     controller: "dashboard", action: "clusters", as: "clusters"
-  get "active_roles(.:format)", controller: "dashboard", action: "active_roles", as: "active_roles"
+  get "clusters", controller: :dashboard, action: :clusters
+  get "active_roles", controller: :dashboard, action: :active_roles
 
-  # deployment queue
-  get "deployment_queue(.:format)", controller: "deploy_queue", action: "index", as: "deployment_queue"
+  resources :deploy_queue, only: [:index], as: :deployment_queue
 
-  #support paths
-  get "utils(.:format)", controller: "support", action: "index", as: "utils"
-  get "utils/files/:id(.:format)", controller: "support", action: "destroy", constraints: { id: /[^\/]+/ }, as: "utils_files"
-  get "utils/chef(.:format)", controller: "support", action: "export_chef", as: "export_chef"
-  get "utils/supportconfig(.:format)", controller: "support", action: "export_supportconfig", as: "export_supportconfig"
-  get "utils/:controller/1.0/export(.:format)", action: "export", as: "utils_export"
-  get "utils/:controller/1.0(.:format)", action: "utils", as: "utils_barclamp"
-  get "utils/import/:id(.:format)", controller: "support", action: "import", constraints: { id: /[^\/]+/ }, as: "utils_import"
-  get "utils/upload/:id(.:format)", controller: "support", action: "upload", constraints: { id: /[^\/]+/ }, as: "utils_upload"
-  get "utils/repositories(.:format)", controller: "repositories", action: "index", as: "repositories"
-  post "utils/repositories/sync(.:format)", controller: "repositories", action: "sync", as: "sync_repositories"
-  post "utils/repositories/activate(.:format)", controller: "repositories", action: "activate", as: "activate_repository"
-  post "utils/repositories/deactivate(.:format)", controller: "repositories", action: "deactivate", as: "deactivate_repository"
-  post "utils/repositories/activate_all(.:format)", controller: "repositories", action: "activate_all", as: "activate_all_repositories"
-  post "utils/repositories/deactivate_all(.:format)", controller: "repositories", action: "deactivate_all", as: "deactivate_all_repositories"
+  # support paths
+  get "utils", controller: :support, action: :index, as: "utils"
+  scope :utils,
+    constraints: { id: /[^\/]+/ } do
+    get ":controller/1.0/export", action: :export, as: "utils_export"
+    get ":controller/1.0", action: :utils
 
-  scope :utils do
-    resources :backups, only: [:index, :create, :destroy] do
+    scope controller: :support do
+      get "import/:id", action: :import
+      get "upload/:id", action: :upload
+      get "supportconfig", action: :export_supportconfig, as: "export_supportconfig"
+      get "chef", action: :export_chef, as: "export_chef"
+      get "files/:id", action: :destroy, as: "utils_files"
+    end
+
+    resources :repositories,
+      only: [:index] do
+      collection do
+        post :sync
+        post :activate
+        post :deactivate
+        post :activate_all
+        post :deactivate_all
+      end
+    end
+
+    resources :backups,
+      only: [:index, :create, :destroy] do
       collection do
         post :upload
         get :restore_status
@@ -100,52 +125,58 @@ Rails.application.routes.draw do
   end
 
   # barclamps
-  get "crowbar/:controller/1.0/help(.:format)", action: "help", as: "help_barclamp"
-  get "crowbar/:controller/1.0/proposals/nodes(.:format)", action: "nodes", as: "barclamp_nodes"
-  put "crowbar/:controller/1.0/proposals(.:format)", action: "proposal_create", as: "create_proposal_barclamp"
-  get "crowbar/:controller/1.0/proposals(.:format)", action: "proposals", as: "proposals_barclamp"
-  get "crowbar/:controller/1.0/proposals/template(.:format)", action: "proposal_template", as: "template_proposal_barclamp"
-  post "crowbar/:controller/1.0/proposals/commit/:id(.:format)", action: "proposal_commit", as: "commit_proposal_barclamp"
-  get "crowbar/:controller/1.0/proposals/status(/:id)(/:name)(.:format)", action: "proposal_status", as: "status_proposals_barclamp"
-  delete "crowbar/:controller/1.0/proposals/:id(.:format)", action: "proposal_delete", as: "delete_proposal_barclamp"
-  delete "crowbar/:controller/1.0/proposals/dequeue/:id(.:format)", action: "proposal_dequeue", as: "dequeue_barclamp"
-  post "crowbar/:controller/1.0/proposals/reset/:id(.:format)", action: "proposal_reset", as: "reset_barclamp"
-  post "crowbar/:controller/1.0/proposals/:id(.:format)", action: "proposal_update", as: "update_proposal_barclamp"
-  get "crowbar/:controller/1.0/proposals/:id(.:format)", action: "proposal_show", as: "proposal_barclamp"
+  get "crowbar", controller: :barclamp, action: :barclamp_index, as: "barclamp_index_barclamp"
+  scope :crowbar,
+    constraints: { id: /[^\/]+/ } do
+    get ":controller/1.0/help", action: :help
+    get ":controller/1.0", action: :index, as: "index_barclamp"
+    delete ":controller/1.0/:id", action: :delete
+    get ":controller/1.0/:id", action: :show, as: "show_barclamp"
+    get ":controller", action: :versions
+    post ":controller/1.0/:action/:id"
 
-  get "crowbar/:controller/1.0/elements(.:format)", action: "elements"
-  get "crowbar/:controller/1.0/elements/:id(.:format)", action: "element_info"
-  post "crowbar/:controller/1.0/transition/:id(.:format)", action: "transition"
-  get "crowbar/:controller/1.0/transition/:id(.:format)", action: "transition"
+    get ":controller/1.0/proposals/nodes", action: :nodes
+    put ":controller/1.0/proposals", action: :proposal_create, as: "create_proposal_barclamp"
+    get ":controller/1.0/proposals", action: :proposals
+    get ":controller/1.0/proposals/template", action: :proposal_template
+    post ":controller/1.0/proposals/commit/:id", action: :proposal_commit
+    get ":controller/1.0/proposals/status(/:id)(/:name)", action: :proposal_status, as: "status_proposals_barclamp"
+    delete ":controller/1.0/proposals/:id", action: :proposal_delete
+    delete ":controller/1.0/proposals/dequeue/:id", action: :proposal_dequeue
+    post ":controller/1.0/proposals/reset/:id", action: :proposal_reset
+    post ":controller/1.0/proposals/:id", action: :proposal_update, as: "update_proposal_barclamp"
+    get ":controller/1.0/proposals/:id", action: :proposal_show, as: "proposal_barclamp"
 
-  get "crowbar/:controller/1.0(.:format)", action: "index", as: "index_barclamp"
-  delete "crowbar/:controller/1.0/:id(.:format)", action: "delete", constraints: { id: /[^\/]+/ }, as: "delete_barclamp"
-  get "crowbar/:controller/1.0/:id(.:format)", action: "show", constraints: { id: /[^\/]+/ }, as: "show_barclamp"
-  get "crowbar/:controller(.:format)", action: "versions", as: "versions_barclamp"
-  post "crowbar/:controller/1.0/:action/:id(.:format)", constraints: { id: /[^\/]+/ }, as: "action_barclamp"
-  get "crowbar(.:format)", controller: "barclamp", action: "barclamp_index", as: "barclamp_index_barclamp"
-  get "crowbar/modules/1.0(.:format)", controller: "barclamp", action: "modules", as: "barclamp_modules"
+    get ":controller/1.0/elements", action: :elements
+    get ":controller/1.0/elements/:id", action: :element_info
+    post ":controller/1.0/transition/:id", action: :transition
+    get ":controller/1.0/transition/:id", action: :transition
 
-  get "crowbar/:barclamp/1.0/help(.:format)", action: "help", controller: "barclamp"
-  get "crowbar/:barclamp/1.0/proposals/nodes(.:format)", controller: "barclamp", action: "nodes"
-  put "crowbar/:barclamp/1.0/proposals(.:format)", action: "proposal_create", controller: "barclamp"
-  get "crowbar/:barclamp/1.0/proposals(.:format)", action: "proposals", controller: "barclamp"
-  post "crowbar/:barclamp/1.0/proposals/commit/:id(.:format)", action: "proposal_commit", controller: "barclamp"
-  get "crowbar/:barclamp/1.0/proposals/status(.:format)", action: "proposal_status", controller: "barclamp"
-  delete "crowbar/:barclamp/1.0/proposals/:id(.:format)", action: "proposal_delete", controller: "barclamp"
-  post "crowbar/:barclamp/1.0/proposals/reset/:id(.:format)", action: "proposal_reset", controller: "barclamp"
-  post "crowbar/:barclamp/1.0/proposals/:id(.:format)", action: "proposal_update", controller: "barclamp"
-  get "crowbar/:barclamp/1.0/proposals/:id(.:format)", action: "proposal_show", controller: "barclamp"
-  get "crowbar/:barclamp/1.0/elements(.:format)", action: "elements", controller: "barclamp"
-  get "crowbar/:barclamp/1.0/elements/:id(.:format)", action: "element_info", controller: "barclamp"
-  post "crowbar/:barclamp/1.0/transition/:id(.:format)", action: "transition", controller: "barclamp"
-  get "crowbar/:barclamp/1.0/transition/:id(.:format)", action: "transition", controller: "barclamp"
-  get "crowbar/:barclamp/1.0(.:format)", action: "index", controller: "barclamp"
-  get "crowbar/:barclamp/1.0/status(.:format)", action: "status", controller: "barclamp"
-  delete "crowbar/:barclamp/1.0/:id(.:format)", action: "delete", controller: "barclamp"
-  get "crowbar/:barclamp/1.0/:id(.:format)", action: "show", controller: "barclamp"
-  get "crowbar/:barclamp(.:format)", action: "versions", controller: "barclamp"
-  post "crowbar/:barclamp/1.0/:action/:id(.:format)", controller: "barclamp"
+    scope controller: :barclamp do
+      get ":barclamp/1.0/help", action: :help
+      get ":barclamp/1.0/proposals/nodes", action: :nodes
+      put ":barclamp/1.0/proposals", action: :proposal_create
+      get ":barclamp/1.0/proposals", action: :proposals
+      post ":barclamp/1.0/proposals/commit/:id", action: :proposal_commit
+      get ":barclamp/1.0/proposals/status", action: :proposal_status
+      delete ":barclamp/1.0/proposals/:id", action: :proposal_delete
+      post ":barclamp/1.0/proposals/reset/:id", action: :proposal_reset
+      post ":barclamp/1.0/proposals/:id", action: :proposal_update
+      get ":barclamp/1.0/proposals/:id", action: :proposal_show
+      get ":barclamp/1.0/elements", action: :elements
+      get ":barclamp/1.0/elements/:id", action: :element_info
+      post ":barclamp/1.0/transition/:id", action: :transition
+      get ":barclamp/1.0/transition/:id", action: :transition
+      get ":barclamp/1.0", action: :index
+      get ":barclamp/1.0/status", action: :status
+      delete ":barclamp/1.0/:id", action: :delete
+      get ":barclamp/1.0/:id", action: :show
+      get ":barclamp", action: :versions
+      post ":barclamp/1.0/:action/:id", action: :barclamp
+
+      get "modules/1.0", action: :modules, as: "barclamp_modules"
+    end
+  end
 
   scope :installer do
     root to: "installer#index",
