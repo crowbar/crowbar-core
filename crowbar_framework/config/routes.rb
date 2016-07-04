@@ -84,13 +84,11 @@ Rails.application.routes.draw do
 
   #support paths
   get "utils(.:format)", controller: "support", action: "index", as: "utils"
-  get "utils/files/:id(.:format)", controller: "support", action: "destroy", constraints: { id: /[^\/]+/ }, as: "utils_files"
+  delete "utils/files/:id(.:format)", controller: "support", action: "destroy", constraints: { id: /[^\/]+/ }, as: "utils_files"
   get "utils/chef(.:format)", controller: "support", action: "export_chef", as: "export_chef"
   get "utils/supportconfig(.:format)", controller: "support", action: "export_supportconfig", as: "export_supportconfig"
   get "utils/:controller/1.0/export(.:format)", action: "export", as: "utils_export"
   get "utils/:controller/1.0(.:format)", action: "utils", as: "utils_barclamp"
-  get "utils/import/:id(.:format)", controller: "support", action: "import", constraints: { id: /[^\/]+/ }, as: "utils_import"
-  get "utils/upload/:id(.:format)", controller: "support", action: "upload", constraints: { id: /[^\/]+/ }, as: "utils_upload"
   get "utils/repositories(.:format)", controller: "repositories", action: "index", as: "repositories"
   post "utils/repositories/sync(.:format)", controller: "repositories", action: "sync", as: "sync_repositories"
   post "utils/repositories/activate(.:format)", controller: "repositories", action: "activate", as: "activate_repository"

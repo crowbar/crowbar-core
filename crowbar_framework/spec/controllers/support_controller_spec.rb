@@ -52,19 +52,22 @@ describe SupportController do
     it "exports known data into db dir" do
       begin
         now = Time.now
+        tmpdir = Rails.root.join("tmp", "chef-export")
+        tmpdir.mkpath
+
         allow(Time).to receive(:now).and_return(now)
         allow(Process).to receive(:fork).and_return(0)
+        allow(Dir).to receive(:mktmpdir).and_return(tmpdir.to_s)
 
         filename = "crowbar-chef-#{now.strftime("%Y%m%d-%H%M%S")}.tgz"
-        export = Rails.root.join("db", filename)
 
         get :export_chef
         expect(flash[:alert]).to be_nil
         expect(response).to redirect_to(utils_url(waiting: true, file: filename))
 
-        expect(Dir.glob(Rails.root.join("db", "*.json")).count).to_not be_zero
+        expect(Dir.glob(tmpdir.join("*.json")).count).to_not be_zero
       ensure
-        Dir.glob(Rails.root.join("db", "*.json")).each { |json| FileUtils.rm(json) }
+        tmpdir.rmtree
       end
     end
   end

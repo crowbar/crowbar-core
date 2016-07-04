@@ -40,8 +40,8 @@ class Proposal < ActiveRecord::Base
     end
   end
 
-  def export
-    ChefObject.export(self)
+  def export(dirpath)
+    ChefObject.export(self, dirpath)
   end
 
   # FIXME: this is not correct, the item of ProposalObject returns

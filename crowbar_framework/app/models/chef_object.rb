@@ -51,17 +51,17 @@ class ChefObject
     str.gsub("-:") { |c| '\\' + c }
   end
 
-  # FIXME: the second argument was added so that the Proposal model
+  # FIXME: the third argument was added so that the Proposal model
   # can be exported in a same way as the ProposalObject. When the replacement
   # is completed, remove it and implement the export in the Proposal.
   # Also check the logging barclamp that it did not break.
-  def self.export(obj, name = nil)
+  def self.export(obj, dirpath, name = nil)
     name ||= obj.respond_to?(:name) ? obj.name : "unknown"
-    file   = Rails.root.join("db", "#{obj.chef_type}_#{name}.json")
+    file   = dirpath.join("#{obj.chef_type}_#{name}.json")
     File.open(file, "w") { |f| f.write(obj.to_json) }
   end
 
-  def export(name = nil)
-    self.class.export(self, name)
+  def export(dirpath, name = nil)
+    self.class.export(self, dirpath, name)
   end
 end

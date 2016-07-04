@@ -41,7 +41,7 @@
               - else
                 = link_to file, "/export/#{file}"
 
-              = link_to icon_tag("trash"), utils_files_path(:id => file), :title => t(".delete_hint"), :class => "pull-right"
+              = link_to icon_tag("trash"), utils_files_path(:id => file), :title => t(".delete_hint"), :class => "pull-right", :method => :delete
 - else
   .alert.alert-info
     = t(".none_exported")
