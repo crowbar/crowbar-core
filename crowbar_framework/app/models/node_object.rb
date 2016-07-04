@@ -731,14 +731,15 @@ class NodeObject < ChefObject
     crowbar["run_list_map"].delete_if { |k, v| v["priority"] == -1001 }
 
     # Sort map (by priority, then name)
-    vals = crowbar["run_list_map"].sort do |a, b|
+    sorted_run_list_map = crowbar["run_list_map"].sort do |a, b|
       [a[1]["priority"], a[0]] <=> [b[1]["priority"], b[0]]
     end
-    Rails.logger.debug("rebuilt run_list will be #{vals.inspect}")
+
+    Rails.logger.debug("rebuilt run_list will be #{sorted_run_list_map.inspect}")
 
     # Rebuild list
     crowbar_run_list.run_list_items.clear
-    vals.each do |item|
+    sorted_run_list_map.each do |item|
       crowbar_run_list.run_list_items << "role[#{item[0]}]"
     end
   end
