@@ -1673,7 +1673,7 @@ class ServiceObject
   # Proposal is a json structure (not a ProposalObject)
   # Use to create or update an active instance
   #
-  def active_update(proposal, inst, in_queue)
+  def active_update(proposal, inst, in_queue, bootstrap = false)
     begin
       role = ServiceObject.proposal_to_role(proposal, @bc_name)
       apply_role(role, inst, in_queue)
