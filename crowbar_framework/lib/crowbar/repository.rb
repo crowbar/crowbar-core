@@ -168,6 +168,11 @@ module Crowbar
         @web_port ||= Proposal.where(barclamp: "provisioner").first.raw_attributes["web_port"]
       end
 
+      # workaround for Chef::DataBag.destroy not working
+      def chef_data_bag_destroy(name)
+        Chef::DataBag.chef_server_rest.delete_rest("data/#{name}")
+      end
+
       private
 
       def provided_with_enabled?(feature, platform = nil, arch = nil, check_enabled = true)
@@ -212,11 +217,11 @@ module Crowbar
 
     end
 
-    def initialize(platform, arch, repo)
+    def initialize(platform, arch, repo, registered = true)
       @platform = platform
       @arch = arch
       @id = repo
-      @config = Repository.registry[@platform][@arch][@id]
+      @config = registered ? registry_config : {}
       ensure_link_smt_path
     end
 
@@ -351,6 +356,10 @@ module Crowbar
       unless remote? || smt_path.nil? || repo_path.directory? || !smt_path.directory?
         system("sudo", "-i", "ln", "-s", smt_path.to_s, repo_path.to_s)
       end
+    end
+
+    def registry_config
+      Repository.registry[@platform][@arch][@id]
     end
 
     #

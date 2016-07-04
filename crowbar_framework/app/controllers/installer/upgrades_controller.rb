@@ -209,6 +209,7 @@ module Installer
       if request.post?
         respond_to do |format|
           begin
+            post_cleanup_repos
             @service_object.disable_non_core_proposals
             @service_object.prepare_nodes_for_os_upgrade
 
@@ -297,6 +298,21 @@ module Installer
       else
         Crowbar::Backup::Restore.purge
         @backup.restore(background: true, from_upgrade: true)
+      end
+    end
+
+    def post_cleanup_repos
+      [:pool, :updates].each do |repo|
+        repository = Crowbar::Repository.new(
+          "suse-12.1",
+          "x86_64",
+          "suse-openstack-cloud-6-#{repo}",
+          false
+        )
+
+        Crowbar::Repository.chef_data_bag_destroy(
+          "#{repository.data_bag_name}/#{repository.id}"
+        )
       end
     end
 
