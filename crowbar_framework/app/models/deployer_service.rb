@@ -132,12 +132,10 @@ class DeployerService < ServiceObject
     #
     if state == "hardware-installing"
       # build a list of current and pending roles to check against
-      roles = []
-      node.crowbar["crowbar"]["pending"].each do |k, v|
-        roles << v
-      end unless node.crowbar["crowbar"]["pending"].nil?
-      roles << node.run_list_to_roles
-      roles.flatten!
+      roles = node.roles.dup
+      unless node.crowbar["crowbar"]["pending"].nil?
+        roles.concat(node.crowbar["crowbar"]["pending"].values)
+      end
 
       # Walk map to categorize the node.  Choose first one from the bios map that matches.
       role = RoleObject.find_role_by_name "deployer-config-#{inst}"

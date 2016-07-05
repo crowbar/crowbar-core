@@ -288,11 +288,6 @@ class CrowbarService < ServiceObject
         end
       end
 
-      # The node is going to call chef-client on return or as a side-effect of the process queue.
-      node = NodeObject.find_node_by_name(name)
-      node.rebuild_run_list
-      node.save
-
       # We have a node that has become ready, test to see if there are queued proposals to commit
       process_queue if state == "ready"
     end

@@ -993,8 +993,6 @@ class ServiceObject
     # For Role ordering
     runlist_priority_map = new_deployment["element_run_list_order"] || { }
     local_chef_order = chef_order()
-    role_map = new_deployment["element_states"]
-    role_map = {} unless role_map
 
     # deployment["element_order"] tells us which order the various
     # roles should be applied, and deployment["elements"] tells us
@@ -1231,7 +1229,7 @@ class ServiceObject
         next if node.role? item
         priority = runlist_priority_map[item] || local_chef_order
         @logger.debug("AR: Adding role #{item} to #{node.name} with priority #{priority}")
-        node.add_to_run_list(item, priority, role_map[item])
+        node.add_to_run_list(item, priority)
         save_it = true
       end
 
@@ -1244,7 +1242,7 @@ class ServiceObject
         unless node.role?(role.name)
           priority = runlist_priority_map[role.name] || local_chef_order
           @logger.debug("AR: Adding role #{role.name} to #{node.name} with priority #{priority}")
-          node.add_to_run_list(role.name, priority, role_map[role.name])
+          node.add_to_run_list(role.name, priority)
           save_it = true
         end
       else
@@ -1404,8 +1402,6 @@ class ServiceObject
 
     runlist_priority_map = prop["deployment"][barclamp]["element_run_list_order"] rescue {}
     runlist_priority_map ||= {}
-    role_map = prop["deployment"][barclamp]["element_states"] rescue {}
-    role_map = {} unless role_map
 
     local_chef_order = runlist_priority_map[newrole] || BarclampCatalog.chef_order(barclamp)
 
@@ -1429,7 +1425,7 @@ class ServiceObject
 
     save_it = false
     unless node.role?(newrole)
-      node.add_to_run_list(newrole, local_chef_order, role_map[newrole])
+      node.add_to_run_list(newrole, local_chef_order)
       save_it = true
     end
 
