@@ -71,18 +71,6 @@ class ServiceObject
     @validation_errors << message
   end
 
-  def simple_proposal_ui?
-    proposals = Proposal.where(barclamp: "crowbar")
-
-    result = false
-    unless proposals[0].nil? or proposals[0]["attributes"].nil? or proposals[0]["attributes"]["crowbar"].nil?
-      if not proposals[0]["attributes"]["crowbar"]["simple_proposal_ui"].nil?
-        result = proposals[0]["attributes"]["crowbar"]["simple_proposal_ui"]
-      end
-    end
-    return result
-  end
-
   def self.barclamp_catalog
     BarclampCatalog.catalog
   end
@@ -1615,13 +1603,5 @@ class ServiceObject
       Rails.logger.error ([e2.message] + e2.backtrace).join("\n")
       [400, e2.message]
     end
-  end
-
-  def only_if_admin(node)
-    yield if node.admin?
-  end
-
-  def only_unless_admin(node)
-    yield unless node.admin?
   end
 end

@@ -171,7 +171,7 @@ class NodeObject < ChefObject
   end
 
   def self.find_node_by_name(name)
-    name += ".#{ChefObject.cloud_domain}" unless name =~ /(.*)\.(.)/
+    name += ".#{Crowbar::Settings.domain}" unless name =~ /(.*)\.(.)/
     begin
       chef_node = Chef::Node.load(name)
       unless chef_node.nil?
@@ -268,7 +268,7 @@ class NodeObject < ChefObject
   end
 
   def pretty_target_platform
-    CrowbarService.pretty_target_platform(target_platform)
+    Crowbar::Platform.pretty_target_platform(target_platform)
   end
 
   def target_platform=(value)
@@ -330,10 +330,10 @@ class NodeObject < ChefObject
   end
 
   def license_key=(value)
-    if CrowbarService.require_license_key?(self.target_platform)
-      @node.set[:license_key] = value
+    @node.set[:license_key] = if Crowbar::Platform.require_license_key?(target_platform)
+      value
     else
-      @node.set[:license_key] = ""
+      ""
     end
   end
 
@@ -393,9 +393,11 @@ class NodeObject < ChefObject
       raise "#{I18n.t('model.node.invalid_dns_alias')}: #{value}"
     end
 
-    if value.length>63 || value.length+ChefObject.cloud_domain.length>254
-      Rails.logger.warn "Alias #{value}.#{ChefObject.cloud_domain} FQDN not saved because it exceeded the 63 character length limit or it's length (#{value.length}) will cause the total DNS max of 255 to be exeeded."
-      raise "#{I18n.t('too_long_dns_alias', scope: 'model.node')}: #{value}.#{ChefObject.cloud_domain}"
+    domain = Crowbar::Settings.domain
+
+    if value.length > 63 || value.length + domain.length > 254
+      Rails.logger.warn "Alias #{value}.#{domain} FQDN not saved because it exceeded the 63 character length limit or it's length (#{value.length}) will cause the total DNS max of 255 to be exeeded."
+      raise "#{I18n.t("too_long_dns_alias", scope: "model.node")}: #{value}.#{domain}"
     end
 
     if unique_check
@@ -1599,6 +1601,79 @@ class NodeObject < ChefObject
     else
       nil
     end
+  end
+
+  def process_raid_claims
+    unless raid_type == "single"
+      save_it = false
+
+      @node["filesystem"].each do |device, attributes|
+        if device =~ /\/dev\/md\d+$/
+          save_it = process_raid_device(device, attributes) || save_it
+        else
+          save_it = process_raid_member(device, attributes) || save_it
+        end
+      end
+
+      save_it = process_raid_boot || save_it
+
+      node.save if save_it
+    end
+  end
+
+  protected
+
+  def process_raid_device(device, attributes)
+    if ["/", "/boot"].include? attributes["mount"]
+      unique_name = unique_device_for(
+        ::File.basename(device.to_s).to_s
+      )
+
+      return false if unique_name.nil?
+
+      unless disk_owner(unique_name) == "OS"
+        disk_release(unique_name, disk_owner(unique_name))
+        disk_claim(unique_name, "OS")
+        return true
+      end
+    end
+
+    false
+  end
+
+  def process_raid_member(device, attributes)
+    if attributes["fs_type"] == "linux_raid_member"
+      unique_name = unique_device_for(
+        ::File.basename(device.to_s).to_s.gsub(/[0-9]+$/, "")
+      )
+
+      return false if unique_name.nil?
+
+      unless disk_owner(unique_name) == "Raid"
+        disk_release(unique_name, disk_owner(unique_name))
+        disk_claim(unique_name, "Raid")
+        return true
+      end
+    end
+
+    false
+  end
+
+  def process_raid_boot
+    boot_dev = @node["filesystem"].sort.map do |device, attributes|
+      if ["/", "/boot"].include? attributes["mount"]
+        unique_device_for(
+          ::File.basename(device.to_s)
+        )
+      end
+    end.compact.first
+
+    unless boot_dev == crowbar_wall["boot_device"]
+      boot_device(boot_dev)
+      return true
+    end
+
+    false
   end
 
   private

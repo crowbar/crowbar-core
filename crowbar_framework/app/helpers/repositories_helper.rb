@@ -40,8 +40,4 @@ module RepositoriesHelper
   def repository_required_to_i(required)
     RepositoriesHelper.repository_required_to_i(required)
   end
-
-  def pretty_target_platform(platform)
-    CrowbarService.pretty_target_platform(platform)
-  end
 end

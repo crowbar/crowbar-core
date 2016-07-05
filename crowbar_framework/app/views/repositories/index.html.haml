@@ -13,7 +13,7 @@
     .panel.panel-default
       .panel-heading
         %h2
-          = "#{pretty_target_platform(platform)} (#{arch})"
+          = "#{Crowbar::Platform.pretty_target_platform(platform)} (#{arch})"
 
       %table.table.table-hover.table-middle.table-bordered
         %thead

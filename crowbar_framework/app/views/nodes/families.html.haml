@@ -17,7 +17,7 @@
           = t(".nics")
         %th
           = t(".drives")
-        - if crowbar_options[:show].include? :raid
+        - if bios_raid_options[:show].include? :raid
           %th
             = t(".raid")
         %th
@@ -41,7 +41,7 @@
             = attributes[:family][:nics]
           %td
             = attributes[:family][:drives]
-          - if crowbar_options[:show].include? :raid
+          - if bios_raid_options[:show].include? :raid
             %td
               = attributes[:family][:raid]
           %td

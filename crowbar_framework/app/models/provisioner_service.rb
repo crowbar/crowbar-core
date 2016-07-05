@@ -137,6 +137,11 @@ class ProvisionerService < ServiceObject
       end
     end
 
+    if state == "readying"
+      node = NodeObject.find_node_by_name(name)
+      node.process_raid_claims
+    end
+
     if state == "reset"
       node = NodeObject.find_node_by_name(name)
       # clean up state capturing attributes on the node that are not likely to be the same
