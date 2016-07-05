@@ -694,7 +694,7 @@ class BarclampController < ApplicationController
       end
 
       if params[:origin] && params[:origin] == "deployment_queue"
-        redirect_to deployment_queue_path
+        redirect_to deployment_queue_index_path
       else
         redirect_params = {
           controller: params[:barclamp],

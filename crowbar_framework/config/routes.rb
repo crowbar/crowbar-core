@@ -1,6 +1,6 @@
 #
 # Copyright 2011-2013, Dell
-# Copyright 2013-2014, SUSE LINUX Products GmbH
+# Copyright 2013-2016, SUSE LINUX GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,7 +24,8 @@ Rails.application.routes.draw do
   # Root route have to be on top of all
   root to: "nodes#index"
 
-  get "docs(.:format)", controller: "docs", action: "index", as: "docs"
+  resources :docs,
+    only: [:index]
 
   # this route allows any barclamp to extend the nodes view
   get "nodes/:controller/1.0", action: :nodes, as: "nodes_barclamp"
@@ -80,26 +81,38 @@ Rails.application.routes.draw do
   get "active_roles", controller: :dashboard, action: :active_roles
 
   # deployment queue
-  get "deployment_queue(.:format)", controller: "deploy_queue", action: "index", as: "deployment_queue"
+  resources :deployment_queue,
+    only: [:index],
+    controller: :deploy_queue
 
-  #support paths
-  get "utils(.:format)", controller: "support", action: "index", as: "utils"
-  get "utils/files/:id(.:format)", controller: "support", action: "destroy", constraints: { id: /[^\/]+/ }, as: "utils_files"
-  get "utils/chef(.:format)", controller: "support", action: "export_chef", as: "export_chef"
-  get "utils/supportconfig(.:format)", controller: "support", action: "export_supportconfig", as: "export_supportconfig"
-  get "utils/:controller/1.0/export(.:format)", action: "export", as: "utils_export"
-  get "utils/:controller/1.0(.:format)", action: "utils", as: "utils_barclamp"
-  get "utils/import/:id(.:format)", controller: "support", action: "import", constraints: { id: /[^\/]+/ }, as: "utils_import"
-  get "utils/upload/:id(.:format)", controller: "support", action: "upload", constraints: { id: /[^\/]+/ }, as: "utils_upload"
-  get "utils/repositories(.:format)", controller: "repositories", action: "index", as: "repositories"
-  post "utils/repositories/sync(.:format)", controller: "repositories", action: "sync", as: "sync_repositories"
-  post "utils/repositories/activate(.:format)", controller: "repositories", action: "activate", as: "activate_repository"
-  post "utils/repositories/deactivate(.:format)", controller: "repositories", action: "deactivate", as: "deactivate_repository"
-  post "utils/repositories/activate_all(.:format)", controller: "repositories", action: "activate_all", as: "activate_all_repositories"
-  post "utils/repositories/deactivate_all(.:format)", controller: "repositories", action: "deactivate_all", as: "deactivate_all_repositories"
-
+  # support paths
+  get "utils", controller: :support, action: :index, as: "utils"
   scope :utils do
-    resources :backups, only: [:index, :create, :destroy] do
+    get ":controller/1.0/export", action: :export, as: "utils_export"
+    get ":controller/1.0", action: :utils
+
+    scope constraints: { id: /[^\/]+/ },
+      controller: :support do
+      get "import/:id", action: :import
+      get "upload/:id", action: :upload
+      get "supportconfig", action: :export_supportconfig, as: "export_supportconfig"
+      get "chef", action: :export_chef, as: "export_chef"
+      get "files/:id", action: :destroy, as: "utils_files"
+    end
+
+    resources :repositories,
+      only: [:index] do
+      collection do
+        post :sync
+        post :activate
+        post :deactivate
+        post :activate_all
+        post :deactivate_all
+      end
+    end
+
+    resources :backups,
+      only: [:index, :create, :destroy] do
       collection do
         post :upload
         get :restore_status
