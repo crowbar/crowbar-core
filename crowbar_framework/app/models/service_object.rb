@@ -1192,16 +1192,12 @@ class ServiceObject
     # through the deployment schedule in pending node actions into run lists.
     @logger.debug "Clean the run_lists for #{pending_node_actions.inspect}"
 
-    admin_nodes = []
-
     pending_node_actions.each do |node_name, lists|
       # pre_cached_nodes contains only new_nodes, we need to look up the
       # old ones as well.
       pre_cached_nodes[node_name] ||= NodeObject.find_node_by_name(node_name)
       node = pre_cached_nodes[node_name]
       next if node.nil?
-
-      admin_nodes << node_name if node.admin?
 
       save_it = false
 
@@ -1281,18 +1277,11 @@ class ServiceObject
     batches.each do |nodes|
       @logger.debug "Applying batch: #{nodes.inspect}"
 
-      nodes.each do |node|
-        ran_admin = true if admin_nodes.include?(node)
-      end
-
-      @logger.debug(
-        "AR: Calling chef-client for #{role.name} on nodes: #{nodes.join(" ")}"
-      )
-
       pids = {}
       nodes.each do |node|
         pre_cached_nodes[node] ||= NodeObject.find_node_by_name(node)
         next if pre_cached_nodes[node][:platform_family] == "windows"
+        ran_admin = true if pre_cached_nodes[node].admin?
 
         filename = "#{ENV["CROWBAR_LOG_DIR"]}/chef-client/#{node}.log"
         pid = run_remote_chef_client(node, "chef-client", filename)
