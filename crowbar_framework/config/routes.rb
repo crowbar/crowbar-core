@@ -162,6 +162,8 @@ Rails.application.routes.draw do
 
   scope :crowbar do
     scope controller: :barclamp do
+      get "modules/1.0", action: :modules, as: "barclamp_modules"
+
       get ":barclamp/1.0/help", action: :help
       get ":barclamp/1.0/proposals/nodes", action: :nodes
       put ":barclamp/1.0/proposals", action: :proposal_create
@@ -182,8 +184,6 @@ Rails.application.routes.draw do
       get ":barclamp/1.0/:id", action: :show
       get ":barclamp", action: :versions
       post ":barclamp/1.0/:action/:id", action: :barclamp
-
-      get "modules/1.0", action: :modules, as: "barclamp_modules"
     end
   end
 
