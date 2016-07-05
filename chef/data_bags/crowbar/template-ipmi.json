@@ -32,7 +32,7 @@
         "mode": "full",
         "transitions": true,
         "transition_list": [
-          "discovering", "discovered"
+          "discovering", "discovered", "hardware-installing"
 	]
       } 
     }
