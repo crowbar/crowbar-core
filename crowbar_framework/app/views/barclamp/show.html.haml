@@ -1,7 +1,7 @@
 .row
   .col-xs-12
     %h1.page-header
-      = display_led_for(:unknown, @role.prop, status_proposals_barclamp_path(:id => @role.prop, :barclamp => @role.barclamp, :name => @role.inst))
+      = display_led_for(:unknown, @role.prop, status_proposal_path(:id => @role.prop, :barclamp => @role.barclamp, :name => @role.inst))
 
       - if Crowbar::Settings.simple_proposal_ui? && !@role.allow_multiple_proposals?
         = link_to @role.display_name, barclamp_modules_path(:id => @role.barclamp)

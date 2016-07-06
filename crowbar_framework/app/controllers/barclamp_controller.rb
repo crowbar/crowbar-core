@@ -99,7 +99,7 @@ class BarclampController < ApplicationController
     Rails.logger.debug "Role #{ret.inspect}"
     respond_to do |format|
       format.html {
-        return redirect_to proposal_barclamp_path controller: @bc_name, id: params[:id] if ret[0] != 200
+        return redirect_to show_proposal_path controller: @bc_name, id: params[:id] if ret[0] != 200
         render template: "barclamp/show"
       }
       format.xml  {
@@ -419,7 +419,7 @@ class BarclampController < ApplicationController
       when 200
         format.html do
           redirect_to(
-            proposal_barclamp_path(
+            show_proposal_path(
               controller: params[:controller],
               id: params[:id]
             )
@@ -433,7 +433,7 @@ class BarclampController < ApplicationController
           flash[:warning] = message
 
           redirect_to(
-            proposal_barclamp_path(
+            show_proposal_path(
               controller: params[:controller],
               id: params[:id]
             )
@@ -447,7 +447,7 @@ class BarclampController < ApplicationController
           flash[:alert] = message
 
           redirect_to(
-            proposal_barclamp_path(
+            show_proposal_path(
               controller: params[:controller],
               id: params[:id]
             )
@@ -477,7 +477,7 @@ class BarclampController < ApplicationController
       when 200
         format.html do
           redirect_to(
-            proposal_barclamp_path(
+            show_proposal_path(
               controller: params[:controller],
               id: params[:id]
             )
@@ -491,7 +491,7 @@ class BarclampController < ApplicationController
           flash[:alert] = message
 
           redirect_to(
-            proposal_barclamp_path(
+            show_proposal_path(
               controller: params[:controller],
               id: params[:id]
             )
@@ -521,7 +521,7 @@ class BarclampController < ApplicationController
       when 200
         format.html do
           redirect_to(
-            proposal_barclamp_path(
+            show_proposal_path(
               controller: params[:controller],
               id: params[:id]
             )
@@ -535,7 +535,7 @@ class BarclampController < ApplicationController
           flash[:alert] = message
 
           redirect_to(
-            proposal_barclamp_path(
+            show_proposal_path(
               controller: params[:controller],
               id: params[:id]
             )
@@ -575,7 +575,7 @@ class BarclampController < ApplicationController
         when 200
           format.html do
             redirect_to(
-              proposal_barclamp_path(
+              show_proposal_path(
                 controller: params[:controller],
                 id: params[:id]
               )
@@ -589,7 +589,7 @@ class BarclampController < ApplicationController
             flash[:alert] = message
 
             redirect_to(
-              proposal_barclamp_path(
+              show_proposal_path(
                 controller: params[:controller],
                 id: params[:id]
               )
@@ -704,7 +704,7 @@ class BarclampController < ApplicationController
         redirect_params[:dep_raw] = true if view_context.show_raw_deployment?
         redirect_params[:attr_raw] = true if view_context.show_raw_attributes?
 
-        redirect_to proposal_barclamp_path(redirect_params)
+        redirect_to show_proposal_path(redirect_params)
       end
     end
   end
@@ -741,7 +741,7 @@ class BarclampController < ApplicationController
         end
         format.html do
           redirect_to(
-            proposal_barclamp_path(
+            show_proposal_path(
               controller: params[:controller],
               id: params[:id]
             )

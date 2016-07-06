@@ -17,7 +17,7 @@
 
 module ProposalsHelper
   def create_proposal_form_for(proposal, &block)
-    url = create_proposal_barclamp_path(
+    url = create_proposal_path(
       controller: proposal
     )
 
@@ -33,7 +33,7 @@ module ProposalsHelper
   end
 
   def update_proposal_form_for(proposal, &block)
-    url = update_proposal_barclamp_path(
+    url = update_proposal_path(
       id: proposal.name,
       controller: proposal.barclamp
     )
@@ -120,7 +120,7 @@ module ProposalsHelper
     parameters.delete(:attr_raw) if parameters[:attr_raw] == false
     parameters.delete(:dep_raw) if parameters[:dep_raw] == false
 
-    link_to t("raw"), proposal_barclamp_path(parameters), class: "rawview"
+    link_to t("raw"), show_proposal_path(parameters), class: "rawview"
   end
 
   def proposal_custom_button(proposal, options = {})
@@ -132,7 +132,7 @@ module ProposalsHelper
     parameters.delete(:attr_raw) if parameters[:attr_raw] == false
     parameters.delete(:dep_raw) if parameters[:dep_raw] == false
 
-    link_to t("custom"), proposal_barclamp_path(parameters), class: "customview"
+    link_to t("custom"), show_proposal_path(parameters), class: "customview"
   end
 
   def attributes_for(proposal, &block)

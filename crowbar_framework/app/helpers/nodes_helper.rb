@@ -410,7 +410,7 @@ module NodesHelper
             proposal.display_name
           end
 
-          route = proposal_barclamp_path(controller: proposal.barclamp, id: proposal.name)
+          route = show_proposal_path(controller: proposal.barclamp, id: proposal.name)
 
           listing[proposal.category] ||= []
           listing[proposal.category].push link_to(display_name, route)
@@ -489,7 +489,7 @@ module NodesHelper
             listing[object.category] ||= []
             listing[object.category].push role.titleize
           else
-            route = proposal_barclamp_path(
+            route = show_proposal_path(
               controller: proposal.barclamp,
               id: proposal.name
             )
