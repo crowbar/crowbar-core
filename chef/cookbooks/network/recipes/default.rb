@@ -301,7 +301,7 @@ node["crowbar"]["network"].keys.sort{|a,b|
     net_ifs << our_iface.name
   end
   if network["mtu"]
-    if name == "admin" or name == "storage"
+    if ["admin", "storage", "os_sdn"].include? name
       Chef::Log.info("Setting mtu #{network['mtu']} for #{name} network on #{our_iface.name}")
       ifs[our_iface.name]["mtu"] = network["mtu"]
     else
