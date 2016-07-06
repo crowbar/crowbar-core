@@ -28,12 +28,15 @@ module BarclampLibrary
 
       def self.list_networks(node)
         answer = []
-        node[:crowbar][:network].each do |net, data|
-          # network is not valid if we don't have the full definition
-          next unless node[:network][:networks].key?(net)
-          network_def = node[:network][:networks][net].to_hash.merge(data.to_hash)
-          answer << Network.new(node, net, network_def)
-        end unless node[:crowbar].nil? || node[:crowbar][:network].nil? || node[:network][:networks].nil?
+        unless node[:crowbar].nil? || node[:crowbar][:network].nil? ||
+            node[:network][:networks].nil?
+          node[:crowbar][:network].each do |net, data|
+            # network is not valid if we don't have the full definition
+            next unless node[:network][:networks].key?(net)
+            network_def = node[:network][:networks][net].to_hash.merge(data.to_hash)
+            answer << Network.new(node, net, network_def)
+          end
+        end
         answer
       end
 
@@ -240,9 +243,14 @@ module BarclampLibrary
       end
 
       class Network
-        attr_reader :name, :address, :broadcast, :netmask,
-          :subnet, :router, :router_pref, :mtu, :vlan, :use_vlan,
-          :add_bridge, :add_ovs_bridge, :bridge_name, :conduit
+        attr_reader :name
+        attr_reader :address, :broadcast, :netmask, :subnet
+        attr_reader :router, :router_pref
+        attr_reader :mtu
+        attr_reader :vlan, :use_vlan
+        attr_reader :add_bridge, :add_ovs_bridge, :bridge_name
+        attr_reader :conduit
+
         def initialize(node, net, data)
           @node = node
           @name = net
