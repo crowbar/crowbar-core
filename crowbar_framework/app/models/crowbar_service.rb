@@ -502,6 +502,17 @@ class CrowbarService < ServiceObject
 
     unless proposals.include?(id)
       @logger.debug("Bootstrap: creating proposal for #{bc}.#{id}")
+      # on bootstrap, we'll generally want to add the admin server to some
+      # roles, so prefill what we know will be needed
+      if data["deployment"].nil? ||
+          data["deployment"][bc].nil? ||
+          data["deployment"][bc]["elements"].nil?
+        data["crowbar-deep-merge-template"] = true
+      end
+      data["deployment"] ||= {}
+      data["deployment"][bc] ||= {}
+      data["deployment"][bc]["elements"] ||= {}
+
       answer = service.proposal_create_bootstrap(data)
       if answer[0] != 200
         msg = "Failed to create proposal '#{id}' for barclamp '#{bc}' " \

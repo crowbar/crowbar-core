@@ -55,14 +55,6 @@ class DnsService < ServiceObject
   def proposal_create_bootstrap(params)
     # nil means "default value", which is "true"
     if params.fetch("attributes", {}).fetch(@bc_name, {})["auto_assign_server"] != false
-      if params["deployment"].nil? ||
-          params["deployment"][@bc_name].nil? ||
-          params["deployment"][@bc_name]["elements"].nil?
-        params["crowbar-deep-merge-template"] = true
-      end
-      params["deployment"] ||= {}
-      params["deployment"][@bc_name] ||= {}
-      params["deployment"][@bc_name]["elements"] ||= {}
       params["deployment"][@bc_name]["elements"]["dns-server"] = [NodeObject.admin_node.name]
     end
     super(params)

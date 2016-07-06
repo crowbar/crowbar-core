@@ -48,14 +48,6 @@ class LoggingService < ServiceObject
   end
 
   def proposal_create_bootstrap(params)
-    if params["deployment"].nil? ||
-        params["deployment"][@bc_name].nil? ||
-        params["deployment"][@bc_name]["elements"].nil?
-      params["crowbar-deep-merge-template"] = true
-    end
-    params["deployment"] ||= {}
-    params["deployment"][@bc_name] ||= {}
-    params["deployment"][@bc_name]["elements"] ||= {}
     params["deployment"][@bc_name]["elements"]["logging-server"] = [NodeObject.admin_node.name]
     super(params)
   end
