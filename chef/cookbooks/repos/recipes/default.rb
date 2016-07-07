@@ -18,8 +18,6 @@ provisioner = provisioners[0] if provisioners
 os_token = "#{node[:platform]}-#{node[:platform_version]}"
 arch = node[:kernel][:machine]
 
-Chef::Log.info("Running on #{os_token} / #{arch}")
-
 file "/tmp/.repo_update" do
   action :nothing
 end

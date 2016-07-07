@@ -15,7 +15,6 @@
 #
 
 if CrowbarRoleRecipe.node_state_valid_for_role?(node, "provisioner", "provisioner-server")
-  include_recipe "utils::default"
   include_recipe "dhcp::default"
   include_recipe "nfs-server::default"
   include_recipe "provisioner::setup_base_images"

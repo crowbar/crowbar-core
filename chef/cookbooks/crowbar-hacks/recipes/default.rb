@@ -16,95 +16,60 @@
 # This recipe is a placeholder for misc. hacks we want to do on every node,
 # but that do not really belong with any specific barclamp.
 
-states = ["ready", "readying", "recovering", "applying"]
-if states.include?(node[:state])
-  unless %w(suse windows).include?(node[:platform_family])
-    # Don't waste time with mlocate or updatedb
-    %w{mlocate mlocate.cron updatedb}.each do |f|
-      file "/etc/cron.daily/#{f}" do
-        action :delete
-      end
-    end
-
-    template "/etc/logrotate.d/chef" do
-      source "logrotate.erb"
-      owner "root"
-      group "root"
-      mode "0644"
-      variables(logfiles: "/var/log/chef/client.log",
-                postrotate: "bluepill chef-client restart")
-    end
-
-    # Set up some basic log rotation
-    template "/etc/logrotate.d/crowbar-webserver" do
-      source "logrotate.erb"
-      owner "root"
-      group "root"
-      mode "0644"
-      variables(logfiles: "/var/log/crowbar/*.log /var/log/crowbar/*.out /var/log/crowbar/chef-client/*.log",
-                  action: "create 644 crowbar crowbar",
-                postrotate: "/usr/bin/pumactl -S /opt/dell/crowbar_framework/tmp/pids/puma.state phased-restart")
-    end if node[:recipes].include?("crowbar")
-    template "/etc/logrotate.d/node-logs" do
-      source "logrotate.erb"
-      owner "root"
-      group "root"
-      mode "0644"
-      variables(logfiles: "/var/log/nodes/*.log /var/log/nodes/.log",
-                postrotate: "/usr/bin/killall -HUP rsyslogd")
-    end if node[:recipes].include?("logging::server")
-    template "/etc/logrotate.d/client-join-logs" do
-      source "logrotate.erb"
-      owner "root"
-      group "root"
-      mode "0644"
-      variables(logfiles: ["/var/log/crowbar/crowbar_join/*"])
-    end unless node[:recipes].include?("crowbar")
-  end
-  # Note: Hacks that are needed on SUSE platforms as well too come here
-
-  if %w(suse rhel).include?(node[:platform_family])
-    # Workaround sysctl not loading configs from /etc/sysctl.d/
-    # during reboot
-    directory "create /etc/sysctl.d for reload-sysctl.d cronjob" do
-      path "/etc/sysctl.d"
-      mode "755"
-    end
-    cookbook_file "/etc/cron.d/reload-sysctl.d" do
-      source "reload-sysctl-d.cron"
+unless %w(suse windows).include?(node[:platform_family])
+  # Don't waste time with mlocate or updatedb
+  %w{mlocate mlocate.cron updatedb}.each do |f|
+    file "/etc/cron.daily/#{f}" do
+      action :delete
     end
   end
+
+  template "/etc/logrotate.d/chef" do
+    source "logrotate.erb"
+    owner "root"
+    group "root"
+    mode "0644"
+    variables(logfiles: "/var/log/chef/client.log",
+              postrotate: "bluepill chef-client restart")
+  end
+
+  # Set up some basic log rotation
+  template "/etc/logrotate.d/crowbar-webserver" do
+    source "logrotate.erb"
+    owner "root"
+    group "root"
+    mode "0644"
+    variables(logfiles: "/var/log/crowbar/*.log /var/log/crowbar/*.out /var/log/crowbar/chef-client/*.log",
+              action: "create 644 crowbar crowbar",
+              postrotate: "/usr/bin/pumactl -S /opt/dell/crowbar_framework/tmp/pids/puma.state phased-restart")
+  end if node[:recipes].include?("crowbar")
+  template "/etc/logrotate.d/node-logs" do
+    source "logrotate.erb"
+    owner "root"
+    group "root"
+    mode "0644"
+    variables(logfiles: "/var/log/nodes/*.log /var/log/nodes/.log",
+              postrotate: "/usr/bin/killall -HUP rsyslogd")
+  end if node[:recipes].include?("logging::server")
+  template "/etc/logrotate.d/client-join-logs" do
+    source "logrotate.erb"
+    owner "root"
+    group "root"
+    mode "0644"
+    variables(logfiles: ["/var/log/crowbar/crowbar_join/*"])
+  end unless node[:recipes].include?("crowbar")
 end
 
-ruby_block "uefi_boot_order_config" do
-  block do
-    if node["uefi"] && File.exist?("/sys/firmware/efi")
-      node["uefi"]["boot"]["order"].each do |order|
-        entry = node["uefi"]["entries"][order]
-        next if entry[:active]
+# Note: Hacks that are needed on SUSE platforms as well come here
 
-        Chef::Log.info("Activating UEFI boot entry "\
-                       "#{sprintf("%x", order)}: #{entry["title"]}")
-        ::Kernel.system("efibootmgr --active --bootnum #{format("%x", order)}")
-      end
-
-      neworder = node["uefi"]["boot"]["order"].partition do |order|
-        node["uefi"]["entries"][order]["device"] =~ /[\/)]MAC\(/i rescue false
-      end.flatten
-
-      if neworder != node["uefi"]["boot"]["order"]
-        Chef::Log.info("Change UEFI Boot Order: "\
-                       "#{node[:provisioner_state]} "\
-                       "#{node["uefi"]["boot"]["order"].inspect} "\
-                       "=> #{neworder.inspect}")
-        ::Kernel.system("efibootmgr --bootorder #{neworder.map { |e| format("%x", e) }.join(",")}")
-
-        node["uefi"]["boot"]["order_old"] = node["uefi"]["boot"]["order"]
-        node["uefi"]["boot"]["order"] = neworder
-
-        node.save
-      end
-    end
+if %w(suse rhel).include?(node[:platform_family])
+  # Workaround sysctl not loading configs from /etc/sysctl.d/
+  # during reboot
+  directory "create /etc/sysctl.d for reload-sysctl.d cronjob" do
+    path "/etc/sysctl.d"
+    mode "755"
   end
-  action :create
+  cookbook_file "/etc/cron.d/reload-sysctl.d" do
+    source "reload-sysctl-d.cron"
+  end
 end
