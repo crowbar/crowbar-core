@@ -200,7 +200,7 @@ if not nodes.nil? and not nodes.empty?
             if admin_data_net.nil?
               ipaddress mnode[:ipaddress]
             else
-              ipaddress admin_data_net.address unless admin_data_net.nil?
+              ipaddress admin_data_net.address
             end
             options [
               'if exists dhcp-parameter-request-list {
