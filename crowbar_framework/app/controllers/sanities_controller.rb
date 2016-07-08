@@ -43,6 +43,7 @@ class SanitiesController < ApplicationController
     end
   end
 
+  api :POST, "/sanities/check", "Perform a sanity check"
   def check
     respond_to do |format|
       format.json do

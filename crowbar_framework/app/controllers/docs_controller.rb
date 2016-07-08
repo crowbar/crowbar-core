@@ -16,6 +16,7 @@
 #
 
 class DocsController < ApplicationController
+  api :GET, "/docs", "List documentation resources"
   def index
     @sections = help_sections
 

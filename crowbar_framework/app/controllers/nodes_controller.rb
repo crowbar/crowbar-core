@@ -16,6 +16,7 @@
 #
 
 class NodesController < ApplicationController
+  api :GET, "/nodes", "List all nodes and their status"
   def index
     @sum = 0
     @groups = {}
@@ -230,6 +231,9 @@ class NodesController < ApplicationController
     end
   end
 
+  api :POST, "/nodes/groups/1.0/:id/:group", "Add a node to a group"
+  param :id, String, desc: "Node name", required: true
+  param :group, String, desc: "Group name", required: true
   def group_change
     NodeObject.find_node_by_name(params[:id]).tap do |node|
       raise ActionController::RoutingError.new("Not Found") if node.nil?
@@ -261,6 +265,7 @@ class NodesController < ApplicationController
     end
   end
 
+  api :GET, "/nodes/status", "Show the status of all nodes"
   def status
     @result = {
       nodes: {},
@@ -306,6 +311,22 @@ class NodesController < ApplicationController
     end
   end
 
+  api :GET, "/nodes/:id/hit/:req",
+    "Perform actions on a node. Actions are defined in the MachinesController"
+  param :id, String, desc: "Node name", required: true
+  param :req, [
+    :reinstall,
+    :reset,
+    :shutdown,
+    :reboot,
+    :poweron,
+    :powercycle,
+    :poweroff,
+    :allocate,
+    :delete,
+    :identify,
+    :update
+  ], desc: "Action that needs to be performed on the node", required: true
   def hit
     name = params[:name] || params[:id]
     machine = NodeObject.find_node_by_name name

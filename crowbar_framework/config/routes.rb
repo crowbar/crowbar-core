@@ -16,6 +16,7 @@
 #
 
 Rails.application.routes.draw do
+  apipie
   # Install route from each barclamp
   Rails.root.join("config", "routes.d").children.each do |routes|
     eval(routes.read, binding) if routes.extname == ".routes"

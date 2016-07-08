@@ -24,6 +24,7 @@ class SupportController < ApplicationController
     redirect_to "/export/#{filename}"
   end
 
+  api :GET, "/utils", "List exports"
   def index
     @export = default_export_hash
     export_dir.children.each do |file|

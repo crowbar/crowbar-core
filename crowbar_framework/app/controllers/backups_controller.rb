@@ -18,11 +18,7 @@ class BackupsController < ApplicationController
   skip_before_filter :enforce_installer
   before_action :set_backup, only: [:destroy, :restore, :download]
 
-  #
-  # Backups
-  #
-  # Provides the restful api call for
-  # /utils/backup 	GET 	Returns a json list of available backups
+  api :GET, "/utils/backups", "Returns a list of available backups"
   def index
     @backups = Backup.all
 
@@ -32,11 +28,10 @@ class BackupsController < ApplicationController
     end
   end
 
-  #
-  # Backups
-  #
-  # Provides the restful api call for
-  # /utils/backup   POST   Trigger a backup
+  api :POST, "/utils/backups", "Create a backup"
+  param :backup, Hash, desc: "Backup info" do
+    param :name, String, desc: "Name of the backup", required: true
+  end
   def create
     @backup = Backup.new(backup_params)
 
@@ -58,11 +53,8 @@ class BackupsController < ApplicationController
     @backup.cleanup unless @backup.nil?
   end
 
-  #
-  # Restore
-  #
-  # Provides the restful api call for
-  # /utils/backup/restore   POST   Trigger a restore
+  api :POST, "/utils/backups/:id/restore", "Restore a backup"
+  param :id, Integer, desc: "Backup ID", required: true
   def restore
     respond_to do |format|
       format.html do
@@ -84,11 +76,8 @@ class BackupsController < ApplicationController
     end
   end
 
-  #
-  # Download
-  #
-  # Provides the restful api call for
-  # /utils/backup/download/:name/:created_at 	GET 	Download a backup
+  api :GET, "/utils/backups/:id/download", "Download a backup"
+  param :id, Integer, desc: "Backup ID", required: true
   def download
     respond_to do |format|
       if @backup.path.exist?
@@ -110,11 +99,10 @@ class BackupsController < ApplicationController
     end
   end
 
-  #
-  # Upload
-  #
-  # Provides the restful api call for
-  # /utils/backup/upload   POST   Upload a backup
+  api :POST, "/utils/backups/upload", "Upload a backup"
+  param :backup, Hash, desc: "Backup info" do
+    param :file, File, desc: "Backup for upload", required: true
+  end
   def upload
     @backup = Backup.new(backup_upload_params)
 
@@ -136,12 +124,8 @@ class BackupsController < ApplicationController
     @backup.cleanup unless @backup.nil?
   end
 
-  #
-  # Delete Backups
-  #
-  # Provides the restful api call for
-  # data-confirm method delete
-  # /utils/backup/destroy 	DELETE 	Delete a backup
+  api :DELETE, "/utils/backups/:id", "Delete a backup"
+  param :id, Integer, "Backup ID", required: true
   def destroy
     respond_to do |format|
       if @backup.destroy
@@ -165,6 +149,7 @@ class BackupsController < ApplicationController
     end
   end
 
+  api :GET, "/utils/backups/restore_status", "Returns status of backup restoration"
   def restore_status
     respond_to do |format|
       format.any { render json: Crowbar::Backup::Restore.status }

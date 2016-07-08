@@ -17,6 +17,12 @@
 
 module Utils
   class BatchController < ApplicationController
+    api :POST, "/utils/batch/build", "Apply a batch proposal"
+    param :batch, Hash, required: true do
+      param :file, File, desc: "Crowbar batch YAML file", required: true
+      param :includes, Array, of: String, desc: "List of barclamps to include"
+      param :excludes, Array, of: String, desc: "List of barclamps to exclude"
+    end
     def build
       @batch = Batch::Build.new(
         build_params
@@ -44,6 +50,11 @@ module Utils
       end
     end
 
+    api :POST, "/utils/batch/export", "Export a batch proposal"
+    param :batch, Hash, required: true do
+      param :includes, Array, of: String, desc: "List of barclamps to include"
+      param :excludes, Array, of: String, desc: "List of barclamps to exclude"
+    end
     def export
       @batch = Batch::Export.new(
         export_params
