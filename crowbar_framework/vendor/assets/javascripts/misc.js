@@ -3,6 +3,7 @@
 //= require misc/localizedValue
 //= require misc/iefix
 //= require misc/handlebars
+//= require misc/mousetrap
 
 $(document).ready(function($) {
   Handlebars.registerHelper('toString', function (x) {

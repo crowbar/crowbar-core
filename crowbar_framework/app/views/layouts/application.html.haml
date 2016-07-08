@@ -42,3 +42,30 @@
         {{/if}}
 
         {{message}}
+
+    .modal.fade{ id: "keybindings_modal" }
+      .modal-dialog
+        .modal-content
+          .modal-header
+            .btn.close{ data: { dismiss: "modal" } }
+              &times
+            %h2
+              = t(".keybindings")
+          .modal-body
+            %table.table.table-hover
+              %thead
+                %th.col-xs-3
+                  = t(".key")
+                %th.col-xs-9
+                  = t(".description")
+              %tbody
+              - keybindings.each do |key, desc|
+                %tr
+                  %td.col-xs-3
+                    %b
+                      = key.to_s.gsub("_", " ")
+                  %td.col-xs-9
+                    = desc
+          .modal-footer
+            .btn.btn-default{ data: { dismiss: "modal" } }
+              = t("cancel")

@@ -1,4 +1,5 @@
 //= require_self
+//= require keybindings
 
 jQuery(document).ready(function($) {
   $('textarea.editor').each(function() {
