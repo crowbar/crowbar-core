@@ -30,7 +30,7 @@
                     - else
                       = proposal[:description]
                   %td.col-xs-1.actions
-                    = link_to t("proposal.actions.edit"), proposal_barclamp_path(:controller => barclamp_name, :id => proposal_name), :class => "btn btn-default btn-block"
+                    = link_to t("proposal.actions.edit"), show_proposal_path(:controller => barclamp_name, :id => proposal_name), :class => "btn btn-default btn-block"
               = create_proposal_form_for(barclamp_name) do
                 %tr
                   %td.col-xs-1.status
@@ -62,4 +62,4 @@
               = hidden_field_tag :description, t(".created_on", :date => l(Time.now))
               %input.btn.btn-default.btn-block{ :type => "submit", :value => t("proposal.actions.create") }
           - else
-            = link_to t("proposal.actions.edit"), proposal_barclamp_path(:controller => barclamp_name, :id => barclamp[:proposals].first.first), :class => "btn btn-default btn-block"
+            = link_to t("proposal.actions.edit"), show_proposal_path(:controller => barclamp_name, :id => barclamp[:proposals].first.first), :class => "btn btn-default btn-block"
