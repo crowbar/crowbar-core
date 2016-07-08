@@ -14,7 +14,7 @@
           %td
             %em
               %b
-                = chef_server_role_link name
+                = name
           %td
             - clusters = value.select {|n| @service_object.is_cluster?(n) || @service_object.is_remotes?(n)}
             - cluster_links = clusters.map {|c| bc, prop = @service_object.cluster_get_barclamp_and_proposal(c); link_to_proposal_with_name(bc, prop)}

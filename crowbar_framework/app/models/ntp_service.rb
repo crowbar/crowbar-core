@@ -41,48 +41,33 @@ class NtpService < ServiceObject
     end
   end
 
-  def create_proposal
-    @logger.debug("NTP create_proposal: entering")
-    base = super
-    @logger.debug("NTP create_proposal: exiting")
-    base
-  end
-
   def validate_proposal_after_save proposal
     validate_at_least_n_for_role proposal, "ntp-server", 1
 
     super
   end
 
+  def proposal_create_bootstrap(params)
+    params["deployment"][@bc_name]["elements"]["ntp-server"] = [NodeObject.admin_node.name]
+    super(params)
+  end
+
   def transition(inst, name, state)
-    @logger.debug("NTP transition: make sure that network role is on all nodes: #{name} for #{state}")
+    @logger.debug("NTP transition: entering: #{name} for #{state}")
 
-    #
-    # If we are discovering the node, make sure that we add the ntp client or server to the node
-    #
-    if state == "discovered"
-      @logger.debug("NTP transition: discovered state for #{name} for #{state}")
-      db = Proposal.where(barclamp: "ntp", name: inst).first
-      role = RoleObject.find_role_by_name "ntp-config-#{inst}"
+    node = NodeObject.find_node_by_name name
+    if node.allocated? && !node.role?("ntp-server")
+      db = Proposal.where(barclamp: @bc_name, name: inst).first
+      role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
 
-      if role.override_attributes["ntp"]["elements"]["ntp-server"].nil? or
-         role.override_attributes["ntp"]["elements"]["ntp-server"].empty?
-        @logger.debug("NTP transition: make sure that ntp-server role is on first: #{name} for #{state}")
-        result = add_role_to_instance_and_node("ntp", inst, name, db, role, "ntp-server")
-      else
-        node = NodeObject.find_node_by_name name
-        unless node.role? "ntp-server"
-          @logger.debug("NTP transition: make sure that ntp-client role is on all nodes but first: #{name} for #{state}")
-          result = add_role_to_instance_and_node("ntp", inst, name, db, role, "ntp-client")
-        end
+      unless add_role_to_instance_and_node(@bc_name, inst, name, db, role, "ntp-client")
+        msg = "Failed to add ntp-client role to #{name}!"
+        @logger.error(msg)
+        return [400, msg]
       end
-
-      @logger.debug("NTP transition: leaving from discovered state for #{name} for #{state}")
-      return [200, { name: name }] if result
-      return [400, "Failed to add role to node"] unless result
     end
 
-    @logger.debug("NTP transition: leaving for #{name} for #{state}")
+    @logger.debug("NTP transition: leaving: #{name} for #{state}")
     [200, { name: name }]
   end
 end

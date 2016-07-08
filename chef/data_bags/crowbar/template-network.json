@@ -278,7 +278,7 @@
         "environment": "network-base-config",
         "mode": "full",
         "transitions": true,
-        "transition_list": [ "discovered", "hardware-installing", "reset", "delete" ]
+        "transition_list": [ "hardware-installing", "installed", "readying", "reset", "delete" ]
       }
     }
   }

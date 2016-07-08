@@ -41,49 +41,33 @@ class LoggingService < ServiceObject
     end
   end
 
-  def create_proposal
-    @logger.debug("Logging create_proposal: entering")
-    base = super
-    @logger.debug("Logging create_proposal: exiting")
-    base
-  end
-
   def validate_proposal_after_save proposal
     validate_one_for_role proposal, "logging-server"
 
     super
   end
 
+  def proposal_create_bootstrap(params)
+    params["deployment"][@bc_name]["elements"]["logging-server"] = [NodeObject.admin_node.name]
+    super(params)
+  end
+
   def transition(inst, name, state)
     @logger.debug("Logging transition: entering: #{name} for #{state}")
 
-    #
-    # If we are discovering the node, make sure that we add the logging client or server to the node
-    #
-    if state == "discovered"
-      @logger.debug("Logging transition: discovered state for #{name} for #{state}")
-      db = Proposal.where(barclamp: "logging", name: inst).first
-      role = RoleObject.find_role_by_name "logging-config-#{inst}"
+    node = NodeObject.find_node_by_name name
+    if node.allocated? && !node.role?("logging-server")
+      db = Proposal.where(barclamp: @bc_name, name: inst).first
+      role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
 
-      if role.override_attributes["logging"]["elements"]["logging-server"].nil? or
-         role.override_attributes["logging"]["elements"]["logging-server"].empty?
-        @logger.debug("Logging transition: make sure that logging-server role is on first: #{name} for #{state}")
-        result = add_role_to_instance_and_node("logging", inst, name, db, role, "logging-server")
-      else
-        node = NodeObject.find_node_by_name name
-        unless node.role? "logging-server"
-          @logger.debug("Logging transition: make sure that logging-client role is on all nodes but first: #{name} for #{state}")
-          result = add_role_to_instance_and_node("logging", inst, name, db, role, "logging-client")
-        end
+      unless add_role_to_instance_and_node(@bc_name, inst, name, db, role, "logging-client")
+        msg = "Failed to add logging-client role to #{name}!"
+        @logger.error(msg)
+        return [400, msg]
       end
-
-      @logger.debug("Logging transition: leaving from discovered state for #{name} for #{state}")
-      a = [200, { name: name }] if result
-      a = [400, "Failed to add logging role to node"] unless result
-      return a
     end
 
-    @logger.debug("Logging transition: leaving for #{name} for #{state}")
+    @logger.debug("Logging transition: leaving: #{name} for #{state}")
     [200, { name: name }]
   end
 end

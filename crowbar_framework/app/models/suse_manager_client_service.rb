@@ -37,13 +37,6 @@ class SuseManagerClientService < ServiceObject
     end
   end
 
-  def create_proposal
-    @logger.debug("SUSE Manager Client create_proposal: entering")
-    base = super
-    @logger.debug("SUSE Manager Client create_proposal: exiting")
-    base
-  end
-
   def self.allow_multiple_proposals?
     false
   end

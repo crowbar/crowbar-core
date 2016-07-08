@@ -41,13 +41,6 @@ class DnsService < ServiceObject
     end
   end
 
-  def create_proposal
-    @logger.debug("DNS create_proposal: entering")
-    base = super
-    @logger.debug("DNS create_proposal: exiting")
-    base
-  end
-
   def validate_proposal_after_save proposal
     server_role = proposal["deployment"]["dns"]["elements"]["dns-server"]
     nameservers = proposal["attributes"]["dns"]["nameservers"]
@@ -59,36 +52,30 @@ class DnsService < ServiceObject
     super
   end
 
+  def proposal_create_bootstrap(params)
+    # nil means "default value", which is "true"
+    if params.fetch("attributes", {}).fetch(@bc_name, {})["auto_assign_server"] != false
+      params["deployment"][@bc_name]["elements"]["dns-server"] = [NodeObject.admin_node.name]
+    end
+    super(params)
+  end
+
   def transition(inst, name, state)
-    @logger.debug("DNS transition: entering for #{name} for #{state}")
+    @logger.debug("DNS transition: entering: #{name} for #{state}")
 
-    #
-    # If we are discovering the node, make sure that we add the dns client or server to the node
-    #
-    if state == "discovered"
-      @logger.debug("DNS transition: handling for #{name} for #{state}: discovered")
-      db = Proposal.where(barclamp: "dns", name: inst).first
-      role = RoleObject.find_role_by_name "dns-config-#{inst}"
+    node = NodeObject.find_node_by_name name
+    if node.allocated?
+      db = Proposal.where(barclamp: @bc_name, name: inst).first
+      role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
 
-      if role.default_attributes["dns"]["auto_assign_server"]
-        if role.override_attributes["dns"]["elements"]["dns-server"].nil? or
-           role.override_attributes["dns"]["elements"]["dns-server"].empty?
-          @logger.debug("DNS transition: adding #{name} to dns-server role")
-          result = add_role_to_instance_and_node("dns", inst, name, db, role, "dns-server")
-        end
+      unless add_role_to_instance_and_node(@bc_name, inst, name, db, role, "dns-client")
+        msg = "Failed to add dns-client role to #{name}!"
+        @logger.error(msg)
+        return [400, msg]
       end
-
-      # Always add the dns client
-      @logger.debug("DNS transition: adding #{name} to dns-client role")
-      result = add_role_to_instance_and_node("dns", inst, name, db, role, "dns-client")
-
-      a = [200, { name: name }] if result
-      a = [400, "Failed to add role to node"] unless result
-      @logger.debug("DNS transition: leaving for #{name} for #{state}: discovered")
-      return a
     end
 
-    @logger.debug("DNS transition: leaving for #{name} for #{state}")
+    @logger.debug("DNS transition: leaving: #{name} for #{state}")
     [200, { name: name }]
   end
 
@@ -98,13 +85,23 @@ class DnsService < ServiceObject
 
     tnodes = role.override_attributes["dns"]["elements"]["dns-server"]
 
-    if !tnodes.blank?
+    if tnodes.length == 1
+      # remember that this node will stick as master node, in case we add some
+      # other dns-server nodes later on
+      node = NodeObject.find_node_by_name tnodes[0]
+
+      node.set[:dns] = {} if node[:dns].nil?
+      unless node[:dns][:master]
+        node.set[:dns][:master] = true
+        node.save
+      end
+    elsif tnodes.length > 1
       nodes = tnodes.map { |n| NodeObject.find_node_by_name n }
       # electing master dns-server
       master = nil
       admin = nil
       nodes.each do |node|
-        if node[:dns][:master]
+        if node[:dns] && node[:dns][:master]
           master = node
           break
         elsif node.admin?
@@ -125,6 +122,7 @@ class DnsService < ServiceObject
       slave_nodes.delete(master.name)
 
       nodes.each do |node|
+        node.set[:dns] = {} if node[:dns].nil?
         node.set[:dns][:master_ip] = master[:crowbar][:network][:admin][:address]
         node.set[:dns][:slave_ips] = slave_ips
         node.set[:dns][:slave_names] = slave_nodes

@@ -241,14 +241,6 @@ class NetworkService < ServiceObject
     false
   end
 
-  def create_proposal
-    @logger.debug("Network create_proposal: entering")
-    base = super
-
-    @logger.debug("Network create_proposal: exiting")
-    base
-  end
-
   def apply_role_pre_chef_call(old_role, role, all_nodes)
     @logger.debug("Network apply_role_pre_chef_call: entering #{all_nodes.inspect}")
 
@@ -280,41 +272,26 @@ class NetworkService < ServiceObject
     @logger.debug("Network apply_role_pre_chef_call: leaving")
   end
 
+  def proposal_create_bootstrap(params)
+    params["deployment"][@bc_name]["elements"]["switch_config"] = [NodeObject.admin_node.name]
+    super(params)
+  end
+
   def transition(inst, name, state)
-    @logger.debug("Network transition: Entering #{name} for #{state}")
+    @logger.debug("Network transition: entering: #{name} for #{state}")
 
-    if state == "discovered"
+    if ["installed", "readying"].include? state
+      db = Proposal.where(barclamp: @bc_name, name: inst).first
+      role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
 
-      db = Proposal.where(barclamp: "network", name: inst).first
-      role = RoleObject.find_role_by_name "network-config-#{inst}"
-      if NodeObject.find_node_by_name(name).try(:[], "crowbar").try(:[], "admin_node")
-        @logger.info("Admin node transitioning to discovered state.  Adding switch_config role.")
-        result = add_role_to_instance_and_node("network", inst, name, db, role, "switch_config")
-      end
-
-      @logger.debug("Network transition: make sure that network role is on all nodes: #{name} for #{state}")
-      result = add_role_to_instance_and_node("network", inst, name, db, role, "network")
-
-      @logger.debug("Network transition: Exiting #{name} for #{state} discovered path")
-      return [200, { name: name }] if result
-      return [400, "Failed to add role to node"] unless result
-    end
-
-    if state == "delete" or state == "reset"
-      node = NodeObject.find_node_by_name name
-      @logger.error("Network transition: return node not found: #{name}") if node.nil?
-      return [404, "No node found"] if node.nil?
-
-      nets = node.crowbar["crowbar"]["network"].keys
-      nets.each do |net|
-        next if net == "admin"
-        ret, msg = self.deallocate_ip(inst, net, name)
-        return [ret, msg] if ret != 200
+      unless add_role_to_instance_and_node(@bc_name, inst, name, db, role, "network")
+        msg = "Failed to add network role to #{name}!"
+        @logger.error(msg)
+        return [400, msg]
       end
     end
 
     if state == "hardware-installing"
-
       node = NodeObject.find_node_by_name name
 
       # Allocate required addresses
@@ -361,7 +338,17 @@ class NetworkService < ServiceObject
       node.save
     end
 
-    @logger.debug("Network transition: Exiting #{name} for #{state}")
+    if ["delete", "reset"].include? state
+      node = NodeObject.find_node_by_name name
+      nets = node.crowbar["crowbar"]["network"].keys
+      nets.each do |net|
+        next if net == "admin"
+        ret, msg = deallocate_ip(inst, net, name)
+        return [ret, msg] if ret != 200
+      end
+    end
+
+    @logger.debug("Network transition: exiting: #{name} for #{state}")
     [200, { name: name }]
   end
 

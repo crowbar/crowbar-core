@@ -199,15 +199,13 @@
     "provisioner": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 100,
+      "schema-revision": 101,
       "element_states": {
-        "provisioner-bootdisk-finder": [ "hardware-installing" ],
         "provisioner-server": [ "readying", "ready", "applying" ],
-        "provisioner-base": [ "readying", "ready", "applying" ]
+        "provisioner-base": [ "hardware-installing", "readying", "ready", "applying" ]
       },
       "elements": {},
       "element_order": [
-        [ "provisioner-bootdisk-finder" ],
         [ "provisioner-server" ],
         [ "provisioner-base" ]
       ],
