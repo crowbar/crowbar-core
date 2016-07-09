@@ -755,7 +755,8 @@ class NodeObject < ChefObject
 
   def role?(role_name)
     return false if @node.nil?
-    @node.role?(role_name)
+    @node.role?(role_name) || crowbar["run_list_map"].key?(role_name) ||
+      crowbar_run_list.run_list_items.include?("role[#{role_name}]")
   end
 
   def roles
