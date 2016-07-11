@@ -1007,6 +1007,9 @@ class ServiceObject
     runlist_priority_map = new_deployment["element_run_list_order"] || { }
     local_chef_order = chef_order()
 
+    # List of all *new* nodes which will be changed (sans deleted ones)
+    all_nodes = new_elements.values.flatten
+
     # deployment["element_order"] tells us which order the various
     # roles should be applied, and deployment["elements"] tells us
     # which nodes each role should be applied to.  We need to "join
@@ -1024,9 +1027,6 @@ class ServiceObject
     #   }
     pending_node_actions = {}
 
-    # List of all *new* nodes which will be changed (sans deleted ones)
-    all_nodes = []
-
     # We'll build an Array where each item represents a batch of work,
     # and the batches must be performed sequentially in this order.
     batches = []
@@ -1040,7 +1040,7 @@ class ServiceObject
     element_order.each do |roles|
       # roles is an Array of names of Chef roles which can all be
       # applied in parallel.
-      @logger.debug "elems #{roles.inspect}"
+      @logger.debug "Preparing batch with following roles: #{roles.inspect}"
 
       # A list of nodes changed when applying roles from this batch
       nodes_in_batch = []
@@ -1053,9 +1053,9 @@ class ServiceObject
         old_nodes = old_elements[role_name] || []
         new_nodes = new_elements[role_name] || []
 
-        @logger.debug "role_name #{role_name.inspect}"
-        @logger.debug "old_nodes #{old_nodes.inspect}"
-        @logger.debug "new_nodes #{new_nodes.inspect}"
+        @logger.debug "Preparing role #{role_name} for batch:"
+        @logger.debug "  Nodes in old applied proposal for role: #{old_nodes.inspect}"
+        @logger.debug "  Nodes in new applied proposal for role: #{new_nodes.inspect}"
 
         remove_role_name = "#{role_name}_remove"
 
@@ -1083,9 +1083,7 @@ class ServiceObject
 
             # An old node that is not in the new deployment, drop it
             unless new_nodes.include?(node_name)
-              @logger.debug "remove node #{node_name}"
-              pending_node_actions[node_name] = { remove: [], add: [] } if pending_node_actions[node_name].nil?
-
+              pending_node_actions[node_name] ||= { remove: [], add: [] }
               pending_node_actions[node_name][:remove] << role_name
 
               # Remove roles are  a way to "de-configure" things on the node
@@ -1131,14 +1129,9 @@ class ServiceObject
 
             pre_cached_nodes[node_name] = node
 
-            all_nodes << node_name unless all_nodes.include?(node_name)
+            pending_node_actions[node_name] ||= { remove: [], add: [] }
+            pending_node_actions[node_name][:add] << role_name
 
-            # A new node that we did not know before
-            unless old_nodes.include?(node_name)
-              @logger.debug "add node #{node_name}"
-              pending_node_actions[node_name] = { remove: [], add: [] } if pending_node_actions[node_name].nil?
-              pending_node_actions[node_name][:add] << role_name
-            end
             nodes_in_batch << node_name unless nodes_in_batch.include?(node_name)
           end
         end
@@ -1208,7 +1201,7 @@ class ServiceObject
 
     # Part III: Update run lists of nodes to reflect new deployment. I.e. write
     # through the deployment schedule in pending node actions into run lists.
-    @logger.debug "Clean the run_lists for #{pending_node_actions.inspect}"
+    @logger.debug "Update the run_lists for #{pending_node_actions.inspect}"
 
     pending_node_actions.each do |node_name, lists|
       # pre_cached_nodes contains only new_nodes, we need to look up the
@@ -1222,48 +1215,26 @@ class ServiceObject
       rlist = lists[:remove]
       alist = lists[:add]
 
-      @logger.debug "rlist #{rlist.pretty_inspect}"
-      @logger.debug "alist #{alist.pretty_inspect}"
-
       # Remove the roles being lost
       rlist.each do |item|
-        next unless node.role? item
-        @logger.debug("AR: Removing role #{item} to #{node.name}")
-        node.delete_from_run_list item
-        save_it = true
+        save_it = node.delete_from_run_list(item) || save_it
       end
 
       # Add the roles being gained
       alist.each do |item|
-        next if node.role? item
         priority = runlist_priority_map[item] || local_chef_order
-        @logger.debug("AR: Adding role #{item} to #{node.name} with priority #{priority}")
-        node.add_to_run_list(item, priority)
-        save_it = true
+        save_it = node.add_to_run_list(item, priority) || save_it
       end
 
       # Make sure the config role is on the nodes in this barclamp, otherwise
       # remove it
-      # FIXME: All nodes is basically all new nodes, which should have an
-      # add/remove list, why do we need to add specifically the passed role?
       if all_nodes.include?(node.name)
-        # Add the config role
-        unless node.role?(role.name)
-          priority = runlist_priority_map[role.name] || local_chef_order
-          @logger.debug("AR: Adding role #{role.name} to #{node.name} with priority #{priority}")
-          node.add_to_run_list(role.name, priority)
-          save_it = true
-        end
+        priority = runlist_priority_map[role.name] || local_chef_order
+        save_it = node.add_to_run_list(role.name, priority) || save_it
       else
-        # Remove the config role
-        if node.role?(role.name)
-          @logger.debug("AR: Removing role #{role.name} to #{node.name}")
-          node.delete_from_run_list role.name
-          save_it = true
-        end
+        save_it = node.delete_from_run_list(role.name) || save_it
       end
 
-      @logger.debug("AR: Saving node #{node.name}") if save_it
       node.save if save_it
     end
 
@@ -1363,8 +1334,7 @@ class ServiceObject
         # apply_role_pre_chef_call
         pre_cached_nodes[node_name] ||= NodeObject.find_node_by_name(node_name)
         node = pre_cached_nodes[node_name]
-        node.delete_from_run_list(role_to_remove)
-        node.save
+        node.save if node.delete_from_run_list(role_to_remove)
       end
     end
 
@@ -1427,15 +1397,8 @@ class ServiceObject
     end
 
     save_it = false
-    unless node.role?(newrole)
-      node.add_to_run_list(newrole, local_chef_order)
-      save_it = true
-    end
-
-    unless node.role?("#{barclamp}-config-#{instance}")
-      node.add_to_run_list("#{barclamp}-config-#{instance}", local_chef_order)
-      save_it = true
-    end
+    save_it = node.add_to_run_list(newrole, local_chef_order) || save_it
+    save_it = node.add_to_run_list("#{barclamp}-config-#{instance}", local_chef_order) || save_it
 
     if save_it
       @logger.debug("saving node")

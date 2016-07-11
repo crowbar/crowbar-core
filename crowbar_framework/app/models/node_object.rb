@@ -710,15 +710,28 @@ class NodeObject < ChefObject
   def add_to_run_list(rolename, priority, states = nil)
     # FIXME: Crowbar 4.0: we keep states parameter for compatibility reason; it
     # should be removed in Crowbar 5.0
+    Rails.logger.debug("Ensuring #{name} has role #{rolename} with priority #{priority}")
+    save_it = false
+
     crowbar["run_list_map"] ||= {}
-    crowbar["run_list_map"][rolename] = { "priority" => priority }
-    rebuild_run_list
+    if crowbar["run_list_map"][rolename] != { "priority" => priority }
+      crowbar["run_list_map"][rolename] = { "priority" => priority }
+      save_it = true
+    end
+
+    rebuild_run_list || save_it
   end
 
   def delete_from_run_list(rolename)
+    Rails.logger.debug("Ensuring #{name} doesn't have role #{rolename}")
+
     crowbar["run_list_map"] ||= {}
-    crowbar["run_list_map"].delete(rolename)
-    crowbar_run_list.run_list_items.delete "role[#{rolename}]"
+    if crowbar["run_list_map"].key?(rolename)
+      crowbar["run_list_map"].delete(rolename)
+      save_it = true
+    end
+
+    rebuild_run_list || save_it
   end
 
   def rebuild_run_list
@@ -735,11 +748,15 @@ class NodeObject < ChefObject
 
     Rails.logger.debug("rebuilt run_list will be #{sorted_run_list_map.inspect}")
 
+    old_run_list = crowbar_run_list.run_list_items.dup
+
     # Rebuild list
     crowbar_run_list.run_list_items.clear
     sorted_run_list_map.each do |item|
       crowbar_run_list.run_list_items << "role[#{item[0]}]"
     end
+
+    old_run_list != crowbar_run_list.run_list_items
   end
 
   def crowbar
@@ -755,7 +772,8 @@ class NodeObject < ChefObject
 
   def role?(role_name)
     return false if @node.nil?
-    @node.role?(role_name)
+    @node.role?(role_name) || crowbar["run_list_map"].key?(role_name) ||
+      crowbar_run_list.run_list_items.include?("role[#{role_name}]")
   end
 
   def roles
