@@ -306,10 +306,8 @@ if node[:platform_family] == "suse" && !node.roles.include?("provisioner-server"
 
       out = `LANG=C zypper --non-interactive repos #{name} 2> /dev/null`
       out.split("\n").each do |line|
-        attribute, value = line.split(":", 2)
+        attribute, value = line.split(":", 2).map(&:strip)
         next if value.nil?
-        attribute.strip!
-        value.strip!
         if attribute == "URI"
           current_url = value
         elsif attribute == "Priority"
