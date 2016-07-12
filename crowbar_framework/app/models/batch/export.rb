@@ -17,6 +17,8 @@
 
 module Batch
   class Export < Base
+    attr_accessor :path
+
     def path
       @path ||= Rails.root.join(
         "storage",
