@@ -279,7 +279,10 @@ class NetworkService < ServiceObject
   def transition(inst, name, state)
     @logger.debug("Network transition: entering: #{name} for #{state}")
 
-    if ["installed", "readying"].include? state
+    # we need one state before "installed" (and after allocation) because we
+    # need the node to have the admin network fully defined for
+    # provisioner-server recipes to be functional for that node
+    if ["hardware-installing", "installed", "readying"].include? state
       db = Proposal.where(barclamp: @bc_name, name: inst).first
       role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
 
