@@ -299,9 +299,15 @@ if not nodes.nil? and not nodes.empty?
 
           target_platform_distro = os.gsub(/-.*$/, "")
           target_platform_version = os.gsub(/^.*-/, "")
-          repos = Provisioner::Repositories.get_repos(target_platform_distro,
-                                                      target_platform_version,
-                                                      arch)
+          repos = Provisioner::Repositories.get_repos(
+            target_platform_distro,
+            target_platform_version,
+            arch
+          )
+          # FIXME: We are just ignoring old repos after the upgrade here
+          # this needs to be improved for the next upgrade by actively removing
+          # the repositories after the upgrade (and on repo deactivation)
+          repos.reject! { |k, _v| k =~ /Cloud-6/ } if mnode[:state] == "os-upgrading"
           Chef::Log.info("repos: #{repos.inspect}")
 
           if node[:provisioner][:suse]
