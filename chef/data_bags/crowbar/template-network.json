@@ -225,6 +225,7 @@
           "vlan": 400,
           "use_vlan": true,
           "add_bridge": false,
+          "mtu": 1500,
           "subnet": "192.168.130.0",
           "netmask": "255.255.255.0",
           "broadcast": "192.168.130.255",
@@ -257,7 +258,7 @@
     "network": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 20,
+      "schema-revision": 21,
       "element_states": {
         "network": [ "readying", "ready", "applying" ]
       },
