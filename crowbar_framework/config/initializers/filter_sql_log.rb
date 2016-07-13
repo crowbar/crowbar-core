@@ -1,6 +1,5 @@
 #
-# Copyright 2011-2013, Dell
-# Copyright 2013-2014, SUSE LINUX Products GmbH
+# Copyright 2016, SUSE Linux GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,12 +14,19 @@
 # limitations under the License.
 #
 
-Rails.application.config.tap do |config|
-  config.filter_parameters += [
-    :password,
-    :password_confirmation,
-    :properties,
-    :proposal_attributes,
-    :secret
-  ]
+# filter sensitive data from our proposal table
+module ActiveRecord
+  class LogSubscriber
+    alias :old_sql :sql
+
+    def sql(event)
+      if event.payload[:sql] =~ /^(INSERT INTO|UPDATE) "proposals".*/
+        Rails.logger.debug(
+          "SQL: INSERT/UPDATE transaction: filtering query to not expose potentially sensitive data"
+        )
+      else
+        old_sql(event)
+      end
+    end
+  end
 end
