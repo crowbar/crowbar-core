@@ -380,18 +380,23 @@ module Crowbar
     end
 
     def check_key_file
-      expected = @config.fetch("repomd", {})["key_md5"]
+      expected = @config.fetch("repomd", {})["fingerprint"]
       return true if expected.blank?
 
       key_path = repodata_path.join("repomd.xml.key")
       key_path = repodata_media_path.join("repomd.xml.key") unless key_path.file?
 
       if key_path.file?
-        md5 = Digest::MD5.hexdigest(key_path.read)
+        fingerprint = `LC_ALL=C gpg --with-fingerprint #{key_path}`.split(/\r?\n/)
+        fingerprint.keep_if { |d| d =~ /fingerprint/ }
+        return false if fingerprint.empty?
+        fingerprint = fingerprint[0].split("=")
+        return false if fingerprint.length != 2
+        fingerprint = fingerprint[1].split.join(" ")
         if expected.is_a?(Array)
-          expected.include? md5
+          expected.include? fingerprint
         else
-          md5 == expected
+          fingerprint == expected
         end
       else
         false
