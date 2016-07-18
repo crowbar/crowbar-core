@@ -268,6 +268,16 @@ Rails.application.routes.draw do
 
       resources :errors,
         only: [:index, :show, :create, :destroy]
+
+      resource :upgrade,
+        controller: :upgrade,
+        only: [:show, :update] do
+        post :prepare
+        post :services
+        get :services
+        get :prechecks
+      end
+
     end
   end
 end
