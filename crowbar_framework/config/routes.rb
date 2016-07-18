@@ -119,10 +119,6 @@ Rails.application.routes.draw do
 
     resources :backups,
       only: [:index, :create, :destroy] do
-      collection do
-        post :upload
-        get :restore_status
-      end
 
       member do
         post :restore
@@ -256,6 +252,18 @@ Rails.application.routes.draw do
         post :upgrade
         get :maintenance
 
+        resources :backups,
+          only: [:index, :show, :create, :destroy] do
+          collection do
+            post :upload
+            get :restore_status
+          end
+
+          member do
+            post :restore
+            get :download
+          end
+        end
       end
     end
   end

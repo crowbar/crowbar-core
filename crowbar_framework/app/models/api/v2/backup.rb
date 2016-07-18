@@ -17,7 +17,9 @@
 
 require "find"
 
-class Backup < ActiveRecord::Base
+class Api::V2::Backup < ActiveRecord::Base
+  belongs_to :crowbar
+
   attr_accessor :file
 
   before_validation :save_archive, on: :create, if: :upload?

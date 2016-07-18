@@ -48,7 +48,7 @@
           &times
         %h2
           = t(".create_image")
-      = form_for new_backup do |f|
+      = form_for new_backup, url: backups_path do |f|
         .modal-body
           %h3
             = t(".enter_name")
@@ -69,7 +69,7 @@
         %h2
           = t(".upload_image")
       .modal-body
-        %input{ name: "backup[file]", type: "file" }
+        %input{ name: "api_v2_backup[file]", type: "file" }
       .modal-footer
         .btn.btn-default{ data: { dismiss: "modal" } }
           = t("cancel")
