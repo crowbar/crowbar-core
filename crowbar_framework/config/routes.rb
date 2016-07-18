@@ -278,6 +278,13 @@ Rails.application.routes.draw do
         get :prechecks
       end
 
+      resources :nodes,
+        only: [:index, :show, :update] do
+        member do
+          post :upgrade
+          get :upgrade
+        end
+      end
     end
   end
 end
