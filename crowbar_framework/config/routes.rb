@@ -245,4 +245,18 @@ Rails.application.routes.draw do
   # TODO(must): Get rid of this wildcard route
   match "/:controller/:action/*(:.format)",
     via: [:get, :post, :put, :patch, :delete]
+
+  namespace :api,
+    constraints: { format: :json } do
+    namespace :v2 do
+      resource :crowbar,
+        controller: :crowbar,
+        only: [:show, :update] do
+        get :upgrade
+        post :upgrade
+        get :maintenance
+
+      end
+    end
+  end
 end
