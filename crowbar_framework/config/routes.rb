@@ -265,6 +265,9 @@ Rails.application.routes.draw do
           end
         end
       end
+
+      resources :errors,
+        only: [:index, :show, :create, :destroy]
     end
   end
 end
