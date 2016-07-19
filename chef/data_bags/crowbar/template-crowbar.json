@@ -20,7 +20,7 @@
       },
       "simple_proposal_ui": true,
       "upgrade": {
-        "db_dump_location" : "/var/lib/pgsql/db-before-cloud6.dump"
+        "db_dump_location" : "/var/lib/pgsql/openstack-db-before-upgrade.dump"
       }
     }
   },
@@ -51,4 +51,3 @@
     }
   }
 }
-
