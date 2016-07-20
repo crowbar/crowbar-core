@@ -85,7 +85,7 @@
             - elsif !repo.valid_key_file?
               %td{ class: repository_availability(repo.required) }
                 = icon_tag :remove
-                = t(".check_failed_md5")
+                = t('.check_failed_fingerprint')
               %td
                 = check_box "repo[#{platform}][#{arch}]", repo.id, { class: "platform#{index}", checked: false, disabled: true }
             - else
