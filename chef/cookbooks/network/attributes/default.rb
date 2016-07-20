@@ -23,9 +23,12 @@ when "suse"
     "openvswitch",
     "openvswitch-switch"
   ]
-  # openSUSE and SLES12SP2 use the module shipped with upstream kernel
-  if node[:platform] == "suse" && node[:platform_version].to_f < 12.2
-    default[:network][:ovs_pkgs].push("openvswitch-kmp-default")
+  # non-x86_64 use the upstream kernel modules
+  if node[:kernel][:machine] == "x86_64"
+    # openSUSE and SLES12SP2 use the module shipped with upstream kernel
+    if node[:platform] == "suse" && node[:platform_version].to_f < 12.2
+      default[:network][:ovs_pkgs].push("openvswitch-kmp-default")
+    end
   end
   # SLES11 uses a different service name for openvswitch
   if node[:platform] == "suse" && node[:platform_version].to_f < 12.0
