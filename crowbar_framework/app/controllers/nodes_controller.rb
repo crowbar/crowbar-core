@@ -140,29 +140,6 @@ class NodesController < ApplicationController
               dirty = true
             end
 
-            if view_context.bios_raid_options[:show].include?(:bios) &&
-                ![node.bios_set, "not_set"].include?(node_attributes["bios"])
-              node.bios_set = node_attributes["bios"]
-              dirty = true
-            end
-
-            if view_context.bios_raid_options[:show].include?(:raid) &&
-                ![node.raid_set, "not_set"].include?(node_attributes["raid"])
-              node.raid_set = node_attributes["raid"]
-              dirty = true
-            end
-
-            unless node.group == node_attributes["group"]
-              unless node_attributes["group"].blank? ||
-                  node_attributes["group"] =~ /^[a-zA-Z][a-zA-Z0-9._:-]+$/
-                report[:group_error] = true
-                raise I18n.t("nodes.list.group_error", failed: node.name)
-              end
-
-              node.group = node_attributes["group"]
-              dirty = true
-            end
-
             if dirty
               node.save
               report[:success].push node_name
