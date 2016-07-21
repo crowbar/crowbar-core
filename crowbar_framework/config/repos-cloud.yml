@@ -8,7 +8,8 @@ suse-12.1:
       repomd:
         tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP1:GA/SLES/12.1/POOL/aarch64",
               "obsproduct://build.suse.de/Devel:ARM:SLE-12-SP1:Update/SLES/12.1/POOL/aarch64"]
-        key_md5: ["9a62177e1c6852d48453ed3909956d6b", "c4a27581cec772c6dc641825d41c63d2"]
+        fingerprint: ["FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82",
+                      "1F75 6615 1A2E EC5A 792B D0D1 2CE5 AD53 34AA 9871"]
       url:
       smt_path: "SUSE/Products/SLE-SERVER/12-SP1/aarch64/product"
       ask_on_error: false
@@ -19,7 +20,8 @@ suse-12.1:
       repomd:
         tag: ["obsrepository://build.suse.de/SUSE:Updates:SLE-SERVER:12-SP1:aarch64/update",
               "obsproduct://build.suse.de/Devel:ARM:SLE-12-SP1:Update/SLES/12.1/POOL/aarch64"]
-        key_md5: ["9a62177e1c6852d48453ed3909956d6b", "c4a27581cec772c6dc641825d41c63d2"]
+        fingerprint: ["FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82",
+                      "1F75 6615 1A2E EC5A 792B D0D1 2CE5 AD53 34AA 9871"]
       url:
       smt_path: "SUSE/Updates/SLE-SERVER/12-SP1/aarch64/update"
       ask_on_error: false
@@ -32,16 +34,17 @@ suse-12.1:
               "obsproduct://build.suse.de/Devel:Cloud:7:Mitaka/suse-openstack-cloud/7/cd/aarch64",
               "obsproduct://build.suse.de/Devel:Cloud:7:Staging/suse-openstack-cloud/7/cd/aarch64",
               "obsproduct://build.suse.de/Devel:Cloud:7/suse-openstack-cloud/7/cd/aarch64"]
-        key_md5: ["9a62177e1c6852d48453ed3909956d6b", "6e2920076653964b7de9d6d0421955bb", "d91f7a13ddadd614001c965f6abb1613"]
+        fingerprint: ["FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82",
+                      "BBB0 A65B 9E2D 41F4 5575 4979 4726 6566 F990 41E1"]
       url:
       ask_on_error: false
     suse-openstack-cloud-7-pool:
       name: "SUSE-OpenStack-Cloud-7-Pool"
 #      required: "mandatory"
       features: ["openstack"]
-#      repomd:
-#        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP2:Update:Products:Cloud7/suse-openstack-cloud/7/POOL/aarch64"
-#        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+      repomd:
+        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP2:Update:Products:Cloud7/suse-openstack-cloud/7/POOL/aarch64"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Products/OpenStack-Cloud/7/aarch64/product"
       ask_on_error: false
@@ -49,9 +52,9 @@ suse-12.1:
       name: "SUSE-OpenStack-Cloud-7-Updates"
 #      required: "mandatory"
       features: ["openstack"]
-#      repomd:
-#        tag: "obsrepository://build.suse.de/SUSE:Updates:OpenStack-Cloud:7:aarch64/update"
-#        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+      repomd:
+        tag: "obsrepository://build.suse.de/SUSE:Updates:OpenStack-Cloud:7:aarch64/update"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Updates/OpenStack-Cloud/7/aarch64/update"
       ask_on_error: false
@@ -61,7 +64,7 @@ suse-12.1:
       features: ["ha"]
       repomd:
         tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP1:GA/sle-ha/12.1/POOL/aarch64"
-        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Products/SLE-HA/12-SP1/aarch64/product"
       ask_on_error: false
@@ -71,7 +74,7 @@ suse-12.1:
       features: ["ha"]
       repomd:
         tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-HA:12-SP1:aarch64/update"
-        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Updates/SLE-HA/12-SP1/aarch64/update"
       ask_on_error: false
@@ -81,7 +84,7 @@ suse-12.1:
       features: ["ceph"]
       repomd:
         tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP1:Update:Products:SES3/ses/3/POOL/aarch64"
-        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Products/Storage/3/aarch64/product"
       ask_on_error: false
@@ -89,9 +92,9 @@ suse-12.1:
       name: "SUSE-Enterprise-Storage-3-Updates"
       required: "optional"
       features: ["ceph"]
-#      repomd:
-#        tag: "obsrepository://build.suse.de/SUSE:Updates:Storage:2.1:aarch64/update"
-#        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+      repomd:
+        tag: "obsrepository://build.suse.de/SUSE:Updates:Storage:2.1:aarch64/update"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Updates/Storage/3/aarch64/update"
       ask_on_error: false
@@ -107,7 +110,7 @@ suse-12.1:
       features: ["os"]
       repomd:
         tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP1:GA/SLES/12.1/POOL/x86_64"
-        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Products/SLE-SERVER/12-SP1/x86_64/product"
       ask_on_error: false
@@ -117,7 +120,7 @@ suse-12.1:
       features: ["os"]
       repomd:
         tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-SERVER:12-SP1:x86_64/update"
-        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Updates/SLE-SERVER/12-SP1/x86_64/update"
       ask_on_error: false
@@ -130,16 +133,17 @@ suse-12.1:
               "obsproduct://build.suse.de/Devel:Cloud:7:Mitaka/suse-openstack-cloud/7/cd/x86_64",
               "obsproduct://build.suse.de/Devel:Cloud:7:Staging/suse-openstack-cloud/7/cd/x86_64",
               "obsproduct://build.suse.de/Devel:Cloud:7/suse-openstack-cloud/7/cd/x86_64"]
-        key_md5: ["9a62177e1c6852d48453ed3909956d6b", "d91f7a13ddadd614001c965f6abb1613"]
+        fingerprint: ["FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82",
+                      "BBB0 A65B 9E2D 41F4 5575 4979 4726 6566 F990 41E1"]
       url:
       ask_on_error: false
     suse-openstack-cloud-7-pool:
       name: "SUSE-OpenStack-Cloud-7-Pool"
 #      required: "mandatory"
       features: ["openstack"]
-#      repomd:
-#        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP2:Update:Products:Cloud7/suse-openstack-cloud/7/POOL/x86_64"
-#        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+      repomd:
+        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP2:Update:Products:Cloud7/suse-openstack-cloud/7/POOL/x86_64"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Products/OpenStack-Cloud/7/x86_64/product"
       ask_on_error: false
@@ -147,9 +151,9 @@ suse-12.1:
       name: "SUSE-OpenStack-Cloud-7-Updates"
 #      required: "mandatory"
       features: ["openstack"]
-#      repomd:
-#        tag: "obsrepository://build.suse.de/SUSE:Updates:OpenStack-Cloud:7:x86_64/update"
-#        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+      repomd:
+        tag: "obsrepository://build.suse.de/SUSE:Updates:OpenStack-Cloud:7:x86_64/update"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Updates/OpenStack-Cloud/7/x86_64/update"
       ask_on_error: false
@@ -159,7 +163,7 @@ suse-12.1:
       features: ["ha"]
       repomd:
         tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP1:GA/sle-ha/12.1/POOL/x86_64"
-        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Products/SLE-HA/12-SP1/x86_64/product"
       ask_on_error: false
@@ -169,7 +173,7 @@ suse-12.1:
       features: ["ha"]
       repomd:
         tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-HA:12-SP1:x86_64/update"
-        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Updates/SLE-HA/12-SP1/x86_64/update"
       ask_on_error: false
@@ -179,7 +183,7 @@ suse-12.1:
       features: ["ceph"]
       repomd:
         tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP1:Update:Products:SES3/ses/3/POOL/x86_64"
-        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Products/Storage/3/x86_64/product"
       ask_on_error: false
@@ -187,9 +191,9 @@ suse-12.1:
       name: "SUSE-Enterprise-Storage-3-Updates"
       required: "optional"
       features: ["ceph"]
-#      repomd:
-#        tag: "obsrepository://build.suse.de/SUSE:Updates:Storage:2.1:x86_64/update"
-#        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+      repomd:
+        tag: "obsrepository://build.suse.de/SUSE:Updates:Storage:2.1:x86_64/update"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Updates/Storage/3/x86_64/update"
       ask_on_error: false
@@ -205,7 +209,7 @@ suse-12.1:
       features: ["os"]
       repomd:
         tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP1:GA/SLES/12.1/POOL/s390x"
-        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Products/SLE-SERVER/12-SP1/s390x/product"
       ask_on_error: false
@@ -215,7 +219,7 @@ suse-12.1:
       features: ["os"]
       repomd:
         tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-SERVER:12-SP1:s390x/update"
-        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Updates/SLE-SERVER/12-SP1/s390x/update"
       ask_on_error: false
@@ -227,7 +231,8 @@ suse-12.1:
         tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP2:Update:Products:Cloud7/suse-openstack-cloud/7/cd/s390x",
               "obsproduct://build.suse.de/Devel:Cloud:7:Staging/suse-openstack-cloud/7/cd/s390x",
               "obsproduct://build.suse.de/Devel:Cloud:7/suse-openstack-cloud/7/cd/s390x"]
-        key_md5: ["9a62177e1c6852d48453ed3909956d6b", "d91f7a13ddadd614001c965f6abb1613"]
+        fingerprint: ["FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82",
+                      "BBB0 A65B 9E2D 41F4 5575 4979 4726 6566 F990 41E1"]
       url:
       ask_on_error: false
     ptf:
@@ -243,7 +248,7 @@ suse-12.2:
       features: ["os"]
       repomd:
         tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP2:GA/SLES/12.2/POOL/aarch64"
-        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Products/SLE-SERVER/12-SP2/aarch64/product"
       ask_on_error: false
@@ -253,7 +258,7 @@ suse-12.2:
       features: ["os"]
       repomd:
         tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-SERVER:12-SP2:aarch64/update"
-        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Updates/SLE-SERVER/12-SP2/aarch64/update"
       ask_on_error: false
@@ -266,16 +271,17 @@ suse-12.2:
               "obsproduct://build.suse.de/Devel:Cloud:7:Mitaka/suse-openstack-cloud/7/cd/aarch64",
               "obsproduct://build.suse.de/Devel:Cloud:7:Staging/suse-openstack-cloud/7/cd/aarch64",
               "obsproduct://build.suse.de/Devel:Cloud:7/suse-openstack-cloud/7/cd/aarch64"]
-        key_md5: ["9a62177e1c6852d48453ed3909956d6b", "6e2920076653964b7de9d6d0421955bb"]
+        fingerprint: ["FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82",
+                      "BBB0 A65B 9E2D 41F4 5575 4979 4726 6566 F990 41E1"]
       url:
       ask_on_error: false
     suse-openstack-cloud-7-pool:
       name: "SUSE-OpenStack-Cloud-7-Pool"
       required: "mandatory"
       features: ["openstack"]
-#      repomd:
-#        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP2:Update:Products:Cloud7/suse-openstack-cloud/7/POOL/aarch64"
-#        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+      repomd:
+        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP2:Update:Products:Cloud7/suse-openstack-cloud/7/POOL/aarch64"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Products/OpenStack-Cloud/7/aarch64/product"
       ask_on_error: false
@@ -283,9 +289,9 @@ suse-12.2:
       name: "SUSE-OpenStack-Cloud-7-Updates"
       required: "mandatory"
       features: ["openstack"]
-#      repomd:
-#        tag: "obsrepository://build.suse.de/SUSE:Updates:OpenStack-Cloud:7:aarch64/update"
-#        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+      repomd:
+        tag: "obsrepository://build.suse.de/SUSE:Updates:OpenStack-Cloud:7:aarch64/update"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Updates/OpenStack-Cloud/7/aarch64/update"
       ask_on_error: false
@@ -295,7 +301,7 @@ suse-12.2:
       features: ["ha"]
       repomd:
         tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP2:GA/sle-ha/12.2/POOL/aarch64"
-        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Products/SLE-HA/12-SP2/aarch64/product"
       ask_on_error: false
@@ -305,7 +311,7 @@ suse-12.2:
       features: ["ha"]
       repomd:
         tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-HA:12-SP2:aarch64/update"
-        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Updates/SLE-HA/12-SP2/aarch64/update"
       ask_on_error: false
@@ -321,7 +327,7 @@ suse-12.2:
       features: ["os"]
       repomd:
         tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP2:GA/SLES/12.2/POOL/x86_64"
-        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Products/SLE-SERVER/12-SP2/x86_64/product"
       ask_on_error: false
@@ -331,7 +337,7 @@ suse-12.2:
       features: ["os"]
       repomd:
         tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-SERVER:12-SP2:x86_64/update"
-        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Updates/SLE-SERVER/12-SP2/x86_64/update"
       ask_on_error: false
@@ -344,16 +350,17 @@ suse-12.2:
               "obsproduct://build.suse.de/Devel:Cloud:7:Mitaka/suse-openstack-cloud/7/cd/x86_64",
               "obsproduct://build.suse.de/Devel:Cloud:7:Staging/suse-openstack-cloud/7/cd/x86_64",
               "obsproduct://build.suse.de/Devel:Cloud:7/suse-openstack-cloud/7/cd/x86_64"]
-        key_md5: ["9a62177e1c6852d48453ed3909956d6b", "d91f7a13ddadd614001c965f6abb1613"]
+        fingerprint: ["FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82",
+                      "BBB0 A65B 9E2D 41F4 5575 4979 4726 6566 F990 41E1"]
       url:
       ask_on_error: false
     suse-openstack-cloud-7-pool:
       name: "SUSE-OpenStack-Cloud-7-Pool"
       required: "mandatory"
       features: ["openstack"]
-#      repomd:
-#        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP2:Update:Products:Cloud7/suse-openstack-cloud/7/POOL/x86_64"
-#        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+      repomd:
+        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP2:Update:Products:Cloud7/suse-openstack-cloud/7/POOL/x86_64"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Products/OpenStack-Cloud/7/x86_64/product"
       ask_on_error: false
@@ -361,9 +368,9 @@ suse-12.2:
       name: "SUSE-OpenStack-Cloud-7-Updates"
       required: "mandatory"
       features: ["openstack"]
-#      repomd:
-#        tag: "obsrepository://build.suse.de/SUSE:Updates:OpenStack-Cloud:7:x86_64/update"
-#        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+      repomd:
+        tag: "obsrepository://build.suse.de/SUSE:Updates:OpenStack-Cloud:7:x86_64/update"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Updates/OpenStack-Cloud/7/x86_64/update"
       ask_on_error: false
@@ -373,7 +380,7 @@ suse-12.2:
       features: ["ha"]
       repomd:
         tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP2:GA/sle-ha/12.2/POOL/x86_64"
-        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Products/SLE-HA/12-SP2/x86_64/product"
       ask_on_error: false
@@ -383,7 +390,7 @@ suse-12.2:
       features: ["ha"]
       repomd:
         tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-HA:12-SP2:x86_64/update"
-        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Updates/SLE-HA/12-SP2/x86_64/update"
       ask_on_error: false
@@ -399,7 +406,7 @@ suse-12.2:
       features: ["os"]
       repomd:
         tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP2:GA/SLES/12.2/POOL/s390x"
-        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Products/SLE-SERVER/12-SP2/s390x/product"
       ask_on_error: false
@@ -409,7 +416,7 @@ suse-12.2:
       features: ["os"]
       repomd:
         tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-SERVER:12-SP2:s390x/update"
-        key_md5: "9a62177e1c6852d48453ed3909956d6b"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Updates/SLE-SERVER/12-SP2/s390x/update"
       ask_on_error: false
@@ -421,7 +428,8 @@ suse-12.2:
         tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP2:Update:Products:Cloud7/suse-openstack-cloud/7/cd/s390x",
               "obsproduct://build.suse.de/Devel:Cloud:7:Staging/suse-openstack-cloud/7/cd/s390x",
               "obsproduct://build.suse.de/Devel:Cloud:7/suse-openstack-cloud/7/cd/s390x"]
-        key_md5: ["9a62177e1c6852d48453ed3909956d6b", "d91f7a13ddadd614001c965f6abb1613"]
+        fingerprint: ["FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82",
+                      "BBB0 A65B 9E2D 41F4 5575 4979 4726 6566 F990 41E1"]
       url:
       ask_on_error: false
     ptf:
