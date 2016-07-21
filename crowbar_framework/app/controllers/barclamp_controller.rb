@@ -732,9 +732,8 @@ class BarclampController < ApplicationController
             barclamp: params[:barclamp],
             name: params[:name]
           ).first
-        ]
+        ].compact
       end
-      result.compact!
 
       result.each do |prop|
         prop_id = "#{prop.barclamp}_#{prop.name}"
