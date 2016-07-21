@@ -953,7 +953,9 @@ class ServiceObject
       # Attempt to queue the proposal.  If delay is empty, then run it.
       deps = proposal_dependencies(role)
       delay, pre_cached_nodes = queue_proposal(inst, element_order, new_elements, deps)
-      return [202, "Queued: waiting for #{delay.join(", ")}"] unless delay.empty?
+      # FIXME: this breaks the convention that we return a string; but really,
+      # we should return a hash everywhere, to avoid this...
+      return [202, delay] unless delay.empty?
 
       @logger.debug "delay empty - running proposal"
     end

@@ -517,6 +517,8 @@ class BarclampController < ApplicationController
           "crowbar-deep-merge-template"
         )
       )
+      # See FIXME in ServiceObject.apply_role
+      message = "" if code = 202
 
       respond_to do |format|
         case code
