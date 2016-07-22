@@ -33,8 +33,8 @@ module Crowbar
     def upgrade
       case @version
       when "1.9"
-        knife_files
-        crowbar_files
+        knife_files_1_9
+        crowbar_files_1_9
       end
 
       if @status[:errors].any?
@@ -53,7 +53,7 @@ module Crowbar
 
     protected
 
-    def knife_files
+    def knife_files_1_9
       Rails.logger.debug "Upgrading chef backup files"
       @data.join("knife", "databags", "barclamps").rmtree
       knife_path = @data.join("knife")
@@ -131,7 +131,7 @@ module Crowbar
       end
     end
 
-    def crowbar_files
+    def crowbar_files_1_9
       FileUtils.touch(@data.join("crowbar", "database.yml"))
     end
 
