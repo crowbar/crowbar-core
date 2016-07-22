@@ -9,7 +9,7 @@ dns_servers = admin_ip if dns_servers.empty?
 
 domain_name = node[:dns].nil? ? node[:domain] : (node[:dns][:domain] || node[:domain])
 
-admin_net = node[:network][:networks]["admin"]
+admin_net = Barclamp::Inventory.get_network_definition(node, "admin")
 lease_time = node[:provisioner][:dhcp]["lease-time"]
 
 pool_opts = {
