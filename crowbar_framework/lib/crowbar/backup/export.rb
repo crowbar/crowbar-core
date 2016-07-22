@@ -183,6 +183,8 @@ module Crowbar
         data_dir.mkpath
 
         klass.list.each do |name, url|
+          next if self.class.send("filter_chef_#{component}".to_sym, name)
+
           logger.debug "Backing up #{component} #{name}"
 
           record = klass.load(name)

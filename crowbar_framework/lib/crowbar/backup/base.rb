@@ -100,6 +100,31 @@ module Crowbar
         def export_files
           restore_files.concat(restore_files_after_install).map(&:reverse)
         end
+
+        def filter_chef_node(name)
+          false
+        end
+        alias_method :filter_chef_nodes, :filter_chef_node
+
+        def filter_chef_role(name)
+          # Filter roles which are not crowbar roles (proposal + node roles)
+          # as they are code, not data
+          # The regexp for node roles is not great, but we know we have a _
+          # due to the domain, so it should be good enough
+          name !~ /(.+-config-.+)|(^crowbar-.+_.+)/
+        end
+        alias_method :filter_chef_roles, :filter_chef_role
+
+        def filter_chef_client(name)
+          # Filter client "crowbar" as we need the new one on restore anyway
+          name =~ /^crowbar$/
+        end
+        alias_method :filter_chef_clients, :filter_chef_client
+
+        def filter_chef_databag(db, name)
+          false
+        end
+        alias_method :filter_chef_databags, :filter_chef_databag
       end
     end
   end

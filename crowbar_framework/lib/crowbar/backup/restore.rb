@@ -189,13 +189,15 @@ module Crowbar
           [:nodes, :roles, :clients, :databags].each do |type|
             Dir.glob(@data.join("knife", type.to_s, "**", "*")).each do |file|
               file = Pathname.new(file)
-              # skip client "crowbar"
-              next if type == :clients && file.basename.to_s =~ /^crowbar.json$/
-              # skip roles which are not crowbar roles (proposal + node roles)
-              # the regexp for node roles is not great, but we know we have a _
-              # due to the domain, so it should be good enough
-              next if type == :roles && file.basename.to_s !~ /(.+-config-.+)|(^crowbar-.+_.+)/
               next unless file.extname == ".json"
+
+              name = file.basename(".json").to_s
+              if type == :databags
+                db = file.parent.basename.to_s
+                next if Crowbar::Backup::Base.send("filter_chef_#{type}".to_sym, db, name)
+              else
+                next if Crowbar::Backup::Base.send("filter_chef_#{type}".to_sym, name)
+              end
 
               record = JSON.load(file.read)
               record.save
