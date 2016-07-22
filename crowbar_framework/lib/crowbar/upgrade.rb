@@ -36,6 +36,9 @@ module Crowbar
         knife_files_1_9
         reset_target_platform_for_nodes
         crowbar_files_1_9
+      when "3.0"
+        network_json_3_0
+        reset_target_platform_for_nodes
       end
 
       if @status[:errors].any?
@@ -53,6 +56,12 @@ module Crowbar
     end
 
     protected
+
+    def network_json_3_0
+      Rails.logger.debug "Re-creating network.json from upgrade data"
+      network_role_path = @data.join("knife", "roles", "network-config-default.json")
+      create_network_json(network_role_path)
+    end
 
     def knife_files_1_9
       Rails.logger.debug "Upgrading chef backup files"
@@ -129,6 +138,7 @@ module Crowbar
     end
 
     def reset_target_platform_for_nodes
+      Rails.logger.debug "Resetting platform of nodes due to upcoming OS upgrade"
       # find admin node and update target_platform
       nodes_path = @data.join("knife", "nodes")
       nodes_path.children.each do |file|
