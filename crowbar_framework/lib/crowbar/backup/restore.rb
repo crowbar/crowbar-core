@@ -195,8 +195,8 @@ module Crowbar
               if type == :databags
                 db = file.parent.basename.to_s
                 next if Crowbar::Backup::Base.send("filter_chef_#{type}".to_sym, db, name)
-              else
-                next if Crowbar::Backup::Base.send("filter_chef_#{type}".to_sym, name)
+              elsif Crowbar::Backup::Base.send("filter_chef_#{type}".to_sym, name)
+                next
               end
 
               record = JSON.load(file.read)
