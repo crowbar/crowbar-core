@@ -191,6 +191,10 @@ module Crowbar
               file = Pathname.new(file)
               # skip client "crowbar"
               next if type == :clients && file.basename.to_s =~ /^crowbar.json$/
+              # skip roles which are not crowbar roles (proposal + node roles)
+              # the regexp for node roles is not great, but we know we have a _
+              # due to the domain, so it should be good enough
+              next if type == :roles && file.basename.to_s !~ /(.+-config-.+)|(^crowbar-.+_.+)/
               next unless file.extname == ".json"
 
               record = JSON.load(file.read)
