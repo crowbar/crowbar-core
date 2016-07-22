@@ -70,7 +70,8 @@ module Crowbar
           bag_dir.mkpath
 
           ::Chef::DataBag.load(name).each do |item, item_url|
-            next if item.match(/\Atemplate-.*/)
+            next if self.class.filter_chef_databag(name, item)
+
             logger.debug "Backing up databag #{name}/#{item}"
 
             record = ::Chef::DataBagItem.load(

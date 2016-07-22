@@ -122,7 +122,9 @@ module Crowbar
         alias_method :filter_chef_clients, :filter_chef_client
 
         def filter_chef_databag(db, name)
-          false
+          # Filter items in crowbar data bag that are not network databag items
+          return false if db != "crowbar"
+          name !~ /.+_network$/
         end
         alias_method :filter_chef_databags, :filter_chef_databag
       end
