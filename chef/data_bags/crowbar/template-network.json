@@ -87,6 +87,9 @@
             },
             "intf2": {
               "if_list": [ "1g1", "1g2" ]
+            },
+            "intf3": {
+              "if_list": [ "1g1", "1g2" ]
             }
           }
         },
@@ -101,6 +104,26 @@
             },
             "intf2": {
               "if_list": [ "?1g1" ]
+            },
+            "intf3": {
+              "if_list": [ "?1g2" ]
+            }
+          }
+        },
+        {
+          "pattern": "single/.*/.*ironic.*",
+          "conduit_list": {
+            "intf0": {
+              "if_list": [ "?1g1" ]
+            },
+            "intf1": {
+              "if_list": [ "?1g1" ]
+            },
+            "intf2": {
+              "if_list": [ "?1g1" ]
+            },
+            "intf3": {
+              "if_list": [ "?1g2" ]
             }
           }
         },
@@ -114,6 +137,9 @@
               "if_list": [ "?1g1" ]
             },
             "intf2": {
+              "if_list": [ "?1g1" ]
+            },
+            "intf3": {
               "if_list": [ "?1g1" ]
             }
           }
@@ -129,6 +155,9 @@
             },
             "intf2": {
               "if_list": [ "1g1" ]
+            },
+            "intf3": {
+              "if_list": [ "1g1" ]
             }
           }
         },
@@ -142,6 +171,9 @@
               "if_list": [ "?1g1" ]
             },
             "intf2": {
+              "if_list": [ "?1g1" ]
+            },
+            "intf3": {
               "if_list": [ "?1g1" ]
             }
           }
@@ -242,6 +274,23 @@
             "host": { "start": "192.168.130.10", "end": "192.168.130.254"}
           }
         },
+        "ironic": {
+          "conduit": "intf3",
+          "vlan": 100,
+          "use_vlan": false,
+          "add_bridge": false,
+          "add_ovs_bridge": false,
+          "bridge_name": "br-ironic",
+          "subnet": "192.168.127.0",
+          "netmask": "255.255.255.0",
+          "broadcast": "192.168.127.255",
+          "router": "192.168.127.1",
+          "router_pref": 50,
+          "ranges": {
+            "admin": { "start": "192.168.127.10", "end": "192.168.127.11" },
+            "dhcp": { "start": "192.168.127.21", "end": "192.168.127.254" }
+          }
+        },
         "admin": {
           "conduit": "intf0",
           "vlan": 100,
@@ -267,7 +316,7 @@
     "network": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 100,
+      "schema-revision": 101,
       "element_states": {
         "network": [ "readying", "ready", "applying" ]
       },
