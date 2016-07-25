@@ -22,9 +22,8 @@ EnvironmentFile=-/etc/sysconfig/crowbar
 
 ExecStartPre=/usr/bin/rm -f /var/run/crowbar/looper-chef-client.lock /var/run/crowbar/chef-client.lock
 ExecStart=/usr/bin/puma -C /opt/dell/crowbar_framework/config/puma.rb
-ExecStop=/usr/bin/pumactl -S /opt/dell/crowbar_framework/tmp/pids/puma.state stop
-ExecReload=/usr/bin/pumactl -S /opt/dell/crowbar_framework/tmp/pids/puma.state restart
 
+Restart=always
 
 [Install]
 WantedBy=multi-user.target
