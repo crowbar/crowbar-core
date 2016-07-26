@@ -1432,6 +1432,11 @@ class ServiceObject
 
     update_proposal_status(inst, "success", "")
     [200, {}]
+  rescue StandardError => e
+    @logger.fatal("apply_role: Uncaught exception #{e.message} #{e.backtrace.join("\n")}")
+    message = "Failed to apply the proposal: uncaught exception (#{e.message})"
+    update_proposal_status(inst, "failed", message)
+    [405, message]
   ensure
     apply_locks.each(&:release) if apply_locks.any?
     restore_to_ready(applying_nodes) if applying_nodes.any?
