@@ -82,6 +82,11 @@ unless node[:platform_family] == "windows"
     rescue LoadError
       Chef::Log.fatal("Unable to load cstruct module - install of #{pkg} failed?")
     end
+
+    # Install dmidecode - needed for better machine detection and network.json matching
+    if node[:kernel][:machine] =~ /(x86|aarch64)/
+      package("dmidecode").run_action(:install)
+    end
   end
 end
 
