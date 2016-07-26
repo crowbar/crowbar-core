@@ -40,7 +40,12 @@ when "rhel", "suse"
   bindgroup = "named"
 end
 
-directory "/etc/bind"
+directory "/etc/bind" do
+  owner "root"
+  group bindgroup
+  mode 0770
+  action :create
+end
 
 unless node[:dns][:master]
   directory "/etc/bind/slave" do
