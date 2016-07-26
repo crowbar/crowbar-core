@@ -33,11 +33,11 @@ module Crowbar
     def upgrade
       case @version
       when "1.9"
-        knife_files_1_9
+        upgrade_knife_files_1_9
         reset_target_platform_for_nodes
-        crowbar_files_1_9
+        upgrade_crowbar_files_1_9
       when "3.0"
-        network_json_3_0
+        create_network_json_3_0
         reset_target_platform_for_nodes
       end
 
@@ -57,13 +57,13 @@ module Crowbar
 
     protected
 
-    def network_json_3_0
+    def create_network_json_3_0
       Rails.logger.debug "Re-creating network.json from upgrade data"
       network_role_path = @data.join("knife", "roles", "network-config-default.json")
       create_network_json(network_role_path)
     end
 
-    def knife_files_1_9
+    def upgrade_knife_files_1_9
       Rails.logger.debug "Upgrading chef backup files"
       @data.join("knife", "databags", "barclamps").rmtree
       knife_path = @data.join("knife")
@@ -111,7 +111,7 @@ module Crowbar
       end
     end
 
-    def crowbar_files_1_9
+    def upgrade_crowbar_files_1_9
       FileUtils.touch(@data.join("crowbar", "database.yml"))
     end
 
