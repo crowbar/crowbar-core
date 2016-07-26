@@ -42,6 +42,9 @@ else
   gem "apipie-rails", "~> 0.3.6"
   require "apipie-rails"
 
+  gem "pg", "~> 0.17.1"
+  require "pg"
+
   # general stuff
   gem "activerecord-session_store", version: "~> 0.1.0"
   require "activerecord/session_store"
