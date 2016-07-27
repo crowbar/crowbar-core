@@ -93,7 +93,7 @@ suse-12.1:
       required: "optional"
       features: ["ceph"]
       repomd:
-        tag: "obsrepository://build.suse.de/SUSE:Updates:Storage:2.1:aarch64/update"
+        tag: "obsrepository://build.suse.de/SUSE:Updates:Storage:3:aarch64/update"
         fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Updates/Storage/3/aarch64/update"
@@ -192,7 +192,7 @@ suse-12.1:
       required: "optional"
       features: ["ceph"]
       repomd:
-        tag: "obsrepository://build.suse.de/SUSE:Updates:Storage:2.1:x86_64/update"
+        tag: "obsrepository://build.suse.de/SUSE:Updates:Storage:3:x86_64/update"
         fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Updates/Storage/3/x86_64/update"
