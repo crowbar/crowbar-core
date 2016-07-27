@@ -1,8 +1,10 @@
 
 
 domain_name = node[:dns].nil? ? node[:domain] : (node[:dns][:domain] || node[:domain])
+
 admin_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
-admin_net = node[:network][:networks]["admin"]
+admin_net = Barclamp::Inventory.get_network_definition(node, "admin")
+
 lease_time = node[:provisioner][:dhcp]["lease-time"]
 pool_opts = {
   "dhcp" => ["allow unknown-clients",
