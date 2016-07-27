@@ -247,7 +247,12 @@ module BarclampLibrary
           conduit_data.each do |conduit_key, conduit_val|
             if conduit_key == "if_list"
               hash["if_list"] = conduit_data["if_list"].map do |if_ref|
-                map_if_ref(if_remap, if_ref)
+                r = map_if_ref(if_remap, if_ref)
+                if r.nil?
+                  Chef::Log.debug "Unable to find interface for #{node.fqdn} " \
+                                  "matching #{if_ref} out of #{if_remap}"
+                end
+                r
               end
             else
               hash[conduit_key] = conduit_val
