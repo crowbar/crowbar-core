@@ -242,18 +242,18 @@ module BarclampLibrary
         #     "1g4"   => "em4"
         #   }
         ans = {}
-        conduits.each do |k,v|
+        conduits.each do |conduit, conduit_data|
           hash = {}
-          v.each do |mk, mv|
-            if mk == "if_list"
-              hash["if_list"] = v["if_list"].map do |if_ref|
+          conduit_data.each do |conduit_key, conduit_val|
+            if conduit_key == "if_list"
+              hash["if_list"] = conduit_data["if_list"].map do |if_ref|
                 map_if_ref(if_remap, if_ref)
               end
             else
-              hash[mk] = mv
+              hash[conduit_key] = conduit_val
             end
           end
-          ans[k] = hash
+          ans[conduit] = hash
         end
 
         ans
@@ -310,9 +310,9 @@ module BarclampLibrary
 
         return [nil, nil] if intf_to_if_map[conduit].nil?
 
-        c_info = intf_to_if_map[conduit]
-        interface_list = c_info["if_list"]
-        team_mode = c_info["team_mode"] rescue nil
+        conduit_info = intf_to_if_map[conduit]
+        interface_list = conduit_info["if_list"]
+        team_mode = conduit_info["team_mode"] rescue nil
 
         return [interface_list[0], interface_list, nil] if interface_list.size == 1
 
