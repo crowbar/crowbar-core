@@ -308,7 +308,7 @@ module BarclampLibrary
       def self.lookup_interface_info(node, conduit, intf_to_if_map = nil)
         intf_to_if_map = Barclamp::Inventory.build_node_map(node) if intf_to_if_map.nil?
 
-        return [nil, nil] if intf_to_if_map[conduit].nil?
+        return [nil, nil, nil] if intf_to_if_map[conduit].nil?
 
         conduit_info = intf_to_if_map[conduit]
         interface_list = conduit_info["if_list"]
