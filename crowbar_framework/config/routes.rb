@@ -18,18 +18,14 @@
 Rails.application.routes.draw do
   apipie
 
-  etc_routes = Pathname.new("/var/lib/crowbar/routes.d/")
-  if etc_routes.directory?
-    etc_routes.children.each do |routes|
+  route_dirs = [Pathname.new("/var/lib/crowbar/routes.d/"), Rails.root.join("config", "routes.d")]
+  route_dirs.each do |route_dir|
+    next unless route_dir.directory?
+    route_dir.children.each do |routes|
       next unless routes.extname == ".routes"
       eval(routes.read, binding)
     end
   end
-
-  # Install route from each barclamp
-  Rails.root.join("config", "routes.d").children.each do |routes|
-    eval(routes.read, binding) if routes.extname == ".routes"
-  end if Rails.root.join("config", "routes.d").directory?
 
   # Root route have to be on top of all
   root to: "nodes#index"
