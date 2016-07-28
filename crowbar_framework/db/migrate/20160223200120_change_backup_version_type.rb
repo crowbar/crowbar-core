@@ -4,6 +4,11 @@ class ChangeBackupVersionType < ActiveRecord::Migration
   end
 
   def down
-    change_column :backups, :version, :float
+    type = if Rails.configuration.database_configuration[Rails.env]["adapter"] == "postgresql"
+      "float USING version::double precision"
+    else
+      :float
+    end
+    change_column :backups, :version, type
   end
 end
