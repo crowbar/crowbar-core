@@ -17,6 +17,15 @@
 
 Rails.application.routes.draw do
   apipie
+
+  etc_routes = Pathname.new("/var/lib/crowbar/routes.d/")
+  if etc_routes.directory?
+    etc_routes.children.each do |routes|
+      next unless routes.extname == ".routes"
+      eval(routes.read, binding)
+    end
+  end
+
   # Install route from each barclamp
   Rails.root.join("config", "routes.d").children.each do |routes|
     eval(routes.read, binding) if routes.extname == ".routes"
