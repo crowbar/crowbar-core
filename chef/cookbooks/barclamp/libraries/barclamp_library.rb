@@ -317,7 +317,7 @@ module BarclampLibrary
 
         conduit_info = intf_to_if_map[conduit]
         interface_list = conduit_info["if_list"]
-        team_mode = conduit_info["team_mode"] rescue nil
+        team_mode = conduit_info["team_mode"]
 
         return [interface_list[0], interface_list, nil] if interface_list.size == 1
 
