@@ -20,6 +20,10 @@ def find_node_boot_mac_addresses(node, admin_data_net)
   result = []
   admin_interfaces = admin_data_net.interface_list
   admin_interfaces.each do |interface|
+    if interface.nil?
+      raise "Failed to find admin node interface for node #{node.fqdn}! " \
+            "Check your network barclamp proposal."
+    end
     node["network"]["interfaces"][interface]["addresses"].each do |addr, addr_data|
       next if addr_data["family"] != "lladdr"
       result << addr unless result.include? addr
