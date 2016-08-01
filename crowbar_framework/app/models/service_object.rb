@@ -355,7 +355,7 @@ class ServiceObject
     return [200, nodes] unless role
 
     valid_roles = Proposal.new(barclamp: @bc_name).all_elements
-    return [404, "No role #{role} found for #{@bc_name}."] if !valid_roles.include?(role)
+    return [404, "No role #{role} found for #{@bc_name}."] unless valid_roles.include?(role)
 
     # FIXME: we could try adding each node in turn to existing proposal's 'elements' and removing it
     # from the nodes list in the case the new proposal would not be valid, so
