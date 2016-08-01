@@ -323,9 +323,14 @@ module Installer
           false
         )
 
-        Crowbar::Repository.chef_data_bag_destroy(
-          "#{repository.data_bag_name}/#{repository.id}"
-        )
+        begin
+          Crowbar::Repository.chef_data_bag_destroy(
+            "#{repository.data_bag_name}/#{repository.id}"
+          )
+        rescue Net::HTTPServerException
+          # it is fine to pass if the databag doesn't exist
+          logger.debug("No such databag #{repository.data_bag_name}/#{repository.id}")
+        end
       end
     end
 
