@@ -1,4 +1,3 @@
-
 #
 # Copyright 2016, SUSE Linux GmbH
 #
@@ -15,33 +14,30 @@
 # limitations under the License.
 #
 
-class Api::V2::CrowbarController < ApplicationController
-  api :GET, "/api/v2/crowbar", "Show the crowbar object"
+class Api::ErrorsController < ApplicationController
+  api :GET, "/api/errors", "Show a list of errors"
+  api_version "2.0"
+  def index
+    render json: [], status: :not_implemented
+  end
+
+  api :GET, "/api/errors/:id", "Show a specific error"
+  param :id, Integer, desc: "Error ID", required: true
   api_version "2.0"
   def show
     render json: {}, status: :not_implemented
   end
 
-  api :PATCH, "/api/v2/crowbar", "Update Crowbar object"
+  api :POST, "/api/errors", "Create an error"
   api_version "2.0"
-  def update
+  def create
     head :not_implemented
   end
 
-  api :GET, "/api/v2/crowbar/upgrade", "Status of Crowbar Upgrade"
-  api :POST, "/api/v2/crowbar/upgrade", "Upgrade Crowbar"
+  api :DELETE, "/api/errors/:id", "Delete a specific error"
+  param :id, Integer, desc: "Error ID", required: true
   api_version "2.0"
-  def upgrade
-    if request.post?
-      head :not_implemented
-    else
-      render json: {}, status: :not_implemented
-    end
-  end
-
-  api :GET, "/api/v2/crowbar/maintenance", "Check for maintenance updates on crowbar"
-  api_version "2.0"
-  def maintenance
-    render json: {}, status: :not_implemented
+  def delete
+    head :not_implemented
   end
 end

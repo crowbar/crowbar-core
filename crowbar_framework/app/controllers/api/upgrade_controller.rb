@@ -1,4 +1,3 @@
-
 #
 # Copyright 2016, SUSE Linux GmbH
 #
@@ -15,20 +14,20 @@
 # limitations under the License.
 #
 
-class Api::V2::UpgradeController < ApplicationController
-  api :GET, "/api/v2/upgrade", "Show the Upgrade status object"
+class Api::UpgradeController < ApplicationController
+  api :GET, "/api/upgrade", "Show the Upgrade status object"
   api_version "2.0"
   def show
     render json: {}, status: :not_implemented
   end
 
-  api :PATCH, "/api/v2/upgrade", "Update Upgrade status object"
+  api :PATCH, "/api/upgrade", "Update Upgrade status object"
   api_version "2.0"
   def update
     head :not_implemented
   end
 
-  api :POST, "/api/v2/upgrade/prepare", "Prepare Crowbar Upgrade"
+  api :POST, "/api/upgrade/prepare", "Prepare Crowbar Upgrade"
   api_version "2.0"
   def prepare
     status = :ok
@@ -51,8 +50,8 @@ class Api::V2::UpgradeController < ApplicationController
     end
   end
 
-  api :GET, "/api/v2/upgrade/services", "List all openstack services on all nodes that need to stop"
-  api :POST, "/api/v2/upgrade/services", "Stop related services on all nodes during upgrade"
+  api :GET, "/api/upgrade/services", "List all openstack services on all nodes that need to stop"
+  api :POST, "/api/upgrade/services", "Stop related services on all nodes during upgrade"
   api_version "2.0"
   def services
     if request.post?
@@ -62,7 +61,7 @@ class Api::V2::UpgradeController < ApplicationController
     end
   end
 
-  api :GET, "/api/v2/upgrade/prechecks", "Shows a sanity check in preparation for the upgrade"
+  api :GET, "/api/upgrade/prechecks", "Shows a sanity check in preparation for the upgrade"
   def prechecks
     render json: {}, status: :not_implemented
   end

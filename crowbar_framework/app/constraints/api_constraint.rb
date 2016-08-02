@@ -1,5 +1,5 @@
 #
-# Copyright 2016, SUSE LINUX GmbH
+# Copyright 2016, SUSE Linux GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,9 +14,14 @@
 # limitations under the License.
 #
 
-module API
-  module V2
-    class Node
-    end
+class ApiConstraint
+  attr_reader :version
+
+  def initialize(options)
+    @version = options.fetch(:version)
+  end
+
+  def matches?(request)
+    request.headers.fetch(:accept) == "application/vnd.crowbar.v#{version}+json"
   end
 end

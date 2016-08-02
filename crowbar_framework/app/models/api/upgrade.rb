@@ -14,9 +14,7 @@
 # limitations under the License.
 #
 
-module API
-  module V2
-    class Upgrade
-    end
+module Api
+  class Upgrade
   end
 end

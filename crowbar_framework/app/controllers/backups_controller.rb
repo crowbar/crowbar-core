@@ -20,15 +20,15 @@ class BackupsController < ApplicationController
 
   api :GET, "/utils/backups", "Returns a list of available backups"
   def index
-    @backups = Api::V2::Backup.all
+    @backups = Api::Backup.all
   end
 
   api :POST, "/utils/backups", "Create a backup"
-  param :api_v2_backup, Hash, desc: "Backup info", required: true do
+  param :api_backup, Hash, desc: "Backup info", required: true do
     param :name, String, desc: "Name of the backup", required: true
   end
   def create
-    @backup = Api::V2::Backup.new(backup_params)
+    @backup = Api::Backup.new(backup_params)
 
     unless @backup.save
       flash[:alert] = @backup.errors.full_messages.first
@@ -78,10 +78,10 @@ class BackupsController < ApplicationController
   protected
 
   def set_backup
-    @backup = Api::V2::Backup.find_using_id_or_name!(params[:id])
+    @backup = Api::Backup.find_using_id_or_name!(params[:id])
   end
 
   def backup_params
-    params.require(:api_v2_backup).permit(:name)
+    params.require(:api_backup).permit(:name)
   end
 end

@@ -17,7 +17,7 @@
 
 require "find"
 
-class Api::V2::Backup < ActiveRecord::Base
+class Api::Backup < ActiveRecord::Base
   belongs_to :crowbar
 
   attr_accessor :file

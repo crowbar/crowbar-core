@@ -14,9 +14,7 @@
 # limitations under the License.
 #
 
-module API
-  module V2
-    class Errors
-    end
+module Api
+  class Errors
   end
 end

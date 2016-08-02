@@ -243,47 +243,45 @@ Rails.application.routes.draw do
     via: [:get, :post, :put, :patch, :delete]
 
   namespace :api,
-    constraints: { format: :json } do
-    namespace :v2 do
-      resource :crowbar,
-        controller: :crowbar,
-        only: [:show, :update] do
-        get :upgrade
-        post :upgrade
-        get :maintenance
+    constraints: ApiConstraint.new(version: 2.0) do
+    resource :crowbar,
+      controller: :crowbar,
+      only: [:show, :update] do
+      get :upgrade
+      post :upgrade
+      get :maintenance
 
-        resources :backups,
-          only: [:index, :show, :create, :destroy] do
-          collection do
-            post :upload
-            get :restore_status
-          end
-
-          member do
-            post :restore
-            get :download
-          end
+      resources :backups,
+        only: [:index, :show, :create, :destroy] do
+        collection do
+          post :upload
+          get :restore_status
         end
-      end
 
-      resources :errors,
-        only: [:index, :show, :create, :destroy]
-
-      resource :upgrade,
-        controller: :upgrade,
-        only: [:show, :update] do
-        post :prepare
-        post :services
-        get :services
-        get :prechecks
-      end
-
-      resources :nodes,
-        only: [:index, :show, :update] do
         member do
-          post :upgrade
-          get :upgrade
+          post :restore
+          get :download
         end
+      end
+    end
+
+    resources :errors,
+      only: [:index, :show, :create, :destroy]
+
+    resource :upgrade,
+      controller: :upgrade,
+      only: [:show, :update] do
+      post :prepare
+      post :services
+      get :services
+      get :prechecks
+    end
+
+    resources :nodes,
+      only: [:index, :show, :update] do
+      member do
+        post :upgrade
+        get :upgrade
       end
     end
   end

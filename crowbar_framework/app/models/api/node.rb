@@ -14,9 +14,7 @@
 # limitations under the License.
 #
 
-module API
-  module V2
-    class Crowbar
-    end
+module Api
+  class Node
   end
 end

@@ -14,29 +14,29 @@
 # limitations under the License.
 #
 
-class Api::V2::BackupsController < ApplicationController
+class Api::BackupsController < ApplicationController
   skip_before_filter :enforce_installer
   before_action :set_backup, only: [:destroy, :show, :restore, :download]
 
-  api :GET, "/api/v2/crowbar/backups", "Returns a list of available backups"
+  api :GET, "/api/crowbar/backups", "Returns a list of available backups"
   api_version "2.0"
   def index
-    render json: Api::V2::Backup.all
+    render json: Api::Backup.all
   end
 
-  api :GET, "/api/v2/crowbar/backups/:id", "Returns a specific backup"
+  api :GET, "/api/crowbar/backups/:id", "Returns a specific backup"
   api_version "2.0"
   def show
     render json: @backup
   end
 
-  api :POST, "/api/v2/crowbar/backups", "Create a backup"
+  api :POST, "/api/crowbar/backups", "Create a backup"
   api_version "2.0"
-  param :api_v2_backup, Hash, desc: "Backup info", required: true do
+  param :api_backup, Hash, desc: "Backup info", required: true do
     param :name, String, desc: "Name of the backup", required: true
   end
   def create
-    @backup = Api::V2::Backup.new(backup_params)
+    @backup = Api::Backup.new(backup_params)
 
     if @backup.save
       render json: @backup, status: :ok
@@ -47,7 +47,7 @@ class Api::V2::BackupsController < ApplicationController
     @backup.cleanup unless @backup.nil?
   end
 
-  api :POST, "/api/v2/crowbar/backups/:id/restore", "Restore a backup"
+  api :POST, "/api/crowbar/backups/:id/restore", "Restore a backup"
   api_version "2.0"
   param :id, Integer, desc: "Backup ID", required: true
   def restore
@@ -58,7 +58,7 @@ class Api::V2::BackupsController < ApplicationController
     end
   end
 
-  api :GET, "/api/v2/crowbar/backups/:id/download", "Download a backup"
+  api :GET, "/api/crowbar/backups/:id/download", "Download a backup"
   api_version "2.0"
   param :id, Integer, desc: "Backup ID", required: true
   def download
@@ -72,13 +72,13 @@ class Api::V2::BackupsController < ApplicationController
     end
   end
 
-  api :POST, "/api/v2/crowbar/backups/upload", "Upload a backup"
+  api :POST, "/api/crowbar/backups/upload", "Upload a backup"
   api_version "2.0"
-  param :api_v2_backup, Hash, desc: "Backup info", required: true do
+  param :api_backup, Hash, desc: "Backup info", required: true do
     param :file, File, desc: "Backup for upload", required: true
   end
   def upload
-    @backup = Api::V2::Backup.new(backup_upload_params)
+    @backup = Api::Backup.new(backup_upload_params)
 
     if @backup.save
       head :ok
@@ -89,7 +89,7 @@ class Api::V2::BackupsController < ApplicationController
     @backup.cleanup unless @backup.nil?
   end
 
-  api :DELETE, "/api/v2/crowbar/backups/:id", "Delete a backup"
+  api :DELETE, "/api/crowbar/backups/:id", "Delete a backup"
   api_version "2.0"
   param :id, Integer, "Backup ID", required: true
   def destroy
@@ -102,7 +102,7 @@ class Api::V2::BackupsController < ApplicationController
     end
   end
 
-  api :GET, "/api/v2/crowbar/backups/restore_status", "Returns status of backup restoration"
+  api :GET, "/api/crowbar/backups/restore_status", "Returns status of backup restoration"
   api_version "2.0"
   def restore_status
     render json: Crowbar::Backup::Restore.status
@@ -111,14 +111,14 @@ class Api::V2::BackupsController < ApplicationController
   protected
 
   def set_backup
-    @backup = Api::V2::Backup.find_using_id_or_name!(params[:id])
+    @backup = Api::Backup.find_using_id_or_name!(params[:id])
   end
 
   def backup_params
-    params.require(:api_v2_backup).permit(:name)
+    params.require(:api_backup).permit(:name)
   end
 
   def backup_upload_params
-    params.require(:api_v2_backup).permit(:file)
+    params.require(:api_backup).permit(:file)
   end
 end

@@ -1,4 +1,3 @@
-
 #
 # Copyright 2016, SUSE Linux GmbH
 #
@@ -15,27 +14,27 @@
 # limitations under the License.
 #
 
-class Api::V2::NodesController < ApplicationController
-  api :GET, "/api/v2/nodes", "List nodes"
+class Api::NodesController < ApplicationController
+  api :GET, "/api/nodes", "List nodes"
   api_version "2.0"
   def index
     render json: [], status: :not_implemented
   end
 
-  api :GET, "/api/v2/nodes/:id", "Show a single node"
+  api :GET, "/api/nodes/:id", "Show a single node"
   api_version "2.0"
   def show
     render json: {}, status: :not_implemented
   end
 
-  api :PATCH, "/api/v2/nodes/:id", "Update a single node"
+  api :PATCH, "/api/nodes/:id", "Update a single node"
   api_version "2.0"
   def update
     head :not_implemented
   end
 
-  api :GET, "/api/v2/nodes/:id/upgrade", "Status of a single node upgrade"
-  api :POST, "/api/v2/nodes/:id/upgrade", "Upgrade a single node"
+  api :GET, "/api/nodes/:id/upgrade", "Status of a single node upgrade"
+  api :POST, "/api/nodes/:id/upgrade", "Upgrade a single node"
   api_version "2.0"
   def upgrade
     if request.post?
