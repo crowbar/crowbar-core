@@ -323,7 +323,7 @@ module Crowbar
         else
           Crowbar::Migrate.migrate!
         end
-      rescue SQLite3::SQLException => e
+      rescue ActiveRecord::UnknownMigrationVersionError => e
         Rails.logger.error "Failed to migrate database #{time} loading: #{e}"
         set_failed
         @status[:restore_database] = {
