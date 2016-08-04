@@ -15,13 +15,20 @@
 #
 
 class ApiConstraint
-  attr_reader :version
+  attr_reader :versions
 
-  def initialize(options)
-    @version = options.fetch(:version)
+  def initialize(*versions)
+    @versions = versions.map { |v| v.to_s.split(".").map(&:to_i) }
   end
 
   def matches?(request)
-    request.headers.fetch(:accept) == "application/vnd.crowbar.v#{version}+json"
+    versions.any? do |major, minor|
+      version_mime = %r(^application/vnd\.crowbar\.v(?<major>\d+).(?<minor>\d+)\+json$)
+
+      versions_requested = version_mime.match(request.accept)
+      !versions_requested.nil? &&
+        versions_requested[:major].to_i == major &&
+        versions_requested[:minor].to_i <= minor
+    end
   end
 end

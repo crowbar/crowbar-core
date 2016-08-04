@@ -243,7 +243,7 @@ Rails.application.routes.draw do
     via: [:get, :post, :put, :patch, :delete]
 
   namespace :api,
-    constraints: ApiConstraint.new(version: 2.0) do
+    constraints: ApiConstraint.new(2.0) do
     resource :crowbar,
       controller: :crowbar,
       only: [:show, :update] do
