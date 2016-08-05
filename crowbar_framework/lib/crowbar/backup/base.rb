@@ -42,8 +42,16 @@ module Crowbar
               "/root/.chef"
             ],
             [
-              "data",
-              "/var/lib/crowbar"
+              "data/backup",
+              "/var/lib/crowbar/backup"
+            ],
+            [
+              "data/cache",
+              "/var/lib/crowbar/cache"
+            ],
+            [
+              "data/config",
+              "/var/lib/crowbar/config"
             ],
             [
               "configs/crowbar",
