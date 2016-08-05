@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-class Api::NodesController < ApplicationController
+class Api::NodesController < ApiController
   api :GET, "/api/nodes", "List nodes"
   api_version "2.0"
   def index

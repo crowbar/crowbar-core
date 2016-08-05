@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-class Api::CrowbarController < ApplicationController
+class Api::CrowbarController < ApiController
   api :GET, "/api/crowbar", "Show the crowbar object"
   api_version "2.0"
   def show

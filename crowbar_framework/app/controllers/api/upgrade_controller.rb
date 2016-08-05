@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-class Api::UpgradeController < ApplicationController
+class Api::UpgradeController < ApiController
   api :GET, "/api/upgrade", "Show the Upgrade status object"
   api_version "2.0"
   def show

@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-class Api::BackupsController < ApplicationController
+class Api::BackupsController < ApiController
   skip_before_filter :enforce_installer
   before_action :set_backup, only: [:destroy, :show, :restore, :download]
 

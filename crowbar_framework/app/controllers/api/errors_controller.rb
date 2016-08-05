@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-class Api::ErrorsController < ApplicationController
+class Api::ErrorsController < ApiController
   api :GET, "/api/errors", "Show a list of errors"
   api_version "2.0"
   def index
