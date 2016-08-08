@@ -37,7 +37,7 @@ class Api::ErrorsController < ApiController
   api :DELETE, "/api/errors/:id", "Delete a specific error"
   param :id, Integer, desc: "Error ID", required: true
   api_version "2.0"
-  def delete
+  def destroy
     head :not_implemented
   end
 end
