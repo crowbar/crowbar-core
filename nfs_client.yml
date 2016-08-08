@@ -17,7 +17,7 @@
 barclamp:
   name: 'nfs_client'
   display: 'NFS Client'
-  description: 'Setup of NFS mounts'
+  description: 'Access remote filesystems by utilizing NFS'
   version: 0
   user_managed: true
   member:
