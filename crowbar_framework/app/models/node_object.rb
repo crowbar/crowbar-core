@@ -759,6 +759,16 @@ class NodeObject < ChefObject
     old_run_list != crowbar_run_list.run_list_items
   end
 
+  def run_list_to_roles
+    crowbar["run_list_map"] = {} if crowbar["run_list_map"].nil?
+    a = crowbar["run_list_map"].select { |k, v| v["priority"] != -1001 }
+    if a.is_a?(Hash)
+      a.keys
+    else
+      a.collect! { |x| x[0] }
+    end
+  end
+
   def crowbar
     @role.default_attributes
   end

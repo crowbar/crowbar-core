@@ -82,6 +82,8 @@ class DeployerService < ServiceObject
       unless node.crowbar["crowbar"]["pending"].nil?
         roles.concat(node.crowbar["crowbar"]["pending"].values)
       end
+      roles << node.run_list_to_roles
+      roles.flatten!
 
       # Walk map to categorize the node.  Choose first one from the bios map that matches.
       role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
@@ -99,9 +101,11 @@ class DeployerService < ServiceObject
         break if done
       end
 
-      os_map = role.default_attributes["deployer"]["os_map"]
-      node.crowbar["crowbar"]["hardware"]["os"] = os_map[0]["install_os"]
-      node.save
+      unless node.crowbar["crowbar"]["hardware"].nil?
+        os_map = role.default_attributes["deployer"]["os_map"]
+        node.crowbar["crowbar"]["hardware"]["os"] = os_map[0]["install_os"]
+        node.save
+      end
     end
 
     # The discovery image needs to have clients cleared.
