@@ -227,15 +227,12 @@ module Crowbar
       end
 
       def cookbook_exist?(cookbook)
-        local_md5sums = local_cookbook_md5_checksums(cookbook)
-        remote_md5sums = api_cookbook_md5_checksums(cookbook.name)
-        combined_md5sums = local_md5sums.deep_merge(remote_md5sums)
-
-        combined_md5sums.reject! { |cb, _| local_md5sums.include? cb }
-        return false unless combined_md5sums.empty?
-
-        logger.info("Cookbook #{cookbook.name} already exists, skipping...")
-        true
+        if local_cookbook_md5_checksums(cookbook) == api_cookbook_md5_checksums(cookbook.name)
+          logger.info("Cookbook #{cookbook.name} already exists, skipping...")
+          true
+        else
+          false
+        end
       end
 
       def file_types(type)
