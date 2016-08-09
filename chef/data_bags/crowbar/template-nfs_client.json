@@ -1,6 +1,6 @@
 {
   "id": "template-nfs_client",
-  "description": "Setup of NFS mounts",
+  "description": "Access remote filesystems by utilizing NFS",
   "attributes": {
     "nfs_client": {
       "exports": { }
