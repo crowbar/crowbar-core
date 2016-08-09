@@ -1242,8 +1242,7 @@ class ServiceObject
 
     # Part IV: Deployment. Running chef clients as separate processes, each
     # independent batch is parallelized, admin and non-admin nodes are treated
-    # separately. The whole deploy runs twice (possibly to cover up transient
-    # errors). Lastly, chef client is executed manually on this (admin) node,
+    # separately. Lastly, chef client is executed manually on this (admin) node,
     # to make sure admin node changes are deployed.
 
     # Deployment pre (and later post) callbacks.
