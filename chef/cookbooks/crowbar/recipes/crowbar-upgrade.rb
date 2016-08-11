@@ -86,55 +86,6 @@ when "dump_openstack_database"
 
   include_recipe "crowbar::stop-services-before-upgrade"
 
-  dump_location = node[:crowbar][:upgrade][:db_dump_location]
-
-  # Ensure the dump_location is saved in DB nodes even after we later drop the role
-  node.set[:crowbar][:upgrade][:db_dump_location] = dump_location
-
-  # If postgres is not running here, it means we're in the DB cluster and database runs
-  # on the other node: let the other node take care of the rest.
-  unless ::Kernel.system("service postgresql status")
-    if node[:crowbar][:upgrade][:db_dumped_here]
-      node[:crowbar][:upgrade].delete :db_dumped_here
-    end
-    node.save
-    return
-  end
-
-  # Check the available space before the dump
-  ruby_block "check available space" do
-    block do
-      require "pathname"
-      path = Pathname.new(dump_location).split.first.to_s
-      available = `df -m #{path} | tail -n 1 | sed "s/ \\+/ /g" | cut -d " " -f 4`
-      db_size = `su - postgres -c 'pg_dumpall | wc -c'`
-      # Use Megabytes and add some reserve (30 MiB)
-      db_size = db_size.to_i / 1024 / 1024 + 30
-      if db_size.to_i > available.to_i
-        message = "Not enough space for the Database dump on node #{node.name}!\n" \
-          "Database size is: #{db_size}MiB, available space on #{path} " \
-          "is only #{available.to_i}MiB."
-        Chef::Log.fatal(message)
-        node["crowbar_wall"]["chef_error"] = message
-        node.save
-        raise message
-      end
-    end
-  end
-
-  Chef::Log.info("dumping DB into #{dump_location}")
-
-  # Dump the database at the DB node
-  bash "dump database content" do
-    code <<-EOF
-      su - postgres -c 'pg_dumpall > #{dump_location}'
-    EOF
-  end
-
-  # we have to indicate the node where the dump is actually located
-  node.set[:crowbar][:upgrade][:db_dumped_here] = true
-  node.save
-
 when "db_shutdown"
 
   bash "stop remaining pacemaker resources" do
