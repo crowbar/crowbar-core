@@ -77,8 +77,7 @@ class DeployerService < ServiceObject
     if state == "hardware-installing"
       node = NodeObject.find_node_by_name(name)
       # build a list of current and pending roles to check against
-      roles = []
-      roles = node.roles.dup if node.roles
+      roles = node.roles ? node.roles.dup : []
       unless node.crowbar["crowbar"]["pending"].nil?
         roles.concat(node.crowbar["crowbar"]["pending"].values)
       end
