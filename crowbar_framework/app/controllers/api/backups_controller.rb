@@ -32,7 +32,7 @@ class Api::BackupsController < ApiController
 
   api :POST, "/api/crowbar/backups", "Create a backup"
   api_version "2.0"
-  param :api_backup, Hash, desc: "Backup info", required: true do
+  param :backup, Hash, desc: "Backup info", required: true do
     param :name, String, desc: "Name of the backup", required: true
   end
   def create
@@ -74,7 +74,7 @@ class Api::BackupsController < ApiController
 
   api :POST, "/api/crowbar/backups/upload", "Upload a backup"
   api_version "2.0"
-  param :api_backup, Hash, desc: "Backup info", required: true do
+  param :backup, Hash, desc: "Backup info", required: true do
     param :file, File, desc: "Backup for upload", required: true
   end
   def upload
@@ -115,10 +115,10 @@ class Api::BackupsController < ApiController
   end
 
   def backup_params
-    params.require(:api_backup).permit(:name)
+    params.require(:backup).permit(:name)
   end
 
   def backup_upload_params
-    params.require(:api_backup).permit(:file)
+    params.require(:backup).require(:payload).permit(:file)
   end
 end

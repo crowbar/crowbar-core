@@ -270,7 +270,7 @@ jQuery(document).ready(function($) {
     }
   });
 
-  $('body.backups input[name="api_backup[file]"]').fileinput({
+  $('body.backups input[name="backup[file]"]').fileinput({
     uploadUrl: Routes.upload_api_crowbar_backups_path({
       format: 'json'
     }),

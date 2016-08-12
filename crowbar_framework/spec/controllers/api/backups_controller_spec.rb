@@ -31,7 +31,7 @@ describe Api::BackupsController, type: :request do
     end
 
     it "creates a backup" do
-      post "/api/crowbar/backups", { api_backup: { name: "another_crowbar_backup" } }, headers
+      post "/api/crowbar/backups", { backup: { name: "another_crowbar_backup" } }, headers
       expect(response).to have_http_status(:ok)
     end
 
@@ -50,7 +50,8 @@ describe Api::BackupsController, type: :request do
     it "uploads a backup" do
       allow_any_instance_of(Api::Backup).to receive(:save).and_return(true)
 
-      post "/api/crowbar/backups/upload", { api_backup: { file: File.open(tarball) } }, headers
+      post "/api/crowbar/backups/upload",
+        { backup: { payload: { file: File.open(tarball) } } }, headers
       expect(response).to have_http_status(:ok)
     end
 
@@ -78,7 +79,7 @@ describe Api::BackupsController, type: :request do
     it "doesn't create a backup" do
       allow_any_instance_of(Api::Backup).to receive(:save).and_return(false)
 
-      post "/api/crowbar/backups", { api_backup: { name: "crowbar_backup" } }, headers
+      post "/api/crowbar/backups", { backup: { name: "crowbar_backup" } }, headers
       expect(response).to have_http_status(:unprocessable_entity)
     end
 
@@ -106,7 +107,8 @@ describe Api::BackupsController, type: :request do
     it "doesn't upload a backup" do
       allow_any_instance_of(Api::Backup).to receive(:save).and_return(false)
 
-      post "/api/crowbar/backups/upload", { api_backup: { file: File.open(tarball) } }, headers
+      post "/api/crowbar/backups/upload",
+        { backup: { payload: { file: File.open(tarball) } } }, headers
       expect(response).to have_http_status(:unprocessable_entity)
     end
 
