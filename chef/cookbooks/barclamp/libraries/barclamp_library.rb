@@ -276,21 +276,21 @@ module BarclampLibrary
         if_cnt = m[3]
         desired = speeds.index(m[2])
         found = nil
-          filter = lambda { |x|
+        filter = lambda do |x|
           found = if_map["#{speeds[x]}#{if_cnt}"] unless found
-        }
+        end
         case m[1]
-          when "+"
-            (desired..speeds.length).each(&filter)
-          when "-"
-            desired.downto(0,&filter)
-          when "?"
-            (desired..speeds.length).each(&filter)
-            desired.downto(0,&filter) unless found
-          else
-            found = if_map[ref]
-          end
-          found
+        when "+"
+          (desired..speeds.length).each(&filter)
+        when "-"
+          desired.downto(0, &filter)
+        when "?"
+          (desired..speeds.length).each(&filter)
+          desired.downto(0, &filter) unless found
+        else
+          found = if_map[ref]
+        end
+        found
       end
 
       # Find the interface(s) and teaming mode to use for the given
