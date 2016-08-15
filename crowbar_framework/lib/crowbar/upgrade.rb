@@ -33,8 +33,12 @@ module Crowbar
     def upgrade
       case @version
       when "1.9"
-        knife_files
-        crowbar_files
+        upgrade_knife_files_1_9
+        reset_target_platform_for_nodes
+        upgrade_crowbar_files_1_9
+      when "3.0"
+        create_network_json_3_0
+        reset_target_platform_for_nodes
       end
 
       if @status[:errors].any?
@@ -53,7 +57,13 @@ module Crowbar
 
     protected
 
-    def knife_files
+    def create_network_json_3_0
+      Rails.logger.debug "Re-creating network.json from upgrade data"
+      network_role_path = @data.join("knife", "roles", "network-config-default.json")
+      create_network_json(network_role_path)
+    end
+
+    def upgrade_knife_files_1_9
       Rails.logger.debug "Upgrading chef backup files"
       @data.join("knife", "databags", "barclamps").rmtree
       knife_path = @data.join("knife")
@@ -75,25 +85,7 @@ module Crowbar
           filecontent_replace(new_file, "nova_dashboard", "horizon")
           file_path = new_file
         when /^bc-network-(.*)\.json$/
-          json = JSON.load(file.read)
-          attributes_deployment = SchemaMigration.migrate_proposal_from_json("network", json)
-          if attributes_deployment.nil?
-            @status[:status] = :internal_server_error
-            @status[:errors].push "Cannot upgrade the network proposal with #{file}"
-            next
-          end
-          json["attributes"]["network"] = attributes_deployment.first
-          network_proposal = Tempfile.new("network")
-          network_proposal.write JSON.pretty_generate(attributes: json["attributes"])
-          network_proposal.close
-          cmd = [
-            "sudo",
-            "cp",
-            network_proposal.path,
-            "/etc/crowbar/network.json"
-          ]
-          system(*cmd)
-          network_proposal.unlink
+          create_network_json(file)
         end
 
         next unless file_path.basename.to_s =~ /^bc-(.*).json$/
@@ -117,9 +109,38 @@ module Crowbar
           filecontent_replace(file, "nova_dashboard", "horizon")
         end
       end
+    end
 
+    def upgrade_crowbar_files_1_9
+      FileUtils.touch(@data.join("crowbar", "database.yml"))
+    end
+
+    def create_network_json(json_path)
+      json = JSON.load(json_path.read)
+      attributes_deployment = SchemaMigration.migrate_proposal_from_json("network", json)
+      if attributes_deployment.nil?
+        @status[:status] = :internal_server_error
+        @status[:errors].push "Cannot upgrade the network proposal with #{json_path}"
+        return
+      end
+      json["attributes"]["network"] = attributes_deployment.first
+      network_proposal = Tempfile.new("network")
+      network_proposal.write JSON.pretty_generate(attributes: json["attributes"])
+      network_proposal.close
+      cmd = [
+        "sudo",
+        "cp",
+        network_proposal.path,
+        "/etc/crowbar/network.json"
+      ]
+      system(*cmd)
+      network_proposal.unlink
+    end
+
+    def reset_target_platform_for_nodes
+      Rails.logger.debug "Resetting platform of nodes due to upcoming OS upgrade"
       # find admin node and update target_platform
-      nodes_path = knife_path.join("nodes")
+      nodes_path = @data.join("knife", "nodes")
       nodes_path.children.each do |file|
         json = JSON.load(file.read)
         next unless json["crowbar"] && json["crowbar"]["admin_node"]
@@ -129,10 +150,6 @@ module Crowbar
           node.write(JSON.pretty_generate(json))
         end
       end
-    end
-
-    def crowbar_files
-      FileUtils.touch(@data.join("crowbar", "database.yml"))
     end
 
     def filename_replace(file, search, replace)
