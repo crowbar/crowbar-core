@@ -60,7 +60,7 @@ module Crowbar
     def create_network_json_3_0
       Rails.logger.debug "Re-creating network.json from upgrade data"
       network_role_path = @data.join("knife", "roles", "network-config-default.json")
-      create_network_json(network_role_path)
+      create_network_json(network_role_path, from_role: true)
     end
 
     def upgrade_knife_files_1_9
@@ -115,8 +115,20 @@ module Crowbar
       FileUtils.touch(@data.join("crowbar", "database.yml"))
     end
 
-    def create_network_json(json_path)
-      json = JSON.load(json_path.read)
+    def create_network_json(json_path, options = {})
+      from_role = options.fetch(:from_role, false)
+      json = if from_role
+        # get network proposal data from database.yml
+        proposals = YAML.load_file(
+          @data.join("crowbar", "database.yml")
+        )
+        network_proposal = proposals["proposals"]["records"].detect do |p|
+          p[1] == "network" && p[2] == "default"
+        end
+        JSON.load(network_proposal[3])
+      else
+        JSON.load(json_path.read)
+      end
       attributes_deployment = SchemaMigration.migrate_proposal_from_json("network", json)
       if attributes_deployment.nil?
         @status[:status] = :internal_server_error
