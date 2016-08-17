@@ -62,6 +62,7 @@ class Api::UpgradeController < ApiController
   end
 
   api :GET, "/api/upgrade/prechecks", "Shows a sanity check in preparation for the upgrade"
+  api_version "2.0"
   def prechecks
     render json: {}, status: :not_implemented
   end
