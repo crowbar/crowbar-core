@@ -182,6 +182,6 @@ class BackupsController < ApplicationController
   end
 
   def backup_upload_params
-    params.require(:backup).permit(:file)
+    params.require(:backup).require(:payload).permit(:file)
   end
 end
