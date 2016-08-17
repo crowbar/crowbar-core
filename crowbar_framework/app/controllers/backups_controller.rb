@@ -20,35 +20,21 @@ class BackupsController < ApplicationController
 
   api :GET, "/utils/backups", "Returns a list of available backups"
   def index
-    @backups = Backup.all
-
-    respond_to do |format|
-      format.html
-      format.json { render json: @backups }
-    end
+    @backups = Api::Backup.all
   end
 
   api :POST, "/utils/backups", "Create a backup"
-  param :backup, Hash, desc: "Backup info" do
+  param :backup, Hash, desc: "Backup info", required: true do
     param :name, String, desc: "Name of the backup", required: true
   end
   def create
-    @backup = Backup.new(backup_params)
+    @backup = Api::Backup.new(backup_params)
 
-    respond_to do |format|
-      if @backup.save
-        format.json { head :ok }
-        format.html { redirect_to backups_path }
-      else
-        format.json do
-          render json: { error: @backup.errors.full_messages.first }, status: :unprocessable_entity
-        end
-        format.html do
-          flash[:alert] = @backup.errors.full_messages.first
-          redirect_to backups_path
-        end
-      end
+    unless @backup.save
+      flash[:alert] = @backup.errors.full_messages.first
     end
+
+    redirect_to backups_path
   ensure
     @backup.cleanup unless @backup.nil?
   end
@@ -56,117 +42,46 @@ class BackupsController < ApplicationController
   api :POST, "/utils/backups/:id/restore", "Restore a backup"
   param :id, Integer, desc: "Backup ID", required: true
   def restore
-    respond_to do |format|
-      format.html do
-        if @backup.restore(background: false)
-          flash[:success] = I18n.t("backups.index.restore_successful")
-          redirect_to dashboard_index_url
-        else
-          flash[:alert] = @backup.errors.full_messages.first
-          redirect_to backups_url
-        end
-      end
-      format.json do
-        if @backup.restore(background: true)
-          head :ok
-        else
-          render json: { error: @backup.errors.full_messages.first }, status: :unprocessable_entity
-        end
-      end
+    if @backup.restore(background: false)
+      flash[:success] = I18n.t("backups.index.restore_successful")
+      redirect_to dashboard_index_url
+    else
+      flash[:alert] = @backup.errors.full_messages.first
+      redirect_to backups_url
     end
   end
 
   api :GET, "/utils/backups/:id/download", "Download a backup"
   param :id, Integer, desc: "Backup ID", required: true
   def download
-    respond_to do |format|
-      if @backup.path.exist?
-        format.any do
-          send_file(
-            @backup.path,
-            filename: @backup.filename
-          )
-        end
-      else
-        format.json do
-          render json: { error: @backup.errors.full_messages.first }, status: :not_found
-        end
-        format.html do
-          flash[:alert] = @backup.errors.full_messages.first
-          redirect_to backups_path
-        end
-      end
+    if @backup.path.exist?
+      send_file(
+        @backup.path,
+        filename: @backup.filename
+      )
+    else
+      flash[:alert] = @backup.errors.full_messages.first
+      redirect_to backups_path
     end
-  end
-
-  api :POST, "/utils/backups/upload", "Upload a backup"
-  param :backup, Hash, desc: "Backup info" do
-    param :file, File, desc: "Backup for upload", required: true
-  end
-  def upload
-    @backup = Backup.new(backup_upload_params)
-
-    respond_to do |format|
-      if @backup.save
-        format.json { head :ok }
-        format.html { redirect_to backups_path }
-      else
-        format.json do
-          render json: { error: @backup.errors.full_messages.first }, status: :unprocessable_entity
-        end
-        format.html do
-          flash[:alert] = @backup.errors.full_messages.first
-          redirect_to backups_path
-        end
-      end
-    end
-  ensure
-    @backup.cleanup unless @backup.nil?
   end
 
   api :DELETE, "/utils/backups/:id", "Delete a backup"
   param :id, Integer, "Backup ID", required: true
   def destroy
-    respond_to do |format|
-      if @backup.destroy
-        format.json do
-          head :ok
-        end
-        format.html do
-          redirect_to backups_path
-        end
-      else
-        format.json do
-          render json: {
-            error: I18n.t("backups.destroy.failed")
-          }, status: :unprocessable_entity
-        end
-        format.html do
-          flash[:alert] = I18n.t("backups.destroy.failed")
-          redirect_to backups_path
-        end
-      end
+    unless @backup.destroy
+      flash[:alert] = I18n.t("backups.destroy.failed")
     end
-  end
 
-  api :GET, "/utils/backups/restore_status", "Returns status of backup restoration"
-  def restore_status
-    respond_to do |format|
-      format.any { render json: Crowbar::Backup::Restore.status }
-    end
+    redirect_to backups_path
   end
 
   protected
 
   def set_backup
-    @backup = Backup.find_using_id_or_name!(params[:id])
+    @backup = Api::Backup.find_using_id_or_name!(params[:id])
   end
 
   def backup_params
     params.require(:backup).permit(:name)
-  end
-
-  def backup_upload_params
-    params.require(:backup).permit(:file)
   end
 end

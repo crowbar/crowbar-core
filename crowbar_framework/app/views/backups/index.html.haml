@@ -48,7 +48,7 @@
           &times
         %h2
           = t(".create_image")
-      = form_for new_backup do |f|
+      = form_for new_backup, url: backups_path do |f|
         .modal-body
           %h3
             = t(".enter_name")

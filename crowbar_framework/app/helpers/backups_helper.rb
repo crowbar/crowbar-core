@@ -44,6 +44,6 @@ module BackupsHelper
   end
 
   def new_backup
-    Backup.new
+    Api::Backup.new
   end
 end
