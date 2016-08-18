@@ -15,8 +15,10 @@
 #
 
 class Api::CrowbarController < ApiController
+  before_action :set_crowbar
+
   def show
-    render json: {}, status: :not_implemented
+    render json: @crowbar
   end
 
   def update
@@ -25,13 +27,23 @@ class Api::CrowbarController < ApiController
 
   def upgrade
     if request.post?
-      head :not_implemented
+      if @crowbar.upgrade!
+        render json: @crowbar.upgrade
+      else
+        render json: { error: @crowbar.errors.full_messages.first }, status: :unprocessable_entity
+      end
     else
-      render json: {}, status: :not_implemented
+      render json: @crowbar.upgrade
     end
   end
 
   def maintenance
     render json: {}, status: :not_implemented
+  end
+
+  protected
+
+  def set_crowbar
+    @crowbar = Api::Crowbar.new
   end
 end

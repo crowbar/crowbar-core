@@ -766,6 +766,10 @@ en:
     check:
       cache_error: 'Failed to cache sanity checks'
 
+  api:
+    crowbar:
+      upgrade_ongoing: 'Upgrade is already ongoing. Please wait.'
+
   # Global
   overview: 'Overview'
   show: 'View'
