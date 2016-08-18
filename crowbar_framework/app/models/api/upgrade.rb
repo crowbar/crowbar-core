@@ -14,7 +14,48 @@
 # limitations under the License.
 #
 
+require "open3"
+
 module Api
-  class Upgrade
+  class Upgrade < Tableless
+    def status
+      {
+        crowbar: crowbar_upgrade_status,
+        checks: check
+      }
+    end
+
+    def check
+      {
+        sanity_checks: sanity_checks,
+        maintenance_updates_missing: maintenance_updates_missing?,
+        clusters_healthy: clusters_healthy?,
+        compute_resources_available: compute_resources_available?
+      }
+    end
+
+    protected
+
+    def crowbar_upgrade_status
+      Api::Crowbar.new.upgrade
+    end
+
+    def sanity_checks
+      ::Crowbar::Sanity.sane? || ::Crowbar::Sanity.check
+    end
+
+    def maintenance_updates_missing?
+      Api::Crowbar.new.maintenance_updates_missing?
+    end
+
+    def clusters_healthy?
+      # FIXME: to be implemented
+      true
+    end
+
+    def compute_resources_available?
+      # FIXME: to be implemented
+      true
+    end
   end
 end

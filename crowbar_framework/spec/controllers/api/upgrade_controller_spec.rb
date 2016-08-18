@@ -3,11 +3,27 @@ require "spec_helper"
 describe Api::UpgradeController, type: :request do
   context "with a successful upgrade API request" do
     let(:headers) { { ACCEPT: "application/vnd.crowbar.v2.0+json" } }
+    let!(:upgrade_status) do
+      JSON.parse(
+        File.read(
+          "spec/fixtures/upgrade_status.json"
+        )
+      ).to_json
+    end
+    let!(:upgrade_prechecks) do
+      JSON.parse(
+        File.read(
+          "spec/fixtures/upgrade_prechecks.json"
+        )
+      ).to_json
+    end
 
     it "shows the upgrade status object" do
+      allow(Crowbar::Sanity).to receive(:sane?).and_return(true)
+
       get "/api/upgrade", {}, headers
-      expect(response).to have_http_status(:not_implemented)
-      expect(response.body).to eq("{}")
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to eq(upgrade_status)
     end
 
     it "updates the upgrade status object" do
@@ -32,8 +48,11 @@ describe Api::UpgradeController, type: :request do
     end
 
     it "shows a sanity check in preparation for the upgrade" do
+      allow(Crowbar::Sanity).to receive(:sane?).and_return(true)
+
       get "/api/upgrade/prechecks", {}, headers
-      expect(response).to have_http_status(:not_implemented)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to eq(upgrade_prechecks)
     end
   end
 end
