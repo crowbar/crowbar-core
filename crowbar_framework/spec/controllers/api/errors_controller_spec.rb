@@ -11,7 +11,7 @@ describe Api::ErrorsController, type: :request do
     end
 
     it "shows a single error" do
-      get "/api/nodes/1", {}, headers
+      get "/api/errors/1", {}, headers
       expect(response).to have_http_status(:not_implemented)
       expect(response.body).to eq("{}")
     end
