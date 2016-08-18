@@ -193,6 +193,26 @@ Rails.application.routes.draw do
     end
   end
 
+  namespace :api,
+    constraints: ApiConstraint.new(2.0) do
+    resource :crowbar,
+      controller: :crowbar,
+      only: [:show, :update] do
+      get :upgrade
+      post :upgrade
+      get :maintenance
+    end
+
+    resource :upgrade,
+      controller: :upgrade,
+      only: [:show, :update] do
+      post :prepare
+      post :services
+      get :services
+      get :prechecks
+    end
+  end
+
   # TODO(must): Get rid of this wildcard route
   match "/:controller/:action/*(:.format)",
     via: [:get, :post, :put, :patch, :delete]
