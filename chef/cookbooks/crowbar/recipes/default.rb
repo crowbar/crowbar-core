@@ -30,8 +30,8 @@ when "debian"
   pkglist = %w(
     curl
     sudo
-    sqlite
-    libsqlite3-dev
+    postgresql-9.4
+    postgresql-server-dev-9.4
     libshadow-ruby1.8
     markdown
   )
@@ -42,8 +42,8 @@ when "rhel"
   pkglist = %w(
     curl
     sudo
-    sqlite
-    sqlite-devel
+    postgresql94-server
+    postgresql-libs
     python-markdown
   )
   unless search(:node, "platform_family:windows").empty?
@@ -53,7 +53,7 @@ when "suse"
   pkglist = %w(
     curl
     sudo
-    sqlite3
+    postgresql94-server
 
     ruby2.1-rubygem-activerecord-session_store
     ruby2.1-rubygem-activeresource
@@ -75,7 +75,7 @@ when "suse"
     ruby2.1-rubygem-sass-rails
     ruby2.1-rubygem-simple-navigation
     ruby2.1-rubygem-simple_navigation_renderers
-    ruby2.1-rubygem-sqlite3
+    ruby2.1-rubygem-pg
     ruby2.1-rubygem-syslogger
     ruby2.1-rubygem-yaml_db
   )
@@ -110,7 +110,7 @@ unless node[:platform_family] == "suse"
     sass-rails
     simple-navigation
     simple_navigation_renderers
-    sqlite3
+    pg
     syslogger
     puma
   )
