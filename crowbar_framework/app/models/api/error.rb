@@ -14,7 +14,19 @@
 # limitations under the License.
 #
 
-module Api
-  class Errors
-  end
+class Api::Error < ActiveRecord::Base
+  belongs_to :crowbar
+
+  validates :error,
+    presence: true
+
+  validates :message,
+    presence: true
+
+  validates :code,
+    numericality: {
+      only_integer: true,
+      greater_than: 0
+    },
+    allow_nil: true
 end

@@ -874,3 +874,7 @@ en:
     poweron: 'Power On'
     pending: 'Pending'
     building: 'Building'
+
+  api:
+    error:
+      destroy_failed: 'Failed to destroy %{component}'
