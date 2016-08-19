@@ -100,7 +100,7 @@ module Batch
 
     def barclamps
       @barclamps ||= begin
-        barclamps = catalog.barclamps.symbolize_keys(true)
+        barclamps = catalog.barclamps.deep_symbolize_keys
 
         barclamps = barclamps.select do |_, x|
           x[:user_managed]
