@@ -1,7 +1,7 @@
 [Unit]
 Description=Crowbar
 After=network.target syslog.target remote-fs.target chef-server.service
-Requires=apache2.service
+Requires=apache2.service postgresql.service
 
 [Service]
 Type=simple
