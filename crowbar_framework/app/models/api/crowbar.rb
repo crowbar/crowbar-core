@@ -63,7 +63,20 @@ module Api
 
     def maintenance_updates_missing?
       Open3.popen3("zypper patch-check") do |_stdin, _stdout, _stderr, wait_thr|
-        [100, 101].include?(wait_thr.value.exitstatus)
+        case wait_thr.value.exitstatus
+        when 100
+          Rails.logger.warn(
+            "ZYPPER_EXIT_INF_UPDATE_NEEDED: patches available for installation."
+          )
+          true
+        when 101
+          Rails.logger.warn(
+            "ZYPPER_EXIT_INF_SEC_UPDATE_NEEDED: security patches available for installation."
+          )
+          true
+        else
+          false
+        end
       end
     end
 
