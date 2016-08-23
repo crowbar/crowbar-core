@@ -9,7 +9,7 @@
   },
   "checks": {
     "sanity_checks":true,
-    "maintenance_updates_missing":false,
+    "maintenance_updates_installed":true,
     "clusters_healthy":true,
     "compute_resources_available":true
   }
