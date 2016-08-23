@@ -1270,6 +1270,8 @@ class ServiceObject
     pre_cached_nodes = {}
 
     # Each batch is a list of nodes that can be done in parallel.
+    # only run remote chef-clent on a node once
+    batches.uniq!
     batches.each do |nodes|
       @logger.debug "Applying batch: #{nodes.inspect}"
 
