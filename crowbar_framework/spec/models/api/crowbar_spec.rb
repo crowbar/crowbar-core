@@ -77,23 +77,18 @@ describe Api::Crowbar do
 
   context "with maintenance updates installed" do
     it "succeeds" do
-      allow(Open3).to(
-        receive(:popen3).
-        with("zypper patch-check").
-        and_return(false)
-      )
-      expect(subject.maintenance_updates_missing?).to be false
+      expect(subject.maintenance_updates_installed?).to be true
     end
   end
 
   context "with no maintenance updates installed" do
     it "fails" do
-      allow(Open3).to(
-        receive(:popen3).
-        with("zypper patch-check").
-        and_return(true)
+      # override global allow from spec_helper
+      allow_any_instance_of(Api::Crowbar).to(
+        receive(:maintenance_updates_installed?).
+        and_return(false)
       )
-      expect(subject.maintenance_updates_missing?).to be true
+      expect(subject.maintenance_updates_installed?).to be false
     end
   end
 end

@@ -15,8 +15,10 @@
 #
 
 class Api::UpgradeController < ApiController
+  before_action :set_upgrade
+
   def show
-    render json: {}, status: :not_implemented
+    render json: @upgrade.status
   end
 
   def update
@@ -53,6 +55,12 @@ class Api::UpgradeController < ApiController
   end
 
   def prechecks
-    render json: {}, status: :not_implemented
+    render json: @upgrade.check
+  end
+
+  protected
+
+  def set_upgrade
+    @upgrade = Api::Upgrade.new
   end
 end
