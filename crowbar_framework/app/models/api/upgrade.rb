@@ -28,7 +28,7 @@ module Api
     def check
       {
         sanity_checks: sanity_checks,
-        maintenance_updates_missing: maintenance_updates_missing?,
+        maintenance_updates_installed: maintenance_updates_installed?,
         clusters_healthy: clusters_healthy?,
         compute_resources_available: compute_resources_available?
       }
@@ -44,8 +44,8 @@ module Api
       ::Crowbar::Sanity.sane? || ::Crowbar::Sanity.check
     end
 
-    def maintenance_updates_missing?
-      Api::Crowbar.new.maintenance_updates_missing?
+    def maintenance_updates_installed?
+      Api::Crowbar.new.maintenance_updates_installed?
     end
 
     def clusters_healthy?
