@@ -18,6 +18,13 @@ describe Api::CrowbarController, type: :request do
         )
       ).to_json
     end
+    let!(:crowbar_maintenance) do
+      JSON.parse(
+        File.read(
+          "spec/fixtures/crowbar_maintenance.json"
+        )
+      ).to_json
+    end
 
     it "shows the crowbar object" do
       get "/api/crowbar", {}, headers
@@ -58,6 +65,12 @@ describe Api::CrowbarController, type: :request do
 
       post "/api/crowbar/upgrade", {}, headers
       expect(response).to have_http_status(:ok)
+    end
+
+    it "shows the maintenance updates status" do
+      get "/api/crowbar/maintenance", {}, headers
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to eq(crowbar_maintenance)
     end
   end
 end
