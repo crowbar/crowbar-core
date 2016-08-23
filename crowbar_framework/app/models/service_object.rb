@@ -21,6 +21,7 @@ require "json"
 require "hash_only_merge"
 require "securerandom"
 require "timeout"
+require "thwait"
 
 class ServiceObject
   include CrowbarPacemakerProxy
@@ -1273,24 +1274,33 @@ class ServiceObject
     batches.each do |nodes|
       @logger.debug "Applying batch: #{nodes.inspect}"
 
-      pids = {}
+      threads = {}
       nodes.each do |node|
         pre_cached_nodes[node] ||= NodeObject.find_node_by_name(node)
         next if pre_cached_nodes[node][:platform_family] == "windows"
         ran_admin = true if pre_cached_nodes[node].admin?
 
         filename = "#{ENV["CROWBAR_LOG_DIR"]}/chef-client/#{node}.log"
-        pid = run_remote_chef_client(node, "chef-client", filename)
-        pids[pid] = node
+        thread = run_remote_chef_client(node, "chef-client", filename)
+        threads[thread] = node
       end
-      status = Process.waitall
-      badones = status.select { |x| x[1].exitstatus != 0 }
 
-      next if badones.empty?
+      # wait for all running threads and collect the ones with a non-zero return value
+      bad_nodes = []
+      logger.debug "Waiting for #{threads.keys.length} threads to finish..."
+      ThreadsWait.all_waits(threads.keys) do |t|
+        logger.debug "thread #{t} for node #{threads[t]} finished (return value '#{t.value}')"
+        unless t.value == 0
+          bad_nodes << threads[t]
+        end
+      end
+
+      next if bad_nodes.empty?
 
       message = "Failed to apply the proposal to: "
-      badones.each do |baddie|
-        message = message + "#{pids[baddie[0]]}\n" + get_log_lines(pids[baddie[0]])
+      bad_nodes.each do |node|
+        message += "#{node}\n"
+        message += get_log_lines(node)
       end
       update_proposal_status(inst, "failed", message)
       restore_to_ready(applying_nodes)
@@ -1408,55 +1418,32 @@ class ServiceObject
     true
   end
 
-  #
-  # fork and exec ssh call to node and return pid.
-  #
+  # run the given command in a thread. the thread returns 0
+  # if the run was successfull
   def run_remote_chef_client(node, command, logfile_name)
-    Kernel::fork {
-      # Make sure all file descriptors are closed
-      ObjectSpace.each_object(IO) do |io|
-        unless [STDIN, STDOUT, STDERR].include?(io)
-          begin
-            unless io.closed?
-              io.close
-            end
-          rescue ::Exception
-          end
-        end
-      end
-
-      # Fix the normal file descriptors.
-      begin; STDIN.reopen "/dev/null"; rescue ::Exception; end
-      if logfile_name
-        begin
-          STDOUT.reopen logfile_name, "a+"
-          File.chmod(0644, logfile_name)
-          STDOUT.sync = true
-        rescue ::Exception
-          begin; STDOUT.reopen "/dev/null"; rescue ::Exception; end
-        end
-      else
-        begin; STDOUT.reopen "/dev/null"; rescue ::Exception; end
-      end
-      begin; STDERR.reopen STDOUT; rescue ::Exception; end
-      STDERR.sync = true
-
+    Thread.new do
       # Exec command
       # the -- tells sudo to stop interpreting options
 
-      ssh = ["sudo", "-u", "root", "--", "ssh", "-o", "TCPKeepAlive=no", "-o", "ServerAliveInterval=15", "root@#{node}"]
-      ssh_cmd = ssh.dup << command
+      ssh_cmd = ["sudo", "-u", "root", "--", "ssh", "-o", "TCPKeepAlive=no",
+                 "-o", "ServerAliveInterval=15", "root@#{node}"]
+      ssh_cmd << command
 
       # check if there are currently other chef-client runs on the node
       wait_for_chef_clients(node, logger: false)
       # check if the node is currently rebooting
       wait_for_reboot(node)
 
-      exit(1) unless system(*ssh_cmd)
-
-      # check if we need to wait for a node reboot
-      wait_for_reboot(node)
-    }
+      ret = 0
+      open(logfile_name, "a") do |f|
+        if system(*ssh_cmd, out: f, err: f)
+          wait_for_reboot(node)
+        else
+          ret = 1
+        end
+      end
+      ret
+    end
   end
 
   def wait_for_chef_daemons(node_list)
