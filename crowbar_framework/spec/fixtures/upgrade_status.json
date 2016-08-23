@@ -1,0 +1,16 @@
+{
+  "crowbar": {
+    "version": "4.0",
+    "upgrade": {
+      "upgrading": false,
+      "success": false,
+      "failed": false
+    }
+  },
+  "checks": {
+    "sanity_checks":true,
+    "maintenance_updates_installed":true,
+    "clusters_healthy":true,
+    "compute_resources_available":true
+  }
+}
