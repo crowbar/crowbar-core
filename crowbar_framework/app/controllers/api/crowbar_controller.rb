@@ -47,7 +47,9 @@ class Api::CrowbarController < ApiController
   api :GET, "/api/crowbar/maintenance", "Check for maintenance updates on crowbar"
   api_version "2.0"
   def maintenance
-    render json: {}, status: :not_implemented
+    render json: {
+      maintenance_updates_installed: @crowbar.maintenance_updates_installed?
+    }
   end
 
   protected
