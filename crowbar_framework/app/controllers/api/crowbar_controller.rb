@@ -38,7 +38,9 @@ class Api::CrowbarController < ApiController
   end
 
   def maintenance
-    render json: {}, status: :not_implemented
+    render json: {
+      maintenance_updates_installed: @crowbar.maintenance_updates_installed?
+    }
   end
 
   protected
