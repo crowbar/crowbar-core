@@ -125,10 +125,18 @@ discovery_arches.each do |arch|
   grubout = "#{uefi_dir}/boot#{short_arch}.efi"
   gruboptions = "-d #{grubdir} -O #{grub2arch}-efi --fonts=\"unicode\" -o #{grubout} "
 
+  if arch == "x86_64"
+    grub_dir = "boot/grub2"
+    bootif_var = "BOOTIF=$net_default_mac"
+  else
+    grub_dir = "default/boot/grub"
+    bootif_var = ""
+  end
+
   package "grub2-#{grub2arch}-efi"
 
-  # grub.cfg has to be in boot/grub/ subdirectory
-  directory "#{uefi_dir}/default/boot/grub" do
+  # grub.cfg has to be in default/boot/grub or in boot/grub2/ subdirectory
+  directory "#{uefi_dir}/#{grub_dir}" do
     recursive true
     mode 0o755
     owner "root"
@@ -136,23 +144,33 @@ discovery_arches.each do |arch|
     action :create
   end
 
-  template "#{uefi_dir}/default/boot/grub/grub.cfg" do
+  template "#{uefi_dir}/#{grub_dir}/grub.cfg" do
     mode 0o644
     owner "root"
     group "root"
     source "grub.conf.erb"
-    variables(append_line: "#{append_line} crowbar.state=discovery",
+    variables(append_line: "#{append_line} crowbar.state=discovery #{bootif_var}",
               install_name: "Crowbar Discovery Image",
               admin_ip: admin_ip,
               initrd: "discovery/#{arch}/initrd0.img",
               kernel: "discovery/#{arch}/vmlinuz0")
   end
 
-  bash "Build UEFI netboot loader with grub2" do
-    cwd "#{uefi_dir}/default"
-    code "grub2-mkstandalone #{gruboptions} boot/grub/grub.cfg"
-    action :nothing
-    subscribes :run, resources("template[#{uefi_dir}/default/boot/grub/grub.cfg]"), :immediately
+  if arch == "x86_64"
+    bash "Build UEFI GRUB2 network boot images at net directory" do
+      code "grub2-mknetdir --net-directory=#{tftproot} \
+                           --subdir=discovery/#{arch}/#{uefi_subdir}/#{grub_dir}"
+      action :nothing
+      subscribes :run, resources("template[#{uefi_dir}/#{grub_dir}/grub.cfg]"), :immediately
+    end
+  else
+    bash "Build UEFI netboot loader with grub2" do
+      cwd "#{uefi_dir}/default"
+      code "grub2-mkstandalone -d /usr/lib/grub2/#{grub2arch}-efi/ -O #{grub2arch}-efi \
+                --fonts=\"unicode\" -o #{uefi_dir}/boot#{short_arch}.efi boot/grub/grub.cfg"
+      action :nothing
+      subscribes :run, resources("template[#{uefi_dir}/#{grub_dir}/grub.cfg]"), :immediately
+    end
   end
 end
 
