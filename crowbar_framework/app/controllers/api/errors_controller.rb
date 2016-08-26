@@ -15,29 +15,59 @@
 #
 
 class Api::ErrorsController < ApiController
+  skip_before_filter :enforce_installer
+  before_action :set_error, only: [:show, :destroy]
+
   api :GET, "/api/errors", "Show a list of errors"
   api_version "2.0"
   def index
-    render json: [], status: :not_implemented
+    render json: Api::Error.all
   end
 
   api :GET, "/api/errors/:id", "Show a specific error"
   param :id, Integer, desc: "Error ID", required: true
   api_version "2.0"
   def show
-    render json: {}, status: :not_implemented
+    render json: @error
   end
 
   api :POST, "/api/errors", "Create an error"
   api_version "2.0"
   def create
-    head :not_implemented
+    @error = Api::Error.new(error_params)
+    if @error.save
+      render json: @error
+    else
+      render json: { error: @error.errors.full_messages.first }, status: :unprocessable_entity
+    end
   end
 
   api :DELETE, "/api/errors/:id", "Delete a specific error"
   param :id, Integer, desc: "Error ID", required: true
   api_version "2.0"
   def destroy
-    head :not_implemented
+    if @error.destroy
+      head :ok
+    else
+      render json: {
+        error: I18n.t("api.error.destroy_failed", component: "error")
+      }, status: :unprocessable_entity
+    end
+  end
+
+  protected
+
+  def set_error
+    @error = Api::Error.find(params[:id])
+  end
+
+  def error_params
+    params.require(:error).permit(
+      :error,
+      :message,
+      :code,
+      :caller,
+      :backtrace,
+    )
   end
 end
