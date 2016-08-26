@@ -340,7 +340,7 @@ class CrowbarService < ServiceObject
         crm_failures[n.name] = ssh_retval[:stdout]
         next
       end
-      ssh_retval = n.run_ssh_cmd('crm status | grep "^Failed actions:"')
+      ssh_retval = n.run_ssh_cmd("LANG=C crm status | grep -A 2 '^Failed Actions:'")
       if ssh_retval[:exit_code] == 0
         failed_actions[n.name] = ssh_retval[:stdout]
       end
