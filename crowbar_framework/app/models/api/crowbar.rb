@@ -104,6 +104,15 @@ module Api
       cluster_health.empty?
     end
 
+    def compute_resources_available?
+      compute_nodes = NodeObject.find("roles:nova-compute-kvm")
+      if compute_nodes.size == 1
+        Rails.logger.warn("Only one compute node found; non-disruptive upgrade is not possible!")
+        return false
+      end
+      true
+    end
+
     protected
 
     def lib_path
