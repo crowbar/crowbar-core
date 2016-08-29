@@ -73,6 +73,16 @@ end
 #define SUPPORTED_10000baseKX4_Full (1 << 18)
 #define SUPPORTED_10000baseKR_Full  (1 << 19)
 #define SUPPORTED_10000baseR_FEC    (1 << 20)
+#define SUPPORTED_20000baseMLD2_Full (1 << 21)
+#define SUPPORTED_20000baseKR2_Full  (1 << 22)
+#define SUPPORTED_40000baseKR4_Full  (1 << 23)
+#define SUPPORTED_40000baseCR4_Full  (1 << 24)
+#define SUPPORTED_40000baseSR4_Full  (1 << 25)
+#define SUPPORTED_40000baseLR4_Full  (1 << 26)
+#define SUPPORTED_56000baseKR4_Full  (1 << 27)
+#define SUPPORTED_56000baseCR4_Full  (1 << 28)
+#define SUPPORTED_56000baseSR4_Full  (1 << 29)
+#define SUPPORTED_56000baseLR4_Full  (1 << 30)
 
 class EthtoolValue < CStruct
   uint32 :cmd
@@ -96,6 +106,9 @@ def get_supported_speeds(interface)
     speeds << "100m" if (rv.supported & ((1<<2)|(1<<3))) != 0
     speeds << "1g" if (rv.supported & ((1<<4)|(1<<5)|(1<<17))) != 0
     speeds << "10g" if (rv.supported & ((1<<12)|(1<<18)|(1<<19)|(1<<20))) != 0
+    speeds << "20g" if (rv.supported & ((1<<21)|(1<<22))) != 0
+    speeds << "40g" if (rv.supported & ((1<<23)|(1<<24)|(1<<25)|(1<<26))) != 0
+    speeds << "56g" if (rv.supported & ((1<<27)|(1<<28)|(1<<29)|(1<<30))) != 0
     speeds
   rescue Exception => e
     puts "Failed to get ioctl for speed: #{e.message}"
