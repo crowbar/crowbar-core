@@ -1002,7 +1002,7 @@ class NodeObject < ChefObject
   #    ? allows either. If no sign is specified, an exact match must be found.
   #  - speed designates the interface speed. 10m, 100m, 1g, 10g, 20g, 40g and 56g are supported
   def map_if_ref(if_map, ref)
-    speeds= %w{10m 100m 1g 10g 20g 40g 56g}
+    speeds = ["10m", "100m", "1g", "10g", "20g", "40g", "56g"]
     m= /^([-+?]?)(\d{1,3}[mg])(\d+)$/.match(ref) # [1]=sign, [2]=speed, [3]=count
     if_cnt = m[3]
     desired = speeds.index(m[2])
