@@ -479,6 +479,26 @@ class CrowbarService < ServiceObject
     upgrade_nodes_failed
   end
 
+  def revert_nodes_from_crowbar_upgrade
+    proposal = Proposal.find_by(barclamp: "crowbar", name: "default")
+
+    NodeObject.all.each do |node|
+      if node.state == "crowbar_upgrade"
+        # revert nodes to previous state; mark the wall so apply does not change state again
+        node["crowbar_wall"]["crowbar_upgrade_step"] = "revert_to_ready"
+        node.save
+        node.set_state("ready")
+      end
+    end
+
+    # commit current proposal (with the crowbar-upgrade role still assigned to nodes),
+    # so the recipe is executed when nodes have 'ready' state
+    self.proposal_commit("default", false, false)
+    # now remove the nodes from upgrade role
+    proposal["deployment"]["crowbar"]["elements"]["crowbar-upgrade"] = []
+    proposal.save
+  end
+
   def apply_role_pre_chef_call(old_role, role, all_nodes)
     @logger.debug("crowbar apply_role_pre_chef_call: entering #{all_nodes.inspect}")
     all_nodes.each do |n|
