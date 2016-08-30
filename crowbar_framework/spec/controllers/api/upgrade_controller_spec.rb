@@ -54,5 +54,26 @@ describe Api::UpgradeController, type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to eq(upgrade_prechecks)
     end
+
+    it "cancels the upgrade" do
+      allow_any_instance_of(CrowbarService).to receive(
+        :revert_nodes_from_crowbar_upgrade
+      ).and_return(true)
+
+      post "/api/upgrade/cancel", {}, headers
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "fails to cancel the upgrade" do
+      allow_any_instance_of(CrowbarService).to receive(
+        :revert_nodes_from_crowbar_upgrade
+      ).and_raise("an Error")
+
+      post "/api/upgrade/cancel", {}, headers
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to eq(
+        "{\"error\":\"an Error\"}"
+      )
+    end
   end
 end
