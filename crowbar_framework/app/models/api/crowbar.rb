@@ -22,11 +22,13 @@ module Api
 
     def initialize
       @version = ENV["CROWBAR_VERSION"]
+      @addons = addons
     end
 
     def status
       {
-        version: @version
+        version: @version,
+        addons: @addons
       }
     end
 
@@ -80,6 +82,14 @@ module Api
       end
     end
 
+    def addons
+      [].tap do |list|
+        ["ceph", "ha"].each do |addon|
+          list.push(addon) if addon_installed?(addon)
+        end
+      end
+    end
+
     protected
 
     def lib_path
@@ -100,6 +110,20 @@ module Api
 
     def upgrade_script_path
       Rails.root.join("..", "bin", "upgrade_admin_server.sh")
+    end
+
+    def addon_installed?(addon)
+      case addon
+      when "ceph"
+        CephService
+      when "ha"
+        PacemakerService
+      else
+        return false
+      end
+      true
+    rescue NameError
+      false
     end
   end
 end

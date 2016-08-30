@@ -91,4 +91,20 @@ describe Api::Crowbar do
       expect(subject.maintenance_updates_installed?).to be false
     end
   end
+
+  context "with addons installed" do
+    it "lists the installed addons" do
+      allow_any_instance_of(Api::Crowbar).to(
+        receive(:addon_installed?).
+        and_return(true)
+      )
+      expect(subject.addons).to eq(["ceph", "ha"])
+    end
+  end
+
+  context "with no addons installed" do
+    it "lists no addons" do
+      expect(subject.addons).to eq([])
+    end
+  end
 end

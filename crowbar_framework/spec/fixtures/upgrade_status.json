@@ -1,6 +1,7 @@
 {
   "crowbar": {
     "version": "4.0",
+    "addons": [],
     "upgrade": {
       "upgrading": false,
       "success": false,
