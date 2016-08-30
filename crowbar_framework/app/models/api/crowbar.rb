@@ -22,11 +22,13 @@ module Api
 
     def initialize
       @version = ENV["CROWBAR_VERSION"]
+      @addons = addons
     end
 
     def status
       {
-        version: @version
+        version: @version,
+        addons: @addons
       }
     end
 
@@ -125,6 +127,13 @@ module Api
       end
     end
 
+    def addons
+      [].tap do |list|
+        ["ceph", "ha"].each do |addon|
+          list.push(addon) if addon_installed?(addon)
+        end
+      end
+    end
 
     # Simple check if HA clusters report some problems
     # If there are no problems, empty hash is returned.
@@ -224,6 +233,20 @@ module Api
 
     def admin_architecture
       NodeObject.admin_node.architecture
+    end
+
+    def addon_installed?(addon)
+      case addon
+      when "ceph"
+        CephService
+      when "ha"
+        PacemakerService
+      else
+        return false
+      end
+      true
+    rescue NameError
+      false
     end
   end
 end
