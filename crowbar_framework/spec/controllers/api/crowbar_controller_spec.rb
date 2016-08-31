@@ -2,6 +2,7 @@ require "spec_helper"
 
 describe Api::CrowbarController, type: :request do
   context "with a successful crowbar API request" do
+    let(:admin_node) { NodeObject.find_node_by_name("admin") }
     let(:headers) { { ACCEPT: "application/vnd.crowbar.v2.0+json" } }
     let(:pid) { rand(20000..30000) }
     let!(:crowbar_upgrade_status) do
@@ -62,6 +63,7 @@ describe Api::CrowbarController, type: :request do
         receive_message_chain(:upgrade_script_path, :exist?).
         and_return(true)
       )
+      allow(NodeObject).to receive(:admin_node).and_return(admin_node)
 
       post "/api/crowbar/upgrade", {}, headers
       expect(response).to have_http_status(:ok)

@@ -2,6 +2,7 @@ require "spec_helper"
 
 describe Api::Crowbar do
   let(:pid) { rand(20000..30000) }
+  let(:admin_node) { NodeObject.find_node_by_name("admin") }
   let!(:crowbar_upgrade_status) do
     JSON.parse(
       File.read(
@@ -59,6 +60,7 @@ describe Api::Crowbar do
         receive_message_chain(:upgrade_script_path, :exist?).
         and_return(true)
       )
+      allow(NodeObject).to receive(:admin_node).and_return(admin_node)
 
       expect(subject.upgrade!).to be true
     end
