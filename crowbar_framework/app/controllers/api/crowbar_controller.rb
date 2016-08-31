@@ -43,6 +43,10 @@ class Api::CrowbarController < ApiController
     }
   end
 
+  def repocheck
+    render json: @crowbar.repocheck
+  end
+
   protected
 
   def set_crowbar

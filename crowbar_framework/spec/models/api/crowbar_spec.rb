@@ -17,6 +17,13 @@ describe Api::Crowbar do
       )
     )
   end
+  let!(:crowbar_repocheck) do
+    JSON.parse(
+      File.read(
+        "spec/fixtures/crowbar_repocheck.json"
+      )
+    )
+  end
 
   before(:each) do
     allow_any_instance_of(Kernel).to(
@@ -91,6 +98,26 @@ describe Api::Crowbar do
         and_return(false)
       )
       expect(subject.maintenance_updates_installed?).to be false
+    end
+  end
+
+  context "with repositories in place" do
+    it "lists the available repositories" do
+      allow_any_instance_of(Api::Crowbar).to(
+        receive(:repo_version_available?).and_return(true)
+      )
+
+      expect(subject.repocheck.deep_stringify_keys).to eq(crowbar_repocheck)
+    end
+  end
+
+  context "with repositories not in place" do
+    it "lists the repositories that are not available" do
+      allow_any_instance_of(Api::Crowbar).to(
+        receive(:repo_version_available?).and_return(false)
+      )
+
+      expect(subject.repocheck.deep_stringify_keys).to_not eq(crowbar_repocheck)
     end
   end
 end
