@@ -90,6 +90,18 @@ module Api
       end
     end
 
+    def repocheck
+      # FIXME: once we start working on 7 to 8 upgrade we have to adapt the sles version
+      {
+        os: {
+          available: repo_version_available?("SLES", "12.2")
+        },
+        cloud: {
+          available: repo_version_available?("suse-openstack-cloud", "8")
+        }
+      }
+    end
+
     protected
 
     def lib_path
@@ -124,6 +136,16 @@ module Api
       true
     rescue NameError
       false
+    end
+
+    def repo_version_available?(product, version)
+      products = Hash.from_xml(
+        `zypper --xmlout products`
+      )["stream"]["product_list"]["product"]
+
+      products.any? do |p|
+        p["version"] == version && p["name"] == product
+      end
     end
   end
 end

@@ -25,6 +25,13 @@ describe Api::CrowbarController, type: :request do
         )
       ).to_json
     end
+    let!(:crowbar_repocheck) do
+      JSON.parse(
+        File.read(
+          "spec/fixtures/crowbar_repocheck.json"
+        )
+      ).to_json
+    end
 
     it "shows the crowbar object" do
       get "/api/crowbar", {}, headers
@@ -71,6 +78,16 @@ describe Api::CrowbarController, type: :request do
       get "/api/crowbar/maintenance", {}, headers
       expect(response).to have_http_status(:ok)
       expect(response.body).to eq(crowbar_maintenance)
+    end
+
+    it "checks the crowbar repositories" do
+      allow_any_instance_of(Api::Crowbar).to(
+        receive(:repocheck).and_return(crowbar_repocheck)
+      )
+
+      get "/api/crowbar/repocheck", {}, headers
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to eq(crowbar_repocheck)
     end
   end
 end

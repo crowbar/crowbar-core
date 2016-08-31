@@ -250,6 +250,7 @@ Rails.application.routes.draw do
       get :upgrade
       post :upgrade
       get :maintenance
+      get :repocheck
 
       resources :backups,
         only: [:index, :show, :create, :destroy] do
