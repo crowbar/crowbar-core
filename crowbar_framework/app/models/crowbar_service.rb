@@ -426,7 +426,7 @@ class CrowbarService < ServiceObject
   end
 
   def revert_nodes_from_crowbar_upgrade
-    proposal = ProposalObject.find_proposal("crowbar", "default")
+    proposal = Proposal.find_by(barclamp: "crowbar", name: "default")
 
     NodeObject.all.each do |node|
       next unless node.state == "crowbar_upgrade"
