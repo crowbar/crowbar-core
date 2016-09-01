@@ -23,6 +23,7 @@ group :development do
   gem "sprockets-standalone", "~> 1.2.1"
   gem "sprockets", "~> 2.11.0"
   gem "rspec", "~> 3.1.0"
+  gem "rest-client", "~> 2.0"
 end
 
 unless ENV["PACKAGING"] && ENV["PACKAGING"] == "yes"
