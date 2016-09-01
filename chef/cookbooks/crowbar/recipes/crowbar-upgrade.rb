@@ -28,6 +28,16 @@ upgrade_step = node["crowbar_wall"]["crowbar_upgrade_step"] || "none"
 
 case upgrade_step
 
+when "revert_to_ready"
+
+  service "crowbar_join" do
+    action :enable
+  end
+
+  service "chef-client" do
+    action [:enable, :start]
+  end
+
 when "crowbar_upgrade"
 
   # Disable openstack services
