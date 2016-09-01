@@ -44,7 +44,15 @@ class Api::CrowbarController < ApiController
   end
 
   def repocheck
-    render json: @crowbar.repocheck
+    check = @crowbar.repocheck
+
+    if @crowbar.errors.any?
+      render json: {
+        error: @crowbar.errors.full_messages.first
+      }, status: :service_unavailable
+    else
+      render json: check
+    end
   end
 
   protected
