@@ -1,0 +1,17 @@
+<?xml version='1.0'?>
+<stream>
+<message type="info">Loading repository data...</message>
+<message type="info">Reading installed packages...</message>
+<product-list>
+<product name="SLES" version="12.2" release="0" epoch="0" arch="x86_64" vendor="SUSE LLC &lt;https://www.suse.com/&gt;" summary="SUSE Linux Enterprise Server 12 SP2 RC2" repo="sles12sp2" productline="" registerrelease="" shortname="SLES12-SP2" flavor="POOL" isbase="false" installed="false"><endoflife time_t="1730332800" text="2024-10-31T01:00:00+01"/><registerflavor/><description>SUSE Linux Enterprise offers a comprehensive
+        suite of products built on a single code base.
+        The platform addresses business needs from
+        the smallest thin-client devices to the world&apos;s
+        most powerful high-performance computing
+        and mainframe servers. SUSE Linux Enterprise
+        offers common management tools and technology
+        certifications across the platform, and
+        each product is enterprise-class.</description></product>
+<product name="suse-openstack-cloud" version="7" release="0" epoch="0" arch="x86_64" vendor="SUSE LINUX GmbH, Nuernberg, Germany" summary="SUSE OpenStack Cloud 7" repo="@System" productline="suse-openstack-cloud" registerrelease="" shortname="SOC7" flavor="cd" isbase="false" installed="true"><endoflife time_t="1556150400" text="2019-04-25T02:00:00+02"/><registerflavor>extension</registerflavor><description>SUSE OpenStack Cloud 7</description></product>
+</product-list>
+</stream>

@@ -55,7 +55,15 @@ class Api::CrowbarController < ApiController
   api :GET, "/api/crowbar/repocheck", "Sanity check for Crowbar server repositories"
   api_version "2.0"
   def repocheck
-    render json: @crowbar.repocheck
+    check = @crowbar.repocheck
+
+    if @crowbar.errors.any?
+      render json: {
+        error: @crowbar.errors.full_messages.first
+      }, status: :service_unavailable
+    else
+      render json: check
+    end
   end
 
   protected

@@ -771,6 +771,7 @@ en:
       destroy_failed: 'Failed to destroy %{component}'
     crowbar:
       upgrade_ongoing: 'Upgrade is already ongoing. Please wait.'
+      zypper_locked: '%{zypper_locked_message}'
 
   # Global
   overview: 'Overview'

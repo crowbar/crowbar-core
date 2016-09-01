@@ -23,6 +23,16 @@ describe Api::Crowbar do
       )
     )
   end
+  let!(:crowbar_repocheck_zypper) do
+    File.read(
+      "spec/fixtures/crowbar_repocheck_zypper.xml"
+    ).to_s
+  end
+  let!(:crowbar_repocheck_zypper_locked) do
+    File.read(
+      "spec/fixtures/crowbar_repocheck_zypper_locked.xml"
+    ).to_s
+  end
 
   before(:each) do
     allow_any_instance_of(Kernel).to(
@@ -120,6 +130,11 @@ describe Api::Crowbar do
       allow_any_instance_of(Api::Crowbar).to(
         receive(:repo_version_available?).and_return(true)
       )
+      allow_any_instance_of(Kernel).to(
+        receive(:`).with(
+          "sudo /usr/bin/zypper-retry --xmlout products"
+        ).and_return(crowbar_repocheck_zypper)
+      )
 
       expect(subject.repocheck.deep_stringify_keys).to eq(crowbar_repocheck)
     end
@@ -130,8 +145,31 @@ describe Api::Crowbar do
       allow_any_instance_of(Api::Crowbar).to(
         receive(:repo_version_available?).and_return(false)
       )
+      allow_any_instance_of(Kernel).to(
+        receive(:`).with(
+          "sudo /usr/bin/zypper-retry --xmlout products"
+        ).and_return(crowbar_repocheck_zypper)
+      )
 
       expect(subject.repocheck.deep_stringify_keys).to_not eq(crowbar_repocheck)
+    end
+  end
+
+  context "with a locked zypper" do
+    it "shows an error message that zypper is locked" do
+      allow_any_instance_of(Api::Crowbar).to(
+        receive(:repo_version_available?).and_return(false)
+      )
+      allow_any_instance_of(Kernel).to(
+        receive(:`).with(
+          "sudo /usr/bin/zypper-retry --xmlout products"
+        ).and_return(crowbar_repocheck_zypper_locked)
+      )
+
+      subject.repocheck
+      expect(subject.errors.full_messages.first).to eq(
+        Hash.from_xml(crowbar_repocheck_zypper_locked)["stream"]["message"]
+      )
     end
   end
 end
