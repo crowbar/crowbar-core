@@ -17,6 +17,7 @@
 
 require "chef/mixin/deep_merge"
 require "timeout"
+require "open3"
 
 class NodeObject < ChefObject
   self.chef_type = "node"
@@ -1199,6 +1200,22 @@ class NodeObject < ChefObject
 
   def get_bmc_password
     @node["ipmi"]["bmc_password"] rescue nil
+  end
+
+  # ssh to the node and wait until the command exits
+  def run_ssh_cmd(cmd)
+    args = ["sudo", "-i", "-u", "root", "--", "timeout", "-k", "5s", "15s",
+            "ssh", "-o", "ConnectTimeout=10",
+            "root@#{@node.name}",
+            %("#{cmd.gsub('"', '\\"')}")
+    ].join(" ")
+    Open3.popen3(args) do |stdin, stdout, stderr, wait_thr|
+      {
+        stdout: stdout.gets(nil),
+        stderr: stderr.gets(nil),
+        exit_code: wait_thr.value.exitstatus
+      }
+    end
   end
 
   def ssh_cmd(cmd)
