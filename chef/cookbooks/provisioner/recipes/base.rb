@@ -304,16 +304,12 @@ if node[:platform_family] == "suse" && !node.roles.include?("provisioner-server"
       current_url = nil
       current_priority = nil
 
-      out = `LANG=C zypper --non-interactive repos #{name} 2> /dev/null`
-      out.split("\n").each do |line|
-        attribute, value = line.split(":", 2).map(&:strip)
-        next if value.nil?
-        if attribute == "URI"
-          current_url = value
-        elsif attribute == "Priority"
-          current_priority = value.to_i
-        end
-      end
+      out = REXML::Document.new(
+        `LANG=C zypper --non-interactive --xmlout repos #{name} 2> /dev/null`
+      ).root.elements
+
+      current_priority = out["repo-list/repo"].attributes["priority"].to_i
+      current_url = out["repo-list/repo/url"].text
 
       if current_url != attrs[:url]
         unless current_url.nil? || current_url.empty?
