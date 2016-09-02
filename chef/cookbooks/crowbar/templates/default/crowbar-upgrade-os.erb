@@ -1,0 +1,77 @@
+#!/bin/bash
+#
+# This script starts the upgrade of the node server to the latest version of
+# system and Cloud product.
+
+LOGFILE=/var/log/crowbar/node-upgrade.log
+mkdir -p "`dirname "$LOGFILE"`"
+
+# Copy stdout to fd 3
+exec 3>&1
+# Create fd 4 for logfile
+exec 4>> "$LOGFILE"
+# Set fd 1 and 2 to logfile
+exec 1>&4 2>&1
+
+set -x
+
+UPGRADEDIR=/var/lib/crowbar/upgrade
+RUNFILE=/var/run/crowbar/node-upgrading
+
+cleanup()
+{
+    echo "cleaning up after interrupt or exit"
+
+    # cleanup upgrading indication so that the action can be restarted
+    rm -f $RUNFILE
+
+    exit 2
+}
+
+initiate_node_upgrade()
+{
+    mkdir -p $UPGRADEDIR
+
+    if [[ -f $RUNFILE ]] ; then
+        echo "Exit: Upgrade is already running..."
+        exit 1
+    fi
+
+    if [[ -f $UPGRADEDIR/node-upgraded-ok ]] && grep -q "<%= @target_platform_version %>" $UPGRADEDIR/node-upgraded-ok ; then
+        echo "Exit: Node already upgraded"
+        exit 0
+    fi
+
+    # Signalize that the upgrade is running
+    touch $RUNFILE
+
+    trap cleanup INT EXIT
+
+    # Upgrade the distribution non-interactively
+    zypper --no-color --releasever <%= @target_platform_version %> ref -f
+    zypper --no-color --non-interactive dist-upgrade -l --recommends --replacefiles
+    ret=$?
+    if [ $ret != 0 ]; then
+        echo "zypper dist-upgrade has failed with $ret, check zypper logs"
+        echo "$ret" > $UPGRADEDIR/node-upgrade-failed
+        exit $ret
+    fi
+
+    # Signalize that the upgrade correctly ended
+    echo "<%= @target_platform_version %>" >> $UPGRADEDIR/node-upgraded-ok
+
+    exit 0
+}
+
+echo "Removing old repositories..."
+<% @old_repos.each do |name, _| %>
+zypper --non-interactive removerepo <%= name %>
+<% end %>
+
+echo "Adding new repositories..."
+<% @new_repos.each do |name, attrs| %>
+zypper --non-interactive addrepo <%= attrs[:url] %> <%= name %>
+<% end %>
+
+# this detaches the process from crowbar and hooks it directly to init
+initiate_node_upgrade &

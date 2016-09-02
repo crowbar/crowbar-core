@@ -67,6 +67,10 @@ when "crowbar_upgrade"
     action [:disable, :stop]
   end
 
+when "prepare-os-upgrade"
+
+  include_recipe "crowbar::prepare-os-upgrade"
+
 when "openstack_shutdown"
 
   include_recipe "crowbar::stop-services-before-upgrade"
