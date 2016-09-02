@@ -111,6 +111,21 @@ describe Api::Crowbar do
     end
   end
 
+  context "with ceph cluster healthy" do
+    it "succeeds" do
+      expect(subject.ceph_healthy?).to be true
+    end
+  end
+
+  context "with ceph cluster not healthy" do
+    it "fails" do
+      allow_any_instance_of(Api::Crowbar).to(
+        receive(:ceph_healthy?).and_return(false)
+      )
+      expect(subject.ceph_healthy?).to be false
+    end
+  end
+
   context "with repositories in place" do
     it "lists the available repositories" do
       allow_any_instance_of(Api::Crowbar).to(
