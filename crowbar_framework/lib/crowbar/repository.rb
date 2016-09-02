@@ -183,7 +183,11 @@ module Crowbar
 
       private
 
-      def provided_with_enabled(feature, platform = nil, arch = nil, check_enabled = true, repos = {})
+      def provided_with_enabled(feature,
+                                platform = nil,
+                                arch = nil,
+                                check_enabled = true,
+                                repos = {})
         answer = false
 
         if platform.nil?
