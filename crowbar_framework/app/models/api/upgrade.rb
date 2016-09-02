@@ -30,7 +30,8 @@ module Api
         sanity_checks: sanity_checks,
         maintenance_updates_installed: maintenance_updates_installed?,
         clusters_healthy: clusters_healthy?,
-        compute_resources_available: compute_resources_available?
+        compute_resources_available: compute_resources_available?,
+        ceph_healthy: ceph_healthy?
       }
     end
 
@@ -51,6 +52,10 @@ module Api
     def clusters_healthy?
       # FIXME: to be implemented
       true
+    end
+
+    def ceph_healthy?
+      Api::Crowbar.new.ceph_healthy?
     end
 
     def compute_resources_available?
