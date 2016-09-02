@@ -58,9 +58,7 @@ module Installer
     end
 
     def upgrade_ha_repo_needed?
-      return true if Proposal.where(barclamp: "pacemaker").first
-
-      false
+      Proposal.where(barclamp: "pacemaker").first ? true : false
     end
 
     def upgrade_ha_repo?
@@ -74,9 +72,7 @@ module Installer
     end
 
     def upgrade_ceph_repo_needed?
-      return true if Proposal.where(barclamp: "ceph").first
-
-      false
+      Proposal.where(barclamp: "ceph").first ? true : false
     end
 
     def upgrade_ceph_repo?

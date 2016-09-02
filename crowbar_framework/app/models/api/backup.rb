@@ -151,11 +151,7 @@ class Api::Backup < ActiveRecord::Base
   protected
 
   def upload?
-    if file.present?
-      true
-    else
-      false
-    end
+    file.present?
   end
 
   def create_archive
