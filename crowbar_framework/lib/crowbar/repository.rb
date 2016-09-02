@@ -183,23 +183,19 @@ module Crowbar
 
       private
 
-      def provided_with_enabled(feature, platform = nil, arch = nil, check_enabled = true)
-        repos = {
-          missing_repos: [],
-          inactive_repos: []
-        }
+      def provided_with_enabled(feature, platform = nil, arch = nil, check_enabled = true, repos = {})
         answer = false
 
         if platform.nil?
           all_platforms.each do |p|
-            if provided_with_enabled(feature, p, arch, check_enabled).first
+            if provided_with_enabled(feature, p, arch, check_enabled, repos).first
               answer = true
               break
             end
           end
         elsif arch.nil?
           arches(platform).each do |a|
-            if provided_with_enabled(feature, platform, a, check_enabled).first
+            if provided_with_enabled(feature, platform, a, check_enabled, repos).first
               answer = true
               break
             end
@@ -215,12 +211,25 @@ module Crowbar
             found = true
 
             r = new(platform, arch, repo)
+
             answer &&= r.available?
-            repos[:missing_repos].push(r.name) unless answer
+            unless r.available?
+              repos[:missing_repos] ||= {}
+              repos[:missing_repos][r.arch.to_sym] ||= []
+              unless repos[:missing_repos][r.arch.to_sym].include?(r.name)
+                repos[:missing_repos][r.arch.to_sym].push(r.name)
+              end
+            end
 
             break unless check_enabled
             answer &&= r.active?
-            repos[:inactive_repos].push(r.name) unless answer
+            next if r.active?
+
+            repos[:inactive_repos] ||= {}
+            repos[:inactive_repos][r.arch.to_sym] ||= []
+            unless repos[:inactive_repos][r.arch.to_sym].include?(r.name)
+              repos[:inactive_repos][r.arch.to_sym].push(r.name)
+            end
           end
 
           answer = false unless found
