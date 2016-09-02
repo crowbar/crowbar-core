@@ -90,6 +90,32 @@ module Api
       end
     end
 
+    def repocheck
+      # FIXME: once we start working on 7 to 8 upgrade we have to adapt the sles version
+      zypper_stream = Hash.from_xml(
+        `sudo /usr/bin/zypper-retry --xmlout products`
+      )["stream"]
+
+      {}.tap do |ret|
+        if zypper_stream["message"] =~ /^System management is locked/
+          errors.add(
+            :base,
+            I18n.t("api.crowbar.zypper_locked", zypper_locked_message: zypper_stream["message"])
+          )
+          return ret
+        end
+
+        products = zypper_stream["product_list"]["product"]
+
+        ret[:os] = {
+          available: repo_version_available?(products, "SLES", "12.2")
+        }
+        ret[:cloud] = {
+          available: repo_version_available?(products, "suse-openstack-cloud", "8")
+        }
+      end
+    end
+
     protected
 
     def lib_path
@@ -124,6 +150,12 @@ module Api
       true
     rescue NameError
       false
+    end
+
+    def repo_version_available?(products, product, version)
+      products.any? do |p|
+        p["version"] == version && p["name"] == product
+      end
     end
   end
 end

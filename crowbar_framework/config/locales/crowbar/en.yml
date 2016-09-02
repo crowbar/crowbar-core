@@ -767,8 +767,11 @@ en:
       cache_error: 'Failed to cache sanity checks'
 
   api:
+    error:
+      destroy_failed: 'Failed to destroy %{component}'
     crowbar:
       upgrade_ongoing: 'Upgrade is already ongoing. Please wait.'
+      zypper_locked: '%{zypper_locked_message}'
 
   # Global
   overview: 'Overview'
@@ -878,7 +881,3 @@ en:
     poweron: 'Power On'
     pending: 'Pending'
     building: 'Building'
-
-  api:
-    error:
-      destroy_failed: 'Failed to destroy %{component}'
