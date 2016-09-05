@@ -210,6 +210,7 @@ Rails.application.routes.draw do
       post :services
       get :services
       get :prechecks
+      post :cancel
     end
   end
 
