@@ -89,6 +89,21 @@ module Api
       end
     end
 
+    def clusters_healthy?
+      service_object = CrowbarService.new(Rails.logger)
+      cluster_health = service_object.check_cluster_health
+      unless cluster_health.empty?
+        Rails.logger.warn("HA clusters report some problems")
+        (cluster_health["crm_failures"] || {}).each do |node, error|
+          Rails.logger.warn("crm status at node #{node} reports error:\n#{error}")
+        end
+        (cluster_health["failed_actions"] || {}).each do |node, error|
+          Rails.logger.warn("crm at node #{node} reports some failed actions:\n#{error}")
+        end
+      end
+      cluster_health.empty?
+    end
+
     protected
 
     def lib_path

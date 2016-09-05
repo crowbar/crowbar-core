@@ -49,8 +49,7 @@ module Api
     end
 
     def clusters_healthy?
-      # FIXME: to be implemented
-      true
+      Api::Crowbar.new.clusters_healthy?
     end
 
     def compute_resources_available?

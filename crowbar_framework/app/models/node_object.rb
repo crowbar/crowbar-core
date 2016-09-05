@@ -1203,7 +1203,7 @@ class NodeObject < ChefObject
     args = ["sudo", "-i", "-u", "root", "--", "timeout", "-k", "5s", "15s",
             "ssh", "-o", "ConnectTimeout=10",
             "root@#{@node.name}",
-            cmd.to_s
+            %("#{cmd.gsub('"', '\\"')}")
     ].join(" ")
     Open3.popen3(args) do |stdin, stdout, stderr, wait_thr|
       {
