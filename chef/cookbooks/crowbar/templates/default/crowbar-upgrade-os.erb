@@ -67,11 +67,13 @@ echo "Removing old repositories..."
 <% @old_repos.each do |name, _| %>
 zypper --non-interactive removerepo <%= name %>
 <% end %>
+zypper --non-interactive removerepo <%= @old_base_repo %>
 
 echo "Adding new repositories..."
 <% @new_repos.each do |name, attrs| %>
 zypper --non-interactive addrepo <%= attrs[:url] %> <%= name %>
 <% end %>
+zypper --non-interactive addrepo <%= @new_base_repo %> <%= @new_alias %>
 
 # this detaches the process from crowbar and hooks it directly to init
 initiate_node_upgrade &
