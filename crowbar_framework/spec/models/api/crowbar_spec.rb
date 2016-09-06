@@ -33,6 +33,7 @@ describe Api::Crowbar do
       "spec/fixtures/crowbar_repocheck_zypper_locked.xml"
     ).to_s
   end
+  let!(:node) { NodeObject.find_node_by_name("testing") }
 
   before(:each) do
     allow_any_instance_of(Kernel).to(
@@ -162,6 +163,36 @@ describe Api::Crowbar do
         and_return(exit_code: 0, stdout: "HEALTH_WARN", stderr: "")
       )
       expect(subject.ceph_healthy?).to be false
+    end
+  end
+
+  context "with enough compute resources" do
+    it "succeeds to find enough compute nodes" do
+      allow(NodeObject).to(
+        receive(:find).with("roles:nova-compute-kvm").
+        and_return([node, node])
+      )
+      expect(subject.compute_resources_available?).to be true
+    end
+  end
+
+  context "with not enough compute resources" do
+    it "finds there is only one compute node and fails" do
+      allow(NodeObject).to(
+        receive(:find).with("roles:nova-compute-kvm").
+        and_return([node])
+      )
+      expect(subject.compute_resources_available?).to be false
+    end
+  end
+
+  context "with no compute resources" do
+    it "finds there is no compute node at all" do
+      allow(NodeObject).to(
+        receive(:find).with("roles:nova-compute-kvm").
+        and_return([])
+      )
+      expect(subject.compute_resources_available?).to be true
     end
   end
 
