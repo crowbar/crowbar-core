@@ -89,6 +89,31 @@ module Api
       end
     end
 
+    def repocheck
+      zypper_stream = Hash.from_xml(
+        `sudo /usr/bin/zypper-retry --xmlout products`
+      )["stream"]
+
+      {}.tap do |ret|
+        if zypper_stream["message"] =~ /^System management is locked/
+          errors.add(
+            :base,
+            I18n.t("api.crowbar.zypper_locked", zypper_locked_message: zypper_stream["message"])
+          )
+          return ret
+        end
+
+        products = zypper_stream["product_list"]["product"]
+
+        ret[:os] = {
+          available: repo_version_available?(products, "SLES", "12.2")
+        }
+        ret[:cloud] = {
+          available: repo_version_available?(products, "suse-openstack-cloud", "7")
+        }
+      end
+    end
+
     def clusters_healthy?
       service_object = CrowbarService.new(Rails.logger)
       cluster_health = service_object.check_cluster_health
@@ -133,6 +158,12 @@ module Api
 
     def upgrade_script_path
       Rails.root.join("..", "bin", "upgrade_admin_server.sh")
+    end
+
+    def repo_version_available?(products, product, version)
+      products.any? do |p|
+        p["version"] == version && p["name"] == product
+      end
     end
   end
 end

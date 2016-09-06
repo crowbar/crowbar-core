@@ -201,6 +201,7 @@ Rails.application.routes.draw do
       get :upgrade
       post :upgrade
       get :maintenance
+      get :repocheck
     end
 
     resource :upgrade,
