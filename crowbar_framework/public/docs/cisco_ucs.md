@@ -74,7 +74,7 @@ All troubleshooting should be done within the Cisco UCS Manager interface.
 ## Testing with the UCS Platform Emulator
 
 The UCS Platform Emulator can be [downloaded from Cisco's
-website](http://developer.cisco.com/web/unifiedcomputing/ucsemulatordownload)
+website](https://communities.cisco.com/ucspe)
 after registering for a free account.
 
 ### Prerequisites
