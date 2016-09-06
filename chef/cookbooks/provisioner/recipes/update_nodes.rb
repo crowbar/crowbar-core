@@ -88,32 +88,36 @@ if not nodes.nil? and not nodes.empty?
     end
 
     arch = mnode[:kernel][:machine] rescue "x86_64"
+    pxefile = nil
+    uefifile = nil
+    grubcfgfile = nil
+    grubfile = nil
+    windows_tftp_file = nil
 
-    # no boot_ip means that no admin network address has been assigned to node,
-    # and it will boot into the default discovery image. But it won't help if
-    # we're trying to delete the node.
-    if boot_ip_hex
-      pxefile = "#{discovery_dir}/#{arch}/#{pxecfg_subdir}/#{boot_ip_hex}"
-      uefi_dir = "#{discovery_dir}/#{arch}/#{uefi_subdir}"
-      if use_elilo
-        uefifile = "#{uefi_dir}/#{boot_ip_hex}.conf"
-        grubdir = nil
-        grubcfgfile = nil
-        grubfile = nil
+    if node[:provisioner][:discovery_arches].include?(arch)
+      # no boot_ip means that no admin network address has been assigned to node,
+      # and it will boot into the default discovery image. But it won't help if
+      # we're trying to delete the node.
+      if boot_ip_hex
+        pxefile = "#{discovery_dir}/#{arch}/#{pxecfg_subdir}/#{boot_ip_hex}"
+        uefi_dir = "#{discovery_dir}/#{arch}/#{uefi_subdir}"
+        if use_elilo
+          uefifile = "#{uefi_dir}/#{boot_ip_hex}.conf"
+          grubdir = nil
+          grubcfgfile = nil
+          grubfile = nil
+        else
+          uefifile = nil
+          grubdir = "#{uefi_dir}/#{boot_ip_hex}"
+          grubcfgfile = "#{grubdir}/boot/grub/grub.cfg"
+          grubfile = "#{uefi_dir}/#{boot_ip_hex}.efi"
+        end
+        windows_tftp_file = "#{tftproot}/windows-common/tftp/#{boot_ip_hex}"
       else
-        uefifile = nil
-        grubdir = "#{uefi_dir}/#{boot_ip_hex}"
-        grubcfgfile = "#{grubdir}/boot/grub/grub.cfg"
-        grubfile = "#{uefi_dir}/#{boot_ip_hex}.efi"
+        Chef::Log.warn("#{mnode[:fqdn]}: no boot IP known; PXE/UEFI boot files won't get updated!")
       end
-      windows_tftp_file = "#{tftproot}/windows-common/tftp/#{boot_ip_hex}"
     else
-      Chef::Log.warn("#{mnode[:fqdn]}: no boot IP known; PXE/UEFI boot files won't get updated!")
-      pxefile = nil
-      uefifile = nil
-      grubcfgfile = nil
-      grubfile = nil
-      windows_tftp_file = nil
+      Chef::Log.warn("#{arch}: not supported for PXE/UEFI, skipping!")
     end
 
     # needed for dhcp

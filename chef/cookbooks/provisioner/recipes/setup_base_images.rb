@@ -31,8 +31,7 @@ pxecfg_subdir = "bios/pxelinux.cfg"
 uefi_subdir = "efi"
 
 # This is what we could support, but this requires validation
-#discovery_arches = ["x86_64", "ppc64le", "ia32"]
-discovery_arches = ["aarch64", "x86_64", "ppc64le"]
+discovery_arches = node[:provisioner][:discovery_arches]
 discovery_arches.select! do |arch|
   File.exist?("#{discovery_dir}/#{arch}/initrd0.img") && File.exist?("#{discovery_dir}/#{arch}/vmlinuz0")
 end
@@ -61,10 +60,7 @@ directory discovery_dir do
 end
 
 # PXE config
-# ppc64le bootloader can parse pxelinux config files
-%w(aarch64 x86_64 ppc64le).each do |arch|
-  # Make it easy to totally disable/enable an architecture
-  next unless discovery_arches.include? arch
+discovery_arches.each do |arch|
 
   directory "#{discovery_dir}/#{arch}/#{pxecfg_subdir}" do
     recursive true
@@ -101,10 +97,7 @@ end
 
 # UEFI config
 use_elilo = true
-%w(aarch64 x86_64 ia32).each do |arch|
-  # Make it easy to totally disable/enable an architecture
-  next unless discovery_arches.include? arch
-
+discovery_arches.each do |arch|
   uefi_dir = "#{discovery_dir}/#{arch}/#{uefi_subdir}"
 
   short_arch = arch
