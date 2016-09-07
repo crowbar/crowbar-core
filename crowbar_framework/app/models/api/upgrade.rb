@@ -72,8 +72,7 @@ module Api
     end
 
     def compute_resources_available?
-      # FIXME: to be implemented
-      true
+      Api::Crowbar.new.compute_resources_available?
     end
   end
 end

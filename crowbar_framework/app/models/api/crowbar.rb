@@ -127,6 +127,18 @@ module Api
       true
     end
 
+    def compute_resources_available?
+      ["kvm", "xen"].each do |virt|
+        compute_nodes = NodeObject.find("roles:nova-compute-#{virt}")
+        next unless compute_nodes.size == 1
+        Rails.logger.warn(
+          "Found only one compute node of #{virt} type; non-disruptive upgrade is not possible"
+        )
+        return false
+      end
+      true
+    end
+
     protected
 
     def lib_path
