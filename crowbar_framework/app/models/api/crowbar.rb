@@ -128,9 +128,12 @@ module Api
     end
 
     def compute_resources_available?
-      compute_nodes = NodeObject.find("roles:nova-compute-kvm")
-      if compute_nodes.size == 1
-        Rails.logger.warn("Only one compute node found; non-disruptive upgrade is not possible!")
+      ["kvm", "xen"].each do |virt|
+        compute_nodes = NodeObject.find("roles:nova-compute-#{virt}")
+        next unless compute_nodes.size == 1
+        Rails.logger.warn(
+          "Found only one compute node of #{virt} type; non-disruptive upgrade is not possible"
+        )
         return false
       end
       true
