@@ -116,6 +116,17 @@ module Api
       end
     end
 
+    def ceph_healthy?
+      ceph_node = NodeObject.find("roles:ceph-mon AND ceph_config_environment:*").first
+      return true if ceph_node.nil?
+      ssh_retval = ceph_node.run_ssh_cmd("LANG=C ceph health 2>&1")
+      unless ssh_retval[:stdout].include? "HEALTH_OK"
+        Rails.logger.warn("ceph cluster health check failed with #{ssh_retval[:stdout]}")
+        return false
+      end
+      true
+    end
+
     protected
 
     def lib_path

@@ -125,6 +125,46 @@ describe Api::Crowbar do
     end
   end
 
+  context "with ceph cluster healthy" do
+    it "succeeds to check ceph cluster health" do
+      allow(NodeObject).to(
+        receive(:find).with("roles:ceph-mon AND ceph_config_environment:*").
+        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+      )
+      allow_any_instance_of(NodeObject).to(
+        receive(:run_ssh_cmd).with("LANG=C ceph health 2>&1").
+        and_return(exit_code: 0, stdout: "HEALTH_OK\n", stderr: "")
+      )
+      expect(subject.ceph_healthy?).to be true
+    end
+  end
+
+  context "with ceph cluster not healthy" do
+    it "fails when checking ceph cluster health" do
+      allow(NodeObject).to(
+        receive(:find).with("roles:ceph-mon AND ceph_config_environment:*").
+        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+      )
+      allow_any_instance_of(NodeObject).to(
+        receive(:run_ssh_cmd).with("LANG=C ceph health 2>&1").
+        and_return(exit_code: 1, stdout: "HEALTH_ERR\n", stderr: "")
+      )
+      expect(subject.ceph_healthy?).to be false
+    end
+
+    it "fails when exit value of ceph check is 0 but stdout still not correct" do
+      allow(NodeObject).to(
+        receive(:find).with("roles:ceph-mon AND ceph_config_environment:*").
+        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+      )
+      allow_any_instance_of(NodeObject).to(
+        receive(:run_ssh_cmd).with("LANG=C ceph health 2>&1").
+        and_return(exit_code: 0, stdout: "HEALTH_WARN", stderr: "")
+      )
+      expect(subject.ceph_healthy?).to be false
+    end
+  end
+
   context "with repositories in place" do
     it "lists the available repositories" do
       allow_any_instance_of(Api::Crowbar).to(
