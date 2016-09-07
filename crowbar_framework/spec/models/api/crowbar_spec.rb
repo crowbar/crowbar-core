@@ -158,14 +158,29 @@ describe Api::Crowbar do
         receive(:find).with("roles:nova-compute-kvm").
         and_return([node, node])
       )
+      allow(NodeObject).to(
+        receive(:find).with("roles:nova-compute-xen").
+        and_return([node, node])
+      )
       expect(subject.compute_resources_available?).to be true
     end
   end
 
   context "with not enough compute resources" do
-    it "finds there is only one compute node and fails" do
+    it "finds there is only one KVM compute node and fails" do
       allow(NodeObject).to(
         receive(:find).with("roles:nova-compute-kvm").
+        and_return([node])
+      )
+      expect(subject.compute_resources_available?).to be false
+    end
+    it "finds there is only one XEN compute node and fails" do
+      allow(NodeObject).to(
+        receive(:find).with("roles:nova-compute-kvm").
+        and_return([node, node])
+      )
+      allow(NodeObject).to(
+        receive(:find).with("roles:nova-compute-xen").
         and_return([node])
       )
       expect(subject.compute_resources_available?).to be false
@@ -176,6 +191,10 @@ describe Api::Crowbar do
     it "finds there is no compute node at all" do
       allow(NodeObject).to(
         receive(:find).with("roles:nova-compute-kvm").
+        and_return([])
+      )
+      allow(NodeObject).to(
+        receive(:find).with("roles:nova-compute-xen").
         and_return([])
       )
       expect(subject.compute_resources_available?).to be true
