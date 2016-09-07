@@ -90,6 +90,33 @@ describe Api::Node do
       )
     )
   end
+  let!(:openstack_repo_missing) do
+    allow(::Crowbar::Repository).to(
+      receive(:provided_and_enabled_with_repolist).with(
+        "openstack", "suse-12.2", "x86_64"
+      ).and_return(
+        [
+          false,
+          {
+            "missing_repos" => {
+              "x86_64" => [
+                "Cloud",
+                "SUSE-OpenStack-Cloud-7-Pool",
+                "SUSE-OpenStack-Cloud-7-Updates"
+              ]
+            },
+            "inactive_repos" => {
+              "x86_64" => [
+                "Cloud",
+                "SUSE-OpenStack-Cloud-7-Pool",
+                "SUSE-OpenStack-Cloud-7-Updates"
+              ]
+            }
+          }
+        ]
+      )
+    )
+  end
 
   before(:each) do
     allow_any_instance_of(Api::Upgrade).to(
@@ -114,13 +141,14 @@ describe Api::Node do
       os_repo_fixture = node_repocheck.tap do |k|
         k.delete("ceph")
         k.delete("ha")
+        k.delete("openstack")
       end
 
       expect(subject.repocheck).to eq(os_repo_fixture)
     end
 
     it "finds the os and addon repositories required to upgrade the nodes" do
-      ["os", "ceph", "ha"].each do |feature|
+      ["os", "ceph", "ha", "openstack"].each do |feature|
         allow(::Crowbar::Repository).to(
           receive(:provided_and_enabled_with_repolist).with(
             feature, "suse-12.2", "x86_64"
@@ -139,7 +167,7 @@ describe Api::Node do
       expected = {}
       got = {}
 
-      ["os", "ceph", "ha"].each do |feature|
+      ["os", "ceph", "ha", "openstack"].each do |feature|
         # stub repolist
         send("#{feature}_repo_missing".to_sym)
 

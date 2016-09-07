@@ -49,5 +49,24 @@
         ]
       }
     }
+  },
+  "openstack": {
+    "available": false,
+    "repos": {
+      "missing_repos": {
+        "x86_64": [
+          "Cloud",
+          "SUSE-OpenStack-Cloud-7-Pool",
+          "SUSE-OpenStack-Cloud-7-Updates"
+        ]
+      },
+      "inactive_repos": {
+        "x86_64": [
+          "Cloud",
+          "SUSE-OpenStack-Cloud-7-Pool",
+          "SUSE-OpenStack-Cloud-7-Updates"
+        ]
+      }
+    }
   }
 }

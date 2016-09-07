@@ -10,5 +10,9 @@
   "ha": {
     "available": true,
     "repos": {}
+  },
+  "openstack": {
+    "available": true,
+    "repos": {}
   }
 }

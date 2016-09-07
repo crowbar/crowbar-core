@@ -59,7 +59,7 @@ describe Api::Upgrade do
       allow(::Crowbar::Repository).to(
         receive(:provided_and_enabled?).and_return(true)
       )
-      ["os", "ceph", "ha"].each do |feature|
+      ["os", "ceph", "ha", "openstack"].each do |feature|
         allow(::Crowbar::Repository).to(
           receive(:provided_and_enabled_with_repolist).with(
             feature, "suse-12.2", "x86_64"
