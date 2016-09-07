@@ -80,6 +80,12 @@ class Api::UpgradeController < ApiController
     render json: { error: e.message }, status: :unprocessable_entity
   end
 
+  api :GET, "/api/upgrade/repocheck", "Check for missing node repositories"
+  api_version "2.0"
+  def repocheck
+    render json: @upgrade.repocheck
+  end
+
   protected
 
   def set_upgrade

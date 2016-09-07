@@ -75,5 +75,17 @@ describe Api::UpgradeController, type: :request do
         "{\"error\":\"an Error\"}"
       )
     end
+
+    it "checks for node repositories" do
+      allow_any_instance_of(Api::Upgrade).to(
+        receive(:target_platform).and_return("suse-12.2")
+      )
+
+      get "/api/upgrade/repocheck", {}, headers
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to eq(
+        "{\"os\":{\"available\":true},\"openstack\":{\"available\":true}}"
+      )
+    end
   end
 end

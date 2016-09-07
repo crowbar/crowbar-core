@@ -35,6 +35,15 @@ module Api
       }
     end
 
+    def repocheck
+      response = {}
+      addons = Api::Crowbar.new.addons
+      addons.push("os").each do |addon|
+        response.merge!(Api::Node.new.repocheck(addon: addon))
+      end
+      response
+    end
+
     def target_platform(options = {})
       platform_exception = options.fetch(:platform_exception, nil)
 
