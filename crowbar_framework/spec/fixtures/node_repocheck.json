@@ -1,0 +1,14 @@
+{
+  "os": {
+    "available": true,
+    "repos": {}
+  },
+  "ceph": {
+    "available": true,
+    "repos": {}
+  },
+  "ha": {
+    "available": true,
+    "repos": {}
+  }
+}

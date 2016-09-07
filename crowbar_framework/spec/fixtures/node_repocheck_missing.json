@@ -1,0 +1,53 @@
+{
+  "os": {
+    "available": false,
+    "repos": {
+      "missing_repos": {
+        "x86_64": [
+          "SLES12-SP2-Pool",
+          "SLES12-SP2-Updates"
+        ]
+      },
+      "inactive_repos": {
+        "x86_64": [
+          "SLES12-SP2-Pool",
+          "SLES12-SP2-Updates"
+        ]
+      }
+    }
+  },
+  "ceph": {
+    "available": false,
+    "repos": {
+      "missing_repos": {
+        "x86_64": [
+          "SUSE-Enterprise-Storage-3-Pool",
+          "SUSE-Enterprise-Storage-3-Updates"
+        ]
+      },
+      "inactive_repos": {
+        "x86_64": [
+          "SUSE-Enterprise-Storage-3-Pool",
+          "SUSE-Enterprise-Storage-3-Updates"
+        ]
+      }
+    }
+  },
+  "ha": {
+    "available": false,
+    "repos": {
+      "missing_repos": {
+        "x86_64": [
+          "SLE12-SP2-HA-Pool",
+          "SLE12-SP2-HA-Updates"
+        ]
+      },
+      "inactive_repos": {
+        "x86_64": [
+          "SLE12-SP2-HA-Pool",
+          "SLE12-SP2-HA-Updates"
+        ]
+      }
+    }
+  }
+}
