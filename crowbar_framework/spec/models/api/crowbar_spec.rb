@@ -221,6 +221,9 @@ describe Api::Crowbar do
       allow_any_instance_of(Api::Crowbar).to(
         receive(:repo_version_available?).and_return(false)
       )
+      allow_any_instance_of(Api::Crowbar).to(
+        receive(:admin_architecture).and_return("x86_64")
+      )
       allow_any_instance_of(Kernel).to(
         receive(:`).with(
           "sudo /usr/bin/zypper-retry --xmlout products"
