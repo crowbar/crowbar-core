@@ -28,18 +28,22 @@ module Api
         platform = Api::Upgrade.new.target_platform(platform_exception: addon)
 
         features.each do |feature|
-          node_architectures(addon: addon).each do |architecture|
-            unless ::Crowbar::Repository.provided_and_enabled?(feature,
-                                                               platform,
-                                                               architecture)
-              ::Openstack::Upgrade.enable_repos_for_feature(feature, Rails.logger)
+          if node_architectures(addon: addon).any?
+            node_architectures(addon: addon).each do |architecture|
+              unless ::Crowbar::Repository.provided_and_enabled?(feature,
+                                                                 platform,
+                                                                 architecture)
+                ::Openstack::Upgrade.enable_repos_for_feature(feature, Rails.logger)
+              end
+              available, repolist = ::Crowbar::Repository.provided_and_enabled_with_repolist(
+                feature, platform, architecture
+              )
+              ret[addon]["available"] &&= available
+              ret[addon]["repos"] ||= {}
+              ret[addon]["repos"].deep_merge!(repolist.deep_stringify_keys)
             end
-            available, repolist = ::Crowbar::Repository.provided_and_enabled_with_repolist(
-              feature, platform, architecture
-            )
-            ret[addon]["available"] &&= available
-            ret[addon]["repos"] ||= {}
-            ret[addon]["repos"].deep_merge!(repolist.deep_stringify_keys)
+          else
+            ret.delete(addon)
           end
         end
       end
