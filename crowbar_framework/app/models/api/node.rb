@@ -20,6 +20,7 @@ module Api
       addon = options.fetch(:addon, "os")
       features = []
       features.push(addon)
+      architectures = node_architectures
 
       {}.tap do |ret|
         ret[addon] = {
@@ -28,8 +29,8 @@ module Api
         platform = Api::Upgrade.new.target_platform(platform_exception: addon)
 
         features.each do |feature|
-          if node_architectures(addon: addon).any?
-            node_architectures(addon: addon).each do |architecture|
+          if architectures[feature]
+            architectures[feature].each do |architecture|
               unless ::Crowbar::Repository.provided_and_enabled?(feature,
                                                                  platform,
                                                                  architecture)
@@ -51,25 +52,35 @@ module Api
 
     protected
 
-    def node_architectures(options = {})
-      addon = options.fetch(:addon, nil)
-      addon = "pacemaker" if addon == "ha"
-      architectures = []
-      proposals = Proposal.where(barclamp: addon)
-      return architectures if proposals.empty?
+    def node_architectures
+      {}.tap do |ret|
+        NodeObject.all.each do |node|
+          arch = node.architecture
+          ret["os"] ||= []
+          ret["os"].push(arch) unless ret["os"].include?(arch)
 
-      proposals.each do |prop|
-        next unless RoleObject.all.detect { |r| r.barclamp == addon && r.proposal? }
-        node_names = prop.properties["deployment"][addon]["elements"].values.flatten.uniq
-        next if node_names == []
+          if ceph_node?(node)
+            ret["ceph"] ||= []
+            ret["ceph"].push(arch) unless ret["ceph"].include?(arch)
+          else
+            ret["openstack"] ||= []
+            ret["openstack"].push(arch) unless ret["openstack"].include?(arch)
+          end
 
-        nodes = node_names.map { |n| NodeObject.find_node_by_name(n) }
-        nodes.map(&:architecture).uniq.each do |arch|
-          architectures.push(arch) unless architectures.include?(arch)
+          if pacemaker_node?(node)
+            ret["ha"] ||= []
+            ret["ha"].push(arch) unless ret["ha"].include?(arch)
+          end
         end
       end
+    end
 
-      architectures
+    def ceph_node?(node)
+      node.roles.include?("ceph-config-default")
+    end
+
+    def pacemaker_node?(node)
+      node.roles.grep(/^pacemaker-config-.*/).any?
     end
   end
 end

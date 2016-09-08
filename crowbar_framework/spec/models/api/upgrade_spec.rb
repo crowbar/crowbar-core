@@ -50,11 +50,25 @@ describe Api::Upgrade do
 
   context "with a successful node repocheck" do
     it "checks the repositories for the nodes" do
-      allow_any_instance_of(Api::Upgrade).to(
-        receive(:target_platform).and_return("suse-12.2")
+      allow_any_instance_of(Api::Node).to(
+        receive(:node_architectures).and_return(
+          "os" => ["x86_64"],
+          "openstack" => ["x86_64"],
+          "ceph" => ["x86_64"],
+          "ha" => ["x86_64"]
+        )
       )
       allow_any_instance_of(Api::Node).to(
-        receive(:node_architectures).and_return(["x86_64"])
+        receive(:ceph_node?).and_return(true)
+      )
+      allow_any_instance_of(Api::Node).to(
+        receive(:pacemaker_node?).and_return(true)
+      )
+      allow(NodeObject).to(
+        receive(:all).and_return([NodeObject.find_node_by_name("testing")])
+      )
+      allow_any_instance_of(Api::Upgrade).to(
+        receive(:target_platform).and_return("suse-12.2")
       )
       allow(::Crowbar::Repository).to(
         receive(:provided_and_enabled?).and_return(true)

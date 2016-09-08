@@ -40,56 +40,6 @@ describe Api::Node do
       )
     )
   end
-  let!(:ceph_repo_missing) do
-    allow(::Crowbar::Repository).to(
-      receive(:provided_and_enabled_with_repolist).with(
-        "ceph", "suse-12.2", "x86_64"
-      ).and_return(
-        [
-          false,
-          {
-            "missing_repos" => {
-              "x86_64" => [
-                "SUSE-Enterprise-Storage-3-Pool",
-                "SUSE-Enterprise-Storage-3-Updates"
-              ]
-            },
-            "inactive_repos" => {
-              "x86_64" => [
-                "SUSE-Enterprise-Storage-3-Pool",
-                "SUSE-Enterprise-Storage-3-Updates"
-              ]
-            }
-          }
-        ]
-      )
-    )
-  end
-  let!(:ha_repo_missing) do
-    allow(::Crowbar::Repository).to(
-      receive(:provided_and_enabled_with_repolist).with(
-        "ha", "suse-12.2", "x86_64"
-      ).and_return(
-        [
-          false,
-          {
-            "missing_repos" => {
-              "x86_64" => [
-                "SLE12-SP2-HA-Pool",
-                "SLE12-SP2-HA-Updates"
-              ]
-            },
-            "inactive_repos" => {
-              "x86_64" => [
-                "SLE12-SP2-HA-Pool",
-                "SLE12-SP2-HA-Updates"
-              ]
-            }
-          }
-        ]
-      )
-    )
-  end
   let!(:openstack_repo_missing) do
     allow(::Crowbar::Repository).to(
       receive(:provided_and_enabled_with_repolist).with(
@@ -123,7 +73,12 @@ describe Api::Node do
       receive(:target_platform).and_return("suse-12.2")
     )
     allow_any_instance_of(Api::Node).to(
-      receive(:node_architectures).and_return(["x86_64"])
+      receive(:node_architectures).and_return(
+        "os" => ["x86_64"],
+        "openstack" => ["x86_64"],
+        "ceph" => ["x86_64"],
+        "ha" => ["x86_64"]
+      )
     )
     allow(::Crowbar::Repository).to(
       receive(:provided_and_enabled?).and_return(true)
@@ -167,7 +122,7 @@ describe Api::Node do
       expected = {}
       got = {}
 
-      ["os", "ceph", "ha", "openstack"].each do |feature|
+      ["os", "openstack"].each do |feature|
         # stub repolist
         send("#{feature}_repo_missing".to_sym)
 

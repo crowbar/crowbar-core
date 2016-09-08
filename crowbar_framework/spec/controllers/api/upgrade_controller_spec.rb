@@ -77,14 +77,38 @@ describe Api::UpgradeController, type: :request do
     end
 
     it "checks for node repositories" do
+      allow_any_instance_of(NodeObject).to(
+        receive(:roles).and_return(["crowbar"])
+      )
+      allow(NodeObject).to(
+        receive(:all).and_return([NodeObject.find_node_by_name("testing")])
+      )
       allow_any_instance_of(Api::Upgrade).to(
         receive(:target_platform).and_return("suse-12.2")
       )
+      allow_any_instance_of(Api::Node).to(
+        receive(:node_architectures).and_return(
+          "os" => ["x86_64"],
+          "openstack" => ["x86_64"],
+          "ceph" => ["x86_64"],
+          "ha" => ["x86_64"]
+        )
+      )
+      allow(::Crowbar::Repository).to(
+        receive(:provided_and_enabled?).and_return(true)
+      )
+      ["os", "ceph", "ha", "openstack"].each do |feature|
+        allow(::Crowbar::Repository).to(
+          receive(:provided_and_enabled_with_repolist).with(
+            feature, "suse-12.2", "x86_64"
+          ).and_return([true, {}])
+        )
+      end
 
       get "/api/upgrade/repocheck", {}, headers
       expect(response).to have_http_status(:ok)
       expect(response.body).to eq(
-        "{\"os\":{\"available\":true},\"openstack\":{\"available\":true}}"
+        "{\"os\":{\"available\":true,\"repos\":{}},\"openstack\":{\"available\":true,\"repos\":{}}}"
       )
     end
   end
