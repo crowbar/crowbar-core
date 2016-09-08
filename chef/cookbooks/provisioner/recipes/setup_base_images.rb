@@ -53,7 +53,7 @@ append_line = append_line.split.join(" ")
 node.set[:provisioner][:sledgehammer_append_line] = append_line
 
 directory discovery_dir do
-  mode 0755
+  mode 0o755
   owner "root"
   group "root"
   action :create
@@ -64,14 +64,14 @@ discovery_arches.each do |arch|
 
   directory "#{discovery_dir}/#{arch}/#{pxecfg_subdir}" do
     recursive true
-    mode 0755
+    mode 0o755
     owner "root"
     group "root"
     action :create
   end
 
   template "#{discovery_dir}/#{arch}/#{pxecfg_subdir}/default" do
-    mode 0644
+    mode 0o644
     owner "root"
     group "root"
     source "default.erb"
@@ -108,7 +108,7 @@ discovery_arches.each do |arch|
 
   directory uefi_dir do
     recursive true
-    mode 0755
+    mode 0o755
     owner "root"
     group "root"
     action :create
@@ -121,19 +121,23 @@ discovery_arches.each do |arch|
     grub2arch = "arm64"
   end
 
+  grubdir = "/usr/lib/grub2/#{grub2arch}-efi/"
+  grubout = "#{uefi_dir}/boot#{short_arch}.efi"
+  gruboptions = "-d #{grubdir} -O #{grub2arch}-efi --fonts=\"unicode\" -o #{grubout} "
+
   package "grub2-#{grub2arch}-efi"
 
   # grub.cfg has to be in boot/grub/ subdirectory
   directory "#{uefi_dir}/default/boot/grub" do
     recursive true
-    mode 0755
+    mode 0o755
     owner "root"
     group "root"
     action :create
   end
 
   template "#{uefi_dir}/default/boot/grub/grub.cfg" do
-    mode 0644
+    mode 0o644
     owner "root"
     group "root"
     source "grub.conf.erb"
@@ -146,7 +150,7 @@ discovery_arches.each do |arch|
 
   bash "Build UEFI netboot loader with grub2" do
     cwd "#{uefi_dir}/default"
-    code "grub2-mkstandalone -d /usr/lib/grub2/#{grub2arch}-efi/ -O #{grub2arch}-efi --fonts=\"unicode\" -o #{uefi_dir}/boot#{short_arch}.efi boot/grub/grub.cfg"
+    code "grub2-mkstandalone #{gruboptions} boot/grub/grub.cfg"
     action :nothing
     subscribes :run, resources("template[#{uefi_dir}/default/boot/grub/grub.cfg]"), :immediately
   end
@@ -158,7 +162,7 @@ if node[:platform_family] == "suse"
 
   template "#{node[:apache][:dir]}/vhosts.d/provisioner.conf" do
     source "base-apache.conf.erb"
-    mode 0644
+    mode 0o644
     variables(docroot: tftproot,
               port: web_port,
               admin_ip: admin_ip,
@@ -234,7 +238,7 @@ when "suse"
   # read permissions for nobody and wwwrun user
   directory tftproot do
     recursive true
-    mode 0755
+    mode 0o755
     owner "root"
     group "root"
   end
@@ -335,7 +339,7 @@ unless node[:provisioner][:supported_oses].keys.select{ |os| /^(hyperv|windows)/
 
   directory "#{extra_dir}" do
     recursive true
-    mode 0755
+    mode 0o755
     owner "root"
     group "root"
     action :create
@@ -396,7 +400,7 @@ unless node[:provisioner][:supported_oses].keys.select{ |os| /^(hyperv|windows)/
 
   # Create tftp helper directory
   directory "#{common_dir}/tftp" do
-    mode 0755
+    mode 0o755
     owner "root"
     group "root"
     action :create
@@ -404,7 +408,7 @@ unless node[:provisioner][:supported_oses].keys.select{ |os| /^(hyperv|windows)/
 
   # Ensure the adk-tools directory exists
   directory "#{tftproot}/adk-tools" do
-    mode 0755
+    mode 0o755
     owner "root"
     group "root"
     action :create
@@ -481,7 +485,7 @@ node[:provisioner][:supported_oses].each do |os, arches|
       target_platform_version = os.gsub(/^.*-/, "")
 
       template "#{os_dir}/crowbar_join.sh" do
-        mode 0644
+        mode 0o644
         owner "root"
         group "root"
         source "crowbar_join.suse.sh.erb"
@@ -499,7 +503,7 @@ node[:provisioner][:supported_oses].each do |os, arches|
       packages = node[:provisioner][:packages][os] || []
 
       template "#{os_dir}/crowbar_register" do
-        mode 0644
+        mode 0o644
         owner "root"
         group "root"
         source "crowbar_register.erb"
@@ -529,7 +533,7 @@ node[:provisioner][:supported_oses].each do |os, arches|
       # Default kickstarts and crowbar_join scripts for redhat.
 
       template "#{os_dir}/crowbar_join.sh" do
-        mode 0644
+        mode 0o644
         owner "root"
         group "root"
         source "crowbar_join.redhat.sh.erb"
@@ -546,7 +550,7 @@ node[:provisioner][:supported_oses].each do |os, arches|
       # Default files needed for Ubuntu.
 
       template "#{os_dir}/net-post-install.sh" do
-        mode 0644
+        mode 0o644
         owner "root"
         group "root"
         variables(admin_web: install_url,
@@ -558,7 +562,7 @@ node[:provisioner][:supported_oses].each do |os, arches|
       end
 
       template "#{os_dir}/crowbar_join.sh" do
-        mode 0644
+        mode 0o644
         owner "root"
         group "root"
         source "crowbar_join.ubuntu.sh.erb"
@@ -575,7 +579,7 @@ node[:provisioner][:supported_oses].each do |os, arches|
       os_dir = "#{tftproot}/#{os}"
 
       template "#{tftproot}/adk-tools/build_winpe_#{os}.ps1" do
-        mode 0644
+        mode 0o644
         owner "root"
         group "root"
         source "build_winpe_os.ps1.erb"
@@ -584,7 +588,7 @@ node[:provisioner][:supported_oses].each do |os, arches|
       end
 
       directory "#{os_dir}" do
-        mode 0755
+        mode 0o755
         owner "root"
         group "root"
         action :create
