@@ -114,18 +114,49 @@ module Api
       end
     end
 
+
+    # Simple check if HA clusters report some problems
+    # If there are no problems, empty hash is returned.
+    # If this fails, information about failed actions for each cluster founder is
+    # returned in a hash that looks like this:
+    # {
+    #     "crm_failures" => {
+    #             "node1" => "reason for crm status failure"
+    #     },
+    #     "failed_actions" => {
+    #             "node2" => "Failed action on this node"
+    #     }
+    # }
+    # User has to manually clean pacemaker resources before proceeding with the upgrade.
     def clusters_healthy?
-      service_object = CrowbarService.new(Rails.logger)
-      cluster_health = service_object.check_cluster_health
-      unless cluster_health.empty?
-        Rails.logger.warn("HA clusters report some problems")
-        (cluster_health["crm_failures"] || {}).each do |node, error|
-          Rails.logger.warn("crm status at node #{node} reports error:\n#{error}")
+      cluster_health = {}
+      crm_failures = {}
+      failed_actions = {}
+
+      founders = NodeObject.find("pacemaker_founder:true AND pacemaker_config_environment:*")
+      return true if founders.empty?
+
+      founders.each do |n|
+        name = n.name
+        ssh_retval = n.run_ssh_cmd("crm status 2>&1")
+        if ssh_retval[:exit_code] != 0
+          crm_failures[name] = ssh_retval[:stdout]
+          Rails.logger.warn(
+            "crm status at node #{name} reports error:\n#{ssh_retval[:stdout]}"
+          )
+          next
         end
-        (cluster_health["failed_actions"] || {}).each do |node, error|
-          Rails.logger.warn("crm at node #{node} reports some failed actions:\n#{error}")
+        ssh_retval = n.run_ssh_cmd("LANG=C crm status | grep -A 2 '^Failed Actions:'")
+        if ssh_retval[:exit_code] == 0
+          failed_actions[name] = ssh_retval[:stdout]
+          Rails.logger.warn(
+            "crm at node #{name} reports some failed actions:\n#{ssh_retval[:stdout]}"
+          )
         end
       end
+      cluster_health["crm_failures"] = crm_failures unless crm_failures.empty?
+      cluster_health["failed_actions"] = failed_actions unless failed_actions.empty?
+
       cluster_health.empty?
     end
 
