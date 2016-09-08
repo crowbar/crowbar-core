@@ -1,8 +1,10 @@
 {
   "os":{
-    "available":true
+    "available":true,
+    "repos": {}
   },
   "cloud":{
-    "available":true
+    "available":true,
+    "repos": {}
   }
 }

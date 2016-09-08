@@ -107,12 +107,23 @@ module Api
 
         products = zypper_stream["product_list"]["product"]
 
+        os_available = repo_version_available?(products, "SLES", "12.2")
         ret[:os] = {
-          available: repo_version_available?(products, "SLES", "12.2")
+          available: os_available,
+          repos: {}
         }
+        ret[:os][:repos][admin_architecture.to_sym] = {
+          missing_repos: ["SUSE Linux Enterprise Server 12 SP2"]
+        } unless os_available
+
+        cloud_available = repo_version_available?(products, "suse-openstack-cloud", "8")
         ret[:cloud] = {
-          available: repo_version_available?(products, "suse-openstack-cloud", "8")
+          available: cloud_available,
+          repos: {}
         }
+        ret[:cloud][:repos][admin_architecture.to_sym] = {
+          missing_repos: ["SUSE OpenStack Cloud 8"]
+        } unless cloud_available
       end
     end
 
@@ -179,6 +190,10 @@ module Api
       products.any? do |p|
         p["version"] == version && p["name"] == product
       end
+    end
+
+    def admin_architecture
+      NodeObject.admin_node.architecture
     end
   end
 end
