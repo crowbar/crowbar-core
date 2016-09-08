@@ -96,7 +96,6 @@ if discovery_arches.include? "x86_64"
 end
 
 # UEFI config
-use_elilo = true
 discovery_arches.each do |arch|
   uefi_dir = "#{discovery_dir}/#{arch}/#{uefi_subdir}"
 
@@ -115,74 +114,41 @@ discovery_arches.each do |arch|
     action :create
   end
 
-  if node[:platform_family] != "suse"
-    bash "Install elilo as UEFI netboot loader" do
-      code <<EOC
-  cd #{uefi_dir}
-  tar xf '#{tftproot}/files/elilo-3.14-all.tar.gz' boot#{short_arch}.efi
-EOC
-      not_if "test -f '#{uefi_dir}/boot#{short_arch}.efi'"
-    end
-  else
-    if node["platform_version"].to_f < 12.0
-      package "elilo"
-
-      bash "Install boot#{short_arch}.efi" do
-        code "cp /usr/lib64/efi/elilo.efi #{uefi_dir}/boot#{short_arch}.efi"
-        not_if "cmp /usr/lib64/efi/elilo.efi #{uefi_dir}/boot#{short_arch}.efi"
-      end
-    else
-      # we use grub2; steps taken from
-      # https://github.com/openSUSE/kiwi/wiki/Setup-PXE-boot-with-EFI-using-grub2
-      use_elilo = false
-      grub2arch = arch
-      if arch == "aarch64"
-        grub2arch = "arm64"
-      end
-
-      package "grub2-#{grub2arch}-efi"
-
-      # grub.cfg has to be in boot/grub/ subdirectory
-      directory "#{uefi_dir}/default/boot/grub" do
-        recursive true
-        mode 0755
-        owner "root"
-        group "root"
-        action :create
-      end
-
-      template "#{uefi_dir}/default/boot/grub/grub.cfg" do
-        mode 0644
-        owner "root"
-        group "root"
-        source "grub.conf.erb"
-        variables(append_line: "#{append_line} crowbar.state=discovery",
-                  install_name: "Crowbar Discovery Image",
-                  admin_ip: admin_ip,
-                  initrd: "discovery/#{arch}/initrd0.img",
-                  kernel: "discovery/#{arch}/vmlinuz0")
-      end
-
-      bash "Build UEFI netboot loader with grub2" do
-        cwd "#{uefi_dir}/default"
-        code "grub2-mkstandalone -d /usr/lib/grub2/#{grub2arch}-efi/ -O #{grub2arch}-efi --fonts=\"unicode\" -o #{uefi_dir}/boot#{short_arch}.efi boot/grub/grub.cfg"
-        action :nothing
-        subscribes :run, resources("template[#{uefi_dir}/default/boot/grub/grub.cfg]"), :immediately
-      end
-    end
+  # we use grub2; steps taken from
+  # https://github.com/openSUSE/kiwi/wiki/Setup-PXE-boot-with-EFI-using-grub2
+  grub2arch = arch
+  if arch == "aarch64"
+    grub2arch = "arm64"
   end
 
-  if use_elilo
-    template "#{uefi_dir}/elilo.conf" do
-      mode 0644
-      owner "root"
-      group "root"
-      source "default.elilo.erb"
-      variables(append_line: "#{append_line} crowbar.state=discovery",
-                install_name: "discovery",
-                initrd: "../initrd0.img",
-                kernel: "../vmlinuz0")
-    end
+  package "grub2-#{grub2arch}-efi"
+
+  # grub.cfg has to be in boot/grub/ subdirectory
+  directory "#{uefi_dir}/default/boot/grub" do
+    recursive true
+    mode 0755
+    owner "root"
+    group "root"
+    action :create
+  end
+
+  template "#{uefi_dir}/default/boot/grub/grub.cfg" do
+    mode 0644
+    owner "root"
+    group "root"
+    source "grub.conf.erb"
+    variables(append_line: "#{append_line} crowbar.state=discovery",
+              install_name: "Crowbar Discovery Image",
+              admin_ip: admin_ip,
+              initrd: "discovery/#{arch}/initrd0.img",
+              kernel: "discovery/#{arch}/vmlinuz0")
+  end
+
+  bash "Build UEFI netboot loader with grub2" do
+    cwd "#{uefi_dir}/default"
+    code "grub2-mkstandalone -d /usr/lib/grub2/#{grub2arch}-efi/ -O #{grub2arch}-efi --fonts=\"unicode\" -o #{uefi_dir}/boot#{short_arch}.efi boot/grub/grub.cfg"
+    action :nothing
+    subscribes :run, resources("template[#{uefi_dir}/default/boot/grub/grub.cfg]"), :immediately
   end
 end
 
