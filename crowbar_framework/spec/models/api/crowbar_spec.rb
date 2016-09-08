@@ -112,6 +112,63 @@ describe Api::Crowbar do
     end
   end
 
+  context "with no HA cluster " do
+    it "succeeds" do
+      allow(NodeObject).to(
+        receive(:find).with("pacemaker_founder:true AND pacemaker_config_environment:*").
+        and_return([])
+      )
+      expect(subject.clusters_healthy?).to be true
+    end
+  end
+
+  context "with HA cluster healthy" do
+    it "succeeds to check HA cluster" do
+      allow(NodeObject).to(
+        receive(:find).with("pacemaker_founder:true AND pacemaker_config_environment:*").
+        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+      )
+      allow_any_instance_of(NodeObject).to(
+        receive(:run_ssh_cmd).with("crm status 2>&1").
+        and_return(exit_code: 0, stdout: "crm status stdout\n", stderr: "")
+      )
+      allow_any_instance_of(NodeObject).to(
+        receive(:run_ssh_cmd).with("LANG=C crm status | grep -A 2 '^Failed Actions:'").
+        and_return(exit_code: 1, stdout: "", stderr: "")
+      )
+      expect(subject.clusters_healthy?).to be true
+    end
+  end
+
+  context "with HA cluster not healthy" do
+    it "fails because crm status is failing" do
+      allow(NodeObject).to(
+        receive(:find).with("pacemaker_founder:true AND pacemaker_config_environment:*").
+        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+      )
+      allow_any_instance_of(NodeObject).to(
+        receive(:run_ssh_cmd).with("crm status 2>&1").
+        and_return(exit_code: 1, stdout: "crm status failure\n", stderr: "")
+      )
+      expect(subject.clusters_healthy?).to be false
+    end
+    it "fails because crm reports failed actions" do
+      allow(NodeObject).to(
+        receive(:find).with("pacemaker_founder:true AND pacemaker_config_environment:*").
+        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+      )
+      allow_any_instance_of(NodeObject).to(
+        receive(:run_ssh_cmd).with("crm status 2>&1").
+        and_return(exit_code: 0, stdout: "crm status stdout\n", stderr: "")
+      )
+      allow_any_instance_of(NodeObject).to(
+        receive(:run_ssh_cmd).with("LANG=C crm status | grep -A 2 '^Failed Actions:'").
+        and_return(exit_code: 0, stdout: "Failed Actions: something failed to start", stderr: "")
+      )
+      expect(subject.clusters_healthy?).to be false
+    end
+  end
+
   context "with ceph cluster healthy" do
     it "succeeds to check ceph cluster health" do
       allow(NodeObject).to(
