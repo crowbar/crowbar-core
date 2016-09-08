@@ -92,7 +92,7 @@ if not nodes.nil? and not nodes.empty?
     # no boot_ip means that no admin network address has been assigned to node,
     # and it will boot into the default discovery image. But it won't help if
     # we're trying to delete the node.
-    if boot_ip_hex
+    if boot_ip_hex && arch != "s390x"
       pxefile = "#{discovery_dir}/#{arch}/#{pxecfg_subdir}/#{boot_ip_hex}"
       uefi_dir = "#{discovery_dir}/#{arch}/#{uefi_subdir}"
       if use_elilo
@@ -108,7 +108,11 @@ if not nodes.nil? and not nodes.empty?
       end
       windows_tftp_file = "#{tftproot}/windows-common/tftp/#{boot_ip_hex}"
     else
-      Chef::Log.warn("#{mnode[:fqdn]}: no boot IP known; PXE/UEFI boot files won't get updated!")
+      if arch == "s390x"
+        Chef::Log.debug("#{mnode[:fqdn]}: S390 node; not creating PXE/UEFI boot files!")
+      else
+        Chef::Log.warn("#{mnode[:fqdn]}: no boot IP known; PXE/UEFI boot files won't get updated!")
+      end
       pxefile = nil
       uefifile = nil
       grubcfgfile = nil
