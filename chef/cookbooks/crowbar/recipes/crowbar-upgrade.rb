@@ -54,7 +54,6 @@ when "crowbar_upgrade"
         systemctl disable $i
       done
     EOF
-    not_if { ::File.exist?("/usr/sbin/crm") }
   end
 
   # Disable crowbar-join
