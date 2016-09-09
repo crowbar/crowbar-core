@@ -24,7 +24,8 @@ module Api
 
       {}.tap do |ret|
         ret[addon] = {
-          "available" => true
+          "available" => true,
+          "repos" => {}
         }
         platform = Api::Upgrade.new.target_platform(platform_exception: addon)
 
@@ -40,7 +41,6 @@ module Api
                 feature, platform, architecture
               )
               ret[addon]["available"] &&= available
-              ret[addon]["repos"] ||= {}
               ret[addon]["repos"].deep_merge!(repolist.deep_stringify_keys)
             end
           else
