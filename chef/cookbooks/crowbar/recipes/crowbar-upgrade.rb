@@ -47,7 +47,7 @@ when "crowbar_upgrade"
 
   bash "disable_openstack_services" do
     code <<-EOF
-      for i in $(systemctl list-units openstack* --no-legend | cut -d" " -f1 | grep -v keystone | grep -v neutron) \
+      for i in $(systemctl list-units openstack* --no-legend | cut -d" " -f1 | grep -Ev 'keystone|neutron') \
                drbd.service \
                pacemaker.service;
       do
