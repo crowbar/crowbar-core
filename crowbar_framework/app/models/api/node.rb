@@ -44,7 +44,7 @@ module Api
               ret[addon]["repos"].deep_merge!(repolist.deep_stringify_keys)
             end
           else
-            ret.delete(addon)
+            ret[addon]["available"] = false
           end
         end
       end
