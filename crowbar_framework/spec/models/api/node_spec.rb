@@ -133,4 +133,40 @@ describe Api::Node do
       expect(got).to eq(expected)
     end
   end
+
+  context "with an addon installed but not deployed" do
+    it "finds any node with the ceph addon deployed" do
+      allow(::Crowbar::Repository).to(
+        receive(:provided_and_enabled_with_repolist).with(
+          "ceph", "suse-12.2", "x86_64"
+        ).and_return([true, {}])
+      )
+
+      expected = node_repocheck.tap do |k|
+        k.delete("os")
+        k.delete("ha")
+        k.delete("openstack")
+      end
+
+      expect(subject.repocheck(addon: "ceph")).to eq(expected)
+    end
+
+    it "doesn't find any node with the ceph addon deployed" do
+      allow_any_instance_of(Api::Node).to(
+        receive(:node_architectures).and_return(
+          "os" => ["x86_64"],
+          "openstack" => ["x86_64"]
+        )
+      )
+
+      expected = node_repocheck.tap do |k|
+        k.delete("os")
+        k.delete("ha")
+        k.delete("openstack")
+        k["ceph"]["available"] = false
+      end
+
+      expect(subject.repocheck(addon: "ceph")).to eq(expected)
+    end
+  end
 end
