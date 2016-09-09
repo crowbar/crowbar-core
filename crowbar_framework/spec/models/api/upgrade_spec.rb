@@ -23,6 +23,33 @@ describe Api::Upgrade do
     )
   end
 
+  before(:each) do
+    allow_any_instance_of(Api::Node).to(
+      receive(:node_architectures).and_return(
+        "os" => ["x86_64"],
+        "openstack" => ["x86_64"],
+        "ceph" => ["x86_64"],
+        "ha" => ["x86_64"]
+      )
+    )
+    allow(NodeObject).to(
+      receive(:all).and_return([NodeObject.find_node_by_name("testing")])
+    )
+    allow_any_instance_of(Api::Upgrade).to(
+      receive(:target_platform).and_return("suse-12.2")
+    )
+    allow(::Crowbar::Repository).to(
+      receive(:provided_and_enabled?).and_return(true)
+    )
+    ["os", "ceph", "ha", "openstack"].each do |feature|
+      allow(::Crowbar::Repository).to(
+        receive(:provided_and_enabled_with_repolist).with(
+          feature, "suse-12.2", "x86_64"
+        ).and_return([true, {}])
+      )
+    end
+  end
+
   context "with a successful creation of an upgrade object" do
     it "checks the type" do
       expect(subject).to be_an_instance_of(Api::Upgrade)
@@ -50,43 +77,41 @@ describe Api::Upgrade do
 
   context "with a successful node repocheck" do
     it "checks the repositories for the nodes" do
-      allow_any_instance_of(Api::Node).to(
-        receive(:node_architectures).and_return(
-          "os" => ["x86_64"],
-          "openstack" => ["x86_64"],
-          "ceph" => ["x86_64"],
-          "ha" => ["x86_64"]
-        )
-      )
-      allow_any_instance_of(Api::Node).to(
-        receive(:ceph_node?).and_return(true)
-      )
-      allow_any_instance_of(Api::Node).to(
-        receive(:pacemaker_node?).and_return(true)
-      )
-      allow(NodeObject).to(
-        receive(:all).and_return([NodeObject.find_node_by_name("testing")])
-      )
-      allow_any_instance_of(Api::Upgrade).to(
-        receive(:target_platform).and_return("suse-12.2")
-      )
-      allow(::Crowbar::Repository).to(
-        receive(:provided_and_enabled?).and_return(true)
-      )
-      ["os", "ceph", "ha", "openstack"].each do |feature|
-        allow(::Crowbar::Repository).to(
-          receive(:provided_and_enabled_with_repolist).with(
-            feature, "suse-12.2", "x86_64"
-          ).and_return([true, {}])
-        )
-      end
-
       os_repo_fixture = node_repocheck.tap do |k|
         k.delete("ceph")
         k.delete("ha")
       end
 
       expect(subject.repocheck).to eq(os_repo_fixture)
+    end
+  end
+
+  context "with addon installed but not deployed" do
+    it "shows that there are no addons deployed" do
+      allow_any_instance_of(Api::Crowbar).to(
+        receive(:addons).and_return(
+          ["ceph", "ha"]
+        )
+      )
+      allow_any_instance_of(Api::Node).to(
+        receive(:ceph_node?).with(anything).and_return(false)
+      )
+      allow_any_instance_of(Api::Node).to(
+        receive(:pacemaker_node?).with(anything).and_return(false)
+      )
+      allow_any_instance_of(Api::Node).to(
+        receive(:node_architectures).and_return(
+          "os" => ["x86_64"],
+          "openstack" => ["x86_64"]
+        )
+      )
+
+      expected = node_repocheck.tap do |k|
+        k["ceph"]["available"] = false
+        k["ha"]["available"] = false
+      end
+
+      expect(subject.repocheck).to eq(expected)
     end
   end
 end
