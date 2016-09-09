@@ -214,7 +214,7 @@ if node[:platform_family] == "suse" && !node.roles.include?("provisioner-server"
   ntp_servers_ips = ntp_servers.map { |n| Chef::Recipe::Barclamp::Inventory.get_network_by_type(n, "admin").address }
 
   template "/usr/sbin/crowbar_join" do
-    mode 0755
+    mode 0o755
     owner "root"
     group "root"
     source "crowbar_join.suse.sh.erb"

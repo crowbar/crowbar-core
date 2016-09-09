@@ -41,8 +41,6 @@ discovery_dir = "#{tftproot}/discovery"
 pxecfg_subdir = "bios/pxelinux.cfg"
 uefi_subdir = "efi"
 
-use_elilo = node[:platform_family] != "suse" || (node[:platform] == "suse" && node["platform_version"].to_f < 12.0)
-
 nodes = search(:node, "*:*")
 if not nodes.nil? and not nodes.empty?
   nodes.map{ |n|Node.load(n.name) }.each do |mnode|
@@ -88,32 +86,27 @@ if not nodes.nil? and not nodes.empty?
     end
 
     arch = mnode[:kernel][:machine] rescue "x86_64"
+    pxefile = nil
+    grubcfgfile = nil
+    grubfile = nil
+    windows_tftp_file = nil
 
-    # no boot_ip means that no admin network address has been assigned to node,
-    # and it will boot into the default discovery image. But it won't help if
-    # we're trying to delete the node.
-    if boot_ip_hex
-      pxefile = "#{discovery_dir}/#{arch}/#{pxecfg_subdir}/#{boot_ip_hex}"
-      uefi_dir = "#{discovery_dir}/#{arch}/#{uefi_subdir}"
-      if use_elilo
-        uefifile = "#{uefi_dir}/#{boot_ip_hex}.conf"
-        grubdir = nil
-        grubcfgfile = nil
-        grubfile = nil
-      else
-        uefifile = nil
+    if node[:provisioner][:discovery_arches].include?(arch)
+      # no boot_ip means that no admin network address has been assigned to node,
+      # and it will boot into the default discovery image. But it won't help if
+      # we're trying to delete the node.
+      if boot_ip_hex
+        pxefile = "#{discovery_dir}/#{arch}/#{pxecfg_subdir}/#{boot_ip_hex}"
+        uefi_dir = "#{discovery_dir}/#{arch}/#{uefi_subdir}"
         grubdir = "#{uefi_dir}/#{boot_ip_hex}"
         grubcfgfile = "#{grubdir}/boot/grub/grub.cfg"
         grubfile = "#{uefi_dir}/#{boot_ip_hex}.efi"
+        windows_tftp_file = "#{tftproot}/windows-common/tftp/#{boot_ip_hex}"
+      else
+        Chef::Log.warn("#{mnode[:fqdn]}: no boot IP known; PXE/UEFI boot files won't get updated!")
       end
-      windows_tftp_file = "#{tftproot}/windows-common/tftp/#{boot_ip_hex}"
     else
-      Chef::Log.warn("#{mnode[:fqdn]}: no boot IP known; PXE/UEFI boot files won't get updated!")
-      pxefile = nil
-      uefifile = nil
-      grubcfgfile = nil
-      grubfile = nil
-      windows_tftp_file = nil
+      Chef::Log.warn("#{arch}: not supported for PXE/UEFI, skipping!")
     end
 
     # needed for dhcp
@@ -135,7 +128,7 @@ if not nodes.nil? and not nodes.empty?
         end
       end
 
-      [pxefile, uefifile, windows_tftp_file].each do |f|
+      [pxefile, windows_tftp_file].each do |f|
         file f do
           action :delete
         end unless f.nil?
@@ -171,11 +164,9 @@ if not nodes.nil? and not nodes.empty?
         end
       end
 
-      [pxefile, uefifile].each do |f|
-        file f do
-          action :delete
-        end unless f.nil?
-      end
+      file pxefile do
+        action :delete
+      end unless pxefile.nil?
 
       file grubfile do
         action :delete
@@ -255,7 +246,7 @@ if not nodes.nil? and not nodes.empty?
         when os =~ /^ubuntu/
           append << "url=#{node_url}/net_seed"
           template "#{node_cfg_dir}/net_seed" do
-            mode 0644
+            mode 0o644
             owner "root"
             group "root"
             source "net_seed.erb"
@@ -272,7 +263,7 @@ if not nodes.nil? and not nodes.empty?
         when os =~ /^(redhat|centos)/
           append << "ks=#{node_url}/compute.ks method=#{install_url}"
           template "#{node_cfg_dir}/compute.ks" do
-            mode 0644
+            mode 0o644
             source "compute.ks.erb"
             owner "root"
             group "root"
@@ -330,7 +321,7 @@ if not nodes.nil? and not nodes.empty?
 
           autoyast_template = mnode[:state] == "os-upgrading" ? "autoyast-upgrade" : "autoyast"
           template "#{node_cfg_dir}/autoyast.xml" do
-            mode 0644
+            mode 0o644
             source "#{autoyast_template}.xml.erb"
             owner "root"
             group "root"
@@ -381,7 +372,7 @@ if not nodes.nil? and not nodes.empty?
             license_key = mnode[:license_key] || ""
           end
           template "#{os_dir_win}/unattend/unattended.xml" do
-            mode 0644
+            mode 0o644
             owner "root"
             group "root"
             source "unattended.xml.erb"
@@ -428,32 +419,29 @@ if not nodes.nil? and not nodes.empty?
 
       end
 
-      [{ file: pxefile, src: "default.erb" },
-       { file: uefifile, src: "default.elilo.erb" }].each do |t|
-        template t[:file] do
-          mode 0644
-          owner "root"
-          group "root"
-          source t[:src]
-          variables(append_line: append_line,
-                    install_name: install_name,
-                    initrd: "#{relative_to_pxelinux}#{initrd}",
-                    kernel: "#{relative_to_pxelinux}#{kernel}")
-        end unless t[:file].nil?
-      end
+      template pxefile do
+        mode 0o644
+        owner "root"
+        group "root"
+        source "default.erb"
+        variables(append_line: append_line,
+                  install_name: install_name,
+                  initrd: "#{relative_to_pxelinux}#{initrd}",
+                  kernel: "#{relative_to_pxelinux}#{kernel}")
+      end unless pxefile.nil?
 
-      if !use_elilo && !grubfile.nil?
+      unless grubfile.nil?
         # grub.cfg has to be in boot/grub/ subdirectory
         directory "#{grubdir}/boot/grub" do
           recursive true
-          mode 0755
+          mode 0o755
           owner "root"
           group "root"
           action :create
         end
 
         template grubcfgfile do
-          mode 0644
+          mode 0o644
           owner "root"
           group "root"
           source "grub.conf.erb"
