@@ -16,7 +16,8 @@ exec 1>&4 2>&1
 set -x
 
 UPGRADEDIR=/var/lib/crowbar/upgrade
-RUNFILE=/var/run/crowbar/node-upgrading
+RUNDIR=/var/run/crowbar/
+RUNFILE=$RUNDIR/node-upgrading
 
 cleanup()
 {
@@ -31,6 +32,7 @@ cleanup()
 initiate_node_upgrade()
 {
     mkdir -p $UPGRADEDIR
+    mkdir -p $RUNDIR
 
     if [[ -f $RUNFILE ]] ; then
         echo "Exit: Upgrade is already running..."
