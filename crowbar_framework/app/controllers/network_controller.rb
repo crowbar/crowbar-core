@@ -269,7 +269,7 @@ class NetworkController < BarclampController
 
   def node_vlans(node)
     nv = {}
-    vlans = node["crowbar"]["network"].each do |vlan, vdetails|
+    node.networks.each do |vlan, vdetails|
       nv[vlan] = { address: vdetails["address"], active: vdetails["use_vlan"] }
     end
     nv

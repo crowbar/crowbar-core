@@ -62,7 +62,7 @@ class NetworkService < ServiceObject
     begin
       lock = acquire_ip_lock
       db = Chef::DataBag.load("crowbar/#{network}_network") rescue nil
-      net_info = build_net_info(network, name, db)
+      net_info = build_net_info(network, db)
 
       rangeH = db["network"]["ranges"][range]
       rangeH = db["network"]["ranges"]["host"] if rangeH.nil?
@@ -121,8 +121,9 @@ class NetworkService < ServiceObject
     return [404, "No Address Available"] if !found
 
     if type == :node
-      # Save the information.
-      node.crowbar["crowbar"]["network"][network] = net_info
+      # Save the information (only what we override from the network definition).
+      node.crowbar["crowbar"]["network"][network] ||= {}
+      node.crowbar["crowbar"]["network"][network]["address"] = net_info["address"]
       node.save
     end
 
@@ -215,12 +216,10 @@ class NetworkService < ServiceObject
 
     if type == :node
       # Save the information.
-      newhash = {}
-      node.crowbar["crowbar"]["network"].each do |k, v|
-        newhash[k] = v unless k == network
+      if node.crowbar["crowbar"]["network"].key? network
+        node.crowbar["crowbar"]["network"].delete network
+        node.save
       end
-      node.crowbar["crowbar"]["network"] = newhash
-      node.save
     end
     @logger.info("Network deallocate_ip: removed: #{name} #{network}")
     [200, nil]
@@ -280,7 +279,10 @@ class NetworkService < ServiceObject
   def transition(inst, name, state)
     @logger.debug("Network transition: entering: #{name} for #{state}")
 
-    if ["installed", "readying"].include? state
+    # we need one state before "installed" (and after allocation) because we
+    # need the node to have the admin network fully defined for
+    # provisioner-server recipes to be functional for that node
+    if ["hardware-installing", "installed", "readying"].include? state
       db = Proposal.where(barclamp: @bc_name, name: inst).first
       role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
 
@@ -377,21 +379,21 @@ class NetworkService < ServiceObject
 
     net_info={}
     begin # Rescue block
-      net_info = build_net_info(network, name)
+      net_info = build_net_info(network)
     rescue Exception => e
       @logger.error("Error finding address: #{e.message}")
     ensure
     end
 
-    # Save the information.
-    node.crowbar["crowbar"]["network"][network] = net_info
+    # Save the information (only what we override from the network definition).
+    node.crowbar["crowbar"]["network"][network] ||= {}
     node.save
 
     @logger.info("Network enable_interface: Assigned: #{name} #{network}")
     [200, net_info]
   end
 
-  def build_net_info(network, name, db = nil)
+  def build_net_info(network, db = nil)
     unless db
       db = Chef::DataBag.load("crowbar/#{network}_network") rescue nil
     end
@@ -400,8 +402,6 @@ class NetworkService < ServiceObject
     db["network"].each { |k,v|
       net_info[k] = v unless v.nil?
     }
-    net_info["usage"]= network
-    net_info["node"] = name
     net_info
   end
 end

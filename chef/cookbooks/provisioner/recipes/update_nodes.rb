@@ -112,6 +112,7 @@ if not nodes.nil? and not nodes.empty?
     # needed for dhcp
     admin_data_net = Chef::Recipe::Barclamp::Inventory.get_network_by_type(mnode, "admin")
     admin_mac_addresses = find_node_boot_mac_addresses(mnode, admin_data_net)
+    admin_ip_address = admin_data_net.nil? ? mnode[:ipaddress] : admin_data_net.address
 
     case
     when (new_group == "delete")
@@ -157,7 +158,7 @@ if not nodes.nil? and not nodes.empty?
         dhcp_host "#{mnode.name}-#{i}" do
           hostname mnode.name
           if admin_mac_addresses.include?(mac_list[i])
-            ipaddress admin_data_net.address
+            ipaddress admin_ip_address
           end
           macaddress mac_list[i]
           action :add
@@ -188,7 +189,7 @@ if not nodes.nil? and not nodes.empty?
           hostname mnode.name
           macaddress mac_list[i]
           if admin_mac_addresses.include?(mac_list[i])
-            ipaddress admin_data_net.address unless admin_data_net.nil?
+            ipaddress admin_ip_address
             options [
               'if exists dhcp-parameter-request-list {
     # Always send the PXELINUX options (specified in hexadecimal)
@@ -222,6 +223,8 @@ if not nodes.nil? and not nodes.empty?
         if os.nil? or os.empty?
           os = node[:provisioner][:default_os]
         end
+
+        node_ip = Barclamp::Inventory.get_network_by_type(mnode, "admin").address
 
         append << node[:provisioner][:available_oses][os][arch][:append_line]
 
@@ -335,7 +338,7 @@ if not nodes.nil? and not nodes.empty?
                       boot_device: (mnode[:crowbar_wall][:boot_device] rescue nil),
                       raid_type: (mnode[:crowbar_wall][:raid_type] || "single"),
                       raid_disks: (mnode[:crowbar_wall][:raid_disks] || []),
-                      node_ip: mnode[:crowbar][:network][:admin][:address],
+                      node_ip: node_ip,
                       node_fqdn: mnode[:fqdn],
                       node_hostname: mnode[:hostname],
                       platform: target_platform_distro,

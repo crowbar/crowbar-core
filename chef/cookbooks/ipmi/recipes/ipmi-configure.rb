@@ -30,15 +30,19 @@ end
 bmc_user     = node[:ipmi][:bmc_user]
 bmc_password = node[:ipmi][:bmc_password]
 use_dhcp     = node[:ipmi][:use_dhcp]
-bmc_address  = node["crowbar"]["network"]["bmc"]["address"] rescue "0.0.0.0"
-bmc_netmask  = node["crowbar"]["network"]["bmc"]["netmask"] rescue "0.0.0.0"
-bmc_router   = node["crowbar"]["network"]["bmc"]["router"] rescue "0.0.0.0"
-bmc_use_vlan = node["crowbar"]["network"]["bmc"]["use_vlan"] rescue false
-bmc_vlan     = if bmc_use_vlan
-                 node["crowbar"]["network"]["bmc"]["vlan"].to_s
-               else
-                 "off"
-               end
+
+bmc_network = Barclamp::Inventory.get_network_by_type(node, "bmc")
+if bmc_network.nil?
+  bmc_address = "0.0.0.0"
+  bmc_netmask = "0.0.0.0"
+  bmc_router  = "0.0.0.0"
+  bmc_vlan    = "off"
+else
+  bmc_address = bmc_network.address
+  bmc_netmask = bmc_network.netmask
+  bmc_router  = bmc_network.router
+  bmc_vlan    = bmc_network.use_vlan ? bmc_network.vlan : "off"
+end
 
 if node["crowbar_wall"]["status"]["ipmi"]["user_set"].nil?
   node.set["crowbar_wall"]["status"]["ipmi"]["user_set"] = false

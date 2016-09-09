@@ -28,22 +28,31 @@ module BarclampLibrary
 
       def self.list_networks(node)
         answer = []
-        intf_to_if_map = Barclamp::Inventory.build_node_map(node)
-        node[:crowbar][:network].each do |net, data|
-          intf, interface_list, tm = Barclamp::Inventory.lookup_interface_info(node, data["conduit"], intf_to_if_map)
-          answer << Network.new(net, data, intf, interface_list)
-        end unless node[:crowbar].nil? or node[:crowbar][:network].nil?
+        unless node[:crowbar].nil? || node[:crowbar][:network].nil? ||
+            node[:network][:networks].nil?
+          node[:crowbar][:network].each do |net, data|
+            # network is not valid if we don't have the full definition
+            next unless node[:network][:networks].key?(net)
+            network_def = node[:network][:networks][net].to_hash.merge(data.to_hash)
+            answer << Network.new(node, net, network_def)
+          end
+        end
         answer
       end
 
       def self.get_network_by_type(node, type)
-        unless node[:crowbar][:network].nil?
+        unless node[:crowbar][:network].nil? || node[:network][:networks].nil?
           [type, "admin"].uniq.each do |usage|
-            if found = node[:crowbar][:network].find { |net, data| data[:usage] == usage }
-              net, data = found
-              intf, interface_list, tm = Barclamp::Inventory.lookup_interface_info(node, data["conduit"])
-              return Network.new(net, data, intf, interface_list)
+            found = node[:crowbar][:network].find do |net, data|
+              # network is not valid if we don't have the full definition
+              node[:network][:networks].key?(net) && net == usage
             end
+
+            next if found.nil?
+
+            net, data = found
+            network_def = node[:network][:networks][net].to_hash.merge(data.to_hash)
+            return Network.new(node, net, network_def)
           end
           return nil
         end
@@ -234,25 +243,50 @@ module BarclampLibrary
       end
 
       class Network
-        attr_reader :name, :address, :mtu, :broadcast, :mac, :netmask,
-          :subnet, :router, :usage, :vlan, :use_vlan, :interface,
-          :interface_list, :add_bridge, :conduit
-        def initialize(net, data, rintf, interface_list)
+        attr_reader :name
+        attr_reader :address, :broadcast, :netmask, :subnet
+        attr_reader :router, :router_pref
+        attr_reader :mtu
+        attr_reader :vlan, :use_vlan
+        attr_reader :add_bridge, :add_ovs_bridge, :bridge_name
+        attr_reader :conduit
+
+        def initialize(node, net, data)
+          @node = node
           @name = net
           @address = data["address"]
-          @mtu = (data["mtu"] || 1500).to_i
           @broadcast = data["broadcast"]
-          @mac = data["mac"]
           @netmask = data["netmask"]
           @subnet = data["subnet"]
           @router = data["router"]
-          @usage = data["usage"]
-          @vlan = data["vlan"]
+          @router_pref = data["router_pref"].nil? ? nil : data["router_pref"].to_i
+          @mtu = (data["mtu"] || 1500).to_i
+          @vlan = data["vlan"].nil? ? nil : data["vlan"].to_i
           @use_vlan = data["use_vlan"]
           @conduit = data["conduit"]
-          @interface = data["use_vlan"] ? "#{rintf}.#{data["vlan"]}" : rintf
-          @interface_list = interface_list
           @add_bridge = data["add_bridge"]
+          @add_ovs_bridge = data["add_ovs_bridge"]
+          @bridge_name = data["bridge_name"]
+          # let's resolve this only if needed
+          @interface = nil
+          @interface_list = nil
+        end
+
+        def interface
+          resolve_interface_info if @interface.nil?
+          @interface
+        end
+
+        def interface_list
+          resolve_interface_info if @interface_list.nil?
+          @interface_list
+        end
+
+        protected
+
+        def resolve_interface_info
+          intf, @interface_list, _tm = Barclamp::Inventory.lookup_interface_info(@node, @conduit)
+          @interface = @use_vlan ? "#{intf}.#{@vlan}" : intf
         end
       end
 

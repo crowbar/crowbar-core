@@ -76,12 +76,14 @@ execute "nfs-export" do
   action :nothing
 end
 
+admin_net = Barclamp::Inventory.get_network_by_type(node, "admin")
+
 template "/etc/exports" do
   source "exports.erb"
   group "root"
   owner "root"
   mode 0644
-  variables(admin_subnet: node["network"]["networks"]["admin"]["subnet"],
-            admin_netmask: node["network"]["networks"]["admin"]["netmask"])
+  variables(admin_subnet: admin_net.subnet,
+            admin_netmask: admin_net.netmask)
   notifies :run, "execute[nfs-export]", :delayed
 end
