@@ -23,26 +23,12 @@
 # Also, postgresql related resources need special handling (see crowbar-db-dump).
 bash "stop pacemaker resources" do
   code <<-EOF
+    exclude="postgresql|vip|rabbitmq|keystone|neutron|haproxy"
     for type in clone ms primitive; do
-      for resource in $(crm configure show | grep ^$type | grep -Ev "postgresql|vip-admin-database|rabbitmq|keystone|neutron" | cut -d " " -f2);
+      for resource in $(crm configure show | grep ^$type | grep -Ev $exclude | cut -d " " -f2);
       do
         crm --force --wait resource stop $resource
       done
-    done
-  EOF
-  only_if { ::File.exist?("/usr/sbin/crm") }
-end
-
-# we deal with rabbitmq differently because of drbd; here we want to be more
-# careful about how we stop things as experience showed that it's easy to get
-# fenced if we're stopping things blindly
-bash "stop pacemaker resources for rabbitmq" do
-  code <<-EOF
-    for resource in g-rabbitmq rabbitmq fs-rabbitmq ms-drbd-rabbitmq drbd-rabbitmq;
-    do
-      if crm configure show $resource >/dev/null 2>&1; then
-        crm --force --wait resource stop $resource
-      fi
     done
   EOF
   only_if { ::File.exist?("/usr/sbin/crm") }
