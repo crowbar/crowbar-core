@@ -47,13 +47,14 @@ when "crowbar_upgrade"
 
   bash "disable_openstack_services" do
     code <<-EOF
-      for i in $(systemctl list-units openstack* --no-legend | cut -d" " -f1) \
+      for i in $(systemctl list-units openstack* --no-legend | cut -d" " -f1 | grep -v keystone | grep -v neutron) \
                drbd.service \
                pacemaker.service;
       do
         systemctl disable $i
       done
     EOF
+    not_if { ::File.exist?("/usr/sbin/crm") }
   end
 
   # Disable crowbar-join

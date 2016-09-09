@@ -24,7 +24,7 @@
 bash "stop pacemaker resources" do
   code <<-EOF
     for type in clone ms primitive; do
-      for resource in $(crm configure show | grep ^$type | grep -Ev "postgresql|vip-admin-database|rabbitmq" | cut -d " " -f2);
+      for resource in $(crm configure show | grep ^$type | grep -Ev "postgresql|vip-admin-database|rabbitmq|keystone|neutron" | cut -d " " -f2);
       do
         crm --force --wait resource stop $resource
       done
@@ -52,7 +52,7 @@ end
 # Note that for HA setup, they should be already stopped by pacemaker.
 bash "stop OpenStack services" do
   code <<-EOF
-    for i in /etc/init.d/openstack-* \
+    for i in `ls /etc/init.d/openstack-* | grep -Ev 'keystone|neutron'` \
              /etc/init.d/apache2 \
              /etc/init.d/rabbitmq-server \
              /etc/init.d/ovs-usurp-config-* \
@@ -63,6 +63,7 @@ bash "stop OpenStack services" do
       fi
     done
   EOF
+  not_if { ::File.exist?("/usr/sbin/crm") }
 end
 
 # On SLE11 the startup and shutdown logs are created as root, adjust
