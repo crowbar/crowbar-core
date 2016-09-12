@@ -38,7 +38,7 @@ end
 # Note that for HA setup, they should be already stopped by pacemaker.
 bash "stop OpenStack services" do
   code <<-EOF
-    for i in `ls /etc/init.d/openstack-* | grep -Ev 'keystone|neutron'` \
+    for i in /etc/init.d/openstack-* \
              /etc/init.d/apache2 \
              /etc/init.d/rabbitmq-server \
              /etc/init.d/ovs-usurp-config-* \
