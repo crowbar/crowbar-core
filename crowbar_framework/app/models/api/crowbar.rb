@@ -150,6 +150,17 @@ module Api
       true
     end
 
+    # Initiate the upgrade of controller nodes
+    # In future, upgrade should be orchestrated one-by-one
+    def upgrade_controller_nodes
+      controller_nodes = NodeObject.find("state:crowbar_upgrade AND roles:nova-controller")
+
+      controller_nodes.each do |node|
+        Rails.logger.info("initiating upgrade of node #{node.name}")
+        node.ssh_cmd("/usr/sbin/crowbar-upgrade-os.sh")
+      end
+    end
+
     protected
 
     def lib_path

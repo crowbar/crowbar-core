@@ -57,6 +57,10 @@ module Api
       end
     end
 
+    def upgrade_controller_nodes
+      Api::Crowbar.new.upgrade_controller_nodes
+    end
+
     protected
 
     def crowbar_upgrade_status
