@@ -218,10 +218,10 @@ module Crowbar
 
             answer &&= r.available?
             unless r.available?
-              repos[:missing_repos] ||= {}
-              repos[:missing_repos][r.arch.to_sym] ||= []
-              unless repos[:missing_repos][r.arch.to_sym].include?(r.name)
-                repos[:missing_repos][r.arch.to_sym].push(r.name)
+              repos[:missing] ||= {}
+              repos[:missing][r.arch.to_sym] ||= []
+              unless repos[:missing][r.arch.to_sym].include?(r.name)
+                repos[:missing][r.arch.to_sym].push(r.name)
               end
             end
 
@@ -229,10 +229,10 @@ module Crowbar
             answer &&= r.active?
             next if r.active?
 
-            repos[:inactive_repos] ||= {}
-            repos[:inactive_repos][r.arch.to_sym] ||= []
-            unless repos[:inactive_repos][r.arch.to_sym].include?(r.name)
-              repos[:inactive_repos][r.arch.to_sym].push(r.name)
+            repos[:inactive] ||= {}
+            repos[:inactive][r.arch.to_sym] ||= []
+            unless repos[:inactive][r.arch.to_sym].include?(r.name)
+              repos[:inactive][r.arch.to_sym].push(r.name)
             end
           end
 
