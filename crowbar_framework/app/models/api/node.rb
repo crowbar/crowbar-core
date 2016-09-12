@@ -16,6 +16,98 @@
 
 module Api
   class Node < Tableless
+    def initialize(name = nil)
+      @node = NodeObject.find_node_by_name name
+    end
+
+    def upgraded?
+      # FIXME: check this by looking at some upgraded-ok file on the node
+      current_platform = "#{@node[:platform]}-#{@node[:platform_version]}"
+      @upgraded ||= current_platform == @node[:target_platform]
+    end
+
+    def pre_upgrade
+      # TODO: save the global status info about this substep (we started prepare for upgrade)
+
+      # Migrate out the l3 agents and shut down pacemaker
+      script = "/usr/sbin/crowbar-pre-upgrade.sh"
+      out = @node.run_ssh_cmd(script)
+      unless out[:exit_code].zero?
+        Rails.logger.error("Executing of pre upgrade script has failed on node #{@node.name}.")
+        Rails.logger.error("Script location: #{script}")
+        Rails.logger.error("stdout: #{out[:stdout]}, stderr: #{out[:stderr]}")
+        return false
+      end
+      true
+    end
+
+    def os_upgrade
+      # Upgrade one node
+      # TODO: save the global status info about this substep (we started upgrade of the node)
+      ssh_status = @node.ssh_cmd("/usr/sbin/crowbar-upgrade-os.sh")
+      if ssh_status[0] != 200
+        Rails.logger.error("Executing of os upgrade script has failed on node #{@node.name}.")
+        return false
+      end
+      true
+    end
+
+    def post_upgrade
+      # FIXME: so far, we have no post-upgrade script
+      return true
+      # TODO: save the global status info about this substep (we started post upgrade stuff)
+
+      # Join the cluster: start pacemaker and run selected recipes
+      script = "/usr/sbin/crowbar-post-upgrade.sh"
+      out = @node.run_ssh_cmd(script)
+      unless out[:exit_code].zero?
+        Rails.logger.error("Executing of post upgrade script has failed on node #{@node.name}.")
+        Rails.logger.error("Script location: #{script}")
+        Rails.logger.error("stdout: #{out[:stdout]}, stderr: #{out[:stderr]}")
+        return false
+      end
+    end
+
+    # Do the complete upgrade of one node
+    def upgrade
+      # FIXME: check the global status:
+      # if we failed in some previous attempt (pre/os/post), continue from the failed substep
+
+      # this is just a fallback check, we should know by checking the global status that the action
+      # should not be executed on already upgraded node
+      return true if upgraded?
+
+      unless pre_upgrade
+        save_error_state("Error while executing pre upgrade script")
+        return false
+      end
+
+      unless os_upgrade
+        save_error_state("Error while executing upgrade script")
+        return false
+      end
+
+      # FIXME: wait until the upgrade is done
+
+      # FIXME: reboot the node
+
+      unless post_upgrade
+        save_error_state("Error while executing post upgrade script")
+        return false
+      end
+      true
+    end
+
+    def save_node_state(message = "")
+      # FIXME: save the node status to global status
+      Rails.logger.info(message)
+    end
+
+    def save_error_state(message = "")
+      # FIXME: save the error to global status
+      Rails.logger.error(message)
+    end
+
     class << self
       def repocheck(options = {})
         addon = options.fetch(:addon, "os")

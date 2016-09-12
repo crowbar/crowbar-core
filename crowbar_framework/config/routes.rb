@@ -274,6 +274,7 @@ Rails.application.routes.draw do
       only: [:show, :update] do
       post :prepare
       post :services
+      post :nodes
       get :prechecks
       post :cancel
       get :repocheck

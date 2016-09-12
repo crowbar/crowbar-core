@@ -57,6 +57,22 @@ describe Api::UpgradeController, type: :request do
       expect(response).to have_http_status(:unprocessable_entity)
     end
 
+    it "initiates the upgrade of nodes" do
+      allow(NodeObject).to(
+        receive(:find).and_return([NodeObject.find_node_by_name("testing")])
+      )
+      post "/api/upgrade/nodes", {}, headers
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "initiates the upgrade of nodes and fails" do
+      allow(NodeObject).to(
+        receive(:find).and_return([])
+      )
+      post "/api/upgrade/nodes", {}, headers
+      expect(response).to have_http_status(:unprocessable_entity)
+    end
+
     it "shows a sanity check in preparation for the upgrade" do
       allow(Crowbar::Sanity).to receive(:sane?).and_return(true)
 

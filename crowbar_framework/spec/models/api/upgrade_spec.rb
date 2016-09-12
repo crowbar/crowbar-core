@@ -171,6 +171,23 @@ describe Api::Upgrade do
     end
   end
 
+  context "upgrading the nodes" do
+    it "successfully upgrades the nodes" do
+      allow(NodeObject).to(
+        receive(:find).
+        with("state:crowbar_upgrade AND (roles:database-server OR roles:rabbitmq-server)").
+        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+      )
+      expect(subject.class.nodes).to be true
+    end
+    it "fails during the upgrade of controller nodes" do
+      allow(subject.class).to(
+        receive(:upgrade_controller_nodes).and_return(false)
+      )
+      expect(subject.class.nodes).to be false
+    end
+  end
+
   context "canceling the upgrade" do
     it "successfully cancels the upgrade" do
       allow_any_instance_of(CrowbarService).to receive(
