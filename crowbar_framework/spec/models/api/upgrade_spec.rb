@@ -75,6 +75,33 @@ describe Api::Upgrade do
     end
   end
 
+  context "with a successful services shutdown" do
+    it "prepares and shuts down services on nodes" do
+      allow_any_instance_of(CrowbarService).to receive(
+        :prepare_nodes_for_os_upgrade
+      ).and_return(true)
+
+      allow(NodeObject).to(
+        receive(:find).with("state:crowbar_upgrade AND pacemaker_founder:true").
+        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+      )
+      allow(NodeObject).to(
+        receive(:find).with("state:crowbar_upgrade AND NOT run_list_map:pacemaker-cluster-member").
+        and_return([])
+      )
+      expect(subject.services).to eq([:ok, ""])
+    end
+  end
+
+  context "with a failure during services shutdown" do
+    it "fails when chef client does not preapre the scripts" do
+      allow_any_instance_of(CrowbarService).to receive(
+        :prepare_nodes_for_os_upgrade
+      ).and_raise("and Error")
+      expect(subject.services).to eq([:unprocessable_entity, "and Error"])
+    end
+  end
+
   context "with a successful node repocheck" do
     it "checks the repositories for the nodes" do
       os_repo_fixture = node_repocheck.tap do |k|
