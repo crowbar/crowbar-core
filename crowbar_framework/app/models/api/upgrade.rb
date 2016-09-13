@@ -207,6 +207,16 @@ module Api
         true
       end
 
+      def prepare(options = {})
+        background = options.fetch(:background, false)
+
+        if background
+          prepare_nodes_for_crowbar_upgrade_background
+        else
+          prepare_nodes_for_crowbar_upgrade
+        end
+      end
+
       protected
 
       def upgrade_controller_nodes
@@ -376,6 +386,27 @@ module Api
 
       def admin_architecture
         NodeObject.admin_node.architecture
+      end
+
+      def prepare_nodes_for_crowbar_upgrade_background
+        @thread = Thread.new do
+          Rails.logger.debug("Started prepare in a background thread")
+          prepare_nodes_for_crowbar_upgrade
+        end
+
+        @thread.alive?
+      end
+
+      def prepare_nodes_for_crowbar_upgrade
+        service_object = CrowbarService.new(Rails.logger)
+        service_object.prepare_nodes_for_crowbar_upgrade
+
+        true
+      rescue => e
+        message = e.message
+        Rails.logger.error message
+
+        false
       end
     end
   end

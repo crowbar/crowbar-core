@@ -54,7 +54,7 @@ describe Api::UpgradeController, type: :request do
 
     it "prepares the crowbar upgrade" do
       post "/api/upgrade/prepare", {}, headers
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:ok)
     end
 
     it "stops related services on all nodes during upgrade" do
