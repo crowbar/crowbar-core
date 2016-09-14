@@ -40,7 +40,6 @@
                     "node": "admin.crowbar.com",
                     "router": "192.168.124.1",
                     "subnet": "192.168.124.0",
-                    "usage": "admin",
                     "use_vlan": false,
                     "vlan": 100
                 },
@@ -53,7 +52,6 @@
                     "node": "admin.crowbar.com",
                     "router": null,
                     "subnet": "192.168.124.0",
-                    "usage": "bmc",
                     "use_vlan": false,
                     "vlan": 100
                 }
