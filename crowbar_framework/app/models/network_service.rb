@@ -300,7 +300,7 @@ class NetworkService < ServiceObject
 
         # Allocate required addresses
         range = node.admin? ? "admin" : "host"
-        @logger.debug("Deployer transition: Allocate admin address for #{name}")
+        @logger.debug("Network transition: Allocate admin address for #{name}")
         result = allocate_ip("default", "admin", range, name)
         @logger.error("Failed to allocate admin address for: #{node.name}: #{result[0]}") if result[0] != 200
         if result[0] == 200
@@ -308,7 +308,7 @@ class NetworkService < ServiceObject
           boot_ip_hex = sprintf("%08X", address.split(".").inject(0) { |acc, i| (acc << 8) + i.to_i })
         end
 
-        @logger.debug("Deployer transition: Done Allocate admin address for #{name} boot file:#{boot_ip_hex}")
+        @logger.debug("Network transition: Done Allocate admin address for #{name} boot file:#{boot_ip_hex}")
 
         if node.admin?
           # If we are the admin node, we may need to add a vlan bmc address.
@@ -322,10 +322,10 @@ class NetworkService < ServiceObject
           @logger.debug("admin_net: #{admin_net.inspect}")
           @logger.debug("bmc_net: #{bmc_net.inspect}")
           if admin_net["subnet"] != bmc_net["subnet"]
-            @logger.debug("Deployer transition: Allocate bmc_vlan address for #{name}")
+            @logger.debug("Network transition: Allocate bmc_vlan address for #{name}")
             result = allocate_ip("default", "bmc_vlan", "host", name)
             @logger.error("Failed to allocate bmc_vlan address for: #{node.name}: #{result[0]}") if result[0] != 200
-            @logger.debug("Deployer transition: Done Allocate bmc_vlan address for #{name}")
+            @logger.debug("Network transition: Done Allocate bmc_vlan address for #{name}")
           end
 
           # Allocate the bastion network ip for the admin node if a bastion
