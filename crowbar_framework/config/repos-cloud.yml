@@ -171,6 +171,26 @@ suse-12.2:
       url:
       smt_path: "SUSE/Updates/SLE-HA/12-SP2/aarch64/update"
       ask_on_error: false
+    suse-enterprise-storage-4-pool:
+      name: "SUSE-Enterprise-Storage-4-Pool"
+      required: "optional"
+      features: ["ceph"]
+      repomd:
+        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP2:Update:Products:SES4/ses/4/POOL/aarch64"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
+      url:
+      smt_path: "SUSE/Products/Storage/4/aarch64/product"
+      ask_on_error: false
+    suse-enterprise-storage-4-updates:
+      name: "SUSE-Enterprise-Storage-4-Updates"
+      required: "optional"
+      features: ["ceph"]
+      repomd:
+        tag: "obsrepository://build.suse.de/SUSE:Updates:Storage:4:aarch64/update"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
+      url:
+      smt_path: "SUSE/Updates/Storage/4/aarch64/update"
+      ask_on_error: false
     ptf:
       name: "PTF"
       required: "recommended"
@@ -250,6 +270,25 @@ suse-12.2:
       url:
       smt_path: "SUSE/Updates/SLE-HA/12-SP2/x86_64/update"
       ask_on_error: false
+    suse-enterprise-storage-4-pool:
+      name: "SUSE-Enterprise-Storage-4-Pool"
+      required: "optional"
+      features: ["ceph"]
+      repomd:
+        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP2:Update:Products:SES4/ses/4/POOL/x86_64"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
+      url:
+      smt_path: "SUSE/Products/Storage/4/x86_64/product"
+      ask_on_error: false
+    suse-enterprise-storage-4-updates:
+      name: "SUSE-Enterprise-Storage-4-Updates"
+      required: "optional"
+      features: ["ceph"]
+      repomd:
+        tag: "obsrepository://build.suse.de/SUSE:Updates:Storage:4:x86_64/update"
+        fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
+      url:
+      smt_path: "SUSE/Updates/Storage/4/x86_64/update"
     ptf:
       name: "PTF"
       required: "recommended"
