@@ -222,7 +222,7 @@ module Installer
           begin
             post_cleanup_repos
             @service_object.disable_non_core_proposals
-            @service_object.prepare_nodes_for_os_upgrade
+            @service_object.initiate_nodes_upgrade
 
             format.json do
               head status

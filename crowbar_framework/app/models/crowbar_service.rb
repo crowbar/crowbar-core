@@ -391,6 +391,60 @@ class CrowbarService < ServiceObject
     commit_and_check_proposal
   end
 
+  # Prepare the upgrade AutoYaST profile for nodes and let them use it for the upgrade
+  # This is the method from 5-6 upgrade. To be removed once we have full replacement
+  def initiate_nodes_upgrade
+    upgrade_nodes = NodeObject.all.reject do |node|
+      node.admin? || node[:platform] == "windows" || node.state != "crowbar_upgrade"
+    end
+    check_if_nodes_are_available upgrade_nodes
+    admin_node = NodeObject.admin_node
+    upgrade_nodes_failed = []
+
+    upgrade_nodes.each do |node|
+      node["target_platform"] = admin_node["provisioner"]["default_os"]
+      node.save
+      node.set_state("os-upgrading")
+    end
+
+    # wait for the pxe_config to be updated, then reboot the nodes
+    discovery_dir = "#{NodeObject.admin_node[:provisioner][:root]}/discovery/"
+    pxecfg_subdir = "bios/pxelinux.cfg"
+
+    upgrade_nodes.each do |node|
+      boot_ip_hex = node["crowbar"]["boot_ip_hex"]
+      node_arch = node["kernel"]["machine"]
+      pxe_conf = "#{discovery_dir}/#{node_arch}/#{pxecfg_subdir}/#{boot_ip_hex}"
+      ready_for_reboot = false
+
+      while Time.now.to_i < Time.now.to_i + 120 && !ready_for_reboot
+        @logger.debug("waiting for pxe configuration to be updated for #{node.name}")
+        if File.file?(pxe_conf)
+          File.open(pxe_conf).each_line do |line|
+            line.chomp!
+            if line =~ /^DEFAULT\s+.+_install$/
+              ready_for_reboot = true
+            end
+          end.close
+        end
+        sleep(5) unless ready_for_reboot
+      end
+      if ready_for_reboot
+        @logger.debug("Rebooting node #{node.name} for operating system upgrade")
+        ssh_status = node.ssh_cmd("/sbin/reboot")
+        if ssh_status[0] != 200
+          @logger.error("Upgrade failed for machine #{node.name}. Could not ssh.")
+          upgrade_nodes_failed.push(node.name)
+        end
+      else
+        @logger.error("Upgrade failed for #{node.name}. Node not ready for reboot")
+        upgrade_nodes_failed.push(node.name)
+      end
+    end
+    # If list is empty, this method was successful.
+    upgrade_nodes_failed
+  end
+
   def revert_nodes_from_crowbar_upgrade
     proposal = Proposal.find_by(barclamp: "crowbar", name: "default")
 
