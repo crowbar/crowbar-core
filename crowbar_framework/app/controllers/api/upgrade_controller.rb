@@ -52,14 +52,15 @@ class Api::UpgradeController < ApiController
     end
   end
 
-  api :GET, "/api/upgrade/services", "List all openstack services on all nodes that need to stop"
   api :POST, "/api/upgrade/services", "Stop related services on all nodes during upgrade"
   api_version "2.0"
   def services
-    if request.post?
-      head :not_implemented
+    status, msg = @upgrade.services
+
+    if status == :ok
+      head status
     else
-      render json: [], status: :not_implemented
+      render json: msg, status: status
     end
   end
 

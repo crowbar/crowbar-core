@@ -57,6 +57,34 @@ module Api
       end
     end
 
+    # Shutdown non-essential services on all nodes.
+    def services
+      status = :ok
+      msg = ""
+      begin
+        # prepare the scripts for various actions necessary for the upgrade
+        service_object = CrowbarService.new(Rails.logger)
+        service_object.prepare_nodes_for_os_upgrade
+      rescue => e
+        msg = e.message
+        Rails.logger.error msg
+        status = :unprocessable_entity
+        return [status, msg]
+      end
+
+      # Initiate the services shutdown by calling scripts on all nodes.
+      # For each cluster, it is enough to initiate the shutdown from one node (e.g. founder)
+      NodeObject.find("state:crowbar_upgrade AND pacemaker_founder:true").each do |node|
+        node.ssh_cmd("/usr/sbin/crowbar-shutdown-services-before-upgrade.sh")
+      end
+      # Shutdown the services for non clustered nodes
+      NodeObject.find("state:crowbar_upgrade AND NOT run_list_map:pacemaker-cluster-member").
+        each do |node|
+        node.ssh_cmd("/usr/sbin/crowbar-shutdown-services-before-upgrade.sh")
+      end
+      [status, msg]
+    end
+
     protected
 
     def crowbar_upgrade_status

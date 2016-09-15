@@ -1,5 +1,5 @@
 # Cookbook Name:: crowbar
-# Recipe:: prepare-os-upgrade
+# Recipe:: prepare-upgrade-scripts
 #
 # Copyright 2013-2016, SUSE LINUX Products GmbH
 #
@@ -15,7 +15,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# This recipe prepares a script which when executed (at selected time)
+# This recipe prepares various scripts usable for upgrading the node
+
+# First part is for OS upgrade. When executed (at selected time), it
 # 1. removes old repositories
 # 2. adds correct new ones
 # 3. runs zypper dup to upgrade the node
@@ -66,5 +68,23 @@ template "/usr/sbin/crowbar-upgrade-os.sh" do
     old_base_repo: old_install_url,
     new_base_repo: new_install_url,
     new_alias: new_alias
+  )
+end
+
+# This script shuts down non-essential services on the nodes
+# It leaves only database (so we can create a dump of it)
+# and services necessary for managing network traffic of running instances.
+
+# Find out now if we have HA setup and pass that info to the script
+use_ha = node["run_list_map"].key? "pacemaker-cluster-member"
+
+template "/usr/sbin/crowbar-shutdown-services-before-upgrade.sh" do
+  source "crowbar-shutdown-services-before-upgrade.sh.erb"
+  mode "0770"
+  owner "root"
+  group "root"
+  action :create
+  variables(
+    use_ha: use_ha
   )
 end
