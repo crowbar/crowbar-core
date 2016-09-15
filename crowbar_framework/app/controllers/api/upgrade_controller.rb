@@ -55,12 +55,10 @@ class Api::UpgradeController < ApiController
   api :POST, "/api/upgrade/services", "Stop related services on all nodes during upgrade"
   api_version "2.0"
   def services
-    status, msg = @upgrade.services
-
-    if status == :ok
-      head status
+    if @upgrade.services
+      head :ok
     else
-      render json: msg, status: status
+      render json: { error: @upgrade.errors.full_messages.first }, status: :unprocessable_entity
     end
   end
 
