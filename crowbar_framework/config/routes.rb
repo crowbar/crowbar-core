@@ -205,30 +205,6 @@ Rails.application.routes.draw do
         post :start
       end
     end
-
-    resource :upgrade,
-      only: [:show],
-      controller: "installer/upgrades" do
-      member do
-        post :prepare
-        get :start
-        post :start
-        get :restore
-        post :restore
-        get :repos
-        post :repos
-        get :services
-        post :services
-        get :backup
-        post :backup
-        get :nodes
-        post :nodes
-        get :finishing
-
-        get :restore_status
-        get :nodes_status
-      end
-    end
   end
 
   resource :sanity,
