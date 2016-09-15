@@ -20,6 +20,8 @@ require "timeout"
 require "open3"
 
 class NodeObject < ChefObject
+  include Crowbar::ConduitResolver
+
   self.chef_type = "node"
 
   def self.find(search)
@@ -550,7 +552,7 @@ class NodeObject < ChefObject
 
   def mac
     begin
-      intf = sort_ifs[0]
+      intf = sorted_ifs[0]
       self.crowbar_ohai["switch_config"][intf]["mac"] || (I18n.t :unknown)
     rescue
       Rails.logger.warn("mac: #{@node.name}: Switch config not detected during discovery")
@@ -895,90 +897,10 @@ class NodeObject < ChefObject
     interface_list.size
   end
 
-  # IMPORTANT: This needs to be kept in sync with the bus_index method in
-  # BarclampLibrary::Barclamp::Inventory in the "barclamp" cookbook of the
-  # deployer barclamp.
-  def bus_index(bus_order, path)
-    return 999 if bus_order.nil? or path.nil?
-
-    # For backwards compatibility with the old busid matching
-    # which just stripped of everything after the first '.'
-    # in the busid
-    path_old = path.split(".")[0]
-
-    index = 0
-    bus_order.each do |b|
-      # When there is no '.' in the busid from the bus_order assume
-      # that we are using the old method of matching busids
-      if b.include?(".")
-        path_used = path
-      else
-        path_used = path_old
-      end
-      return index if b == path_used
-      index = index + 1
-    end
-
-    999
-  end
-
-  # IMPORTANT: This needs to be kept in sync with the get_bus_order method in
-  # BarclampLibrary::Barclamp::Inventory in the "barclamp" cookbook of the
-  # deployer barclamp.
-  def get_bus_order
-    bus_order = nil
-    @node["network"]["interface_map"].each do |data|
-      if @node[:dmi][:system][:product_name] =~ /#{data["pattern"]}/
-        if data.key?("serial_number")
-          bus_order = data["bus_order"] if @node[:dmi][:system][:serial_number].strip == data["serial_number"].strip
-        else
-          bus_order = data["bus_order"]
-        end
-      end
-      break if bus_order
-    end rescue nil
-    bus_order
-  end
-
-  def sort_ifs
-    bus_order = get_bus_order
-    map = self.crowbar_ohai["detected"]["network"]
-    answer = map.sort{|a,b|
-      aindex = bus_index(bus_order, a[1]["path"])
-      bindex = bus_index(bus_order, b[1]["path"])
-      aindex == bindex ? a[0] <=> b[0] : aindex <=> bindex
-    }
-    answer.map! { |x| x[0] }
-  end
-
-  def get_conduits
-    conduits = nil
-    @node["network"]["conduit_map"].each do |data|
-      parts = data["pattern"].split("/")
-      the_one = true
-      the_one = false unless @node["network"]["mode"] =~ /#{parts[0]}/
-      the_one = false unless self.crowbar_ohai["detected"]["network"].size.to_s =~ /#{parts[1]}/
-
-      found = false
-      @node.roles.each do |role|
-        found = true if role =~ /#{parts[2]}/
-        break if found
-      end
-      the_one = false unless found
-
-      conduits = data["conduit_list"] if the_one
-      break if conduits
-    end rescue nil
-    conduits
-  end
-
   def build_node_map
-    bus_order = get_bus_order
-    conduits = get_conduits
 
     return {} if conduits.nil?
 
-    sorted_ifs = sort_ifs
     map = self.crowbar_ohai["detected"]["network"]
     if_remap = {}
     count_map = {}
@@ -1039,26 +961,6 @@ class NodeObject < ChefObject
     found
   end
 
-  def unmanaged_interfaces
-    intf_to_if_map = build_node_map
-
-    orig_if_list = self.crowbar_ohai["detected"]["network"] rescue nil
-    return {} if orig_if_list.nil?
-    if_list = orig_if_list.map { |x| x[0] }
-
-    intf_to_if_map.each do |k,v|
-      v.each do |mk, mv|
-        if mk == "if_list"
-          v["if_list"].each do |x|
-            if_list.delete(x) if if_list.include?(x)
-          end
-        end
-      end
-    end
-
-    if_list
-  end
-
   def lookup_interface_info(conduit, intf_to_if_map = nil)
     intf_to_if_map = build_node_map if intf_to_if_map.nil?
 
@@ -1104,7 +1006,7 @@ class NodeObject < ChefObject
   def switch_find_info(type)
     res = nil
     begin
-      sort_ifs.each do |intf|
+      sorted_ifs.each do |intf|
         switch_config_intf = self.crowbar_ohai["switch_config"][intf]
         # try next interface in case this is one is missing data
         next if [switch_config_intf["switch_name"], switch_config_intf["switch_unit"], switch_config_intf["switch_port"]].include? -1
@@ -1774,4 +1676,31 @@ class NodeObject < ChefObject
     end
     {}
   end
+
+  ## These are overrides required for the Crowbar::ConduitResolver
+  def cr_network_config
+    @node["network"]
+  end
+
+  def cr_ohai_network
+    @node.automatic_attrs["crowbar_ohai"]["detected"]["network"]
+  end
+
+  def cr_node_roles
+    @node.roles
+  end
+
+  def cr_dmi_system
+    @node["dmi"]["system"]
+  end
+
+  def cr_node_bond_list
+    @node["crowbar"]["bond_list"] || {}
+  end
+
+  def cr_error(s)
+    Rails.logger.error(s)
+  end
+  ## End of Crowbar::ConduitResolver overrides
+
 end
