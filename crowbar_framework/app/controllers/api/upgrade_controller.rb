@@ -73,12 +73,11 @@ class Api::UpgradeController < ApiController
   api :POST, "/api/upgrade/cancel", "Cancel the upgrade process by setting the nodes back to ready"
   api_version "2.0"
   def cancel
-    service_object = CrowbarService.new(Rails.logger)
-    service_object.revert_nodes_from_crowbar_upgrade
-
-    head :ok
-  rescue => e
-    render json: { error: e.message }, status: :unprocessable_entity
+    if @upgrade.cancel
+      head :ok
+    else
+      render json: { error: @upgrade.errors.full_messages.first }, status: :unprocessable_entity
+    end
   end
 
   api :GET, "/api/upgrade/repocheck", "Check for missing node repositories"

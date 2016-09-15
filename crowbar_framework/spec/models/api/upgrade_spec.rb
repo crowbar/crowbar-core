@@ -141,4 +141,24 @@ describe Api::Upgrade do
       expect(subject.repocheck).to eq(expected)
     end
   end
+
+  context "canceling the upgrade" do
+    it "successfully cancels the upgrade" do
+      allow_any_instance_of(CrowbarService).to receive(
+        :revert_nodes_from_crowbar_upgrade
+      ).and_return(true)
+
+      expect(subject.cancel).to be true
+      expect(subject.errors).to be_empty
+    end
+
+    it "fails to cancel the upgrade" do
+      allow_any_instance_of(CrowbarService).to receive(
+        :revert_nodes_from_crowbar_upgrade
+      ).and_raise("Some Error")
+
+      expect(subject.cancel).to be false
+      expect(subject.errors).not_to be_empty
+    end
+  end
 end

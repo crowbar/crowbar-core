@@ -85,6 +85,18 @@ module Api
       [status, msg]
     end
 
+    def cancel
+      service_object = CrowbarService.new(Rails.logger)
+      service_object.revert_nodes_from_crowbar_upgrade
+
+      true
+    rescue => e
+      errors.add(:base, e.message)
+      Rails.logger.error(e.message)
+
+      false
+    end
+
     protected
 
     def crowbar_upgrade_status
