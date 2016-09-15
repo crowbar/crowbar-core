@@ -113,7 +113,7 @@ module Api
           repos: {}
         }
         ret[:os][:repos][admin_architecture.to_sym] = {
-          missing_repos: ["SUSE Linux Enterprise Server 12 SP3"]
+          missing: ["SUSE Linux Enterprise Server 12 SP3"]
         } unless os_available
 
         cloud_available = repo_version_available?(products, "suse-openstack-cloud", "8")
@@ -122,7 +122,7 @@ module Api
           repos: {}
         }
         ret[:cloud][:repos][admin_architecture.to_sym] = {
-          missing_repos: ["SUSE OpenStack Cloud 8"]
+          missing: ["SUSE OpenStack Cloud 8"]
         } unless cloud_available
       end
     end

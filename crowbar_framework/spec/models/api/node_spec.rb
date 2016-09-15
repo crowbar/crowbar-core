@@ -23,13 +23,13 @@ describe Api::Node do
         [
           false,
           {
-            "missing_repos" => {
+            "missing" => {
               "x86_64" => [
                 "SLES12-SP2-Pool",
                 "SLES12-SP2-Updates"
               ]
             },
-            "inactive_repos" => {
+            "inactive" => {
               "x86_64" => [
                 "SLES12-SP2-Pool",
                 "SLES12-SP2-Updates"
@@ -48,14 +48,14 @@ describe Api::Node do
         [
           false,
           {
-            "missing_repos" => {
+            "missing" => {
               "x86_64" => [
                 "Cloud",
                 "SUSE-OpenStack-Cloud-7-Pool",
                 "SUSE-OpenStack-Cloud-7-Updates"
               ]
             },
-            "inactive_repos" => {
+            "inactive" => {
               "x86_64" => [
                 "Cloud",
                 "SUSE-OpenStack-Cloud-7-Pool",
