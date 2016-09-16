@@ -558,14 +558,13 @@ class NodesController < ApplicationController
     if @node
       # If we're in discovery mode, then we have a temporary DHCP IP address.
       if !["discovering", "discovered"].include?(@node.state)
-        intf_if_map = @node.build_node_map
         # build network information (this may need to move into the object)
         @node.networks.each do |name, data|
           if name == "bmc"
             ifname = "bmc"
             address = @node["crowbar_wall"]["ipmi"]["address"] rescue nil
           else
-            ifname, ifs, team = @node.lookup_interface_info(data["conduit"])
+            ifname, ifs, team = @node.conduit_details(data["conduit"])
             if ifname.nil? or ifs.nil?
               ifname = "Unknown"
             else

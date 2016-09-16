@@ -259,7 +259,7 @@ class NetworkController < BarclampController
 
     @nodes = {}
     NodeObject.all.each do |node|
-      @nodes[node.handle] = {alias: node.alias, description: node.description, model: node.hardware, bus: node.bus_order, conduits: node.build_node_map}
+      @nodes[node.handle] = {alias: node.alias, description: node.description, model: node.hardware, bus: node.bus_order, conduits: node.conduit_to_if_map}
     end
     @conduits = @conduits.sort
 
