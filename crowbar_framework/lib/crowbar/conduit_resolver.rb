@@ -159,6 +159,34 @@ module Crowbar
       result
     end
 
+    ## Map of conduits (defined in network.json) to OS interface names (ie,
+    ## names given by the OS: eth0, etc.) and other attributes
+    # The conduit is 'stable' in terms of renumbering because of
+    # addition/removal of add on cards (across machines)
+    def conduit_to_if_map
+      @conduit_to_if_map ||= begin
+        result = {}
+
+        conduits.each do |conduit_name, conduit_def|
+          hash = {}
+
+          conduit_def.each do |key, value|
+            if key == "if_list"
+              hash[key] = value.map do |if_ref|
+                resolve_if_ref(if_ref)
+              end
+            else
+              hash[key] = value
+            end
+          end
+
+          result[conduit_name] = hash
+        end
+
+        result
+      end
+    end
+
     ## Return details about conduit on this node
     # The return value has three components:
     #   1) the OS interface for this conduit (can be a "physical" interface,
@@ -308,34 +336,6 @@ module Crowbar
       end
 
       result
-    end
-
-    ## Map of conduits (defined in network.json) to OS interface names (ie,
-    ## names given by the OS: eth0, etc.) and other attributes
-    # The conduit is 'stable' in terms of renumbering because of
-    # addition/removal of add on cards (across machines)
-    def conduit_to_if_map
-      @conduit_to_if_map ||= begin
-        result = {}
-
-        conduits.each do |conduit_name, conduit_def|
-          hash = {}
-
-          conduit_def.each do |key, value|
-            if key == "if_list"
-              hash[key] = value.map do |if_ref|
-                resolve_if_ref(if_ref)
-              end
-            else
-              hash[key] = value
-            end
-          end
-
-          result[conduit_name] = hash
-        end
-
-        result
-      end
     end
 
   end
