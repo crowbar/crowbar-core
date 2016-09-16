@@ -29,7 +29,7 @@ module Crowbar
 
     def self.ses_platform
       # Returns the platform used for SES
-      "suse-12.1"
+      "suse-12.2"
     end
   end
 end
