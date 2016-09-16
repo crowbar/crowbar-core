@@ -89,7 +89,8 @@ module Crowbar
     ## Map of stable interface names (<speed><#>; for instance: 1g1, etc.) to
     ## OS interface names
     # Format of stable interface names is <speed><#> where
-    #  - speed designates the interface speed. 10m, 100m, 1g and 10g are supported
+    #  - speed designates the interface speed. 10m, 100m, 1g, 10g, 20g,
+    #    40g and 56g are supported.
     #  - # is the interface index for interfaces of specified speed, based on
     #    the bus order defined for this node
     # Note that a OS interface name can have multiple stable interface names,
@@ -121,14 +122,14 @@ module Crowbar
     #  - sign is optional, and determines behavior if exact match is not
     #    found. + allows speed upgrade, - allows downgrade, ? allows either.
     #    If no sign is specified, an exact match must be found.
-    #  - speed designates the interface speed. 10m, 100m, 1g and 10g are supported
+    #  - speed designates the interface speed. 10m, 100m, 1g, 10g, 20g,
+    #    40g and 56g are supported.
     #  - # is the interface index for interfaces of specified speed, based on
     #    the bus order defined for this node
     def resolve_if_ref(if_ref)
       result = nil
 
-      speeds= %w{10m 100m 1g 10g}
-
+      speeds = ["10m", "100m", "1g", "10g", "20g", "40g", "56g"]
       m = /^([-+?]?)(\d{1,3}[mg])(\d+)$/.match(if_ref) # [1]=sign, [2]=speed, [3]=count
 
       unless m.nil?
