@@ -3,5 +3,6 @@
   "maintenance_updates_installed":true,
   "clusters_healthy":true,
   "compute_resources_available":true,
-  "ceph_healthy":true
+  "ceph_healthy":true,
+  "ha_deployed":true
 }
