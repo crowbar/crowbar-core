@@ -32,7 +32,8 @@ module Api
           maintenance_updates_installed: maintenance_updates_installed?,
           clusters_healthy: clusters_healthy?,
           compute_resources_available: compute_resources_available?,
-          ceph_healthy: ceph_healthy?
+          ceph_healthy: ceph_healthy?,
+          ha_deployed: ha_presence_check.empty?
         }
       end
 
@@ -132,6 +133,10 @@ module Api
 
       def compute_resources_available?
         Api::Crowbar.compute_resources_available?
+      end
+
+      def ha_presence_check
+        Api::Crowbar.ha_presence_check
       end
     end
   end
