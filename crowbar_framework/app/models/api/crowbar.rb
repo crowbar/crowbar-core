@@ -125,6 +125,15 @@ module Api
       end
     end
 
+    def ha_deployed?
+      founders = NodeObject.find("pacemaker_founder:true AND pacemaker_config_environment:*")
+
+      if founders.empty?
+        Rails.logger.warn("No pacemaker cluster is configured.")
+        return false
+      end
+      true
+    end
 
     # Simple check if HA clusters report some problems
     # If there are no problems, empty hash is returned.

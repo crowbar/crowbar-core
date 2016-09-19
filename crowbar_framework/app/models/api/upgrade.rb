@@ -32,6 +32,7 @@ module Api
         clusters_healthy: clusters_healthy?,
         compute_resources_available: compute_resources_available?,
         ceph_healthy: ceph_healthy?
+        ha_deployed: ha_deployed?
       }
     end
 
@@ -59,6 +60,10 @@ module Api
 
     def compute_resources_available?
       Api::Crowbar.new.compute_resources_available?
+    end
+
+    def ha_deployed?
+      Api::Crowbar.new.ha_deployed?
     end
   end
 end
