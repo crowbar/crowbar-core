@@ -66,6 +66,13 @@ describe Api::UpgradeController, type: :request do
         :ha_presence_check
       ).and_return({})
 
+      allow_any_instance_of(Api::Crowbar).to(
+        receive(:addons).and_return(["ha"])
+      )
+      allow(Api::Upgrade).to(
+        receive(:ha_presence_check).and_return({})
+      )
+
       get "/api/upgrade/prechecks", {}, headers
       expect(response).to have_http_status(:ok)
       expect(response.body).to eq(upgrade_prechecks)

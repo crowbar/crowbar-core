@@ -791,6 +791,8 @@ en:
           help:
             default: 'Make sure there is enough compute power'
         ha_configured:
+          not_installed: 'HA add-on is not installed.'
+          not_configured: 'No Pacemaker cluster is configured.'
           help:
             default: 'Without HA setup, non-disruptive upgrade is not possible.'
       prepare:
