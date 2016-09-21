@@ -41,7 +41,8 @@ module BarclampLibrary
       end
 
       def self.get_network_by_type(node, type)
-        unless node[:crowbar][:network].nil? || node[:network][:networks].nil?
+        unless node[:crowbar].nil? ||
+            node[:crowbar][:network].nil? || node[:network][:networks].nil?
           [type, "admin"].uniq.each do |usage|
             found = node[:crowbar][:network].find do |net, data|
               # network is not valid if we don't have the full definition
