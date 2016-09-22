@@ -20,6 +20,9 @@ describe Api::UpgradeController, type: :request do
 
     it "shows the upgrade status object" do
       allow(Crowbar::Sanity).to receive(:sane?).and_return(true)
+      allow_any_instance_of(Api::Crowbar).to(
+        receive(:features).and_return([])
+      )
 
       get "/api/upgrade", {}, headers
       expect(response).to have_http_status(:ok)

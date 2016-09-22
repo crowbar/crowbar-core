@@ -34,6 +34,9 @@ describe Api::CrowbarController, type: :request do
     end
 
     it "shows the crowbar object" do
+      allow_any_instance_of(Api::Crowbar).to(
+        receive(:features).and_return([])
+      )
       get "/api/crowbar", {}, headers
       expect(response).to have_http_status(:ok)
       expect(response.body).to eq(crowbar_object)

@@ -53,6 +53,9 @@ describe Api::Upgrade do
   context "with a successful status" do
     it "checks the status" do
       allow(Crowbar::Sanity).to receive(:sane?).and_return(true)
+      allow_any_instance_of(Api::Crowbar).to(
+        receive(:features).and_return([])
+      )
 
       expect(subject.class).to respond_to(:status)
       expect(subject.class.status).to be_a(Hash)
@@ -74,7 +77,6 @@ describe Api::Upgrade do
       allow_any_instance_of(CrowbarService).to receive(
         :prepare_nodes_for_os_upgrade
       ).and_return(true)
-
       allow(NodeObject).to(
         receive(:find).with("state:crowbar_upgrade AND pacemaker_founder:true").
         and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
@@ -124,7 +126,7 @@ describe Api::Upgrade do
   context "with addon installed but not deployed" do
     it "shows that there are no addons deployed" do
       allow_any_instance_of(Api::Crowbar).to(
-        receive(:addons).and_return(
+        receive(:features).and_return(
           ["ceph", "ha"]
         )
       )
