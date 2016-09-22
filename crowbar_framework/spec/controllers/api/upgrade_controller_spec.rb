@@ -36,17 +36,6 @@ describe Api::UpgradeController, type: :request do
       expect(response).to have_http_status(:unprocessable_entity)
     end
 
-    it "list all openstack services on all nodes that need to stop" do
-      get "/api/upgrade/services", {}, headers
-      expect(response).to have_http_status(:not_implemented)
-      expect(response.body).to eq("[]")
-    end
-
-    it "stops related services on all nodes during upgrade" do
-      post "/api/upgrade/services", {}, headers
-      expect(response).to have_http_status(:not_implemented)
-    end
-
     it "shows a sanity check in preparation for the upgrade" do
       allow(Crowbar::Sanity).to receive(:sane?).and_return(true)
 

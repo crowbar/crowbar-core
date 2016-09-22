@@ -15,10 +15,8 @@
 #
 
 class Api::UpgradeController < ApiController
-  before_action :set_upgrade
-
   def show
-    render json: @upgrade.status
+    render json: Api::Upgrade.status
   end
 
   def update
@@ -46,29 +44,17 @@ class Api::UpgradeController < ApiController
     end
   end
 
-  def services
-    if request.post?
-      head :not_implemented
-    else
-      render json: [], status: :not_implemented
-    end
-  end
-
   def prechecks
-    render json: @upgrade.check
+    render json: Api::Upgrade.check
   end
 
   def cancel
-    if @upgrade.cancel
+    cancel_upgrade = Api::Upgrade.cancel
+
+    if cancel_upgrade[:status] == :ok
       head :ok
     else
-      render json: { error: @upgrade.errors.full_messages.first }, status: :unprocessable_entity
+      render json: { error: cancel_upgrade[:message] }, status: cancel_upgrade[:status]
     end
-  end
-
-  protected
-
-  def set_upgrade
-    @upgrade = Api::Upgrade.new
   end
 end
