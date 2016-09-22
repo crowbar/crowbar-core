@@ -89,7 +89,8 @@ describe Api::Upgrade do
         receive(:find).with("state:crowbar_upgrade AND NOT run_list_map:pacemaker-cluster-member").
         and_return([])
       )
-      expect(subject.services).to eq([:ok, ""])
+
+      expect(subject.services).to be true
     end
   end
 
@@ -98,7 +99,9 @@ describe Api::Upgrade do
       allow_any_instance_of(CrowbarService).to receive(
         :prepare_nodes_for_os_upgrade
       ).and_raise("and Error")
-      expect(subject.services).to eq([:unprocessable_entity, "and Error"])
+
+      expect(subject.services).to be false
+      expect(subject.errors).not_to be_empty
     end
   end
 
@@ -139,6 +142,26 @@ describe Api::Upgrade do
       end
 
       expect(subject.repocheck).to eq(expected)
+    end
+  end
+
+  context "canceling the upgrade" do
+    it "successfully cancels the upgrade" do
+      allow_any_instance_of(CrowbarService).to receive(
+        :revert_nodes_from_crowbar_upgrade
+      ).and_return(true)
+
+      expect(subject.cancel).to be true
+      expect(subject.errors).to be_empty
+    end
+
+    it "fails to cancel the upgrade" do
+      allow_any_instance_of(CrowbarService).to receive(
+        :revert_nodes_from_crowbar_upgrade
+      ).and_raise("Some Error")
+
+      expect(subject.cancel).to be false
+      expect(subject.errors).not_to be_empty
     end
   end
 end
