@@ -55,8 +55,12 @@ module Api
 
       protected
 
+      def crowbar
+        Api::Crowbar.new
+      end
+
       def crowbar_upgrade_status
-        Api::Crowbar.new.upgrade
+        crowbar.upgrade
       end
 
       def sanity_checks
@@ -64,19 +68,19 @@ module Api
       end
 
       def maintenance_updates_installed?
-        Api::Crowbar.new.maintenance_updates_installed?
+        crowbar.maintenance_updates_installed?
       end
 
       def ceph_healthy?
-        Api::Crowbar.new.ceph_healthy?
+        crowbar.ceph_healthy?
       end
 
       def clusters_healthy?
-        Api::Crowbar.new.clusters_healthy?
+        crowbar.clusters_healthy?
       end
 
       def compute_resources_available?
-        Api::Crowbar.new.compute_resources_available?
+        crowbar.compute_resources_available?
       end
     end
   end
