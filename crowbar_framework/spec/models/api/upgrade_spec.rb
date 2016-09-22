@@ -144,8 +144,8 @@ describe Api::Upgrade do
       )
 
       expected = node_repocheck.tap do |k|
-        k["ceph"]["available"] = false
-        k["ha"]["available"] = false
+        k.delete("ceph")
+        k.delete("ha")
       end
 
       expect(subject.class.repocheck).to eq(expected)

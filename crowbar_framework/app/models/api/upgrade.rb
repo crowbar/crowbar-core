@@ -38,7 +38,7 @@ module Api
 
       def repocheck
         response = {}
-        addons = crowbar.addons
+        addons = Api::Crowbar.addons
         addons.push("os", "openstack").each do |addon|
           response.merge!(Api::Node.repocheck(addon: addon))
         end
@@ -109,12 +109,8 @@ module Api
 
       protected
 
-      def crowbar
-        Api::Crowbar.new
-      end
-
       def crowbar_upgrade_status
-        crowbar.upgrade
+        Api::Crowbar.upgrade
       end
 
       def sanity_checks
@@ -122,11 +118,11 @@ module Api
       end
 
       def maintenance_updates_installed?
-        crowbar.maintenance_updates_installed?
+        Api::Crowbar.maintenance_updates_installed?
       end
 
       def ceph_healthy?
-        crowbar.ceph_healthy?
+        Api::Crowbar.ceph_healthy?
       end
 
       def clusters_healthy?
@@ -135,7 +131,7 @@ module Api
       end
 
       def compute_resources_available?
-        crowbar.compute_resources_available?
+        Api::Crowbar.compute_resources_available?
       end
     end
   end

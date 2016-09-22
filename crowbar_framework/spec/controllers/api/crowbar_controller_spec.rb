@@ -34,8 +34,8 @@ describe Api::CrowbarController, type: :request do
     end
 
     it "shows the crowbar object" do
-      allow_any_instance_of(Api::Crowbar).to(
-        receive(:features).and_return([])
+      allow(Api::Crowbar).to(
+        receive(:addons).and_return([])
       )
       get "/api/crowbar", {}, headers
       expect(response).to have_http_status(:ok)
@@ -68,7 +68,7 @@ describe Api::CrowbarController, type: :request do
           with(pid).
           and_return(pid)
       )
-      allow_any_instance_of(Api::Crowbar).to(
+      allow(Api::Crowbar).to(
         receive_message_chain(:upgrade_script_path, :exist?).
         and_return(true)
       )
@@ -84,8 +84,8 @@ describe Api::CrowbarController, type: :request do
     end
 
     it "checks the crowbar repositories" do
-      allow_any_instance_of(Api::Crowbar).to(
-        receive(:repocheck).and_return(crowbar_repocheck)
+      allow(Api::Crowbar).to(
+        receive(:repocheck).and_return(JSON.parse(crowbar_repocheck))
       )
 
       get "/api/crowbar/repocheck", {}, headers
