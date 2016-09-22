@@ -83,6 +83,12 @@ describe Api::Upgrade do
         receive(:find).with("state:crowbar_upgrade AND NOT run_list_map:pacemaker-cluster-member").
         and_return([])
       )
+      allow_any_instance_of(NodeObject).to receive(:ssh_cmd).with(
+        "/usr/sbin/crowbar-shutdown-services-before-upgrade.sh"
+      ).and_return(true)
+      allow_any_instance_of(NodeObject).to receive(:ssh_cmd).with(
+        "/usr/sbin/crowbar-shutdown-services-before-upgrade.sh"
+      ).and_return(true)
 
       expect(subject.class.services).to eq(
         status: :ok,
