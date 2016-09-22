@@ -38,7 +38,7 @@ module Api
 
       def repocheck
         response = {}
-        addons = Api::Crowbar.new.addons
+        addons = crowbar.addons
         addons.push("os", "openstack").each do |addon|
           response.merge!(Api::Node.repocheck(addon: addon))
         end
@@ -48,7 +48,7 @@ module Api
       def target_platform(options = {})
         platform_exception = options.fetch(:platform_exception, nil)
 
-        case Api::Crowbar.new.version
+        case crowbar.version
         when "4.0"
           if platform_exception == :ceph
             ::Crowbar::Product.ses_platform
@@ -109,8 +109,12 @@ module Api
 
       protected
 
+      def crowbar
+        Api::Crowbar.new
+      end
+
       def crowbar_upgrade_status
-        Api::Crowbar.new.upgrade
+        crowbar.upgrade
       end
 
       def sanity_checks
@@ -118,11 +122,11 @@ module Api
       end
 
       def maintenance_updates_installed?
-        Api::Crowbar.new.maintenance_updates_installed?
+        crowbar.maintenance_updates_installed?
       end
 
       def ceph_healthy?
-        Api::Crowbar.new.ceph_healthy?
+        crowbar.ceph_healthy?
       end
 
       def clusters_healthy?
@@ -131,7 +135,7 @@ module Api
       end
 
       def compute_resources_available?
-        Api::Crowbar.new.compute_resources_available?
+        crowbar.compute_resources_available?
       end
     end
   end
