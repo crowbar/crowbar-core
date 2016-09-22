@@ -69,7 +69,7 @@ describe Api::Node do
   end
 
   before(:each) do
-    allow_any_instance_of(Api::Upgrade).to(
+    allow(Api::Upgrade).to(
       receive(:target_platform).and_return("suse-12.2")
     )
     allow(Api::Node).to(

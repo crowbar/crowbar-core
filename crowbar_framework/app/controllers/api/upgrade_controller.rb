@@ -15,12 +15,10 @@
 #
 
 class Api::UpgradeController < ApiController
-  before_action :set_upgrade
-
   api :GET, "/api/upgrade", "Show the Upgrade status object"
   api_version "2.0"
   def show
-    render json: @upgrade.status
+    render json: Api::Upgrade.status
   end
 
   api :PATCH, "/api/upgrade", "Update Upgrade status object"
@@ -55,38 +53,36 @@ class Api::UpgradeController < ApiController
   api :POST, "/api/upgrade/services", "Stop related services on all nodes during upgrade"
   api_version "2.0"
   def services
-    if @upgrade.services
+    stop_services = Api::Upgrade.services
+
+    if stop_services[:status] == :ok
       head :ok
     else
-      render json: { error: @upgrade.errors.full_messages.first }, status: :unprocessable_entity
+      render json: { error: stop_services[:message] }, status: stop_services[:status]
     end
   end
 
   api :GET, "/api/upgrade/prechecks", "Shows a sanity check in preparation for the upgrade"
   api_version "2.0"
   def prechecks
-    render json: @upgrade.check
+    render json: Api::Upgrade.check
   end
 
   api :POST, "/api/upgrade/cancel", "Cancel the upgrade process by setting the nodes back to ready"
   api_version "2.0"
   def cancel
-    if @upgrade.cancel
+    cancel_upgrade = Api::Upgrade.cancel
+
+    if cancel_upgrade[:status] == :ok
       head :ok
     else
-      render json: { error: @upgrade.errors.full_messages.first }, status: :unprocessable_entity
+      render json: { error: cancel_upgrade[:message] }, status: cancel_upgrade[:status]
     end
   end
 
   api :GET, "/api/upgrade/repocheck", "Check for missing node repositories"
   api_version "2.0"
   def repocheck
-    render json: @upgrade.repocheck
-  end
-
-  protected
-
-  def set_upgrade
-    @upgrade = Api::Upgrade.new
+    render json: Api::Upgrade.repocheck
   end
 end

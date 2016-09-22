@@ -37,7 +37,6 @@ describe Api::UpgradeController, type: :request do
     end
 
     it "stops related services on all nodes during upgrade" do
-
       allow_any_instance_of(CrowbarService).to receive(
         :prepare_nodes_for_os_upgrade
       ).and_return(true)
@@ -47,7 +46,6 @@ describe Api::UpgradeController, type: :request do
     end
 
     it "fails to stop related services on all nodes during upgrade" do
-
       allow_any_instance_of(CrowbarService).to receive(
         :prepare_nodes_for_os_upgrade
       ).and_raise("and Error")
@@ -92,7 +90,7 @@ describe Api::UpgradeController, type: :request do
       allow(NodeObject).to(
         receive(:all).and_return([NodeObject.find_node_by_name("testing")])
       )
-      allow_any_instance_of(Api::Upgrade).to(
+      allow(Api::Upgrade).to(
         receive(:target_platform).and_return("suse-12.2")
       )
       allow(Api::Node).to(

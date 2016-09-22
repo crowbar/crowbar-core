@@ -35,7 +35,7 @@ describe Api::Upgrade do
     allow(NodeObject).to(
       receive(:all).and_return([NodeObject.find_node_by_name("testing")])
     )
-    allow_any_instance_of(Api::Upgrade).to(
+    allow(Api::Upgrade).to(
       receive(:target_platform).and_return("suse-12.2")
     )
     allow(::Crowbar::Repository).to(
@@ -50,19 +50,13 @@ describe Api::Upgrade do
     end
   end
 
-  context "with a successful creation of an upgrade object" do
-    it "checks the type" do
-      expect(subject).to be_an_instance_of(Api::Upgrade)
-    end
-  end
-
   context "with a successful status" do
     it "checks the status" do
       allow(Crowbar::Sanity).to receive(:sane?).and_return(true)
 
-      expect(subject).to respond_to(:status)
-      expect(subject.status).to be_a(Hash)
-      expect(subject.status.deep_stringify_keys).to eq(upgrade_status)
+      expect(subject.class).to respond_to(:status)
+      expect(subject.class.status).to be_a(Hash)
+      expect(subject.class.status.deep_stringify_keys).to eq(upgrade_status)
     end
   end
 
@@ -70,8 +64,8 @@ describe Api::Upgrade do
     it "checks the maintenance updates on crowbar" do
       allow(Crowbar::Sanity).to receive(:sane?).and_return(true)
 
-      expect(subject).to respond_to(:check)
-      expect(subject.check.deep_stringify_keys).to eq(upgrade_prechecks)
+      expect(subject.class).to respond_to(:check)
+      expect(subject.class.check.deep_stringify_keys).to eq(upgrade_prechecks)
     end
   end
 
@@ -90,7 +84,10 @@ describe Api::Upgrade do
         and_return([])
       )
 
-      expect(subject.services).to be true
+      expect(subject.class.services).to eq(
+        status: :ok,
+        message: ""
+      )
     end
   end
 
@@ -98,10 +95,12 @@ describe Api::Upgrade do
     it "fails when chef client does not preapre the scripts" do
       allow_any_instance_of(CrowbarService).to receive(
         :prepare_nodes_for_os_upgrade
-      ).and_raise("and Error")
+      ).and_raise("some Error")
 
-      expect(subject.services).to be false
-      expect(subject.errors).not_to be_empty
+      expect(subject.class.services).to eq(
+        status: :unprocessable_entity,
+        message: "some Error"
+      )
     end
   end
 
@@ -112,7 +111,7 @@ describe Api::Upgrade do
         k.delete("ha")
       end
 
-      expect(subject.repocheck).to eq(os_repo_fixture)
+      expect(subject.class.repocheck).to eq(os_repo_fixture)
     end
   end
 
@@ -141,7 +140,7 @@ describe Api::Upgrade do
         k["ha"]["available"] = false
       end
 
-      expect(subject.repocheck).to eq(expected)
+      expect(subject.class.repocheck).to eq(expected)
     end
   end
 
@@ -151,8 +150,10 @@ describe Api::Upgrade do
         :revert_nodes_from_crowbar_upgrade
       ).and_return(true)
 
-      expect(subject.cancel).to be true
-      expect(subject.errors).to be_empty
+      expect(subject.class.cancel).to eq(
+        status: :ok,
+        message: ""
+      )
     end
 
     it "fails to cancel the upgrade" do
@@ -160,8 +161,10 @@ describe Api::Upgrade do
         :revert_nodes_from_crowbar_upgrade
       ).and_raise("Some Error")
 
-      expect(subject.cancel).to be false
-      expect(subject.errors).not_to be_empty
+      expect(subject.class.cancel).to eq(
+        status: :unprocessable_entity,
+        message: "Some Error"
+      )
     end
   end
 end

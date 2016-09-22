@@ -28,7 +28,7 @@ module Api
             "available" => true,
             "repos" => {}
           }
-          platform = Api::Upgrade.new.target_platform(platform_exception: addon)
+          platform = Api::Upgrade.target_platform(platform_exception: addon)
 
           features.each do |feature|
             if architectures[feature]
