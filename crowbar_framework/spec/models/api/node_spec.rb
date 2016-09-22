@@ -72,7 +72,7 @@ describe Api::Node do
     allow_any_instance_of(Api::Upgrade).to(
       receive(:target_platform).and_return("suse-12.2")
     )
-    allow_any_instance_of(Api::Node).to(
+    allow(Api::Node).to(
       receive(:node_architectures).and_return(
         "os" => ["x86_64"],
         "openstack" => ["x86_64"],
@@ -99,7 +99,7 @@ describe Api::Node do
         k.delete("openstack")
       end
 
-      expect(subject.repocheck).to eq(os_repo_fixture)
+      expect(subject.class.repocheck).to eq(os_repo_fixture)
     end
 
     it "finds the os and addon repositories required to upgrade the nodes" do
@@ -110,7 +110,7 @@ describe Api::Node do
           ).and_return([true, {}])
         )
 
-        expect(subject.repocheck(addon: feature)).to eq(
+        expect(subject.class.repocheck(addon: feature)).to eq(
           feature.to_s => node_repocheck[feature]
         )
       end
@@ -127,7 +127,7 @@ describe Api::Node do
         send("#{feature}_repo_missing".to_sym)
 
         expected[feature] = node_repocheck_missing[feature]
-        got.merge!(subject.repocheck(addon: feature))
+        got.merge!(subject.class.repocheck(addon: feature))
       end
 
       expect(got).to eq(expected)
@@ -148,11 +148,11 @@ describe Api::Node do
         k.delete("openstack")
       end
 
-      expect(subject.repocheck(addon: "ceph")).to eq(expected)
+      expect(subject.class.repocheck(addon: "ceph")).to eq(expected)
     end
 
     it "doesn't find any node with the ceph addon deployed" do
-      allow_any_instance_of(Api::Node).to(
+      allow(Api::Node).to(
         receive(:node_architectures).and_return(
           "os" => ["x86_64"],
           "openstack" => ["x86_64"]
@@ -166,7 +166,7 @@ describe Api::Node do
         k["ceph"]["available"] = false
       end
 
-      expect(subject.repocheck(addon: "ceph")).to eq(expected)
+      expect(subject.class.repocheck(addon: "ceph")).to eq(expected)
     end
   end
 end

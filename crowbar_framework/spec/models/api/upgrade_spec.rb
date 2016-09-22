@@ -24,7 +24,7 @@ describe Api::Upgrade do
   end
 
   before(:each) do
-    allow_any_instance_of(Api::Node).to(
+    allow(Api::Node).to(
       receive(:node_architectures).and_return(
         "os" => ["x86_64"],
         "openstack" => ["x86_64"],
@@ -123,13 +123,13 @@ describe Api::Upgrade do
           ["ceph", "ha"]
         )
       )
-      allow_any_instance_of(Api::Node).to(
+      allow(Api::Node).to(
         receive(:ceph_node?).with(anything).and_return(false)
       )
-      allow_any_instance_of(Api::Node).to(
+      allow(Api::Node).to(
         receive(:pacemaker_node?).with(anything).and_return(false)
       )
-      allow_any_instance_of(Api::Node).to(
+      allow(Api::Node).to(
         receive(:node_architectures).and_return(
           "os" => ["x86_64"],
           "openstack" => ["x86_64"]

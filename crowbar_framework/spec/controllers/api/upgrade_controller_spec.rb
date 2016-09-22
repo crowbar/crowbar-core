@@ -95,7 +95,7 @@ describe Api::UpgradeController, type: :request do
       allow_any_instance_of(Api::Upgrade).to(
         receive(:target_platform).and_return("suse-12.2")
       )
-      allow_any_instance_of(Api::Node).to(
+      allow(Api::Node).to(
         receive(:node_architectures).and_return(
           "os" => ["x86_64"],
           "openstack" => ["x86_64"],

@@ -39,7 +39,7 @@ module Api
       response = {}
       addons = Api::Crowbar.new.addons
       addons.push("os", "openstack").each do |addon|
-        response.merge!(Api::Node.new.repocheck(addon: addon))
+        response.merge!(Api::Node.repocheck(addon: addon))
       end
       response
     end
