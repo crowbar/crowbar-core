@@ -3,13 +3,13 @@
   "description": "Register systems as SUSE Manager clients",
   "attributes": {
     "suse_manager_client": {
-      "activation_key": "",
-      "manager_server": ""
+      "bootstrap_script_url": ""
     }
   },
   "deployment": {
     "suse_manager_client": {
       "crowbar-revision": 0,
+      "schema-revision": 1,
       "crowbar-applied": false,
       "element_states": {
         "suse-manager-client": [ "readying", "ready", "applying" ]

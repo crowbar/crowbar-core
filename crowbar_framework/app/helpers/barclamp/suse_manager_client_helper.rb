@@ -25,7 +25,7 @@ module Barclamp
     end
 
     def suse_manager_client_install
-      "/opt/dell/bin/barclamp_install.rb --rpm suse-manager-client"
+      "knife cookbook upload suse-manager-client -o /opt/dell/chef/cookbooks"
     end
   end
 end
