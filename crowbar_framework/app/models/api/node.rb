@@ -87,9 +87,31 @@ module Api
         return false
       end
 
-      # FIXME: wait until the upgrade is done
+      # wait until the OS upgrade is finished
+      upgrade_failure = false
+      begin
+        Timeout.timeout(600) do
+          loop do
+            out = @node.run_ssh_cmd("test -e /var/lib/crowbar/upgrade/node-upgraded-ok")
+            if out[:exit_code].zero?
+              save_node_state("Package upgrade was successful.")
+              break
+            end
+            out = @node.run_ssh_cmd("test -e /var/lib/crowbar/upgrade/node-upgrade-failed")
+            if out[:exit_code].zero?
+              upgrade_failure = true
+              save_error_state("Installation of node #{@node.name} failed")
+              break
+            end
+            sleep(5)
+          end
+        end
+      rescue Timeout::Error
+        save_error_state("Error during upgrading node. Action did not finish after 10 minutes")
+        return false
+      end
 
-      # FIXME: reboot the node
+      return false if upgrade_failure
 
       unless post_upgrade
         save_error_state("Error while executing post upgrade script")
