@@ -113,6 +113,15 @@ module Api
 
       return false if upgrade_failure
 
+      # reboot the node after successful upgrade
+      ssh_status = @node.ssh_cmd("/sbin/reboot")
+      if ssh_status[0] != 200
+        save_error_state("Failed to reboot the machine. Could not ssh.")
+        return false
+      end
+
+      # FIXME: wait until node comes back
+
       unless post_upgrade
         save_error_state("Error while executing post upgrade script")
         return false
