@@ -59,12 +59,11 @@ class Api::UpgradeController < ApiController
   end
 
   def cancel
-    service_object = CrowbarService.new(Rails.logger)
-    service_object.revert_nodes_from_crowbar_upgrade
-
-    head :ok
-  rescue => e
-    render json: { error: e.message }, status: :unprocessable_entity
+    if @upgrade.cancel
+      head :ok
+    else
+      render json: { error: @upgrade.errors.full_messages.first }, status: :unprocessable_entity
+    end
   end
 
   protected
