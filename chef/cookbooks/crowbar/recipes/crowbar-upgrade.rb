@@ -69,7 +69,7 @@ when "crowbar_upgrade"
 
 when "prepare-os-upgrade"
 
-  include_recipe "crowbar::prepare-os-upgrade"
+  include_recipe "crowbar::prepare-upgrade-scripts"
 
 when "openstack_shutdown"
 
