@@ -1,0 +1,1 @@
+../../../../crowbar_framework/lib/crowbar/conduit_resolver.rb

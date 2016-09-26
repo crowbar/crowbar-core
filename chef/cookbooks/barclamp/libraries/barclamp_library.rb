@@ -15,6 +15,20 @@
 
 module BarclampLibrary
   class Barclamp
+    class NodeConduitResolver
+      def initialize(node)
+        @node = node
+      end
+
+      include Crowbar::ConduitResolver
+
+      ## These are overrides required for the Crowbar::ConduitResolver
+      def cr_error(s)
+        Chef::Log.error(s)
+      end
+      ## End of Crowbar::ConduitResolver overrides
+    end
+
     class Inventory
       # returns a full network definition, including ranges; this doesn't
       # depend on the node being enabled for this network
@@ -59,188 +73,12 @@ module BarclampLibrary
         end
       end
 
-      # IMPORTANT: This needs to be kept in sync with the bus_index method in
-      # node_object.rb in the Crowbar framework.
-      def self.bus_index(bus_order, path)
-        return 999 if bus_order.nil?
-
-        # For backwards compatibility with the old busid matching
-        # which just stripped of everything after the first '.'
-        # in the busid
-        path_old = path.split(".")[0]
-
-        index = 0
-        bus_order.each do |b|
-          # When there is no '.' in the busid from the bus_order assume
-          # that we are using the old method of matching busids
-          if b.include?(".")
-            path_used = path
-          else
-            path_used = path_old
-          end
-          return index if b == path_used
-          index = index + 1
-        end
-
-        999
-      end
-
-      def self.sort_ifs(map, bus_order)
-        answer = map.sort{|a,b|
-          aindex = Barclamp::Inventory.bus_index(bus_order, a[1]["path"])
-          bindex = Barclamp::Inventory.bus_index(bus_order, b[1]["path"])
-          aindex == bindex ? a[0] <=> b[0] : aindex <=> bindex
-        }
-        answer.map! { |x| x[0] }
-      end
-
-      # IMPORTANT: This needs to be kept in sync with the get_bus_order method in
-      # node_object.rb in the Crowbar framework.
-      def self.get_bus_order(node)
-        bus_order = nil
-        node["network"]["interface_map"].each do |data|
-          hardware = node[:dmi][:system][:product_name] rescue "unknown"
-          if hardware =~ /#{data["pattern"]}/
-            if data.key?("serial_number")
-                bus_order = data["bus_order"] if node[:dmi][:system][:serial_number].strip == data["serial_number"].strip
-            else
-                bus_order = data["bus_order"]
-            end
-          end
-          break if bus_order
-        end rescue nil
-        bus_order
-      end
-
-      def self.get_conduits(node)
-        conduits = nil
-        node["network"]["conduit_map"].each do |data|
-          # conduit pattern format:  <mode>/#nics/role-pattern
-          parts = data["pattern"].split("/")
-          the_one = true
-          ### find the right conduit mapping to be used based on the conduit's pattern and node info.
-          # check that the networking config mode (e.g. single/dual etc) matches
-          the_one = false unless node["network"]["mode"] =~ /#{parts[0]}/
-          # check that the # of detected NIC's on the node matches.
-          the_one = false unless node.automatic_attrs["crowbar_ohai"]["detected"]["network"].size.to_s =~ /#{parts[1]}/
-
-          found = false
-          # if the conduit map has a role, check that the node at least one matching role
-          node.roles.each do |role|
-            found = true if role =~ /#{parts[2]}/
-            break if found
-          end
-          the_one = false unless found
-
-          conduits = data["conduit_list"] if the_one
-          break if conduits
-        end rescue nil
-        conduits
-      end
-
       def self.get_detected_intfs(node)
         node.automatic_attrs["crowbar_ohai"]["detected"]["network"]
       end
 
       def self.build_node_map(node)
-        bus_order = Barclamp::Inventory.get_bus_order(node)
-        conduits = Barclamp::Inventory.get_conduits(node)
-
-        return {} if conduits.nil?
-
-        if_list = get_detected_intfs(node)
-
-        # build a set of maps <intf-designator> -> <OS intf>
-        # designators are <speed><#> (speed = 100m, 1g etc). # is a count of interfaces of the same speed.
-        # OS intf is the name given to the interface by the operating system
-        # The intf-designator is 'stable' in terms of renumbering because of addition/removal of add on cards (across machines)
-
-        sorted_ifs = Barclamp::Inventory.sort_ifs(if_list, bus_order)
-        if_remap = {}
-        count_map = {}
-        sorted_ifs.each do |intf|
-          speeds = if_list[intf]["speeds"]
-          # Assume "1g" if ohai didn't return anything
-          speeds = ["1g"] unless speeds && !speeds.empty?
-          speeds.each do |speed|
-            count = count_map[speed] || 1
-            if_remap["#{speed}#{count}"] = intf
-            count_map[speed] = count + 1
-          end
-        end
-
-        ans = {}
-        conduits.each do |k,v|
-          hash = {}
-          v.each do |mk, mv|
-            if mk == "if_list"
-              hash["if_list"] = v["if_list"].map do |if_ref|
-                map_if_ref(if_remap, if_ref)
-              end
-            else
-              hash[mk] = mv
-            end
-          end
-          ans[k] = hash
-        end
-
-        ans
-      end
-
-      ##
-      # given a map of available interfaces on the local machine,
-      # resolve references form conduit list. The supported reference format is <sign><speed><#> where
-      #  - sign is optional, and determines behavior if exact match is not found. + allows speed upgrade, - allows downgrade
-      #    ? allows either. If no sign is specified, an exact match must be found.
-      #  - speed designates the interface speed. 10m, 100m, 1g, 10g, 20g, 40g and 56g are supported
-      def self.map_if_ref(if_map, ref)
-        speeds = ["10m", "100m", "1g", "10g", "20g", "40g", "56g"]
-        m= /^([-+?]?)(\d{1,3}[mg])(\d+)$/.match(ref) # [1]=sign, [2]=speed, [3]=count
-        if_cnt = m[3]
-        desired = speeds.index(m[2])
-        found = nil
-          filter = lambda { |x|
-          found = if_map["#{speeds[x]}#{if_cnt}"] unless found
-        }
-        case m[1]
-          when "+"
-            (desired..speeds.length).each(&filter)
-          when "-"
-            desired.downto(0,&filter)
-          when "?"
-            (desired..speeds.length).each(&filter)
-            desired.downto(0,&filter) unless found
-          else
-            found = if_map[ref]
-          end
-          found
-      end
-
-      def self.lookup_interface_info(node, conduit, intf_to_if_map = nil)
-        intf_to_if_map = Barclamp::Inventory.build_node_map(node) if intf_to_if_map.nil?
-
-        return [nil, nil] if intf_to_if_map[conduit].nil?
-
-        c_info = intf_to_if_map[conduit]
-        interface_list = c_info["if_list"]
-        team_mode = c_info["team_mode"] rescue nil
-
-        return [interface_list[0], interface_list, nil] if interface_list.size == 1
-
-        bond_list = node["crowbar"]["bond_list"] || {}
-        the_bond = nil
-        bond_list.each do |bond, map|
-          the_bond = bond if map == interface_list
-          break if the_bond
-        end
-
-        if the_bond.nil?
-          # This should not happen as bond_list is always kept uptodate in
-          # the network::default recipe
-          Chef::Log.error("Unable to find the bond device for the teamed interfaces: #{interface_list.inspect}")
-        end
-
-        [the_bond, interface_list, team_mode]
+        Barclamp::NodeConduitResolver.new(node).conduit_to_if_map
       end
 
       class Network
@@ -286,7 +124,7 @@ module BarclampLibrary
         protected
 
         def resolve_interface_info
-          intf, @interface_list, _tm = Barclamp::Inventory.lookup_interface_info(@node, @conduit)
+          intf, @interface_list, _tm = Barclamp::NodeConduitResolver.new(@node).conduit_details(@conduit)
           @interface = @use_vlan ? "#{intf}.#{@vlan}" : intf
         end
       end
