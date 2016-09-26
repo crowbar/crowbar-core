@@ -4,28 +4,34 @@ else
     prompt_suffix=">"
 fi
 
-case $(readlink /proc/$$/exe 2>/dev/null) in
-    */zsh)
-        PS1=$'<%= @zsh_prompt_from_template.call %> '
-        ;;
+# Only set the crazy prompt on terminals that support colors
+# it looks horrible on monochromatic terminals
 
-    */bash)
-        PS1="<%= @bash_prompt_from_template.call %> "
-        ;;
+if [ $(tput colors) -ge 8 ]; then
+    case $(readlink /proc/$$/exe 2>/dev/null) in
+        */zsh)
+            PS1=$'<%= @zsh_prompt_from_template.call %> '
+            ;;
 
-    */ash|*/dash)
-        PS1="<%= @prompt_from_template.call("${USER}", "${PWD}") %> "
-        ;;
+        */bash)
+            PS1="<%= @bash_prompt_from_template.call %> "
+            ;;
 
-    */ksh|*/ksh93)
-        PS1="<%= @prompt_from_template.call("${USER}", "${PWD}") %> "
-        ;;
+        */ash|*/dash)
+            PS1="<%= @prompt_from_template.call("${USER}", "${PWD}") %> "
+            ;;
 
-    */pdksh|*/*pcksh)
-        PS1="<%= @prompt_from_template.call("${USER}", "${PWD}") %> "
-        ;;
+        */ksh|*/ksh93)
+            PS1="<%= @prompt_from_template.call("${USER}", "${PWD}") %> "
+            ;;
 
-    */*)
-        PS1="<%= @prompt_from_template.call("\\u", "\\w") %> "
-        ;;
-esac
+        */pdksh|*/*pcksh)
+            PS1="<%= @prompt_from_template.call("${USER}", "${PWD}") %> "
+            ;;
+
+        */*)
+            PS1="<%= @prompt_from_template.call("\\u", "\\w") %> "
+            ;;
+    esac
+    ;;
+fi
