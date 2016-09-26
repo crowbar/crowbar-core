@@ -43,7 +43,7 @@ end
 directory "/etc/bind" do
   owner "root"
   group bindgroup
-  mode 0770
+  mode 0775
   action :create
 end
 
