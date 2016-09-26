@@ -245,51 +245,34 @@ module Crowbar
 
     private
 
-    ### Methods that have to be overridden
+    ### Methods might need to be overridden
 
     ## Return the network config, from network.json
     def cr_network_config
-      # barclamp-deployer:
-      #  node["network"]
-      # barclamp-crowbar:
-      #  @node["network"]
-      raise NotImplementedError, "#{self.class} didn't implement cr_network_config"
+      @node["network"]
     end
 
     ## Return the OHAI network attributes from the node
     def cr_ohai_network
-      # barclamp-deployer:
-      #  node.automatic_attrs["crowbar_ohai"]["detected"]["network"]
-      # barclamp-crowbar:
-      #  self.crowbar_ohai["detected"]["network"]
-      raise NotImplementedError, "#{self.class} didn't implement cr_ohai_network"
+      return {} if @node.automatic_attrs["crowbar_ohai"].nil? ||
+          @node.automatic_attrs["crowbar_ohai"]["detected"].nil? ||
+          @node.automatic_attrs["crowbar_ohai"]["detected"]["network"].nil?
+      @node.automatic_attrs["crowbar_ohai"]["detected"]["network"]
     end
 
     ## Return the roles from the node
     def cr_node_roles
-      # barclamp-deployer:
-      #  node.roles
-      # barclamp-crowbar:
-      #  @node.roles
-      raise NotImplementedError, "#{self.class} didn't implement cr_node_roles"
+      @node.roles
     end
 
     ## Return the DMI system attributes from the node
     def cr_dmi_system
-      # barclamp-deployer:
-      #  node[:dmi][:system]
-      # barclamp-crowbar:
-      #  @node[:dmi][:system]
-      raise NotImplementedError, "#{self.class} didn't implement cr_dmi_system"
+      @node[:dmi][:system]
     end
 
     ## Return the list of bonds from the node
     def cr_node_bond_list
-      # barclamp-deployer:
-      #  node["crowbar"]["bond_list"] || {}
-      # barclamp-crowbar:
-      #  @node["crowbar"]["bond_list"] || {}
-      raise NotImplementedError, "#{self.class} didn't implement cr_node_bond_list"
+      @node["crowbar"]["bond_list"] || {}
     end
 
     ## Output an error message

@@ -1587,26 +1587,6 @@ class NodeObject < ChefObject
   end
 
   ## These are overrides required for the Crowbar::ConduitResolver
-  def cr_network_config
-    @node["network"]
-  end
-
-  def cr_ohai_network
-    @node.automatic_attrs["crowbar_ohai"]["detected"]["network"]
-  end
-
-  def cr_node_roles
-    @node.roles
-  end
-
-  def cr_dmi_system
-    @node["dmi"]["system"]
-  end
-
-  def cr_node_bond_list
-    @node["crowbar"]["bond_list"] || {}
-  end
-
   def cr_error(s)
     Rails.logger.error(s)
   end
