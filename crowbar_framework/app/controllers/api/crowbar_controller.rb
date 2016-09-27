@@ -15,12 +15,10 @@
 #
 
 class Api::CrowbarController < ApiController
-  before_action :set_crowbar
-
   api :GET, "/api/crowbar", "Show the crowbar object"
   api_version "2.0"
   def show
-    render json: @crowbar
+    render json: Api::Crowbar.status
   end
 
   api :PATCH, "/api/crowbar", "Update Crowbar object"
@@ -34,13 +32,15 @@ class Api::CrowbarController < ApiController
   api_version "2.0"
   def upgrade
     if request.post?
-      if @crowbar.upgrade!
-        render json: @crowbar.upgrade
+      crowbar_upgrade = Api::Crowbar.upgrade!
+
+      if crowbar_upgrade[:status] == :ok
+        render json: Api::Crowbar.upgrade
       else
-        render json: { error: @crowbar.errors.full_messages.first }, status: :unprocessable_entity
+        render json: { error: crowbar_upgrade[:message] }, status: crowbar_upgrade[:status]
       end
     else
-      render json: @crowbar.upgrade
+      render json: Api::Crowbar.upgrade
     end
   end
 
@@ -48,27 +48,21 @@ class Api::CrowbarController < ApiController
   api_version "2.0"
   def maintenance
     render json: {
-      maintenance_updates_installed: @crowbar.maintenance_updates_installed?
+      maintenance_updates_installed: Api::Crowbar.maintenance_updates_installed?
     }
   end
 
   api :GET, "/api/crowbar/repocheck", "Sanity check for Crowbar server repositories"
   api_version "2.0"
   def repocheck
-    check = @crowbar.repocheck
+    check = Api::Crowbar.repocheck
 
-    if @crowbar.errors.any?
+    if check.key?(:error)
       render json: {
-        error: @crowbar.errors.full_messages.first
-      }, status: :service_unavailable
+        error: check[:error]
+      }, status: check[:status]
     else
       render json: check
     end
-  end
-
-  protected
-
-  def set_crowbar
-    @crowbar = Api::Crowbar.new
   end
 end

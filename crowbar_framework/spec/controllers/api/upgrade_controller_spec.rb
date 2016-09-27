@@ -20,6 +20,9 @@ describe Api::UpgradeController, type: :request do
 
     it "shows the upgrade status object" do
       allow(Crowbar::Sanity).to receive(:sane?).and_return(true)
+      allow(Api::Crowbar).to(
+        receive(:addons).and_return([])
+      )
 
       get "/api/upgrade", {}, headers
       expect(response).to have_http_status(:ok)
@@ -37,7 +40,6 @@ describe Api::UpgradeController, type: :request do
     end
 
     it "stops related services on all nodes during upgrade" do
-
       allow_any_instance_of(CrowbarService).to receive(
         :prepare_nodes_for_os_upgrade
       ).and_return(true)
@@ -47,7 +49,6 @@ describe Api::UpgradeController, type: :request do
     end
 
     it "fails to stop related services on all nodes during upgrade" do
-
       allow_any_instance_of(CrowbarService).to receive(
         :prepare_nodes_for_os_upgrade
       ).and_raise("and Error")
@@ -92,10 +93,10 @@ describe Api::UpgradeController, type: :request do
       allow(NodeObject).to(
         receive(:all).and_return([NodeObject.find_node_by_name("testing")])
       )
-      allow_any_instance_of(Api::Upgrade).to(
+      allow(Api::Upgrade).to(
         receive(:target_platform).and_return("suse-12.2")
       )
-      allow_any_instance_of(Api::Node).to(
+      allow(Api::Node).to(
         receive(:node_architectures).and_return(
           "os" => ["x86_64"],
           "openstack" => ["x86_64"],
