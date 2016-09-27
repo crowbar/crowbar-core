@@ -176,6 +176,11 @@ describe Api::Crowbar do
           receive(:addon_installed?).with(addon).
           and_return(true)
         )
+        allow(Api::Node).to(
+          receive(:repocheck).with(addon: addon).and_return(
+            addon => { "available" => true }
+          )
+        )
       end
 
       expect(subject.class.addons).to eq(["ceph", "ha"])
