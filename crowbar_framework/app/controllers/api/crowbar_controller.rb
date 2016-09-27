@@ -17,6 +17,15 @@
 class Api::CrowbarController < ApiController
   api :GET, "/api/crowbar", "Show the crowbar object"
   api_version "2.0"
+  example '
+  {
+    "version": "4.0",
+    "addons": [
+      "ceph",
+      "ha"
+    ]
+  }
+  '
   def show
     render json: Api::Crowbar.status
   end
@@ -28,6 +37,20 @@ class Api::CrowbarController < ApiController
   end
 
   api :GET, "/api/crowbar/upgrade", "Status of Crowbar Upgrade"
+  example '
+  {
+    "version": "4.0",
+    "addons": [
+      "ceph",
+      "ha"
+    ],
+    "upgrade": {
+      "upgrading": false, # the crowbar admin server is currently upgrading
+      "success": false, # the crowbar admin server has been successfully upgraded
+      "failed": false # the crowbar admin server failed to upgrade
+    }
+  }
+  '
   api :POST, "/api/crowbar/upgrade", "Upgrade Crowbar"
   api_version "2.0"
   def upgrade
@@ -54,6 +77,24 @@ class Api::CrowbarController < ApiController
 
   api :GET, "/api/crowbar/repocheck", "Sanity check for Crowbar server repositories"
   api_version "2.0"
+  example '
+  {
+    "os": {
+      "available": true,
+      "repos": {}
+    },
+    "cloud": {
+      "available": false,
+      "repos": {
+        "x86_64": {
+          "missing": [
+            "SUSE OpenStack Cloud 7"
+          ]
+        }
+      }
+    }
+  }
+  '
   def repocheck
     check = Api::Crowbar.repocheck
 

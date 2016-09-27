@@ -24,6 +24,32 @@ module Installer
     end
 
     api :GET, "/installer/installer/status", "Returns a status of the installation"
+    example '
+    {
+      "steps": [
+        "pre_sanity_checks",
+        "run_services",
+        "initial_chef_client",
+        "barclamp_install",
+        "bootstrap_crowbar_setup",
+        "apply_crowbar_config",
+        "transition_crowbar",
+        "chef_client_daemon",
+        "post_sanity_checks"
+      ],
+      "failed": false,
+      "success": true,
+      "installing": false,
+      "network": {
+        "mtime": "2016-08-29T09:13:36.422+02:00",
+        "valid": true,
+        "msg": ""
+      },
+      "errorMsg": "",
+      "successMsg": "Installation was successful. You will be redirected in a few seconds.",
+      "noticeMsg": "If you want to reinstall to get a fresh setup, please remove the following file: /var/lib/crowbar/install/crowbar-installed-ok"
+    }
+    '
     def status
       respond_to do |format|
         format.json do

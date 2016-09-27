@@ -20,6 +20,20 @@ class Api::ErrorsController < ApiController
 
   api :GET, "/api/errors", "Show a list of errors"
   api_version "2.0"
+  example '
+  [
+    {
+      "id": 1,
+      "error": "StandardError",
+      "message": "This is an error",
+      "code": 500,
+      "caller": "apply_role",
+      "backtrace": "",
+      "created_at": "2016-09-13T08:04:24.128Z",
+      "updated_at": "2016-09-13T08:04:24.128Z"
+    }
+  ]
+  '
   def index
     render json: Api::Error.all
   end
@@ -27,6 +41,18 @@ class Api::ErrorsController < ApiController
   api :GET, "/api/errors/:id", "Show a specific error"
   param :id, Integer, desc: "Error ID", required: true
   api_version "2.0"
+  example '
+  {
+    "id": 1,
+    "error": "StandardError",
+    "message": "This is an error",
+    "code": null,
+    "caller": null,
+    "backtrace": "",
+    "created_at": "2016-09-13T08:04:24.128Z",
+    "updated_at": "2016-09-13T08:04:24.128Z"
+  }
+  '
   def show
     render json: @error
   end

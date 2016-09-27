@@ -17,6 +17,35 @@
 
 class DocsController < ApplicationController
   api :GET, "/docs", "List documentation resources"
+  example '
+  [
+    {
+      "heading": "Deployment Resources",
+      "items": [
+        {
+          "text": "Crowbar Deployment Guide",
+          "pdf": "/docs/crowbar_deployment_guide.pdf"
+        },
+        {
+          "text": "Crowbar User Guide",
+          "pdf": "/docs/crowbar_users_guide.pdf"
+        },
+        {
+          "text": "OpenStack User Guide",
+          "pdf": "/docs/openstack_users_guide.pdf"
+        },
+        {
+          "text": "Crowbar Batch Command",
+          "link": "/docs/batch.md"
+        },
+        {
+          "text": "Cisco UCS Integration",
+          "link": "/docs/cisco_ucs.md"
+        }
+      ]
+    }
+  ]
+  '
   def index
     @sections = help_sections
 
