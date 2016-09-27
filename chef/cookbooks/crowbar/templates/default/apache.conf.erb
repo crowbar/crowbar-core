@@ -1,8 +1,8 @@
 <VirtualHost *:80>
     DocumentRoot /opt/dell/crowbar_framework/public
 
-    ErrorLog <%= @errorlog %>
-    CustomLog <%= @logfile %> combined
+    ErrorLog /var/log/apache2/crowbar-error_log
+    CustomLog /var/log/apache2/crowbar-access_log combined
 
     ErrorDocument 403 /403.html
     ErrorDocument 404 /404.html
