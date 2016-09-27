@@ -360,8 +360,18 @@ template "#{node[:apache][:dir]}/vhosts.d/crowbar.conf" do
   mode 0644
 
   variables(
-    port: web_port,
     realm: realm
+  )
+
+  notifies :reload, resources(service: "apache2")
+end
+
+template "#{node[:apache][:dir]}/conf.d/crowbar-rails.conf.partial" do
+  source "crowbar-rails.conf.partial.erb"
+  mode 0644
+
+  variables(
+    port: web_port
   )
 
   notifies :reload, resources(service: "apache2")
