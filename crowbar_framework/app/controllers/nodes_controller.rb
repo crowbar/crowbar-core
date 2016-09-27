@@ -564,7 +564,7 @@ class NodesController < ApplicationController
             ifname = "bmc"
             address = @node["crowbar_wall"]["ipmi"]["address"] rescue nil
           else
-            ifname, ifs, team = @node.conduit_details(data["conduit"])
+            ifname, ifs, _team = @node.conduit_details(data["conduit"])
             if ifname.nil? or ifs.nil?
               ifname = "Unknown"
             else

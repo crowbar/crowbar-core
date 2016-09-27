@@ -124,7 +124,8 @@ module BarclampLibrary
         protected
 
         def resolve_interface_info
-          intf, @interface_list, _tm = Barclamp::NodeConduitResolver.new(@node).conduit_details(@conduit)
+          intf, @interface_list, _tm =
+            Barclamp::NodeConduitResolver.new(@node).conduit_details(@conduit)
           @interface = @use_vlan ? "#{intf}.#{@vlan}" : intf
         end
       end

@@ -17,7 +17,6 @@
 
 module Crowbar
   module ConduitResolver
-
     ### Public methods
 
     ## Bus order for this node
@@ -26,10 +25,11 @@ module Crowbar
       @bus_order ||= begin
         result = nil
 
-        if cr_network_config.has_key?("interface_map")
+        if cr_network_config.key?("interface_map")
           cr_network_config["interface_map"].each do |data|
             next unless cr_dmi_system["product_name"] =~ /#{data["pattern"]}/
-            next if data.has_key?("serial_number") && cr_dmi_system["serial_number"].strip != data["serial_number"].strip
+            next if data.key?("serial_number") &&
+                cr_dmi_system["serial_number"].strip != data["serial_number"].strip
 
             result = data["bus_order"]
             break
@@ -43,11 +43,12 @@ module Crowbar
     ## List of interfaces, sorted by the interface map
     def sorted_ifs
       @sorted_ifs ||= begin
-        cr_ohai_network.sort{ |a, b|
+        result = cr_ohai_network.sort do |a, b|
           aindex = bus_index(a[1]["path"])
           bindex = bus_index(b[1]["path"])
           aindex == bindex ? a[0] <=> b[0] : aindex <=> bindex
-        }.map{ |x| x[0] }
+        end
+        result.map { |x| x[0] }
       end
     end
 
@@ -58,12 +59,13 @@ module Crowbar
       @conduits ||= begin
         result = nil
 
-        if cr_network_config.has_key?("conduit_map")
+        if cr_network_config.key?("conduit_map")
           cr_network_config["conduit_map"].each do |data|
             # conduit pattern format:  <mode>/#nics/role-pattern
             parts = data["pattern"].split("/")
 
-            ### find the right conduit mapping to be used based on the conduit's pattern and node info.
+            ### find the right conduit mapping to be used based on the conduit's
+            ### pattern and node info.
             matches = true
 
             # check that the networking config mode (e.g. single/dual/team/etc) matches
@@ -73,7 +75,7 @@ module Crowbar
             matches = false unless cr_ohai_network.size.to_s =~ /#{parts[1]}/
 
             # check that the node has one matching role
-            matches = false if cr_node_roles.none?{|role| role =~ /#{parts[2]}/}
+            matches = false if cr_node_roles.none? { |role| role =~ /#{parts[2]}/ }
 
             if matches
               result = data["conduit_list"]
@@ -104,7 +106,7 @@ module Crowbar
 
         sorted_ifs.each do |intf|
           speeds = cr_ohai_network[intf]["speeds"]
-          speeds = ['1g'] unless speeds # legacy object support
+          speeds = ["1g"] unless speeds # legacy object support
           speeds.each do |speed|
             count = count_speed_map[speed] || 1
             result["#{speed}#{count}"] = intf
@@ -132,31 +134,30 @@ module Crowbar
       speeds = ["10m", "100m", "1g", "10g", "20g", "40g", "56g"]
       m = /^([-+?]?)(\d{1,3}[mg])(\d+)$/.match(if_ref) # [1]=sign, [2]=speed, [3]=count
 
-      unless m.nil?
-        requested_speed_index = speeds.index(m[2])
+      return result if m.nil?
 
-        unless requested_speed_index.nil?
-          sign = m[1]
-          if_bus_index = m[3]
+      requested_speed_index = speeds.index(m[2])
 
-          resolve_with_speed_index = lambda { |x|
-            result = if_speed_remap["#{speeds[x]}#{if_bus_index}"] unless result
-          }
+      unless requested_speed_index.nil?
+        sign = m[1]
+        if_bus_index = m[3]
 
-          case sign
-            when '+'
-              (requested_speed_index..speeds.length - 1).each(&resolve_with_speed_index)
-            when '-'
-              requested_speed_index.downto(0, &resolve_with_speed_index)
-            when '?'
-              (requested_speed_index..speeds.length - 1).each(&resolve_with_speed_index)
-              requested_speed_index.downto(0, &resolve_with_speed_index) unless result
-            else
-              result = if_speed_remap[if_ref]
-          end
+        resolve_with_speed_index = lambda do |x|
+          result = if_speed_remap["#{speeds[x]}#{if_bus_index}"] unless result
+        end
+
+        case sign
+        when "+"
+          (requested_speed_index..speeds.length - 1).each(&resolve_with_speed_index)
+        when "-"
+          requested_speed_index.downto(0, &resolve_with_speed_index)
+        when "?"
+          (requested_speed_index..speeds.length - 1).each(&resolve_with_speed_index)
+          requested_speed_index.downto(0, &resolve_with_speed_index) unless result
+        else
+          result = if_speed_remap[if_ref]
         end
       end
-
       result
     end
 
@@ -172,12 +173,12 @@ module Crowbar
           hash = {}
 
           conduit_def.each do |key, value|
-            if key == "if_list"
-              hash[key] = value.map do |if_ref|
+            hash[key] = if key == "if_list"
+              value.map do |if_ref|
                 resolve_if_ref(if_ref)
               end
             else
-              hash[key] = value
+              value
             end
           end
 
@@ -217,7 +218,8 @@ module Crowbar
           if interface.nil?
             # This should not happen as bond_list is always kept uptodate in
             # the network::default recipe
-            cr_error("Unable to find the bond device for the teamed interfaces: #{interface_slaves.inspect}")
+            cr_error("Unable to find the bond device for the teamed interfaces: " \
+                     "#{interface_slaves.inspect}")
           end
 
           team_mode = conduit_def["team_mode"] || default_team_mode
@@ -233,7 +235,7 @@ module Crowbar
       if_list = cr_ohai_network.map { |x| x[0] }
 
       conduit_to_if_map.each do |conduit_name, conduit_def|
-        next unless conduit_def.has_key?("if_list")
+        next unless conduit_def.key?("if_list")
 
         conduit_def["if_list"].each do |interface|
           if_list.delete(interface)
@@ -257,6 +259,7 @@ module Crowbar
       return {} if @node.automatic_attrs["crowbar_ohai"].nil? ||
           @node.automatic_attrs["crowbar_ohai"]["detected"].nil? ||
           @node.automatic_attrs["crowbar_ohai"]["detected"]["network"].nil?
+
       @node.automatic_attrs["crowbar_ohai"]["detected"]["network"]
     end
 
@@ -306,10 +309,10 @@ module Crowbar
         bus_order.each_with_index do |bus_order_path, index|
           # When there is no '.' in the busid from the bus_order assume
           # that we are using the old method of matching busids
-          if bus_order_path.include?('.')
-            path_used = path
+          path_used = if bus_order_path.include?(".")
+            path
           else
-            path_used = path_old
+            path_old
           end
 
           if bus_order_path == path_used
@@ -321,6 +324,5 @@ module Crowbar
 
       result
     end
-
   end
 end

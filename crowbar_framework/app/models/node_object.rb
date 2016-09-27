@@ -1591,5 +1591,4 @@ class NodeObject < ChefObject
     Rails.logger.error(s)
   end
   ## End of Crowbar::ConduitResolver overrides
-
 end
