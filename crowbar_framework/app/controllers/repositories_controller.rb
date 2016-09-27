@@ -16,12 +16,43 @@
 
 class RepositoriesController < ApplicationController
   before_filter :reload_registry
-  #
-  # Repository Check
-  #
-  # Provides the restful api call for
-  # Repository Checks 	/utils/repositories 	GET 	Returns a json list of checked repositories
-  # Renders an HTML view in the UI
+  api :GET, "/utils/repositories", "List all node repositories"
+  example '
+  [
+    {
+      "platform": "suse-12.1",
+      "arch": "aarch64",
+      "repos": [
+        {
+          "platform": "suse-12.1",
+          "arch": "aarch64",
+          "id": "sles12-sp1-pool",
+          "config": {
+            "name": "SLES12-SP1-Pool",
+            "required": "mandatory",
+            "features": [
+              "os"
+            ],
+            "repomd": {
+              "tag": [
+                "obsproduct://build.suse.de/SUSE:SLE-12-SP1:GA/SLES/12.1/POOL/aarch64",
+                "obsproduct://build.suse.de/Devel:ARM:SLE-12-SP1:Update/SLES/12.1/POOL/aarch64"
+              ],
+              "fingerprint": [
+                "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82",
+                "1F75 6615 1A2E EC5A 792B D0D1 2CE5 AD53 34AA 9871"
+              ]
+            },
+            "url": null,
+            "smt_path": "SUSE/Products/SLE-SERVER/12-SP1/aarch64/product",
+            "ask_on_error": false
+          }
+        },
+        ...
+      ]
+    }
+  ]
+  '
   def index
     all_repos = Crowbar::Repository.check_all_repos
     grouped_repos = {}
@@ -64,12 +95,10 @@ class RepositoriesController < ApplicationController
     redirect_to repositories_path
   end
 
-  #
-  # Activate a single Repository
-  #
-  # Provides the restful api call for
-  # Activate a Repository   /utils/repositories/activate   POST  Creates Repository DataBagItem
-  # required parameters: platform, arch, repo
+  api :POST, "/utils/repositories/activate", "Activate a single repository. Creates a DataBagItem"
+  param :platform, String, desc: "Platform of the repository", required: true
+  param :arch, String, desc: "Architecture of the repository", required: true
+  param :repo, String, desc: "Name of the repository", required: true
   def activate
     return render_not_found if params[:platform].nil? || params[:arch].nil? || params[:repo].nil?
     ret, _message = ProvisionerService.new(logger).enable_repository(params[:platform], params[:arch], params[:repo])
@@ -93,12 +122,11 @@ class RepositoriesController < ApplicationController
     end
   end
 
-  #
-  # Deactivate a single Repository
-  #
-  # Provides the restful api call for
-  # Deactivate a Repository   /utils/repositories/deactivate   POST   Destroys Repository DataBagItem
-  # required parameters: platform, arch, repo
+  api :POST, "/utils/repositories/deactivate",
+    "Deactivate a single repository. Destroys a DataBagItem"
+  param :platform, String, desc: "Platform of the repository", required: true
+  param :arch, String, desc: "Architecture of the repository", required: true
+  param :repo, String, desc: "Name of the repository", required: true
   def deactivate
     return render_not_found if params[:platform].nil? || params[:arch].nil? || params[:repo].nil?
     ret, _message = ProvisionerService.new(logger).disable_repository(params[:platform], params[:arch], params[:repo])
@@ -122,11 +150,7 @@ class RepositoriesController < ApplicationController
     end
   end
 
-  #
-  # Activate all Repositories
-  #
-  # Provides the restful api call for
-  # Activate all Repositories   /utils/repositories/activate_all   POST  Creates Repository DataBagItem
+  api :POST, "/utils/repositories/activate_all", "Activate all repositories. Creates DataBagItems"
   def activate_all
     ProvisionerService.new(logger).enable_all_repositories
     respond_to do |format|
@@ -135,11 +159,8 @@ class RepositoriesController < ApplicationController
     end
   end
 
-  #
-  # Deactivate all Repositories
-  #
-  # Provides the restful api call for
-  # Deactivate all Repositories   /utils/repositories/deactivate_all   POST   Destroys Repository DataBagItem
+  api :POST, "/utils/repositories/deactivate_all",
+    "Dectivate all repositories. Destroys DataBagItems"
   def deactivate_all
     ProvisionerService.new(logger).disable_all_repositories
     respond_to do |format|
