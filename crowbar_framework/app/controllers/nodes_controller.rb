@@ -17,6 +17,28 @@
 
 class NodesController < ApplicationController
   api :GET, "/nodes", "List all nodes and their status"
+  example '
+  {
+    "d52-54-77-77-77-01": {
+      "alias": "d52-54-77-77-77-01",
+      "description": null,
+      "status": "unknown",
+      "state": "shutdown"
+    },
+    "d52-54-77-77-77-02": {
+      "alias": "d52-54-77-77-77-02",
+      "description": null,
+      "status": "unknown",
+      "state": "shutdown"
+    },
+    "crowbar": {
+      "alias": "crowbar",
+      "description": null,
+      "status": "ready",
+      "state": "ready"
+    }
+  }
+  '
   def index
     @sum = 0
     @groups = {}
@@ -243,6 +265,38 @@ class NodesController < ApplicationController
   end
 
   api :GET, "/nodes/status", "Show the status of all nodes"
+  example '
+  {
+    "nodes": {
+      "d52-54-77-77-77-01": {
+        "class": "unknown",
+        "status": "Power Off"
+      },
+      "d52-54-77-77-77-02": {
+        "class": "unknown",
+        "status": "Power Off"
+      },
+      "crowbar": {
+        "class": "ready",
+        "status": "Ready"
+      }
+    },
+    "groups": {
+      "sw-unknown": {
+        "tooltip": "<strong>Total 3</strong><br />1 Ready<br />2 Not Ready",
+        "status": {
+          "ready": 1,
+          "failed": 0,
+          "pending": 0,
+          "unready": 0,
+          "building": 0,
+          "crowbar_upgrade": 0,
+          "unknown": 2
+        }
+      }
+    }
+  }
+  '
   def status
     @result = {
       nodes: {},

@@ -20,12 +20,36 @@ class Api::BackupsController < ApiController
 
   api :GET, "/api/crowbar/backups", "Returns a list of available backups"
   api_version "2.0"
+  example '
+  [
+    {
+      "id": 1,
+      "name": "testbackup",
+      "version": "4.0",
+      "size": 76815,
+      "created_at": "2016-09-27T06:05:10.208Z",
+      "updated_at": "2016-09-27T06:05:10.208Z",
+      "migration_level": 20160819142156
+    }
+  ]
+  '
   def index
     render json: Api::Backup.all
   end
 
   api :GET, "/api/crowbar/backups/:id", "Returns a specific backup"
   api_version "2.0"
+  example '
+  {
+    "id": 1,
+    "name": "testbackup",
+    "version": "4.0",
+    "size": 76815,
+    "created_at": "2016-09-27T06:05:10.208Z",
+    "updated_at": "2016-09-27T06:05:10.208Z",
+    "migration_level": 20160819142156
+  }
+  '
   def show
     render json: @backup
   end
@@ -35,6 +59,17 @@ class Api::BackupsController < ApiController
   param :backup, Hash, desc: "Backup info", required: true do
     param :name, String, desc: "Name of the backup", required: true
   end
+  example '
+  {
+    "id": 1,
+    "name": "testbackup",
+    "version": "4.0",
+    "size": 76815,
+    "created_at": "2016-09-27T06:05:10.208Z",
+    "updated_at": "2016-09-27T06:05:10.208Z",
+    "migration_level": 20160819142156
+  }
+  '
   def create
     @backup = Api::Backup.new(backup_params)
 

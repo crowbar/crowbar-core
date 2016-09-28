@@ -40,6 +40,39 @@ class BarclampController < ApplicationController
 
   add_help(:barclamp_index)
   api :GET, "/crowbar", "Returns a list of string names and descriptions for all barclamps"
+  example '
+  {
+    "ceilometer": "Installation for Ceilometer",
+    "deployer": "Initial classification system for the Crowbar environment ",
+    "crowbar": "Self-referential barclamp enabling other barclamps",
+    "keystone": "Centralized authentication and authorization service for OpenStack",
+    "ipmi": "The default proposal for the ipmi barclamp",
+    "logging": "Centralized logging system based on syslog",
+    "rabbitmq": "Installation for rabbitmq",
+    "nova": "installs and configures the Openstack Nova component. It relies upon the network and glance barclamps for normal operation.",
+    "glance": "Glance service (image registry and delivery service) for the cloud",
+    "provisioner": "The roles and recipes to set up the provisioning server and a base environment for all nodes",
+    "barbican": "Key and Secret Management Service for OpenStack",
+    "database": "Installation for Database",
+    "horizon": "User Interface for OpenStack projects (code name Horizon)",
+    "manila": "Installation for Manila",
+    "ntp": "Common NTP service for the cluster. An NTP server or servers can be specified and all other nodes will be clients of them.",
+    "ceph": "Distributed object store and file system",
+    "network": "Instantiates network interfaces on the crowbar managed systems. Also manages the address pool",
+    "neutron": "API-enabled, pluggable virtual network service for OpenStack",
+    "tempest": "provides a tempest installation",
+    "updater": "System package updater",
+    "trove": "Sets up OpenStack Trove Database Service",
+    "swift": "part of Openstack, and provides a distributed blob storage",
+    "nfs_client": "Access remote filesystems by utilizing NFS",
+    "dns": "Manages the DNS subsystem for the cluster",
+    "heat": "Installation for Heat",
+    "pacemaker": "Installation for Pacemaker",
+    "suse_manager_client": "Register systems as SUSE Manager clients",
+    "cinder": "Installation for Cinder",
+    "magnum": "Sets up OpenStack Magnum Containers as a Service"
+  }
+  '
   def barclamp_index
     @barclamps = ServiceObject.all
     respond_to do |format|
@@ -52,6 +85,13 @@ class BarclampController < ApplicationController
   add_help(:versions)
   api :GET, "/crowbar/:barclamp_name",
     "Returns the API version of a barclamp"
+  example '
+  {
+    "versions": [
+      "1.0"
+    ]
+  }
+  '
   def versions
     ret = @service_object.versions
     return render text: ret[1], status: ret[0] if ret[0] != 200
@@ -91,6 +131,82 @@ class BarclampController < ApplicationController
   add_help(:show,[:id])
   api :GET, "/crowbar/:barclamp/1.0/:id",
     "Returns a document describing the instance"
+  example '
+  {
+    "id": "dns-default",
+    "description": "Manages the DNS subsystem for the cluster",
+    "attributes": {
+      "dns": {
+        "domain": "cloud.crowbar.com",
+        "forwarders": [
+          "192.168.124.1"
+        ],
+        "allow_transfer": [],
+        "nameservers": [],
+        "records": {
+          "multi-dns": {
+            "ips": [
+              "10.11.12.13"
+            ]
+          }
+        },
+        "auto_assign_server": true
+      }
+    },
+    "deployment": {
+      "dns": {
+        "crowbar-revision": 3,
+        "crowbar-applied": true,
+        "schema-revision": 100,
+        "element_states": {
+          "dns-server": [
+            "readying",
+            "ready",
+            "applying"
+          ],
+          "dns-client": [
+            "readying",
+            "ready",
+            "applying"
+          ]
+        },
+        "elements": {
+          "dns-server": [
+            "crowbar.crowbar.com"
+          ],
+          "dns-client": [
+            "d52-54-77-77-77-01.crowbar.com",
+            "d52-54-77-77-77-02.crowbar.com"
+          ]
+        },
+        "element_order": [
+          [
+            "dns-server"
+          ],
+          [
+            "dns-client"
+          ]
+        ],
+        "element_run_list_order": {
+          "dns-server": 30,
+          "dns-client": 31
+        },
+        "config": {
+          "environment": "dns-config-default",
+          "mode": "full",
+          "transitions": true,
+          "transition_list": [
+            "installed",
+            "readying"
+          ]
+        },
+        "crowbar-committing": true,
+        "crowbar-status": "success",
+        "crowbar-failed": ""
+      }
+    }
+  }
+  '
   param_group :proposal
   def show
     ret = @service_object.show_active params[:id]
@@ -147,6 +263,12 @@ class BarclampController < ApplicationController
   api :GET, "/crowbar/:controller/1.0/elements",
     "Returns a list of roles that a node could be assigned to"
   param :controller, String, desc: "Name of the controller (barclamp)", required: true
+  example '
+  [
+    "dns-server",
+    "dns-client"
+  ]
+  '
   add_help(:elements)
   def elements
     ret = @service_object.elements
@@ -159,6 +281,13 @@ class BarclampController < ApplicationController
     "Returns a list of nodes that can be assigned to that element"
   param :id, String, desc: "Proposal name", required: true
   param :controller, String, desc: "Name of the controller (barclamp)", required: true
+  example '
+  [
+    "d52-54-77-77-77-01.crowbar.com",
+    "d52-54-77-77-77-02.crowbar.com",
+    "crowbar.crowbar.com"
+  ]
+  '
   def element_info
     ret = @service_object.element_info(params[:id])
     return render text: ret[1], status: ret[0] if ret[0] != 200
@@ -169,6 +298,11 @@ class BarclampController < ApplicationController
   api :GET, "/crowbar/:barclamp/1.0",
     "Returns a list of names for the ids of instances"
   param :barclamp, String, desc: "Name of the barclamp", required: true
+  example '
+  [
+    "default"
+  ]
+  '
   def index
     respond_to do |format|
       format.html {
@@ -200,6 +334,49 @@ class BarclampController < ApplicationController
   add_help(:modules)
   api :GET, "/crowbar/modules/1.0",
     "Returns a list of barclamp data mainly used by the UI"
+  example '
+  [
+    [
+      "crowbar",
+      {
+        "description": "Self-referential barclamp enabling other barclamps",
+        "order": 0,
+        "proposals": {
+          "default": {
+            "id": 1,
+            "description": "Self-referential barclamp enabling other barclamps",
+            "status": "ready",
+            "active": true
+          }
+        },
+        "expand": false,
+        "members": 12,
+        "allow_multiple_proposals": false,
+        "suggested_proposal_name": "proposal"
+      }
+    ],
+    [
+      "deployer",
+      {
+        "description": "Deployment Management",
+        "order": 10,
+        "proposals": {
+          "default": {
+            "id": 2,
+            "description": "Initial classification system for the Crowbar environment ",
+            "status": "ready",
+            "active": true
+          }
+        },
+        "expand": false,
+        "members": 0,
+        "allow_multiple_proposals": false,
+        "suggested_proposal_name": "proposal"
+      }
+    ],
+    ...
+  ]
+  '
   def modules
     @title = I18n.t("barclamp.modules.title")
     @count = 0
@@ -221,6 +398,11 @@ class BarclampController < ApplicationController
   api :GET, "/crowbar/:barclamp/1.0/proposals",
     "Returns a list of available proposals"
   param :barclamp, String, desc: "Name of the barclamp", required: true
+  example '
+  [
+    "default"
+  ]
+  '
   def proposals
     code, message = @service_object.proposals
 
@@ -255,6 +437,63 @@ class BarclampController < ApplicationController
   api :GET, "/crowbar/:barclamp/1.0/proposals/template",
     "Returns the content of a proposal template"
   param :barclamp, String, desc: "Name of the barclamp", required: true
+  example '
+  {
+    "id": "template-dns",
+    "description": "Manages the DNS subsystem for the cluster",
+    "attributes": {
+      "dns": {
+        "domain": "pod.your.cloud.org",
+        "forwarders": [],
+        "allow_transfer": [],
+        "nameservers": [],
+        "records": {},
+        "auto_assign_server": true
+      }
+    },
+    "deployment": {
+      "dns": {
+        "crowbar-revision": 0,
+        "crowbar-applied": false,
+        "schema-revision": 100,
+        "element_states": {
+          "dns-server": [
+            "readying",
+            "ready",
+            "applying"
+          ],
+          "dns-client": [
+            "readying",
+            "ready",
+            "applying"
+          ]
+        },
+        "elements": {},
+        "element_order": [
+          [
+            "dns-server"
+          ],
+          [
+            "dns-client"
+          ]
+        ],
+        "element_run_list_order": {
+          "dns-server": 30,
+          "dns-client": 31
+        },
+        "config": {
+          "environment": "dns-base-config",
+          "mode": "full",
+          "transitions": true,
+          "transition_list": [
+            "installed",
+            "readying"
+          ]
+        }
+      }
+    }
+  }
+  '
   def proposal_template
     code, message = @service_object.proposal_template
 
@@ -277,6 +516,82 @@ class BarclampController < ApplicationController
   api :GET, "/crowbar/:barclamp/1.0/proposals/:id",
     "Returns the details of a specific proposal"
   param_group :proposal
+  example '
+  {
+    "id": "dns-default",
+    "description": "Manages the DNS subsystem for the cluster",
+    "attributes": {
+      "dns": {
+        "domain": "cloud.crowbar.com",
+        "forwarders": [
+          "192.168.124.1"
+        ],
+        "allow_transfer": [],
+        "nameservers": [],
+        "records": {
+          "multi-dns": {
+            "ips": [
+              "10.11.12.13"
+            ]
+          }
+        },
+        "auto_assign_server": true
+      }
+    },
+    "deployment": {
+      "dns": {
+        "crowbar-revision": 3,
+        "crowbar-applied": true,
+        "schema-revision": 100,
+        "element_states": {
+          "dns-server": [
+            "readying",
+            "ready",
+            "applying"
+          ],
+          "dns-client": [
+            "readying",
+            "ready",
+            "applying"
+          ]
+        },
+        "elements": {
+          "dns-server": [
+            "crowbar.crowbar.com"
+          ],
+          "dns-client": [
+            "d52-54-77-77-77-01.crowbar.com",
+            "d52-54-77-77-77-02.crowbar.com"
+          ]
+        },
+        "element_order": [
+          [
+            "dns-server"
+          ],
+          [
+            "dns-client"
+          ]
+        ],
+        "element_run_list_order": {
+          "dns-server": 30,
+          "dns-client": 31
+        },
+        "config": {
+          "environment": "dns-config-default",
+          "mode": "full",
+          "transitions": true,
+          "transition_list": [
+            "installed",
+            "readying"
+          ]
+        },
+        "crowbar-committing": true,
+        "crowbar-status": "success",
+        "crowbar-failed": ""
+      }
+    }
+  }
+  '
   def proposal_show
     code, message = @service_object.proposal_show(
       params[:id]
