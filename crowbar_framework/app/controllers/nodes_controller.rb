@@ -17,6 +17,7 @@
 
 class NodesController < ApplicationController
   api :GET, "/nodes", "List all nodes and their status"
+  header "Accept", "application/json", required: true
   example '
   {
     "d52-54-77-77-77-01": {
@@ -231,6 +232,7 @@ class NodesController < ApplicationController
   end
 
   api :POST, "/nodes/groups/1.0/:id/:group", "Add a node to a group"
+  header "Accept", "application/json", required: true
   param :id, String, desc: "Node name", required: true
   param :group, String, desc: "Group name", required: true
   def group_change
@@ -265,6 +267,7 @@ class NodesController < ApplicationController
   end
 
   api :GET, "/nodes/status", "Show the status of all nodes"
+  header "Accept", "application/json", required: true
   example '
   {
     "nodes": {
@@ -344,6 +347,7 @@ class NodesController < ApplicationController
 
   api :GET, "/nodes/:id/hit/:req",
     "Perform actions on a node. Actions are defined in the MachinesController"
+  header "Accept", "application/json", required: true
   param :id, String, desc: "Node name", required: true
   param :req, [
     :reinstall,

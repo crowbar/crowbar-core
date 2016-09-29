@@ -25,6 +25,7 @@ class SupportController < ApplicationController
   end
 
   api :GET, "/utils", "List exports"
+  header "Accept", "application/json", required: true
   def index
     @export = default_export_hash
     export_dir.children.each do |file|

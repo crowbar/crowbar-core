@@ -44,6 +44,7 @@ class SanitiesController < ApplicationController
   end
 
   api :POST, "/sanities/check", "Perform a sanity check"
+  header "Accept", "application/json", required: true
   def check
     respond_to do |format|
       format.json do

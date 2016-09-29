@@ -17,6 +17,7 @@
 class RepositoriesController < ApplicationController
   before_filter :reload_registry
   api :GET, "/utils/repositories", "List all node repositories"
+  header "Accept", "application/json", required: true
   example '
   [
     {
@@ -96,6 +97,7 @@ class RepositoriesController < ApplicationController
   end
 
   api :POST, "/utils/repositories/activate", "Activate a single repository. Creates a DataBagItem"
+  header "Accept", "application/json", required: true
   param :platform, String, desc: "Platform of the repository", required: true
   param :arch, String, desc: "Architecture of the repository", required: true
   param :repo, String, desc: "Name of the repository", required: true
@@ -124,6 +126,7 @@ class RepositoriesController < ApplicationController
 
   api :POST, "/utils/repositories/deactivate",
     "Deactivate a single repository. Destroys a DataBagItem"
+  header "Accept", "application/json", required: true
   param :platform, String, desc: "Platform of the repository", required: true
   param :arch, String, desc: "Architecture of the repository", required: true
   param :repo, String, desc: "Name of the repository", required: true
@@ -151,6 +154,7 @@ class RepositoriesController < ApplicationController
   end
 
   api :POST, "/utils/repositories/activate_all", "Activate all repositories. Creates DataBagItems"
+  header "Accept", "application/json", required: true
   def activate_all
     ProvisionerService.new(logger).enable_all_repositories
     respond_to do |format|
@@ -161,6 +165,7 @@ class RepositoriesController < ApplicationController
 
   api :POST, "/utils/repositories/deactivate_all",
     "Dectivate all repositories. Destroys DataBagItems"
+  header "Accept", "application/json", required: true
   def deactivate_all
     ProvisionerService.new(logger).disable_all_repositories
     respond_to do |format|

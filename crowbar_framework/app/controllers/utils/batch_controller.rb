@@ -18,6 +18,7 @@
 module Utils
   class BatchController < ApplicationController
     api :POST, "/utils/batch/build", "Apply a batch proposal"
+    header "Accept", "application/json", required: true
     param :batch, Hash, required: true do
       param :file, File, desc: "Crowbar batch YAML file", required: true
       param :includes, Array, of: String, desc: "List of barclamps to include"
@@ -51,6 +52,7 @@ module Utils
     end
 
     api :POST, "/utils/batch/export", "Export a batch proposal"
+    header "Accept", "application/json", required: true
     param :batch, Hash, required: true do
       param :includes, Array, of: String, desc: "List of barclamps to include"
       param :excludes, Array, of: String, desc: "List of barclamps to exclude"
