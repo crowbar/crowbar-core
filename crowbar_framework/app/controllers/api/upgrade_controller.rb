@@ -16,6 +16,7 @@
 
 class Api::UpgradeController < ApiController
   api :GET, "/api/upgrade", "Show the Upgrade status object"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   example '
   {
@@ -45,12 +46,14 @@ class Api::UpgradeController < ApiController
   end
 
   api :PATCH, "/api/upgrade", "Update Upgrade status object"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   def update
     head :not_implemented
   end
 
   api :POST, "/api/upgrade/prepare", "Prepare Crowbar Upgrade"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   def prepare
     status = :ok
@@ -74,6 +77,7 @@ class Api::UpgradeController < ApiController
   end
 
   api :POST, "/api/upgrade/services", "Stop related services on all nodes during upgrade"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   def services
     stop_services = Api::Upgrade.services
@@ -86,6 +90,7 @@ class Api::UpgradeController < ApiController
   end
 
   api :GET, "/api/upgrade/prechecks", "Shows a sanity check in preparation for the upgrade"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   example '
   {
@@ -101,6 +106,7 @@ class Api::UpgradeController < ApiController
   end
 
   api :POST, "/api/upgrade/cancel", "Cancel the upgrade process by setting the nodes back to ready"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   def cancel
     cancel_upgrade = Api::Upgrade.cancel
@@ -113,6 +119,7 @@ class Api::UpgradeController < ApiController
   end
 
   api :GET, "/api/upgrade/repocheck", "Check for missing node repositories"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   example '
   {

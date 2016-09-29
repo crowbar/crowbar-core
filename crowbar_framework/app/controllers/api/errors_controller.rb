@@ -19,6 +19,7 @@ class Api::ErrorsController < ApiController
   before_action :set_error, only: [:show, :destroy]
 
   api :GET, "/api/errors", "Show a list of errors"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   example '
   [
@@ -39,6 +40,7 @@ class Api::ErrorsController < ApiController
   end
 
   api :GET, "/api/errors/:id", "Show a specific error"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   param :id, Integer, desc: "Error ID", required: true
   api_version "2.0"
   example '
@@ -58,6 +60,7 @@ class Api::ErrorsController < ApiController
   end
 
   api :POST, "/api/errors", "Create an error"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   def create
     @error = Api::Error.new(error_params)
@@ -69,6 +72,7 @@ class Api::ErrorsController < ApiController
   end
 
   api :DELETE, "/api/errors/:id", "Delete a specific error"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   param :id, Integer, desc: "Error ID", required: true
   api_version "2.0"
   def destroy

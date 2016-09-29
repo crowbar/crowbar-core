@@ -16,6 +16,7 @@
 
 class Api::CrowbarController < ApiController
   api :GET, "/api/crowbar", "Show the crowbar object"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   example '
   {
@@ -31,12 +32,14 @@ class Api::CrowbarController < ApiController
   end
 
   api :PATCH, "/api/crowbar", "Update Crowbar object"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   def update
     head :not_implemented
   end
 
   api :GET, "/api/crowbar/upgrade", "Status of Crowbar Upgrade"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   example '
   {
     "version": "4.0",
@@ -68,6 +71,7 @@ class Api::CrowbarController < ApiController
   end
 
   api :GET, "/api/crowbar/maintenance", "Check for maintenance updates on crowbar"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   def maintenance
     render json: {
@@ -76,6 +80,7 @@ class Api::CrowbarController < ApiController
   end
 
   api :GET, "/api/crowbar/repocheck", "Sanity check for Crowbar server repositories"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   example '
   {

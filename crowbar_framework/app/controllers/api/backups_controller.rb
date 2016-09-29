@@ -19,6 +19,7 @@ class Api::BackupsController < ApiController
   before_action :set_backup, only: [:destroy, :show, :restore, :download]
 
   api :GET, "/api/crowbar/backups", "Returns a list of available backups"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   example '
   [
@@ -38,6 +39,7 @@ class Api::BackupsController < ApiController
   end
 
   api :GET, "/api/crowbar/backups/:id", "Returns a specific backup"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   example '
   {
@@ -55,6 +57,7 @@ class Api::BackupsController < ApiController
   end
 
   api :POST, "/api/crowbar/backups", "Create a backup"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   param :backup, Hash, desc: "Backup info", required: true do
     param :name, String, desc: "Name of the backup", required: true
@@ -83,6 +86,7 @@ class Api::BackupsController < ApiController
   end
 
   api :POST, "/api/crowbar/backups/:id/restore", "Restore a backup"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   param :id, Integer, desc: "Backup ID", required: true
   def restore
@@ -94,6 +98,7 @@ class Api::BackupsController < ApiController
   end
 
   api :GET, "/api/crowbar/backups/:id/download", "Download a backup"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   param :id, Integer, desc: "Backup ID", required: true
   def download
@@ -108,6 +113,7 @@ class Api::BackupsController < ApiController
   end
 
   api :POST, "/api/crowbar/backups/upload", "Upload a backup"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   param :backup, Hash, desc: "Backup info", required: true do
     param :file, File, desc: "Backup for upload", required: true
@@ -125,6 +131,7 @@ class Api::BackupsController < ApiController
   end
 
   api :DELETE, "/api/crowbar/backups/:id", "Delete a backup"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   param :id, Integer, "Backup ID", required: true
   def destroy
@@ -138,6 +145,7 @@ class Api::BackupsController < ApiController
   end
 
   api :GET, "/api/crowbar/backups/restore_status", "Returns status of backup restoration"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   def restore_status
     render json: Crowbar::Backup::Restore.status

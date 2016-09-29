@@ -16,18 +16,21 @@
 
 class Api::NodesController < ApiController
   api :GET, "/api/nodes", "List nodes"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   def index
     render json: [], status: :not_implemented
   end
 
   api :GET, "/api/nodes/:id", "Show a single node"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   def show
     render json: {}, status: :not_implemented
   end
 
   api :PATCH, "/api/nodes/:id", "Update a single node"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   def update
     head :not_implemented
@@ -35,6 +38,7 @@ class Api::NodesController < ApiController
 
   api :GET, "/api/nodes/:id/upgrade", "Status of a single node upgrade"
   api :POST, "/api/nodes/:id/upgrade", "Upgrade a single node"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   def upgrade
     if request.post?
