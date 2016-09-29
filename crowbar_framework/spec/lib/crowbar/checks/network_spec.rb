@@ -66,26 +66,6 @@ describe Crowbar::Checks::Network do
     end
   end
 
-  describe "#firewall_disabled?" do
-    it "returns false if firewall is enabled" do
-      allow_any_instance_of(Kernel).to(
-        receive(:system).with(
-          "sudo LANG=C iptables -n -L | grep -qvE '^$|^Chain [^ ]|^target     prot'"
-        ).and_return(true)
-      )
-      expect(subject.firewall_disabled?).to be false
-    end
-
-    it "returns true if firewall is disabled" do
-      allow_any_instance_of(Kernel).to(
-        receive(:system).with(
-          "sudo LANG=C iptables -n -L | grep -qvE '^$|^Chain [^ ]|^target     prot'"
-        ).and_return(false)
-      )
-      expect(subject.firewall_disabled?).to be true
-    end
-  end
-
   describe "#ping_succeeds?" do
     it "returns true if fqdn is pingable" do
       allow_any_instance_of(Kernel).to(
