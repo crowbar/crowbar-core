@@ -39,15 +39,6 @@ describe Api::Upgrade do
     end
   end
 
-  context "with a successful check" do
-    it "checks the maintenance updates on crowbar" do
-      allow(Crowbar::Sanity).to receive(:sane?).and_return(true)
-
-      expect(subject.class).to respond_to(:check)
-      expect(subject.class.check.deep_stringify_keys).to eq(upgrade_prechecks)
-    end
-  end
-
   context "canceling the upgrade" do
     it "successfully cancels the upgrade" do
       allow_any_instance_of(CrowbarService).to receive(
