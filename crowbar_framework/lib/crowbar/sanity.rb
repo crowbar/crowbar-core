@@ -58,7 +58,6 @@ module Crowbar
             :ip_resolved,
             :loopback_unresolved,
             :ip_configured,
-            :firewall_disabled,
             :ping_succeeds
           ].each do |c|
             next if check.send("#{c}?")
