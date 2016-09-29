@@ -105,7 +105,7 @@ RSpec.configure do |config|
     allow(ChefObject).to receive(:cloud_domain).and_return("crowbar.com")
     allow_any_instance_of(Proposal).to receive(:properties_template_dir).
       and_return(Rails.root.join("spec/fixtures/data_bags"))
-    allow_any_instance_of(Api::Crowbar).to(
+    allow(Api::Crowbar).to(
       receive(:maintenance_updates_installed?).
       and_return(true)
     )

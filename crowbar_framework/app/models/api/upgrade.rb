@@ -18,59 +18,66 @@ require "open3"
 
 module Api
   class Upgrade < Tableless
-    def status
-      {
-        crowbar: crowbar_upgrade_status,
-        checks: check
-      }
-    end
+    class << self
+      def status
+        {
+          crowbar: crowbar_upgrade_status,
+          checks: check
+        }
+      end
 
-    def check
-      {
-        sanity_checks: sanity_checks,
-        maintenance_updates_installed: maintenance_updates_installed?,
-        clusters_healthy: clusters_healthy?,
-        compute_resources_available: compute_resources_available?,
-        ceph_healthy: ceph_healthy?
-      }
-    end
+      def check
+        {
+          sanity_checks: sanity_checks,
+          maintenance_updates_installed: maintenance_updates_installed?,
+          clusters_healthy: clusters_healthy?,
+          compute_resources_available: compute_resources_available?,
+          ceph_healthy: ceph_healthy?
+        }
+      end
 
-    def cancel
-      service_object = CrowbarService.new(Rails.logger)
-      service_object.revert_nodes_from_crowbar_upgrade
+      def cancel
+        service_object = CrowbarService.new(Rails.logger)
+        service_object.revert_nodes_from_crowbar_upgrade
 
-      true
-    rescue => e
-      errors.add(:base, e.message)
-      Rails.logger.error(e.message)
+        {
+          status: :ok,
+          message: ""
+        }
+      rescue => e
+        Rails.logger.error(e.message)
 
-      false
-    end
+        {
+          status: :unprocessable_entity,
+          message: e.message
+        }
+      end
 
-    protected
+      protected
 
-    def crowbar_upgrade_status
-      Api::Crowbar.new.upgrade
-    end
+      def crowbar_upgrade_status
+        Api::Crowbar.upgrade
+      end
 
-    def sanity_checks
-      ::Crowbar::Sanity.sane? || ::Crowbar::Sanity.check
-    end
+      def sanity_checks
+        ::Crowbar::Sanity.sane? || ::Crowbar::Sanity.check
+      end
 
-    def maintenance_updates_installed?
-      Api::Crowbar.new.maintenance_updates_installed?
-    end
+      def maintenance_updates_installed?
+        Api::Crowbar.maintenance_updates_installed?
+      end
 
-    def ceph_healthy?
-      Api::Crowbar.new.ceph_healthy?
-    end
+      def ceph_healthy?
+        Api::Crowbar.ceph_healthy?
+      end
 
-    def clusters_healthy?
-      Api::Crowbar.new.clusters_healthy?
-    end
+      def clusters_healthy?
+        Api::Crowbar.clusters_healthy?
+      end
 
-    def compute_resources_available?
-      Api::Crowbar.new.compute_resources_available?
+      def compute_resources_available?
+        Api::Crowbar.compute_resources_available?
+      end
     end
   end
 end
