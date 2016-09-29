@@ -393,8 +393,47 @@ class NodesController < ApplicationController
     end
   end
 
-  # GET /nodes/1
-  # GET /nodes/1.xml
+  api :GET, "/nodes/:id", "Show details of a node"
+  header "Accept", "application/json", required: true
+  param :id, String, desc: "Node name", required: true
+  example '
+  {
+    "chef_type": "node",
+    "name": "admin.crowbar.com",
+    "chef_environment": "_default",
+    "languages": {
+      "ruby": {
+        "platform": "x86_64-linux-gnu",
+        "version": "2.1.2",
+        "release_date": "2014-05-08",
+        "target": "x86_64-suse-linux-gnu",
+        "target_cpu": "x86_64",
+        "target_vendor": "suse",
+        "target_os": "linux-gnu",
+        "host": "x86_64-suse-linux-gnu",
+        "host_cpu": "x86_64",
+        "host_os": "linux-gnu",
+        "host_vendor": "suse",
+        "bin_dir": "/usr/bin",
+        "ruby_bin": "/usr/bin/ruby.ruby2.1",
+        "gems_dir": "/usr/lib64/ruby/gems/2.1.0",
+        "gem_bin": "/usr/bin/gem.ruby2.1"
+      },
+      "perl": {
+        "version": "5.18.2",
+        "archname": "x86_64-linux-thread-multi"
+      },
+      "python": {
+        "version": "2.7.9",
+        "builddate": "Dec 21 2014, 11:02:59"
+      },
+      "nodejs": {
+        "version": "4.4.7"
+      }
+    },
+    ...
+  }
+  '
   def show
     get_node_and_network(params[:id] || params[:name])
     if @node.nil?
