@@ -24,6 +24,7 @@ module Installer
     before_filter :set_service_object, only: [:services, :backup, :nodes]
 
     api :POST, "/installer/upgrade/prepare", "Prepare nodes for Crowbar upgrade"
+    header "Accept", "application/json", required: true
     def prepare
       status = :ok
       msg = ""
@@ -62,6 +63,7 @@ module Installer
 
     api :POST, "/installer/upgrade/start",
       "Start Crowbar upgrade by uploading a backup and trigger a restore"
+    header "Accept", "application/json", required: true
     param :file, File, desc: "Backup for upload"
     def start
       @current_step = 4
@@ -100,6 +102,7 @@ module Installer
     end
 
     api :POST, "/installer/upgrade/restore", "Finalize restoration"
+    header "Accept", "application/json", required: true
     def restore
       @current_step = 5
       @steps = Crowbar::Backup::Restore.steps
@@ -118,6 +121,7 @@ module Installer
     end
 
     api :POST, "/installer/upgrade/repos", "Finalize repocheck"
+    header "Accept", "application/json", required: true
     def repos
       @current_step = 6
 
@@ -142,6 +146,7 @@ module Installer
 
     api :POST, "/installer/upgrade/services",
       "Shutdown services at non database nodes and dump OpenStack database"
+    header "Accept", "application/json", required: true
     def services
       @current_step = 7
       status = :ok
@@ -177,6 +182,7 @@ module Installer
     end
 
     api :POST, "/installer/upgrade/backup", "Finalize OpenStack shutdown"
+    header "Accept", "application/json", required: true
     def backup
       @current_step = 8
       status = :ok
@@ -213,6 +219,7 @@ module Installer
 
     api :POST, "/installer/upgrade/nodes",
       "Disable non core proposals and prepare nodes for upgrade"
+    header "Accept", "application/json", required: true
     def nodes
       @current_step = 9
       status = :ok
@@ -260,6 +267,7 @@ module Installer
     end
 
     api :GET, "/installer/upgrade/restore_status", "Returns status of backup restoration"
+    header "Accept", "application/json", required: true
     def restore_status
       @status = Crowbar::Backup::Restore.status
 
@@ -277,6 +285,7 @@ module Installer
     end
 
     api :GET, "/installer/upgrade/nodes_status", "Returns status of node upgrade"
+    header "Accept", "application/json", required: true
     def nodes_status
       respond_to do |format|
         format.json do

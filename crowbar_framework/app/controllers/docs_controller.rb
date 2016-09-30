@@ -17,6 +17,7 @@
 
 class DocsController < ApplicationController
   api :GET, "/docs", "List documentation resources"
+  header "Accept", "application/json", required: true
   example '
   [
     {

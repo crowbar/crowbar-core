@@ -24,6 +24,7 @@ module Installer
     end
 
     api :GET, "/installer/installer/status", "Returns a status of the installation"
+    header "Accept", "application/json", required: true
     example '
     {
       "steps": [
@@ -62,6 +63,7 @@ module Installer
     end
 
     api :POST, "/installer/installer/start", "Trigger Crowbar installation"
+    header "Accept", "application/json", required: true
     param :force, [0, 1], desc: "Force installation by removing crowbar-installed-ok"
     def start
       header = :ok

@@ -40,6 +40,7 @@ class BarclampController < ApplicationController
 
   add_help(:barclamp_index)
   api :GET, "/crowbar", "Returns a list of string names and descriptions for all barclamps"
+  header "Accept", "application/json", required: true
   example '
   {
     "ceilometer": "Installation for Ceilometer",
@@ -85,6 +86,7 @@ class BarclampController < ApplicationController
   add_help(:versions)
   api :GET, "/crowbar/:barclamp_name",
     "Returns the API version of a barclamp"
+  header "Accept", "application/json", required: true
   example '
   {
     "versions": [
@@ -102,6 +104,7 @@ class BarclampController < ApplicationController
   api [:GET, :POST], "/crowbar/:barclamp/1.0/transition/:id",
     "Informs the barclamp instance of a change of state in the specified node - The GET is
     supported here to allow for the limited function environment of the installation system."
+  header "Accept", "application/json", required: true
   param :id, String, desc: "Proposal name", required: true
   param :name, String, desc: "Name of the node transitioning", required: true
   param :state, String, desc: "State of the node transitioning", required: true
@@ -131,6 +134,7 @@ class BarclampController < ApplicationController
   add_help(:show,[:id])
   api :GET, "/crowbar/:barclamp/1.0/:id",
     "Returns a document describing the instance"
+  header "Accept", "application/json", required: true
   example '
   {
     "id": "dns-default",
@@ -232,6 +236,7 @@ class BarclampController < ApplicationController
   add_help(:delete,[:id],[:delete])
   api :DELETE, "/crowbar/:barclamp/1.0/:id",
     "Delete will deactivate and remove the proposal"
+  header "Accept", "application/json", required: true
   param_group :proposal
   def delete
     params[:id] = params[:id] || params[:name]
@@ -262,6 +267,7 @@ class BarclampController < ApplicationController
 
   api :GET, "/crowbar/:controller/1.0/elements",
     "Returns a list of roles that a node could be assigned to"
+  header "Accept", "application/json", required: true
   param :controller, String, desc: "Name of the controller (barclamp)", required: true
   example '
   [
@@ -279,6 +285,7 @@ class BarclampController < ApplicationController
   add_help(:element_info,[:id])
   api :GET, "/crowbar/:controller/1.0/elements/:id",
     "Returns a list of nodes that can be assigned to that element"
+  header "Accept", "application/json", required: true
   param :id, String, desc: "Proposal name", required: true
   param :controller, String, desc: "Name of the controller (barclamp)", required: true
   example '
@@ -297,6 +304,7 @@ class BarclampController < ApplicationController
   add_help(:index)
   api :GET, "/crowbar/:barclamp/1.0",
     "Returns a list of names for the ids of instances"
+  header "Accept", "application/json", required: true
   param :barclamp, String, desc: "Name of the barclamp", required: true
   example '
   [
@@ -334,6 +342,7 @@ class BarclampController < ApplicationController
   add_help(:modules)
   api :GET, "/crowbar/modules/1.0",
     "Returns a list of barclamp data mainly used by the UI"
+  header "Accept", "application/json", required: true
   example '
   [
     [
@@ -397,6 +406,7 @@ class BarclampController < ApplicationController
   add_help(:proposals, [], [:get])
   api :GET, "/crowbar/:barclamp/1.0/proposals",
     "Returns a list of available proposals"
+  header "Accept", "application/json", required: true
   param :barclamp, String, desc: "Name of the barclamp", required: true
   example '
   [
@@ -436,6 +446,7 @@ class BarclampController < ApplicationController
   add_help(:proposal_template, [], [:get])
   api :GET, "/crowbar/:barclamp/1.0/proposals/template",
     "Returns the content of a proposal template"
+  header "Accept", "application/json", required: true
   param :barclamp, String, desc: "Name of the barclamp", required: true
   example '
   {
@@ -515,6 +526,7 @@ class BarclampController < ApplicationController
   add_help(:proposal_show, [:id], [:get])
   api :GET, "/crowbar/:barclamp/1.0/proposals/:id",
     "Returns the details of a specific proposal"
+  header "Accept", "application/json", required: true
   param_group :proposal
   example '
   {
@@ -636,6 +648,7 @@ class BarclampController < ApplicationController
   add_help(:proposal_delete, [:id], [:delete])
   api :DELETE, "/crowbar/:barclamp/1.0/proposals/:id",
     "Remove a specific proposal"
+  header "Accept", "application/json", required: true
   param_group :proposal
   def proposal_delete
     code, message = @service_object.proposal_delete(
@@ -676,6 +689,7 @@ class BarclampController < ApplicationController
   add_help(:proposal_commit, [:id], [:post])
   api :POST, "/crowbar/:barclamp/1.0/proposals/commit/:id",
     "Commit a specific proposal to apply it"
+  header "Accept", "application/json", required: true
   param_group :proposal
   def proposal_commit
     code, message = @service_object.proposal_commit(
@@ -732,6 +746,7 @@ class BarclampController < ApplicationController
   add_help(:proposal_reset, [:id], [:post])
   api :POST, "/crowbar/:barclamp/1.0/proposals/reset/:id",
     "Reset a specific proposal status"
+  header "Accept", "application/json", required: true
   param_group :proposal
   def proposal_reset
     code, message = @service_object.reset_proposal(
@@ -774,6 +789,7 @@ class BarclampController < ApplicationController
   add_help(:proposal_dequeue, [:id], [:delete])
   api :DELETE, "/crowbar/:barclamp/1.0/proposals/dequeue/:id",
     "Reset a specific proposal from the queue"
+  header "Accept", "application/json", required: true
   param_group :proposal
   def proposal_dequeue
     code, message = @service_object.dequeue_proposal(
@@ -816,6 +832,7 @@ class BarclampController < ApplicationController
   add_help(:proposal_update, [:id], [:post])
   api :POST, "/crowbar/:barclamp/1.0/proposals/:id",
     "Update a specific proposal"
+  header "Accept", "application/json", required: true
   param_group :proposal
   def proposal_update
     if params[:submit].nil?
@@ -977,6 +994,7 @@ class BarclampController < ApplicationController
   add_help(:proposal_create, [:name], [:put])
   api :PUT, "/crowbar/:barclamp/1.0/proposals",
     "Create a new specific proposal"
+  header "Accept", "application/json", required: true
   param :barclamp, String, desc: "Name of the barclamp", required: true
   def proposal_create
     params[:id] = params[:id] || params[:name]
