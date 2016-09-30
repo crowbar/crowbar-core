@@ -1,7 +1,29 @@
 {
-  "sanity_checks":true,
-  "maintenance_updates_installed":true,
-  "clusters_healthy":true,
-  "compute_resources_available":true,
-  "ceph_healthy":true
+  "checks": {
+    "network_checks": {
+      "required": true,
+      "passed": true,
+      "errors": {}
+    },
+    "maintenance_updates_installed": {
+      "required": true,
+      "passed": true,
+      "errors": {}
+    },
+    "compute_resources_available": {
+      "required": false,
+      "passed": true,
+      "errors": {}
+    },
+    "ceph_healthy": {
+      "required": true,
+      "passed": true,
+      "errors": {}
+    },
+    "clusters_healthy": {
+      "required": true,
+      "passed": true,
+      "errors": {}
+    }
+  }
 }

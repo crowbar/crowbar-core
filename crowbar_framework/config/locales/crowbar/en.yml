@@ -775,6 +775,23 @@ en:
       maintenance_updates_status:
         patches_missing: 'ZYPPER_EXIT_INF_UPDATE_NEEDED: patches available for installation.'
         security_patches_missing: 'ZYPPER_EXIT_INF_SEC_UPDATE_NEEDED: security patches available for installation.'
+    upgrade:
+      prechecks:
+        network_checks:
+          help:
+            default: 'Examine the error messages'
+        maintenance_updates_check:
+          help:
+            default: 'Make sure maintenance updates are installed'
+        ceph_health_check:
+          help:
+            default: 'Make sure Ceph is healthy'
+        clusters_health_check:
+          help:
+            default: 'Make sure clusters are healthy'
+        compute_resources_check:
+          help:
+            default: 'Make sure there is enough compute power'
 
   # Global
   overview: 'Overview'

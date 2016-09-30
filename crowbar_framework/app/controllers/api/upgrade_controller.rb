@@ -107,11 +107,40 @@ class Api::UpgradeController < ApiController
   api_version "2.0"
   example '
   {
-    "sanity_checks": true,
-    "maintenance_updates_installed": true,
-    "clusters_healthy": true,
-    "compute_resources_available": true,
-    "ceph_healthy": true
+    "checks": {
+      "network_checks": {
+        "required": true,
+        "passed": true,
+        "errors": {}
+      },
+      "maintenance_updates_installed": {
+        "required": true,
+        "passed": false,
+        "errors": {
+          "maintenance_updates_installed": {
+            "data": [
+              "ZYPPER_EXIT_INF_UPDATE_NEEDED: patches available for installation."
+            ],
+            "help": "make sure maintenance updates are installed"
+          }
+        }
+      },
+      "clusters_healthy": {
+        "required": true,
+        "passed": true,
+        "errors": {}
+      },
+      "compute_resources_available": {
+        "required": false,
+        "passed": true,
+        "errors": {}
+      },
+      "ceph_healthy": {
+        "required": true,
+        "passed": true,
+        "errors": {}
+      }
+    }
   }
   '
   def prechecks
