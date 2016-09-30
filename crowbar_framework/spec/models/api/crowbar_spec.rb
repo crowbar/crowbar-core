@@ -95,23 +95,6 @@ describe Api::Crowbar do
     end
   end
 
-  context "with maintenance updates installed" do
-    it "succeeds" do
-      expect(subject.maintenance_updates_status[:passed]).to be true
-    end
-  end
-
-  context "with no maintenance updates installed" do
-    it "fails" do
-      # override global allow from spec_helper
-      allow(Api::Crowbar).to(
-        receive(:maintenance_updates_status).
-        and_return(passed: false, errors: ["Some Error"])
-      )
-      expect(subject.class.maintenance_updates_status[:passed]).to be false
-    end
-  end
-
   context "with no HA cluster " do
     it "succeeds" do
       allow(NodeObject).to(

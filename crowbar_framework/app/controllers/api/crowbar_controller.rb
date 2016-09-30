@@ -38,7 +38,7 @@ class Api::CrowbarController < ApiController
   end
 
   def maintenance
-    render json: Api::Crowbar.maintenance_updates_status
+    render json: ::Crowbar::Checks::Maintenance.updates_status
   end
 
   def repocheck
