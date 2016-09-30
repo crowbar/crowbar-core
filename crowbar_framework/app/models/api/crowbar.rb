@@ -76,25 +76,6 @@ module Api
         end
       end
 
-      def maintenance_updates_installed?
-        Open3.popen3("zypper patch-check") do |_stdin, _stdout, _stderr, wait_thr|
-          case wait_thr.value.exitstatus
-          when 100
-            Rails.logger.warn(
-              "ZYPPER_EXIT_INF_UPDATE_NEEDED: patches available for installation."
-            )
-            false
-          when 101
-            Rails.logger.warn(
-              "ZYPPER_EXIT_INF_SEC_UPDATE_NEEDED: security patches available for installation."
-            )
-            false
-          else
-            true
-          end
-        end
-      end
-
       def repocheck
         # FIXME: once we start working on 7 to 8 upgrade we have to adapt the sles version
         zypper_stream = Hash.from_xml(
@@ -130,6 +111,25 @@ module Api
           ret[:cloud][:repos][admin_architecture.to_sym] = {
             missing: ["SUSE OpenStack Cloud 8"]
           } unless cloud_available
+        end
+      end
+
+      def maintenance_updates_status
+        {}.tap do |ret|
+          Open3.popen3("zypper patch-check") do |_stdin, _stdout, _stderr, wait_thr|
+            case wait_thr.value.exitstatus
+            when 100
+              ret[:errors] ||= []
+              ret[:errors].push(
+                I18n.t("api.crowbar.maintenance_updates_status.patches_missing")
+              )
+            when 101
+              ret[:errors] ||= []
+              ret[:errors].push(
+                I18n.t("api.crowbar.maintenance_updates_status.security_patches_missing")
+              )
+            end
+          end
         end
       end
 

@@ -78,6 +78,10 @@ describe Api::CrowbarController, type: :request do
     end
 
     it "shows the maintenance updates status" do
+      allow(Api::Crowbar).to receive(:maintenance_updates_status).and_return(
+        "{\"passed\":true,\"errors\":[]}"
+      )
+
       get "/api/crowbar/maintenance", {}, headers
       expect(response).to have_http_status(:ok)
       expect(response.body).to eq(crowbar_maintenance)
