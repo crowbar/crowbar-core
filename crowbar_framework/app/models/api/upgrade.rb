@@ -192,7 +192,7 @@ module Api
       end
 
       def maintenance_updates_status
-        @maintenance_updates_status ||= Api::Crowbar.maintenance_updates_status
+        @maintenance_updates_status ||= ::Crowbar::Checks::Maintenance.updates_status
       end
 
       def network_checks

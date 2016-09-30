@@ -78,7 +78,7 @@ describe Api::CrowbarController, type: :request do
     end
 
     it "shows the maintenance updates status" do
-      allow(Api::Crowbar).to receive(:maintenance_updates_status).and_return(
+      allow(::Crowbar::Checks::Maintenance).to receive(:updates_status).and_return(
         "{\"passed\":true,\"errors\":[]}"
       )
 
