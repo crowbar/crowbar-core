@@ -39,6 +39,7 @@ SimpleNavigation::Configuration.run do |navigation|
       level2.item :repositories, t("nav.utils.repositories"), repositories_path
       level2.item :backup, t("nav.utils.backup"), backups_path
       level2.item :logs, t("nav.utils.logs"), utils_path
+      level2.item :rsd, t("nav.utils.rsd"), rsd_show_path
     end
   end
 end

@@ -14,24 +14,23 @@
 # limitations under the License.
 #
 
-barclamp:
-  name: intelrsd
-  display: Intel RackScale Design
-  description: Integration with Intel Rack Scale Design
-  version: 1
-  user_managed: false
-  member:
-    - crowbar
-
-crowbar:
-  layout: 1
-  order: 112
-  run_order: 112
-  chef_order: 112
-  proposal_schema_version: 3
-
-nav:
-  utils:
+en:
+  nav:
+    utils:
+      rsd: 'Intel RackScale'
+  rsd:
+    show:
+      title: 'Intel Rackscale'
+      rsd_header: 'Lists Systems available from Intel RackScale server by talking to the Redfish APIs'
+      man_header: 'Managers'
+      sys_header: 'Systems'
+      sw_header:  'Switches'
+      ch_header:  'Chassis'
+      allocate_switch: 'Allocate'
+      rsd_selection: 'Selection'
+      system_id:  'System ID'
+  barclamp:
     rsd:
-      order: 91
-      route: 'rsd_edit_path'
+      login:
+        provide_creds: 'Please provide Rackscale login credentials.'
+        please_login: 'No active Rackscale session; please login.'

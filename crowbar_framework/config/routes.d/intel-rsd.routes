@@ -14,24 +14,5 @@
 # limitations under the License.
 #
 
-barclamp:
-  name: intelrsd
-  display: Intel RackScale Design
-  description: Integration with Intel Rack Scale Design
-  version: 1
-  user_managed: false
-  member:
-    - crowbar
-
-crowbar:
-  layout: 1
-  order: 112
-  run_order: 112
-  chef_order: 112
-  proposal_schema_version: 3
-
-nav:
-  utils:
-    rsd:
-      order: 91
-      route: 'rsd_edit_path'
+get 'rsd/show' => 'rsd#show', as: 'rsd_show'
+post 'rsd/allocate' => 'rsd#allocate', as: 'rsd_allocate'
