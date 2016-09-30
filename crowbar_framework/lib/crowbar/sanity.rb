@@ -50,7 +50,7 @@ module Crowbar
       protected
 
       def network_checks
-        check = Crowbar::Checks::Network.new
+        check = Crowbar::Checks::Network
 
         [].tap do |errors|
           [
