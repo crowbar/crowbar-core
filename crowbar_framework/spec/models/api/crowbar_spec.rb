@@ -95,7 +95,7 @@ describe Api::Crowbar do
 
   context "with maintenance updates installed" do
     it "succeeds" do
-      expect(subject.class.maintenance_updates_installed?).to be true
+      expect(subject.maintenance_updates_status[:passed]).to be true
     end
   end
 
@@ -103,10 +103,10 @@ describe Api::Crowbar do
     it "fails" do
       # override global allow from spec_helper
       allow(Api::Crowbar).to(
-        receive(:maintenance_updates_installed?).
-        and_return(false)
+        receive(:maintenance_updates_status).
+        and_return(passed: false, errors: ["Some Error"])
       )
-      expect(subject.class.maintenance_updates_installed?).to be false
+      expect(subject.class.maintenance_updates_status[:passed]).to be false
     end
   end
 

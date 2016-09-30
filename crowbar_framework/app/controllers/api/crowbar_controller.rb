@@ -74,9 +74,7 @@ class Api::CrowbarController < ApiController
   header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   def maintenance
-    render json: {
-      maintenance_updates_installed: Api::Crowbar.maintenance_updates_installed?
-    }
+    render json: Api::Crowbar.maintenance_updates_status
   end
 
   api :GET, "/api/crowbar/repocheck", "Sanity check for Crowbar server repositories"

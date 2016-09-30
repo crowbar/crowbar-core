@@ -772,6 +772,9 @@ en:
       upgrade_ongoing: 'Upgrade is already ongoing. Please wait.'
       zypper_locked: '%{zypper_locked_message}'
       upgrade_script_path: 'Could not find %{path}'
+      maintenance_updates_status:
+        patches_missing: 'ZYPPER_EXIT_INF_UPDATE_NEEDED: patches available for installation.'
+        security_patches_missing: 'ZYPPER_EXIT_INF_SEC_UPDATE_NEEDED: security patches available for installation.'
 
   # Global
   overview: 'Overview'
