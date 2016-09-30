@@ -61,9 +61,9 @@ module Crowbar
             return false
           end
           # we don't really depend on IPv6, so no big deal
-          #unless ipv6_configured || ipv6_addrs.empty?
-          #  return false
-          #end
+          # unless ipv6_configured || ipv6_addrs.empty?
+          #   return false
+          # end
 
           true
         end
@@ -99,10 +99,11 @@ module Crowbar
             Resolv.getaddresses(fqdn).each do |address|
               ip_addr = IPAddr.new(address)
               if version == :ipv6
-                addresses.push address if ip_addr.ipv6?
+                next unless ip_addr.ipv6?
               else
-                addresses.push address if ip_addr.ipv4?
+                next unless ip_addr.ipv4?
               end
+              addresses.push address
             end
           end
         end
