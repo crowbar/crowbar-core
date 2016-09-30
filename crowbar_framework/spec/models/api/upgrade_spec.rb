@@ -52,10 +52,13 @@ describe Api::Upgrade do
 
   context "with a successful status" do
     it "checks the status" do
-      allow(Crowbar::Sanity).to receive(:sane?).and_return(true)
-      allow_any_instance_of(Api::Crowbar).to(
-        receive(:features).and_return([])
-      )
+      allow(Api::Upgrade).to receive(:network_checks).and_return([])
+      allow(Api::Upgrade).to receive(
+        :maintenance_updates_status
+      ).and_return({})
+      allow(Api::Crowbar).to receive(
+        :addons
+      ).and_return(["ceph", "ha"])
 
       expect(subject.class).to respond_to(:status)
       expect(subject.class.status).to be_a(Hash)
@@ -65,10 +68,16 @@ describe Api::Upgrade do
 
   context "with a successful maintenance updates check" do
     it "checks the maintenance updates on crowbar" do
-      allow(Crowbar::Sanity).to receive(:sane?).and_return(true)
+      allow(Api::Upgrade).to receive(:network_checks).and_return([])
+      allow(Api::Upgrade).to receive(
+        :maintenance_updates_status
+      ).and_return({})
+      allow(Api::Crowbar).to receive(
+        :addons
+      ).and_return(["ceph", "ha"])
 
-      expect(subject.class).to respond_to(:check)
-      expect(subject.class.check.deep_stringify_keys).to eq(upgrade_prechecks)
+      expect(subject.class).to respond_to(:checks)
+      expect(subject.class.checks.deep_stringify_keys).to eq(upgrade_prechecks)
     end
   end
 

@@ -22,18 +22,38 @@ module Api
       def status
         {
           crowbar: crowbar_upgrade_status,
-          checks: check
+          checks: checks
         }
       end
 
-      def check
-        {
-          sanity_checks: sanity_checks,
-          maintenance_updates_installed: maintenance_updates_installed?,
-          clusters_healthy: clusters_healthy?,
-          compute_resources_available: compute_resources_available?,
-          ceph_healthy: ceph_healthy?
-        }
+      def checks
+        {}.tap do |ret|
+          ret[:network_checks] = {
+            required: true,
+            passed: network_checks.empty?,
+            errors: sanity_check_errors
+          }
+          ret[:maintenance_updates_installed] = {
+            required: true,
+            passed: maintenance_updates_status.empty?,
+            errors: maintenance_updates_check_errors
+          }
+          ret[:compute_resources_available] = {
+            required: false,
+            passed: compute_resources_available?,
+            errors: compute_resources_check_errors
+          }
+          ret[:ceph_healthy] = {
+            required: true,
+            passed: ceph_healthy?,
+            errors: ceph_health_check_errors
+          } if Api::Crowbar.addons.include?("ceph")
+          ret[:clusters_healthy] = {
+            required: true,
+            passed: clusters_healthy?,
+            errors: clusters_health_check_errors
+          } if Api::Crowbar.addons.include?("ha")
+        end
       end
 
       def repocheck
@@ -171,12 +191,12 @@ module Api
         Api::Crowbar.upgrade
       end
 
-      def sanity_checks
-        ::Crowbar::Sanity.sane? || ::Crowbar::Sanity.check
+      def maintenance_updates_status
+        @maintenance_updates_status ||= Api::Crowbar.maintenance_updates_status
       end
 
-      def maintenance_updates_installed?
-        Api::Crowbar.maintenance_updates_installed?
+      def network_checks
+        @network_checks ||= ::Crowbar::Sanity.check
       end
 
       def ceph_healthy?
@@ -190,6 +210,67 @@ module Api
 
       def compute_resources_available?
         Api::Crowbar.compute_resources_available?
+      end
+
+      # Check Errors
+      # all of the below errors return a hash with the following schema:
+      # code: {
+      #   data: ... whatever data type ...,
+      #   help: String # "this is how you might fix the error"
+      # }
+      def sanity_check_errors
+        return {} if network_checks.empty?
+
+        {
+          network_checks: {
+            data: network_checks,
+            help: I18n.t("api.upgrade.prechecks.network_checks.help.default")
+          }
+        }
+      end
+
+      def maintenance_updates_check_errors
+        return {} if maintenance_updates_status.empty?
+
+        {
+          maintenance_updates_installed: {
+            data: maintenance_updates_status[:errors],
+            help: I18n.t("api.upgrade.prechecks.maintenance_updates_check.help.default")
+          }
+        }
+      end
+
+      def ceph_health_check_errors
+        return {} if ceph_healthy?
+
+        {
+          ceph_health: {
+            data: [], # TODO: implement ceph health check errors
+            help: I18n.t("api.upgrade.prechecks.ceph_health_check.help.default")
+          }
+        }
+      end
+
+      def clusters_health_check_errors
+        return {} if clusters_healthy?
+
+        {
+          clusters_health: {
+            data: [], # TODO: implement cluster health check errors
+            help: I18n.t("api.upgrade.prechecks.clusters_health_check.help.default")
+          }
+        }
+      end
+
+      def compute_resources_check_errors
+        return {} if compute_resources_available?
+
+        {
+          compute_resources: {
+            data: [], # TODO: implement cluster health check errors
+            help: I18n.t("api.upgrade.prechecks.compute_resources_check.help.default")
+          }
+        }
       end
     end
   end
