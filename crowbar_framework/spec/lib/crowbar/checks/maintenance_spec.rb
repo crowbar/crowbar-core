@@ -33,6 +33,7 @@ describe ::Crowbar::Checks::Maintenance do
         and_return(passed: false, errors: ["Some Error"])
       )
       expect(subject.updates_status[:passed]).to be false
+      expect(subject.updates_status[:errors]).to eq(["Some Error"])
     end
   end
 end
