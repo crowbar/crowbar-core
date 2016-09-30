@@ -73,8 +73,15 @@ class Api::CrowbarController < ApiController
   api :GET, "/api/crowbar/maintenance", "Check for maintenance updates on crowbar"
   header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
+  example '
+  {
+    "errors": [
+      "ZYPPER_EXIT_INF_SEC_UPDATE_NEEDED: security patches available for installation."
+    ]
+  }
+  '
   def maintenance
-    render json: Api::Crowbar.maintenance_updates_status
+    render json: ::Crowbar::Checks::Maintenance.updates_status
   end
 
   api :GET, "/api/crowbar/repocheck", "Sanity check for Crowbar server repositories"
