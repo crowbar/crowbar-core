@@ -29,12 +29,12 @@ module Crowbar
               when 100
                 ret[:passed] = false
                 ret[:errors].push(
-                  I18n.t("api.crowbar.maintenance_updates_status.patches_missing")
+                  "ZYPPER_EXIT_INF_UPDATE_NEEDED: patches available for installation."
                 )
               when 101
                 ret[:passed] = false
                 ret[:errors].push(
-                  I18n.t("api.crowbar.maintenance_updates_status.security_patches_missing")
+                  "ZYPPER_EXIT_INF_SEC_UPDATE_NEEDED: security patches available for installation."
                 )
               end
             end
