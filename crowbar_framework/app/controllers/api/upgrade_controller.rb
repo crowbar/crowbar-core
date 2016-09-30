@@ -45,7 +45,7 @@ class Api::UpgradeController < ApiController
   end
 
   def prechecks
-    render json: Api::Upgrade.check
+    render json: Api::Upgrade.checks
   end
 
   def cancel
