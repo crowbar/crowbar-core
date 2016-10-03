@@ -47,8 +47,13 @@ gem "mixlib-shellout", "~> 1.3.0",
 gem "activerecord-session_store", "~> 0.1.0",
     require: "activerecord/session_store"
 
-gem "mime-types", "~> 2.6.1",
+if ENV["CI"] && ENV["CI"] == "true"
+  gem "mime-types", "~> 1.25.0",
     require: "mime/types"
+else
+  gem "mime-types", "~> 2.6.1",
+    require: "mime/types"
+end
 
 gem "activeresource", "~> 4.0.0",
     require: "active_resource"
