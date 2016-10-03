@@ -73,7 +73,7 @@ else
   gem "kwalify", version: "~> 0.7.2"
   require "kwalify"
 
-  gem "mime-types", version: "~> 1.25.0"
+  gem "mime-types", version: "~> 2.6.1"
   require "mime/types"
 
   gem "redcarpet", version: "~> 3.2.3"
