@@ -65,7 +65,7 @@ when "suse"
     ruby2.1-rubygem-hashie
     ruby2.1-rubygem-js-routes
     ruby2.1-rubygem-kwalify
-    ruby2.1-rubygem-mime-types-1
+    ruby2.1-rubygem-mime-types
     ruby2.1-rubygem-mixlib-shellout
     ruby2.1-rubygem-ohai-6
     ruby2.1-rubygem-rails-4_2
