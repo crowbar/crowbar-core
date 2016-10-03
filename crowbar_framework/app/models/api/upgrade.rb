@@ -107,7 +107,65 @@ module Api
         }
       end
 
+      # Orchestrate the upgrade of the nodes
+      def nodes
+        # check for current global status
+        # 1. TODO: return if upgrade has finished
+        # 2. TODO: find the next big step
+        next_step = "controllers"
+
+        if next_step == "controllers"
+
+          # TODO: Save the "current_step" to global status
+          if upgrade_controller_nodes
+            # upgrading controller nodes succeeded, we can continue with computes
+            next_step = "computes"
+          else
+            # upgrading controller nodes has failed, exiting
+            # leaving next_step as "controllers", so we continue from correct point on retry
+            return false
+          end
+        end
+
+        if next_step == "computes"
+          # TODO: Save the "current_step" to global status
+          upgrade_compute_nodes
+        end
+        true
+      end
+
       protected
+
+      def upgrade_controller_nodes
+        # TODO: find the controller node that needs to be upgraded now
+        # First node to upgrade is DRBD slave
+        drbd_slave = ""
+        NodeObject.find(
+          "state:crowbar_upgrade AND (roles:database-server OR roles:rabbitmq-server)"
+        ).each do |db_node|
+          cmd = "LANG=C crm resource status ms-drbd-{postgresql,rabbitmq}\
+          | grep \\$(hostname) | grep -q Master"
+          out = db_node.run_ssh_cmd(cmd)
+          unless out[:exit_code].zero?
+            drbd_slave = db_node.name
+          end
+        end
+        # FIXME: prepare for cases with no drbd out there
+        return false if drbd_slave.empty?
+
+        node_api = Api::Node.new drbd_slave
+
+        # FIXME: save the global status information that this node is being upgraded
+        node_api.upgrade
+
+        # FIXME: if upgrade went well, continue with next node(s)
+        true
+      end
+
+      def upgrade_compute_nodes
+        # TODO: not implemented
+        true
+      end
 
       def crowbar_upgrade_status
         Api::Crowbar.upgrade

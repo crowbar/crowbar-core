@@ -1,0 +1,28 @@
+#!/bin/bash
+#
+# This does what is necessary directly before the start of OS upgrade
+
+LOGFILE=/var/log/crowbar/node-upgrade.log
+mkdir -p "`dirname "$LOGFILE"`"
+exec >>"$LOGFILE" 2>&1
+
+set -x
+
+<% if @use_ha %>
+
+echo "Evacuating l3 agents out of this node..."
+
+if [[ -f /usr/bin/neutron-ha-tool ]] ; then
+    source /root/.openrc
+    OS_AUTH_URL="<%= @os_auth_url_v2 %>" neutron-ha-tool --l3-agent-evacuate $(hostname)
+fi
+
+# Shutdown pacemaker so the remaining OpenStack services are stopped
+# This is needed so that the zypper dup won't trigger any db migrations on package update
+service pacemaker stop
+
+<% else %>
+
+echo "No HA setup found..."
+
+<% end %>

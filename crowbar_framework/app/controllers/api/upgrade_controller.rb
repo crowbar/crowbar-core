@@ -89,6 +89,19 @@ class Api::UpgradeController < ApiController
     end
   end
 
+  api :POST, "/api/upgrade/nodes", "Initiate the upgrade of all nodes"
+  api_version "2.0"
+  # This is gonna initiate the upgrade of all nodes.
+  # The method runs asynchronously, so there's a need to poll for the status and possible errors
+  def nodes
+    # FIXME: implement this as asynchronous call!
+    if Api::Upgrade.nodes
+      head :ok
+    else
+      render json: { error: "Node Upgrade failed" }, status: :unprocessable_entity
+    end
+  end
+
   api :GET, "/api/upgrade/prechecks", "Shows a sanity check in preparation for the upgrade"
   header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"

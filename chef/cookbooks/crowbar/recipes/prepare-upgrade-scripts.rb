@@ -88,3 +88,30 @@ template "/usr/sbin/crowbar-shutdown-services-before-upgrade.sh" do
     use_ha: use_ha
   )
 end
+
+# Following script executes all actions that are needed directly on the node
+# directly before the OS upgrade is initiated.
+
+# Find out v2 auth URL that is needed for neutron-ha-tool
+os_auth_url_v2 = ""
+if use_ha && node["run_list_map"].key?("neutron-network")
+  keystone_settings = KeystoneHelper.keystone_settings(node, @cookbook_name)
+  os_auth_url_v2 = KeystoneHelper.versioned_service_URL(
+    keystone_settings["protocol"],
+    keystone_settings["internal_url_host"],
+    keystone_settings["service_port"],
+    "2.0"
+  )
+end
+
+template "/usr/sbin/crowbar-pre-upgrade.sh" do
+  source "crowbar-pre-upgrade.sh.erb"
+  mode "0770"
+  owner "root"
+  group "root"
+  action :create
+  variables(
+    use_ha: use_ha,
+    os_auth_url_v2: os_auth_url_v2
+  )
+end
