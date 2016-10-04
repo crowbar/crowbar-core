@@ -1,8 +1,8 @@
 <VirtualHost *:80>
     DocumentRoot /opt/dell/crowbar_framework/public
 
-    ErrorLog <%= @errorlog %>
-    CustomLog <%= @logfile %> combined
+    ErrorLog /var/log/apache2/crowbar-error.log
+    CustomLog /var/log/apache2/crowbar-access.log combined
 
     ErrorDocument 403 /403.html
     ErrorDocument 404 /404.html
@@ -10,10 +10,7 @@
     ErrorDocument 500 /500.html
 
     IncludeOptional /etc/apache2/conf.d/crowbar-ui.conf.partia[l]
-
-    ProxyPass / http://127.0.0.1:<%= @port %>/ timeout=1500 Keepalive=On
-    ProxyPassReverse / http://127.0.0.1:<%= @port %>/
-    SetEnv proxy-initial-not-pooled 1
+    Include /etc/apache2/conf.d/crowbar.conf.partial
 
     <Location />
         <%- unless @realm.nil? %>
