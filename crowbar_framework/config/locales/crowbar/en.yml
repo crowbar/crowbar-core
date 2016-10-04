@@ -761,7 +761,6 @@ en:
       ip_resolved: 'Could not resolve %{fqdn} to an IPv4 or IPv6 address.'
       loopback_unresolved: '%{fqdn} resolves to a loopback address.'
       ip_configured: 'No local interface is configured with a correct IP address.'
-      firewall_disabled: 'Firewall is not completely disabled.'
       ping_succeeds: 'Failed to ping %{fqdn}; please check your network configuration.'
     check:
       cache_error: 'Failed to cache sanity checks'
