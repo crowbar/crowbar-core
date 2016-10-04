@@ -308,8 +308,10 @@ if node[:platform_family] == "suse" && !node.roles.include?("provisioner-server"
         `LANG=C zypper --non-interactive --xmlout repos #{name} 2> /dev/null`
       ).root.elements
 
-      current_priority = out["repo-list/repo"].attributes["priority"].to_i
-      current_url = out["repo-list/repo/url"].text
+      unless out["repo-list/repo"].nil?
+        current_priority = out["repo-list/repo"].attributes["priority"].to_i
+        current_url = out["repo-list/repo/url"].text
+      end
 
       if current_url != attrs[:url]
         unless current_url.nil? || current_url.empty?
