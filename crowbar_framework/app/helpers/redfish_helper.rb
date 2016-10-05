@@ -37,25 +37,56 @@ module RedfishHelper
       @service_uri = "https://#{host}:#{port}/#{REDFISH_VERSION}"
       @verify_ssl = OpenSSL::SSL::VERIFY_NONE if insecure
       @ssl_client_cert = false unless client_cert
+      @reset_action = "ComputerSystem.Reset".freeze
     end
 
-    def handle_exception(json_rpc_error)
-      Rails.logger.error(json_rpc_error[:message])
-    end
-
-    def post_action(resource, action:None, params: None)
+    def post_action(resource, action = nil, payload = nil)
       uri = @service_uri + resource
       uri += "/Actions/#{action}" if action
+      payload = {} unless payload
 
       begin
         response = RestClient::Request.execute(url: uri,
                                                method: :post,
+                                               payload: payload.to_json,
+                                               headers: { content_type: :json },
                                                verify_ssl: @verify_ssl,
                                                ssl_client_cert: @ssl_client_cert)
-      rescue
-        handle_exception(response)
+        JSON.parse(response)
+      rescue RestClient::ExceptionWithResponse => e
+        Rails.logger.error("Error while trying to post #{payload} to #{uri}: #{e}")
+        false
       end
-      JSON.parse(response)
+    end
+
+    def restart(resource)
+      post_action("Systems/#{resource}",
+                  @reset_action,
+                  "ResetType" => "GracefulRestart")
+    end
+
+    def shutdown(resource)
+      post_action("Systems/#{resource}",
+                  @reset_action,
+                  "ResetType" => "GracefulShutdown")
+    end
+
+    def poweron(resource)
+      post_action("Systems/#{resource}",
+                  @reset_action,
+                  "ResetType" => "On")
+    end
+
+    def powercycle(resource)
+      post_action("Systems/#{resource}",
+                  @reset_action,
+                  "ResetType" => "ForceRestart")
+    end
+
+    def poweroff(resource)
+      post_action("Systems/#{resource}",
+                  @reset_action,
+                  "ResetType" => "ForceOff")
     end
 
     def get_resource(resource)
@@ -67,10 +98,11 @@ module RedfishHelper
                                                method: :get,
                                                verify_ssl: @verify_ssl,
                                                ssl_client_cert: @ssl_client_cert)
-      rescue
-        handle_exception(response)
+        return JSON.parse(response)
+      rescue RestClient::ExceptionWithResponse => e
+        Rails.logger.error(e)
+        JSON.parse(e.response)
       end
-      JSON.parse(response)
     end
   end
 end

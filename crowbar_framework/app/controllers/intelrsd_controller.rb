@@ -95,10 +95,6 @@ class IntelRSDController < ApplicationController
     @node_object_list
   end
 
-  def reset_system(sys_id)
-    post_action("Systems/#{sys_id}", action: "ComputerSystem.Reset")
-  end
-
   def get_crowbar_node_object(sys_id)
     system_object = get_system_data(sys_id)
     node_name_prefix = "d"
@@ -110,6 +106,10 @@ class IntelRSDController < ApplicationController
     node = NodeObject.create_new "#{node_name}.#{Crowbar::Settings.domain}".downcase
 
     node.set["name"] = node_name
+    # set a flag to identify this node as a rackscale one
+    node.set["rackscale"] = true
+    # track the rackscale id for this node
+    node.set["rackscale_id"] = sys_id
     node.set["target_cpu"] = ""
     node.set["target_vendor"] = "suse"
     node.set["host_cpu"] = ""
