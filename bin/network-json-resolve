@@ -1,0 +1,394 @@
+#!/usr/bin/env ruby
+#
+# Copyright 2014-2016, SUSE Linux GmbH
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+require 'rubygems'
+require 'chef'
+require 'getoptlong'
+require 'json'
+
+@options = [
+    [ [ '--help', '-h', GetoptLong::NO_ARGUMENT ], "--help or -h - help" ],
+    [ [ '--network-json', GetoptLong::REQUIRED_ARGUMENT ], "--network-json <JSON> - Path to a network.json file (by default, deployed network.json is used)" ],
+    [ [ '--role', GetoptLong::REQUIRED_ARGUMENT ], "--role <ROLE> - Additional role the node will have (can influence the conduit map choice)" ]
+]
+
+@network_json_path = nil
+@node_name = nil
+@roles = []
+
+
+### Helpers
+
+def usage (rc)
+  puts "Usage: network-json-resolve [options] COMMAND"
+  @options.each do |options|
+    puts "  #{options[1]}"
+  end
+  puts ""
+  puts "Available commands:"
+  puts "  aliases NODE [<INTERFACE>] - List network.json-style interface names of NODE for INTERFACE, or for all available interfaces"
+  puts "  bus_order NODE - Display interface bus order defined in network.json for NODE"
+  puts "  conduit_map NODE - Display conduit map defined in network.json for NODE"
+  puts "  conduits NODE [<CONDUIT>] - Resolve conduits (or only CONDUIT) to standard interface names for NODE"
+  puts "  networks NODE [<INTERFACE>] - Resolve networks from network.json to standard interface names for NODE"
+  puts "  resolve NODE <INTERFACE> - Resolve network.json-style interface (eg: +1g1) to standard interface name for NODE"
+  exit rc
+end
+
+def opt_parse()
+  sub_options = @options.map { |x| x[0] }
+  opts = GetoptLong.new(*sub_options)
+
+  opts.each do |opt, arg|
+    case opt
+      when '--help'
+        usage 0
+      when '--network-json'
+        if @network_json_path.nil?
+          @network_json_path = arg
+        else
+          usage -1
+        end
+      when '--role'
+        @roles << arg
+      else
+        usage -1
+    end
+  end
+
+  if ARGV.length < 2
+    usage -1
+  end
+end
+
+def chef_init
+  Chef::Config.node_name "crowbar"
+  Chef::Config.client_key "/opt/dell/crowbar_framework/config/client.pem"
+  Chef::Config.chef_server_url "http://localhost:4000"
+end
+
+def search_node(query)
+  nodes = []
+  Chef::Search::Query.new.search "node", "#{query.gsub("-:") { |c| '\\' + c }}" do |o|
+    nodes << o
+  end
+
+  if nodes.length > 1
+    raise "More than one node matching search for #{node_name}."
+  end
+
+  nodes.empty? ? nil : nodes[0]
+end
+
+def get_node
+  node = nil
+  begin
+    node = Chef::Node.load(@node_name)
+  rescue Net::HTTPServerException => e
+    raise e unless e.response.code == "404"
+  end
+
+  node ||= search_node("hostname:#{@node_name}")
+  node ||= search_node("crowbar_display_alias:#{@node_name}")
+
+  raise "Cannot find node \"#{@node_name}\"." if node.nil?
+
+  node
+end
+
+def get_network
+  network = nil
+
+  if @network_json_path.nil?
+    role = nil
+    begin
+      role = Chef::Role.load("network-config-default")
+    rescue Net::HTTPServerException => e
+      if e.response.code == "404"
+        raise "Cannot find network proposal."
+      else
+        raise e
+      end
+    end
+
+    network = role.default_attributes["network"]
+  else
+    filename = File.expand_path(@network_json_path)
+    unless File.exists?(filename)
+      raise "File #{filename} does not exist."
+    end
+
+    begin
+      databag = JSON.load(File.open(filename).read())
+    rescue Exception => e
+      raise "File #{filename} is not a valid JSON file: #{e.to_s}"
+    end
+
+    unless databag.has_key?('attributes')
+      raise "Invalid network JSON: missing attribute: attributes"
+    end
+
+    unless databag['attributes'].has_key?('network')
+      raise "Invalid network JSON: missing attribute: attributes.network"
+    end
+
+    network = databag['attributes']['network']
+  end
+
+  network
+end
+
+
+### Classes
+
+load '/opt/dell/crowbar_framework/lib/crowbar/conduit_resolver.rb'
+
+class NodeConduitResolver
+  def initialize(node, network_json, roles)
+    @node = node
+    @network_json = network_json
+    @roles = roles.uniq
+  end
+
+  include Crowbar::ConduitResolver
+
+  def cr_network_config
+    @network_json
+  end
+
+  def cr_node_roles
+    (@node.roles + @roles).uniq
+  end
+
+  def cr_error(s)
+    puts s
+  end
+end
+
+
+### Commands
+
+def do_aliases(resolver, interface)
+  def sort_helper(x, y)
+    mx = /^(\d{1,3})([mg])(\d+)$/.match(x)
+    my = /^(\d{1,3})([mg])(\d+)$/.match(y)
+
+    return x <=> y if mx.nil? && my.nil?
+    return -1 if my.nil?
+    return 1 if mx.nil?
+    if mx[2] != my[2]
+      return mx[2] == "g" ? 1 : -1
+    end
+    return [mx[1], mx[3]] <=> [my[1], my[3]]
+  end
+
+  reverse_if_speed_remap = {}
+  resolver.if_speed_remap.each do |iface_alias, iface|
+    reverse = reverse_if_speed_remap[iface] || []
+    reverse << iface_alias
+    reverse_if_speed_remap[iface] = reverse
+  end
+
+  if interface
+    if reverse_if_speed_remap.has_key?(interface)
+      puts "#{interface}: #{reverse_if_speed_remap[interface].sort{|x, y| sort_helper(x, y)}.join(', ')}"
+    else
+      raise "Interface \"#{interface}\" is unknown."
+    end
+  else
+    reverse_if_speed_remap.keys.sort.each do |iface|
+      puts "#{iface}: #{reverse_if_speed_remap[iface].sort{|x, y| sort_helper(x, y)}.join(', ')}"
+    end
+  end
+end
+
+def do_bus_order(resolver)
+  if resolver.bus_order.empty?
+    puts "No bus order defined for #{@node_name}."
+  else
+    resolver.bus_order.each{|b| puts b}
+  end
+end
+
+def do_conduit_map(resolver)
+  if resolver.conduits.empty?
+    puts "No conduit map defined for #{@node_name}."
+    return
+  end
+
+  resolver.conduits.keys.sort.each do |conduit|
+    aliases = resolver.conduits[conduit]["if_list"]
+    unless aliases.empty?
+      puts "#{conduit}: #{aliases.join(', ')}"
+    else
+      puts "#{conduit}: empty"
+    end
+  end
+end
+
+def do_conduits(resolver, conduit)
+  def display_conduit(conduit, interface, interface_slaves, teaming_mode)
+    if [interface, interface_slaves, teaming_mode] == [nil, nil, nil]
+      puts "#{conduit}: cannot resolve conduit"
+    elsif interface_slaves.length == 1
+      puts "#{conduit}: #{interface}"
+    elsif interface
+      puts "#{conduit}: bond (#{interface}) with interfaces #{interface_slaves.sort.join(', ')} (mode: #{teaming_mode})"
+    else
+      puts "#{conduit}: bond with interfaces #{interface_slaves.sort.join(', ')} (mode: #{teaming_mode})"
+    end
+  end
+
+  if resolver.conduits.empty?
+    puts "No conduit map defined for #{@node_name}."
+    return
+  end
+
+  if conduit
+    interface, interface_slaves, teaming_mode = resolver.conduit_details(conduit)
+    if [interface, interface_slaves, teaming_mode] == [nil, nil, nil]
+      raise "Cannot resolve conduit \"#{conduit}\"."
+    else
+      display_conduit(conduit, interface, interface_slaves, teaming_mode)
+    end
+  else
+    resolver.conduits.keys.sort.each do |conduit|
+      interface, interface_slaves, teaming_mode = resolver.conduit_details(conduit)
+      display_conduit(conduit, interface, interface_slaves, teaming_mode)
+    end
+  end
+end
+
+def do_networks(resolver, network)
+  def display_network(resolver, network)
+    unless resolver.cr_network_config["networks"][network].has_key?("conduit")
+      puts "#{network}: no conduit defined"
+      return
+    end
+
+    conduit = resolver.cr_network_config["networks"][network]["conduit"]
+    interface, interface_slaves, teaming_mode = resolver.conduit_details(conduit)
+
+    if [interface, interface_slaves, teaming_mode] == [nil, nil, nil]
+      puts "#{network}: cannot resolve network"
+    elsif interface_slaves.length == 1
+      puts "#{network}: #{interface}"
+    elsif interface
+      puts "#{network}: bond (#{interface}) with interfaces #{interface_slaves.sort.join(', ')} (mode: #{teaming_mode})"
+    else
+      puts "#{network}: bond with interfaces #{interface_slaves.sort.join(', ')} (mode: #{teaming_mode})"
+    end
+  end
+
+  if resolver.conduits.empty?
+    puts "No conduit map defined for #{@node_name}."
+    return
+  end
+
+  unless resolver.cr_network_config.has_key?("networks")
+    puts "No networks defined."
+    return
+  end
+
+  if network
+    unless resolver.cr_network_config["networks"].has_key?(network)
+      puts "Network #{network} not defined."
+      return
+    end
+    display_network(resolver, network)
+  else
+    resolver.cr_network_config["networks"].keys.sort.each do |network|
+      display_network(resolver, network)
+    end
+  end
+end
+
+def do_resolve(resolver, interface_alias)
+  result = resolver.resolve_if_ref(interface_alias)
+  if result
+    puts result
+  else
+    raise "No interface matching \"#{interface_alias}\"."
+  end
+end
+
+
+### Main
+
+begin
+  opt_parse
+rescue Exception => e
+  exit 1
+end
+
+usage -1 if ARGV.length < 2
+
+command = ARGV[0]
+@node_name = ARGV[1]
+
+begin
+  usage -1 unless ["aliases", "bus_order", "conduit_map", "conduits", "networks", "resolve"].include?(command)
+
+  chef_init
+  resolver = NodeConduitResolver.new(get_node, get_network, @roles)
+
+  case command
+  when "aliases"
+    case ARGV.length
+    when 2
+      do_aliases(resolver, nil)
+    when 3
+      interface = ARGV[2]
+      do_aliases(resolver, interface)
+    else
+      usage -1
+    end
+  when "bus_order"
+    usage -1 if ARGV.length != 2
+    do_bus_order(resolver)
+  when "conduit_map"
+    usage -1 if ARGV.length != 2
+    do_conduit_map(resolver)
+  when "conduits"
+    case ARGV.length
+    when 2
+      do_conduits(resolver, nil)
+    when 3
+      conduit = ARGV[2]
+      do_conduits(resolver, conduit)
+    else
+      usage -1
+    end
+  when "networks"
+    case ARGV.length
+    when 2
+      do_networks(resolver, nil)
+    when 3
+      network = ARGV[2]
+      do_networks(resolver, network)
+    else
+      usage -1
+    end
+  when "resolve"
+    usage -1 if ARGV.length != 3
+    interface_alias = ARGV[2]
+    do_resolve(resolver, interface_alias)
+  end
+rescue Exception => e
+  puts e.to_s unless e.class == SystemExit
+  exit 1
+end
