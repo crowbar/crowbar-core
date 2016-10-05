@@ -72,6 +72,13 @@ describe Api::CrowbarController, type: :request do
         receive_message_chain(:upgrade_script_path, :exist?).
         and_return(true)
       )
+      allow(Api::Upgrade).to(
+        receive(:target_platform).with(anything).and_return("suse-12.2")
+      )
+      allow(NodeObject).to receive(:admin_node).and_return(
+        NodeObject.find_node_by_name("admin")
+      )
+      allow_any_instance_of(NodeObject).to receive(:save).and_return(true)
 
       post "/api/crowbar/upgrade", {}, headers
       expect(response).to have_http_status(:ok)
