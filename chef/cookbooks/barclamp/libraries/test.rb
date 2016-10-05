@@ -1,10 +1,11 @@
 
 if $0 == __FILE__
 
-  require "test/unit"
-  require "barclamp_library"
+  require "minitest/autorun"
+  require_relative "conduit_resolver"
+  require_relative "barclamp_library"
 
-  class TestIFRemap < Test::Unit::TestCase
+  class TestIFRemap < MiniTest::Test
     def build_if_map(speeds)
       if_map={}
       speeds.each {|x|
