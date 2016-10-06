@@ -178,6 +178,12 @@ describe Api::Upgrade do
         with("state:crowbar_upgrade AND (roles:database-server OR roles:rabbitmq-server)").
         and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
       )
+      allow_any_instance_of(NodeObject).to receive(:run_ssh_cmd).and_return(
+        stdout: "",
+        stderr: "",
+        exit_code: 1
+      )
+      allow_any_instance_of(Api::Node).to receive(:upgrade).and_return(true)
       expect(subject.class.nodes).to be true
     end
     it "fails during the upgrade of controller nodes" do
