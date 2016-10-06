@@ -21,9 +21,11 @@ describe Api::UpgradeController, type: :request do
     it "shows the upgrade status object" do
       allow(Crowbar::Sanity).to receive(:sane?).and_return(true)
       allow(Api::Crowbar).to(
-        receive(:addons).and_return([])
+        receive(:addons).and_return(["ha"])
       )
-
+      allow(Api::Upgrade).to(
+        receive(:ha_presence_check).and_return({})
+      )
       get "/api/upgrade", {}, headers
       expect(response).to have_http_status(:ok)
       expect(response.body).to eq(upgrade_status)
@@ -41,6 +43,13 @@ describe Api::UpgradeController, type: :request do
 
     it "shows a sanity check in preparation for the upgrade" do
       allow(Crowbar::Sanity).to receive(:sane?).and_return(true)
+
+      allow_any_instance_of(Api::Crowbar).to(
+        receive(:addons).and_return(["ha"])
+      )
+      allow(Api::Upgrade).to(
+        receive(:ha_presence_check).and_return({})
+      )
 
       get "/api/upgrade/prechecks", {}, headers
       expect(response).to have_http_status(:ok)

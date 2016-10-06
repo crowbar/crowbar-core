@@ -233,6 +233,47 @@ describe Api::Crowbar do
     end
   end
 
+  context "with HA deployed" do
+    it "succeeds to confirm that HA is deployed" do
+
+      allow(Api::Crowbar).to(
+        receive(:addon_installed?).
+        and_return(true)
+      )
+      allow(NodeObject).to(
+        receive(:find).with("pacemaker_founder:true AND pacemaker_config_environment:*").
+        and_return([node])
+      )
+      expect(subject.class.ha_presence_check).to eq({})
+    end
+  end
+
+  context "with HA installed but not deployed" do
+    it "fails when finding out HA is not deployed" do
+
+      allow(Api::Crowbar).to(
+        receive(:addon_installed?).
+        and_return(true)
+      )
+      allow(NodeObject).to(
+        receive(:find).with("pacemaker_founder:true AND pacemaker_config_environment:*").
+        and_return([])
+      )
+      expect(subject.class.ha_presence_check).to have_key(:errors)
+    end
+  end
+
+  context "with HA not even installed" do
+    it "fails when finding out HA is not deployed" do
+
+      allow(Api::Crowbar).to(
+        receive(:addon_installed?).
+        and_return(false)
+      )
+      expect(subject.class.ha_presence_check).to have_key(:errors)
+    end
+  end
+
   context "with enough compute resources" do
     it "succeeds to find enough compute nodes" do
       allow(NodeObject).to(

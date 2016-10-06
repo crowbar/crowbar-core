@@ -209,6 +209,22 @@ module Api
         true
       end
 
+      # Check for presence of HA setup, which is a requirement for non-disruptive upgrade
+      def ha_presence_check
+        ret = {}
+        unless addon_installed? "ha"
+          ret[:errors] = [I18n.t("api.crowbar.ha_not_installed")]
+          return ret
+        end
+
+        founders = NodeObject.find("pacemaker_founder:true AND pacemaker_config_environment:*")
+
+        if founders.empty?
+          ret[:errors] = [I18n.t("api.crowbar.ha_not_configured")]
+        end
+        ret
+      end
+
       protected
 
       def lib_path
