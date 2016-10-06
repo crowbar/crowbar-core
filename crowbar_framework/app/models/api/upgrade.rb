@@ -36,6 +36,19 @@ module Api
         }
       end
 
+      def target_platform(options = {})
+        platform_exception = options.fetch(:platform_exception, nil)
+
+        case ENV["CROWBAR_VERSION"]
+        when "3.0"
+          if platform_exception == :ceph
+            ::Crowbar::Product.ses_platform
+          else
+            NodeObject.admin_node.target_platform
+          end
+        end
+      end
+
       def cancel
         service_object = CrowbarService.new(Rails.logger)
         service_object.revert_nodes_from_crowbar_upgrade
