@@ -124,7 +124,7 @@ suse-12.2:
       features: ["openstack"]
       repomd:
         tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP2:Update:Products:Cloud7/suse-openstack-cloud/7/cd/aarch64",
-              "obsproduct://build.suse.de/Devel:Cloud:7:Mitaka/suse-openstack-cloud/7/cd/aarch64",
+              "obsproduct://build.suse.de/Devel:Cloud:7:Newton/suse-openstack-cloud/7/cd/aarch64",
               "obsproduct://build.suse.de/Devel:Cloud:7:Staging/suse-openstack-cloud/7/cd/aarch64",
               "obsproduct://build.suse.de/Devel:Cloud:7/suse-openstack-cloud/7/cd/aarch64"]
         fingerprint: ["FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82",
@@ -223,7 +223,7 @@ suse-12.2:
       features: ["openstack"]
       repomd:
         tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP2:Update:Products:Cloud7/suse-openstack-cloud/7/cd/x86_64",
-              "obsproduct://build.suse.de/Devel:Cloud:7:Mitaka/suse-openstack-cloud/7/cd/x86_64",
+              "obsproduct://build.suse.de/Devel:Cloud:7:Newton/suse-openstack-cloud/7/cd/x86_64",
               "obsproduct://build.suse.de/Devel:Cloud:7:Staging/suse-openstack-cloud/7/cd/x86_64",
               "obsproduct://build.suse.de/Devel:Cloud:7/suse-openstack-cloud/7/cd/x86_64"]
         fingerprint: ["FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82",
@@ -321,6 +321,7 @@ suse-12.2:
       features: ["openstack"]
       repomd:
         tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP2:Update:Products:Cloud7/suse-openstack-cloud/7/cd/s390x",
+              "obsproduct://build.suse.de/Devel:Cloud:7:Newton/suse-openstack-cloud/7/cd/s390x",
               "obsproduct://build.suse.de/Devel:Cloud:7:Staging/suse-openstack-cloud/7/cd/s390x",
               "obsproduct://build.suse.de/Devel:Cloud:7/suse-openstack-cloud/7/cd/s390x"]
         fingerprint: ["FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82",
