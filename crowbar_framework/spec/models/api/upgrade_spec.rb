@@ -184,12 +184,15 @@ describe Api::Upgrade do
         exit_code: 1
       )
       allow_any_instance_of(Api::Node).to receive(:upgrade).and_return(true)
+
       expect(subject.class.nodes).to be true
     end
+
     it "fails during the upgrade of controller nodes" do
       allow(subject.class).to(
         receive(:upgrade_controller_nodes).and_return(false)
       )
+
       expect(subject.class.nodes).to be false
     end
   end
