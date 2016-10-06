@@ -7,6 +7,8 @@ UPGRADEDIR=/var/lib/crowbar/upgrade
 mkdir -p "`dirname "$LOGFILE"`"
 exec >>"$LOGFILE" 2>&1
 
+echo "Executing $BASH_SOURCE"
+
 set -x
 
 mkdir -p $UPGRADEDIR
