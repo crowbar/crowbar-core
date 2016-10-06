@@ -28,7 +28,7 @@ class Api::CrowbarController < ApiController
       crowbar_upgrade = Api::Crowbar.upgrade!
 
       if crowbar_upgrade[:status] == :ok
-        render json: Api::Crowbar.upgrade
+        head :ok
       else
         render json: { error: crowbar_upgrade[:message] }, status: crowbar_upgrade[:status]
       end
