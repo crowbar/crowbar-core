@@ -770,6 +770,23 @@ en:
       upgrade_ongoing: 'Upgrade is already ongoing. Please wait.'
       zypper_locked: '%{zypper_locked_message}'
       upgrade_script_path: 'Could not find %{path}'
+    upgrade:
+      prechecks:
+        network_checks:
+          help:
+            default: 'Examine the error messages'
+        maintenance_updates_check:
+          help:
+            default: 'Make sure maintenance updates are installed'
+        ceph_health_check:
+          help:
+            default: 'Make sure Ceph is healthy'
+        clusters_health_check:
+          help:
+            default: 'Make sure clusters are healthy'
+        compute_resources_check:
+          help:
+            default: 'Make sure there is enough compute power'
 
   # Global
   overview: 'Overview'
