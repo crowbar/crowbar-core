@@ -1,18 +1,51 @@
 {
-  "crowbar": {
-    "version": "4.0",
-    "addons": [],
-    "upgrade": {
-      "upgrading": false,
-      "success": false,
-      "failed": false
+  "current_step": "upgrade_prechecks",
+  "current_substep":null,
+  "current_node":null,
+  "steps":{
+    "upgrade_prechecks":{
+      "status":"pending",
+      "errors":{}
+    },
+    "upgrade_prepare":{
+      "status":"pending",
+      "errors":{}
+    },
+    "admin_backup":{
+      "status":"pending",
+      "errors":{}
+    },
+    "admin_repo_checks":{
+      "status":"pending",
+      "errors":{}
+    },
+    "admin_upgrade":{
+      "status":"pending",
+      "errors":{}
+    },
+    "database":{
+      "status":"pending",
+      "errors":{}
+    },
+    "nodes_repo_checks":{
+      "status":"pending",
+      "errors":{}
+    },
+    "nodes_services":{
+      "status":"pending",
+      "errors":{}
+    },
+    "nodes_db_dump":{
+      "status":"pending",
+      "errors":{}
+    },
+    "nodes_upgrade":{
+      "status":"pending",
+      "errors":{}
+    },
+    "finished":{
+      "status":"pending",
+      "errors":{}
     }
-  },
-  "checks": {
-    "sanity_checks":true,
-    "maintenance_updates_installed":true,
-    "clusters_healthy":true,
-    "compute_resources_available":true,
-    "ceph_healthy":true
   }
 }

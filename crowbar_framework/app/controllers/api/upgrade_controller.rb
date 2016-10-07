@@ -15,29 +15,55 @@
 #
 
 class Api::UpgradeController < ApiController
-  api :GET, "/api/upgrade", "Show the Upgrade status object"
+  api :GET, "/api/upgrade", "Show the Upgrade progress"
   header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   example '
   {
-    "crowbar": {
-      "version": "4.0",
-      "addons": [
-        "ceph",
-        "ha"
-      ],
-      "upgrade": {
-        "upgrading": false,
-        "success": false,
-        "failed": false
+    "current_step": "upgrade_prechecks",
+    "substep": null
+    "current_node": null,
+    "steps": {
+      "upgrade_prechecks": {
+        "status": "pending",
+        "errors": {}
+      },
+      "admin_backup": {
+        "status": "pending",
+        "errors": {}
+      },
+      "admin_repo_checks": {
+        "status": "pending",
+        "errors": {}
+      },
+      "admin_upgrade": {
+        "status": "pending",
+        "errors": {}
+      },
+      "database": {
+        "status": "pending",
+        "errors": {}
+      },
+      "nodes_repo_checks": {
+        "status": "pending",
+        "errors": {}
+      },
+      "nodes_services": {
+        "status": "pending",
+        "errors": {}
+      },
+      "nodes_db_dump": {
+        "status": "pending",
+        "errors": {}
+      },
+      "nodes_upgrade": {
+        "status": "pending",
+        "errors": {}
+      },
+      "finished": {
+        "status": "pending",
+        "errors": {}
       }
-    },
-    "checks": {
-      "sanity_checks": true,
-      "maintenance_updates_installed": true,
-      "clusters_healthy": true,
-      "compute_resources_available": true,
-      "ceph_healthy": true
     }
   }
   '
