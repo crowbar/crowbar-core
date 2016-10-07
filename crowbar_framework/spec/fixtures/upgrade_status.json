@@ -1,41 +1,51 @@
 {
-  "crowbar": {
-    "version": "4.0",
-    "addons": [
-      "ceph",
-      "ha"
-    ],
-    "upgrade": {
-      "upgrading": false,
-      "success": false,
-      "failed": false
-    }
-  },
-  "checks": {
-    "network_checks": {
-      "required": true,
-      "passed": true,
-      "errors": {}
+  "current_step": "upgrade_prechecks",
+  "current_substep":null,
+  "current_node":null,
+  "steps":{
+    "upgrade_prechecks":{
+      "status":"pending",
+      "errors":{}
     },
-    "maintenance_updates_installed": {
-      "required": true,
-      "passed": true,
-      "errors": {}
+    "upgrade_prepare":{
+      "status":"pending",
+      "errors":{}
     },
-    "compute_resources_available": {
-      "required": false,
-      "passed": true,
-      "errors": {}
+    "admin_backup":{
+      "status":"pending",
+      "errors":{}
     },
-    "ceph_healthy": {
-      "required": true,
-      "passed": true,
-      "errors": {}
+    "admin_repo_checks":{
+      "status":"pending",
+      "errors":{}
     },
-    "clusters_healthy": {
-      "required": true,
-      "passed": true,
-      "errors": {}
+    "admin_upgrade":{
+      "status":"pending",
+      "errors":{}
+    },
+    "database":{
+      "status":"pending",
+      "errors":{}
+    },
+    "nodes_repo_checks":{
+      "status":"pending",
+      "errors":{}
+    },
+    "nodes_services":{
+      "status":"pending",
+      "errors":{}
+    },
+    "nodes_db_dump":{
+      "status":"pending",
+      "errors":{}
+    },
+    "nodes_upgrade":{
+      "status":"pending",
+      "errors":{}
+    },
+    "finished":{
+      "status":"pending",
+      "errors":{}
     }
   }
 }
