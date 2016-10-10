@@ -170,4 +170,69 @@ class Api::UpgradeController < ApiController
   def repocheck
     render json: Api::Upgrade.repocheck
   end
+
+  protected
+
+  api :POST, "/api/upgrade/new",
+    "Initialization of Crowbar during upgrade with creation of a new database.
+    NOTE: It is only possible to use this endpoint during the stage where crowbar-init is running."
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
+  param :username, String, desc: "Username"
+  param :password, String, desc: "Password"
+  api_version "2.0"
+  example '
+  {
+    "database_setup": {
+      "success": true
+    },
+    "database_migration": {
+      "success": true
+    },
+    "schema_migration": {
+      "success": true
+    },
+    "crowbar_init": {
+      "success": false,
+      "body": {
+        "error": "crowbar_init: Failed to stop crowbar-init.service"
+      }
+    }
+  }
+  '
+  def dummy_crowbar_init_api_upgrade_new
+    # empty method to document crowbar-init's upgrade related API endpoints
+  end
+
+  api :POST, "/api/upgrade/connect",
+    "Initialization of Crowbar during upgrade with connection to an existing database.
+    NOTE: It is only possible to use this endpoint during the stage where crowbar-init is running."
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
+  param :username, String, desc: "External database username"
+  param :password, String, desc: "External database password"
+  param :database, String, desc: "Database name"
+  param :host, String, desc: "External database host"
+  param :port, Integer, desc: "External database port"
+  api_version "2.0"
+  example '
+  {
+    "database_setup": {
+      "success": true
+    },
+    "database_migration": {
+      "success": true
+    },
+    "schema_migration": {
+      "success": true
+    },
+    "crowbar_init": {
+      "success": false,
+      "body": {
+        "error": "crowbar_init: Failed to stop crowbar-init.service"
+      }
+    }
+  }
+  '
+  def dummy_crowbar_init_api_upgrade_connect
+    # empty method to document crowbar-init's upgrade related API endpoints
+  end
 end
