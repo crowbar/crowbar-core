@@ -55,6 +55,7 @@ class Api::UpgradeController < ApiController
   api :POST, "/api/upgrade/prepare", "Prepare Crowbar Upgrade"
   header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
+  error 422, "Failed to prepare nodes for Crowbar upgrade"
   def prepare
     status = :ok
     msg = ""
@@ -79,6 +80,7 @@ class Api::UpgradeController < ApiController
   api :POST, "/api/upgrade/services", "Stop related services on all nodes during upgrade"
   header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
+  error 422, "Failed to stop services on all nodes"
   def services
     stop_services = Api::Upgrade.services
 
@@ -91,6 +93,7 @@ class Api::UpgradeController < ApiController
 
   api :POST, "/api/upgrade/nodes", "Initiate the upgrade of all nodes"
   api_version "2.0"
+  error 422, "Failed to upgrade nodes"
   # This is gonna initiate the upgrade of all nodes.
   # The method runs asynchronously, so there's a need to poll for the status and possible errors
   def nodes
@@ -121,6 +124,7 @@ class Api::UpgradeController < ApiController
   api :POST, "/api/upgrade/cancel", "Cancel the upgrade process by setting the nodes back to ready"
   header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
+  error 422, "Failed to cancel the upgrade process"
   def cancel
     cancel_upgrade = Api::Upgrade.cancel
 

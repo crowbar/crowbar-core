@@ -25,6 +25,7 @@ module Installer
 
     api :POST, "/installer/upgrade/prepare", "Prepare nodes for Crowbar upgrade"
     header "Accept", "application/json", required: true
+    error 422, "Failed to prepare nodes for Crowbar upgrade, details in response"
     def prepare
       status = :ok
       msg = ""
@@ -65,6 +66,7 @@ module Installer
       "Start Crowbar upgrade by uploading a backup and trigger a restore"
     header "Accept", "application/json", required: true
     param :file, File, desc: "Backup for upload"
+    error 422, "Failed to upload Crowbar backup, details in response"
     def start
       @current_step = 4
 
@@ -147,6 +149,8 @@ module Installer
     api :POST, "/installer/upgrade/services",
       "Shutdown services at non database nodes and dump OpenStack database"
     header "Accept", "application/json", required: true
+    error 422, "Failed to either shut down services on non db nodes or dump OpenStack database,
+      details in response"
     def services
       @current_step = 7
       status = :ok
@@ -183,6 +187,7 @@ module Installer
 
     api :POST, "/installer/upgrade/backup", "Finalize OpenStack shutdown"
     header "Accept", "application/json", required: true
+    error 422, "Failed to finalize OpenStack shutdown, details in response"
     def backup
       @current_step = 8
       status = :ok
@@ -220,6 +225,8 @@ module Installer
     api :POST, "/installer/upgrade/nodes",
       "Disable non core proposals and prepare nodes for upgrade"
     header "Accept", "application/json", required: true
+    error 422, "Failed to either disable non core proposals or initiate nodes upgrade,
+      details in response"
     def nodes
       @current_step = 9
       status = :ok

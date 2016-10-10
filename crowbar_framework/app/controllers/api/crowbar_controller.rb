@@ -56,6 +56,7 @@ class Api::CrowbarController < ApiController
   '
   api :POST, "/api/crowbar/upgrade", "Upgrade Crowbar"
   api_version "2.0"
+  error 422, "Upgrade is already ongoing or upgrade script is not present, details in the response"
   def upgrade
     if request.post?
       crowbar_upgrade = Api::Crowbar.upgrade!
@@ -100,6 +101,7 @@ class Api::CrowbarController < ApiController
     }
   }
   '
+  error 503, "zypper is locked"
   def repocheck
     check = Api::Crowbar.repocheck
 

@@ -65,6 +65,10 @@ module Installer
     api :POST, "/installer/installer/start", "Trigger Crowbar installation"
     header "Accept", "application/json", required: true
     param :force, [0, 1], desc: "Force installation by removing crowbar-installed-ok"
+    error 226, "Installation already ongoing"
+    error 410, "Installation already successful"
+    error 412, "Invalid network configuration"
+    error 501, "System not supported"
     def start
       header = :ok
       msg = ""

@@ -55,6 +55,7 @@ class Api::ErrorsController < ApiController
     "updated_at": "2016-09-13T08:04:24.128Z"
   }
   '
+  error 404, "Error could not be found"
   def show
     render json: @error
   end
@@ -62,6 +63,7 @@ class Api::ErrorsController < ApiController
   api :POST, "/api/errors", "Create an error"
   header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
+  error 422, "Failed to save Error, error details are provided in the response"
   def create
     @error = Api::Error.new(error_params)
     if @error.save
@@ -75,6 +77,7 @@ class Api::ErrorsController < ApiController
   header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   param :id, Integer, desc: "Error ID", required: true
   api_version "2.0"
+  error 422, "Failed to destroy Error, error details are provided in the response"
   def destroy
     if @error.destroy
       head :ok

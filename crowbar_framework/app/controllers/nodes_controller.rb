@@ -235,6 +235,7 @@ class NodesController < ApplicationController
   header "Accept", "application/json", required: true
   param :id, String, desc: "Node name", required: true
   param :group, String, desc: "Group name", required: true
+  error 404, "Node not found"
   def group_change
     NodeObject.find_node_by_name(params[:id]).tap do |node|
       raise ActionController::RoutingError.new("Not Found") if node.nil?
@@ -438,6 +439,7 @@ class NodesController < ApplicationController
     ...
   }
   '
+  error 404, "Node not found"
   def show
     get_node_and_network(params[:id] || params[:name])
     if @node.nil?

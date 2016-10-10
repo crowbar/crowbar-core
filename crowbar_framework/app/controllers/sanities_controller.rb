@@ -45,6 +45,7 @@ class SanitiesController < ApplicationController
 
   api :POST, "/sanities/check", "Perform a sanity check"
   header "Accept", "application/json", required: true
+  error 409, "Sanity check cache error"
   def check
     respond_to do |format|
       format.json do

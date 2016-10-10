@@ -101,6 +101,8 @@ class RepositoriesController < ApplicationController
   param :platform, String, desc: "Platform of the repository", required: true
   param :arch, String, desc: "Architecture of the repository", required: true
   param :repo, String, desc: "Name of the repository", required: true
+  error 404, "Either platform, arch, or repo not found"
+  error 422, "Failed to activate repository, details in response"
   def activate
     return render_not_found if params[:platform].nil? || params[:arch].nil? || params[:repo].nil?
     ret, _message = ProvisionerService.new(logger).enable_repository(params[:platform], params[:arch], params[:repo])
@@ -130,6 +132,8 @@ class RepositoriesController < ApplicationController
   param :platform, String, desc: "Platform of the repository", required: true
   param :arch, String, desc: "Architecture of the repository", required: true
   param :repo, String, desc: "Name of the repository", required: true
+  error 404, "Either platform, arch, or repo not found"
+  error 422, "Failed to deactivate repository, details in response"
   def deactivate
     return render_not_found if params[:platform].nil? || params[:arch].nil? || params[:repo].nil?
     ret, _message = ProvisionerService.new(logger).disable_repository(params[:platform], params[:arch], params[:repo])
