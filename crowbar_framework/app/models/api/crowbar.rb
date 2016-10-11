@@ -17,7 +17,7 @@
 require "open3"
 
 module Api
-  class Crowbar < Tableless
+  class Crowbar
     class << self
       def status
         {

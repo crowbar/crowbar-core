@@ -15,7 +15,7 @@
 #
 
 module Api
-  class Node < Tableless
+  class Node
     def initialize(name = nil)
       @node = NodeObject.find_node_by_name name
     end

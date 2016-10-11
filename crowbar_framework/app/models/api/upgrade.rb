@@ -17,7 +17,7 @@
 require "open3"
 
 module Api
-  class Upgrade < Tableless
+  class Upgrade
     class << self
       def status
         {
