@@ -19,13 +19,7 @@ module Crowbar
   class Lock::LocalBlocking < Lock
     def acquire(options = {})
       logger.debug("Acquire #{name} lock enter as uid #{Process.uid}")
-      begin
-        @file ||= File.new(path, File::RDWR | File::CREAT, 0644)
-      rescue
-        logger.error("Couldn't open #{path} for locking: #$!")
-        logger.error("cwd was #{Dir.getwd})")
-        raise "Couldn't open #{path} for locking: #$!"
-      end
+      ensure_lock_file_exists
       logger.debug("Acquiring #{name} lock with #{options}")
       count = 0
       # specify different bits for shared vs. exclusive locks
@@ -56,6 +50,16 @@ module Crowbar
       logger.debug("Release #{name} lock exit")
       @locked = false
       self
+    end
+
+    private
+
+    def ensure_lock_file_exists
+      @file ||= File.new(path, File::RDWR | File::CREAT, 0o644)
+    rescue
+      logger.error("Couldn't open #{path} for locking: #$!")
+      logger.error("cwd was #{Dir.getwd})")
+      raise "Couldn't open #{path} for locking: #$!"
     end
   end
 end
