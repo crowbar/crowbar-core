@@ -8,7 +8,7 @@ describe Crowbar::Lock::LocalBlocking do
     lock.release
   end
 
-  context "when a lock is acquired" do
+  shared_examples "a lock" do
     it "returns a lock object" do
       expect(lock.acquire).to be_an_instance_of(subject.class)
     end
@@ -26,6 +26,11 @@ describe Crowbar::Lock::LocalBlocking do
       end
       expect(lock.locked?).to be false
     end
+  end
+
+  context "when a lock is acquired" do
+
+    it_behaves_like "a lock"
 
     it "is an exclusive lock" do
       # Check that one of two attempts racing to obtain lock will win
