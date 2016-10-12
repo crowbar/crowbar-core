@@ -7,7 +7,7 @@ fi
 # Only set the crazy prompt on terminals that support colors
 # it looks horrible on monochromatic terminals
 
-if [ $(tput colors) -ge 8 ]; then
+if test $(tput colors 2> /dev/null || echo 0) -ge 8; then
     case $(readlink /proc/$$/exe 2>/dev/null) in
         */zsh)
             PS1=$'<%= @zsh_prompt_from_template.call %> '
