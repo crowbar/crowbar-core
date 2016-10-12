@@ -13,7 +13,9 @@ class Upgrade
       current_node: nil
     }
     if progress_file_path.exist?
-      @upgrade_progress = JSON.load(progress_file_path.read)
+      Crowbar::Lock::LocalBlocking.with_lock(shared: true) do
+        @upgrade_progress = JSON.load(progress_file_path.read)
+      end
     else
       # in 'steps', we save the information about each step that was executed
       @upgrade_progress[:steps] = upgrade_steps_6_7.map do |step|
@@ -23,8 +25,10 @@ class Upgrade
   end
 
   def save
-    progress_file_path.open("w") do |f|
-      f.write(JSON.pretty_generate(upgrade_progress))
+    Crowbar::Lock::LocalBlocking.with_lock(shared: false) do
+      progress_file_path.open("w") do |f|
+        f.write(JSON.pretty_generate(upgrade_progress))
+      end
     end
   end
 
