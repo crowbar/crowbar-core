@@ -78,7 +78,7 @@ module Crowbar
       Crowbar::Error::LockingFailure.new(msg)
     end
 
-    def acquire
+    def acquire(options = {})
       if locked?
         logger.warn("#{owner} tried to re-acquire remote lock #{path} on #{node}")
         return
