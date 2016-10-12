@@ -35,7 +35,7 @@ module Api
       unless out[:exit_code].zero?
         Rails.logger.error("Executing of pre upgrade script has failed on node #{@node.name}.")
         Rails.logger.error("Script location: #{script}")
-        Rails.logger.error("stdout: #{out[:stdout]}, stderr: #{out[:stderr]}")
+        Rails.logger.error("exit: #{out[:exit_code]}, out: #{out[:stdout]}, err: #{out[:stderr]}")
         return false
       end
       true
@@ -63,7 +63,7 @@ module Api
       unless out[:exit_code].zero?
         Rails.logger.error("Executing of post upgrade script has failed on node #{@node.name}.")
         Rails.logger.error("Script location: #{script}")
-        Rails.logger.error("stdout: #{out[:stdout]}, stderr: #{out[:stderr]}")
+        Rails.logger.error("exit: #{out[:exit_code]}, out: #{out[:stdout]}, err: #{out[:stderr]}")
         return false
       end
     end
