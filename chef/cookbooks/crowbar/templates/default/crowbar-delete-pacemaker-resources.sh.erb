@@ -1,0 +1,70 @@
+#!/bin/bash
+#
+# Old pacemaker resources must be deleted in the old setup before they get created from upgraded node
+
+LOGFILE=/var/log/crowbar/node-upgrade.log
+UPGRADEDIR=/var/lib/crowbar/upgrade
+mkdir -p "`dirname "$LOGFILE"`"
+exec >>"$LOGFILE" 2>&1
+
+echo "Executing $BASH_SOURCE"
+
+set -x
+
+mkdir -p $UPGRADEDIR
+
+if [[ -f $UPGRADEDIR/crowbar-delete-pacemaker-resources-ok ]] ; then
+    echo "Pacemaker resources already successfully deleted"
+    exit 0
+fi
+
+rm -f $UPGRADEDIR/crowbar-delete-pacemaker-resources-failed
+
+<% if @use_ha %>
+
+echo "Stopping pacemaker resources..."
+
+# Services need to be stopped before deletion.
+# Otherwise we could have services starting up in unwanted locations while deleting constraints.
+
+for type in clone group ms primitive; do
+    for resource in $(crm configure show | awk "\$1 == \"$type\" && ! (\$2 ~ /drbd|stonith|vip-/) {print \$2}"); do
+        crm --wait resource stop $resource
+    done
+done
+
+ret=$?
+if [ $ret != 0 ] ; then
+    echo "Error occured during stopping resources."
+    echo $ret > $UPGRADEDIR/crowbar-delete-pacemaker-resources-failed
+    exit $ret
+fi
+
+echo "Deleting pacemaker resources..."
+
+crm_cmd=""
+for type in location clone group ms primitive; do
+    for resource in $(crm configure show | awk "\$1 == \"$type\" && ! (\$2 ~ /drbd|stonith|vip-/) {print \$2}"); do
+        printf -v crm_cmd "${crm_cmd}delete $resource\n"
+    done
+done
+
+# Delete the resources in single transaction - let pacemaker decide the ordering
+crm configure <<EOF
+$crm_cmd
+EOF
+
+ret=$?
+if [ $ret != 0 ] ; then
+    echo "Error occured during deleting resources"
+    echo $ret > $UPGRADEDIR/crowbar-delete-pacemaker-resources-failed
+    exit $ret
+fi
+
+<% else %>
+
+echo "No HA setup found..."
+
+<% end %>
+
+touch $UPGRADEDIR/crowbar-delete-pacemaker-resources-ok
