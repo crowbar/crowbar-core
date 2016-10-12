@@ -1435,9 +1435,24 @@ class ServiceObject
       # check if the node is currently rebooting
       wait_for_reboot(node)
 
+      # don't use a cached node object here, as there might have been some chef
+      # run we were blocking on in the wait_for_chef_clients call before
+      node_wall = NodeObject.find_node_by_name(node)[:crowbar_wall]
+      old_reboot_time = node_wall[:wait_for_reboot_requesttime] || 0
+
       ret = 0
       open(logfile_name, "a") do |f|
-        if system(*ssh_cmd, out: f, err: f)
+        success = system(*ssh_cmd, out: f, err: f)
+        # If reboot was requested (through the reboot handler), then the
+        # chef-client call might be interrupted and might fail; however,
+        # because the reboot occurs at the end of the chef run, we know that
+        # the run was actually successful.
+        # And of course, we need to reload the node object from chef to get the
+        # latest attributes.
+        node_wall = NodeObject.find_node_by_name(node)[:crowbar_wall]
+        if success ||
+            (node_wall[:wait_for_reboot] &&
+                node_wall[:wait_for_reboot_requesttime] > old_reboot_time)
           wait_for_reboot(node)
         else
           ret = 1
