@@ -3,7 +3,7 @@
     "available":true,
     "repos": {}
   },
-  "cloud":{
+  "openstack":{
     "available":true,
     "repos": {}
   }
