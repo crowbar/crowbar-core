@@ -110,11 +110,11 @@ module Api
           } unless os_available
 
           cloud_available = repo_version_available?(products, "suse-openstack-cloud", "7")
-          ret[:cloud] = {
+          ret[:openstack] = {
             available: cloud_available,
             repos: {}
           }
-          ret[:cloud][:repos][admin_architecture.to_sym] = {
+          ret[:openstack][:repos][admin_architecture.to_sym] = {
             missing: ["SUSE OpenStack Cloud 7"]
           } unless cloud_available
         end
