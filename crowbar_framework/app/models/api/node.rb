@@ -76,8 +76,6 @@ Action did not finish after 1 minute")
     end
 
     def post_upgrade
-      # FIXME: so far, we have no post-upgrade script
-      return true
       # TODO: save the global status info about this substep (we started post upgrade stuff)
 
       # Join the cluster: start pacemaker and run selected recipes
