@@ -106,7 +106,10 @@ module Api
             repos: {}
           }
           ret[:os][:repos][admin_architecture.to_sym] = {
-            missing: ["SUSE Linux Enterprise Server 12 SP2"]
+            missing: [
+              "SLES12-SP2-Pool",
+              "SLES12-SP2-Updates"
+            ]
           } unless os_available
 
           cloud_available = repo_version_available?(products, "suse-openstack-cloud", "7")
@@ -115,7 +118,10 @@ module Api
             repos: {}
           }
           ret[:openstack][:repos][admin_architecture.to_sym] = {
-            missing: ["SUSE OpenStack Cloud 7"]
+            missing: [
+              "SUSE-OpenStack-Cloud-7-Pool",
+              "SUSE-OpenStack-Cloud-7-Updates"
+            ]
           } unless cloud_available
         end
       end
