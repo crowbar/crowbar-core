@@ -42,7 +42,7 @@ class BackupsController < ApplicationController
 
     respond_to do |format|
       if @backup.save
-        format.json { head :ok }
+        format.json { render json: @backup }
         format.html { redirect_to backups_path }
       else
         format.json do
