@@ -4,48 +4,37 @@
   "current_node":null,
   "steps":{
     "upgrade_prechecks":{
-      "status":"pending",
-      "errors":{}
+      "status":"pending"
     },
     "upgrade_prepare":{
-      "status":"pending",
-      "errors":{}
+      "status":"pending"
     },
     "admin_backup":{
-      "status":"pending",
-      "errors":{}
+      "status":"pending"
     },
     "admin_repo_checks":{
-      "status":"pending",
-      "errors":{}
+      "status":"pending"
     },
     "admin_upgrade":{
-      "status":"pending",
-      "errors":{}
+      "status":"pending"
     },
     "database":{
-      "status":"pending",
-      "errors":{}
+      "status":"pending"
     },
     "nodes_repo_checks":{
-      "status":"pending",
-      "errors":{}
+      "status":"pending"
     },
     "nodes_services":{
-      "status":"pending",
-      "errors":{}
+      "status":"pending"
     },
     "nodes_db_dump":{
-      "status":"pending",
-      "errors":{}
+      "status":"pending"
     },
     "nodes_upgrade":{
-      "status":"pending",
-      "errors":{}
+      "status":"pending"
     },
     "finished":{
-      "status":"pending",
-      "errors":{}
+      "status":"pending"
     }
   }
 }
