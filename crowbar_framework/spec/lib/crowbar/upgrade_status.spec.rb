@@ -16,7 +16,7 @@
 
 require "spec_helper"
 
-describe Upgrade do
+describe Crowbar::UpgradeStatus do
   context "with a status file that does not exist" do
     it "ensures the default initial values are correct" do
       allow(File).to receive(:exist?).and_return(false)
@@ -35,7 +35,6 @@ describe Upgrade do
       expect(subject.current_step_state[:status]).to eql "pending"
       expect(subject.start_step).to be true
       expect(subject.current_step_state[:status]).to eql "running"
-      expect(subject.current_step_state[:errors]).to be_empty
       expect(subject.end_step).to be true
       expect(subject.current_step).to eql "upgrade_prepare"
     end
@@ -43,7 +42,7 @@ describe Upgrade do
     it "does not move to next step when current one failed" do
       allow(File).to receive(:exist?).and_return(false)
       expect(subject.current_step).to eql "upgrade_prechecks"
-      expect(subject.end_step(false, { :failure => "error message" })).to be false
+      expect(subject.end_step(false, failure: "error message")).to be false
       expect(subject.current_step).to eql "upgrade_prechecks"
       expect(subject.current_step_state[:status]).to eql "failed"
       expect(subject.current_step_state[:errors]).to_not be_empty
