@@ -150,6 +150,18 @@ Action did not finish after 1 minute")
       true
     end
 
+    # Disable "pre-upgrade" attribute for given node
+    # We must do it from a node where pacemaker is running
+    def disable_pre_upgrade_attribute_for(name)
+      hostname = name.split(".").first
+      out = @node.run_ssh_cmd("crm node attribute #{hostname} set pre-upgrade false")
+      unless out[:exit_code].zero?
+        save_error_state("Changing the pre-upgrade role for #{hostname} from #{@node.name} failed")
+        return false
+      end
+      true
+    end
+
     def save_node_state(message = "")
       # FIXME: save the node status to global status
       Rails.logger.info(message)

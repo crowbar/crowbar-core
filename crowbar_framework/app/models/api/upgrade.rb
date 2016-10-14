@@ -210,29 +210,80 @@ module Api
       protected
 
       def upgrade_controller_nodes
+        drbd_nodes = NodeObject.find("drbd:*")
+        # FIXME: prepare for cases with no drbd out there
+        return true if drbd_nodes.empty?
+
         # TODO: find the controller node that needs to be upgraded now
         # First node to upgrade is DRBD slave
         drbd_slave = ""
+        drbd_master = ""
         NodeObject.find(
           "state:crowbar_upgrade AND (roles:database-server OR roles:rabbitmq-server)"
         ).each do |db_node|
           cmd = "LANG=C crm resource status ms-drbd-{postgresql,rabbitmq}\
           | grep \\$(hostname) | grep -q Master"
           out = db_node.run_ssh_cmd(cmd)
-          unless out[:exit_code].zero?
+          if out[:exit_code].zero?
+            drbd_master = db_node.name
+          else
             drbd_slave = db_node.name
           end
         end
-        # FIXME: prepare for cases with no drbd out there
         return false if drbd_slave.empty?
 
         node_api = Api::Node.new drbd_slave
 
-        # FIXME: save the global status information that this node is being upgraded
-        node_api.upgrade
+        save_upgrade_state("Starting the upgrade of node #{drbd_slave}")
+        return false unless node_api.upgrade
+
+        # Explicitly mark node1 as the cluster founder
+        # and adapt DRBD config to the new founder situation.
+        # This shoudl be one time action only (for each cluster).
+        unless Api::Pacemaker.set_node_as_founder drbd_slave
+          save_error_state("Changing the cluster founder to #{drbd_slave} has failed")
+          return false
+        end
+
+        # Remove "pre-upgrade" attribute from node1
+        # We must do it from a node where pacemaker is running
+        master_node_api = Api::Node.new drbd_master
+        return false unless master_node_api.disable_pre_upgrade_attribute_for drbd_slave
+
+        # FIXME: this should be one time action only (for each cluster)
+        return false unless delete_pacemaker_resources drbd_master
 
         # FIXME: if upgrade went well, continue with next node(s)
         true
+      end
+
+      # Delete existing pacemaker resources, from other node in the cluster
+      def delete_pacemaker_resources(node_name)
+        node = NodeObject.find_node_by_name node_name
+        return false if node.nil?
+
+        begin
+          node.wait_for_script_to_finish(
+            "/usr/sbin/crowbar-delete-pacemaker-resources.sh", 300
+          )
+          save_upgrade_state("Deleting pacemaker resources was successful.")
+        rescue StandardError => e
+          save_error_state(
+            e.message +
+            "Check /var/log/crowbar/node-upgrade.log for details."
+          )
+          return false
+        end
+      end
+
+      def save_upgrade_state(message = "")
+        # FIXME: update the global status
+        Rails.logger.info(message)
+      end
+
+      def save_error_state(message = "")
+        # FIXME: save the error to global status
+        Rails.logger.error(message)
       end
 
       def upgrade_compute_nodes
