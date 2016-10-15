@@ -108,6 +108,8 @@ class BarclampController < ApplicationController
   param :id, String, desc: "Proposal name", required: true
   param :name, String, desc: "Name of the node transitioning", required: true
   param :state, String, desc: "State of the node transitioning", required: true
+  error 404, "Node not found"
+  error 500, "Transitioning failed, details are in the respose"
   def transition
     id = params[:id]       # Provisioner id
     state = params[:state] # State of node transitioning
@@ -212,6 +214,7 @@ class BarclampController < ApplicationController
   }
   '
   param_group :proposal
+  error 404, "Proposal not found"
   def show
     ret = @service_object.show_active params[:id]
     @role = ret[1]
@@ -238,6 +241,7 @@ class BarclampController < ApplicationController
     "Delete will deactivate and remove the proposal"
   header "Accept", "application/json", required: true
   param_group :proposal
+  error 500, "Failed to deactivate proposal"
   def delete
     params[:id] = params[:id] || params[:name]
     ret = [500, "Server Problem"]
@@ -413,6 +417,7 @@ class BarclampController < ApplicationController
     "default"
   ]
   '
+  error 404, "Proposals of barclamp not found"
   def proposals
     code, message = @service_object.proposals
 
@@ -505,6 +510,7 @@ class BarclampController < ApplicationController
     }
   }
   '
+  error 404, "Proposal template of barclamp not found"
   def proposal_template
     code, message = @service_object.proposal_template
 
@@ -604,6 +610,7 @@ class BarclampController < ApplicationController
     }
   }
   '
+  error 404, "Proposal of barclamp not found"
   def proposal_show
     code, message = @service_object.proposal_show(
       params[:id]
@@ -650,6 +657,7 @@ class BarclampController < ApplicationController
     "Remove a specific proposal"
   header "Accept", "application/json", required: true
   param_group :proposal
+  error 404, "Proposal of barclamp not found"
   def proposal_delete
     code, message = @service_object.proposal_delete(
       params[:id]
@@ -691,6 +699,10 @@ class BarclampController < ApplicationController
     "Commit a specific proposal to apply it"
   header "Accept", "application/json", required: true
   param_group :proposal
+  error 400, "Invalid proposal"
+  error 402, "Proposal already committing"
+  error 404, "Proposal of barclamp not found"
+  error 500, "Failed to commit proposal, details in the response"
   def proposal_commit
     code, message = @service_object.proposal_commit(
       params[:id]
@@ -748,6 +760,8 @@ class BarclampController < ApplicationController
     "Reset a specific proposal status"
   header "Accept", "application/json", required: true
   param_group :proposal
+  error 404, "Proposal of barclamp not found"
+  error 422, "Failed to reset proposal, details in the response"
   def proposal_reset
     code, message = @service_object.reset_proposal(
       params[:id]
@@ -791,6 +805,7 @@ class BarclampController < ApplicationController
     "Reset a specific proposal from the queue"
   header "Accept", "application/json", required: true
   param_group :proposal
+  error 400, "Failed to dequeue proposal, details in the response"
   def proposal_dequeue
     code, message = @service_object.dequeue_proposal(
       params[:id]
@@ -834,6 +849,8 @@ class BarclampController < ApplicationController
     "Update a specific proposal"
   header "Accept", "application/json", required: true
   param_group :proposal
+  error 400, "Invalid proposal"
+  error "any other http server exception", "Unknown error"
   def proposal_update
     if params[:submit].nil?
       #
@@ -996,6 +1013,9 @@ class BarclampController < ApplicationController
     "Create a new specific proposal"
   header "Accept", "application/json", required: true
   param :barclamp, String, desc: "Name of the barclamp", required: true
+  error 400, "Invalid proposal, details in response"
+  error 403, "Illegal proposal name"
+  error 412, "Failed to create proposal, details in response"
   def proposal_create
     params[:id] = params[:id] || params[:name]
 

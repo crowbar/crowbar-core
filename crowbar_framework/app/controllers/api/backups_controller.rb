@@ -52,6 +52,7 @@ class Api::BackupsController < ApiController
     "migration_level": 20160819142156
   }
   '
+  error 404, "Backup could not be found"
   def show
     render json: @backup
   end
@@ -73,6 +74,7 @@ class Api::BackupsController < ApiController
     "migration_level": 20160819142156
   }
   '
+  error 422, "Failed to save backup, error details are provided in the response"
   def create
     @backup = Api::Backup.new(backup_params)
 
@@ -89,6 +91,7 @@ class Api::BackupsController < ApiController
   header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   param :id, Integer, desc: "Backup ID", required: true
+  error 422, "Failed to restore backup, error details are provided in the response"
   def restore
     if @backup.restore(background: true)
       head :ok
@@ -101,6 +104,7 @@ class Api::BackupsController < ApiController
   header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   param :id, Integer, desc: "Backup ID", required: true
+  error 404, "Backup could not be found"
   def download
     if @backup.path.exist?
       send_file(
@@ -118,6 +122,7 @@ class Api::BackupsController < ApiController
   param :backup, Hash, desc: "Backup info", required: true do
     param :file, File, desc: "Backup for upload", required: true
   end
+  error 422, "Failed to upload backup, error details are provided in the response"
   def upload
     @backup = Api::Backup.new(backup_upload_params)
 
@@ -134,6 +139,7 @@ class Api::BackupsController < ApiController
   header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   param :id, Integer, "Backup ID", required: true
+  error 422, "Failed to destroy backup, error details are provided in the response"
   def destroy
     if @backup.destroy
       head :ok
