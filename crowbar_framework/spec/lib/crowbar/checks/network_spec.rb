@@ -17,6 +17,7 @@
 require "spec_helper"
 
 describe Crowbar::Checks::Network do
+  subject { Crowbar::Checks::Network }
   before :each do
     allow(subject).to receive_messages(
       hostname: "crowbar",

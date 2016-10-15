@@ -14,8 +14,6 @@
 # limitations under the License.
 #
 
-require "open3"
-
 module Api
   class Crowbar < Tableless
     class << self
@@ -72,25 +70,6 @@ module Api
         [].tap do |list|
           ["ceph", "ha"].each do |addon|
             list.push(addon) if addon_installed?(addon) && addon_enabled?(addon)
-          end
-        end
-      end
-
-      def maintenance_updates_installed?
-        Open3.popen3("zypper patch-check") do |_stdin, _stdout, _stderr, wait_thr|
-          case wait_thr.value.exitstatus
-          when 100
-            Rails.logger.warn(
-              "ZYPPER_EXIT_INF_UPDATE_NEEDED: patches available for installation."
-            )
-            false
-          when 101
-            Rails.logger.warn(
-              "ZYPPER_EXIT_INF_SEC_UPDATE_NEEDED: security patches available for installation."
-            )
-            false
-          else
-            true
           end
         end
       end
