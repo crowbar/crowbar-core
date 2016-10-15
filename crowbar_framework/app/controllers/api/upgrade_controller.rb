@@ -174,4 +174,115 @@ class Api::UpgradeController < ApiController
   def repocheck
     render json: Api::Upgrade.repocheck
   end
+
+  protected
+
+  api :POST, "/api/upgrade/new",
+    "Initialization of Crowbar during upgrade with creation of a new database.
+    NOTE: It is only possible to use this endpoint during the stage where crowbar-init is running."
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
+  param :username, /(?=^.{4,63}$)(?=^[a-zA-Z0-9_]*$)/,
+    desc: "Username
+      Min length: 4
+      Max length: 63
+      Only alphanumeric characters or underscores
+      Must begin with a letter [a-zA-Z] or underscore",
+    required: true
+  param :password, /(?=^.{4,63}$)(?=^[a-zA-Z0-9_]*$)(?=[a-zA-Z0-9_$&+,:;=?@#|'<>.^*()%!-]*$)/,
+    desc: "Password
+      Min length: 4
+      Max length: 63
+      Alphanumeric and special characters
+      Must begin with any alphanumeric character or underscore",
+    required: true
+  api_version "2.0"
+  example '
+  {
+    "database_setup": {
+      "success": true
+    },
+    "database_migration": {
+      "success": true
+    },
+    "schema_migration": {
+      "success": true
+    },
+    "crowbar_init": {
+      "success": false,
+      "body": {
+        "error": "crowbar_init: Failed to stop crowbar-init.service"
+      }
+    }
+  }
+  '
+  error 422, "Failed to initialize Crowbar, details are provided in the response hash"
+  def dummy_crowbar_init_api_upgrade_new
+    # empty method to document crowbar-init's upgrade related API endpoints
+  end
+
+  api :POST, "/api/upgrade/connect",
+    "Initialization of Crowbar during upgrade with connection to an existing database.
+    NOTE: It is only possible to use this endpoint during the stage where crowbar-init is running."
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
+  param :username, /(?=^.{4,63}$)(?=^[a-zA-Z0-9_]*$)/,
+    desc: "External database username
+      Min length: 4
+      Max length: 63
+      Only alphanumeric characters and/or underscores
+      Must begin with a letter [a-zA-Z] or underscore", required: true
+  param :password, /(?=^.{4,63}$)(?=^[a-zA-Z0-9_]*$)(?=[a-zA-Z0-9_$&+,:;=?@#|'<>.^*()%!-]*$)/,
+    desc: "External database password
+      Min length: 4
+      Max length: 63
+      Alphanumeric and special characters
+      Must begin with any alphanumeric character or underscore",
+    required: true
+  param :database, /(?=^.{1,63}$)(?=^[a-zA-Z0-9_]*$)(?=[a-zA-Z0-9_$&+,:;=?@#|'<>.^*()%!-]*$)/,
+    desc: "Database name
+      Min length: 4
+      Max length: 63
+      Alphanumeric and special characters
+      Must begin with any alphanumeric character or underscore",
+    required: true
+  param :host, /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/,
+    desc: "External database host, Ipv4 or Hostname
+      Min length: 4
+      Max length: 63
+      Numbers and period characters (only IPv4)
+      Hostnames:
+       alphanumeric characters and hyphens
+       cannot start/end with digits or hyphen",
+    required: true
+  param :port, /(?=^.{1,5}$)(?=^[0-9]*$)/,
+    desc: "External database port
+      Min length: 1
+      Max length: 5
+      Only numbers",
+    required: true
+  api_version "2.0"
+  example '
+  {
+    "database_setup": {
+      "success": true
+    },
+    "database_migration": {
+      "success": true
+    },
+    "schema_migration": {
+      "success": true
+    },
+    "crowbar_init": {
+      "success": false,
+      "body": {
+        "error": "crowbar_init: Failed to stop crowbar-init.service"
+      }
+    }
+  }
+  '
+  error 406, "Connection to external database failed. Possible errors can be:
+    host not found, incorrect port, wrong credentials, wrong database name"
+  error 422, "Failed to initialize Crowbar, details are provided in the response hash"
+  def dummy_crowbar_init_api_upgrade_connect
+    # empty method to document crowbar-init's upgrade related API endpoints
+  end
 end
