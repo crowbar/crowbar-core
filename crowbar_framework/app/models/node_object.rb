@@ -946,7 +946,13 @@ class NodeObject < ChefObject
     answer = map.sort{|a,b|
       aindex = bus_index(bus_order, a[1]["path"])
       bindex = bus_index(bus_order, b[1]["path"])
-      aindex == bindex ? a[0] <=> b[0] : aindex <=> bindex
+      if aindex != bindex
+        aindex <=> bindex
+      elsif a[1]["path"] != b[1]["path"]
+        a[1]["path"] <=> b[1]["path"]
+      else
+        a[0] <=> b[0]
+      end
     }
     answer.map! { |x| x[0] }
   end
