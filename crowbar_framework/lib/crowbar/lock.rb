@@ -29,13 +29,14 @@ module Crowbar
     end
 
     def self.with_lock(options = {})
-      new(options).with_lock do
+      shared = options.delete(:shared) || false
+      new(options).with_lock(shared: shared) do
         yield
       end
     end
 
-    def with_lock
-      acquire
+    def with_lock(options = {})
+      acquire(options)
       yield if block_given?
     ensure
       release
