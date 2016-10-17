@@ -135,16 +135,24 @@ module Api
         @network_checks ||= ::Crowbar::Sanity.check
       end
 
+      def ceph_status
+        @ceph_status ||= Api::Crowbar.ceph_status
+      end
+
       def ceph_healthy?
-        Api::Crowbar.ceph_healthy?
+        ceph_status.empty?
       end
 
       def clusters_healthy?
         Api::Crowbar.clusters_healthy?
       end
 
+      def compute_resources_status
+        @compute_resounrces_status ||= Api::Crowbar.compute_resources_status
+      end
+
       def compute_resources_available?
-        Api::Crowbar.compute_resources_available?
+        compute_resources_status.empty?
       end
 
       # Check Errors
@@ -180,7 +188,7 @@ module Api
 
         {
           ceph_health: {
-            data: [], # TODO: implement ceph health check errors
+            data: ceph_status[:errors],
             help: I18n.t("api.upgrade.prechecks.ceph_health_check.help.default")
           }
         }
@@ -202,7 +210,7 @@ module Api
 
         {
           compute_resources: {
-            data: [], # TODO: implement cluster health check errors
+            data: compute_resources_status[:errors],
             help: I18n.t("api.upgrade.prechecks.compute_resources_check.help.default")
           }
         }
