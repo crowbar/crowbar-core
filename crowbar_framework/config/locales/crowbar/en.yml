@@ -799,6 +799,7 @@ en:
         help:
           default: 'Refer to the error message in the response'
       nodes:
+        failed: 'Node upgrade failed'
         help:
           default: 'Refer to the error message in the response'
       cancel:
