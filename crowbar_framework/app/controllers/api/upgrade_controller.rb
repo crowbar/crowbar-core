@@ -40,7 +40,14 @@ class Api::UpgradeController < ApiController
     if status == :ok
       head status
     else
-      render json: msg, status: status
+      render json: {
+        errors: {
+          prepare: {
+            data: msg,
+            help: I18n.t("api.upgrade.prepare.help.default")
+          }
+        }
+      }, status: status
     end
   end
 
@@ -54,7 +61,14 @@ class Api::UpgradeController < ApiController
     if cancel_upgrade[:status] == :ok
       head :ok
     else
-      render json: { error: cancel_upgrade[:message] }, status: cancel_upgrade[:status]
+      render json: {
+        errors: {
+          cancel: {
+            data: cancel_upgrade[:message],
+            help: I18n.t("api.upgrade.cancel.help.default")
+          }
+        }
+      }, status: cancel_upgrade[:status]
     end
   end
 end
