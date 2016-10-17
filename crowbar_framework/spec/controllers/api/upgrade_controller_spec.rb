@@ -17,6 +17,13 @@ describe Api::UpgradeController, type: :request do
         )
       ).to_json
     end
+    let!(:crowbar_repocheck) do
+      JSON.parse(
+        File.read(
+          "spec/fixtures/crowbar_repocheck.json"
+        )
+      ).to_json
+    end
 
     it "shows the upgrade status object" do
       allow(Api::Upgrade).to receive(:network_checks).and_return([])
@@ -157,6 +164,16 @@ describe Api::UpgradeController, type: :request do
       expect(response.body).to eq(
         "{\"os\":{\"available\":true,\"repos\":{}},\"openstack\":{\"available\":true,\"repos\":{}}}"
       )
+    end
+
+    it "checks the crowbar repositories" do
+      allow(Api::Upgrade).to(
+        receive(:adminrepocheck).and_return(JSON.parse(crowbar_repocheck))
+      )
+
+      get "/api/upgrade/adminrepocheck", {}, headers
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to eq(crowbar_repocheck)
     end
   end
 end
