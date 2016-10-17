@@ -47,6 +47,7 @@ module Crowbar
 
     def start_step
       progress[:steps][current_step][:status] = "running"
+      save
       true
     end
 
@@ -70,6 +71,7 @@ module Crowbar
       return false if current_step_state[:status] != "passed"
       i = upgrade_steps_6_7.index current_step
       progress[:current_step] = upgrade_steps_6_7[i + 1]
+      save
       true
     end
 
