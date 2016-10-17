@@ -85,6 +85,8 @@ module BarclampLibrary
         999
       end
 
+      # Returns an array of interfaces like ["em1", "em2", "em3", "em4"],
+      # sorted by bus_order
       def self.sort_ifs(map, bus_order)
         answer = map.sort{|a,b|
           aindex = Barclamp::Inventory.bus_index(bus_order, a[1]["path"])
@@ -96,6 +98,14 @@ module BarclampLibrary
 
       # IMPORTANT: This needs to be kept in sync with the get_bus_order method in
       # node_object.rb in the Crowbar framework.
+      #
+      # Returns something like
+      #   [
+      #     "0000:00/0000:00:03.0/0000:01:00.0",
+      #     "0000:00/0000:00:03.0/0000:01:00.1",
+      #     "0000:00/0000:00:1c.4/0000:06:00.0",
+      #     "0000:00/0000:00:1c.4/0000:06:00.1"
+      #   ]
       def self.get_bus_order(node)
         bus_order = nil
         node["network"]["interface_map"].each do |data|
@@ -112,6 +122,22 @@ module BarclampLibrary
         bus_order
       end
 
+      # Each Hash in the network.conduit_map list looks something like:
+      #
+      #   {
+      #     "pattern": "dual/.*/crowbar$",
+      #     "conduit_list": {
+      #       "intf0"   => { "if_list" => ["?1g1"] },
+      #       "intf1"   => { "if_list" => ["?1g2"] },
+      #       "intf2"   => { "if_list" => ["?1g1"] },
+      #       "bastion" => { "if_list" => [ "1g2"] }
+      #     }
+      #   }
+      #
+      # This method searches that list for the Hash whose value of the
+      # "pattern" key matches the selected network mode / number of
+      # interfaces / role, and from the matching Hash, returns the
+      # sub-Hash corresponding to the value of the "conduit_list" key.
       def self.get_conduits(node)
         conduits = nil
         node["network"]["conduit_map"].each do |data|
@@ -138,10 +164,40 @@ module BarclampLibrary
         conduits
       end
 
+      # Returns something like
+      #   {
+      #     "em4" => {
+      #       "path" => "0000:00/0000:00:1c.4/0000:06:00.1",
+      #       "speeds" => ["10m", "100m", "1g"]
+      #     },
+      #     "em1" => {
+      #       "path" => "0000:00/0000:00:03.0/0000:01:00.0",
+      #       "speeds" => ["100m", "1g", "10g"]
+      #     },
+      #     "em2" => {
+      #       "path" => "0000:00/0000:00:03.0/0000:01:00.1",
+      #       "speeds" => ["100m", "1g", "10g"]
+      #     },
+      #     "em3" => {
+      #       "path" => "0000:00/0000:00:1c.4/0000:06:00.0",
+      #       "speeds" => ["10m", "100m", "1g"]
+      #     }
+      #   }
       def self.get_detected_intfs(node)
         node.automatic_attrs["crowbar_ohai"]["detected"]["network"]
       end
 
+      # Creates a copy of the nested Hash returned by get_conduits,
+      # with every interface designator pattern (e.g. "?1g2") replaced
+      # with a matching interface of the correct speed which the node has.
+      #
+      # Returns something like
+      #   {
+      #     "intf0"   => { "if_list" => [ "eth0" ] },
+      #     "intf1"   => { "if_list" => [ "eth0" ] },
+      #     "intf2"   => { "if_list" => [ "eth0" ] },
+      #     "bastion" => { "if_list" => [ "eth1" ] }
+      #   }
       def self.build_node_map(node)
         bus_order = Barclamp::Inventory.get_bus_order(node)
         conduits = Barclamp::Inventory.get_conduits(node)
@@ -150,11 +206,14 @@ module BarclampLibrary
 
         if_list = get_detected_intfs(node)
 
-        # build a set of maps <intf-designator> -> <OS intf>
-        # designators are <speed><#> (speed = 100m, 1g etc). # is a count of interfaces of the same speed.
-        # OS intf is the name given to the interface by the operating system
-        # The intf-designator is 'stable' in terms of renumbering because of addition/removal of add on cards (across machines)
-
+        # build an if_remap Hash mapping <intf-designator> to <OS-intf>
+        # intf-designators are of the format <speed><i>, where:
+        #   - speed is a value like 100m, 1g, 10g etc.
+        #   - i is an integer ordering interfaces of the same speed
+        # OS-intf is the name given to the interface by the operating system
+        #
+        # The intf-designator is 'stable' in terms of renumbering because of
+        # addition/removal of add on cards (across machines)
         sorted_ifs = Barclamp::Inventory.sort_ifs(if_list, bus_order)
         if_remap = {}
         count_map = {}
@@ -168,20 +227,39 @@ module BarclampLibrary
             count_map[speed] = count + 1
           end
         end
-
+        # if_remap now contains something like
+        #   {
+        #     "100m1" => "em1",
+        #     "1g1"   => "em1",
+        #     "10g1"  => "em1",
+        #     "100m2" => "em2",
+        #     "1g2"   => "em2",
+        #     "10g2"  => "em2",
+        #     "10m1"  => "em3",
+        #     "100m3" => "em3",
+        #     "1g3"   => "em3",
+        #     "10m2"  => "em4",
+        #     "100m4" => "em4",
+        #     "1g4"   => "em4"
+        #   }
         ans = {}
-        conduits.each do |k,v|
+        conduits.each do |conduit, conduit_data|
           hash = {}
-          v.each do |mk, mv|
-            if mk == "if_list"
-              hash["if_list"] = v["if_list"].map do |if_ref|
-                map_if_ref(if_remap, if_ref)
+          conduit_data.each do |conduit_key, conduit_val|
+            if conduit_key == "if_list"
+              hash["if_list"] = conduit_data["if_list"].map do |if_ref|
+                r = map_if_ref(if_remap, if_ref)
+                if r.nil?
+                  Chef::Log.debug "Unable to find interface for #{node.fqdn} " \
+                                  "matching #{if_ref} out of #{if_remap}"
+                end
+                r
               end
             else
-              hash[mk] = mv
+              hash[conduit_key] = conduit_val
             end
           end
-          ans[k] = hash
+          ans[conduit] = hash
         end
 
         ans
@@ -199,31 +277,48 @@ module BarclampLibrary
         if_cnt = m[3]
         desired = speeds.index(m[2])
         found = nil
-          filter = lambda { |x|
+        filter = lambda do |x|
           found = if_map["#{speeds[x]}#{if_cnt}"] unless found
-        }
+        end
         case m[1]
-          when "+"
-            (desired..speeds.length).each(&filter)
-          when "-"
-            desired.downto(0,&filter)
-          when "?"
-            (desired..speeds.length).each(&filter)
-            desired.downto(0,&filter) unless found
-          else
-            found = if_map[ref]
-          end
-          found
+        when "+"
+          (desired..speeds.length).each(&filter)
+        when "-"
+          desired.downto(0, &filter)
+        when "?"
+          (desired..speeds.length).each(&filter)
+          desired.downto(0, &filter) unless found
+        else
+          found = if_map[ref]
+        end
+        found
       end
 
+      # Find the interface(s) and teaming mode to use for the given
+      # conduit on the given node.  Optionally provide a
+      # intf_to_if_map precalculated by #build_node_map if you are
+      # calling this in a loop and want to avoid it being calculated
+      # on each call.
+      #
+      # Returns an [interface, if_list, teaming_mode] Array:
+      #   interface:
+      #     The interface providing access to the given conduit.
+      #     If teaming is enabled, this will be something like bond0.
+      #   if_list:
+      #     The list of physical interfaces used.  If teaming is enabled,
+      #     this will be the backing interfaces behind bondN, otherwise
+      #     it will be a singleton list.
+      #   team_mode:
+      #     The integer representing the teaming mode, as specified
+      #     by the relevant conduit_list entry in the network barclamp proposal
       def self.lookup_interface_info(node, conduit, intf_to_if_map = nil)
         intf_to_if_map = Barclamp::Inventory.build_node_map(node) if intf_to_if_map.nil?
 
-        return [nil, nil] if intf_to_if_map[conduit].nil?
+        return [nil, nil, nil] if intf_to_if_map[conduit].nil?
 
-        c_info = intf_to_if_map[conduit]
-        interface_list = c_info["if_list"]
-        team_mode = c_info["team_mode"] rescue nil
+        conduit_info = intf_to_if_map[conduit]
+        interface_list = conduit_info["if_list"]
+        team_mode = conduit_info["team_mode"]
 
         return [interface_list[0], interface_list, nil] if interface_list.size == 1
 
