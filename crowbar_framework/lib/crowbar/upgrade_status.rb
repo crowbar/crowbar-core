@@ -31,6 +31,10 @@ module Crowbar
           f.write(JSON.pretty_generate(progress))
         end
       end
+      true
+    rescue StandardError => e
+      Rails.logger.error("Exception during saving the status file: #{e.message}")
+      false
     end
 
     def current_substep
@@ -47,7 +51,7 @@ module Crowbar
 
     def start_step
       progress[:steps][current_step][:status] = "running"
-      true
+      save
     end
 
     def end_step(success = true, errors = {})
@@ -70,7 +74,7 @@ module Crowbar
       return false if current_step_state[:status] != "passed"
       i = upgrade_steps_6_7.index current_step
       progress[:current_step] = upgrade_steps_6_7[i + 1]
-      true
+      save
     end
 
     # global list of the steps of the upgrade process

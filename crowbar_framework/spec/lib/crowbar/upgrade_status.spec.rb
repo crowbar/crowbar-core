@@ -31,6 +31,7 @@ describe Crowbar::UpgradeStatus do
 
     it "moves to next step when requested" do
       allow(File).to receive(:exist?).and_return(false)
+      allow(File).to receive(:open).and_return(true)
       expect(subject.current_step).to eql "upgrade_prechecks"
       expect(subject.current_step_state[:status]).to eql "pending"
       expect(subject.start_step).to be true
@@ -50,6 +51,7 @@ describe Crowbar::UpgradeStatus do
 
     it "goes through the steps and returns finish when finished" do
       allow(File).to receive(:exist?).and_return(false)
+      allow(File).to receive(:open).and_return(true)
       expect(subject.start_step).to be true
       expect(subject.end_step).to be true
       expect(subject.current_step).to eql "upgrade_prepare"
