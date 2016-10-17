@@ -45,6 +45,11 @@ module Api
             passed: ceph_healthy?,
             errors: ceph_health_check_errors
           } if Api::Crowbar.addons.include?("ceph")
+          ret[:ha_configured] = {
+            required: false,
+            passed: ha_present?,
+            errors: ha_presence_errors
+          } if Api::Crowbar.addons.include?("ha")
           ret[:clusters_healthy] = {
             required: true,
             passed: clusters_healthy?,
@@ -242,6 +247,14 @@ module Api
         ceph_status.empty?
       end
 
+      def ha_presence_status
+        @ha_presence_status ||= Api::Pacemaker.ha_presence_check
+      end
+
+      def ha_present?
+        ha_presence_status.empty?
+      end
+
       def clusters_healthy?
         # FIXME: to be implemented
         true
@@ -290,6 +303,17 @@ module Api
           ceph_health: {
             data: ceph_status[:errors],
             help: I18n.t("api.upgrade.prechecks.ceph_health_check.help.default")
+          }
+        }
+      end
+
+      def ha_presence_errors
+        return {} if ha_present?
+
+        {
+          ha_configured: {
+            data: ha_presence_status[:errors],
+            help: I18n.t("api.upgrade.prechecks.ha_configured.help.default")
           }
         }
       end

@@ -19,6 +19,11 @@
     "passed": true,
     "errors": {}
   },
+  "ha_configured": {
+    "required": false,
+    "passed": true,
+    "errors":{}
+  },
   "clusters_healthy": {
     "required": true,
     "passed": true,
