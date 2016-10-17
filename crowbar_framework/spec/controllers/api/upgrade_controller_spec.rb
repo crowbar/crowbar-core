@@ -62,17 +62,27 @@ describe Api::UpgradeController, type: :request do
     end
 
     it "initiates the upgrade of nodes" do
-      allow(NodeObject).to(
-        receive(:find).and_return([NodeObject.find_node_by_name("testing")])
+      allow_any_instance_of(NodeObject).to receive(:run_ssh_cmd).and_return(
+        stdout: "",
+        tderr: "",
+        exit_code: 0
       )
+      allow(Api::Upgrade).to receive(:upgrade_controller_nodes).and_return(true)
+      allow_any_instance_of(Api::Node).to receive(:upgrade).and_return(true)
+
       post "/api/upgrade/nodes", {}, headers
       expect(response).to have_http_status(:ok)
     end
 
     it "initiates the upgrade of nodes and fails" do
-      allow(NodeObject).to(
-        receive(:find).and_return([])
+      allow_any_instance_of(NodeObject).to receive(:run_ssh_cmd).and_return(
+        stdout: "",
+        tderr: "",
+        exit_code: 1
       )
+      allow(Api::Upgrade).to receive(:upgrade_controller_nodes).and_return(false)
+      allow_any_instance_of(Api::Node).to receive(:upgrade).and_return(true)
+
       post "/api/upgrade/nodes", {}, headers
       expect(response).to have_http_status(:unprocessable_entity)
     end
