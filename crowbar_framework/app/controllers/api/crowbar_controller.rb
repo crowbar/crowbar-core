@@ -40,16 +40,4 @@ class Api::CrowbarController < ApiController
   def maintenance
     render json: ::Crowbar::Checks::Maintenance.updates_status
   end
-
-  def repocheck
-    check = Api::Crowbar.repocheck
-
-    if check.key?(:error)
-      render json: {
-        error: check[:error]
-      }, status: check[:status]
-    else
-      render json: check
-    end
-  end
 end
