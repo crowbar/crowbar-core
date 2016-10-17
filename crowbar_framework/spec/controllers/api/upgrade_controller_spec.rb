@@ -118,8 +118,15 @@ describe Api::UpgradeController, type: :request do
 
       post "/api/upgrade/cancel", {}, headers
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(response.body).to eq(
-        "{\"error\":\"an Error\"}"
+      expect(JSON.parse(response.body)).to eq(
+        {
+          errors: {
+            cancel: {
+              data: "an Error",
+              help: I18n.t("api.upgrade.cancel.help.default")
+            }
+          }
+        }.deep_stringify_keys
       )
     end
 

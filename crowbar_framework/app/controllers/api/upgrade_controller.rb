@@ -73,7 +73,14 @@ class Api::UpgradeController < ApiController
     if status == :ok
       head status
     else
-      render json: msg, status: status
+      render json: {
+        errors: {
+          prepare: {
+            data: msg,
+            help: I18n.t("api.upgrade.prepare.help.default")
+          }
+        }
+      }, status: status
     end
   end
 
@@ -87,7 +94,14 @@ class Api::UpgradeController < ApiController
     if stop_services[:status] == :ok
       head :ok
     else
-      render json: { error: stop_services[:message] }, status: stop_services[:status]
+      render json: {
+        errors: {
+          services: {
+            data: stop_services[:message],
+            help: I18n.t("api.upgrade.services.help.default")
+          }
+        }
+      }, status: stop_services[:status]
     end
   end
 
@@ -101,7 +115,14 @@ class Api::UpgradeController < ApiController
     if Api::Upgrade.nodes
       head :ok
     else
-      render json: { error: "Node Upgrade failed" }, status: :unprocessable_entity
+      render json: {
+        errors: {
+          nodes: {
+            data: "Node Upgrade failed",
+            help: I18n.t("api.upgrade.nodes.help.default")
+          }
+        }
+      }, status: :unprocessable_entity
     end
   end
 
@@ -160,7 +181,14 @@ class Api::UpgradeController < ApiController
     if cancel_upgrade[:status] == :ok
       head :ok
     else
-      render json: { error: cancel_upgrade[:message] }, status: cancel_upgrade[:status]
+      render json: {
+        errors: {
+          cancel: {
+            data: cancel_upgrade[:message],
+            help: I18n.t("api.upgrade.cancel.help.default")
+          }
+        }
+      }, status: cancel_upgrade[:status]
     end
   end
 
