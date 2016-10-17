@@ -106,7 +106,7 @@ module Crowbar
 
         sorted_ifs.each do |intf|
           speeds = cr_ohai_network[intf]["speeds"]
-          speeds = ["1g"] unless speeds # legacy object support
+          speeds = ["1g"] if speeds.nil? || speeds.empty? # legacy object support
           speeds.each do |speed|
             count = count_speed_map[speed] || 1
             result["#{speed}#{count}"] = intf
