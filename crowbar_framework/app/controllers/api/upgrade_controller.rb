@@ -164,7 +164,7 @@ class Api::UpgradeController < ApiController
     end
   end
 
-  api :GET, "/api/upgrade/repocheck", "Check for missing node repositories"
+  api :GET, "/api/upgrade/noderepocheck", "Check for missing node repositories"
   header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   example '
@@ -200,8 +200,8 @@ class Api::UpgradeController < ApiController
     }
   }
   '
-  def repocheck
-    render json: Api::Upgrade.repocheck
+  def noderepocheck
+    render json: Api::Upgrade.noderepocheck
   end
 
   api :GET, "/api/upgrade/adminrepocheck",

@@ -159,7 +159,7 @@ describe Api::UpgradeController, type: :request do
         )
       end
 
-      get "/api/upgrade/repocheck", {}, headers
+      get "/api/upgrade/noderepocheck", {}, headers
       expect(response).to have_http_status(:ok)
       expect(response.body).to eq(
         "{\"os\":{\"available\":true,\"repos\":{}},\"openstack\":{\"available\":true,\"repos\":{}}}"

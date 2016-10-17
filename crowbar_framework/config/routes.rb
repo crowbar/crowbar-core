@@ -276,7 +276,7 @@ Rails.application.routes.draw do
       post :nodes
       get :prechecks
       post :cancel
-      get :repocheck
+      get :noderepocheck
       get :adminrepocheck
     end
 

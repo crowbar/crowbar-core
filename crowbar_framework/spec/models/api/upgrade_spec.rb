@@ -164,7 +164,7 @@ describe Api::Upgrade do
         k.delete("ha")
       end
 
-      expect(subject.class.repocheck).to eq(os_repo_fixture)
+      expect(subject.class.noderepocheck).to eq(os_repo_fixture)
     end
   end
 
@@ -193,7 +193,7 @@ describe Api::Upgrade do
         k.delete("ha")
       end
 
-      expect(subject.class.repocheck).to eq(expected)
+      expect(subject.class.noderepocheck).to eq(expected)
     end
   end
 

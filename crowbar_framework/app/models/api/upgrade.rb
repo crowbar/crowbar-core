@@ -56,7 +56,7 @@ module Api
         end
       end
 
-      def repocheck
+      def noderepocheck
         response = {}
         addons = Api::Crowbar.addons
         addons.push("os", "openstack").each do |addon|
