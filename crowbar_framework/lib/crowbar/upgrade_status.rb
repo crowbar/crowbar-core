@@ -25,18 +25,6 @@ module Crowbar
       end
     end
 
-    def save
-      Crowbar::Lock::LocalBlocking.with_lock(shared: false) do
-        progress_file_path.open("w") do |f|
-          f.write(JSON.pretty_generate(progress))
-        end
-      end
-      true
-    rescue StandardError => e
-      Rails.logger.error("Exception during saving the status file: #{e.message}")
-      false
-    end
-
     def current_substep
       progress[:current_substep]
     end
@@ -50,16 +38,28 @@ module Crowbar
     end
 
     def start_step
-      progress[:steps][current_step][:status] = "running"
-      save
+      Crowbar::Lock::LocalBlocking.with_lock(shared: false) do
+        if progress[:steps][current_step][:status] == "running"
+          Rails.logger.warn("The step has already been started")
+          return false
+        end
+        progress[:steps][current_step][:status] = "running"
+        save
+      end
     end
 
     def end_step(success = true, errors = {})
-      progress[:steps][current_step] = {
-        status: success ? "passed" : "failed",
-        errors: errors
-      }
-      next_step
+      Crowbar::Lock::LocalBlocking.with_lock(shared: false) do
+        unless progress[:steps][current_step][:status] == "running"
+          Rails.logger.warn("The step is not running, could not be finished")
+          return false
+        end
+        progress[:steps][current_step] = {
+          status: success ? "passed" : "failed",
+          errors: errors
+        }
+        next_step
+      end
     end
 
     def finished?
@@ -67,6 +67,16 @@ module Crowbar
     end
 
     protected
+
+    def save
+      progress_file_path.open("w") do |f|
+        f.write(JSON.pretty_generate(progress))
+      end
+      true
+    rescue StandardError => e
+      Rails.logger.error("Exception during saving the status file: #{e.message}")
+      false
+    end
 
     # advance the current step if the latest one finished successfully
     def next_step
