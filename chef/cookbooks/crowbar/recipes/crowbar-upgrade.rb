@@ -26,6 +26,8 @@ return unless node[:platform_family] == "suse"
 
 upgrade_step = node["crowbar_wall"]["crowbar_upgrade_step"] || "none"
 
+Chef::Log.info("Current upgrade step: #{upgrade_step}")
+
 case upgrade_step
 
 when "revert_to_ready"
@@ -70,6 +72,11 @@ when "crowbar_upgrade"
 when "prepare-os-upgrade"
 
   include_recipe "crowbar::prepare-upgrade-scripts"
+
+  execute "set pre-upgrade node attribute" do
+    command "crm node attribute $(hostname) set pre-upgrade true"
+    only_if { node.roles.include? "pacemaker-cluster-member" }
+  end
 
 when "openstack_shutdown"
 
