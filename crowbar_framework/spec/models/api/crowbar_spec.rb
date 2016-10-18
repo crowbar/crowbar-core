@@ -16,23 +16,6 @@ describe Api::Crowbar do
       )
     )
   end
-  let!(:crowbar_repocheck) do
-    JSON.parse(
-      File.read(
-        "spec/fixtures/crowbar_repocheck.json"
-      )
-    )
-  end
-  let!(:crowbar_repocheck_zypper) do
-    File.read(
-      "spec/fixtures/crowbar_repocheck_zypper.xml"
-    ).to_s
-  end
-  let!(:crowbar_repocheck_zypper_locked) do
-    File.read(
-      "spec/fixtures/crowbar_repocheck_zypper_locked.xml"
-    ).to_s
-  end
   let!(:node) { NodeObject.find_node_by_name("testing") }
 
   before(:each) do
@@ -203,58 +186,6 @@ describe Api::Crowbar do
         and_return([])
       )
       expect(subject.class.compute_resources_available?).to be true
-    end
-  end
-
-  context "with repositories in place" do
-    it "lists the available repositories" do
-      allow(Api::Crowbar).to(
-        receive(:repo_version_available?).and_return(true)
-      )
-      allow_any_instance_of(Kernel).to(
-        receive(:`).with(
-          "sudo /usr/bin/zypper-retry --xmlout products"
-        ).and_return(crowbar_repocheck_zypper)
-      )
-
-      expect(subject.class.repocheck.deep_stringify_keys).to eq(crowbar_repocheck)
-    end
-  end
-
-  context "with repositories not in place" do
-    it "lists the repositories that are not available" do
-      allow(Api::Crowbar).to(
-        receive(:repo_version_available?).and_return(false)
-      )
-      allow(Api::Crowbar).to(
-        receive(:admin_architecture).and_return("x86_64")
-      )
-      allow_any_instance_of(Kernel).to(
-        receive(:`).with(
-          "sudo /usr/bin/zypper-retry --xmlout products"
-        ).and_return(crowbar_repocheck_zypper)
-      )
-
-      expect(subject.class.repocheck.deep_stringify_keys).to_not eq(crowbar_repocheck)
-    end
-  end
-
-  context "with a locked zypper" do
-    it "shows an error message that zypper is locked" do
-      allow(Api::Crowbar).to(
-        receive(:repo_version_available?).and_return(false)
-      )
-      allow_any_instance_of(Kernel).to(
-        receive(:`).with(
-          "sudo /usr/bin/zypper-retry --xmlout products"
-        ).and_return(crowbar_repocheck_zypper_locked)
-      )
-
-      check = subject.class.repocheck
-      expect(check[:status]).to eq(:service_unavailable)
-      expect(check[:message]).to eq(
-        Hash.from_xml(crowbar_repocheck_zypper_locked)["stream"]["message"]
-      )
     end
   end
 end

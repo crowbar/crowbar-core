@@ -84,38 +84,4 @@ class Api::CrowbarController < ApiController
   def maintenance
     render json: ::Crowbar::Checks::Maintenance.updates_status
   end
-
-  api :GET, "/api/crowbar/repocheck", "Sanity check for Crowbar server repositories"
-  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
-  api_version "2.0"
-  example '
-  {
-    "os": {
-      "available": true,
-      "repos": {}
-    },
-    "cloud": {
-      "available": false,
-      "repos": {
-        "x86_64": {
-          "missing": [
-            "SUSE OpenStack Cloud 7"
-          ]
-        }
-      }
-    }
-  }
-  '
-  error 503, "zypper is locked"
-  def repocheck
-    check = Api::Crowbar.repocheck
-
-    if check.key?(:error)
-      render json: {
-        error: check[:error]
-      }, status: check[:status]
-    else
-      render json: check
-    end
-  end
 end

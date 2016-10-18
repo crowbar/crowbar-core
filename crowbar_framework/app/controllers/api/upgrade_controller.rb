@@ -164,7 +164,7 @@ class Api::UpgradeController < ApiController
     end
   end
 
-  api :GET, "/api/upgrade/repocheck", "Check for missing node repositories"
+  api :GET, "/api/upgrade/noderepocheck", "Check for missing node repositories"
   header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
   example '
@@ -200,8 +200,43 @@ class Api::UpgradeController < ApiController
     }
   }
   '
-  def repocheck
-    render json: Api::Upgrade.repocheck
+  def noderepocheck
+    render json: Api::Upgrade.noderepocheck
+  end
+
+  api :GET, "/api/upgrade/adminrepocheck",
+    "Sanity check for Crowbar server repositories"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
+  api_version "2.0"
+  example '
+  {
+    "os": {
+      "available": true,
+      "repos": {}
+    },
+    "openstack": {
+      "available": false,
+      "repos": {
+        "x86_64": {
+          "missing": [
+            "SUSE OpenStack Cloud 7"
+          ]
+        }
+      }
+    }
+  }
+  '
+  error 503, "zypper is locked"
+  def adminrepocheck
+    check = Api::Upgrade.adminrepocheck
+
+    if check.key?(:error)
+      render json: {
+        error: check[:error]
+      }, status: check[:status]
+    else
+      render json: check
+    end
   end
 
   protected

@@ -56,13 +56,51 @@ module Api
         end
       end
 
-      def repocheck
+      def noderepocheck
         response = {}
         addons = Api::Crowbar.addons
         addons.push("os", "openstack").each do |addon|
           response.merge!(Api::Node.repocheck(addon: addon))
         end
         response
+      end
+
+      def adminrepocheck
+        # FIXME: once we start working on 7 to 8 upgrade we have to adapt the sles version
+        zypper_stream = Hash.from_xml(
+          `sudo /usr/bin/zypper-retry --xmlout products`
+        )["stream"]
+
+        {}.tap do |ret|
+          if zypper_stream["message"] =~ /^System management is locked/
+            return {
+              status: :service_unavailable,
+              message: I18n.t(
+                "api.crowbar.zypper_locked", zypper_locked_message: zypper_stream["message"]
+              )
+            }
+          end
+
+          products = zypper_stream["product_list"]["product"]
+
+          os_available = repo_version_available?(products, "SLES", "12.3")
+          ret[:os] = {
+            available: os_available,
+            repos: {}
+          }
+          ret[:os][:repos][admin_architecture.to_sym] = {
+            missing: ["SUSE Linux Enterprise Server 12 SP3"]
+          } unless os_available
+
+          cloud_available = repo_version_available?(products, "suse-openstack-cloud", "8")
+          ret[:openstack] = {
+            available: cloud_available,
+            repos: {}
+          }
+          ret[:openstack][:repos][admin_architecture.to_sym] = {
+            missing: ["SUSE OpenStack Cloud 8"]
+          } unless cloud_available
+        end
       end
 
       def target_platform(options = {})
