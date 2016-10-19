@@ -24,6 +24,10 @@ module Api
       end
 
       def checks
+        upgrade_status = ::Crowbar::UpgradeStatus.new
+        # the check for current_step means to allow running the step at any point in time
+        upgrade_status.start_step if upgrade_status.current_step == :upgrade_prechecks
+
         {}.tap do |ret|
           ret[:network_checks] = {
             required: true,
@@ -55,6 +59,15 @@ module Api
             passed: clusters_healthy?,
             errors: clusters_health_report_errors
           } if Api::Crowbar.addons.include?("ha")
+
+          return ret unless upgrade_status.current_step == :upgrade_prechecks
+
+          errors = ret.select { |_k, v| v[:required] && v[:errors].any? }.map { |_k, v| v[:errors] }
+          if errors.any?
+            upgrade_status.end_step(false, prechecks: errors)
+          else
+            upgrade_status.end_step
+          end
         end
       end
 
