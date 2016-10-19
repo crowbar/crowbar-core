@@ -25,9 +25,9 @@ module Crowbar
             Open3.popen3("zypper patch-check") do |_stdin, _stdout, _stderr, wait_thr|
               case wait_thr.value.exitstatus
               when 100
-                I18n.t("api.crowbar.maintenance_updates_status.patches_missing")
+                "ZYPPER_EXIT_INF_UPDATE_NEEDED: patches available for installation."
               when 101
-                I18n.t("api.crowbar.maintenance_updates_status.security_patches_missing")
+                "ZYPPER_EXIT_INF_SEC_UPDATE_NEEDED: security patches available for installation."
               end
             end
           error ? { errors: [error] } : {}
