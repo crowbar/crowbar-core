@@ -74,27 +74,30 @@ module Api
         end
       end
 
-      def ceph_healthy?
-        ceph_node = NodeObject.find("roles:ceph-mon AND ceph_config_environment:*").first
-        return true if ceph_node.nil?
-        ssh_retval = ceph_node.run_ssh_cmd("LANG=C ceph health 2>&1")
-        unless ssh_retval[:stdout].include? "HEALTH_OK"
-          Rails.logger.warn("ceph cluster health check failed with #{ssh_retval[:stdout]}")
-          return false
+      def ceph_status
+        {}.tap do |ret|
+          ceph_node = NodeObject.find("roles:ceph-mon AND ceph_config_environment:*").first
+          return ret if ceph_node.nil?
+          ssh_retval = ceph_node.run_ssh_cmd("LANG=C ceph health 2>&1")
+          unless ssh_retval[:stdout].include? "HEALTH_OK"
+            ret["errors"] = [
+              "ceph cluster health check failed with #{ssh_retval[:stdout]}"
+            ]
+          end
         end
-        true
       end
 
-      def compute_resources_available?
-        ["kvm", "xen"].each do |virt|
-          compute_nodes = NodeObject.find("roles:nova-compute-#{virt}")
-          next unless compute_nodes.size == 1
-          Rails.logger.warn(
-            "Found only one compute node of #{virt} type; non-disruptive upgrade is not possible"
-          )
-          return false
+      def compute_resources_status
+        {}.tap do |ret|
+          ["kvm", "xen"].each do |virt|
+            compute_nodes = NodeObject.find("roles:nova-compute-#{virt}")
+            next unless compute_nodes.size == 1
+            ret["errors"] ||= []
+            ret["errors"].push(
+              "Found only one compute node of #{virt} type; non-disruptive upgrade is not possible"
+            )
+          end
         end
-        true
       end
 
       protected

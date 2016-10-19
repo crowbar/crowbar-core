@@ -45,6 +45,11 @@ module Api
             passed: ceph_healthy?,
             errors: ceph_health_check_errors
           } if Api::Crowbar.addons.include?("ceph")
+          ret[:ha_configured] = {
+            required: false,
+            passed: ha_present?,
+            errors: ha_presence_errors
+          } if Api::Crowbar.addons.include?("ha")
           ret[:clusters_healthy] = {
             required: true,
             passed: clusters_healthy?,
@@ -234,8 +239,20 @@ module Api
         @network_checks ||= ::Crowbar::Sanity.check
       end
 
+      def ceph_status
+        @ceph_status ||= Api::Crowbar.ceph_status
+      end
+
       def ceph_healthy?
-        Api::Crowbar.ceph_healthy?
+        ceph_status.empty?
+      end
+
+      def ha_presence_status
+        @ha_presence_status ||= Api::Pacemaker.ha_presence_check
+      end
+
+      def ha_present?
+        ha_presence_status.empty?
       end
 
       def clusters_healthy?
@@ -243,8 +260,12 @@ module Api
         true
       end
 
+      def compute_resources_status
+        @compute_resounrces_status ||= Api::Crowbar.compute_resources_status
+      end
+
       def compute_resources_available?
-        Api::Crowbar.compute_resources_available?
+        compute_resources_status.empty?
       end
 
       # Check Errors
@@ -280,8 +301,19 @@ module Api
 
         {
           ceph_health: {
-            data: [], # TODO: implement ceph health check errors
+            data: ceph_status[:errors],
             help: I18n.t("api.upgrade.prechecks.ceph_health_check.help.default")
+          }
+        }
+      end
+
+      def ha_presence_errors
+        return {} if ha_present?
+
+        {
+          ha_configured: {
+            data: ha_presence_status[:errors],
+            help: I18n.t("api.upgrade.prechecks.ha_configured.help.default")
           }
         }
       end
@@ -302,7 +334,7 @@ module Api
 
         {
           compute_resources: {
-            data: [], # TODO: implement cluster health check errors
+            data: compute_resources_status[:errors],
             help: I18n.t("api.upgrade.prechecks.compute_resources_check.help.default")
           }
         }

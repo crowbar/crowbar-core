@@ -39,6 +39,9 @@ describe Api::Upgrade do
       "spec/fixtures/crowbar_repocheck_zypper_locked.xml"
     ).to_s
   end
+  let(:pacemaker) do
+    Class.new
+  end
 
   before(:each) do
     allow(Api::Node).to(
@@ -65,6 +68,10 @@ describe Api::Upgrade do
         ).and_return([true, {}])
       )
     end
+    stub_const("Api::Pacemaker", pacemaker)
+    allow(pacemaker).to receive(
+      :ha_presence_check
+    ).and_return({})
   end
 
   context "with a successful status" do

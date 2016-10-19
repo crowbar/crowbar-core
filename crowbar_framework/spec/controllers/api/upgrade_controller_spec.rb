@@ -24,6 +24,9 @@ describe Api::UpgradeController, type: :request do
         )
       ).to_json
     end
+    let(:pacemaker) do
+      Class.new
+    end
 
     it "shows the upgrade status object" do
       allow(Api::Upgrade).to receive(:network_checks).and_return([])
@@ -34,6 +37,10 @@ describe Api::UpgradeController, type: :request do
       allow(Api::Crowbar).to receive(
         :addons
       ).and_return(["ceph", "ha"])
+      stub_const("Api::Pacemaker", pacemaker)
+      allow(pacemaker).to receive(
+        :ha_presence_check
+      ).and_return({})
 
       get "/api/upgrade", {}, headers
       expect(response).to have_http_status(:ok)
@@ -103,6 +110,10 @@ describe Api::UpgradeController, type: :request do
       allow(Api::Crowbar).to receive(
         :addons
       ).and_return(["ha", "ceph"])
+      stub_const("Api::Pacemaker", pacemaker)
+      allow(pacemaker).to receive(
+        :ha_presence_check
+      ).and_return({})
 
       get "/api/upgrade/prechecks", {}, headers
       expect(response).to have_http_status(:ok)
