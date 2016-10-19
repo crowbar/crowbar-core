@@ -48,6 +48,10 @@ else
   gem "pg", "~> 0.17.1"
   require "pg"
 
+  gem "daemons", "~> 1.2.3"
+  gem "delayed_job_active_record", "~> 4.1.1"
+  require "delayed_job"
+
   # general stuff
   gem "activerecord-session_store", version: "~> 0.1.0"
   require "activerecord/session_store"
