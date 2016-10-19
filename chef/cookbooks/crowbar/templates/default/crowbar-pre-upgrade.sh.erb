@@ -45,4 +45,10 @@ fi
 echo "No HA setup found..."
 
 <% end %>
+
+<% @bridges_to_reset.each do |bridge| %>
+echo "Resetting fail-mode on ovs-bridge <%= bridge %>"
+ovs-vsctl set-fail-mode <%= bridge %> standalone
+<% end %>
+
 touch $UPGRADEDIR/crowbar-pre-upgrade-ok
