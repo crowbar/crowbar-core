@@ -20,10 +20,7 @@ module Api
   class Upgrade < Tableless
     class << self
       def status
-        {
-          crowbar: crowbar_upgrade_status,
-          checks: checks
-        }
+        ::Crowbar::UpgradeStatus.new.progress
       end
 
       def checks
