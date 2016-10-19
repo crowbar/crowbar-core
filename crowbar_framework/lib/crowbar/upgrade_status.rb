@@ -15,7 +15,7 @@ module Crowbar
       }
       if progress_file_path.exist?
         Crowbar::Lock::LocalBlocking.with_lock(shared: true) do
-          @progress = JSON.load(progress_file_path.read)
+          @progress = JSON.load(progress_file_path.read).deep_symbolize_keys
         end
       else
         # in 'steps', we save the information about each step that was executed
@@ -26,11 +26,11 @@ module Crowbar
     end
 
     def current_substep
-      progress[:current_substep]
+      progress[:current_substep].to_sym
     end
 
     def current_step
-      progress[:current_step]
+      progress[:current_step].to_sym
     end
 
     def current_step_state
@@ -90,17 +90,17 @@ module Crowbar
     # global list of the steps of the upgrade process
     def upgrade_steps_6_7
       [
-        "upgrade_prechecks",
-        "upgrade_prepare",
-        "admin_backup",
-        "admin_repo_checks",
-        "admin_upgrade",
-        "database",
-        "nodes_repo_checks",
-        "nodes_services",
-        "nodes_db_dump",
-        "nodes_upgrade",
-        "finished"
+        :upgrade_prechecks,
+        :upgrade_prepare,
+        :admin_backup,
+        :admin_repo_checks,
+        :admin_upgrade,
+        :database,
+        :nodes_repo_checks,
+        :nodes_services,
+        :nodes_db_dump,
+        :nodes_upgrade,
+        :finished
       ]
     end
 
