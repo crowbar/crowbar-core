@@ -108,10 +108,12 @@ else
   require "chef"
 end
 
-includes_path = Pathname.new("/var/lib/crowbar/includes/")
-if includes_path.directory?
-  includes_path.each_child(false) do |file|
-    next unless file.extname == ".rb"
-    require_relative "/var/lib/crowbar/includes/#{file}"
+if Rails.env.production?
+  includes_path = Pathname.new("/var/lib/crowbar/includes/")
+  if includes_path.directory?
+    includes_path.each_child(false) do |file|
+      next unless file.extname == ".rb"
+      require_relative "/var/lib/crowbar/includes/#{file}"
+    end
   end
 end

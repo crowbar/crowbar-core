@@ -18,7 +18,8 @@
 Rails.application.routes.draw do
   apipie
 
-  route_dirs = [Pathname.new("/var/lib/crowbar/includes/"), Rails.root.join("config", "routes.d")]
+  route_dirs = [Rails.root.join("config", "routes.d")]
+  route_dirs.push(Pathname.new("/var/lib/crowbar/includes/")) if Rails.env.production?
   route_dirs.each do |route_dir|
     next unless route_dir.directory?
     route_dir.children.each do |routes|
