@@ -13,6 +13,8 @@
 # limitations under the License.
 #
 
+require_relative "conduit_resolver.rb"
+
 module BarclampLibrary
   class Barclamp
     class NodeConduitResolver
