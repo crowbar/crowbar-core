@@ -114,6 +114,9 @@ describe Api::UpgradeController, type: :request do
       allow(pacemaker).to receive(
         :ha_presence_check
       ).and_return({})
+      allow(Api::Upgrade).to receive(:checks).and_return(
+        JSON.parse(upgrade_prechecks)["checks"].deep_symbolize_keys
+      )
 
       get "/api/upgrade/prechecks", {}, headers
       expect(response).to have_http_status(:ok)
