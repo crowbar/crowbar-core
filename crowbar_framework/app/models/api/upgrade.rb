@@ -153,6 +153,8 @@ module Api
       end
 
       def prepare(options = {})
+        ::Crowbar::UpgradeStatus.new.start_step
+
         background = options.fetch(:background, false)
 
         if background
@@ -315,9 +317,11 @@ module Api
         service_object = CrowbarService.new(Rails.logger)
         service_object.prepare_nodes_for_crowbar_upgrade
 
+        ::Crowbar::UpgradeStatus.new.end_step
         true
       rescue => e
         message = e.message
+        ::Crowbar::UpgradeStatus.new.end_step(false, { prepare_nodes_for_crowbar_upgrade: message })
         Rails.logger.error message
 
         false
