@@ -3,10 +3,18 @@
 # This does what is necessary directly before the start of OS upgrade
 
 LOGFILE=/var/log/crowbar/node-upgrade.log
+UPGRADEDIR=/var/lib/crowbar/upgrade
 mkdir -p "`dirname "$LOGFILE"`"
 exec >>"$LOGFILE" 2>&1
 
 set -x
+
+mkdir -p $UPGRADEDIR
+
+if [[ -f $UPGRADEDIR/crowbar-pre-upgrade-ok ]] ; then
+    echo "Pre upgrade actions were already successfully executed"
+    exit 0
+fi
 
 <% if @use_ha %>
 
@@ -21,8 +29,16 @@ fi
 # This is needed so that the zypper dup won't trigger any db migrations on package update
 service pacemaker stop
 
+ret=$?
+if [ $ret != 0 ] ; then
+    echo "Error occured during shutting down pacemaker service"
+    echo $ret > $UPGRADEDIR/crowbar-pre-upgrade-failed
+    exit $ret
+fi
+
 <% else %>
 
 echo "No HA setup found..."
 
 <% end %>
+touch $UPGRADEDIR/crowbar-pre-upgrade-ok

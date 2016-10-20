@@ -31,14 +31,37 @@ module Api
 
       # Migrate out the l3 agents and shut down pacemaker
       script = "/usr/sbin/crowbar-pre-upgrade.sh"
-      out = @node.run_ssh_cmd(script)
-      unless out[:exit_code].zero?
-        Rails.logger.error("Executing of pre upgrade script has failed on node #{@node.name}.")
-        Rails.logger.error("Script location: #{script}")
-        Rails.logger.error("exit: #{out[:exit_code]}, out: #{out[:stdout]}, err: #{out[:stderr]}")
+      ssh_status = @node.ssh_cmd(script)
+      if ssh_status[0] != 200
+        save_error_state("Executing of pre upgrade script has failed on node #{@node.name}.")
         return false
       end
-      true
+
+      upgrade_ok = false
+      begin
+        Timeout.timeout(60) do
+          loop do
+            out = @node.run_ssh_cmd("test -e /var/lib/crowbar/upgrade/crowbar-pre-upgrade-ok")
+            if out[:exit_code].zero?
+              save_node_state("Pre upgrade script run was successful.")
+              upgrade_ok = true
+              break
+            end
+            out = @node.run_ssh_cmd("test -e /var/lib/crowbar/upgrade/crowbar-pre-upgrade-failed")
+            if out[:exit_code].zero?
+              save_error_state("Execution of pre upgrade script at node #{@node.name} has failed
+Check /var/log/crowbar/node-upgrade.log at #{@node.name} node for details.")
+              break
+            end
+            sleep(5)
+          end
+        end
+      rescue Timeout::Error
+        save_error_state("Possible error during pre-upgrade script execution.
+Action did not finish after 1 minute")
+        return false
+      end
+      upgrade_ok
     end
 
     def os_upgrade
