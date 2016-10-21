@@ -194,7 +194,10 @@ class Api::UpgradeController < ApiController
   }
   '
   def prechecks
-    render json: Api::Upgrade.checks
+    render json: {
+      checks: Api::Upgrade.checks,
+      best_method: Api::Upgrade.best_method
+    }
   end
 
   api :POST, "/api/upgrade/cancel", "Cancel the upgrade process by setting the nodes back to ready"

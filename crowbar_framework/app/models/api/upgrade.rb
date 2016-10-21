@@ -58,6 +58,19 @@ module Api
         end
       end
 
+      def best_method
+        checks_cached = checks
+        return "none" if checks_cached.any? do |_id, c|
+          c[:required] && !c[:passed]
+        end
+        return "non-disruptive" unless checks_cached.any? do |_id, c|
+          (c[:required] || !c[:required]) && !c[:passed]
+        end
+        return "disruptive" unless checks_cached.any? do |_id, c|
+          (c[:required] && !c[:passed]) && (!c[:required] && c[:passed])
+        end
+      end
+
       def noderepocheck
         response = {}
         addons = Api::Crowbar.addons

@@ -101,7 +101,7 @@ describe Api::Upgrade do
       ).and_return(["ceph", "ha"])
 
       expect(subject.class).to respond_to(:checks)
-      expect(subject.class.checks.deep_stringify_keys).to eq(upgrade_prechecks)
+      expect(subject.class.checks.deep_stringify_keys).to eq(upgrade_prechecks["checks"])
     end
   end
 
@@ -307,6 +307,32 @@ describe Api::Upgrade do
         status: :unprocessable_entity,
         message: "Some Error"
       )
+    end
+  end
+
+  context "determining the best upgrade method" do
+    it "chooses non-disruptive upgrade" do
+      allow(subject.class).to receive(:checks).and_return(
+        upgrade_prechecks["checks"].deep_symbolize_keys
+      )
+
+      expect(subject.class.best_method).to eq("non-disruptive")
+    end
+
+    it "chooses disruptive upgrade" do
+      prechecks = upgrade_prechecks
+      prechecks["checks"]["compute_resources_available"]["passed"] = false
+      allow(subject.class).to receive(:checks).and_return(prechecks["checks"])
+
+      expect(subject.class.best_method).to eq("disruptive")
+    end
+
+    it "chooses none" do
+      allow(Api::Upgrade).to receive(
+        :maintenance_updates_status
+      ).and_return(errors: ["Some Error"])
+
+      expect(subject.class.best_method).to eq("none")
     end
   end
 end
