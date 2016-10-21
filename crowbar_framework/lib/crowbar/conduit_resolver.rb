@@ -270,7 +270,7 @@ module Crowbar
 
     ## Return the DMI system attributes from the node
     def cr_dmi_system
-      return {} if @node[:dmi].nil? || node[:dmi][:system].nil?
+      return {} if @node[:dmi].nil? || @node[:dmi][:system].nil?
 
       @node[:dmi][:system]
     end
