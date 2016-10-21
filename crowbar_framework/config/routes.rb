@@ -201,7 +201,6 @@ Rails.application.routes.draw do
       get :upgrade
       post :upgrade
       get :maintenance
-      get :repocheck
     end
 
     resource :upgrade,
@@ -212,6 +211,7 @@ Rails.application.routes.draw do
       get :services
       get :prechecks
       post :cancel
+      get :adminrepocheck
     end
   end
 

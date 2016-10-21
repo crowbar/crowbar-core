@@ -57,4 +57,16 @@ class Api::UpgradeController < ApiController
       render json: { error: cancel_upgrade[:message] }, status: cancel_upgrade[:status]
     end
   end
+
+  def adminrepocheck
+    check = Api::Upgrade.adminrepocheck
+
+    if check.key?(:error)
+      render json: {
+        error: check[:error]
+      }, status: check[:status]
+    else
+      render json: check
+    end
+  end
 end
