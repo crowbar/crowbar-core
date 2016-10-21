@@ -30,7 +30,14 @@ class Api::CrowbarController < ApiController
       if crowbar_upgrade[:status] == :ok
         head :ok
       else
-        render json: { error: crowbar_upgrade[:message] }, status: crowbar_upgrade[:status]
+        render json: {
+          errors: {
+            admin_upgrade: {
+              data: crowbar_upgrade[:message],
+              help: I18n.t("api.crowbar.upgrade.help.default")
+            }
+          }
+        }, status: crowbar_upgrade[:status]
       end
     else
       render json: Api::Crowbar.upgrade

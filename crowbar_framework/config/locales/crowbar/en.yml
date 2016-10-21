@@ -770,6 +770,9 @@ en:
       upgrade_ongoing: 'Upgrade is already ongoing. Please wait.'
       zypper_locked: '%{zypper_locked_message}'
       upgrade_script_path: 'Could not find %{path}'
+      upgrade:
+        help:
+          default: 'Refer to the error message in the response'
     upgrade:
       prechecks:
         network_checks:
@@ -787,6 +790,12 @@ en:
         compute_resources_check:
           help:
             default: 'Make sure there is enough compute power'
+      prepare:
+        help:
+          default: 'Refer to the error message in the response'
+      cancel:
+        help:
+          default: 'Refer to the error message in the response'
 
   # Global
   overview: 'Overview'
