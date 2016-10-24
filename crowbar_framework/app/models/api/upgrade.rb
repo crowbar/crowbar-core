@@ -49,7 +49,7 @@ module Api
             required: false,
             passed: ha_present?,
             errors: ha_presence_errors
-          } if Api::Crowbar.addons.include?("ha")
+          }
           ret[:clusters_healthy] = {
             required: true,
             passed: clusters_healthy?,
