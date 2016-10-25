@@ -24,6 +24,10 @@ describe Crowbar::UpgradeStatus do
 
   subject { Crowbar::UpgradeStatus.new(@state_file) }
 
+  def new_status
+    subject.class.new(@state_file)
+  end
+
   after do
     File.unlink @state_file if File.exist? @state_file
   end
@@ -69,6 +73,15 @@ describe Crowbar::UpgradeStatus do
       expect(subject.running?(:upgrade_prechecks)).to be true
     end
 
+    it "determines whether current step is running from another object" do
+      expect(subject.current_step).to eql :upgrade_prechecks
+      other_status = new_status
+      expect(other_status.running?).to be false
+      expect(subject.start_step).to be true
+      other_status.load
+      expect(other_status.running?).to be true
+    end
+
     it "determines whether a given step is running" do
       expect(subject.current_step).to eql :upgrade_prechecks
       expect(subject.running?(:upgrade_prepare)).to be false
@@ -110,6 +123,15 @@ describe Crowbar::UpgradeStatus do
       expect(subject.end_step).to be false
     end
 
+    it "does not allow to end step when it was started by another object" do
+      pending("need some way to track step ownership")
+      expect(subject.current_step).to eql :upgrade_prechecks
+      expect(subject.start_step).to be true
+      other_status = new_status
+      expect(other_status.end_step).to be false
+      expect(subject.running?).to be true
+    end
+
     it "does not to stop the first step without starting it" do
       expect(subject.current_step).to eql :upgrade_prechecks
       expect(subject.end_step).to be false
@@ -122,6 +144,15 @@ describe Crowbar::UpgradeStatus do
       expect(subject.start_step).to be false
       expect(subject.current_step_state[:status]).to eql :running
       expect(subject.current_step).to eql :upgrade_prechecks
+    end
+
+    it "prevents starting a step from a separate object while it is already running" do
+      expect(subject.current_step).to eql :upgrade_prechecks
+      other_status = new_status
+      expect(subject.start_step).to be true
+      expect(subject.current_step_state[:status]).to eql :running
+      other_status.load
+      expect(other_status.start_step).to be false
     end
 
     it "goes through the steps and returns finish when finished" do
