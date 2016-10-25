@@ -31,10 +31,29 @@ describe Crowbar::UpgradeStatus do
       expect(subject.current_step).to eql :upgrade_prechecks
     end
 
+    it "determines whether current step is pending" do
+      allow(File).to receive(:open).and_return(true)
+      expect(subject.current_step).to eql :upgrade_prechecks
+      expect(subject.pending?).to be true
+      expect(subject.start_step).to be true
+      expect(subject.pending?).to be false
+    end
+
+    it "determines whether given step is pending" do
+      allow(File).to receive(:open).and_return(true)
+      expect(subject.current_step).to eql :upgrade_prechecks
+      expect(subject.pending?).to be true
+      expect(subject.pending?(:upgrade_prechecks)).to be true
+      expect(subject.pending?(:admin_backup)).to be true
+      expect(subject.start_step).to be true
+      expect(subject.pending?).to be false
+      expect(subject.pending?(:upgrade_prechecks)).to be false
+      expect(subject.pending?(:admin_backup)).to be true
+    end
+
     it "determines whether current step is running" do
       allow(File).to receive(:open).and_return(true)
       expect(subject.current_step).to eql :upgrade_prechecks
-      expect(subject.current_step_state[:status]).to eql "pending"
       expect(subject.running?).to be false
       expect(subject.running?(:upgrade_prechecks)).to be false
       expect(subject.start_step).to be true
@@ -45,7 +64,6 @@ describe Crowbar::UpgradeStatus do
     it "determines whether a given step is running" do
       allow(File).to receive(:open).and_return(true)
       expect(subject.current_step).to eql :upgrade_prechecks
-      expect(subject.current_step_state[:status]).to eql "pending"
       expect(subject.running?(:upgrade_prepare)).to be false
       expect(subject.start_step).to be true
       expect(subject.running?(:upgrade_prepare)).to be false

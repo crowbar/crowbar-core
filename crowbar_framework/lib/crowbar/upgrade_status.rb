@@ -68,6 +68,12 @@ module Crowbar
       step[:status] == "running"
     end
 
+    def pending?(step_name = nil)
+      step = progress[:steps][step_name || current_step]
+      return false unless step
+      step[:status] == "pending"
+    end
+
     def finished?
       current_step == upgrade_steps_6_7.last
     end
