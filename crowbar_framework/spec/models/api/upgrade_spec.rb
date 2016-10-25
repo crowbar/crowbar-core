@@ -288,6 +288,7 @@ describe Api::Upgrade do
       allow_any_instance_of(Api::Node).to receive(:disable_pre_upgrade_attribute_for).
         and_return(true)
       allow(Api::Upgrade).to receive(:delete_pacemaker_resources).and_return(true)
+      allow_any_instance_of(Api::Node).to receive(:post_upgrade).and_return(true)
 
       expect(subject.class.nodes).to be true
     end

@@ -253,6 +253,10 @@ module Api
         # FIXME: this should be one time action only (for each cluster)
         return false unless delete_pacemaker_resources drbd_master
 
+        # Execute post-upgrade actions after the node has been upgraded, rebooted
+        # and the existing cluster has been cleaned up by deleting most of resources
+        return false unless node_api.post_upgrade
+
         # FIXME: if upgrade went well, continue with next node(s)
         true
       end

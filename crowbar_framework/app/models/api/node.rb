@@ -26,67 +26,41 @@ module Api
       @upgraded ||= current_platform == @node[:target_platform]
     end
 
+    # execute script in background and wait for it to finish
+    def execute_and_wait_for_finish(script, seconds)
+      Rails.logger.info("Executing #{script} at #{@node.name}...")
+      @node.wait_for_script_to_finish(script, seconds)
+      true
+    rescue StandardError => e
+      save_error_state(
+        e.message + "Check /var/log/crowbar/node-upgrade.log for details."
+      )
+      false
+    end
+
     def pre_upgrade
-      # TODO: save the global status info about this substep (we started prepare for upgrade)
-
-      # Migrate out the l3 agents and shut down pacemaker
-      script = "/usr/sbin/crowbar-pre-upgrade.sh"
-      ssh_status = @node.ssh_cmd(script)
-      if ssh_status[0] != 200
-        save_error_state("Executing of pre upgrade script has failed on node #{@node.name}.")
-        return false
+      if execute_and_wait_for_finish("/usr/sbin/crowbar-pre-upgrade.sh", 300)
+        save_node_state("Pre upgrade script run was successful.")
+        return true
       end
-
-      upgrade_ok = false
-      begin
-        Timeout.timeout(60) do
-          loop do
-            out = @node.run_ssh_cmd("test -e /var/lib/crowbar/upgrade/crowbar-pre-upgrade-ok")
-            if out[:exit_code].zero?
-              save_node_state("Pre upgrade script run was successful.")
-              upgrade_ok = true
-              break
-            end
-            out = @node.run_ssh_cmd("test -e /var/lib/crowbar/upgrade/crowbar-pre-upgrade-failed")
-            if out[:exit_code].zero?
-              save_error_state("Execution of pre upgrade script at node #{@node.name} has failed
-Check /var/log/crowbar/node-upgrade.log at #{@node.name} node for details.")
-              break
-            end
-            sleep(5)
-          end
-        end
-      rescue Timeout::Error
-        save_error_state("Possible error during pre-upgrade script execution.
-Action did not finish after 1 minute")
-        return false
-      end
-      upgrade_ok
+      false
     end
 
     def os_upgrade
-      # Upgrade one node
-      # TODO: save the global status info about this substep (we started upgrade of the node)
-      ssh_status = @node.ssh_cmd("/usr/sbin/crowbar-upgrade-os.sh")
-      if ssh_status[0] != 200
-        Rails.logger.error("Executing of os upgrade script has failed on node #{@node.name}.")
-        return false
+      if execute_and_wait_for_finish("/usr/sbin/crowbar-upgrade-os.sh", 600)
+        save_node_state("Package upgrade was successful.")
+        return true
       end
-      true
+      false
     end
 
+    # Execute post upgrade actions: prepare drbd and start pacemaker
     def post_upgrade
-      # TODO: save the global status info about this substep (we started post upgrade stuff)
-
-      # Join the cluster: start pacemaker and run selected recipes
-      script = "/usr/sbin/crowbar-post-upgrade.sh"
-      out = @node.run_ssh_cmd(script)
-      unless out[:exit_code].zero?
-        Rails.logger.error("Executing of post upgrade script has failed on node #{@node.name}.")
-        Rails.logger.error("Script location: #{script}")
-        Rails.logger.error("exit: #{out[:exit_code]}, out: #{out[:stdout]}, err: #{out[:stderr]}")
-        return false
+      if execute_and_wait_for_finish("/usr/sbin/crowbar-post-upgrade.sh", 300)
+        save_node_state("Post upgrade script run was successful.")
+        return true
       end
+      false
     end
 
     # Do the complete upgrade of one node
@@ -108,32 +82,6 @@ Action did not finish after 1 minute")
         return false
       end
 
-      # wait until the OS upgrade is finished
-      upgrade_failure = false
-      begin
-        Timeout.timeout(600) do
-          loop do
-            out = @node.run_ssh_cmd("test -e /var/lib/crowbar/upgrade/node-upgraded-ok")
-            if out[:exit_code].zero?
-              save_node_state("Package upgrade was successful.")
-              break
-            end
-            out = @node.run_ssh_cmd("test -e /var/lib/crowbar/upgrade/node-upgrade-failed")
-            if out[:exit_code].zero?
-              upgrade_failure = true
-              save_error_state("Installation of node #{@node.name} failed")
-              break
-            end
-            sleep(5)
-          end
-        end
-      rescue Timeout::Error
-        save_error_state("Error during upgrading node. Action did not finish after 10 minutes")
-        return false
-      end
-
-      return false if upgrade_failure
-
       # reboot the node after successful upgrade
       ssh_status = @node.ssh_cmd("/sbin/reboot")
       if ssh_status[0] != 200
@@ -143,10 +91,6 @@ Action did not finish after 1 minute")
 
       # FIXME: wait until node comes back
 
-      unless post_upgrade
-        save_error_state("Error while executing post upgrade script")
-        return false
-      end
       true
     end
 
