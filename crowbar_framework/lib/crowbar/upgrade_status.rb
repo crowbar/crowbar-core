@@ -39,7 +39,7 @@ module Crowbar
 
     def start_step
       Crowbar::Lock::LocalBlocking.with_lock(shared: false) do
-        if progress[:steps][current_step][:status] == "running"
+        if running?
           Rails.logger.warn("The step has already been started")
           return false
         end
@@ -50,7 +50,7 @@ module Crowbar
 
     def end_step(success = true, errors = {})
       Crowbar::Lock::LocalBlocking.with_lock(shared: false) do
-        unless progress[:steps][current_step][:status] == "running"
+        unless running?
           Rails.logger.warn("The step is not running, could not be finished")
           return false
         end
@@ -60,6 +60,12 @@ module Crowbar
         }
         next_step
       end
+    end
+
+    def running?(step_name = nil)
+      step = progress[:steps][step_name || current_step]
+      return false unless step
+      step[:status] == "running"
     end
 
     def finished?
