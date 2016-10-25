@@ -243,14 +243,14 @@ class Api::UpgradeController < ApiController
       "repos": {
         "missing": {
           "x86_64": [
-            "SUSE-OpenStack-Cloud-7-Pool",
-            "SUSE-OpenStack-Cloud-7-Updates"
+            "SUSE-OpenStack-Cloud-8-Pool",
+            "SUSE-OpenStack-Cloud-8-Updates"
           ]
         },
         "inactive": {
           "x86_64": [
-            "SUSE-OpenStack-Cloud-7-Pool",
-            "SUSE-OpenStack-Cloud-7-Updates"
+            "SUSE-OpenStack-Cloud-8-Pool",
+            "SUSE-OpenStack-Cloud-8-Updates"
           ]
         }
       }
@@ -276,7 +276,7 @@ class Api::UpgradeController < ApiController
       "repos": {
         "x86_64": {
           "missing": [
-            "SUSE OpenStack Cloud 7"
+            "SUSE OpenStack Cloud 8"
           ]
         }
       }
