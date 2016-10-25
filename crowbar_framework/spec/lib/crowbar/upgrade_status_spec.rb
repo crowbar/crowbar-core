@@ -17,15 +17,17 @@
 require "spec_helper"
 
 describe Crowbar::UpgradeStatus do
+  before do
+    allow(File).to receive(:exist?).and_return(false)
+  end
+
   context "with a status file that does not exist" do
     it "ensures the default initial values are correct" do
-      allow(File).to receive(:exist?).and_return(false)
       expect(subject.current_substep).to be_nil
       expect(subject.finished?).to be false
     end
 
     it "returns first step as current step" do
-      allow(File).to receive(:exist?).and_return(false)
       expect(subject.current_step).to eql :upgrade_prechecks
     end
 
@@ -60,7 +62,6 @@ describe Crowbar::UpgradeStatus do
     end
 
     it "moves to next step when requested" do
-      allow(File).to receive(:exist?).and_return(false)
       allow(File).to receive(:open).and_return(true)
       expect(subject.current_step).to eql :upgrade_prechecks
       expect(subject.current_step_state[:status]).to eql "pending"
@@ -70,7 +71,6 @@ describe Crowbar::UpgradeStatus do
     end
 
     it "does not move to next step when current one failed" do
-      allow(File).to receive(:exist?).and_return(false)
       allow(File).to receive(:open).and_return(true)
       expect(subject.current_step).to eql :upgrade_prechecks
       expect(subject.start_step).to be true
@@ -106,7 +106,6 @@ describe Crowbar::UpgradeStatus do
     end
 
     it "goes through the steps and returns finish when finished" do
-      allow(File).to receive(:exist?).and_return(false)
       allow(File).to receive(:open).and_return(true)
       expect(subject.start_step).to be true
       expect(subject.end_step).to be true
