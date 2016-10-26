@@ -63,6 +63,35 @@ module Api
       false
     end
 
+    def wait_for_ssh_state(desired_state, action)
+      Timeout.timeout(300) do
+        loop do
+          ssh_status = @node.ssh_cmd("").first
+          break if desired_state == :up ? ssh_status == 200 : ssh_status != 200
+          sleep(5)
+        end
+      end
+      true
+    rescue Timeout::Error
+      save_error_state(
+        "Possible error at node #{@node.name}" \
+        "Node did not #{action} after 5 minutes of trying."
+      )
+      false
+    end
+
+    # Reboot the node and wait until it comes back online
+    def reboot_and_wait
+      ssh_status = @node.ssh_cmd("/sbin/reboot")
+      if ssh_status[0] != 200
+        save_error_state("Failed to reboot the machine. Could not ssh.")
+        return false
+      end
+
+      return false unless wait_for_ssh_state(:down, "reboot")
+      wait_for_ssh_state(:up, "come up")
+    end
+
     # Do the complete upgrade of one node
     def upgrade
       # FIXME: check the global status:
@@ -82,16 +111,7 @@ module Api
         return false
       end
 
-      # reboot the node after successful upgrade
-      ssh_status = @node.ssh_cmd("/sbin/reboot")
-      if ssh_status[0] != 200
-        save_error_state("Failed to reboot the machine. Could not ssh.")
-        return false
-      end
-
-      # FIXME: wait until node comes back
-
-      true
+      reboot_and_wait
     end
 
     # Disable "pre-upgrade" attribute for given node
