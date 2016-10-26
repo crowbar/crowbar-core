@@ -20,12 +20,6 @@ module Api
       @node = NodeObject.find_node_by_name name
     end
 
-    def upgraded?
-      # FIXME: check this by looking at some upgraded-ok file on the node
-      current_platform = "#{@node[:platform]}-#{@node[:platform_version]}"
-      @upgraded ||= current_platform == @node[:target_platform]
-    end
-
     # execute script in background and wait for it to finish
     def execute_and_wait_for_finish(script, seconds)
       Rails.logger.info("Executing #{script} at #{@node.name}...")
@@ -99,7 +93,7 @@ module Api
 
       # this is just a fallback check, we should know by checking the global status that the action
       # should not be executed on already upgraded node
-      return true if upgraded?
+      return true if @node.file_exist? "/var/lib/crowbar/upgrade/node-upgraded-ok"
 
       unless pre_upgrade
         save_error_state("Error while executing pre upgrade script")
