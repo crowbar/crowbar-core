@@ -380,6 +380,17 @@ class CrowbarService < ServiceObject
       node.admin? || node[:platform] == "windows" || node.state != "crowbar_upgrade"
     end
     check_if_nodes_are_available upgrade_nodes
+
+    # reset the OS values at admin node...
+    admin_node = NodeObject.admin_node
+    admin_node["target_platform"] = ""
+    if admin_node["provisioner"] && admin_node["provisioner"]["default_os"]
+      admin_node["provisioner"].delete "default_os"
+    end
+    admin_node.save
+    # ... and let provisioner fill correct values for current OS
+    commit_and_check_proposal
+
     admin_node = NodeObject.admin_node
 
     upgrade_nodes.each do |node|
