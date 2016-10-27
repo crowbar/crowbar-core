@@ -169,7 +169,7 @@ describe Api::Crowbar do
         receive(:run_ssh_cmd).with("LANG=C ceph health 2>&1").
         and_return(exit_code: 0, stdout: "HEALTH_OK\n", stderr: "")
       )
-      expect(subject.class.ceph_healthy?).to be true
+      expect(subject.class.ceph_status).to be_empty
     end
   end
 
@@ -183,7 +183,7 @@ describe Api::Crowbar do
         receive(:run_ssh_cmd).with("LANG=C ceph health 2>&1").
         and_return(exit_code: 1, stdout: "HEALTH_ERR\n", stderr: "")
       )
-      expect(subject.class.ceph_healthy?).to be false
+      expect(subject.class.ceph_status).to_not be_empty
     end
 
     it "fails when exit value of ceph check is 0 but stdout still not correct" do
@@ -195,7 +195,46 @@ describe Api::Crowbar do
         receive(:run_ssh_cmd).with("LANG=C ceph health 2>&1").
         and_return(exit_code: 0, stdout: "HEALTH_WARN", stderr: "")
       )
-      expect(subject.class.ceph_healthy?).to be false
+      expect(subject.class.ceph_status).to_not be_empty
+    end
+  end
+
+  context "with HA deployed" do
+    it "succeeds to confirm that HA is deployed" do
+      allow(Api::Crowbar).to(
+        receive(:addon_installed?).
+        and_return(true)
+      )
+      allow(NodeObject).to(
+        receive(:find).with("pacemaker_founder:true AND pacemaker_config_environment:*").
+        and_return([node])
+      )
+      expect(subject.class.ha_presence_check).to eq({})
+    end
+  end
+
+  context "with HA installed but not deployed" do
+    it "fails when finding out HA is not deployed" do
+      allow(Api::Crowbar).to(
+        receive(:addon_installed?).
+        and_return(true)
+      )
+      allow(NodeObject).to(
+        receive(:find).with("pacemaker_founder:true AND pacemaker_config_environment:*").
+        and_return([])
+      )
+      expect(subject.class.ha_presence_check).to have_key(:errors)
+    end
+  end
+
+  context "with HA not even installed" do
+    it "fails when finding out HA is not deployed" do
+
+      allow(Api::Crowbar).to(
+        receive(:addon_installed?).
+        and_return(false)
+      )
+      expect(subject.class.ha_presence_check).to have_key(:errors)
     end
   end
 
@@ -209,7 +248,7 @@ describe Api::Crowbar do
         receive(:find).with("roles:nova-compute-xen").
         and_return([node, node])
       )
-      expect(subject.class.compute_resources_available?).to be true
+      expect(subject.class.compute_resources_status).to be_empty
     end
   end
 
@@ -219,7 +258,11 @@ describe Api::Crowbar do
         receive(:find).with("roles:nova-compute-kvm").
         and_return([node])
       )
-      expect(subject.class.compute_resources_available?).to be false
+      allow(NodeObject).to(
+        receive(:find).with("roles:nova-compute-xen").
+        and_return([node, node])
+      )
+      expect(subject.class.compute_resources_status).to_not be_empty
     end
     it "finds there is only one XEN compute node and fails" do
       allow(NodeObject).to(
@@ -230,7 +273,7 @@ describe Api::Crowbar do
         receive(:find).with("roles:nova-compute-xen").
         and_return([node])
       )
-      expect(subject.class.compute_resources_available?).to be false
+      expect(subject.class.compute_resources_status).to_not be_empty
     end
   end
 
@@ -244,7 +287,7 @@ describe Api::Crowbar do
         receive(:find).with("roles:nova-compute-xen").
         and_return([])
       )
-      expect(subject.class.compute_resources_available?).to be true
+      expect(subject.class.compute_resources_status).to be_empty
     end
   end
 end

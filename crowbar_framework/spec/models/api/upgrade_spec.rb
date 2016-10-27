@@ -43,6 +43,15 @@ describe Api::Upgrade do
         :addons
       ).and_return(["ceph", "ha"])
 
+      allow(Api::Crowbar).to(
+        receive(:addons).and_return(
+          ["ha"]
+        )
+      )
+      allow(Api::Crowbar).to(
+        receive(:ha_presence_check).and_return({})
+      )
+
       expect(subject.class).to respond_to(:status)
       expect(subject.class.status).to be_a(Hash)
       expect(subject.class.status.deep_stringify_keys).to eq(upgrade_status)
@@ -58,6 +67,9 @@ describe Api::Upgrade do
       allow(Api::Crowbar).to receive(
         :addons
       ).and_return(["ceph", "ha"])
+      allow(Api::Crowbar).to(
+        receive(:ha_presence_check).and_return({})
+      )
 
       expect(subject.class).to respond_to(:checks)
       expect(subject.class.checks.deep_stringify_keys).to eq(upgrade_prechecks)

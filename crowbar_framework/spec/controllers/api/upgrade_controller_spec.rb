@@ -34,6 +34,9 @@ describe Api::UpgradeController, type: :request do
       allow(Api::Crowbar).to receive(
         :addons
       ).and_return(["ceph", "ha"])
+      allow(Api::Crowbar).to receive(
+        :ha_presence_check
+      ).and_return({})
 
       get "/api/upgrade", {}, headers
       expect(response).to have_http_status(:ok)
@@ -59,6 +62,16 @@ describe Api::UpgradeController, type: :request do
       allow(Api::Crowbar).to receive(
         :addons
       ).and_return(["ha", "ceph"])
+      allow(Api::Crowbar).to receive(
+        :ha_presence_check
+      ).and_return({})
+
+      allow_any_instance_of(Api::Crowbar).to(
+        receive(:addons).and_return(["ha"])
+      )
+      allow(Api::Upgrade).to(
+        receive(:ha_presence_check).and_return({})
+      )
 
       get "/api/upgrade/prechecks", {}, headers
       expect(response).to have_http_status(:ok)
