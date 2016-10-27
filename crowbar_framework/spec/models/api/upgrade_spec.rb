@@ -68,7 +68,13 @@ describe Api::Upgrade do
         :addons
       ).and_return(["ceph", "ha"])
       allow(Api::Crowbar).to(
+        receive(:addon_installed?).and_return(true)
+      )
+      allow(Api::Crowbar).to(
         receive(:ha_presence_check).and_return({})
+      )
+      allow(Api::Crowbar).to(
+        receive(:clusters_health_report).and_return({})
       )
 
       expect(subject.class).to respond_to(:checks)

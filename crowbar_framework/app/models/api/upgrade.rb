@@ -53,7 +53,7 @@ module Api
           ret[:clusters_healthy] = {
             required: true,
             passed: clusters_healthy?,
-            errors: clusters_health_check_errors
+            errors: clusters_health_report_errors
           } if Api::Crowbar.addons.include?("ha")
         end
       end
@@ -169,8 +169,12 @@ module Api
         ha_presence_status.empty?
       end
 
+      def clusters_health_report
+        @clusters_health_report ||= Api::Crowbar.clusters_health_report
+      end
+
       def clusters_healthy?
-        Api::Crowbar.clusters_healthy?
+        clusters_health_report.empty?
       end
 
       def compute_resources_status
@@ -231,15 +235,27 @@ module Api
         }
       end
 
-      def clusters_health_check_errors
-        return {} if clusters_healthy?
+      def clusters_health_report_errors
+        ret = {}
+        return ret if clusters_healthy?
 
-        {
-          clusters_health: {
-            data: [], # TODO: implement cluster health check errors
-            help: I18n.t("api.upgrade.prechecks.clusters_health_check.help.default")
-          }
-        }
+        crm_failures = clusters_health_report["crm_failures"]
+        failed_actions = clusters_health_report["failed_actions"]
+        ret[:clusters_health_crm_failures] = {
+          data: crm_failures.values,
+          help: I18n.t(
+            "api.upgrade.prechecks.clusters_health.crm_failures",
+            nodes: crm_failures.join(",")
+          )
+        } if crm_failures
+        ret[:clusters_health_failed_actions] = {
+          data: failed_actions.values,
+          help: I18n.t(
+            "api.upgrade.prechecks.clusters_health.failed_actions",
+            nodes: failed_actions.keys.join(",")
+          )
+        } if failed_actions
+        ret
       end
 
       def compute_resources_check_errors

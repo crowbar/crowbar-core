@@ -95,13 +95,13 @@ module Api
       #     }
       # }
       # User has to manually clean pacemaker resources before proceeding with the upgrade.
-      def clusters_healthy?
+      def clusters_health_report
         cluster_health = {}
         crm_failures = {}
         failed_actions = {}
 
         founders = NodeObject.find("pacemaker_founder:true AND pacemaker_config_environment:*")
-        return true if founders.empty?
+        return cluster_health if founders.empty?
 
         founders.each do |n|
           name = n.name
@@ -123,8 +123,7 @@ module Api
         end
         cluster_health["crm_failures"] = crm_failures unless crm_failures.empty?
         cluster_health["failed_actions"] = failed_actions unless failed_actions.empty?
-
-        cluster_health.empty?
+        cluster_health
       end
 
       def ceph_status
