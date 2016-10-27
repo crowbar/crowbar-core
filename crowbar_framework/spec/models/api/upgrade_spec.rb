@@ -72,6 +72,9 @@ describe Api::Upgrade do
     allow(pacemaker).to receive(
       :ha_presence_check
     ).and_return({})
+    allow(pacemaker).to receive(
+      :health_report
+    ).and_return({})
   end
 
   context "with a successful status" do
