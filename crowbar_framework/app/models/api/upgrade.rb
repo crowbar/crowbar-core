@@ -172,6 +172,16 @@ module Api
           }
         }
       end
+
+      def repo_version_available?(products, product, version)
+        products.any? do |p|
+          p["version"] == version && p["name"] == product
+        end
+      end
+
+      def admin_architecture
+        NodeObject.admin_node.architecture
+      end
     end
   end
 end
