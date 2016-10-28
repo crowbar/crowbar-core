@@ -52,7 +52,10 @@ class Api::UpgradeController < ApiController
   end
 
   def prechecks
-    render json: Api::Upgrade.checks
+    render json: {
+      checks: Api::Upgrade.checks,
+      best_method: Api::Upgrade.best_method
+    }
   end
 
   def cancel

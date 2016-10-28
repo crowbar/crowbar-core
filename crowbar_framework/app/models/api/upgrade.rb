@@ -58,6 +58,19 @@ module Api
         end
       end
 
+      def best_method
+        checks_cached = checks
+        return "none" if checks_cached.any? do |_id, c|
+          c[:required] && !c[:passed]
+        end
+        return "non-disruptive" unless checks_cached.any? do |_id, c|
+          (c[:required] || !c[:required]) && !c[:passed]
+        end
+        return "disruptive" unless checks_cached.any? do |_id, c|
+          (c[:required] && !c[:passed]) && (!c[:required] && c[:passed])
+        end
+      end
+
       def adminrepocheck
         # FIXME: once we start working on 7 to 8 upgrade we have to adapt the sles version
         zypper_stream = Hash.from_xml(
