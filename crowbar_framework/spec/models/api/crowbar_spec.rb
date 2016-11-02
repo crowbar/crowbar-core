@@ -84,7 +84,7 @@ describe Api::Crowbar do
         receive(:find).with("pacemaker_founder:true AND pacemaker_config_environment:*").
         and_return([])
       )
-      expect(subject.class.clusters_healthy?).to be true
+      expect(subject.class.clusters_health_report).to be_empty
     end
   end
 
@@ -102,7 +102,7 @@ describe Api::Crowbar do
         receive(:run_ssh_cmd).with("LANG=C crm status | grep -A 2 '^Failed Actions:'").
         and_return(exit_code: 1, stdout: "", stderr: "")
       )
-      expect(subject.class.clusters_healthy?).to be true
+      expect(subject.class.clusters_health_report).to be_empty
     end
   end
 
@@ -116,7 +116,7 @@ describe Api::Crowbar do
         receive(:run_ssh_cmd).with("crm status 2>&1").
         and_return(exit_code: 1, stdout: "crm status failure\n", stderr: "")
       )
-      expect(subject.class.clusters_healthy?).to be false
+      expect(subject.class.clusters_health_report).to_not be_empty
     end
     it "fails because crm reports failed actions" do
       allow(NodeObject).to(
@@ -131,7 +131,7 @@ describe Api::Crowbar do
         receive(:run_ssh_cmd).with("LANG=C crm status | grep -A 2 '^Failed Actions:'").
         and_return(exit_code: 0, stdout: "Failed Actions: something failed to start", stderr: "")
       )
-      expect(subject.class.clusters_healthy?).to be false
+      expect(subject.class.clusters_health_report).to_not be_empty
     end
   end
 
