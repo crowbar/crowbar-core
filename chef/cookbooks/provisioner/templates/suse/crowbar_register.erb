@@ -314,6 +314,9 @@ PATTERNS_INSTALL="$PATTERNS_INSTALL base enhanced_base sw_management"
 <% end -%>
 PACKAGES_INSTALL="$PACKAGES_INSTALL netcat ruby2.1-rubygem-chef"
 
+# We also need ntp for this script
+PACKAGES_INSTALL="$PACKAGES_INSTALL ntp"
+
 case $ARCH in
     x86_64) PACKAGES_INSTALL+=" biosdevname";;
 esac
