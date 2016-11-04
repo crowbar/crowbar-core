@@ -57,7 +57,7 @@ new_alias = repo_alias.gsub("SP1", "SP2").gsub(node[:platform_version], target_p
 
 template "/usr/sbin/crowbar-upgrade-os.sh" do
   source "crowbar-upgrade-os.erb"
-  mode "0770"
+  mode "0755"
   owner "root"
   group "root"
   action :create
@@ -80,7 +80,7 @@ use_ha = node["run_list_map"].key? "pacemaker-cluster-member"
 
 template "/usr/sbin/crowbar-shutdown-services-before-upgrade.sh" do
   source "crowbar-shutdown-services-before-upgrade.sh.erb"
-  mode "0770"
+  mode "0755"
   owner "root"
   group "root"
   action :create
@@ -106,12 +106,23 @@ end
 
 template "/usr/sbin/crowbar-pre-upgrade.sh" do
   source "crowbar-pre-upgrade.sh.erb"
-  mode "0770"
+  mode "0755"
   owner "root"
   group "root"
   action :create
   variables(
     use_ha: use_ha,
     os_auth_url_v2: os_auth_url_v2
+  )
+end
+
+template "/usr/sbin/crowbar-delete-pacemaker-resources.sh" do
+  source "crowbar-delete-pacemaker-resources.sh.erb"
+  mode "0755"
+  owner "root"
+  group "root"
+  action :create
+  variables(
+    use_ha: use_ha
   )
 end
