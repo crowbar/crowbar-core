@@ -38,6 +38,10 @@ describe Crowbar::UpgradeStatus do
       expect(subject.finished?).to be false
     end
 
+    it "ensures that the defaults are saved" do
+      expect(subject.progress_file_path.exist?).to be true
+    end
+
     it "returns first step as current step" do
       expect(subject.current_step).to eql :upgrade_prechecks
     end
