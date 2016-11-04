@@ -6,6 +6,18 @@ module Crowbar
     # We're keeping the information in the file so is accessible by
     # external applications and different crowbar versions.
     def initialize
+      load
+    end
+
+    def load
+      if progress_file_path.exist?
+        load!
+      else
+        initialize_state
+      end
+    end
+
+    def initialize_state
       @progress = {
         current_step: upgrade_steps_6_7.first,
         # substep is needed for more complex steps like upgrading the nodes
@@ -13,15 +25,15 @@ module Crowbar
         # current node is relevant only for the nodes_upgrade step
         current_node: nil
       }
-      if progress_file_path.exist?
-        Crowbar::Lock::LocalBlocking.with_lock(shared: true) do
-          @progress = JSON.load(progress_file_path.read)
-        end
-      else
-        # in 'steps', we save the information about each step that was executed
-        @progress[:steps] = upgrade_steps_6_7.map do |step|
-          [step, { status: "pending" }]
-        end.to_h
+      # in 'steps', we save the information about each step that was executed
+      @progress[:steps] = upgrade_steps_6_7.map do |step|
+        [step, { status: "pending" }]
+      end.to_h
+    end
+
+    def load!
+      Crowbar::Lock::LocalBlocking.with_lock(shared: true) do
+        @progress = JSON.load(progress_file_path.read)
       end
     end
 
