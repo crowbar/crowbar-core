@@ -31,6 +31,7 @@ module Crowbar
       @progress[:steps] = upgrade_steps_6_7.map do |step|
         [step, { status: "pending" }]
       end.to_h
+      save
     end
 
     def load!
