@@ -18,7 +18,14 @@ require "spec_helper"
 
 describe Crowbar::UpgradeStatus do
   before do
-    allow(File).to receive(:exist?).and_return(false)
+    @json = Tempfile.open("upgrade_status_spec.json", &:path)
+    File.unlink @json
+  end
+
+  subject { Crowbar::UpgradeStatus.new(@json) }
+
+  after do
+    File.unlink @json if File.exist? @json
   end
 
   context "with a status file that does not exist" do
@@ -32,7 +39,6 @@ describe Crowbar::UpgradeStatus do
     end
 
     it "determines whether current step is pending" do
-      allow(File).to receive(:open).and_return(true)
       expect(subject.current_step).to eql :upgrade_prechecks
       expect(subject.pending?).to be true
       expect(subject.start_step).to be true
@@ -40,7 +46,6 @@ describe Crowbar::UpgradeStatus do
     end
 
     it "determines whether given step is pending" do
-      allow(File).to receive(:open).and_return(true)
       expect(subject.current_step).to eql :upgrade_prechecks
       expect(subject.pending?).to be true
       expect(subject.pending?(:upgrade_prechecks)).to be true
@@ -52,7 +57,6 @@ describe Crowbar::UpgradeStatus do
     end
 
     it "determines whether current step is running" do
-      allow(File).to receive(:open).and_return(true)
       expect(subject.current_step).to eql :upgrade_prechecks
       expect(subject.running?).to be false
       expect(subject.running?(:upgrade_prechecks)).to be false
@@ -62,7 +66,6 @@ describe Crowbar::UpgradeStatus do
     end
 
     it "determines whether a given step is running" do
-      allow(File).to receive(:open).and_return(true)
       expect(subject.current_step).to eql :upgrade_prechecks
       expect(subject.running?(:upgrade_prepare)).to be false
       expect(subject.start_step).to be true
@@ -70,7 +73,6 @@ describe Crowbar::UpgradeStatus do
     end
 
     it "determines whether current step is running" do
-      allow(File).to receive(:open).and_return(true)
       expect(subject.current_step).to eql :upgrade_prechecks
       expect(subject.current_step_state[:status]).to eql "pending"
       expect(subject.running?).to be false
@@ -80,7 +82,6 @@ describe Crowbar::UpgradeStatus do
     end
 
     it "moves to next step when requested" do
-      allow(File).to receive(:open).and_return(true)
       expect(subject.current_step).to eql :upgrade_prechecks
       expect(subject.current_step_state[:status]).to eql "pending"
       expect(subject.start_step).to be true
@@ -89,7 +90,6 @@ describe Crowbar::UpgradeStatus do
     end
 
     it "does not move to next step when current one failed" do
-      allow(File).to receive(:open).and_return(true)
       expect(subject.current_step).to eql :upgrade_prechecks
       expect(subject.start_step).to be true
       expect(subject.end_step(false, failure: "error message")).to be false
@@ -100,7 +100,6 @@ describe Crowbar::UpgradeStatus do
 
     it "does not allow to end step when it is not running" do
       expect(subject.current_step).to eql :upgrade_prechecks
-      allow(File).to receive(:open).and_return(true)
       expect(subject.start_step).to be true
       expect(subject.end_step).to be true
       expect(subject.current_step).to eql :upgrade_prepare
@@ -109,13 +108,11 @@ describe Crowbar::UpgradeStatus do
 
     it "does not to stop the first step without starting it" do
       expect(subject.current_step).to eql :upgrade_prechecks
-      allow(File).to receive(:open).and_return(true)
       expect(subject.end_step).to be false
     end
 
     it "prevents starting a step while it is already running" do
       expect(subject.current_step).to eql :upgrade_prechecks
-      allow(File).to receive(:open).and_return(true)
       expect(subject.start_step).to be true
       expect(subject.current_step_state[:status]).to eql "running"
       expect(subject.start_step).to be false
@@ -124,7 +121,6 @@ describe Crowbar::UpgradeStatus do
     end
 
     it "goes through the steps and returns finish when finished" do
-      allow(File).to receive(:open).and_return(true)
       expect(subject.start_step).to be true
       expect(subject.end_step).to be true
       expect(subject.current_step).to eql :upgrade_prepare
