@@ -18,14 +18,14 @@ require "spec_helper"
 
 describe Crowbar::UpgradeStatus do
   before do
-    @json = Tempfile.open("upgrade_status_spec.json", &:path)
-    File.unlink @json
+    @state_file = Tempfile.open("upgrade_status_spec.state.yml", &:path)
+    File.unlink @state_file
   end
 
-  subject { Crowbar::UpgradeStatus.new(@json) }
+  subject { Crowbar::UpgradeStatus.new(@state_file) }
 
   after do
-    File.unlink @json if File.exist? @json
+    File.unlink @state_file if File.exist? @state_file
   end
 
   context "with a status file that does not exist" do
@@ -78,7 +78,7 @@ describe Crowbar::UpgradeStatus do
 
     it "determines whether current step is running" do
       expect(subject.current_step).to eql :upgrade_prechecks
-      expect(subject.current_step_state[:status]).to eql "pending"
+      expect(subject.current_step_state[:status]).to eql :pending
       expect(subject.running?).to be false
       expect(subject.start_step).to be true
       expect(subject.running?).to be true
@@ -87,7 +87,7 @@ describe Crowbar::UpgradeStatus do
 
     it "moves to next step when requested" do
       expect(subject.current_step).to eql :upgrade_prechecks
-      expect(subject.current_step_state[:status]).to eql "pending"
+      expect(subject.current_step_state[:status]).to eql :pending
       expect(subject.start_step).to be true
       expect(subject.end_step).to be true
       expect(subject.current_step).to eql :upgrade_prepare
@@ -118,9 +118,9 @@ describe Crowbar::UpgradeStatus do
     it "prevents starting a step while it is already running" do
       expect(subject.current_step).to eql :upgrade_prechecks
       expect(subject.start_step).to be true
-      expect(subject.current_step_state[:status]).to eql "running"
+      expect(subject.current_step_state[:status]).to eql :running
       expect(subject.start_step).to be false
-      expect(subject.current_step_state[:status]).to eql "running"
+      expect(subject.current_step_state[:status]).to eql :running
       expect(subject.current_step).to eql :upgrade_prechecks
     end
 
