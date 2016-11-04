@@ -1,11 +1,13 @@
 module Crowbar
   class UpgradeStatus
+    attr_reader :progress_file_path
     attr_accessor :progress
 
     # Return the current state of upgrade process.
     # We're keeping the information in the file so is accessible by
     # external applications and different crowbar versions.
-    def initialize
+    def initialize(json_file = "/var/lib/crowbar/upgrade/progress.json")
+      @progress_file_path = Pathname.new(json_file)
       load
     end
 
@@ -126,10 +128,6 @@ module Crowbar
         :nodes_upgrade,
         :finished
       ]
-    end
-
-    def progress_file_path
-      Pathname.new("/var/lib/crowbar/upgrade/progress.json")
     end
   end
 end
