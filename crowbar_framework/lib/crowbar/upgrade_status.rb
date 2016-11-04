@@ -6,8 +6,8 @@ module Crowbar
     # Return the current state of upgrade process.
     # We're keeping the information in the file so is accessible by
     # external applications and different crowbar versions.
-    def initialize(json_file = "/var/lib/crowbar/upgrade/progress.json")
-      @progress_file_path = Pathname.new(json_file)
+    def initialize(yaml_file = "/var/lib/crowbar/upgrade/progress.yml")
+      @progress_file_path = Pathname.new(yaml_file)
       load
     end
 
@@ -29,14 +29,14 @@ module Crowbar
       }
       # in 'steps', we save the information about each step that was executed
       @progress[:steps] = upgrade_steps_6_7.map do |step|
-        [step, { status: "pending" }]
+        [step, { status: :pending }]
       end.to_h
       save
     end
 
     def load!
       Crowbar::Lock::LocalBlocking.with_lock(shared: true) do
-        @progress = JSON.load(progress_file_path.read)
+        @progress = YAML.load(progress_file_path.read)
       end
     end
 
@@ -58,7 +58,7 @@ module Crowbar
           Rails.logger.warn("The step has already been started")
           return false
         end
-        progress[:steps][current_step][:status] = "running"
+        progress[:steps][current_step][:status] = :running
         save
       end
     end
@@ -80,13 +80,13 @@ module Crowbar
     def running?(step_name = nil)
       step = progress[:steps][step_name || current_step]
       return false unless step
-      step[:status] == "running"
+      step[:status] == :running
     end
 
     def pending?(step_name = nil)
       step = progress[:steps][step_name || current_step]
       return false unless step
-      step[:status] == "pending"
+      step[:status] == :pending
     end
 
     def finished?
@@ -97,7 +97,7 @@ module Crowbar
 
     def save
       progress_file_path.open("w") do |f|
-        f.write(JSON.pretty_generate(progress))
+        f.write(YAML.dump(progress))
       end
       true
     rescue StandardError => e
