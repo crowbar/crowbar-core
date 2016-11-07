@@ -7,6 +7,8 @@ LOGFILE=/var/log/crowbar/node-upgrade.log
 mkdir -p "`dirname "$LOGFILE"`"
 exec >>"$LOGFILE" 2>&1
 
+echo "Executing $BASH_SOURCE"
+
 set -x
 
 <% if @use_ha %>

@@ -126,3 +126,15 @@ template "/usr/sbin/crowbar-delete-pacemaker-resources.sh" do
     use_ha: use_ha
   )
 end
+
+template "/usr/sbin/crowbar-post-upgrade.sh" do
+  source "crowbar-post-upgrade.sh.erb"
+  mode "0775"
+  owner "root"
+  group "root"
+  action :create
+  variables(
+    use_ha: use_ha,
+    has_drbd: use_ha && node.fetch("drbd", {})["rsc"]
+  )
+end

@@ -267,6 +267,11 @@ describe Api::Upgrade do
     it "successfully upgrades the nodes" do
       allow(NodeObject).to(
         receive(:find).
+        with("drbd:*").
+        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+      )
+      allow(NodeObject).to(
+        receive(:find).
         with("state:crowbar_upgrade AND (roles:database-server OR roles:rabbitmq-server)").
         and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
       )
@@ -276,6 +281,14 @@ describe Api::Upgrade do
         exit_code: 1
       )
       allow_any_instance_of(Api::Node).to receive(:upgrade).and_return(true)
+      stub_const("Api::Pacemaker", pacemaker)
+      allow(pacemaker).to receive(
+        :set_node_as_founder
+      ).and_return(true)
+      allow_any_instance_of(Api::Node).to receive(:disable_pre_upgrade_attribute_for).
+        and_return(true)
+      allow(Api::Upgrade).to receive(:delete_pacemaker_resources).and_return(true)
+      allow_any_instance_of(Api::Node).to receive(:post_upgrade).and_return(true)
 
       expect(subject.class.nodes).to be true
     end

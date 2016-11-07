@@ -1,0 +1,72 @@
+#!/bin/bash
+#
+# This does what is necessary directly after upgraded node is rebooted
+
+LOGFILE=/var/log/crowbar/node-upgrade.log
+UPGRADEDIR=/var/lib/crowbar/upgrade
+mkdir -p "`dirname "$LOGFILE"`"
+exec >>"$LOGFILE" 2>&1
+
+echo "Executing $BASH_SOURCE"
+
+set -x
+
+mkdir -p $UPGRADEDIR
+
+if [[ -f $UPGRADEDIR/crowbar-post-upgrade-ok ]] ; then
+    echo "Post upgrade actions were already successfully executed"
+    exit 0
+fi
+
+<% if @use_ha %>
+
+<% if @has_drbd %>
+
+if [[ -f /sbin/drbdadm ]] ; then
+    echo "Recreating DRBD metadata after the upgrade to new DRBD version..."
+
+    # FIXME: workaround for bnc#1006105 : creating metatata works after 2nd run...
+    for i in 1 2; do
+        drbdadm -- --force create-md all
+
+        ret=$?
+        if [ $ret != 0 ] ; then
+            echo "Error occured during DRBD metadata upgrade"
+            echo $ret > $UPGRADEDIR/crowbar-post-upgrade-failed
+            exit $ret
+        fi
+
+        sleep 5
+    done
+fi
+
+# Starting pacemaker will cause DRBD service to start and synchronize with the other node
+echo "Starting pacemaker..."
+service pacemaker start
+
+ret=$?
+if [ $ret != 0 ] ; then
+    echo "Error occured during starting pacemaker service"
+    echo $ret > $UPGRADEDIR/crowbar-post-upgrade-failed
+    exit $ret
+fi
+
+if [[ -f /sbin/drbdadm ]] ; then
+    # Wait until DRBD is started
+    while crm resource status ms-drbd-{postgresql,rabbitmq} | grep "NOT running"; do
+        sleep 1
+    done
+    # Now wait after DRBD data are synced with the other node
+    while drbdadm status | grep replication; do
+        sleep 5
+    done
+fi
+
+<% end %>
+
+<% else %>
+
+echo "No HA setup found..."
+
+<% end %>
+touch $UPGRADEDIR/crowbar-post-upgrade-ok

@@ -7,6 +7,8 @@ LOGFILE=/var/log/crowbar/node-upgrade.log
 mkdir -p "`dirname "$LOGFILE"`"
 exec >>"$LOGFILE" 2>&1
 
+echo "Executing $BASH_SOURCE"
+
 set -x
 
 UPGRADEDIR=/var/lib/crowbar/upgrade
@@ -33,7 +35,7 @@ initiate_node_upgrade()
         exit 1
     fi
 
-    if [[ -f $UPGRADEDIR/node-upgraded-ok ]] && grep -q "<%= @target_platform_version %>" $UPGRADEDIR/node-upgraded-ok ; then
+    if [[ -f $UPGRADEDIR/crowbar-upgrade-os-ok ]] && grep -q "<%= @target_platform_version %>" $UPGRADEDIR/crowbar-upgrade-os-ok ; then
         echo "Exit: Node already upgraded"
         exit 0
     fi
@@ -49,12 +51,12 @@ initiate_node_upgrade()
     ret=$?
     if [ $ret != 0 ]; then
         echo "zypper dist-upgrade has failed with $ret, check zypper logs"
-        echo "$ret" > $UPGRADEDIR/node-upgrade-failed
+        echo "$ret" > $UPGRADEDIR/crowbar-upgrade-os-failed
         exit $ret
     fi
 
     # Signalize that the upgrade correctly ended
-    echo "<%= @target_platform_version %>" >> $UPGRADEDIR/node-upgraded-ok
+    echo "<%= @target_platform_version %>" >> $UPGRADEDIR/crowbar-upgrade-os-ok
 
     exit 0
 }
