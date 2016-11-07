@@ -41,7 +41,7 @@ else
   bmc_address = bmc_network.address
   bmc_netmask = bmc_network.netmask
   bmc_router  = bmc_network.router
-  bmc_vlan    = bmc_network.use_vlan ? bmc_network.vlan : "off"
+  bmc_vlan    = bmc_network.use_vlan ? bmc_network.vlan.to_s : "off"
 end
 
 if node["crowbar_wall"]["status"]["ipmi"]["user_set"].nil?
