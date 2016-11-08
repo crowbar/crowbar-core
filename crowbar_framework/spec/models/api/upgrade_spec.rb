@@ -32,6 +32,11 @@ describe Api::Upgrade do
       "spec/fixtures/crowbar_repocheck_zypper_locked.xml"
     ).to_s
   end
+  let!(:crowbar_repocheck_zypper_prompt) do
+    File.read(
+      "spec/fixtures/crowbar_repocheck_zypper_prompt.xml"
+    ).to_s
+  end
 
   context "with a successful status" do
     it "checks the status" do
@@ -115,8 +120,27 @@ describe Api::Upgrade do
 
       check = subject.class.adminrepocheck
       expect(check[:status]).to eq(:service_unavailable)
-      expect(check[:message]).to eq(
+      expect(check[:error]).to eq(
         Hash.from_xml(crowbar_repocheck_zypper_locked)["stream"]["message"]
+      )
+    end
+  end
+
+  context "with a zypper prompt" do
+    it "shows the prompt text" do
+      allow(Api::Crowbar).to(
+        receive(:repo_version_available?).and_return(false)
+      )
+      allow_any_instance_of(Kernel).to(
+        receive(:`).with(
+          "sudo /usr/bin/zypper-retry --xmlout products"
+        ).and_return(crowbar_repocheck_zypper_prompt)
+      )
+
+      check = subject.class.adminrepocheck
+      expect(check[:status]).to eq(:service_unavailable)
+      expect(check[:error]).to eq(
+        Hash.from_xml(crowbar_repocheck_zypper_prompt)["stream"]["prompt"]["text"]
       )
     end
   end
