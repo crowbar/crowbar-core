@@ -1,3 +1,6 @@
+require "yaml"
+require "pathname"
+
 module Crowbar
   class UpgradeStatus
     attr_reader :progress_file_path
@@ -35,7 +38,7 @@ module Crowbar
     end
 
     def load!
-      Crowbar::Lock::LocalBlocking.with_lock(shared: true) do
+      ::Crowbar::Lock::LocalBlocking.with_lock(shared: true) do
         @progress = YAML.load(progress_file_path.read)
       end
     end
@@ -70,7 +73,7 @@ module Crowbar
     end
 
     def end_step(success = true, errors = {})
-      Crowbar::Lock::LocalBlocking.with_lock(shared: false) do
+      ::Crowbar::Lock::LocalBlocking.with_lock(shared: false) do
         unless running?
           Rails.logger.warn("The step is not running, could not be finished")
           return false
