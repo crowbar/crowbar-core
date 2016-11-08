@@ -43,13 +43,6 @@ module Api
         end
 
         if upgrade_script_path.exist?
-          # admin node will have different OS after the upgrade
-          admin_node = NodeObject.admin_node
-          admin_node["target_platform"] = ""
-          if admin_node["provisioner"] && admin_node["provisioner"]["default_os"]
-            admin_node["provisioner"].delete "default_os"
-          end
-          admin_node.save
 
           pid = spawn("sudo #{upgrade_script_path}")
           Process.detach(pid)
