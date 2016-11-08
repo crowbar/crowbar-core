@@ -9,7 +9,8 @@ module Crowbar
     # Return the current state of upgrade process.
     # We're keeping the information in the file so is accessible by
     # external applications and different crowbar versions.
-    def initialize(yaml_file = "/var/lib/crowbar/upgrade/progress.yml")
+    def initialize(logger = Rails.logger, yaml_file = "/var/lib/crowbar/upgrade/progress.yml")
+      @logger = logger
       @progress_file_path = Pathname.new(yaml_file)
       load
     end
@@ -38,7 +39,7 @@ module Crowbar
     end
 
     def load!
-      ::Crowbar::Lock::LocalBlocking.with_lock(shared: true) do
+      ::Crowbar::Lock::LocalBlocking.with_lock(shared: true, logger: @logger) do
         @progress = YAML.load(progress_file_path.read)
       end
     end
@@ -60,10 +61,11 @@ module Crowbar
       Crowbar::Lock::LocalBlocking.with_lock(shared: false) do
         if running? step_name
           Rails.logger.warn("The step has already been started")
+          @logger.warn("The step has already been started")
           return false
         end
         unless step_allowed? step_name
-          Rails.logger.warn("The start of step #{step_name} is requested in the wrong order")
+          @logger.warn("The start of step #{step_name} is requested in the wrong order")
           return false
         end
         progress[:current_step] = step_name
@@ -73,9 +75,9 @@ module Crowbar
     end
 
     def end_step(success = true, errors = {})
-      ::Crowbar::Lock::LocalBlocking.with_lock(shared: false) do
+      ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger) do
         unless running?
-          Rails.logger.warn("The step is not running, could not be finished")
+          @logger.warn("The step is not running, could not be finished")
           return false
         end
         progress[:steps][current_step] = {
@@ -112,7 +114,7 @@ module Crowbar
       end
       true
     rescue StandardError => e
-      Rails.logger.error("Exception during saving the status file: #{e.message}")
+      @logger.error("Exception during saving the status file: #{e.message}")
       false
     end
 

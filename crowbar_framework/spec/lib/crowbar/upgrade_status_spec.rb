@@ -22,10 +22,10 @@ describe Crowbar::UpgradeStatus do
     File.unlink @state_file
   end
 
-  subject { Crowbar::UpgradeStatus.new(@state_file) }
+  subject { Crowbar::UpgradeStatus.new(Rails.logger, @state_file) }
 
   def new_status
-    subject.class.new(@state_file)
+    subject.class.new(Rails.logger, @state_file)
   end
 
   after do
