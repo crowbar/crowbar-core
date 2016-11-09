@@ -17,6 +17,9 @@
 require "yaml"
 require "pathname"
 
+require_relative "lock"
+require_relative "lock/local_blocking"
+
 module Crowbar
   class UpgradeStatus
     attr_reader :progress_file_path
