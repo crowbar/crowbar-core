@@ -146,16 +146,10 @@ module Api
           }
         end
 
-        # Initiate the services shutdown by calling scripts on all nodes.
-        # For each cluster, it is enough to initiate the shutdown from one node (e.g. founder)
-        NodeObject.find("state:crowbar_upgrade AND pacemaker_founder:true").each do |node|
-          node.ssh_cmd("/usr/sbin/crowbar-shutdown-services-before-upgrade.sh")
-        end
-        # Shutdown the services for non clustered nodes
-        NodeObject.find("state:crowbar_upgrade AND NOT run_list_map:pacemaker-cluster-member").
-          each do |node|
-          node.ssh_cmd("/usr/sbin/crowbar-shutdown-services-before-upgrade.sh")
-        end
+        # Initiate the services shutdown for all nodes
+        NodeObject.find("state:crowbar_upgrade").each(
+          &:shutdown_services_before_upgrade
+        )
 
         {
           status: :ok,

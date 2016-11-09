@@ -114,38 +114,13 @@ describe Api::Upgrade do
         :prepare_nodes_for_os_upgrade
       ).and_return(true)
       allow(NodeObject).to(
-        receive(:find).with("state:crowbar_upgrade AND pacemaker_founder:true").
+        receive(:find).with("state:crowbar_upgrade").
         and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
       )
-      allow(NodeObject).to(
-        receive(:find).with("state:crowbar_upgrade AND NOT run_list_map:pacemaker-cluster-member").
-        and_return([])
+      allow_any_instance_of(NodeObject).to(
+        receive(:shutdown_services_before_upgrade).
+        and_return(true)
       )
-      allow_any_instance_of(NodeObject).to receive(:ssh_cmd).with(
-        "/usr/sbin/crowbar-shutdown-services-before-upgrade.sh"
-      ).and_return(true)
-
-      expect(subject.class.services).to eq(
-        status: :ok,
-        message: ""
-      )
-    end
-
-    it "prepares and shuts down services on non clustered nodes" do
-      allow_any_instance_of(CrowbarService).to receive(
-        :prepare_nodes_for_os_upgrade
-      ).and_return(true)
-      allow(NodeObject).to(
-        receive(:find).with("state:crowbar_upgrade AND pacemaker_founder:true").
-        and_return([])
-      )
-      allow(NodeObject).to(
-        receive(:find).with("state:crowbar_upgrade AND NOT run_list_map:pacemaker-cluster-member").
-        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
-      )
-      allow_any_instance_of(NodeObject).to receive(:ssh_cmd).with(
-        "/usr/sbin/crowbar-shutdown-services-before-upgrade.sh"
-      ).and_return(true)
 
       expect(subject.class.services).to eq(
         status: :ok,

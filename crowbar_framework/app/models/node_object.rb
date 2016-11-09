@@ -1103,6 +1103,20 @@ class NodeObject < ChefObject
     end
   end
 
+  def shutdown_services_before_upgrade
+    if @node.roles.include?("pacemaker-cluster-member")
+      # For all nodes in cluster, set the pre-upgrade attribute
+      ssh_cmd("crm node attribute $(hostname) set pre-upgrade true")
+      # Shutdown of services could be done from the founder node
+      if @node["pacemaker"] && @node["pacemaker"]["founder"]
+        ssh_cmd("/usr/sbin/crowbar-shutdown-services-before-upgrade.sh")
+      end
+    else
+      # For non clustered nodes, we need to shutdown the services at each node
+      ssh_cmd("/usr/sbin/crowbar-shutdown-services-before-upgrade.sh")
+    end
+  end
+
   def net_rpc_cmd(cmd)
     case cmd
     when :power_cycle

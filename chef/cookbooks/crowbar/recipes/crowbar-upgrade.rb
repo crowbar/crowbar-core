@@ -73,11 +73,6 @@ when "prepare-os-upgrade"
 
   include_recipe "crowbar::prepare-upgrade-scripts"
 
-  execute "set pre-upgrade node attribute" do
-    command "crm node attribute $(hostname) set pre-upgrade true"
-    only_if { node.roles.include? "pacemaker-cluster-member" }
-  end
-
 when "openstack_shutdown"
 
   include_recipe "crowbar::stop-services-before-upgrade"
