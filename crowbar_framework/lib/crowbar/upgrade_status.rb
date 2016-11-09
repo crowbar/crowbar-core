@@ -58,7 +58,7 @@ module Crowbar
     end
 
     def load!
-      ::Crowbar::Lock::LocalBlocking.with_lock(shared: true, logger: @logger) do
+      ::Crowbar::Lock::LocalBlocking.with_lock(shared: true, logger: @logger, path: lock_path) do
         @progress = YAML.load(progress_file_path.read)
       end
     end
@@ -76,7 +76,7 @@ module Crowbar
     end
 
     def start_step
-      ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger) do
+      ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
         if running?
           @logger.warn("The step has already been started")
           return false
@@ -87,7 +87,7 @@ module Crowbar
     end
 
     def end_step(success = true, errors = {})
-      ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger) do
+      ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
         unless running?
           @logger.warn("The step is not running, could not be finished")
           return false
@@ -153,6 +153,10 @@ module Crowbar
         :nodes_upgrade,
         :finished
       ]
+    end
+
+    def lock_path
+      "/opt/dell/crowbar_framework/tmp/upgrade_status_lock"
     end
   end
 end

@@ -108,6 +108,9 @@ RSpec.configure do |config|
       receive(:updates_status).
       and_return(passed: true, errors: [])
     )
+    allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:lock_path).and_return(
+      Tempfile.open("upgrade_status_spec.lock").path
+    )
   end
 
   config.append_before(:each) do
