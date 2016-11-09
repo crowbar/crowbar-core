@@ -21,7 +21,7 @@ class Api::UpgradeController < ApiController
   example '
   {
     "current_step": "upgrade_prechecks",
-    "substep": null
+    "substep": null,
     "current_node": null,
     "steps": {
       "upgrade_prechecks": {
