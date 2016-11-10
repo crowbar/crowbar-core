@@ -1,11 +1,25 @@
 module Crowbar
   class UpgradeStatus
+    attr_reader :progress_file_path
     attr_accessor :progress
 
     # Return the current state of upgrade process.
     # We're keeping the information in the file so is accessible by
     # external applications and different crowbar versions.
-    def initialize
+    def initialize(yaml_file = "/var/lib/crowbar/upgrade/progress.yml")
+      @progress_file_path = Pathname.new(yaml_file)
+      load
+    end
+
+    def load
+      if progress_file_path.exist?
+        load!
+      else
+        initialize_state
+      end
+    end
+
+    def initialize_state
       @progress = {
         current_step: upgrade_steps_6_7.first,
         # substep is needed for more complex steps like upgrading the nodes
@@ -13,15 +27,16 @@ module Crowbar
         # current node is relevant only for the nodes_upgrade step
         current_node: nil
       }
-      if progress_file_path.exist?
-        Crowbar::Lock::LocalBlocking.with_lock(shared: true) do
-          @progress = JSON.load(progress_file_path.read)
-        end
-      else
-        # in 'steps', we save the information about each step that was executed
-        @progress[:steps] = upgrade_steps_6_7.map do |step|
-          [step, { status: "pending" }]
-        end.to_h
+      # in 'steps', we save the information about each step that was executed
+      @progress[:steps] = upgrade_steps_6_7.map do |step|
+        [step, { status: :pending }]
+      end.to_h
+      save
+    end
+
+    def load!
+      Crowbar::Lock::LocalBlocking.with_lock(shared: true) do
+        @progress = YAML.load(progress_file_path.read)
       end
     end
 
@@ -39,18 +54,18 @@ module Crowbar
 
     def start_step
       Crowbar::Lock::LocalBlocking.with_lock(shared: false) do
-        if progress[:steps][current_step][:status] == "running"
+        if running?
           Rails.logger.warn("The step has already been started")
           return false
         end
-        progress[:steps][current_step][:status] = "running"
+        progress[:steps][current_step][:status] = :running
         save
       end
     end
 
     def end_step(success = true, errors = {})
       Crowbar::Lock::LocalBlocking.with_lock(shared: false) do
-        unless progress[:steps][current_step][:status] == "running"
+        unless running?
           Rails.logger.warn("The step is not running, could not be finished")
           return false
         end
@@ -59,7 +74,21 @@ module Crowbar
           errors: errors
         }
         next_step
+        save
+        success
       end
+    end
+
+    def running?(step_name = nil)
+      step = progress[:steps][step_name || current_step]
+      return false unless step
+      step[:status] == :running
+    end
+
+    def pending?(step_name = nil)
+      step = progress[:steps][step_name || current_step]
+      return false unless step
+      step[:status] == :pending
     end
 
     def finished?
@@ -70,7 +99,7 @@ module Crowbar
 
     def save
       progress_file_path.open("w") do |f|
-        f.write(JSON.pretty_generate(progress))
+        f.write(YAML.dump(progress))
       end
       true
     rescue StandardError => e
@@ -80,32 +109,27 @@ module Crowbar
 
     # advance the current step if the latest one finished successfully
     def next_step
-      return false if finished?
+      return true if finished?
       return false if current_step_state[:status] != "passed"
       i = upgrade_steps_6_7.index current_step
       progress[:current_step] = upgrade_steps_6_7[i + 1]
-      save
     end
 
     # global list of the steps of the upgrade process
     def upgrade_steps_6_7
       [
-        "upgrade_prechecks",
-        "upgrade_prepare",
-        "admin_backup",
-        "admin_repo_checks",
-        "admin_upgrade",
-        "database",
-        "nodes_repo_checks",
-        "nodes_services",
-        "nodes_db_dump",
-        "nodes_upgrade",
-        "finished"
+        :upgrade_prechecks,
+        :upgrade_prepare,
+        :admin_backup,
+        :admin_repo_checks,
+        :admin_upgrade,
+        :database,
+        :nodes_repo_checks,
+        :nodes_services,
+        :nodes_db_dump,
+        :nodes_upgrade,
+        :finished
       ]
-    end
-
-    def progress_file_path
-      Pathname.new("/var/lib/crowbar/upgrade/progress.json")
     end
   end
 end

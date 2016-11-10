@@ -54,7 +54,7 @@ describe Api::Upgrade do
 
       expect(subject.class).to respond_to(:status)
       expect(subject.class.status).to be_a(Hash)
-      expect(subject.class.status.deep_stringify_keys).to eq(upgrade_status)
+      expect(subject.class.status.to_json).to eq(upgrade_status.to_json)
     end
   end
 
