@@ -103,8 +103,17 @@ module Api
           if zypper_stream["message"] =~ /^System management is locked/
             return {
               status: :service_unavailable,
-              message: I18n.t(
+              error: I18n.t(
                 "api.crowbar.zypper_locked", zypper_locked_message: zypper_stream["message"]
+              )
+            }
+          end
+
+          unless zypper_stream["prompt"].nil?
+            return {
+              status: :service_unavailable,
+              error: I18n.t(
+                "api.crowbar.zypper_prompt", zypper_prompt_text: zypper_stream["prompt"]["text"]
               )
             }
           end
