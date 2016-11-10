@@ -254,6 +254,53 @@ module Api
       def upgrade_controller_nodes
         drbd_nodes = NodeObject.find("drbd_rsc:*")
         return upgrade_drbd_nodes unless drbd_nodes.empty?
+
+        founder = NodeObject.find(
+          "state:crowbar_upgrade AND pacemaker_founder:true"
+        ).first
+        cluster_env = founder[:pacemaker][:config][:environment]
+
+        non_founder = NodeObject.find(
+          "state:crowbar_upgrade AND pacemaker_founder:false AND " \
+          "pacemaker_config_environment:#{cluster_env}"
+        ).first
+
+        # 1. upgrade the founder
+        save_upgrade_state("Starting the upgrade of node #{founder.name}")
+        founder_api = Api::Node.new founder.name
+        return false unless founder_api.upgrade
+
+        non_founder_api = Api::Node.new non_founder.name
+        # 2. remove pre-upgrade attribute
+        return false unless non_founder_api.disable_pre_upgrade_attribute_for founder.name
+
+        # 3. delete old pacemaker resources
+        # FIXME: couldn't we do it right after migrating l3 routers from the first node?
+        delete_pacemaker_resources non_founder.name
+
+        # 4. start crowbar-join at the first node
+        return false unless founder_api.post_upgrade
+
+        # 5. upgrade the rest of nodes in the same cluster
+        NodeObject.find(
+          "state:crowbar_upgrade AND pacemaker_config_environment:#{cluster_env}"
+        ).each do |node|
+
+          name = node.name
+          save_upgrade_state("Starting the upgrade of node #{name}")
+
+          node_api = Api::Node.new name
+          return false unless node_api.upgrade
+
+          # start crowbar-join
+          return false unless node_api.post_upgrade
+
+          # remove pre-upgrade attribute:
+          # - after chef-client run because pacemaker is already running
+          #   and we want the configuration to be updated
+          return false unless founder_api.disable_pre_upgrade_attribute_for name
+        end
+        true
       end
 
       def upgrade_drbd_nodes
