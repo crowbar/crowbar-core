@@ -127,6 +127,8 @@ template "/usr/sbin/crowbar-delete-pacemaker-resources.sh" do
   )
 end
 
+has_drbd = use_ha && node.fetch("drbd", {}).fetch("rsc", {}).any?
+
 template "/usr/sbin/crowbar-post-upgrade.sh" do
   source "crowbar-post-upgrade.sh.erb"
   mode "0775"
@@ -135,6 +137,6 @@ template "/usr/sbin/crowbar-post-upgrade.sh" do
   action :create
   variables(
     use_ha: use_ha,
-    has_drbd: use_ha && node.fetch("drbd", {})["rsc"]
+    has_drbd: has_drbd
   )
 end

@@ -252,9 +252,12 @@ module Api
       protected
 
       def upgrade_controller_nodes
-        drbd_nodes = NodeObject.find("drbd:*")
-        # FIXME: prepare for cases with no drbd out there
-        return true if drbd_nodes.empty?
+        drbd_nodes = NodeObject.find("drbd_rsc:*")
+        return upgrade_drbd_nodes unless drbd_nodes.empty?
+      end
+
+      def upgrade_drbd_nodes
+        save_upgrade_state("Upgrading controller nodes with DRBD-based storage")
 
         # TODO: find the controller node that needs to be upgraded now
         # First node to upgrade is DRBD slave
