@@ -24,21 +24,8 @@ class Api::UpgradeController < ApiController
   end
 
   def prepare
-    status = :ok
-    msg = ""
-
-    begin
-      service_object = CrowbarService.new(Rails.logger)
-
-      service_object.prepare_nodes_for_crowbar_upgrade
-    rescue => e
-      msg = e.message
-      Rails.logger.error msg
-      status = :unprocessable_entity
-    end
-
-    if status == :ok
-      head status
+    if Api::Upgrade.prepare(background: true)
+      head :ok
     else
       render json: {
         errors: {
@@ -47,7 +34,7 @@ class Api::UpgradeController < ApiController
             help: I18n.t("api.upgrade.prepare.help.default")
           }
         }
-      }, status: status
+      }, status: :unprocessable_entity
     end
   end
 
