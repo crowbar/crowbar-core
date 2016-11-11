@@ -94,6 +94,8 @@ module Api
       end
 
       def adminrepocheck
+        upgrade_status = ::Crowbar::UpgradeStatus.new
+        upgrade_status.start_step
         # FIXME: once we start working on 7 to 8 upgrade we have to adapt the sles version
         zypper_stream = Hash.from_xml(
           `sudo /usr/bin/zypper-retry --xmlout products`
@@ -137,6 +139,12 @@ module Api
           ret[:openstack][:repos][admin_architecture.to_sym] = {
             missing: ["SUSE OpenStack Cloud 8"]
           } unless cloud_available
+
+          if ret.any? { |_k, v| !v[:available] }
+            upgrade_status.end_step(false, adminrepocheck: "Missing repositories")
+          else
+            upgrade_status.end_step
+          end
         end
       end
 

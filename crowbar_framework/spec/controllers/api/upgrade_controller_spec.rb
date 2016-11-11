@@ -27,6 +27,7 @@ describe Api::UpgradeController, type: :request do
     let(:pacemaker) do
       Class.new
     end
+    let(:tarball) { Rails.root.join("spec", "fixtures", "crowbar_backup.tar.gz") }
 
     it "shows the upgrade status object" do
       allow(Api::Upgrade).to receive(:network_checks).and_return([])
@@ -195,6 +196,17 @@ describe Api::UpgradeController, type: :request do
       get "/api/upgrade/adminrepocheck", {}, headers
       expect(response).to have_http_status(:ok)
       expect(response.body).to eq(crowbar_repocheck)
+    end
+
+    it "creates a backup of the admin server" do
+      allow_any_instance_of(Crowbar::Backup::Export).to receive(:export).and_return(true)
+      allow_any_instance_of(Kernel).to receive(:system).and_return(true)
+      allow_any_instance_of(Api::Backup).to receive(:path).and_return(tarball)
+      allow_any_instance_of(Api::Backup).to receive(:delete_archive).and_return(true)
+      allow_any_instance_of(Api::Backup).to receive(:create_archive).and_return(true)
+
+      post "/api/upgrade/adminbackup", { backup: { name: "crowbar_upgrade" } }, headers
+      expect(response).to have_http_status(:ok)
     end
   end
 end

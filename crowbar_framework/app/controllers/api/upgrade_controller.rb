@@ -283,6 +283,43 @@ class Api::UpgradeController < ApiController
     end
   end
 
+  api :POST, "/api/upgrade/adminbackup", "Create a backup"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
+  api_version "2.0"
+  param :backup, Hash, desc: "Backup info", required: true do
+    param :name, String, desc: "Name of the backup", required: true
+  end
+  example '
+  {
+    "id": 1,
+    "name": "testbackup",
+    "version": "4.0",
+    "size": 76815,
+    "created_at": "2016-09-27T06:05:10.208Z",
+    "updated_at": "2016-09-27T06:05:10.208Z",
+    "migration_level": 20160819142156
+  }
+  '
+  error 422, "Failed to save backup, error details are provided in the response"
+  def adminbackup
+    upgrade_status = ::Crowbar::UpgradeStatus.new
+    upgrade_status.start_step if upgrade_status.current_step == :admin_backup
+    @backup = Api::Backup.new(backup_params)
+
+    if @backup.save
+      upgrade_status.end_step if upgrade_status.current_step == :admin_backup
+      render json: @backup, status: :ok
+    else
+      upgrade_status.end_step(
+        false,
+        admin_backup: @backup.errors.full_messages.first
+      ) if upgrade_status.current_step == :admin_backup
+      render json: { error: @backup.errors.full_messages.first }, status: :unprocessable_entity
+    end
+  ensure
+    @backup.cleanup unless @backup.nil?
+  end
+
   protected
 
   api :POST, "/api/upgrade/new",
@@ -392,5 +429,9 @@ class Api::UpgradeController < ApiController
   error 422, "Failed to initialize Crowbar, details are provided in the response hash"
   def dummy_crowbar_init_api_upgrade_connect
     # empty method to document crowbar-init's upgrade related API endpoints
+  end
+
+  def backup_params
+    params.require(:backup).permit(:name)
   end
 end

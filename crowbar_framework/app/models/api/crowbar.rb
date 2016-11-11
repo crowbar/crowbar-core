@@ -43,10 +43,14 @@ module Api
         end
 
         if upgrade_script_path.exist?
+          upgrade_status = ::Crowbar::UpgradeStatus.new
+          upgrade_status.start_step
           pid = spawn("sudo #{upgrade_script_path}")
           Process.detach(pid)
           Rails.logger.info("#{upgrade_script_path} executed with pid: #{pid}")
 
+          # we can't really call upgrade_status.end_step here yet as the upgrade is running
+          # in the background
           {
             status: :ok,
             message: ""
