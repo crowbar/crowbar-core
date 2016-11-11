@@ -24,6 +24,10 @@ module Api
       end
 
       def checks
+        upgrade_status = ::Crowbar::UpgradeStatus.new
+        # the check for current_step means to allow running the step at any point in time
+        upgrade_status.start_step if upgrade_status.current_step == :upgrade_prechecks
+
         {}.tap do |ret|
           ret[:network_checks] = {
             required: true,
@@ -55,6 +59,15 @@ module Api
             passed: clusters_healthy?,
             errors: clusters_health_report_errors
           } if Api::Crowbar.addons.include?("ha")
+
+          return ret unless upgrade_status.current_step == :upgrade_prechecks
+
+          errors = ret.select { |_k, v| v[:required] && v[:errors].any? }.map { |_k, v| v[:errors] }
+          if errors.any?
+            upgrade_status.end_step(false, prechecks: errors)
+          else
+            upgrade_status.end_step
+          end
         end
       end
 
@@ -137,6 +150,18 @@ module Api
           status: :unprocessable_entity,
           message: e.message
         }
+      end
+
+      def prepare(options = {})
+        ::Crowbar::UpgradeStatus.new.start_step
+
+        background = options.fetch(:background, false)
+
+        if background
+          prepare_nodes_for_crowbar_upgrade_background
+        else
+          prepare_nodes_for_crowbar_upgrade
+        end
       end
 
       protected
@@ -277,6 +302,29 @@ module Api
 
       def admin_architecture
         NodeObject.admin_node.architecture
+      end
+
+      def prepare_nodes_for_crowbar_upgrade_background
+        @thread = Thread.new do
+          Rails.logger.debug("Started prepare in a background thread")
+          prepare_nodes_for_crowbar_upgrade
+        end
+
+        @thread.alive?
+      end
+
+      def prepare_nodes_for_crowbar_upgrade
+        service_object = CrowbarService.new(Rails.logger)
+        service_object.prepare_nodes_for_crowbar_upgrade
+
+        ::Crowbar::UpgradeStatus.new.end_step
+        true
+      rescue => e
+        message = e.message
+        ::Crowbar::UpgradeStatus.new.end_step(false, { prepare_nodes_for_crowbar_upgrade: message })
+        Rails.logger.error message
+
+        false
       end
     end
   end

@@ -187,4 +187,30 @@ describe Api::Upgrade do
       expect(subject.class.best_method).to eq("none")
     end
   end
+
+  context "with preparing the upgrade" do
+    it "succeeds to spawn the prepare in the background" do
+      allow_any_instance_of(CrowbarService).to receive(
+        :prepare_nodes_for_crowbar_upgrade
+      ).and_return(true)
+
+      expect(subject.class.prepare(background: true)).to be true
+    end
+
+    it "succeeds to spawn the prepare in the foreground" do
+      allow_any_instance_of(CrowbarService).to receive(
+        :prepare_nodes_for_crowbar_upgrade
+      ).and_return(true)
+
+      expect(subject.class.prepare).to be true
+    end
+
+    it "fails to spawn the prepare in the foreground" do
+      allow_any_instance_of(CrowbarService).to receive(
+        :prepare_nodes_for_crowbar_upgrade
+      ).and_raise("Some error")
+
+      expect(subject.class.prepare).to be false
+    end
+  end
 end
