@@ -73,4 +73,29 @@ class Api::UpgradeController < ApiController
       render json: check
     end
   end
+
+  def adminbackup
+    upgrade_status = ::Crowbar::UpgradeStatus.new
+    upgrade_status.start_step if upgrade_status.current_step == :admin_backup
+    @backup = Backup.new(backup_params)
+
+    if @backup.save
+      upgrade_status.end_step if upgrade_status.current_step == :admin_backup
+      render json: @backup, status: :ok
+    else
+      upgrade_status.end_step(
+        false,
+        admin_backup: @backup.errors.full_messages.first
+      ) if upgrade_status.current_step == :admin_backup
+      render json: { error: @backup.errors.full_messages.first }, status: :unprocessable_entity
+    end
+  ensure
+    @backup.cleanup unless @backup.nil?
+  end
+
+  protected
+
+  def backup_params
+    params.require(:backup).permit(:name)
+  end
 end

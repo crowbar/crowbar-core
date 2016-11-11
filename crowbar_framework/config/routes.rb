@@ -212,6 +212,7 @@ Rails.application.routes.draw do
       get :prechecks
       post :cancel
       get :adminrepocheck
+      post :adminbackup
     end
   end
 
