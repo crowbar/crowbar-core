@@ -279,6 +279,7 @@ Rails.application.routes.draw do
       post :cancel
       get :noderepocheck
       get :adminrepocheck
+      post :adminbackup
     end
 
     resources :nodes,
