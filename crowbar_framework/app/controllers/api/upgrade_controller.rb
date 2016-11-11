@@ -345,20 +345,20 @@ class Api::UpgradeController < ApiController
       Alphanumeric and special characters
       Must begin with any alphanumeric character or underscore",
     required: true
-  param :database, /(?=^.{1,63}$)(?=^[a-zA-Z0-9_]*$)(?=[a-zA-Z0-9_$&+,:;=?@#|'<>.^*()%!-]*$)/,
+  param :database, /(?=^.{4,253}$)(?=^[a-zA-Z0-9_]*$)(?=[a-zA-Z0-9_$&+,:;=?@#|'<>.^*()%!-]*$)/,
     desc: "Database name
       Min length: 4
       Max length: 63
-      Alphanumeric and special characters
+      Alphanumeric characters and underscores
       Must begin with any alphanumeric character or underscore",
     required: true
   param :host, /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/,
     desc: "External database host, Ipv4 or Hostname
       Min length: 4
-      Max length: 63
+      Max length: 253
       Numbers and period characters (only IPv4)
-      Hostnames:
-       alphanumeric characters and hyphens
+      Hostnames/FQDNs:
+       alphanumeric characters, dots and hyphens
        cannot start/end with digits or hyphen",
     required: true
   param :port, /(?=^.{1,5}$)(?=^[0-9]*$)/,
