@@ -69,4 +69,8 @@ fi
 echo "No HA setup found..."
 
 <% end %>
+
+# Move node to ready state and execute chef-client for the first time
+crowbar_join --start
+
 touch $UPGRADEDIR/crowbar-post-upgrade-ok
