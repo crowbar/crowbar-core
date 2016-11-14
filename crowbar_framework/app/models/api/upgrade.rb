@@ -220,7 +220,7 @@ module Api
       end
 
       def compute_resources_status
-        @compute_resounrces_status ||= Api::Crowbar.compute_resources_status
+        @compute_resources_status ||= Api::Crowbar.compute_resources_status
       end
 
       def compute_resources_available?
