@@ -21,6 +21,11 @@ class InstallerController < ApplicationController
   before_filter :hide_navigation
 
   def index
+    if Crowbar::Product.is_ses?
+      redirect_to installer_url
+      return
+    end
+
     respond_to do |format|
       format.html
     end
