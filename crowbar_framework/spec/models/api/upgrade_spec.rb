@@ -100,13 +100,16 @@ describe Api::Upgrade do
 
   context "with a successful maintenance updates check" do
     it "checks the maintenance updates on crowbar" do
-      allow(Api::Upgrade).to receive(:network_checks).and_return([])
-      allow(Api::Upgrade).to receive(
-        :maintenance_updates_status
+      allow(Crowbar::Sanity).to receive(:check).and_return([])
+      allow(Crowbar::Checks::Maintenance).to receive(
+        :updates_status
       ).and_return({})
       allow(Api::Crowbar).to receive(
         :addons
       ).and_return(["ceph", "ha"])
+      allow(Api::Pacemaker).to receive(
+        :clusters_health_report
+      ).and_return({})
 
       expect(subject.class).to respond_to(:checks)
       expect(subject.class.checks.deep_stringify_keys).to eq(upgrade_prechecks["checks"])
@@ -390,6 +393,9 @@ describe Api::Upgrade do
       allow(Api::Upgrade).to receive(
         :maintenance_updates_status
       ).and_return(errors: ["Some Error"])
+      allow(Api::Pacemaker).to receive(
+        :clusters_health_report
+      ).and_return(crm_failures: "error", failed_actions: "error")
 
       expect(subject.class.best_method).to eq("none")
     end
