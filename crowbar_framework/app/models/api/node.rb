@@ -50,7 +50,7 @@ module Api
 
     # Execute post upgrade actions: prepare drbd and start pacemaker
     def post_upgrade
-      if execute_and_wait_for_finish("/usr/sbin/crowbar-post-upgrade.sh", 300)
+      if execute_and_wait_for_finish("/usr/sbin/crowbar-post-upgrade.sh", 600)
         save_node_state("Post upgrade script run was successful.")
         return true
       end
