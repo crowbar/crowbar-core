@@ -53,12 +53,14 @@ fi
 
 if [[ -f /sbin/drbdadm ]] ; then
     # Wait until DRBD is started
-    while crm resource status ms-drbd-{postgresql,rabbitmq} | grep "NOT running"; do
+    while [[ $(drbdadm status | wc -c) -eq 0 ]]; do
+        echo "Waiting for DRBD to bring the devices up..."
         sleep 1
     done
     # Now wait after DRBD data are synced with the other node
-    while drbdadm status | grep replication; do
-        sleep 5
+    while drbdadm status | grep -q Inconsistent; do
+        echo "Replication status: `drbdadm status`"
+        sleep 10
     done
 fi
 
