@@ -141,7 +141,11 @@ module Api
           } unless cloud_available
 
           if ret.any? { |_k, v| !v[:available] }
-            upgrade_status.end_step(false, adminrepocheck: "Missing repositories")
+            missing_repos = ret.collect do |k, v|
+              missing_repo_arch = v[:repos].keys.first.to_sym
+              v[:repos][missing_repo_arch][:missing]
+            end.flatten.join(", ")
+            upgrade_status.end_step(false, adminrepocheck: "Missing repositories: #{missing_repos}")
           else
             upgrade_status.end_step
           end
