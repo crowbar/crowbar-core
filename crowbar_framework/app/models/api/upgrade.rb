@@ -273,7 +273,7 @@ module Api
 
       def compute_resources_check_errors(check)
         {
-          compute_resources: {
+          compute_resources_available: {
             data: check[:errors],
             help: I18n.t("api.upgrade.prechecks.compute_resources_check.help.default")
           }
