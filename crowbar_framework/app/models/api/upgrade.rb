@@ -544,7 +544,7 @@ module Api
         return {} if compute_resources_available?
 
         {
-          compute_resources: {
+          compute_resources_available: {
             data: compute_resources_status[:errors],
             help: I18n.t("api.upgrade.prechecks.compute_resources_check.help.default")
           }
