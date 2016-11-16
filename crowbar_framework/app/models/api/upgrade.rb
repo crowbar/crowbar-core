@@ -29,35 +29,50 @@ module Api
         upgrade_status.start_step if upgrade_status.current_step == :upgrade_prechecks
 
         {}.tap do |ret|
+          network = ::Crowbar::Sanity.check
           ret[:network_checks] = {
             required: true,
-            passed: network_checks.empty?,
-            errors: sanity_check_errors
+            passed: network.empty?,
+            errors: network.empty? ? {} : sanity_check_errors(network)
           }
+
+          maintenance_updates = ::Crowbar::Checks::Maintenance.updates_status
           ret[:maintenance_updates_installed] = {
             required: true,
-            passed: maintenance_updates_status.empty?,
-            errors: maintenance_updates_check_errors
+            passed: maintenance_updates.empty?,
+            errors: maintenance_updates.empty? ? {} : maintenance_updates_check_errors(
+              maintenance_updates
+            )
           }
+
+          compute_resources = Api::Crowbar.compute_resources_status
           ret[:compute_resources_available] = {
             required: false,
-            passed: compute_resources_available?,
-            errors: compute_resources_check_errors
+            passed: compute_resources.empty?,
+            errors: compute_resources.empty? ? {} : compute_resources_check_errors(
+              compute_resources
+            )
           }
+
+          ceph_status = Api::Crowbar.ceph_status
           ret[:ceph_healthy] = {
             required: true,
-            passed: ceph_healthy?,
-            errors: ceph_health_check_errors
+            passed: ceph_status.empty?,
+            errors: ceph_status.empty? ? {} : ceph_health_check_errors(ceph_status)
           } if Api::Crowbar.addons.include?("ceph")
+
+          ha_presence = Api::Crowbar.ha_presence_check
           ret[:ha_configured] = {
             required: false,
-            passed: ha_present?,
-            errors: ha_presence_errors
+            passed: ha_presence.empty?,
+            errors: ha_presence.empty? ? {} : ha_presence_errors(ha_presence)
           }
+
+          clusters_health = Api::Crowbar.clusters_health_report
           ret[:clusters_healthy] = {
             required: true,
-            passed: clusters_healthy?,
-            errors: clusters_health_report_errors
+            passed: clusters_health.empty?,
+            errors: clusters_health.empty? ? {} : clusters_health_report_errors(clusters_health)
           } if Api::Crowbar.addons.include?("ha")
 
           return ret unless upgrade_status.current_step == :upgrade_prechecks
@@ -187,102 +202,52 @@ module Api
         Api::Crowbar.upgrade
       end
 
-      def maintenance_updates_status
-        @maintenance_updates_status ||= ::Crowbar::Checks::Maintenance.updates_status
-      end
-
-      def network_checks
-        @network_checks ||= ::Crowbar::Sanity.check
-      end
-
-      def ceph_status
-        @ceph_status ||= Api::Crowbar.ceph_status
-      end
-
-      def ceph_healthy?
-        ceph_status.empty?
-      end
-
-      def ha_presence_status
-        @ha_presence_status ||= Api::Crowbar.ha_presence_check
-      end
-
-      def ha_present?
-        ha_presence_status.empty?
-      end
-
-      def clusters_health_report
-        @clusters_health_report ||= Api::Crowbar.clusters_health_report
-      end
-
-      def clusters_healthy?
-        clusters_health_report.empty?
-      end
-
-      def compute_resources_status
-        @compute_resounrces_status ||= Api::Crowbar.compute_resources_status
-      end
-
-      def compute_resources_available?
-        compute_resources_status.empty?
-      end
-
       # Check Errors
       # all of the below errors return a hash with the following schema:
       # code: {
       #   data: ... whatever data type ...,
       #   help: String # "this is how you might fix the error"
       # }
-      def sanity_check_errors
-        return {} if network_checks.empty?
-
+      def sanity_check_errors(check)
         {
           network_checks: {
-            data: network_checks,
+            data: check,
             help: I18n.t("api.upgrade.prechecks.network_checks.help.default")
           }
         }
       end
 
-      def maintenance_updates_check_errors
-        return {} if maintenance_updates_status.empty?
-
+      def maintenance_updates_check_errors(check)
         {
           maintenance_updates_installed: {
-            data: maintenance_updates_status[:errors],
+            data: check[:errors],
             help: I18n.t("api.upgrade.prechecks.maintenance_updates_check.help.default")
           }
         }
       end
 
-      def ceph_health_check_errors
-        return {} if ceph_healthy?
-
+      def ceph_health_check_errors(check)
         {
           ceph_health: {
-            data: ceph_status[:errors],
+            data: check[:errors],
             help: I18n.t("api.upgrade.prechecks.ceph_health_check.help.default")
           }
         }
       end
 
-      def ha_presence_errors
-        return {} if ha_present?
-
+      def ha_presence_errors(check)
         {
           ha_configured: {
-            data: ha_presence_status[:errors],
+            data: check[:errors],
             help: I18n.t("api.upgrade.prechecks.ha_configured.help.default")
           }
         }
       end
 
-      def clusters_health_report_errors
+      def clusters_health_report_errors(check)
         ret = {}
-        return ret if clusters_healthy?
-
-        crm_failures = clusters_health_report["crm_failures"]
-        failed_actions = clusters_health_report["failed_actions"]
+        crm_failures = check["crm_failures"]
+        failed_actions = check["failed_actions"]
         ret[:clusters_health_crm_failures] = {
           data: crm_failures.values,
           help: I18n.t(
@@ -300,12 +265,10 @@ module Api
         ret
       end
 
-      def compute_resources_check_errors
-        return {} if compute_resources_available?
-
+      def compute_resources_check_errors(check)
         {
           compute_resources: {
-            data: compute_resources_status[:errors],
+            data: check[:errors],
             help: I18n.t("api.upgrade.prechecks.compute_resources_check.help.default")
           }
         }

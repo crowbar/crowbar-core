@@ -65,9 +65,9 @@ describe Api::Upgrade do
 
   context "with a successful check" do
     it "checks the maintenance updates on crowbar" do
-      allow(Api::Upgrade).to receive(:network_checks).and_return([])
-      allow(Api::Upgrade).to receive(
-        :maintenance_updates_status
+      allow(Crowbar::Sanity).to receive(:check).and_return([])
+      allow(Crowbar::Checks::Maintenance).to receive(
+        :updates_status
       ).and_return({})
       allow(Api::Crowbar).to receive(
         :addons
