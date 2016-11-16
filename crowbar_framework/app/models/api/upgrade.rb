@@ -435,7 +435,7 @@ module Api
           data: crm_failures.values,
           help: I18n.t(
             "api.upgrade.prechecks.clusters_health.crm_failures",
-            nodes: crm_failures.join(",")
+            nodes: crm_failures.keys.join(",")
           )
         } if crm_failures
         ret[:clusters_health_failed_actions] = {
