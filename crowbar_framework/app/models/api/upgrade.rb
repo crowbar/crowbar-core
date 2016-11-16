@@ -349,7 +349,16 @@ module Api
         # and the existing cluster has been cleaned up by deleting most of resources
         return false unless node_api.post_upgrade
 
-        # FIXME: if upgrade went well, continue with next node(s)
+        # FIXME: Delete router namespaces on non-upgraded node
+
+        save_upgrade_state("Starting the upgrade of node #{drbd_master}")
+        return false unless master_node_api.upgrade
+        return false unless master_node_api.post_upgrade
+        # Remove pre-upgrade attribute after chef-client run because pacemaker is already running
+        # and we want the configuration to be updated first
+        return false unless node_api.disable_pre_upgrade_attribute_for drbd_master
+
+        save_upgrade_state("Nodes in DRBD-based cluster successfully upgraded")
         true
       end
 
