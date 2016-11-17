@@ -202,6 +202,8 @@ module Api
           status: :unprocessable_entity,
           message: e.message
         }
+      ensure
+        ::Crowbar::UpgradeStatus.new.initialize_state
       end
 
       # Orchestrate the upgrade of the nodes
