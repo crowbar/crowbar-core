@@ -101,7 +101,7 @@ module Api
 
       def adminrepocheck
         upgrade_status = ::Crowbar::UpgradeStatus.new
-        upgrade_status.start_step
+        upgrade_status.start_step if upgrade_status.current_step == :admin_repo_checks
         # FIXME: once we start working on 7 to 8 upgrade we have to adapt the sles version
         zypper_stream = Hash.from_xml(
           `sudo /usr/bin/zypper-retry --xmlout products`
@@ -151,8 +151,12 @@ module Api
               missing_repo_arch = v[:repos].keys.first.to_sym
               v[:repos][missing_repo_arch][:missing]
             end.flatten.join(", ")
-            upgrade_status.end_step(false, adminrepocheck: "Missing repositories: #{missing_repos}")
+            upgrade_status.end_step(
+              false,
+              adminrepocheck: "Missing repositories: #{missing_repos}"
+            ) if upgrade_status.current_step == :admin_repo_checks
           else
+            next unless upgrade_status.current_step == :admin_repo_checks
             upgrade_status.end_step
           end
         end
