@@ -14,12 +14,32 @@
 #
 
 def find_node_boot_mac_addresses(node, admin_data_net)
-  # If we don't have an admin IP allocated yet using node.macaddress is
-  # our best guess for the boot macaddress
-  return [node[:macaddress]] if admin_data_net.nil? || admin_data_net.interface_list.nil?
+  # If we don't have an admin IP allocated yet, using node.macaddress is
+  # our best guess for the boot macaddress.
+  if admin_data_net.nil? || \
+      admin_data_net.interface_list.nil?
+    return [node[:macaddress]]
+  end
+
+  # Also, if the interface list is not empty, but filled with nil, this
+  # means something is either very wrong with the network proposal for this
+  # node, or the node is simply missing the ohai data to resolve the conduits.
+  # In both cases, we should not crash here as this is a DoS on the admin
+  # server.
+  if admin_data_net.interface_list.compact.empty?
+    Chef::Log.warn("#{node[:fqdn]}: no interface found for admin network; " \
+                   "DHCP might not work as intended!")
+    return [node[:macaddress]]
+  end
+
   result = []
   admin_interfaces = admin_data_net.interface_list
   admin_interfaces.each do |interface|
+    if interface.nil?
+      Chef::Log.warn("#{node[:fqdn]}: incomplete interface mapping for admin network; " \
+                     "DHCP might not work as intended!")
+      next
+    end
     node["network"]["interfaces"][interface]["addresses"].each do |addr, addr_data|
       next if addr_data["family"] != "lladdr"
       result << addr unless result.include? addr
