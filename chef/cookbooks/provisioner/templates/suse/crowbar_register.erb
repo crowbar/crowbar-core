@@ -466,4 +466,15 @@ post_state $HOSTNAME "installed"
 # Wait for DHCP to update
 sleep 30
 
+# Make sure we can always resolve our hostname; we use DHCP to find what's our
+# admin IP
+DHCP_VARS=$(mktemp)
+/usr/lib/wicked/bin/wickedd-dhcp4 --test --test-output $DHCP_VARS $BOOTDEV
+if test $? -eq 0; then
+    eval $(grep ^IPADDR= "$DHCP_VARS")
+    ADMIN_IP=${IPADDR%%/*}
+    echo "$ADMIN_IP $HOSTNAME ${HOSTNAME%%.*}" >> /etc/hosts
+fi
+rm -f "$DHCP_VARS"
+
 /usr/sbin/crowbar_join --setup --debug --verbose
