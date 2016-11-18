@@ -39,6 +39,9 @@ else
   gem "puma", version: "~> 2.11.3"
   require "puma"
 
+  gem "puma_worker_killer", version: "~> 0.0.7"
+  require "puma_worker_killer"
+
   gem "apipie-rails", "~> 0.3.6"
   require "apipie-rails"
 
