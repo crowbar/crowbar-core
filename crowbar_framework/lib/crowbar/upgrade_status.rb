@@ -70,7 +70,7 @@ module Crowbar
           return false
         end
         progress[:steps][current_step] = {
-          status: success ? "passed" : "failed",
+          status: success ? :passed : :failed,
           errors: errors
         }
         next_step
@@ -110,7 +110,7 @@ module Crowbar
     # advance the current step if the latest one finished successfully
     def next_step
       return true if finished?
-      return false if current_step_state[:status] != "passed"
+      return false if current_step_state[:status] != :passed
       i = upgrade_steps_6_7.index current_step
       progress[:current_step] = upgrade_steps_6_7[i + 1]
     end
