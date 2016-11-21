@@ -87,6 +87,9 @@ unless node[:platform_family] == "windows"
     if node[:kernel][:machine] =~ /(x86|aarch64)/
       package("dmidecode").run_action(:install)
     end
+
+    # we also need tcpdump for the crowbar plugin
+    package("tcpdump").run_action(:install)
   end
 end
 
