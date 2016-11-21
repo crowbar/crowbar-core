@@ -1,8 +1,8 @@
 ROOT = File.expand_path("../../", __FILE__)
 ENVIRONMENT = ENV["CROWBAR_ENV"] || "production"
 
-THREADS = ENV["CROWBAR_THREADS"] || 10
-WORKERS = ENV["CROWBAR_WORKERS"] || 5
+THREADS = ENV["CROWBAR_THREADS"] || 16
+WORKERS = ENV["CROWBAR_WORKERS"] || 2
 
 LISTEN = ENV["CROWBAR_LISTEN"] || "127.0.0.1"
 PORT = ENV["CROWBAR_PORT"] || 3000
@@ -34,7 +34,7 @@ bind "tcp://#{LISTEN}:#{PORT}"
 on_worker_boot do
   ::ActiveSupport.on_load(:active_record) do
     config = Rails.application.config.database_configuration[Rails.env]
-    config["pool"] = ENV["CROWBAR_THREADS"] || 10
+    config["pool"] = ENV["CROWBAR_THREADS"] || 16
 
     ::ActiveRecord::Base.establish_connection(config)
   end
