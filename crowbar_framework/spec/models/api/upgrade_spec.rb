@@ -263,10 +263,10 @@ describe Api::Upgrade do
   end
 
   context "upgrading the nodes" do
-    it "successfully upgrades the nodes" do
+    it "successfully upgrades nodes with DRBD backend" do
       allow(NodeObject).to(
         receive(:find).
-        with("drbd:*").
+        with("drbd_rsc:*").
         and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
       )
       allow(NodeObject).to(
