@@ -271,7 +271,13 @@ describe Api::Upgrade do
       )
       allow(NodeObject).to(
         receive(:find).
-        with("state:crowbar_upgrade AND (roles:database-server OR roles:rabbitmq-server)").
+        with("state:crowbar_upgrade AND pacemaker_founder:true").
+        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+      )
+      allow(NodeObject).to(
+        receive(:find).
+        with("state:crowbar_upgrade AND pacemaker_config_environment:data "\
+        "AND (roles:database-server OR roles:rabbitmq-server)").
         and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
       )
       allow_any_instance_of(NodeObject).to receive(:run_ssh_cmd).and_return(
