@@ -306,15 +306,18 @@ module Api
       def upgrade_drbd_nodes
         save_upgrade_state("Upgrading controller nodes with DRBD-based storage")
 
-        # TODO: find the controller node that needs to be upgraded now
-        # First node to upgrade is DRBD slave
+        # Find the controller node that needs to be upgraded now
+
+        # First node to upgrade is DRBD slave. There might be more resources using DRBD backend
+        # but the Master/Slave distribution might be different in the among them.
+        # Therefore, we decide only by looking at the first DRBD resource we find in the cluster.
         drbd_slave = ""
         drbd_master = ""
         NodeObject.find(
           "state:crowbar_upgrade AND (roles:database-server OR roles:rabbitmq-server)"
         ).each do |db_node|
           cmd = "LANG=C crm resource status ms-drbd-{postgresql,rabbitmq}\
-          | grep \\$(hostname) | grep -q Master"
+          | sort | head -n 2 | grep \\$(hostname) | grep -q Master"
           out = db_node.run_ssh_cmd(cmd)
           if out[:exit_code].zero?
             drbd_master = db_node.name
