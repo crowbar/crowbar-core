@@ -253,7 +253,7 @@ module Api
 
       def upgrade_controller_nodes
         drbd_nodes = NodeObject.find("drbd_rsc:*")
-        return upgrade_drbd_nodes unless drbd_nodes.empty?
+        return upgrade_drbd_clusters unless drbd_nodes.empty?
 
         founder = NodeObject.find(
           "state:crowbar_upgrade AND pacemaker_founder:true"
@@ -303,26 +303,42 @@ module Api
         true
       end
 
-      def upgrade_drbd_nodes
+      def upgrade_drbd_clusters
+        NodeObject.find(
+          "state:crowbar_upgrade AND pacemaker_founder:true"
+        ).each do |founder|
+          cluster_env = founder[:pacemaker][:config][:environment]
+          return false unless upgrade_drbd_cluster cluster_env
+        end
+      end
+
+      def upgrade_drbd_cluster(cluster)
         save_upgrade_state("Upgrading controller nodes with DRBD-based storage")
 
-        # Find the controller node that needs to be upgraded now
+        drbd_nodes = NodeObject.find(
+          "state:crowbar_upgrade AND "\
+          "pacemaker_config_environment:#{cluster} AND " \
+          "(roles:database-server OR roles:rabbitmq-server)"
+        )
+        if drbd_nodes.empty?
+          save_upgrade_state("There's no DRBD-based node in cluster #{cluster}")
+          return true
+        end
 
         # First node to upgrade is DRBD slave. There might be more resources using DRBD backend
-        # but the Master/Slave distribution might be different in the among them.
+        # but the Master/Slave distribution might be different among them.
         # Therefore, we decide only by looking at the first DRBD resource we find in the cluster.
         drbd_slave = ""
         drbd_master = ""
-        NodeObject.find(
-          "state:crowbar_upgrade AND (roles:database-server OR roles:rabbitmq-server)"
-        ).each do |db_node|
+
+        drbd_nodes.each do |drbd_node|
           cmd = "LANG=C crm resource status ms-drbd-{postgresql,rabbitmq}\
           | sort | head -n 2 | grep \\$(hostname) | grep -q Master"
-          out = db_node.run_ssh_cmd(cmd)
+          out = drbd_node.run_ssh_cmd(cmd)
           if out[:exit_code].zero?
-            drbd_master = db_node.name
+            drbd_master = drbd_node.name
           else
-            drbd_slave = db_node.name
+            drbd_slave = drbd_node.name
           end
         end
         return false if drbd_slave.empty?

@@ -12,6 +12,11 @@
 
       }
     },
+    "pacemaker" : {
+      "config": {
+        "environment": "data"
+      }
+    },
     "state": "discovered"
   },
   "name": "testing.crowbar.com",
