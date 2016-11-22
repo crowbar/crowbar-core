@@ -14,7 +14,7 @@ CROWBAR_ENV="production"
 ## Default:         16
 ## ServiceRestart:  crowbar
 # Sets the maximum number of threads used by the web server.
-CROWBAR_THREADS="16"
+CROWBAR_THREADS="<%= @threads %>"
 
 ## Path:            Crowbar
 ## Description:     Maximum number of worker processes
@@ -23,7 +23,7 @@ CROWBAR_THREADS="16"
 ## ServiceRestart:  crowbar
 # Sets the maximum number of separate worker processes spawned by the
 # web server.
-CROWBAR_WORKERS="2"
+CROWBAR_WORKERS="<%= @workers %>"
 
 ## Path:            Crowbar
 ## Description:     Listen address
@@ -40,4 +40,3 @@ CROWBAR_LISTEN="<%= @web_host %>"
 ## ServiceRestart:  crowbar
 # Port which Crowbar listens to.
 CROWBAR_PORT=<%= @web_port %>
-
