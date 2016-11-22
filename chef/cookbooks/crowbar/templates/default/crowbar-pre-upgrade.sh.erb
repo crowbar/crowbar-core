@@ -26,7 +26,7 @@ if [[ -f /usr/bin/neutron-ha-tool ]] ; then
     set +x
     source /root/.openrc
     set -x
-    OS_AUTH_URL="<%= @os_auth_url_v2 %>" neutron-ha-tool --l3-agent-evacuate $(hostname)
+    neutron-ha-tool --l3-agent-evacuate $(hostname)
 fi
 
 # Shutdown pacemaker so the remaining OpenStack services are stopped
