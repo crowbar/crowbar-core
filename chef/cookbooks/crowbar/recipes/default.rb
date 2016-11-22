@@ -235,6 +235,8 @@ end
 unless node["crowbar"].nil? or node["crowbar"]["users"].nil? or node["crowbar"]["realm"].nil?
   web_port = node["crowbar"]["web_port"] || 3000
   realm = node["crowbar"]["realm"]
+  workers = node["crowbar"]["workers"] || 2
+  threads = node["crowbar"]["threads"] || 16
 
   users = {}
   node["crowbar"]["users"].each do |k,h|
@@ -254,6 +256,8 @@ unless node["crowbar"].nil? or node["crowbar"]["users"].nil? or node["crowbar"][
 else
   web_port = 3000
   realm = nil
+  workers = 2
+  threads = 16
 end
 
 # Remove rainbows configuration, dating from before the switch to puma
@@ -269,6 +273,8 @@ template "/etc/sysconfig/crowbar" do
   variables(
     web_host: "127.0.0.1",
     web_port: web_port,
+    workers: workers,
+    threads: threads
   )
 end
 

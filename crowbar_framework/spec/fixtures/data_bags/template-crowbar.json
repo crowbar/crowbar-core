@@ -16,6 +16,8 @@
       },
       "realm": "Crowbar - By selecting OK you are agreeing to the License Agreement",
       "web_port": 3000,
+      "workers": 2,
+      "threads": 16,
       "users": {
         "machine-install": { "password": "machine_password" },
         "crowbar": { "password": "crowbar" }
@@ -46,4 +48,3 @@
     }
   }
 }
-
