@@ -111,7 +111,7 @@ describe Crowbar::UpgradeStatus do
       expect(subject.start_step).to be true
       expect(subject.end_step(false, failure: "error message")).to be false
       expect(subject.current_step).to eql :upgrade_prechecks
-      expect(subject.current_step_state[:status]).to eql "failed"
+      expect(subject.current_step_state[:status]).to eql :failed
       expect(subject.current_step_state[:errors]).to_not be_empty
     end
 
