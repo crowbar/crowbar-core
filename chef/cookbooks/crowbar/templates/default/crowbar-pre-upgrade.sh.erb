@@ -51,4 +51,7 @@ echo "Resetting fail-mode on ovs-bridge <%= bridge %>"
 ovs-vsctl set-fail-mode <%= bridge %> standalone
 <% end %>
 
+echo "Reloading wicked configuration for all interfaces"
+wicked ifreload all
+
 touch $UPGRADEDIR/crowbar-pre-upgrade-ok
