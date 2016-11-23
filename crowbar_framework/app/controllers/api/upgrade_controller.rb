@@ -263,7 +263,8 @@ class Api::UpgradeController < ApiController
       "repos": {
         "x86_64": {
           "missing": [
-            "SUSE OpenStack Cloud 8"
+            "SUSE-OpenStack-Cloud-8-Pool",
+            "SUSE-OpenStack-Cloud-8-Updates"
           ]
         }
       }
