@@ -165,14 +165,15 @@
           "crowbar_upgrade": "execute",
           "debug": "debug"
         }
-      }
+      },
+      "chef_client_runs": 900
     }
   },
   "deployment": {
     "provisioner": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 35,
+      "schema-revision": 36,
       "element_states": {
         "provisioner-bootdisk-finder": [ "hardware-installing" ],
         "provisioner-server": [ "readying", "ready", "applying" ],
@@ -195,4 +196,3 @@
     }
   }
 }
-
