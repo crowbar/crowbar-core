@@ -21,6 +21,11 @@ en:
       edit_attributes:
         access_keys: 'Additional SSH keys'
         access_keys_hint: 'Each SSH key must be on its own line'
+        suse:
+            autoyast:
+                do_self_update: 'Update AutoYaST before installing node'
+                self_update_url: 'AutoYaST Self-update URL'
+                self_update_url_hint: 'The alias <ADMINWEB> can be used to specify the admin server. An empty URL implies scc.suse.com.'
         shell_prompt: 'Custom Shell Prompt'
         shell_prompt_hint: 'You can use the placeholders USER, ALIAS, HOST, FQDN, CWD and SUFFIX to customize the shell prompt on all nodes. Add a \n for a new line within the prompt.'
         serial_console: 'Serial Console'

@@ -301,6 +301,18 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
       end
 
     when /^(open)?suse/
+      expanded_self_update_url = node[:provisioner][:suse][:autoyast][:self_update_url].gsub(
+        "<ADMINWEB>", "#{admin_ip}:#{web_port}"
+      )
+      do_self_update = node[:provisioner][:suse][:autoyast][:do_self_update]
+      if do_self_update && !expanded_self_update_url.empty?
+        do_self_update = system("wget --quiet --spider " +
+                                expanded_self_update_url.gsub("$arch", "#{arch}"))
+        unless do_self_update
+          Chef::Log.warn("AutoYaST self-update URL #{expanded_self_update_url} does not exist")
+        end
+      end
+
       append << "install=#{install_url} autoyast=#{node_url}/autoyast.xml"
       if node[:provisioner][:use_serial_console]
         append << "textmode=1"
@@ -308,6 +320,7 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
       append << "ifcfg=dhcp4 netwait=60"
       append << "squash=0" # workaround bsc#962397
       append << "autoupgrade=1" if mnode[:state] == "os-upgrading"
+      append << "self_update" if do_self_update
 
       target_platform_distro = os.gsub(/-.*$/, "")
       target_platform_version = os.gsub(/^.*-/, "")
@@ -350,6 +363,8 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
           web_port: web_port,
           packages: packages,
           repos: repos,
+          do_self_update: do_self_update,
+          self_update_url: expanded_self_update_url,
           rootpw_hash: node[:provisioner][:root_password_hash] || "",
           timezone: timezone,
           boot_device: boot_device,
