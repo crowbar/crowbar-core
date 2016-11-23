@@ -29,6 +29,13 @@ if [[ -f /usr/bin/neutron-ha-tool ]] ; then
     neutron-ha-tool --l3-agent-evacuate $(hostname)
 fi
 
+# Even if agents are migrated, we want to explicitly destroy the router namespaces
+# because in some upgrade cases, the routers remain active when there are no
+# valid destinations for the migration
+for router_ns in `ip netns | grep qrouter`; do
+    ip netns delete $router_ns
+done
+
 # Shutdown pacemaker so the remaining OpenStack services are stopped
 # This is needed so that the zypper dup won't trigger any db migrations on package update
 service pacemaker stop
