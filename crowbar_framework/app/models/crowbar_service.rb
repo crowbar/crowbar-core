@@ -392,6 +392,9 @@ class CrowbarService < ServiceObject
       node.save
     end
 
+    # unset `db_synced` flag for OpenStack components
+    ::Openstack::Upgrade.unset_db_synced
+
     commit_and_check_proposal
   end
 
