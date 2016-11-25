@@ -89,9 +89,16 @@ template "/usr/sbin/crowbar-shutdown-services-before-upgrade.sh" do
   )
 end
 
+# Find all ovs bridges that we manage to be able to reset their fail-mode
+# in preparation for the OS upgrade
+bridges_to_reset = []
+Barclamp::Inventory.list_networks(node).each do |network|
+  next unless network.add_ovs_bridge
+  bridges_to_reset << network.bridge_name
+end
+
 # Following script executes all actions that are needed directly on the node
 # directly before the OS upgrade is initiated.
-
 template "/usr/sbin/crowbar-pre-upgrade.sh" do
   source "crowbar-pre-upgrade.sh.erb"
   mode "0755"
@@ -99,7 +106,8 @@ template "/usr/sbin/crowbar-pre-upgrade.sh" do
   group "root"
   action :create
   variables(
-    use_ha: use_ha
+    use_ha: use_ha,
+    bridges_to_reset: bridges_to_reset
   )
 end
 
