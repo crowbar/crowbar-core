@@ -199,8 +199,7 @@ service "chef-client" do
   action :nothing
 end
 
-config_file = "/etc/default/chef-client"
-config_file = "/etc/sysconfig/chef-client" if node[:platform_family] == "rhel"
+config_file = "/etc/sysconfig/chef-client"
 
 chef_client_runs = node[:provisioner][:chef_client_runs] || 900
 
