@@ -237,6 +237,12 @@ unless node["crowbar"].nil? or node["crowbar"]["users"].nil? or node["crowbar"][
   realm = node["crowbar"]["realm"]
   workers = node["crowbar"]["workers"] || 2
   threads = node["crowbar"]["threads"] || 16
+  chef_solr_heap = node["crowbar"]["chef"]["solr_heap"] || 256
+  chef_solr_data = if node["crowbar"]["chef"]["solr_tmpfs"]
+    "/dev/shm/solr_data"
+  else
+    "/var/cache/chef/solr/data"
+  end
 
   users = {}
   node["crowbar"]["users"].each do |k,h|
@@ -258,6 +264,8 @@ else
   realm = nil
   workers = 2
   threads = 16
+  chef_solr_heap = 256
+  chef_solr_data = "/var/cache/chef/solr/data"
 end
 
 # Remove rainbows configuration, dating from before the switch to puma
@@ -276,6 +284,23 @@ template "/etc/sysconfig/crowbar" do
     workers: workers,
     threads: threads
   )
+end
+
+service "chef-solr" do
+  supports status: true, restart: true
+  action :nothing
+end
+
+template "/etc/chef/solr.rb" do
+  source "chef-solr.rb.erb"
+  owner "root"
+  group "chef"
+  mode "0640"
+  variables(
+    chef_solr_heap: chef_solr_heap,
+    chef_solr_data: chef_solr_data
+  )
+  notifies :restart, "service[chef-solr]", :delayed
 end
 
 if node[:platform_family] == "suse"
