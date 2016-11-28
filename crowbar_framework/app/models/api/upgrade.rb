@@ -26,7 +26,7 @@ module Api
       def checks
         upgrade_status = ::Crowbar::UpgradeStatus.new
         # the check for current_step means to allow running the step at any point in time
-        upgrade_status.start_step if upgrade_status.current_step == :upgrade_prechecks
+        upgrade_status.start_step(:upgrade_prechecks)
 
         {}.tap do |ret|
           ret[:network_checks] = {
@@ -95,7 +95,7 @@ module Api
 
       def adminrepocheck
         upgrade_status = ::Crowbar::UpgradeStatus.new
-        upgrade_status.start_step if upgrade_status.current_step == :admin_repo_checks
+        upgrade_status.start_step(:admin_repo_checks)
         # FIXME: once we start working on 7 to 8 upgrade we have to adapt the sles version
         zypper_stream = Hash.from_xml(
           `sudo /usr/bin/zypper-retry --xmlout products`
@@ -148,9 +148,8 @@ module Api
             upgrade_status.end_step(
               false,
               adminrepocheck: "Missing repositories: #{missing_repos}"
-            ) if upgrade_status.current_step == :admin_repo_checks
+            )
           else
-            next unless upgrade_status.current_step == :admin_repo_checks
             upgrade_status.end_step
           end
         end
@@ -242,7 +241,7 @@ module Api
       end
 
       def prepare(options = {})
-        ::Crowbar::UpgradeStatus.new.start_step
+        ::Crowbar::UpgradeStatus.new.start_step(:upgrade_prepare)
 
         background = options.fetch(:background, false)
 
@@ -574,7 +573,10 @@ module Api
         true
       rescue => e
         message = e.message
-        ::Crowbar::UpgradeStatus.new.end_step(false, { prepare_nodes_for_crowbar_upgrade: message })
+        ::Crowbar::UpgradeStatus.new.end_step(
+          false,
+          prepare_nodes_for_crowbar_upgrade: message
+        )
         Rails.logger.error message
 
         false
