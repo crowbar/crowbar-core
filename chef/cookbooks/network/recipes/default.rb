@@ -490,6 +490,7 @@ when "suse"
         interfaces: ifs,
         nic: nic
       })
+      notifies :run, "bash[wicked-ifreload-#{nic.name}]", :immediately
     end
     if ifs[nic.name]["gateway"]
       template "/etc/sysconfig/network/ifroute-#{nic.name}" do
@@ -498,11 +499,22 @@ when "suse"
                     interfaces: ifs,
                     nic: nic
                   })
+        notifies :run, "bash[wicked-ifreload-#{nic.name}]", :immediately
       end
     else
       file "/etc/sysconfig/network/ifroute-#{nic.name}" do
         action :delete
       end
+    end
+    bash "wicked-ifreload-#{nic.name}" do
+      action :nothing
+      code <<-EOF
+        wicked ifcheck --changed --quiet #{nic.name}
+        rc=$?
+        if [[ $rc != 0 ]]; then
+          wicked ifreload #{nic.name}
+        fi
+      EOF
     end
   end
 
