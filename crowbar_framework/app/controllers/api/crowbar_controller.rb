@@ -42,6 +42,16 @@ class Api::CrowbarController < ApiController
     else
       render json: Api::Crowbar.upgrade
     end
+  rescue Crowbar::Error::StartStepRunningError,
+         Crowbar::Error::StartStepOrderError => e
+    render json: {
+      errors: {
+        admin_upgrade: {
+          data: e.message,
+          help: I18n.t("api.crowbar.upgrade.help.default")
+        }
+      }
+    }, status: :unprocessable_entity
   end
 
   def maintenance
