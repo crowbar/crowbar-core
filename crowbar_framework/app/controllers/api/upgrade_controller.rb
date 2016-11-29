@@ -95,6 +95,16 @@ class Api::UpgradeController < ApiController
         }
       }, status: :unprocessable_entity
     end
+  rescue Crowbar::Error::StartStepRunningError,
+         Crowbar::Error::StartStepOrderError => e
+    render json: {
+      errors: {
+        upgrade_prepare: {
+          data: e.message,
+          help: I18n.t("api.upgrade.prepare.help.default")
+        }
+      }
+    }, status: :unprocessable_entity
   end
 
   api :POST, "/api/upgrade/services", "Stop related services on all nodes during upgrade"
@@ -282,6 +292,17 @@ class Api::UpgradeController < ApiController
     else
       render json: check
     end
+  rescue Crowbar::Error::StartStepRunningError,
+         Crowbar::Error::StartStepOrderError,
+         Crowbar::Error::EndStepRunningError => e
+    render json: {
+      errors: {
+        admin_repo_checks: {
+          data: e.message,
+          help: I18n.t("api.upgrade.adminrepocheck.help.default")
+        }
+      }
+    }, status: :unprocessable_entity
   end
 
   api :POST, "/api/upgrade/adminbackup", "Create a backup"
@@ -317,6 +338,17 @@ class Api::UpgradeController < ApiController
       )
       render json: { error: @backup.errors.full_messages.first }, status: :unprocessable_entity
     end
+  rescue Crowbar::Error::StartStepRunningError,
+         Crowbar::Error::StartStepOrderError,
+         Crowbar::Error::EndStepRunningError => e
+    render json: {
+      errors: {
+        admin_backup: {
+          data: e.message,
+          help: I18n.t("api.upgrade.adminbackup.help.default")
+        }
+      }
+    }, status: :unprocessable_entity
   ensure
     @backup.cleanup unless @backup.nil?
   end

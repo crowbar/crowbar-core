@@ -49,6 +49,12 @@ describe Api::Crowbar do
         receive_message_chain(:upgrade_script_path, :exist?).
         and_return(true)
       )
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:admin_upgrade).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :end_step
+      ).and_return(true)
 
       expect(subject.class.upgrade!).to eq(
         status: :ok,

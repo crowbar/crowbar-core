@@ -801,6 +801,12 @@ en:
       prepare:
         help:
           default: 'Refer to the error message in the response'
+      adminbackup:
+        help:
+          default: 'Refer to the error message in the response'
+      adminrepocheck:
+        help:
+          default: 'Refer to the error message in the response'
       services:
         help:
           default: 'Refer to the error message in the response'
