@@ -19,6 +19,7 @@ require "pathname"
 
 require_relative "lock"
 require_relative "lock/local_blocking"
+require_relative "error/upgrade_status"
 
 module Crowbar
   class UpgradeStatus
@@ -80,11 +81,11 @@ module Crowbar
       ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
         if running? step_name
           @logger.warn("The step has already been started")
-          return false
+          raise Crowbar::Error::StartStepRunningError.new(step_name)
         end
         unless step_allowed? step_name
-          @logger.error("The start of step #{step_name} is requested in the wrong order")
-          return false
+          @logger.warn("The start of step #{step_name} is requested in the wrong order")
+          raise Crowbar::Error::StartStepOrderError.new(step_name)
         end
         progress[:current_step] = step_name
         progress[:steps][step_name][:status] = :running
@@ -96,7 +97,7 @@ module Crowbar
       ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
         unless running?
           @logger.warn("The step is not running, could not be finished")
-          return false
+          raise Crowbar::Error::EndStepRunningError.new(current_step)
         end
         progress[:steps][current_step] = {
           status: success ? :passed : :failed,

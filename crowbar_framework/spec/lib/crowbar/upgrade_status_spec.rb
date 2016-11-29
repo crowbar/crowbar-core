@@ -120,7 +120,7 @@ describe Crowbar::UpgradeStatus do
       expect(subject.start_step(:upgrade_prechecks)).to be true
       expect(subject.end_step).to be true
       expect(subject.current_step).to eql :upgrade_prepare
-      expect(subject.end_step).to be false
+      expect{subject.end_step}.to raise_error(Crowbar::Error::EndStepRunningError)
     end
 
     it "does not allow to end step when it was started by another object" do
@@ -134,14 +134,14 @@ describe Crowbar::UpgradeStatus do
 
     it "does not to stop the first step without starting it" do
       expect(subject.current_step).to eql :upgrade_prechecks
-      expect(subject.end_step).to be false
+      expect{subject.end_step}.to raise_error(Crowbar::Error::EndStepRunningError)
     end
 
     it "prevents starting a step while it is already running" do
       expect(subject.current_step).to eql :upgrade_prechecks
       expect(subject.start_step(:upgrade_prechecks)).to be true
       expect(subject.current_step_state[:status]).to eql :running
-      expect(subject.start_step(:upgrade_prechecks)).to be false
+      expect{subject.start_step(:upgrade_prechecks)}.to raise_error(Crowbar::Error::StartStepRunningError)
       expect(subject.current_step_state[:status]).to eql :running
       expect(subject.current_step).to eql :upgrade_prechecks
     end
@@ -152,7 +152,7 @@ describe Crowbar::UpgradeStatus do
       expect(subject.start_step(:upgrade_prechecks)).to be true
       expect(subject.current_step_state[:status]).to eql :running
       other_status.load
-      expect(other_status.start_step(:upgrade_prechecks)).to be false
+      expect{other_status.start_step(:upgrade_prechecks)}.to raise_error(Crowbar::Error::StartStepRunningError)
     end
 
     it "goes through the steps and returns finish when finished" do
@@ -187,7 +187,7 @@ describe Crowbar::UpgradeStatus do
       expect(subject.end_step).to be true
       expect(subject.current_step).to eql :finished
       expect(subject.finished?).to be true
-      expect(subject.end_step).to be false
+      expect{subject.end_step}.to raise_error(Crowbar::Error::EndStepRunningError)
     end
 
     it "allows repeating some steps" do
@@ -196,28 +196,28 @@ describe Crowbar::UpgradeStatus do
       expect(subject.running?(:upgrade_prechecks)).to be false
       expect(subject.current_step).to eql :upgrade_prepare
       expect(subject.start_step(:upgrade_prechecks)).to be true
-      expect(subject.start_step(:upgrade_prechecks)).to be false
+      expect{subject.start_step(:upgrade_prechecks)}.to raise_error(Crowbar::Error::StartStepRunningError)
       expect(subject.running?(:upgrade_prechecks)).to be true
       expect(subject.end_step).to be true
     end
 
     it "prevents repeating steps that do not allow repetition" do
-      expect(subject.start_step(:upgrade_prepare)).to be false
-      expect(subject.start_step(:admin_backup)).to be false
-      expect(subject.start_step(:admin_upgrade)).to be false
-      expect(subject.start_step(:database)).to be false
-      expect(subject.start_step(:nodes_services)).to be false
-      expect(subject.start_step(:nodes_db_dump)).to be false
-      expect(subject.start_step(:nodes_upgrade)).to be false
+      expect{subject.start_step(:upgrade_prepare)}.to raise_error(Crowbar::Error::StartStepOrderError)
+      expect{subject.start_step(:admin_backup)}.to raise_error(Crowbar::Error::StartStepOrderError)
+      expect{subject.start_step(:admin_upgrade)}.to raise_error(Crowbar::Error::StartStepOrderError)
+      expect{subject.start_step(:database)}.to raise_error(Crowbar::Error::StartStepOrderError)
+      expect{subject.start_step(:nodes_services)}.to raise_error(Crowbar::Error::StartStepOrderError)
+      expect{subject.start_step(:nodes_db_dump)}.to raise_error(Crowbar::Error::StartStepOrderError)
+      expect{subject.start_step(:nodes_upgrade)}.to raise_error(Crowbar::Error::StartStepOrderError)
     end
 
     it "prevents repeating steps when it's too late or too early" do
       expect(subject.start_step(:upgrade_prechecks)).to be true
       expect(subject.end_step).to be true
       expect(subject.start_step(:upgrade_prepare)).to be true
-      expect(subject.start_step(:upgrade_prechecks)).to be false
+      expect{subject.start_step(:upgrade_prechecks)}.to raise_error(Crowbar::Error::StartStepOrderError)
       expect(subject.current_step).to eql :upgrade_prepare
-      expect(subject.start_step(:admin_repo_checks)).to be false
+      expect{subject.start_step(:admin_repo_checks)}.to raise_error(Crowbar::Error::StartStepOrderError)
     end
   end
 end
