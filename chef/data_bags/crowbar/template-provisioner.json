@@ -192,14 +192,15 @@
           "crowbar_upgrade": "execute",
           "debug": "debug"
         }
-      }
+      },
+      "chef_client_runs": 900
     }
   },
   "deployment": {
     "provisioner": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 101,
+      "schema-revision": 102,
       "element_states": {
         "provisioner-server": [ "readying", "ready", "applying" ],
         "provisioner-base": [ "hardware-installing", "readying", "ready", "applying" ]
@@ -220,4 +221,3 @@
     }
   }
 }
-

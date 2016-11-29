@@ -194,15 +194,24 @@ else
   end
 end
 
-config_file = "/etc/default/chef-client"
-config_file = "/etc/sysconfig/chef-client" if node[:platform_family] == "rhel"
+service "chef-client" do
+  supports status: true, restart: true
+  action :nothing
+end
 
-cookbook_file config_file do
+config_file = "/etc/sysconfig/chef-client"
+
+chef_client_runs = node[:provisioner][:chef_client_runs] || 900
+
+template config_file do
   owner "root"
   group "root"
   mode "0644"
-  action :create
-  source "chef-client"
+  source "chef_client.erb"
+  variables(
+    chef_client_runs: chef_client_runs
+  )
+  notifies :restart, "service[chef-client]", :delayed
 end
 
 # On SUSE: install crowbar_join properly, with init script
