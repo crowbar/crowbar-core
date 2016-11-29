@@ -52,13 +52,19 @@ module Crowbar
       progress[:steps][current_step] || {}
     end
 
-    def start_step
+    # 'step' is name of the step user wants to start.
+    def start_step(step_name)
       Crowbar::Lock::LocalBlocking.with_lock(shared: false) do
-        if running?
+        if running? step_name
           Rails.logger.warn("The step has already been started")
           return false
         end
-        progress[:steps][current_step][:status] = :running
+        unless step_allowed? step_name
+          Rails.logger.warn("The start of step #{step_name} is requested in the wrong order")
+          return false
+        end
+        progress[:current_step] = step_name
+        progress[:steps][step_name][:status] = :running
         save
       end
     end
@@ -130,6 +136,24 @@ module Crowbar
         :nodes_upgrade,
         :finished
       ]
+    end
+
+    # Return true if user is allowed to execute given step
+    # In normal cases, that should be true only for next step in the sequence.
+    # But for some cases, we allow repeating of the step that has just passed.
+    def step_allowed?(step)
+      return true if step == current_step
+      if [
+        :upgrade_prechecks,
+        :admin_repo_checks,
+        :nodes_repo_checks
+      ].include? step
+        # Allow repeating one of these steps if it was the last one finished
+        # and no other one has been started yet.
+        i = upgrade_steps_6_7.index step
+        return upgrade_steps_6_7[i + 1] == current_step && pending?(current_step)
+      end
+      false
     end
   end
 end
