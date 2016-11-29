@@ -79,6 +79,10 @@ module Crowbar
     # 'step' is name of the step user wants to start.
     def start_step(step_name)
       ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
+        unless upgrade_steps_6_7.include?(step_name)
+          @logger.warn("The step #{step_name} doesn't exist")
+          raise Crowbar::Error::StartStepExistenceError.new(step_name)
+        end
         if running? step_name
           @logger.warn("The step has already been started")
           raise Crowbar::Error::StartStepRunningError.new(step_name)
