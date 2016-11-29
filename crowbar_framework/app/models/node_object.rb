@@ -524,7 +524,14 @@ class NodeObject < ChefObject
     return "unknown" if (@node.nil? or @role.nil?)
     if self.crowbar["state"] === "ready" and @node["ohai_time"]
       since_last = Time.now.to_i-@node["ohai_time"].to_i
-      return "noupdate" if since_last > 1200 # or 20 mins
+      crowbar_proposal = Proposal.where(barclamp: "provisioner").first
+      max_last = if crowbar_proposal
+        # time from proposal + 5 min buffer time
+        crowbar_proposal.properties["attributes"]["provisioner"]["chef_client_runs"] + 300
+      else
+        1200 # 20min
+      end
+      return "noupdate" if since_last > max_last
     end
     return self.crowbar["state"] || "unknown"
   end

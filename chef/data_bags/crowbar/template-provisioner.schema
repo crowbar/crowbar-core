@@ -103,7 +103,8 @@
                   }
                 }
               }
-            }
+            },
+            "chef_client_runs": { "type": "int", "required": true }
           }
         }
       }
