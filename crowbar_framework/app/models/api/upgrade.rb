@@ -278,14 +278,16 @@ module Api
         return false unless non_founder_api.disable_pre_upgrade_attribute_for founder.name
 
         # 3. delete old pacemaker resources
-        # FIXME: couldn't we do it right after migrating l3 routers from the first node?
         delete_pacemaker_resources non_founder.name
 
         # 4. start crowbar-join at the first node
         return false unless founder_api.post_upgrade
         return false unless founder_api.join_and_chef
 
-        # 5. upgrade the rest of nodes in the same cluster
+        # 5. migrate routers from nodes being upgraded
+        return false unless founder_api.router_migration
+
+        # 6. upgrade the rest of nodes in the same cluster
         NodeObject.find(
           "state:crowbar_upgrade AND pacemaker_config_environment:#{cluster_env}"
         ).each do |node|
@@ -376,7 +378,8 @@ module Api
         # - initiate the first chef-client run
         return false unless node_api.join_and_chef
 
-        # FIXME: Delete router namespaces on non-upgraded node
+        # migrate routers from drbd_master to recently upgraded drbd_slave
+        return false unless node_api.router_migration
 
         save_upgrade_state("Starting the upgrade of node #{drbd_master}")
         return false unless master_node_api.upgrade
