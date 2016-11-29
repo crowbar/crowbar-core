@@ -1,0 +1,24 @@
+#!/bin/bash
+#
+# This script executes crowbar_join and initial chef-client run on upgraded node
+
+LOGFILE=/var/log/crowbar/node-upgrade.log
+UPGRADEDIR=/var/lib/crowbar/upgrade
+mkdir -p "`dirname "$LOGFILE"`"
+exec >>"$LOGFILE" 2>&1
+
+echo "Executing $BASH_SOURCE"
+
+set -x
+
+mkdir -p $UPGRADEDIR
+
+if [[ -f $UPGRADEDIR/crowbar-chef-upgraded-ok ]] ; then
+    echo "crowbar_join and chef-client actions were already successfully executed"
+    exit 0
+fi
+
+# Move node to ready state and execute chef-client for the first time
+crowbar_join --start
+
+touch $UPGRADEDIR/crowbar-chef-upgraded-ok

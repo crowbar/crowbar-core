@@ -135,3 +135,11 @@ template "/usr/sbin/crowbar-post-upgrade.sh" do
     has_drbd: has_drbd
   )
 end
+
+template "/usr/sbin/crowbar-chef-upgraded.sh" do
+  source "crowbar-chef-upgraded.sh.erb"
+  mode "0775"
+  owner "root"
+  group "root"
+  action :create
+end

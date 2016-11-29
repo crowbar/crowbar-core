@@ -283,6 +283,7 @@ module Api
 
         # 4. start crowbar-join at the first node
         return false unless founder_api.post_upgrade
+        return false unless founder_api.join_and_chef
 
         # 5. upgrade the rest of nodes in the same cluster
         NodeObject.find(
@@ -297,6 +298,7 @@ module Api
 
           # start crowbar-join
           return false unless node_api.post_upgrade
+          return false unless node_api.join_and_chef
 
           # remove pre-upgrade attribute:
           # - after chef-client run because pacemaker is already running
@@ -368,8 +370,11 @@ module Api
         return false unless delete_pacemaker_resources drbd_master
 
         # Execute post-upgrade actions after the node has been upgraded, rebooted
-        # and the existing cluster has been cleaned up by deleting most of resources
+        # and the existing cluster has been cleaned up by deleting most of resources:
+        # - start pacemaker and sync DRBD devices
         return false unless node_api.post_upgrade
+        # - initiate the first chef-client run
+        return false unless node_api.join_and_chef
 
         # FIXME: Delete router namespaces on non-upgraded node
 
