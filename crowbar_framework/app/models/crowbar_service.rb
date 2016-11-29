@@ -385,8 +385,15 @@ class CrowbarService < ServiceObject
     upgrade_nodes.each do |node|
       node["target_platform"] = admin_node["provisioner"]["default_os"]
       node["crowbar_wall"]["crowbar_upgrade_step"] = "prepare-os-upgrade"
+      # skip initial keystone bootstrapping
+      if node["run_list_map"].key? "keystone-server"
+        node["keystone"]["bootstrap"] = true
+      end
       node.save
     end
+
+    # unset `db_synced` flag for OpenStack components
+    ::Openstack::Upgrade.unset_db_synced
 
     commit_and_check_proposal
   end
