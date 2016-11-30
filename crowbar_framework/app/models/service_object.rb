@@ -1297,9 +1297,10 @@ class ServiceObject
 
       next if bad_nodes.empty?
 
-      message = "Failed to apply the proposal to: "
+      message = "Failed to apply the proposal to:\n"
       bad_nodes.each do |node|
-        message += "#{node}\n"
+        node_alias = pre_cached_nodes[node].alias
+        message += "#{node_alias}: #{node}\n"
         message += get_log_lines(node)
       end
       update_proposal_status(inst, "failed", message)
