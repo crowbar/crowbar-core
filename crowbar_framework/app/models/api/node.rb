@@ -57,6 +57,14 @@ module Api
       false
     end
 
+    def join_and_chef
+      if execute_and_wait_for_finish("/usr/sbin/crowbar-chef-upgraded.sh", 600)
+        save_node_state("Initial chef-client run was successful.")
+        return true
+      end
+      false
+    end
+
     def wait_for_ssh_state(desired_state, action)
       Timeout.timeout(300) do
         loop do
