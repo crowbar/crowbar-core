@@ -23,6 +23,10 @@
       "simple_proposal_ui": true,
       "upgrade": {
         "db_dump_location" : "/var/lib/pgsql/db-before-cloud6.dump"
+      },
+      "chef": {
+        "solr_heap": 256,
+        "solr_tmpfs": false
       }
     }
   },
@@ -30,7 +34,7 @@
     "crowbar": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 101,
+      "schema-revision": 14,
       "element_states": {
         "crowbar": [ "all" ],
         "crowbar-upgrade": [ "readying", "ready", "applying", "crowbar_upgrade" ]
