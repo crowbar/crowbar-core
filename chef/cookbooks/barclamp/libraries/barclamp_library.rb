@@ -295,11 +295,12 @@ module BarclampLibrary
             # now select the best candidate
             # Should be matching the code in provisioner/recipes/bootdisk.rb
             unless candidates.empty?
-              match = candidates.find{ |b|b =~ /^scsi-[a-zA-Z]/ } ||
-                candidates.find{ |b|b =~ /^scsi-[^1]/ } ||
-                candidates.find{ |b|b =~ /^scsi-/ } ||
-                candidates.find{ |b|b =~ /^ata-/ } ||
-                candidates.find{ |b|b =~ /^cciss-/ } ||
+              match = candidates.find { |b| b =~ /^wwn-/ } ||
+                candidates.find { |b| b =~ /^scsi-[a-zA-Z]/ } ||
+                candidates.find { |b| b =~ /^scsi-[^1]/ } ||
+                candidates.find { |b| b =~ /^scsi-/ } ||
+                candidates.find { |b| b =~ /^ata-/ } ||
+                candidates.find { |b| b =~ /^cciss-/ } ||
                 candidates.first
 
               unless match.empty?
