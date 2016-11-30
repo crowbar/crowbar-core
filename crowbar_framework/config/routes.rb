@@ -194,7 +194,7 @@ Rails.application.routes.draw do
   end
 
   scope :installer do
-    root to: "installer#index",
+    root to: "installer/installers#show",
       as: "installer_root"
 
     resource :installer,
