@@ -18,7 +18,7 @@ def downgrade(ta, td, a, d)
   unless ta["chef"].key?("solr_tmpfs")
     a.delete["chef"]["solr_tmpfs"]
   end
-  unless ta["chef"].lenght ~= 0
+  unless ta["chef"]
     a.delete["chef"]
   end
   return a, d
