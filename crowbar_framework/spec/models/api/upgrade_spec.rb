@@ -412,10 +412,12 @@ describe Api::Upgrade do
       allow_any_instance_of(Api::Node).to receive(:save_node_state).and_return(true)
       allow(Api::Upgrade).to receive(:upgrade_all_compute_nodes).and_return(true)
       allow(Api::Upgrade).to receive(:evacuate_network_node).and_return(true)
+      allow(Api::Upgrade).to receive(:finalize_nodes_upgrade).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
       ).with(:nodes).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
+      allow(Api::Upgrade).to receive(:finalize_cluster_upgrade).and_return(true)
 
       expect(subject.class.nodes_without_delay).to be true
     end
@@ -436,6 +438,7 @@ describe Api::Upgrade do
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
       ).with(:nodes).and_return(true)
+      allow(Api::Upgrade).to receive(:finalize_nodes_upgrade).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
       expect(subject.class.nodes_without_delay).to be true
@@ -517,6 +520,7 @@ describe Api::Upgrade do
       )
       allow_any_instance_of(Node).to receive(:upgraded?).and_return(true)
       allow(Api::Upgrade).to receive(:upgrade_all_compute_nodes).and_return(true)
+      allow(Api::Upgrade).to receive(:finalize_nodes_upgrade).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
       expect(subject.class.nodes_without_delay).to be true
@@ -537,6 +541,7 @@ describe Api::Upgrade do
       )
       allow_any_instance_of(Node).to receive(:upgraded?).and_return(true)
       allow(Node).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
+      allow(Api::Upgrade).to receive(:finalize_nodes_upgrade).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
       expect(subject.class.nodes_without_delay).to be true
@@ -569,6 +574,7 @@ describe Api::Upgrade do
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
       ).with(:nodes).and_return(true)
+      allow(Api::Upgrade).to receive(:finalize_nodes_upgrade).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
       expect(subject.class.nodes_without_delay).to be true
