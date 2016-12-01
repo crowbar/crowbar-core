@@ -116,6 +116,17 @@ class Api::UpgradeController < ApiController
         }
       }, status: stop_services[:status]
     end
+  rescue Crowbar::Error::StartStepRunningError,
+         Crowbar::Error::StartStepOrderError,
+         Crowbar::Error::EndStepRunningError => e
+    render json: {
+      errors: {
+        nodes_services: {
+          data: e.message,
+          help: I18n.t("api.upgrade.services.help.default")
+        }
+      }
+    }, status: :unprocessable_entity
   end
 
   api :POST, "/api/upgrade/nodes", "Initiate the upgrade of all nodes"

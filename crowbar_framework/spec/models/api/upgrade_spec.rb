@@ -124,8 +124,14 @@ describe Api::Upgrade do
       )
       allow_any_instance_of(NodeObject).to(
         receive(:shutdown_services_before_upgrade).
-        and_return(true)
+        and_return([200, "Some Error"])
       )
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:nodes_services).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :end_step
+      ).and_return(true)
 
       expect(subject.class.services).to eq(
         status: :ok,
