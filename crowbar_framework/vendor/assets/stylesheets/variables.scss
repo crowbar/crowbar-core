@@ -9,12 +9,12 @@ $gray-lighter: lighten(#000, 93.5%);
 // Navigation colors
 // -------------------------
 $nav-font-color: #f3eef4;
-$nav-active-bg-color: #2a8d8e;
+$nav-active-bg-color: #0d2c40;
 
 
 // Brand colors
 // -------------------------
-$brand-primary: #4a90e2;
+$brand-primary: #00b2e2;
 $brand-success: #5cb85c;
 $brand-warning: #f0ad4e;
 $brand-danger: #d9534f;
@@ -24,7 +24,7 @@ $brand-info: #5bc0de;
 // Scaffolding
 // -------------------------
 $body-bg: #fff;
-$text-color: $gray-dark;
+$text-color: #0d2c40;
 
 
 // Links
@@ -109,13 +109,13 @@ $table-border-color:#ddd;
 // -------------------------
 $btn-font-weight: normal;
 
-$btn-default-color: #333;
-$btn-default-bg: #fff;
-$btn-default-border: #ccc;
+$btn-default-color: #fff;
+$btn-default-bg: #00c081;
+$btn-default-border: darken($btn-default-bg, 5%);;
 
-$btn-primary-color: #fff;
-$btn-primary-bg: $brand-primary;
-$btn-primary-border: darken($btn-primary-bg, 5%);
+$btn-primary-color: #00c081;
+$btn-primary-bg: #eeeeee;
+$btn-primary-border: $btn-primary-color;
 
 $btn-success-color: #fff;
 $btn-success-bg: $brand-success;
@@ -160,15 +160,15 @@ $input-group-addon-border-color: $input-border;
 
 // Dropdowns
 // -------------------------
-$dropdown-bg: #fff !default;
+$dropdown-bg: #0d2c40 !default;
 $dropdown-border: rgba(0, 0, 0, 0.15);
 $dropdown-fallback-border:  #ccc;
 $dropdown-divider-bg: #e5e5e5;
-$dropdown-link-color: $nav-active-bg-color;
-$dropdown-link-hover-color: darken($nav-active-bg-color, 5%);
-$dropdown-link-hover-bg:  #f5f5f5;
+$dropdown-link-color: #fff;
+$dropdown-link-hover-color: #00c081;
+$dropdown-link-hover-bg: #0d2c40;
 $dropdown-link-active-color:  #fff;
-$dropdown-link-active-bg: $nav-active-bg-color;
+$dropdown-link-active-bg: #004271;
 $dropdown-link-disabled-color:  $gray-light;
 $dropdown-header-color: $gray-light;
 
@@ -244,14 +244,14 @@ $navbar-default-toggle-border-color: #ddd;
 // Inverted navbar
 // -------------------------
 $navbar-inverse-color: $gray-light;
-$navbar-inverse-bg: #212121;
+$navbar-inverse-bg: #0d2c40;
 $navbar-inverse-border: darken($navbar-inverse-bg, 10%);
 
 $navbar-inverse-link-color: #f3eef4;
 $navbar-inverse-link-hover-color: #fff;
 $navbar-inverse-link-hover-bg: transparent;
 $navbar-inverse-link-active-color: #fff;
-$navbar-inverse-link-active-bg: darken($navbar-inverse-bg, 10%);
+$navbar-inverse-link-active-bg: #004271;
 $navbar-inverse-link-disabled-color: #444;
 $navbar-inverse-link-disabled-bg: transparent;
 
@@ -454,7 +454,7 @@ $list-group-link-heading-color: #333;
 $panel-bg: #fff;
 $panel-inner-border: #ddd;
 $panel-border-radius: $border-radius-base;
-$panel-footer-bg: #f5f5f5;
+$panel-footer-bg: #ededed;
 
 $panel-default-text: $gray-dark;
 $panel-default-border: #ddd;

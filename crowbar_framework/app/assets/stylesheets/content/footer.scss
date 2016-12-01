@@ -12,6 +12,9 @@ footer {
   }
 
   span {
+    a {
+      color: #00c081;
+    }
     &:before {
       content: " - ";
     }
@@ -37,8 +40,7 @@ footer {
 }
 
 .bottom-line {
-  @include gradient-horizontal(#3f2c50, #502c4f, 0%, 90%);
-  background: #2d2c50;
+  @include gradient-horizontal(#00c081, #02d35f, 0%, 90%);
   bottom: 0;
   height: 7px;
   margin-top: 10px;
