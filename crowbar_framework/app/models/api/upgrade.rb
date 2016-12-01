@@ -85,10 +85,23 @@ module Api
       end
 
       def noderepocheck
+        upgrade_status = ::Crowbar::UpgradeStatus.new
+        upgrade_status.start_step(:nodes_repo_checks)
+
         response = {}
         addons = Api::Crowbar.addons
         addons.push("os", "openstack").each do |addon|
           response.merge!(Api::Node.repocheck(addon: addon))
+        end
+
+        unavailable_repos = response.select { |_k, v| !v["available"] }
+        if unavailable_repos.any?
+          upgrade_status.end_step(
+            false,
+            nodes_repo_checks: "#{unavailable_repos.keys.join(", ")} repositories are missing"
+          )
+        else
+          upgrade_status.end_step
         end
         response
       end

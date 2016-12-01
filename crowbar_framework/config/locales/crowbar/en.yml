@@ -808,6 +808,9 @@ en:
         failed: 'Node upgrade failed'
         help:
           default: 'Refer to the error message in the response'
+      noderepocheck:
+        help:
+          default: 'Refer to the error message in the response'
       cancel:
         help:
           default: 'Refer to the error message in the response'

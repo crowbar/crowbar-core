@@ -246,6 +246,17 @@ class Api::UpgradeController < ApiController
   '
   def noderepocheck
     render json: Api::Upgrade.noderepocheck
+  rescue Crowbar::Error::StartStepRunningError,
+         Crowbar::Error::StartStepOrderError,
+         Crowbar::Error::EndStepRunningError => e
+    render json: {
+      errors: {
+        nodes_repo_checks: {
+          data: e.message,
+          help: I18n.t("api.upgrade.noderepocheck.help.default")
+        }
+      }
+    }, status: :unprocessable_entity
   end
 
   api :GET, "/api/upgrade/adminrepocheck",
