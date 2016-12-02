@@ -16,23 +16,29 @@
 #
 
 default: &default
+  adapter: postgresql
+  host: localhost
+  port: 5432
+  database: crowbar_production
+  pool: 5
+  username: crowbar
+  password: crowbar
+
+sqlite: &sqlite
   adapter: sqlite3
+  database: db/test.sqlite3
   pool: 5
   timeout: 5000
   options: "PRAGMA journal_mode=WAL;"
 
 development:
   <<: *default
-  database: db/development.sqlite3
 
 test:
-  <<: *default
-  database: db/test.sqlite3
+  <<: *sqlite
 
 cucumber:
-  <<: *default
-  database: db/test.sqlite3
+  <<: *sqlite
 
 production:
   <<: *default
-  database: db/production.sqlite3
