@@ -30,11 +30,16 @@ en:
         client_configuration: 'Client Configuration'
         nameservers: 'Additional Name Servers (for use in /etc/resolv.conf)'
 
-        records: 'Manual A Records'
+        records: 'Manual Records'
         record_name: 'Name'
-        record_ips: 'IP Addresses'
+        record_type: 'Type'
+        record_values: 'IP Addresses / Aliased Domain'
         record_add: 'Add'
         record_remove: 'Remove'
         record_invalid: 'Name and IP Addresses must not be empty!'
         record_duplicate: 'There is already a record for this name defined!'
         no_records: 'Currently there are no records defined'
+        records_hint: 'Do not forget the trailing dot in the aliased domain if it is a fully qualified domain name.'
+      validation:
+        invalid_record_type: 'Invalid type %{type} for record %{name}.'
+        cname_single_alias: 'CNAME records cannot alias multiple domains, but %{cname} is an alias for more than one domain.'

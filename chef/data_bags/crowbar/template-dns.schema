@@ -36,10 +36,11 @@
                   "type" : "map",
                   "required" : false,
                   "mapping" : {
-                    "ips": {
+                    "type": { "type": "str", "required": true },
+                    "values": {
                       "type" : "seq",
                       "required" : true,
-                      "sequence": [ { "type": "str", "name": "IpAddress" } ]
+                      "sequence": [ { "type": "str" } ]
                     }
                   }
                 }

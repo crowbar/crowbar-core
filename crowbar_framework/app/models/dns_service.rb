@@ -56,6 +56,22 @@ class DnsService < ServiceObject
       validation_error("At least one nameserver or one node with the dns-server role must be specified.")
     end
 
+    proposal["attributes"]["dns"]["records"].each do |host, records|
+      unless ["A", "CNAME"].include?(records[:type])
+        validation_error I18n.t(
+          "barclamp.#{@bc_name}.validation.invalid_record_type",
+          type: records[:type],
+          name: host
+        )
+      end
+      if records[:type] == "CNAME" && records[:values].length > 1
+        validation_error I18n.t(
+          "barclamp.#{@bc_name}.validation.cname_single_alias",
+          cname: host
+        )
+      end
+    end
+
     super
   end
 
