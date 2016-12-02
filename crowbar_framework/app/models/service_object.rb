@@ -537,6 +537,7 @@ class ServiceObject
     clean_proposal(prop.raw_data)
     validate_proposal(prop.raw_data)
     validate_proposal_elements(prop.elements)
+    prop.latest_applied = false
     prop.save
     validate_proposal_after_save(prop.raw_data) if options[:validate_after_save]
   end
