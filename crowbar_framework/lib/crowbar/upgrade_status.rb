@@ -1,3 +1,26 @@
+#
+# Copyright 2016, SUSE LINUX GmbH
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+require "yaml"
+require "pathname"
+
+require_relative "lock"
+require_relative "lock/local_blocking"
+require_relative "error/upgrade_status"
+
 module Crowbar
   class UpgradeStatus
     attr_reader :progress_file_path
@@ -6,7 +29,8 @@ module Crowbar
     # Return the current state of upgrade process.
     # We're keeping the information in the file so is accessible by
     # external applications and different crowbar versions.
-    def initialize(yaml_file = "/var/lib/crowbar/upgrade/progress.yml")
+    def initialize(logger = Rails.logger, yaml_file = "/var/lib/crowbar/upgrade/progress.yml")
+      @logger = logger
       @progress_file_path = Pathname.new(yaml_file)
       load
     end
@@ -35,7 +59,7 @@ module Crowbar
     end
 
     def load!
-      Crowbar::Lock::LocalBlocking.with_lock(shared: true) do
+      ::Crowbar::Lock::LocalBlocking.with_lock(shared: true, logger: @logger, path: lock_path) do
         @progress = YAML.load(progress_file_path.read)
       end
     end
@@ -54,14 +78,18 @@ module Crowbar
 
     # 'step' is name of the step user wants to start.
     def start_step(step_name)
-      Crowbar::Lock::LocalBlocking.with_lock(shared: false) do
+      ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
+        unless upgrade_steps_6_7.include?(step_name)
+          @logger.warn("The step #{step_name} doesn't exist")
+          raise Crowbar::Error::StartStepExistenceError.new(step_name)
+        end
         if running? step_name
-          Rails.logger.warn("The step has already been started")
-          return false
+          @logger.warn("The step has already been started")
+          raise Crowbar::Error::StartStepRunningError.new(step_name)
         end
         unless step_allowed? step_name
-          Rails.logger.warn("The start of step #{step_name} is requested in the wrong order")
-          return false
+          @logger.warn("The start of step #{step_name} is requested in the wrong order")
+          raise Crowbar::Error::StartStepOrderError.new(step_name)
         end
         progress[:current_step] = step_name
         progress[:steps][step_name][:status] = :running
@@ -70,10 +98,10 @@ module Crowbar
     end
 
     def end_step(success = true, errors = {})
-      Crowbar::Lock::LocalBlocking.with_lock(shared: false) do
+      ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
         unless running?
-          Rails.logger.warn("The step is not running, could not be finished")
-          return false
+          @logger.warn("The step is not running, could not be finished")
+          raise Crowbar::Error::EndStepRunningError.new(current_step)
         end
         progress[:steps][current_step] = {
           status: success ? :passed : :failed,
@@ -109,7 +137,7 @@ module Crowbar
       end
       true
     rescue StandardError => e
-      Rails.logger.error("Exception during saving the status file: #{e.message}")
+      @logger.error("Exception during saving the status file: #{e.message}")
       false
     end
 
@@ -154,6 +182,10 @@ module Crowbar
         return upgrade_steps_6_7[i + 1] == current_step && pending?(current_step)
       end
       false
+    end
+
+    def lock_path
+      "/opt/dell/crowbar_framework/tmp/upgrade_status_lock"
     end
   end
 end

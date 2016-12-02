@@ -21,9 +21,9 @@ module Crowbar
     attr_reader :path, :name, :file
 
     def initialize(options = {})
-      @logger = options.fetch :logger, Rails.logger
+      @logger = options[:logger] || Rails.logger
       @name = options.fetch :name, "default.lock"
-      @path = options.fetch :path, Rails.root.join("tmp", @name) # full path to lockfile
+      @path = options[:path] || Rails.root.join("tmp", @name) # full path to lockfile
       @locked = false
       @file = nil
     end

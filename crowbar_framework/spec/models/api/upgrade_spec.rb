@@ -100,6 +100,12 @@ describe Api::Upgrade do
           "sudo /usr/bin/zypper-retry --xmlout products"
         ).and_return(crowbar_repocheck_zypper)
       )
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:admin_repo_checks).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :end_step
+      ).and_return(true)
 
       expect(subject.class.adminrepocheck.deep_stringify_keys).to_not(
         eq(crowbar_repocheck)
@@ -117,6 +123,12 @@ describe Api::Upgrade do
           "sudo /usr/bin/zypper-retry --xmlout products"
         ).and_return(crowbar_repocheck_zypper_locked)
       )
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:admin_repo_checks).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :end_step
+      ).and_return(true)
 
       check = subject.class.adminrepocheck
       expect(check[:status]).to eq(:service_unavailable)
@@ -136,6 +148,12 @@ describe Api::Upgrade do
           "sudo /usr/bin/zypper-retry --xmlout products"
         ).and_return(crowbar_repocheck_zypper_prompt)
       )
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:admin_repo_checks).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :end_step
+      ).and_return(true)
 
       check = subject.class.adminrepocheck
       expect(check[:status]).to eq(:service_unavailable)
@@ -155,6 +173,12 @@ describe Api::Upgrade do
           "sudo /usr/bin/zypper-retry --xmlout products"
         ).and_return(crowbar_repocheck_zypper)
       )
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:admin_repo_checks).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :end_step
+      ).and_return(true)
 
       expect(subject.class.adminrepocheck.deep_stringify_keys).to(
         eq(crowbar_repocheck)
@@ -217,6 +241,9 @@ describe Api::Upgrade do
       allow_any_instance_of(CrowbarService).to receive(
         :prepare_nodes_for_crowbar_upgrade
       ).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:upgrade_prepare).and_return(true)
 
       expect(subject.class.prepare(background: true)).to be true
     end
@@ -224,6 +251,12 @@ describe Api::Upgrade do
     it "succeeds to spawn the prepare in the foreground" do
       allow_any_instance_of(CrowbarService).to receive(
         :prepare_nodes_for_crowbar_upgrade
+      ).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:upgrade_prepare).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :end_step
       ).and_return(true)
 
       expect(subject.class.prepare).to be true
@@ -233,6 +266,12 @@ describe Api::Upgrade do
       allow_any_instance_of(CrowbarService).to receive(
         :prepare_nodes_for_crowbar_upgrade
       ).and_raise("Some error")
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:upgrade_prepare).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :end_step
+      ).and_return(true)
 
       expect(subject.class.prepare).to be false
     end
