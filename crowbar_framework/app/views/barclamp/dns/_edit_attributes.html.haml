@@ -32,13 +32,18 @@
       %legend
         = t(".records")
 
+      .alert.alert-info
+        = t('.records_hint')
+
       %table.table.table-middle{ "data-dynamic" => "#record-entries", "data-namespace" => "records", "data-optional" => "", "data-invalid" => t(".record_invalid"), "data-duplicate" => t(".record_duplicate") }
         %thead
           %tr
             %th.col-sm-3
               = t(".record_name")
-            %th.col-sm-8
-              = t(".record_ips")
+            %th.col-sm-1
+              = t(".record_type")
+            %th.col-sm-7
+              = t(".record_values")
             %th.col-sm-1
 
         %tbody
@@ -48,7 +53,9 @@
             %td
               = text_field_tag "record[name]", "", :placeholder => t(".record_name"), :class => "form-control", "data-name" => "name", "data-type" => "string"
             %td
-              = text_field_tag "record[ips]", "", :placeholder => t(".record_ips"), :class => "form-control", "data-name" => "ips", "data-type" => "array-string"
+              = select_tag "record[type]", dns_record_types("A"), :class => "form-control", "data-name" => "type", "data-type" => "string"
+            %td
+              = text_field_tag "record[values]", "", :placeholder => t(".record_values"), :class => "form-control", "data-name" => "values", "data-type" => "array-string"
             %td
               = link_to t(".record_add"), "#", :class => "btn btn-default btn-block", "data-add" => true
 
@@ -58,12 +65,14 @@
     %td
       = text_field_tag "record[name]", "{{name}}", :placeholder => t(".record_name"), :class => "form-control", :disabled => "disabled"
     %td
-      = text_field_tag "record[ips]", "{{ips}}", :placeholder => t(".record_ips"), :class => "form-control", "data-update" => "records/{{name}}/ips", "data-name" => "ips", "data-type" => "array-string"
+      = select_tag "record[type]", raw("{{#select type}}#{dns_record_types("__no_select__")}{{/select}}"), :class => "form-control", "data-update" => "records/{{name}}/type", "data-name" => "type", "data-type" => "string"
+    %td
+      = text_field_tag "record[values]", "{{values}}", :placeholder => t(".record_values"), :class => "form-control", "data-update" => "records/{{name}}/values", "data-name" => "values", "data-type" => "array-string"
     %td
       = link_to t(".record_remove"), "#", :class => "btn btn-default btn-block", "data-remove" => "{{name}}"
   {{else}}
   %tr
-    %td{ :colspan => 3 }
+    %td{ :colspan => 4 }
       .empty.alert.alert-info.text-center
         = t(".no_records")
   {{/each}}

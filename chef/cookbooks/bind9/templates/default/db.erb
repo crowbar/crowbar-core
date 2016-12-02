@@ -29,9 +29,9 @@ $TTL <%= @zone[:ttl] %>
 <% end if @zone[:mail_exchangers]-%>
 
 ; Manual records
-<% @zone[:records].each do |host, values| -%>
-<% values[:ips].each do |ip| -%>
-<%= host %> IN A <%= ip %>
+<% @zone[:records].each do |host, records| -%>
+<% records[:values].each do |value| -%>
+<%= host %> IN <%= records[:type] %> <%= value %>
 <% end -%>
 <% end if @zone[:records] -%>
 
