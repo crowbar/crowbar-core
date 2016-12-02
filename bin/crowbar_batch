@@ -82,10 +82,19 @@ INDENT = "   "
 @commands = {
   "help" => ["help", "help - This page for further help"],
   "build" => ["build", "build - Create/edit/commit proposals defined in a YAML file or from stdin"],
+  "import" => ["import", "import - Create/edit proposals defined in a YAML file or from stdin"],
   "export" => ["export ARGV", "export <barclamp> [<barclamp> ...] - export barclamps as YAML"]
 }
 
 def build()
+  import_or_build(true)
+end
+
+def import()
+  import_or_build(false)
+end
+
+def import_or_build(do_commit)
   # read from stdin or from file(s)
   input_data = ARGF.read
 
@@ -113,7 +122,7 @@ def build()
 
   begin
     proposals.each do |proposal|
-      build_proposal(proposal)
+      import_proposal(proposal, do_commit)
     end
   rescue Timeout::Error
     abort "Timed out at #{Time.now};\n" +
@@ -168,7 +177,7 @@ def proposal_debug(msg)
   debug INDENT + msg
 end
 
-def build_proposal(proposal)
+def import_proposal(proposal, do_commit)
   barclamp = proposal["barclamp"]
   name     = proposal["name"] || "default"
   fullname = "%s.%s" % [barclamp, name]
@@ -184,7 +193,7 @@ def build_proposal(proposal)
   ensure_proposal_exists(barclamp, name)
 
   needs_commit = modify_proposal(barclamp, name, proposal)
-  commit_proposal(barclamp, name) if needs_commit
+  commit_proposal(barclamp, name) if do_commit && needs_commit
 end
 
 def ensure_proposal_exists(barclamp, name)
@@ -258,7 +267,7 @@ def modify_proposal(barclamp, name, proposal)
     proposal_puts "No change required"
     applied = old_json["deployment"][barclamp]["crowbar-applied"]
     if applied
-      proposal_puts "Already applied; skipping commit"
+      proposal_puts "Already applied; no need to commit"
       return false
     else
       proposal_puts "Not yet applied; needs commit"
