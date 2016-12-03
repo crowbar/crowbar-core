@@ -70,6 +70,6 @@ module CrowbarHelper
 
   def self.in_sledgehammer?(node)
     states = ["ready", "readying", "recovering", "applying"]
-    not states.include?(node[:state])
+    !node.fetch(:crowbar_wall, {})[:registering] && !states.include?(node[:state])
   end
 end

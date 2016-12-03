@@ -407,7 +407,7 @@ curl -L -o /etc/chef/validation.pem \
 TMP_ATTRIBUTES=$(mktemp --suffix .json)
 
 # Make sure that we have the right target platform
-echo "{ \"target_platform\": \"$CROWBAR_OS\" }" > "$TMP_ATTRIBUTES"
+echo "{ \"target_platform\": \"$CROWBAR_OS\", \"crowbar_wall\": { \"registering\": true } }" > "$TMP_ATTRIBUTES"
 
 post_state $HOSTNAME "discovering"
 chef-client -S http://$ADMIN_IP:4000/ -N "$HOSTNAME" --json-attributes "$TMP_ATTRIBUTES"
