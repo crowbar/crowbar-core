@@ -115,7 +115,7 @@ class Api::UpgradeController < ApiController
          Crowbar::Error::EndStepRunningError => e
     render json: {
       errors: {
-        adminbackup: {
+        admin_backup: {
           data: e.message,
           help: I18n.t("api.upgrade.adminbackup.help.default")
         }
