@@ -1,0 +1,45 @@
+#!/bin/bash
+#
+# This script migrates all neutron routers to the node where the script is
+# executed. As part of the upgrade, the founder node disbanded all routers
+# to other nodes. After the founder is upgraded, all routers have to come
+# back.
+
+LOGFILE=/var/log/crowbar/node-upgrade.log
+UPGRADEDIR=/var/lib/crowbar/upgrade
+mkdir -p "`dirname "$LOGFILE"`"
+exec >>"$LOGFILE" 2>&1
+
+echo "Executing $BASH_SOURCE"
+
+set -x
+
+mkdir -p $UPGRADEDIR
+
+if [[ -f $UPGRADEDIR/crowbar-router-migration-ok ]] ; then
+    echo "router migration actions were already successfully executed"
+    exit 0
+fi
+
+set +x
+source /root/.openrc
+set -x
+
+upgraded_agent=$(neutron agent-list --binary neutron-l3-agent --host $(hostname) -f value -c id)
+routers=$(neutron router-list -f value -c id)
+for router in $routers; do
+    agent=$(neutron l3-agent-list-hosting-router $router -f value -c id)
+    old_host=$(neutron agent-show $agent -f value -c host)
+
+    # delete old router assignment to agent
+    neutron l3-agent-router-remove $agent $router
+
+    # assign router to agent in upgraded node
+    neutron l3-agent-router-add $upgraded_agent $router
+
+    # delete old routers namespaces. Unassignment didn't delete the namespaces
+    ssh $old_host ip netns delete qrouter-$router
+
+done
+
+touch $UPGRADEDIR/crowbar-router-migration-ok

@@ -294,6 +294,7 @@ describe Api::Upgrade do
         and_return(true)
       allow(Api::Upgrade).to receive(:delete_pacemaker_resources).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:post_upgrade).and_return(true)
+      allow_any_instance_of(Api::Node).to receive(:router_migration).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:join_and_chef).and_return(true)
 
       expect(subject.class.nodes).to be true

@@ -122,6 +122,14 @@ template "/usr/sbin/crowbar-delete-pacemaker-resources.sh" do
   )
 end
 
+template "/usr/sbin/crowbar-router-migration.sh" do
+  source "crowbar-router-migration.sh.erb"
+  mode "0755"
+  owner "root"
+  group "root"
+  action :create
+end
+
 has_drbd = use_ha && node.fetch("drbd", {}).fetch("rsc", {}).any?
 
 template "/usr/sbin/crowbar-post-upgrade.sh" do
