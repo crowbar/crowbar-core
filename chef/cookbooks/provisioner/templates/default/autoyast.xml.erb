@@ -58,8 +58,8 @@
         <username>glance</username>
         <user_password>!</user_password>
         <encrypted config:type="boolean">true</encrypted>
-        <uid>483</uid>
-        <gid>483</gid>
+        <uid>200</uid>
+        <gid>200</gid>
         <home>/var/lib/glance</home>
         <shell>/sbin/nologin</shell>
       </user>
@@ -67,8 +67,8 @@
         <username>qemu</username>
         <user_password>!</user_password>
         <encrypted config:type="boolean">true</encrypted>
-        <uid>484</uid>
-        <gid>484</gid>
+        <uid>201</uid>
+        <gid>201</gid>
         <home>/</home>
         <shell>/sbin/nologin</shell>
       </user>
@@ -76,19 +76,19 @@
   <groups config:type="list">
     <!-- for making HA on shared NFS backend storage work -->
     <group>
-      <gid>483</gid>
+      <gid>200</gid>
       <groupname>glance</groupname>
       <group_password>x</group_password>
       <userlist>glance</userlist>
     </group>
     <group>
-      <gid>484</gid>
+      <gid>201</gid>
       <groupname>qemu</groupname>
       <group_password>x</group_password>
       <userlist/>
     </group>
     <group>
-      <gid>485</gid>
+      <gid>202</gid>
       <groupname>kvm</groupname>
       <group_password>x</group_password>
       <userlist>qemu</userlist>
