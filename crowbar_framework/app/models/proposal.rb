@@ -17,6 +17,7 @@ class Proposal < ActiveRecord::Base
 
   after_initialize :load_properties_template, :set_default_name
   before_save :update_proposal_id
+  before_save :increment_crowbar_revision!
 
   # XXX: a 'registered' barclamp could have a has_many :proposals and have a factory
   # method for creating them. Then the check for barclamp arg would not be needed,
