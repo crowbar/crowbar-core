@@ -168,6 +168,7 @@ module Crowbar
       return true if step == current_step
       if [
         :upgrade_prechecks,
+        :admin_backup,
         :admin_repo_checks,
         :nodes_repo_checks
       ].include? step
