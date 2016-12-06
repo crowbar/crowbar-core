@@ -15,6 +15,8 @@
 #
 
 class Api::UpgradeController < ApiController
+  skip_before_filter :upgrade
+
   def show
     render json: Api::Upgrade.status
   end

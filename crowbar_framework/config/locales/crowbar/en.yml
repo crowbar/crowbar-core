@@ -890,6 +890,7 @@ en:
     chef_server_down: 'Chef server is not available'
     param_missing: 'A required parameter is missing'
     before_install: 'This API is not available before installation'
+    during_upgrade: 'This API is not available during upgrade'
 
   state:
     unknown: 'Unknown'
