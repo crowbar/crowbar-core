@@ -25,6 +25,11 @@ module SchemaMigration
   end
 
   def self.run_for_bc bc_name
+    return unless File.exist?("/var/lib/crowbar/install/crowbar-installed-ok")
+    unless system("systemctl is-active postgresql")
+      raise "Cannot run schema migrations for #{bc_name}. Database server is not running"
+    end
+
     template = get_template_for_barclamp bc_name
     return if template.nil?
 
