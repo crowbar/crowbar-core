@@ -177,7 +177,8 @@ class Api::UpgradeController < ApiController
         "passed": true,
         "errors": {}
       }
-    }
+    },
+    "best_method": "non-disruptive"
   }
   '
   def prechecks
