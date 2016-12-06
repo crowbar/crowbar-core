@@ -15,6 +15,8 @@
 #
 
 class Api::UpgradeController < ApiController
+  skip_before_filter :upgrade
+
   api :GET, "/api/upgrade", "Show the Upgrade progress"
   header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
