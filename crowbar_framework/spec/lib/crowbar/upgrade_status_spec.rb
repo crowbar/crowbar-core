@@ -199,6 +199,16 @@ describe Crowbar::UpgradeStatus do
       expect{subject.start_step(:upgrade_prechecks)}.to raise_error(Crowbar::Error::StartStepRunningError)
       expect(subject.running?(:upgrade_prechecks)).to be true
       expect(subject.end_step).to be true
+      expect(subject.start_step(:upgrade_prepare)).to be true
+      expect(subject.end_step).to be true
+      expect(subject.start_step(:admin_backup)).to be true
+      expect(subject.end_step).to be true
+      expect(subject.start_step(:admin_backup)).to be true
+      expect(subject.end_step).to be true
+      expect(subject.start_step(:admin_repo_checks)).to be true
+      expect(subject.end_step).to be true
+      expect(subject.start_step(:admin_repo_checks)).to be true
+      expect(subject.end_step).to be true
     end
 
     it "prevents repeating steps that do not allow repetition" do
