@@ -145,6 +145,8 @@ describe Api::Upgrade do
       allow_any_instance_of(CrowbarService).to receive(
         :prepare_nodes_for_os_upgrade
       ).and_raise("some Error")
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:start_step).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
       expect(subject.class.services).to eq(
         status: :unprocessable_entity,
@@ -159,6 +161,8 @@ describe Api::Upgrade do
         k.delete("ceph")
         k.delete("ha")
       end
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:start_step).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
       expect(subject.class.noderepocheck).to eq(os_repo_fixture)
     end
@@ -183,6 +187,8 @@ describe Api::Upgrade do
           "openstack" => ["x86_64"]
         )
       )
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:start_step).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
       expected = node_repocheck.tap do |k|
         k.delete("ceph")
