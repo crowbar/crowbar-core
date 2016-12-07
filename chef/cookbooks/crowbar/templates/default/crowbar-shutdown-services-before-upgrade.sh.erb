@@ -41,3 +41,20 @@ do
 done
 
 <% end %>
+
+<% if @cinder_controller %>
+
+# all cinder services must be stopped
+while cinder-manage service list 2>/dev/null | grep -q ":-)"; do
+  echo "Some cinder services are still running"
+  sleep 5
+done
+
+for service in cinder-volume cinder-scheduler; do
+    hosts=$(cinder-manage service list | grep $service | tr -s ' ' | cut -d ' ' -f 2)
+    for host in $hosts; do
+        cinder-manage service remove $service $host 2>/dev/null
+    done
+done
+
+<% end %>
