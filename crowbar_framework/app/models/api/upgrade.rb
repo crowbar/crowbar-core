@@ -85,10 +85,23 @@ module Api
       end
 
       def noderepocheck
+        upgrade_status = ::Crowbar::UpgradeStatus.new
+        upgrade_status.start_step(:nodes_repo_checks)
+
         response = {}
         addons = Api::Crowbar.addons
         addons.push("os", "openstack").each do |addon|
           response.merge!(Api::Node.repocheck(addon: addon))
+        end
+
+        unavailable_repos = response.select { |_k, v| !v["available"] }
+        if unavailable_repos.any?
+          upgrade_status.end_step(
+            false,
+            nodes_repo_checks: "#{unavailable_repos.keys.join(", ")} repositories are missing"
+          )
+        else
+          upgrade_status.end_step
         end
         response
       end
@@ -170,6 +183,9 @@ module Api
 
       # Shutdown non-essential services on all nodes.
       def services
+        upgrade_status = ::Crowbar::UpgradeStatus.new
+        upgrade_status.start_step(:nodes_services)
+
         begin
           # prepare the scripts for various actions necessary for the upgrade
           service_object = CrowbarService.new(Rails.logger)
@@ -177,6 +193,7 @@ module Api
         rescue => e
           msg = e.message
           Rails.logger.error msg
+          upgrade_status.end_step(false, nodes_services: msg)
           return {
             status: :unprocessable_entity,
             message: msg
@@ -184,9 +201,19 @@ module Api
         end
 
         # Initiate the services shutdown for all nodes
-        NodeObject.find("state:crowbar_upgrade").each(
-          &:shutdown_services_before_upgrade
-        )
+        errors = []
+        upgrade_nodes = NodeObject.find("state:crowbar_upgrade")
+        upgrade_nodes.each do |upgrade_node|
+          cmd = upgrade_node.shutdown_services_before_upgrade
+          next if cmd[0] == 200
+          errors.push(cmd[1])
+        end
+
+        if errors.any?
+          upgrade_status.end_step(false, nodes_services: errors.join(","))
+        else
+          upgrade_status.end_step
+        end
 
         {
           status: :ok,
