@@ -43,6 +43,11 @@ module Crowbar
       g.fallbacks[:rspec] = :test_unit
     end
 
+    config.middleware.use(
+      ExceptionNotification::Rack,
+      crowbar_error: {}
+    )
+
     config.before_configuration do
       Dotenv.load *Dir.glob(Rails.root.join("config", "*.env"))
 

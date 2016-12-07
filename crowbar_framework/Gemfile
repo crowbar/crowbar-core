@@ -37,6 +37,7 @@ gem "yaml_db", "~> 0.3.0"
 gem "easy_diff", "~> 0.0.5"
 gem "apipie-rails", "~> 0.3.6"
 gem "pg", "~> 0.17.1"
+gem "exception_notification", "~> 4.2.1"
 
 gem "ohai", "~> 6.24.2"
 gem "chef", "~> 10.32.2"

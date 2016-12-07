@@ -48,6 +48,9 @@ else
   gem "pg", "~> 0.17.1"
   require "pg"
 
+  gem "exception_notification", "~> 4.2.1"
+  require "exception_notification"
+
   # general stuff
   gem "activerecord-session_store", version: "~> 0.1.0"
   require "activerecord/session_store"
