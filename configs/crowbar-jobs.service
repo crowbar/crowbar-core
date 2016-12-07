@@ -1,0 +1,26 @@
+[Unit]
+Description=Crowbar Background jobs
+After=network.target syslog.target remote-fs.target chef-server.service crowbar.service
+Requires=postgresql.service
+
+[Service]
+Type=simple
+User=crowbar
+Group=crowbar
+KillMode=control-group
+TimeoutSec=300
+TimeoutStopSec=10
+
+WorkingDirectory=/opt/dell/crowbar_framework
+
+Environment="CROWBAR_ENV=production"
+Environment="CROWBAR_JOBS=2"
+EnvironmentFile=-/etc/sysconfig/crowbar
+
+ExecStart=/opt/dell/crowbar_framework/bin/delayed_job -n $CROWBAR_JOBS start
+ExecStop=/opt/dell/crowbar_framework/bin/delayed_job stop
+
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

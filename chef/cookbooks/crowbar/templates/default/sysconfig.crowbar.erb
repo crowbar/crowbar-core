@@ -40,3 +40,11 @@ CROWBAR_LISTEN="<%= @web_host %>"
 ## ServiceRestart:  crowbar
 # Port which Crowbar listens to.
 CROWBAR_PORT=<%= @web_port %>
+
+## Path:            Crowbar
+## Description:     Number of Background Jobs
+## Type:            integer
+## Default:         2
+## ServiceRestart:  crowbar-jobs
+# Sets the number of background jobs.
+CROWBAR_JOBS=2
