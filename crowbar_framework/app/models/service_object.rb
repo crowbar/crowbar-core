@@ -1302,7 +1302,7 @@ class ServiceObject
       bad_nodes.each do |node|
         pre_cached_nodes[node] ||= NodeObject.find_node_by_name(node)
         node_alias = pre_cached_nodes[node].alias
-        message += "#{node_alias}: #{node}\n"
+        message += "#{node_alias} (#{node}):\n"
         message += get_log_lines(node)
       end
       update_proposal_status(inst, "failed", message)
