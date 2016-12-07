@@ -490,7 +490,7 @@ when "suse"
         interfaces: ifs,
         nic: nic
       })
-      notifies :run, "bash[wicked-ifreload-#{nic.name}]", :immediately
+      notifies :create, "ruby_block[wicked-ifreload-required]", :immediately
     end
     if ifs[nic.name]["gateway"]
       template "/etc/sysconfig/network/ifroute-#{nic.name}" do
@@ -499,23 +499,42 @@ when "suse"
                     interfaces: ifs,
                     nic: nic
                   })
-        notifies :run, "bash[wicked-ifreload-#{nic.name}]", :immediately
+        notifies :create, "ruby_block[wicked-ifreload-required]", :immediately
       end
     else
       file "/etc/sysconfig/network/ifroute-#{nic.name}" do
         action :delete
       end
     end
-    bash "wicked-ifreload-#{nic.name}" do
-      action :nothing
-      code <<-EOF
-        wicked ifcheck --changed --quiet #{nic.name}
-        rc=$?
-        if [[ $rc != 0 ]]; then
-          wicked ifreload #{nic.name}
-        fi
-      EOF
+  end
+
+  run_wicked_ifreload = false
+
+  # This, when notified by the above "ifcfg" templates, sets run_wicked_ifreload
+  # to true (which was initialized to false in the compile phase).
+  # run_wicked_ifreload is later used as a "only_if" guard for the
+  # "wicked ifreload all" call that is needs to happen when any of the config
+  # files got updated. The purpose of doing it this way (instead of notifying the
+  # "wicked-ifreload-all" resource directly), is to make sure that the
+  # ifrelaod is only run once after all ifcfg file have been update and
+  # independent of how many of them were changed.
+  ruby_block "wicked-ifreload-required" do
+    block do
+      run_wicked_ifreload = true
     end
+    action :nothing
+  end
+
+  bash "wicked-ifreload-all" do
+    action :nothing
+    code <<-EOF
+      wicked ifcheck --changed --quiet all
+      rc=$?
+      if [[ $rc != 0 ]]; then
+        wicked ifreload all
+      fi
+    EOF
+    only_if { run_wicked_ifreload }
   end
 
   # Avoid running the wicked related thing on SLE11 nodes
