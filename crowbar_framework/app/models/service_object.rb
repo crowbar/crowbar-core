@@ -1300,6 +1300,7 @@ class ServiceObject
 
       message = "Failed to apply the proposal to:\n"
       bad_nodes.each do |node|
+        pre_cached_nodes[node] ||= NodeObject.find_node_by_name(node)
         node_alias = pre_cached_nodes[node].alias
         message += "#{node_alias}: #{node}\n"
         message += get_log_lines(node)
