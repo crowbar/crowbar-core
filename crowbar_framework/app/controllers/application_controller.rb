@@ -201,12 +201,15 @@ class ApplicationController < ActionController::Base
 
   def upgrade
     respond_to do |format|
-      format.html do
-        # redirect to the upgrade ui wizard
-        redirect_to "/upgrade"
-      end
       format.json do
-        render json: { error: I18n.t("error.during_upgrade") }, status: :service_unavailable
+        if request.post?
+          render json: { error: I18n.t("error.during_upgrade") }, status: :service_unavailable
+        else
+          return
+        end
+      end
+      format.html do
+        render "errors/during_upgrade", status: :service_unavailable
       end
     end
   end
