@@ -54,6 +54,9 @@ describe Api::UpgradeController, type: :request do
     end
 
     it "prepares the crowbar upgrade" do
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:upgrade_prepare).and_return(true)
       post "/api/upgrade/prepare", {}, headers
       expect(response).to have_http_status(:ok)
     end
@@ -204,6 +207,12 @@ describe Api::UpgradeController, type: :request do
       allow_any_instance_of(Api::Backup).to receive(:path).and_return(tarball)
       allow_any_instance_of(Api::Backup).to receive(:delete_archive).and_return(true)
       allow_any_instance_of(Api::Backup).to receive(:create_archive).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:admin_backup).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :end_step
+      ).and_return(true)
 
       post "/api/upgrade/adminbackup", { backup: { name: "crowbar_upgrade" } }, headers
       expect(response).to have_http_status(:ok)
