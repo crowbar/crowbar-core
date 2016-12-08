@@ -788,8 +788,8 @@ en:
           help:
             default: 'Make sure Ceph is healthy'
         clusters_health:
-          crm_failures: '"crm status" failed at nodes %nodes.'
-          failed_actions: '"crm status" is showing some failed actions at nodes %nodes.'
+          crm_failures: '"crm status" failed at nodes %{nodes}.'
+          failed_actions: '"crm status" is showing some failed actions at nodes %{nodes}.'
           help:
             default: 'Make sure clusters are healthy'
         compute_resources_check:
