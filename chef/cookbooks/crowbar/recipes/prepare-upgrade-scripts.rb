@@ -55,8 +55,8 @@ end
 
 new_alias = repo_alias.gsub("SP1", "SP2").gsub(node[:platform_version], target_platform_version)
 
-template "/usr/sbin/crowbar-upgrade-os.sh" do
-  source "crowbar-upgrade-os.erb"
+template "/usr/sbin/crowbar-prepare-repositories.sh" do
+  source "crowbar-prepare-repositories.sh.erb"
   mode "0755"
   owner "root"
   group "root"
@@ -64,10 +64,20 @@ template "/usr/sbin/crowbar-upgrade-os.sh" do
   variables(
     old_repos: old_repos,
     new_repos: new_repos,
-    target_platform_version: target_platform_version,
     old_base_repo: old_install_url,
     new_base_repo: new_install_url,
     new_alias: new_alias
+  )
+end
+
+template "/usr/sbin/crowbar-upgrade-os.sh" do
+  source "crowbar-upgrade-os.sh.erb"
+  mode "0755"
+  owner "root"
+  group "root"
+  action :create
+  variables(
+    target_platform_version: target_platform_version
   )
 end
 

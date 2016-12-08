@@ -40,6 +40,14 @@ module Api
       false
     end
 
+    def prepare_repositories
+      if execute_and_wait_for_finish("/usr/sbin/crowbar-prepare-repositories.sh", 100)
+        Rails.logger.info("Prepare of repositories was successful.")
+        return true
+      end
+      false
+    end
+
     def os_upgrade
       if execute_and_wait_for_finish("/usr/sbin/crowbar-upgrade-os.sh", 600)
         Rails.logger.info("Package upgrade was successful.")
@@ -108,6 +116,11 @@ module Api
 
     # Do the complete package upgrade of one node
     def upgrade
+      unless prepare_repositories
+        save_error_state("Error while executing prepare repositories script")
+        return false
+      end
+
       unless pre_upgrade
         save_error_state("Error while executing pre upgrade script")
         return false
