@@ -411,6 +411,7 @@ module Api
         save_upgrade_state("Starting the upgrade of node #{drbd_master}")
         return false unless master_node_api.upgrade
         return false unless master_node_api.post_upgrade
+        return false unless master_node_api.join_and_chef
         # Remove pre-upgrade attribute after chef-client run because pacemaker is already running
         # and we want the configuration to be updated first
         return false unless node_api.disable_pre_upgrade_attribute_for drbd_master
