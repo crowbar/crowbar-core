@@ -88,10 +88,20 @@ class MachinesController < BarclampController
 
   add_help(:rename, [:id])
   def rename
-    @machine.alias = params[:alias]
+    alias_error = nil
+    begin
+      @machine.alias = params[:alias]
+    rescue StandardError => e
+      alias_error = e.message
+    end
 
     respond_to do |format|
-      if @machine.save
+      if alias_error
+        format.json do
+          render json: { error: "#{I18n.t("cannot_save_node", scope: "error")} #{alias_error}" },
+                 status: :not_acceptable
+        end
+      elsif @machine.save
         format.json { head :ok }
       else
         format.json do
