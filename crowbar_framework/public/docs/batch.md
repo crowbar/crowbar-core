@@ -1,7 +1,7 @@
 # `crowbar-batch`
 
 This is the documentation for the
-[`crowbar batch`](../bin/crowbar_batch) subcommand.
+[`crowbar batch`](../../../bin/crowbar_batch) subcommand.
 
 ## Description
 
