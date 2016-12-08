@@ -111,6 +111,41 @@ describe Api::Upgrade do
         eq(crowbar_repocheck)
       )
     end
+
+    it "has only one repository that is not available" do
+      allow(Api::Upgrade).to(
+        receive(:repo_version_available?).with(
+          Hash.from_xml(crowbar_repocheck_zypper)["stream"]["product_list"]["product"],
+          "SLES",
+          "12.2"
+        ).and_return(false)
+      )
+      allow(Api::Upgrade).to(
+        receive(:repo_version_available?).with(
+          Hash.from_xml(crowbar_repocheck_zypper)["stream"]["product_list"]["product"],
+          "suse-openstack-cloud",
+          "7"
+        ).and_return(true)
+      )
+      allow(Api::Upgrade).to(
+        receive(:admin_architecture).and_return("x86_64")
+      )
+      allow_any_instance_of(Kernel).to(
+        receive(:`).with(
+          "sudo /usr/bin/zypper-retry --xmlout products"
+        ).and_return(crowbar_repocheck_zypper)
+      )
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:admin_repo_checks).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :end_step
+      ).and_return(true)
+
+      expect(subject.class.adminrepocheck.deep_stringify_keys).to_not(
+        eq(crowbar_repocheck.merge(subject.class.adminrepocheck[:os]))
+      )
+    end
   end
 
   context "with a locked zypper" do
