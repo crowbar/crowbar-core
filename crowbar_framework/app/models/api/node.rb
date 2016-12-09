@@ -66,6 +66,13 @@ module Api
     end
 
     def join_and_chef
+      # Mark this upgrade step, so chef-client run can also start disabled services
+      unless @node["crowbar_wall"]["crowbar_upgrade_step"] == "done_os_upgrade"
+        # Make sure we save with the latest node data
+        @node = ::Node.find_by_name(@node.name)
+        @node["crowbar_wall"]["crowbar_upgrade_step"] = "done_os_upgrade"
+        @node.save
+      end
       begin
         execute_and_wait_for_finish("/usr/sbin/crowbar-chef-upgraded.sh", 600)
       rescue StandardError => e

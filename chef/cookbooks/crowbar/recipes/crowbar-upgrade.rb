@@ -30,7 +30,7 @@ Chef::Log.info("Current upgrade step: #{upgrade_step}")
 
 case upgrade_step
 
-when "revert_to_ready"
+when "revert_to_ready", "done_os_upgrade"
 
   service "crowbar_join" do
     action :enable
