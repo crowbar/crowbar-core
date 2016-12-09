@@ -377,6 +377,11 @@ describe Api::Upgrade do
       allow_any_instance_of(Api::Node).to receive(:router_migration).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:join_and_chef).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:save_node_state).and_return(true)
+      allow(NodeObject).to(
+        receive(:find).
+        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+      )
+      allow(Api::Upgrade).to receive(:upgrade_all_compute_nodes).and_return(true)
 
       expect(subject.class.nodes).to be true
     end

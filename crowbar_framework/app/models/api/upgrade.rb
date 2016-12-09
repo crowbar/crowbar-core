@@ -304,7 +304,7 @@ module Api
         end
 
         if substep == "computes"
-          return false unless upgrade_compute_nodes
+          return false unless upgrade_all_compute_nodes
         end
         # FIXME: mark the whole step as done
         true
@@ -470,8 +470,62 @@ module Api
         Rails.logger.error(message)
       end
 
-      def upgrade_compute_nodes
-        # TODO: not implemented
+      def upgrade_all_compute_nodes
+        ["kvm", "xen"].each do |virt|
+          return false unless upgrade_compute_nodes virt
+        end
+        true
+      end
+
+      def upgrade_compute_nodes(virt)
+        save_upgrade_state("Upgrading compute nodes of #{virt} type")
+        compute_nodes = NodeObject.find("roles:nova-compute-#{virt}")
+        return true if compute_nodes.empty?
+
+        controller = NodeObject.find("roles:nova-controller").first
+        if controller.nil?
+          save_error_state("No nova controller node was found!")
+          return false
+        end
+
+        # FIXME: action in this block could be executed in parallel for all compute nodes!
+        # should we use chef-client for that?
+        compute_nodes.each do |node|
+          node_api = Api::Node.new node.name
+          # prepare the repositories (we could actually do this in paralel for all nodes!)
+          return false unless node_api.prepare_repositories
+          # upgrade specific services (nova-compute, neutron agent, cinder)
+          # adapt the config files so the upgraded services can run
+          # start the services
+          return false unless node_api.pre_upgrade
+        end
+
+        compute_nodes.each do |n|
+          node_api = Api::Node.new n.name
+
+          # FIXME: this is the main part of the whole upgrade
+          # from controller node (ha!) execute "nova host-evacuate-live"
+          # ... and wait until live-migration finishes
+
+          # upgrade and reboot the node
+          return false unless node_api.os_upgrade
+          return false unless node_api.reboot_and_wait
+          return false unless node_api.post_upgrade
+          return false unless node_api.join_and_chef
+
+          out = controller.run_ssh_cmd(
+            "source /root/.openrc; nova service-enable #{n.name} nova-compute"
+          )
+          unless out[:exit_code].zero?
+            save_error_state(
+              "Enabling nova-compute service for #{n.name} has failed!" \
+              "Check nova log files at #{controller.name} and #{n.name}."
+            )
+            return false
+          end
+          save_upgrade_state("Node #{n.name} successfully upgraded.")
+        end
+        # FIXME: finalize compute nodes (move upgrade_step to done etc.)
         true
       end
 
