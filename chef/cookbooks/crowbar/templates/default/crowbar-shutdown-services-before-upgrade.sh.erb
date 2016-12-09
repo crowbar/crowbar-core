@@ -12,6 +12,8 @@ echo "Executing $BASH_SOURCE"
 set -x
 
 <% if @use_ha %>
+
+<% if @cluster_founder %>
 echo "Stopping pacemaker resources..."
 
 exclude="postgresql|vip|rabbitmq|keystone|neutron|haproxy"
@@ -22,6 +24,11 @@ for type in clone ms primitive; do
         crm --force --wait resource stop $resource
     done
 done
+
+<% end %>
+
+# stop cinder-volume at all nodes so the service could be removed from the database later
+/etc/init.d/openstack-cinder-volume stop
 
 <% else %>
 
@@ -42,7 +49,7 @@ done
 
 <% end %>
 
-<% if @cinder_controller %>
+<% if @cinder_controller && (!@use_ha || @cluster_founder) %>
 
 # all cinder services must be stopped
 while cinder-manage service list 2>/dev/null | grep -q ":-)"; do

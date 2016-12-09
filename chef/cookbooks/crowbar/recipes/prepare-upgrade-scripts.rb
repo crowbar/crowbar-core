@@ -87,6 +87,7 @@ template "/usr/sbin/crowbar-shutdown-services-before-upgrade.sh" do
   action :create
   variables(
     cinder_controller: cinder_controller,
+    cluster_founder: use_ha && (node["pacemaker"]["founder"] || false),
     use_ha: use_ha
   )
 end
