@@ -63,4 +63,15 @@ namespace :crowbar do
       end
     end
   end
+
+  desc "Import single/all not known node/s from chef into crowbar"
+  task import_all_nodes_from_chef: :environment do |t, args|
+    # FIXME: Remove NodeObject dependency
+    NodeObject.all.each do |node|
+      unless Api::Node.exists?(name: node.name)
+        puts "import #{node.alias} (#{node.name}) from chef..."
+        Api::Node.create(name: node.name, alias: node.alias, last_seen: DateTime.now)
+      end
+    end
+  end
 end

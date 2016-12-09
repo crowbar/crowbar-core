@@ -15,13 +15,14 @@
 #
 
 module Api
-  class Node < Tableless
-    attr_reader :name
-    attr_reader :ssh
+  class Node < ActiveRecord::Base
+    validates :name, presence: true
+    validates :name, uniqueness: true
 
-    def initialize(name = nil)
-      @name = name
-      @ssh = ::Crowbar::Connection::SSH.new("root", name)
+    validates :alias, presence: true
+
+    def ssh
+      @ssh ||= ::Crowbar::Connection::SSH.new("root", name)
     end
 
     # execute script in background and wait for it to finish

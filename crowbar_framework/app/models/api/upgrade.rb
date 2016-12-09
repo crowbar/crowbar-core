@@ -297,10 +297,11 @@ module Api
 
         # 1. upgrade the founder
         save_upgrade_state("Starting the upgrade of node #{founder.name}")
-        founder_api = Api::Node.new founder.name
+
+        founder_api = Api::Node.find_by name: founder.name
         return false unless founder_api.upgrade
 
-        non_founder_api = Api::Node.new non_founder.name
+        non_founder_api = Api::Node.find_by name: non_founder.name
         # 2. remove pre-upgrade attribute
         return false unless non_founder_api.disable_pre_upgrade_attribute_for founder.name
 
@@ -322,7 +323,7 @@ module Api
           name = node.name
           save_upgrade_state("Starting the upgrade of node #{name}")
 
-          node_api = Api::Node.new name
+          node_api = Api::Node.find_by name: name
           return false unless node_api.upgrade
 
           # start crowbar-join
@@ -377,7 +378,7 @@ module Api
         end
         return false if drbd_slave.empty?
 
-        node_api = Api::Node.new drbd_slave
+        node_api = Api::Node.find_by name: drbd_slave
 
         save_upgrade_state("Starting the upgrade of node #{drbd_slave}")
         return false unless node_api.upgrade
@@ -392,7 +393,7 @@ module Api
 
         # Remove "pre-upgrade" attribute from node1
         # We must do it from a node where pacemaker is running
-        master_node_api = Api::Node.new drbd_master
+        master_node_api = Api::Node.find_by name: drbd_master
         return false unless master_node_api.disable_pre_upgrade_attribute_for drbd_slave
 
         # FIXME: this should be one time action only (for each cluster)
