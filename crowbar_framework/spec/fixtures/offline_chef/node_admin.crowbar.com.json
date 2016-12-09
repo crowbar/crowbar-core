@@ -67,6 +67,9 @@
     },
     "crowbar": {
       "admin_node": true
+    },
+    "provisioner": {
+      "chef_client_runs": 900
     }
   },
   "json_class": "Chef::Node",
