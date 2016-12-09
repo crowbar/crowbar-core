@@ -170,9 +170,10 @@ module Api
 
           if ret.any? { |_k, v| !v[:available] }
             missing_repos = ret.collect do |k, v|
+              next if v[:repos].empty?
               missing_repo_arch = v[:repos].keys.first.to_sym
               v[:repos][missing_repo_arch][:missing]
-            end.flatten.join(", ")
+            end.flatten.compact.join(", ")
             upgrade_status.end_step(
               false,
               adminrepocheck: "Missing repositories: #{missing_repos}"
