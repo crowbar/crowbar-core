@@ -55,4 +55,52 @@ ovs-vsctl set-fail-mode <%= bridge %> standalone
 echo "Reloading wicked configuration for all interfaces"
 wicked ifreload all
 
+<% if @compute_node %>
+
+echo "Upgrading services needed to act as nova-compute node"
+
+zypper --non-interactive up openstack-nova-compute
+# This is ugly, but fixing neutron spec to upgrade to correct version of pecan is even uglier:
+zypper --non-interactive up python-pecan
+zypper --non-interactive install crudini
+
+echo "Upgrading configuration for Newton based packages"
+
+crudini --set /etc/nova/nova.conf.d/200-crowbar-upgrade.conf DEFAULT use_neutron true
+
+zypper --non-interactive up <%= @neutron_agent %>
+<% case @neutron_agent %>
+<% when "openstack-neutron-openvswitch-agent" %>
+crudini --set /etc/neutron/neutron-openvswitch-agent.conf.d/200-crowbar-upgrade.conf ovs ovsdb_interface vsctl
+crudini --set /etc/neutron/neutron-openvswitch-agent.conf.d/200-crowbar-upgrade.conf ovs of_interface ovs-ofctl
+<% when "openstack-neutron-linuxbridge-agent" %>
+<% # FIXME: configuration changes for linuxbridge %>
+<% end %>
+systemctl start <%= @neutron_agent %>
+
+<% if @l3_agent %>
+zypper --non-interactive up <%= @l3_agent %>
+<% # FIXME: configuration changes for l3 agent %>
+systemctl start <%= @l3_agent %>
+<% end %>
+
+<% if @metadata_agent %>
+zypper --non-interactive up <%= @metadata_agent %>
+<% # FIXME: configuration changes for metadata agent %>
+systemctl start <%= @metadata_agent %>
+<% end %>
+
+systemctl start openstack-nova-compute.service
+
+<% if @cinder_volume %>
+zypper --non-interactive up openstack-cinder-volume
+systemctl start openstack-cinder-volume.service
+<% end %>
+
+# Remove temporary config options
+rm -f /etc/nova/nova.conf.d/200-crowbar-upgrade.conf
+rm -f /etc/neutron/neutron-openvswitch-agent.conf.d/200-crowbar-upgrade.conf
+
+<% end %>
+
 touch $UPGRADEDIR/crowbar-pre-upgrade-ok
