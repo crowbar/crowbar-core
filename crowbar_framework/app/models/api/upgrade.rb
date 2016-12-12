@@ -460,6 +460,23 @@ module Api
         end
       end
 
+      # Live migrate all instances of the specified
+      # node to other available hosts.
+      def live_evacuate_compute_node(controller, compute)
+        controller.wait_for_script_to_finish(
+          "/usr/sbin/crowbar-evacuate-host.sh", 300, [compute]
+        )
+        save_upgrade_state(
+          "Migrating instances from node #{compute} was successful."
+        )
+      rescue StandardError => e
+        save_error_state(
+          e.message +
+          "Check /var/log/crowbar/node-upgrade.log at #{controller.name} for details."
+        )
+        return false
+      end
+
       def save_upgrade_state(message = "")
         # FIXME: update the global status
         Rails.logger.info(message)
@@ -502,12 +519,7 @@ module Api
 
         compute_nodes.each do |n|
           node_api = Api::Node.new n.name
-
-          # FIXME: this is the main part of the whole upgrade
-          # from controller node (ha!) execute "nova host-evacuate-live"
-          # ... and wait until live-migration finishes
-
-          # upgrade and reboot the node
+          return false unless live_evacuate_compute_node(controller, n.name)
           return false unless node_api.os_upgrade
           return false unless node_api.reboot_and_wait
           return false unless node_api.post_upgrade

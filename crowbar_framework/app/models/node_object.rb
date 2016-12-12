@@ -1075,8 +1075,10 @@ class NodeObject < ChefObject
   # Executes a script in background and Waits until it finishes.
   # We expect that the script generates two kinds of files to indicate success or failure.
   # Raise a timeout exception if the waiting time exceedes 'seconds'
-  def wait_for_script_to_finish(script, seconds)
-    ssh_status = ssh_cmd(script)
+  def wait_for_script_to_finish(script, seconds, args = [])
+    cmd = script
+    cmd += " " + args.join(" ") unless args.empty?
+    ssh_status = ssh_cmd(cmd)
     if ssh_status[0] != 200
       raise "Executing of script #{script} has failed on node #{@node.name}."
     end

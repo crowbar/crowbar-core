@@ -1,0 +1,44 @@
+#!/bin/bash
+#
+# This script has to be run from nova controller node.
+# It takes name of compute node as an argument and live-migrates all running instancess
+# from this compute node.
+
+LOGFILE=/var/log/crowbar/node-upgrade.log
+UPGRADEDIR=/var/lib/crowbar/upgrade
+mkdir -p "`dirname "$LOGFILE"`"
+exec >>"$LOGFILE" 2>&1
+
+echo "Executing $BASH_SOURCE"
+
+host=$1
+
+if [ "$host" = "" ]; then
+    echo "No argument was given! Exiting..."
+    touch $UPGRADEDIR/crowbar-evacuate-host-failed
+    exit 1
+fi
+
+mkdir -p $UPGRADEDIR
+
+set +x
+source /root/.openrc
+set -x
+
+nova service-disable "$host" nova-compute
+
+if ! nova host-evacuate-live "$host"; then
+    echo "Live migration of instances from host $host has failed!"
+    touch $UPGRADEDIR/crowbar-evacuate-host-failed
+    exit 2
+fi
+
+# FIXME: here we need checks for potential errors during the evacuation
+
+while nova list --host "$host" --fields host 2>/dev/null | grep "$host"; do
+    echo "There is still some VM running at $host..."
+    sleep 10
+done
+
+
+touch $UPGRADEDIR/crowbar-evacuate-host-ok
