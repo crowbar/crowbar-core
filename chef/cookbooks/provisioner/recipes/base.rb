@@ -220,9 +220,8 @@ if node[:platform_family] == "suse" && !node.roles.include?("provisioner-server"
   admin_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(provisioner_server_node, "admin").address
   web_port = provisioner_server_node[:provisioner][:web_port]
 
-  ntp_instance = CrowbarHelper.get_proposal_instance(node, "ntp", "default")
-  ntp_servers = node_search_with_cache("roles:ntp-server", ntp_instance)
-  ntp_servers_ips = ntp_servers.map { |n| Chef::Recipe::Barclamp::Inventory.get_network_by_type(n, "admin").address }
+  ntp_config = Barclamp::Config.load("core", "ntp")
+  ntp_servers = ntp_config["servers"] || []
 
   template "/usr/sbin/crowbar_join" do
     mode 0o755
@@ -231,7 +230,7 @@ if node[:platform_family] == "suse" && !node.roles.include?("provisioner-server"
     source "crowbar_join.suse.sh.erb"
     variables(admin_ip: admin_ip,
               web_port: web_port,
-              ntp_servers_ips: ntp_servers_ips,
+              ntp_servers_ips: ntp_servers,
               target_platform_version: node["platform_version"] )
   end
 

@@ -70,4 +70,28 @@ class NtpService < ServiceObject
     @logger.debug("NTP transition: leaving: #{name} for #{state}")
     [200, { name: name }]
   end
+
+  def apply_role_pre_chef_call(old_role, role, all_nodes)
+    @logger.debug("NTP apply_role_pre_chef_call: entering #{all_nodes.inspect}")
+
+    save_config_to_databag(old_role, role)
+
+    @logger.debug("NTP apply_role_pre_chef_call: leaving")
+  end
+
+  def save_config_to_databag(old_role, role)
+    if role.nil?
+      config = nil
+    else
+      server_nodes_names = role.override_attributes["ntp"]["elements"]["ntp-server"]
+      server_nodes = server_nodes_names.map { |n| NodeObject.find_node_by_name n }
+
+      addresses = server_nodes.map { |n| n.get_network_by_type("admin")["address"] }.sort
+
+      config = { servers: addresses }
+    end
+
+    instance = Crowbar::DataBagConfig.instance_from_role(old_role, role)
+    Crowbar::DataBagConfig.save("core", instance, @bc_name, config)
+  end
 end
