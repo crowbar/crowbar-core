@@ -377,5 +377,48 @@ module BarclampLibrary
         end
       end
     end
+
+    class Config
+      def self.node=(node)
+        @node = node
+      end
+
+      def self.load(group, barclamp, instance = nil)
+        # If no instance is specified, see if this node uses an instance of
+        # this barclamp and use it
+        if instance.nil? && @node[barclamp] && @node[barclamp][:config]
+          instance = @node[barclamp][:config][:environment]
+        end
+
+        # Accept environments passed as instances
+        if instance =~ /^#{barclamp}-config-(.*)/
+          instance = $1
+        elsif instance.nil?
+          instance = "default"
+        end
+
+        # Cache the config we load from data bag items.
+        # This cache needs to be invalidated for each chef-client run from
+        # chef-client daemon (which are all in the same process); so use the
+        # ohai time as a marker for that.
+        @cache ||= {}
+
+        if @cache["cache_time"] != @node[:ohai_time]
+          unless @cache["groups"].nil?
+            Chef::Log.info("Invalidating cached config loaded from data bag items")
+          end
+          @cache["groups"] = {}
+          @cache["cache_time"] = @node[:ohai_time]
+        end
+
+        @cache["groups"][group] ||= begin
+          Chef::DataBagItem.load("crowbar-config", group)
+        rescue Net::HTTPServerException
+          {}
+        end
+
+        @cache["groups"][group].fetch(instance, {}).fetch(barclamp, {})
+      end
+    end
   end
 end

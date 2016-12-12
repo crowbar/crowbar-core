@@ -17,3 +17,4 @@ class Chef::Recipe
   include BarclampLibrary
 end
 
+Barclamp::Config.node = node
