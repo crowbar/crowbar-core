@@ -18,19 +18,13 @@
 # limitations under the License.
 #
 
-dns_instance = CrowbarHelper.get_proposal_instance(node, "dns")
-nodes = node_search_with_cache("roles:dns-server", dns_instance)
-
-dns_list = []
-if !nodes.nil? and !nodes.empty?
-  dns_list = nodes.map { |x| Chef::Recipe::Barclamp::Inventory.get_network_by_type(x, "admin").address }
-  dns_list.sort!
-elsif !node["crowbar"].nil? and node["crowbar"]["admin_node"] and !node[:dns][:forwarders].nil?
-  dns_list << node[:dns][:forwarders]
+dns_config = Barclamp::Config.load("core", "dns")
+dns_list = dns_config["servers"] || []
+if dns_list.empty? && \
+    !node["crowbar"].nil? && node["crowbar"]["admin_node"] && \
+    !node[:dns][:forwarders].nil?
+  dns_list = (node[:dns][:forwarders] + node[:dns][:nameservers]).flatten.compact
 end
-
-dns_list << node[:dns][:nameservers]
-dns_list.flatten!
 
 unless node[:platform_family] == "windows"
   package "dnsmasq"
@@ -40,8 +34,7 @@ unless node[:platform_family] == "windows"
     owner "root"
     group "root"
     mode 0644
-    # do a dup, because we'll insert 127.0.0.1 later on
-    variables(nameservers: dns_list.dup)
+    variables(nameservers: dns_list)
   end
 
   file "/etc/resolv-forwarders.conf" do
@@ -59,13 +52,14 @@ unless node[:platform_family] == "windows"
     not_if { node["crowbar"]["admin_node"] && File.exist?("/var/lib/crowbar/install/disable_dns") }
   end
 
-  dns_list = dns_list.insert(0, "127.0.0.1").take(3)
+  # do a dup because we modify the content
+  dns_list_with_local = dns_list.dup.insert(0, "127.0.0.1").take(3)
 
   template "/etc/resolv.conf" do
     source "resolv.conf.erb"
     owner "root"
     group "root"
     mode 0644
-    variables(nameservers: dns_list, search: node[:dns][:domain])
+    variables(nameservers: dns_list_with_local, search: node[:dns][:domain])
   end
 end
