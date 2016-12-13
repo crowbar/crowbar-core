@@ -248,7 +248,7 @@ en:
       unknown_remotes: 'Unable to find any cluster with remote nodes named'
       unsaved_changes: 'You might have unsaved changes; do you really want to switch to another page?'
       proposal_reset: 'Failed to save proposal reset state'
-      nodes_reset: 'Failed to reset all related nodes'
+      nodes_reset: 'Failed to reset nodes: %{nodes}'
 
   docs:
     index:
