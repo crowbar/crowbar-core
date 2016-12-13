@@ -235,7 +235,13 @@ class NodeObject < ChefObject
     machine["fqdn"] = "#{new_name}"
     role = RoleObject.find_role_by_name NodeObject.make_role_name(new_name)
     role = NodeObject.create_new_role(new_name, machine) if role.nil?
-    NodeObject.new machine
+    node = NodeObject.new machine
+
+    unless Api::Node.exists?(name: new_name)
+      Api::Node.create(name: new_name, alias: node.alias, last_seen: DateTime.now)
+    end
+
+    node
   end
 
   def method_missing(method, *args, &block)
@@ -841,6 +847,9 @@ class NodeObject < ChefObject
     Rails.logger.debug("Destroying node: #{@node.name} - #{crowbar_revision}")
     @role.destroy
     @node.destroy
+    if Api::Node.exists?(@node.name)
+      Api::Node.destroy(name: @node.name)
+    end
     Rails.logger.debug("Done with removal of node: #{@node.name} - #{crowbar_revision}")
   end
 
