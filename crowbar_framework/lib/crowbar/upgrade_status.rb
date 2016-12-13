@@ -112,6 +112,9 @@ module Crowbar
         }
         next_step
         save
+        if finished? && success
+          FileUtils.touch("/var/lib/crowbar/upgrade/6-to-7-upgraded-ok")
+        end
         success
       end
     end

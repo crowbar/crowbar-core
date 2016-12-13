@@ -188,6 +188,7 @@ describe Crowbar::UpgradeStatus do
       expect(subject.end_step).to be true
       expect(subject.current_step).to eql :nodes_upgrade
       expect(subject.start_step(:nodes_upgrade)).to be true
+      allow(FileUtils).to receive(:touch).and_return(true)
       expect(subject.end_step).to be true
       expect(subject.current_step).to eql :finished
       expect(subject.finished?).to be true
