@@ -1203,31 +1203,15 @@ class ServiceObject
         node_attr_cache[node_name]["windows"] || node_attr_cache[node_name]["admin"]
       end
 
-      begin
-        apply_locks = []
-        # do not use a map to set apply_locks: if there's a failure, we need the
-        # variable to contain the locks that were acquired; with a map, the
-        # variable would be empty.
-        nodes_to_lock.each do |node|
-          apply_lock = Crowbar::Lock::SharedNonBlocking.new(
-            logger: Rails.logger,
-            path: "/var/chef/cache/pause-file.lock",
-            node: node,
-            owner: "apply_role-#{role.name}-#{inst}-#{Process.pid}",
-            reason: "apply_role(#{role.name}, #{inst}, #{in_queue}) pid #{Process.pid}"
-          ).acquire
-          apply_locks.push(apply_lock)
-        end
-      rescue Crowbar::Error::LockingFailure => e
-        Rails.logger.progress("Failed to apply role #{role.name}")
-        message = "Failed to apply the proposal: #{e.message}"
-        update_proposal_status(inst, "failed", message)
-        return [409, message] # 409 is 'Conflict'
-      end
+      owner = "apply_role-#{role.name}-#{inst}-#{Process.pid}"
+      reason = "apply_role(#{role.name}, #{inst}, #{in_queue}) pid #{Process.pid}"
+      apply_locks, errors = lock_and_wait_for_chef_clients(nodes_to_lock, owner, reason)
 
-      # Now that we've ensured no new intervallic runs can be started,
-      # wait for any which started before we paused the daemons.
-      wait_for_chef_daemons(applying_nodes)
+      unless errors.empty?
+        message = "Failed to apply the proposal:\n#{errors.values.join("\n")}"
+        update_proposal_status(inst, "failed", message)
+        return [409, message] # 409 is 'Conflict', which makes sense for locks
+      end
     end
 
     # By this point, no intervallic runs should be running, and no
@@ -1399,7 +1383,7 @@ class ServiceObject
     update_proposal_status(inst, "failed", message)
     [405, message]
   ensure
-    apply_locks.each(&:release) if apply_locks.any?
+    release_chef_locks(apply_locks)
     restore_to_ready(applying_nodes) if applying_nodes.any?
     process_queue unless in_queue
   end
@@ -1539,6 +1523,58 @@ class ServiceObject
   end
 
   private
+
+  def release_chef_locks(locks)
+    return if locks.empty?
+
+    locks.each_slice(20) do |lock_batch|
+      threads = []
+      lock_batch.each do |lock|
+        threads.push(Thread.new { lock.release })
+      end
+      logger.debug "Waiting for #{threads.length} unlock threads to finish..."
+      ThreadsWait.all_waits(threads)
+    end
+  end
+
+  def lock_and_wait_for_chef_clients(nodes, lock_owner, lock_reason)
+    locks = []
+    errors = {}
+    locks_mutex = Mutex.new
+    errors_mutex = Mutex.new
+
+    nodes.each_slice(20) do |node_batch|
+      threads = {}
+      node_batch.each do |node|
+        thread = Thread.new do
+          begin
+            lock = Crowbar::Lock::SharedNonBlocking.new(
+              logger: @logger,
+              path: "/var/chef/cache/pause-file.lock",
+              node: node,
+              owner: lock_owner,
+              reason: lock_reason
+            ).acquire
+            locks_mutex.synchronize { locks.push(lock) }
+            # Now that we've ensured no new intervallic runs can be started,
+            # wait for any which started before we paused the daemons.
+            wait_for_chef_clients(node, logger: true)
+          rescue Crowbar::Error::LockingFailure => e
+            errors_mutex.synchronize { errors[node] = e.message }
+          end
+        end
+        threads[thread] = node
+      end
+
+      # wait for all running threads and collect the ones with a non-zero return value
+      logger.debug "Waiting for #{threads.keys.length} lock threads to finish..."
+      ThreadsWait.all_waits(threads.keys)
+
+      break unless errors.empty?
+    end
+
+    [locks, errors]
+  end
 
   def wait_for_chef_clients(node_name, options = {})
     options = options.include?(:logger) ? { logger: Rails.logger } : {}
