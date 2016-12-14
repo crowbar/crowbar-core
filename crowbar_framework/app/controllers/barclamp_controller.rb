@@ -625,7 +625,8 @@ class BarclampController < ApplicationController
           @proposal["attributes"][params[:barclamp]] = JSON.parse(params[:proposal_attributes])
           @proposal["deployment"][params[:barclamp]] = JSON.parse(params[:proposal_deployment])
           @service_object.save_proposal!(@proposal)
-          answer = @service_object.proposal_commit(params[:name])
+          # validation already happened on save
+          answer = @service_object.proposal_commit(params[:name], validate: false, validate_after_save: false)
           flash[:alert] = answer[1] if answer[0] >= 400
           flash[:notice] = answer[1] if answer[0] >= 300 and answer[0] < 400
           flash[:notice] = t("barclamp.proposal_show.commit_proposal_success") if answer[0] == 200
