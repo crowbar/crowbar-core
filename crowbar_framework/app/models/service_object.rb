@@ -541,7 +541,13 @@ class ServiceObject
   # XXX: this is where proposal gets copied into a role, scheduling / ops order
   # is computed (in apply_role) and chef client gets called on the nodes.
   # Hopefully, this will get moved into a background job.
-  def proposal_commit(inst, in_queue = false, validate_after_save = true, bootstrap = false)
+  def proposal_commit(inst, options = {})
+    options.reverse_merge!(
+      in_queue: false,
+      validate_after_save: true,
+      bootstrap: false
+    )
+
     prop = Proposal.where(barclamp: @bc_name, name: inst).first
 
     if prop.nil?
@@ -553,8 +559,8 @@ class ServiceObject
       begin
         # Put mark on the wall
         prop["deployment"][@bc_name]["crowbar-committing"] = true
-        save_proposal!(prop, validate_after_save: validate_after_save)
-        response = active_update(prop.raw_data, inst, in_queue, bootstrap)
+        save_proposal!(prop, validate_after_save: options[:validate_after_save])
+        response = active_update(prop.raw_data, inst, options[:in_queue], options[:bootstrap])
       rescue Chef::Exceptions::ValidationFailed => e
         @logger.error ([e.message] + e.backtrace).join("\n")
         response = [400, "Failed to validate proposal: #{e.message}"]

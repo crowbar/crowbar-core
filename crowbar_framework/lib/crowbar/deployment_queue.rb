@@ -202,8 +202,7 @@ module Crowbar
       service = ServiceObject.get_service(bc).new(logger)
 
       # This will call apply_role and chef-client.
-      # Params: (inst, in_queue, validate_after_save)
-      status, message = service.proposal_commit(inst, true, false)
+      status, message = service.proposal_commit(inst, in_queue: true, validate_after_save: false)
 
       logger.debug("process queue: committed item #{bc}:#{inst}: results = #{message.inspect}")
 
