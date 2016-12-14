@@ -87,4 +87,17 @@ end
 
 o = Ohai::System.new
 o.all_plugins
+
+# drop virtual interfaces, to not overload chef
+virtual_intfs = ["tap", "qbr", "qvo", "qvb", "brq"]
+o.data["network"]["interfaces"].each_key do |intf|
+  if virtual_intfs.include?(intf.slice(0..2))
+    o.data["network"]["interfaces"].delete(intf)
+  end
+end
+
+# the virtual interfaces are also in there, but generally speaking, we don't
+# need counters
+o.data.delete("counters")
+
 node.automatic_attrs.merge! o.data
