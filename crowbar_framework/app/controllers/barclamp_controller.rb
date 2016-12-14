@@ -22,6 +22,7 @@ class BarclampController < ApplicationController
   wrap_parameters false
 
   skip_before_filter :enforce_installer, if: proc { Crowbar::Installer.initial_chef_client? }
+  skip_before_filter :upgrade, only: [:transition]
   before_filter :initialize_service
   before_filter :controller_to_barclamp
 
