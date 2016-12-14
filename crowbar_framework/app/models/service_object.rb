@@ -508,12 +508,12 @@ class ServiceObject
     proposal_create(params)
   end
 
-  def proposal_edit(params, validate_after_save = true)
+  def proposal_edit(params)
     base_id = params["id"] || params[:name]
     params["id"] = "#{@bc_name}-#{base_id}"
     proposal = {}.merge(params)
     clean_proposal(proposal)
-    _proposal_update(@bc_name, base_id, proposal, validate_after_save)
+    _proposal_update(@bc_name, base_id, proposal, true)
   end
 
   def proposal_delete(inst)
