@@ -1094,7 +1094,7 @@ class NodeObject < ChefObject
             break
           end
           if file_exist? failed_file
-            raise "Execution of script #{script} at node #{@node.name} has failed"
+            raise "Execution of script #{script} at node #{@node.name} has failed."
           end
           sleep(5)
         end
