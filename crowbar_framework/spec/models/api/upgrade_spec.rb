@@ -118,6 +118,9 @@ describe Api::Upgrade do
 
   context "with a successful services shutdown" do
     it "prepares and shuts down services on cluster founder nodes" do
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:nodes_services).and_return(true)
       allow_any_instance_of(CrowbarService).to receive(
         :prepare_nodes_for_os_upgrade
       ).and_return(true)
@@ -129,9 +132,6 @@ describe Api::Upgrade do
         receive(:shutdown_services_before_upgrade).
         and_return([200, "Some Error"])
       )
-      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
-        :start_step
-      ).with(:nodes_services).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :end_step
       ).and_return(true)

@@ -77,7 +77,6 @@ end
 
 # Find out now if we have HA setup and pass that info to the script
 use_ha = node["run_list_map"].key? "pacemaker-cluster-member"
-cinder_controller = node["run_list_map"].key? "cinder-controller"
 
 template "/usr/sbin/crowbar-shutdown-services-before-upgrade.sh" do
   source "crowbar-shutdown-services-before-upgrade.sh.erb"
@@ -86,10 +85,20 @@ template "/usr/sbin/crowbar-shutdown-services-before-upgrade.sh" do
   group "root"
   action :create
   variables(
-    cinder_controller: cinder_controller,
-    cluster_founder: use_ha && (node["pacemaker"]["founder"] || false),
     use_ha: use_ha
   )
+end
+
+cinder_controller = node["run_list_map"].key? "cinder-controller"
+cluster_founder = use_ha && node["pacemaker"]["founder"]
+
+template "/usr/sbin/crowbar-delete-cinder-services-before-upgrade.sh" do
+  source "crowbar-delete-cinder-services-before-upgrade.sh.erb"
+  mode "0755"
+  owner "root"
+  group "root"
+  action :create
+  only_if { cinder_controller && (!use_ha || cluster_founder) }
 end
 
 # Find all ovs bridges that we manage to be able to reset their fail-mode

@@ -1110,7 +1110,7 @@ class NodeObject < ChefObject
       # For all nodes in cluster, set the pre-upgrade attribute
       ssh_cmd("crm node attribute $(hostname) set pre-upgrade true")
     end
-    # For all nodes, we need to shutdown the services at each node
+    # Initiate the shutdown of services at each node
     ssh_cmd("/usr/sbin/crowbar-shutdown-services-before-upgrade.sh")
   end
 
