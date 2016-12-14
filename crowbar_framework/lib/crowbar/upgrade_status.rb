@@ -29,7 +29,10 @@ module Crowbar
     # Return the current state of upgrade process.
     # We're keeping the information in the file so is accessible by
     # external applications and different crowbar versions.
-    def initialize(logger = Rails.logger, yaml_file = "/var/lib/crowbar/upgrade/progress.yml")
+    def initialize(
+      logger = Rails.logger,
+      yaml_file = "/var/lib/crowbar/upgrade/6-to-7-progress.yml"
+    )
       @logger = logger
       @progress_file_path = Pathname.new(yaml_file)
       load
@@ -109,6 +112,9 @@ module Crowbar
         }
         next_step
         save
+        if finished? && success
+          FileUtils.touch("/var/lib/crowbar/upgrade/6-to-7-upgraded-ok")
+        end
         success
       end
     end
