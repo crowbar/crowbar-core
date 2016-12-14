@@ -100,4 +100,14 @@ end
 # need counters
 o.data.delete("counters")
 
+# drop relatively big attributes that we know we won't use
+o.data.delete("etc")
+o.data["kernel"].delete("modules")
+
+# duplicates the cpu data
+o.data["dmi"].delete("processor")
+# when looking at cpu data, we're happy looking at the first one only; removing
+# the others avoids having tons of useless information when having many cores
+(1..(o.data["cpu"]["total"] - 1)).each { |n| o.data["cpu"].delete(n.to_s) }
+
 node.automatic_attrs.merge! o.data
