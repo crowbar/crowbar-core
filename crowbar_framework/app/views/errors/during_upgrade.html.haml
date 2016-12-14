@@ -1,0 +1,28 @@
+.navbar.navbar-inverse.navbar-fixed-top
+  .container
+    .navbar-header
+      %button.navbar-toggle
+        %span.sr-only
+          Navigation
+        %span.icon-bar
+        %span.icon-bar
+        %span.icon-bar
+      %a{ href: "/" }
+        .navbar-brand
+          %span.title
+            Crowbar
+    .collapse.navbar-collapse.navbar-right
+      %ul.nav.navbar-nav
+        %li
+          %a{ href: "/upgrade" }
+            Go to upgrade wizard
+
+.panel.panel-default.panel-warning
+  .panel-heading
+    The requested service is temporarily unavailable
+
+  .panel-body
+    %p
+      You are currently upgrading your deployment and therefore access to the Crowbar UI is
+      restricted to the <a href="/upgrade">upgrade wizard</a>.
+      Please finish the upgrade first.

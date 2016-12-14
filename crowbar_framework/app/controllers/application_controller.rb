@@ -33,6 +33,10 @@ class ApplicationController < ActionController::Base
     Crowbar::Installer.successful? || \
     Rails.env.test?
   }
+  before_filter :upgrade, if: proc {
+    File.exist?("/var/lib/crowbar/upgrade/6-to-7-progress.yml") && \
+      !File.exist?("/var/lib/crowbar/upgrade/6-to-7-upgraded-ok")
+  }
   before_filter :sanity_checks, unless: proc {
     Rails.env.test? || \
     Rails.cache.fetch(:sanity_check_errors).empty?
@@ -192,6 +196,21 @@ class ApplicationController < ActionController::Base
       end
       format.json do
         render json: { error: I18n.t("error.before_install") }, status: :unprocessable_entity
+      end
+    end
+  end
+
+  def upgrade
+    respond_to do |format|
+      format.json do
+        if request.post?
+          render json: { error: I18n.t("error.during_upgrade") }, status: :service_unavailable
+        else
+          return
+        end
+      end
+      format.html do
+        render "errors/during_upgrade", status: :service_unavailable
       end
     end
   end
