@@ -105,13 +105,25 @@ describe Crowbar::Backup::Export do
     it "exports crowbar files" do
       Crowbar::Backup::Base.export_files.each do |filemap|
         source, destination = filemap
-        next if source =~ /resolv.conf/
+        next if source =~ /resolv.conf/ || source =~ %r(/var/lib/crowbar)
         expect_any_instance_of(Kernel).to(
           receive(:system).with(
             "sudo", "cp", "-a", source, "#{@tmpdir}/crowbar/#{destination}"
           ).and_return(true)
         )
       end
+      expect_any_instance_of(Kernel).to(
+        receive(:system).with(
+          "sudo",
+          "rsync",
+          "-a",
+          "/var/lib/crowbar/",
+          "--exclude",
+          "backup",
+          "#{@tmpdir}/crowbar/data"
+        ).and_return(true)
+      )
+
       allow_any_instance_of(File).to receive(:open).and_return(true)
       allow(subject).to receive(:forwarders).and_return([])
       expect(subject.crowbar).to eq(Crowbar::Backup::Base.export_files)
