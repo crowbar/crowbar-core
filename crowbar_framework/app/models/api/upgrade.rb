@@ -297,6 +297,44 @@ module Api
 
       protected
 
+      # Method for upgrading first node of the cluster
+      # other_node_name argument is the name of any other node in the same cluster
+      def upgrade_first_cluster_node(node_name, other_node_name)
+        save_upgrade_state("Starting the upgrade of node #{node_name}")
+        node_api = Api::Node.new node_name
+        other_node_api = Api::Node.new other_node_name
+        # upgrade the first node
+        return false unless node_api.upgrade
+
+        # Explicitly mark the first node as cluster founder
+        # and in case of DRBD setup, adapt DRBD config accordingly.
+        unless Api::Pacemaker.set_node_as_founder node_name
+          save_error_state("Changing the cluster founder to #{node_name} has failed")
+          return false
+        end
+        # remove pre-upgrade attribute, so the services can start
+        return false unless other_node_api.disable_pre_upgrade_attribute_for node_name
+        # delete old pacemaker resources (from the node where old pacemaker is running)
+        return false unless delete_pacemaker_resources other_node_name
+        # start crowbar-join at the first node
+        return false unless node_api.post_upgrade
+        return false unless node_api.join_and_chef
+        # migrate routers from nodes being upgraded
+        node_api.router_migration
+      end
+
+      def upgrade_next_cluster_node(node_name)
+        save_upgrade_state("Starting the upgrade of node #{node_name}")
+        node_api = Api::Node.new node_name
+        return false unless node_api.upgrade
+        return false unless node_api.post_upgrade
+        return false unless node_api.join_and_chef
+        # Remove pre-upgrade attribute _after_ chef-client run because pacemaker is already running
+        # and we want the configuration to be updated first
+        # (disabling attribute causes starting the services on the node)
+        node_api.disable_pre_upgrade_attribute_for node_name
+      end
+
       def upgrade_controller_nodes
         drbd_nodes = NodeObject.find("drbd_rsc:*")
         return upgrade_drbd_clusters unless drbd_nodes.empty?
@@ -311,44 +349,13 @@ module Api
           "pacemaker_config_environment:#{cluster_env}"
         ).first
 
-        # 1. upgrade the founder
-        save_upgrade_state("Starting the upgrade of node #{founder.name}")
-        founder_api = Api::Node.new founder.name
-        return false unless founder_api.upgrade
+        return false unless upgrade_first_cluster_node founder.name, non_founder.name
 
-        non_founder_api = Api::Node.new non_founder.name
-        # 2. remove pre-upgrade attribute
-        return false unless non_founder_api.disable_pre_upgrade_attribute_for founder.name
-
-        # 3. delete old pacemaker resources
-        delete_pacemaker_resources non_founder.name
-
-        # 4. start crowbar-join at the first node
-        return false unless founder_api.post_upgrade
-        return false unless founder_api.join_and_chef
-
-        # 5. migrate routers from nodes being upgraded
-        return false unless founder_api.router_migration
-
-        # 6. upgrade the rest of nodes in the same cluster
+        # upgrade the rest of nodes in the same cluster
         NodeObject.find(
           "state:crowbar_upgrade AND pacemaker_config_environment:#{cluster_env}"
         ).each do |node|
-
-          name = node.name
-          save_upgrade_state("Starting the upgrade of node #{name}")
-
-          node_api = Api::Node.new name
-          return false unless node_api.upgrade
-
-          # start crowbar-join
-          return false unless node_api.post_upgrade
-          return false unless node_api.join_and_chef
-
-          # remove pre-upgrade attribute:
-          # - after chef-client run because pacemaker is already running
-          #   and we want the configuration to be updated
-          return false unless founder_api.disable_pre_upgrade_attribute_for name
+          return false unless upgrade_next_cluster_node node.name
         end
         true
       end
@@ -393,43 +400,9 @@ module Api
         end
         return false if drbd_slave.empty?
 
-        node_api = Api::Node.new drbd_slave
+        return false unless upgrade_first_cluster_node drbd_slave, drbd_master
 
-        save_upgrade_state("Starting the upgrade of node #{drbd_slave}")
-        return false unless node_api.upgrade
-
-        # Explicitly mark node1 as the cluster founder
-        # and adapt DRBD config to the new founder situation.
-        # This shoudl be one time action only (for each cluster).
-        unless Api::Pacemaker.set_node_as_founder drbd_slave
-          save_error_state("Changing the cluster founder to #{drbd_slave} has failed")
-          return false
-        end
-
-        # Remove "pre-upgrade" attribute from node1
-        # We must do it from a node where pacemaker is running
-        master_node_api = Api::Node.new drbd_master
-        return false unless master_node_api.disable_pre_upgrade_attribute_for drbd_slave
-
-        # FIXME: this should be one time action only (for each cluster)
-        return false unless delete_pacemaker_resources drbd_master
-
-        # Execute post-upgrade actions after the node has been upgraded, rebooted
-        # and the existing cluster has been cleaned up by deleting most of resources:
-        # - start pacemaker and sync DRBD devices
-        return false unless node_api.post_upgrade
-        # - initiate the first chef-client run
-        return false unless node_api.join_and_chef
-
-        # migrate routers from drbd_master to recently upgraded drbd_slave
-        return false unless node_api.router_migration
-
-        save_upgrade_state("Starting the upgrade of node #{drbd_master}")
-        return false unless master_node_api.upgrade
-        return false unless master_node_api.post_upgrade
-        # Remove pre-upgrade attribute after chef-client run because pacemaker is already running
-        # and we want the configuration to be updated first
-        return false unless node_api.disable_pre_upgrade_attribute_for drbd_master
+        return false unless upgrade_next_cluster_node drbd_master
 
         save_upgrade_state("Nodes in DRBD-based cluster successfully upgraded")
         true
