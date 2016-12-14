@@ -12,6 +12,7 @@ echo "Executing $BASH_SOURCE"
 set -x
 
 mkdir -p $UPGRADEDIR
+rm -f $UPGRADEDIR/crowbar-pre-upgrade-failed
 
 if [[ -f $UPGRADEDIR/crowbar-pre-upgrade-ok ]] ; then
     echo "Pre upgrade actions were already successfully executed"

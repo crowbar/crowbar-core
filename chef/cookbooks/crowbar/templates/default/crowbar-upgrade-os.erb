@@ -15,6 +15,11 @@ UPGRADEDIR=/var/lib/crowbar/upgrade
 RUNDIR=/var/run/crowbar/
 RUNFILE=$RUNDIR/node-upgrading
 
+mkdir -p $UPGRADEDIR
+mkdir -p $RUNDIR
+
+rm -f $UPGRADEDIR/crowbar-upgrade-os-failed
+
 cleanup()
 {
     echo "cleaning up after interrupt or exit"
@@ -27,9 +32,6 @@ cleanup()
 
 initiate_node_upgrade()
 {
-    mkdir -p $UPGRADEDIR
-    mkdir -p $RUNDIR
-
     if [[ -f $RUNFILE ]] ; then
         echo "Exit: Upgrade is already running..."
         exit 1
