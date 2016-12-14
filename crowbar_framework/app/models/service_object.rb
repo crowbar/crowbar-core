@@ -921,6 +921,9 @@ class ServiceObject
     apply_locks = []
     applying_nodes = []
 
+    # Cache some node attributes to avoid useless node reloads
+    node_attr_cache = {}
+
     # Part I: Looking up data & checks
     #
     # we look up the role in the database (if there is one), the new one is
@@ -1077,16 +1080,14 @@ class ServiceObject
           use_remove_role = !tmprole.nil?
 
           old_nodes.each do |node_name|
-            node = Node.find_node_by_name(node_name)
+            pre_cached_nodes[node_name] ||= Node.find_node_by_name(node_name)
 
             # Don't add deleted nodes to the run order, they clearly won't have
             # the old role
-            if node.nil?
+            if pre_cached_nodes[node_name].nil?
               @logger.debug "skipping deleted node #{node_name}"
               next
             end
-
-            pre_cached_nodes[node_name] = node
 
             # An old node that is not in the new deployment, drop it
             unless new_nodes.include?(node_name)
@@ -1116,7 +1117,7 @@ class ServiceObject
         # If new_nodes is empty, we are just removing the proposal.
         unless new_nodes.empty?
           new_nodes.each do |node_name|
-            node = Node.find_node_by_name(node_name)
+            pre_cached_nodes[node_name] ||= Node.find_node_by_name(node_name)
 
             # Don't add deleted nodes to the run order
             #
@@ -1129,12 +1130,10 @@ class ServiceObject
             # have some alias that be used to assign all existing nodes to a
             # role (which would be an improvement over the requirement to
             # explicitly list all nodes).
-            if node.nil?
+            if pre_cached_nodes[node_name].nil?
               @logger.debug "skipping deleted node #{node_name}"
               next
             end
-
-            pre_cached_nodes[node_name] = node
 
             pending_node_actions[node_name] ||= { remove: [], add: [] }
             pending_node_actions[node_name][:add] << role_name
@@ -1147,6 +1146,15 @@ class ServiceObject
       batches << nodes_in_batch unless nodes_in_batch.empty?
     end
     @logger.debug "batches: #{batches.inspect}"
+
+    # Cache attributes that are useful later on
+    pre_cached_nodes.each do |node_name, node|
+      node_attr_cache[node_name] = {
+        "alias" => node.alias,
+        "windows" => node[:platform_family] == "windows",
+        "admin" => node.admin?
+      }
+    end
 
     # save databag with the role removal intention
     proposal.save if save_proposal
@@ -1166,9 +1174,7 @@ class ServiceObject
       # pause-file.lock exists which the daemons will honour due to a
       # custom patch:
       nodes_to_lock = applying_nodes.reject do |node_name|
-        pre_cached_nodes[node_name] ||= Node.find_node_by_name(node_name)
-        node = pre_cached_nodes[node_name]
-        node[:platform_family] == "windows" || node.admin?
+        node_attr_cache[node_name]["windows"] || node_attr_cache[node_name]["admin"]
       end
 
       begin
@@ -1273,9 +1279,8 @@ class ServiceObject
 
       threads = {}
       nodes.each do |node|
-        pre_cached_nodes[node] ||= Node.find_node_by_name(node)
-        next if pre_cached_nodes[node][:platform_family] == "windows"
-        ran_admin = true if pre_cached_nodes[node].admin?
+        next if node_attr_cache[node]["windows"]
+        ran_admin = true if node_attr_cache[node]["admin"]
 
         filename = "#{ENV["CROWBAR_LOG_DIR"]}/chef-client/#{node}.log"
         thread = run_remote_chef_client(node, "chef-client", filename)
@@ -1296,9 +1301,7 @@ class ServiceObject
 
       message = "Failed to apply the proposal to:\n"
       bad_nodes.each do |node|
-        pre_cached_nodes[node] ||= Node.find_node_by_name(node)
-        node_alias = pre_cached_nodes[node].alias
-        message += "#{node_alias} (#{node}):\n"
+        message += "#{node_attr_cache[node]["alias"]} (#{node}):\n"
         message += get_log_lines(node)
       end
       update_proposal_status(inst, "failed", message)
