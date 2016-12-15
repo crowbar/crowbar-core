@@ -2,6 +2,8 @@
   "current_step": "upgrade_prechecks",
   "current_substep":null,
   "current_node":null,
+  "remaining_nodes": null,
+  "upgraded_nodes": null,
   "steps":{
     "upgrade_prechecks":{
       "status":"pending"
