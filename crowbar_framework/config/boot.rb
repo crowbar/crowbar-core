@@ -50,7 +50,7 @@ else
 
   gem "daemons", "~> 1.2.3"
   gem "delayed_job_active_record", "~> 4.1.1"
-  require "delayed_job"
+  require "delayed_job_active_record"
 
   # general stuff
   gem "activerecord-session_store", version: "~> 0.1.0"
