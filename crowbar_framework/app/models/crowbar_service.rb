@@ -45,7 +45,12 @@ class CrowbarService < ServiceObject
   # Unfortunatelly we need to explicitely look at crowbar-status of the proposal
   # because apply_role from this model ignores errors from superclass's apply_role.
   def commit_and_check_proposal
-    answer = proposal_commit("default", in_queue: false, validate: false, validate_after_save: false)
+    answer = proposal_commit(
+      "default",
+      in_queue: false,
+      validate: false,
+      validate_after_save: false
+    )
     # check if error message is saved in one of the nodes
     if answer.first != 200
       found_errors = []
@@ -581,7 +586,12 @@ class CrowbarService < ServiceObject
 
     unless active_proposals.include?(id)
       @logger.debug("Bootstrap: applying proposal for #{bc}.#{id}")
-      answer = service.proposal_commit(id, in_queue: false, validate_after_save: false, bootstrap: true)
+      answer = service.proposal_commit(
+        id,
+        in_queue: false,
+        validate_after_save: false,
+        bootstrap: true
+      )
       if answer[0] != 200
         msg = "Failed to commit proposal '#{id}' for '#{bc}' " \
             "(The error message was: #{answer[1].strip})"
