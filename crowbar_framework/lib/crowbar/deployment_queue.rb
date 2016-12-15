@@ -202,7 +202,12 @@ module Crowbar
       service = eval("#{bc.camelize}Service.new logger")
 
       # This will call apply_role and chef-client.
-      status, message = service.proposal_commit(inst, in_queue: true, validate: false, validate_after_save: false)
+      status, message = service.proposal_commit(
+        inst,
+        in_queue: true,
+        validate: false,
+        validate_after_save: false
+      )
 
       logger.debug("process queue: committed item #{bc}:#{inst}: results = #{message.inspect}")
 
