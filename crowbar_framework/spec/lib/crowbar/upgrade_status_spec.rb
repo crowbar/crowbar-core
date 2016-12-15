@@ -32,6 +32,16 @@ describe Crowbar::UpgradeStatus do
     File.unlink @state_file if File.exist? @state_file
   end
 
+  let(:current_node) do
+    {
+      alias: "controller-1",
+      name: "controller.1234.suse.com",
+      ip: "1.2.3.4",
+      role: "controller",
+      state: "post-upgrade"
+    }
+  end
+
   context "with a status file that does not exist" do
     it "ensures the default initial values are correct" do
       expect(subject.current_substep).to be_nil
@@ -253,6 +263,23 @@ describe Crowbar::UpgradeStatus do
       expect { subject.start_step(:admin_repo_checks) }.to raise_error(
         Crowbar::Error::StartStepOrderError
       )
+    end
+
+    it "saves and checks current node data" do
+      expect(subject.current_substep).to be_nil
+      expect(subject.progress[:current_node]).to be nil
+      expect(subject.progress[:remaining_nodes]).to be nil
+      expect(subject.progress[:upgraded_nodes]).to be nil
+
+      expect(subject.save_substep(:controllers)).to be true
+      expect(subject.current_substep).to eql :controllers
+      expect(subject.progress).to_not be_empty
+      expect(subject.save_current_node(current_node)).to be true
+      expect(subject.progress[:current_node][:name]).to be current_node[:name]
+      expect(subject.progress[:current_node][:alias]).to be current_node[:alias]
+      expect(subject.save_nodes(1, 2)).to be true
+      expect(subject.progress[:remaining_nodes]).to be 2
+      expect(subject.progress[:upgraded_nodes]).to be 1
     end
   end
 end
