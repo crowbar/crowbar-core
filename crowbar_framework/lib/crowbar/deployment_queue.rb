@@ -162,7 +162,10 @@ module Crowbar
             dequeue_proposal_no_lock(iii[:barclamp], iii[:inst])
           end
 
-          dequeue_proposal_no_lock(proposal_to_commit[:barclamp], proposal_to_commit[:inst])
+          dequeue_proposal_no_lock(
+            proposal_to_commit[:barclamp],
+            proposal_to_commit[:inst]
+          ) if proposal_to_commit
         rescue StandardError => e
           logger.error("Error processing queue: #{e.message} #{e.backtrace.join("\n")}")
           logger.debug("process queue: exit: error")
