@@ -553,7 +553,7 @@ class ServiceObject
     elsif prop["deployment"][@bc_name]["crowbar-committing"]
       [402, "#{I18n.t('.already_commit', scope: 'model.service')}: #{@bc_name}.#{inst}"]
     else
-      response = nil
+      response = [500, "Internal Error: Something went wrong."]
       begin
         # Put mark on the wall
         prop["deployment"][@bc_name]["crowbar-committing"] = true
