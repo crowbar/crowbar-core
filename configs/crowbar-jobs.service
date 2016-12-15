@@ -4,7 +4,7 @@ After=network.target syslog.target remote-fs.target chef-server.service crowbar.
 Requires=postgresql.service
 
 [Service]
-Type=simple
+Type=forking
 User=crowbar
 Group=crowbar
 KillMode=control-group
@@ -13,12 +13,12 @@ TimeoutStopSec=10
 
 WorkingDirectory=/opt/dell/crowbar_framework
 
-Environment="CROWBAR_ENV=production"
+Environment="RAILS_ENV=production"
 Environment="CROWBAR_JOBS=2"
 EnvironmentFile=-/etc/sysconfig/crowbar
 
-ExecStart=/opt/dell/crowbar_framework/bin/delayed_job -n $CROWBAR_JOBS start
-ExecStop=/opt/dell/crowbar_framework/bin/delayed_job stop
+ExecStart=/opt/dell/crowbar_framework/bin/delayed_job -n $CROWBAR_JOBS start --pid-dir=/opt/dell/crowbar_framework/tmp/pids
+ExecStop=/opt/dell/crowbar_framework/bin/delayed_job stop --pid-dir=/opt/dell/crowbar_framework/tmp/pids
 
 Restart=always
 
