@@ -558,7 +558,7 @@ class ServiceObject
         # Put mark on the wall
         prop["deployment"][@bc_name]["crowbar-committing"] = true
         save_proposal!(prop, validate_after_save: validate_after_save)
-        response = active_update prop.raw_data, inst, in_queue, bootstrap
+        response = active_update(prop.raw_data, inst, in_queue, bootstrap)
       rescue Chef::Exceptions::ValidationFailed => e
         @logger.error ([e.message] + e.backtrace).join("\n")
         response = [400, "Failed to validate proposal: #{e.message}"]
