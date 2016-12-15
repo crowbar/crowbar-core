@@ -12,6 +12,7 @@ echo "Executing $BASH_SOURCE"
 set -x
 
 mkdir -p $UPGRADEDIR
+rm -f $UPGRADEDIR/crowbar-post-upgrade-failed
 
 if [[ -f $UPGRADEDIR/crowbar-post-upgrade-ok ]] ; then
     echo "Post upgrade actions were already successfully executed"
