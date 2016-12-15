@@ -494,6 +494,44 @@ module Api
         true
       end
 
+      # Take a list of nodes and execute given script at each node in the background
+      # Wait until all scripts at all nodes correctly finish or until some error is detected
+      def execute_scripts_and_wait_for_finish(nodes, script, seconds)
+        nodes.each do |node|
+          ssh_status = node.ssh_cmd(script).first
+          if ssh_status != 200
+            save_error_state("Failed to connect to node #{node.name}!")
+            raise "Execution of script #{script} has failed on node #{node.name}."
+          end
+        end
+
+        scripts_status = {}
+        begin
+          Timeout.timeout(seconds) do
+            nodes.each do |node|
+              # wait until sript on this node finishes, than move to check next one
+              loop do
+                status = node.script_status(script)
+                scripts_status[node.name] = status
+                break if status != "running"
+                sleep 1
+              end
+            end
+          end
+          failed = scripts_status.select { |_, v| v == "failed" }.keys
+          unless failed.empty?
+            raise "Execution of script #{script} has failed at node(s) " \
+            "#{failed.join(",")}. " \
+            "Check /var/log/crowbar/node-upgrade.log for details."
+          end
+        rescue Timeout::Error
+          running = scripts_status.select { |_, v| v == "running" }.keys
+          raise "Possible error during execution of #{script} at node(s) " \
+            "#{running.join(",")}. " \
+            "Action did not finish after #{seconds} seconds."
+        end
+      end
+
       def upgrade_compute_nodes(virt)
         save_upgrade_state("Upgrading compute nodes of #{virt} type")
         compute_nodes = NodeObject.find("roles:nova-compute-#{virt}")
@@ -505,18 +543,26 @@ module Api
           return false
         end
 
-        # FIXME: action in this block could be executed in parallel for all compute nodes!
-        # should we use chef-client for that?
-        compute_nodes.each do |node|
-          node_api = Api::Node.new node.name
-          # prepare the repositories (we could actually do this in paralel for all nodes!)
-          return false unless node_api.prepare_repositories
-          # upgrade specific services (nova-compute, neutron agent, cinder)
-          # adapt the config files so the upgraded services can run
-          # start the services
-          return false unless node_api.pre_upgrade
+        # First batch of actions can be executed in parallel for all compute nodes
+        begin
+          execute_scripts_and_wait_for_finish(
+            compute_nodes,
+            "/usr/sbin/crowbar-prepare-repositories.sh",
+            120
+          )
+          save_upgrade_state("Repositories prepared successfully.")
+          execute_scripts_and_wait_for_finish(
+            compute_nodes,
+            "/usr/sbin/crowbar-pre-upgrade.sh",
+            300
+          )
+          save_upgrade_state("Services at compute nodes upgraded and prepared.")
+        rescue StandardError => e
+          save_error_state(e.message)
+          return false
         end
 
+        # Next part must be done sequentially, only one compute node can be upgraded at a time
         compute_nodes.each do |n|
           node_api = Api::Node.new n.name
           return false unless live_evacuate_compute_node(controller, n.name)
