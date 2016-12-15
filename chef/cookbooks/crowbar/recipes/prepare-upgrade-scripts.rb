@@ -35,17 +35,12 @@ new_repos = Provisioner::Repositories.get_repos(
 )
 
 # Find out the location of the base system repository
-provisioner_instance = CrowbarHelper.get_proposal_instance(node, "provisioner", "default")
-provisioner = node_search_with_cache("roles:provisioner-server", provisioner_instance).first
-admin_ip = Barclamp::Inventory.get_network_by_type(provisioner, "admin").address
+provisioner_config = Barclamp::Config.load("core", "provisioner")
 
-web_port = provisioner[:provisioner][:web_port]
-provisioner_web = "http://#{admin_ip}:#{web_port}"
-
-web_path = "#{provisioner_web}/#{node[:platform]}-#{node[:platform_version]}/#{arch}"
+web_path = "#{provisioner_config["root_url"]}/#{node[:platform]}-#{node[:platform_version]}/#{arch}"
 old_install_url = "#{web_path}/install"
 
-web_path = "#{provisioner_web}/#{node[:target_platform]}/#{arch}"
+web_path = "#{provisioner_config["root_url"]}/#{node[:target_platform]}/#{arch}"
 new_install_url = "#{web_path}/install"
 
 # try to create an alias for new base repo from the original base repo

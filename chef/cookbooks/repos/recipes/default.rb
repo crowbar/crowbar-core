@@ -15,10 +15,15 @@
 
 return if node[:platform_family] == "suse" || node[:platform_family] == "windows"
 
+# we still need to search for the provisioner node to get access to the
+# repositories, which are attributes set from the cookbook
+
 # no need to have a fallback as this recipe is run as part of the provisioner-base role
 provisioner_instance = CrowbarHelper.get_proposal_instance(node, "provisioner")
 provisioners = node_search_with_cache("roles:provisioner-server", provisioner_instance)
 provisioner = provisioners.first if provisioners
+
+provisioner_config = Barclamp::Config.load("core", "provisioner")
 
 os_token = "#{node[:platform]}-#{node[:platform_version]}"
 arch = node[:kernel][:machine]
@@ -27,10 +32,7 @@ file "/tmp/.repo_update" do
   action :nothing
 end
 
-if provisioner and !CrowbarHelper.in_sledgehammer?(node)
-  web_port = provisioner["provisioner"]["web_port"]
-  address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(provisioner, "admin").address
-
+if provisioner && !provisioner_config.empty? && !CrowbarHelper.in_sledgehammer?(node)
   case node[:platform_family]
   when "debian"
     repositories = provisioner["provisioner"]["repositories"][os_token][arch]
@@ -86,7 +88,7 @@ if provisioner and !CrowbarHelper.in_sledgehammer?(node)
 
   if node[:platform_family] != "suse" && node[:platform_family] != "windows"
     template "/etc/gemrc" do
-      variables(admin_ip: address, web_port: web_port)
+      variables(root_url: provisioner_config["root_url"])
       mode "0644"
     end
   end
