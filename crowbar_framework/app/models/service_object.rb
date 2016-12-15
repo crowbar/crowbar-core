@@ -219,23 +219,19 @@ class ServiceObject
         end
       end
 
-      nodes = NodeObject.find("roles:#{bc}-config-#{inst}").map do |node|
-        if node.role.nil?
-          false
-        else
-          node.role.tap do |role|
-            return true if role.default_attributes["state"] == "ready"
-
-            role.default_attributes["state"] = "ready"
-            role.save
-          end
+      nodes = []
+      NodeObject.find("roles:#{bc}-config-#{inst}").each do |node|
+        next if node.crowbar["state"] == "ready"
+        node.crowbar["state"] = "ready"
+        unless node.save
+          nodes.push(node.alias)
         end
       end
 
-      unless nodes.all?
+      unless nodes.blank?
         return [
           422,
-          I18n.t("proposal.failures.nodes_reset")
+          I18n.t("proposal.failures.nodes_reset", nodes: nodes.join(", "))
         ]
       end
     end
