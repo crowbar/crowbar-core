@@ -52,7 +52,10 @@ module Crowbar
         # substep is needed for more complex steps like upgrading the nodes
         current_substep: nil,
         # current node is relevant only for the nodes_upgrade step
-        current_node: nil
+        current_node: nil,
+        # number of nodes still to be upgraded
+        remaining_nodes: nil,
+        upgraded_nodes: nil
       }
       # in 'steps', we save the information about each step that was executed
       @progress[:steps] = upgrade_steps_6_7.map do |step|
@@ -133,6 +136,28 @@ module Crowbar
 
     def finished?
       current_step == upgrade_steps_6_7.last
+    end
+
+    def save_current_node(node_data = {})
+      ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
+        progress[:current_node] = node_data
+        save
+      end
+    end
+
+    def save_nodes(upgraded = 0, remaining = 0)
+      ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
+        progress[:upgraded_nodes] = upgraded
+        progress[:remaining_nodes] = remaining
+        save
+      end
+    end
+
+    def save_substep(substep)
+      ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
+        progress[:current_substep] = substep
+        save
+      end
     end
 
     protected
