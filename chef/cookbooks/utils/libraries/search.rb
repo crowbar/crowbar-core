@@ -40,20 +40,20 @@ class Chef
     @@node_search_cache = nil
     @@node_search_cache_time = nil
 
-    def node_search_with_cache(query)
+    def node_search_with_cache(query, bc_instance = nil)
       if @@node_search_cache_time != node[:ohai_time]
         Chef::Log.info("Invalidating node search cache") if @@node_search_cache
         @@node_search_cache = {}
         @@node_search_cache_time = node[:ohai_time]
       end
 
-      real_query = "#{query}#{crowbar_filter_env(query)}"
+      real_query = "#{query}#{crowbar_filter_env(query, bc_instance)}"
       @@node_search_cache[real_query] ||= search(:node, real_query)
     end
 
     private
 
-    def crowbar_filter_env(query)
+    def crowbar_filter_env(query, bc_instance = nil)
       # All cookbooks encode the barclamp name as the role name prefix, thus we can
       # simply grab it from the query (e.g. BC 'keystone' for role 'keystone-server'):
       barclamp = /^(roles|recipes):(\w*).*$/.match(query)[2]
@@ -61,9 +61,13 @@ class Chef
       # There are two conventions to filter by barclamp proposal:
       #  1) Other barclamp cookbook: node[@cookbook_name][$OTHER_BC_NAME_instance]
       #  2) Same cookbook: node[@cookbook_name][:config][:environment]
-      env = if node[barclamp] && node[barclamp][:config] && (barclamp == cookbook_name)
+      env = if !bc_instance.nil?
+        "#{barclamp}-config-#{bc_instance}"
+      elsif node[barclamp] && node[barclamp][:config] && (barclamp == cookbook_name)
         node[barclamp][:config][:environment]
-      elsif !node[cookbook_name]["#{barclamp}_instance"].nil? || !node[cookbook_name]["#{barclamp}_instance"].empty?
+      elsif !node[cookbook_name].nil? &&
+          !node[cookbook_name]["#{barclamp}_instance"].nil? &&
+          !node[cookbook_name]["#{barclamp}_instance"].empty?
         "#{barclamp}-config-#{node[cookbook_name]["#{barclamp}_instance"]}"
       end
 
