@@ -1,0 +1,37 @@
+#!/bin/bash
+#
+# This script deletes existing cinder services from the database. This is necessary when upgrading to Newton.
+# They will be recreated automatically once upgraded and started.
+#
+# The script should be run only from cinder-controller.
+
+LOGFILE=/var/log/crowbar/node-upgrade.log
+UPGRADEDIR=/var/lib/crowbar/upgrade
+mkdir -p "`dirname "$LOGFILE"`"
+exec >>"$LOGFILE" 2>&1
+
+echo "Executing $BASH_SOURCE"
+
+set -x
+
+mkdir -p $UPGRADEDIR
+
+if [[ -f $UPGRADEDIR/crowbar-delete-cinder-services-before-upgrade-ok ]] ; then
+    echo "Services shutdown was already successfully executed"
+    exit 0
+fi
+
+# all cinder services must be stopped before deleting
+while cinder-manage service list 2>/dev/null | grep -q ":-)"; do
+  echo "Some cinder services are still running"
+  sleep 5
+done
+
+for service in cinder-volume cinder-scheduler; do
+    hosts=$(cinder-manage service list | grep $service | tr -s ' ' | cut -d ' ' -f 2)
+    for host in $hosts; do
+        cinder-manage service remove $service $host 2>/dev/null
+    done
+done
+
+touch $UPGRADEDIR/crowbar-delete-cinder-services-before-upgrade-ok

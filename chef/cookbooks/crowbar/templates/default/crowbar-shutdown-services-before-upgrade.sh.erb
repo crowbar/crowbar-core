@@ -1,9 +1,10 @@
 #!/bin/bash
 #
-# This script starts the upgrade of the node server to the latest version of
-# system and Cloud product.
+# This script stops unnecessary OpenStack services on the nodes before we dive
+# deeper into the real upgrade.
 
 LOGFILE=/var/log/crowbar/node-upgrade.log
+UPGRADEDIR=/var/lib/crowbar/upgrade
 mkdir -p "`dirname "$LOGFILE"`"
 exec >>"$LOGFILE" 2>&1
 
@@ -28,7 +29,9 @@ done
 <% end %>
 
 # stop cinder-volume at all nodes so the service could be removed from the database later
-/etc/init.d/openstack-cinder-volume stop
+if test -e /etc/init.d/openstack-cinder-volume; then
+    /etc/init.d/openstack-cinder-volume stop
+fi
 
 <% else %>
 
@@ -45,23 +48,6 @@ do
     if test -e $i; then
         $i stop
     fi
-done
-
-<% end %>
-
-<% if @cinder_controller && (!@use_ha || @cluster_founder) %>
-
-# all cinder services must be stopped
-while cinder-manage service list 2>/dev/null | grep -q ":-)"; do
-  echo "Some cinder services are still running"
-  sleep 5
-done
-
-for service in cinder-volume cinder-scheduler; do
-    hosts=$(cinder-manage service list | grep $service | tr -s ' ' | cut -d ' ' -f 2)
-    for host in $hosts; do
-        cinder-manage service remove $service $host 2>/dev/null
-    done
 done
 
 <% end %>

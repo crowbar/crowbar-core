@@ -25,7 +25,9 @@
 
   },
   "default": {
-
+    "roles": [
+      "cinder-controller"
+    ]
   },
   "json_class": "Chef::Node",
   "automatic": {
