@@ -18,7 +18,8 @@ class Chef
   class Recipe
     def search_env_filtered(type, query="*:*", sort="X_CHEF_id_CHEF_X asc",
                             start=0, rows=100, &block)
-      filtered_query = "#{query}#{crowbar_filter_env(query)}"
+      filter = CrowbarUtilsSearch.crowbar_filter_env(node, query, cookbook_name)
+      filtered_query = "#{query}#{filter}"
       if block
         return search(type, filtered_query, sort, start, rows, &block)
       else
@@ -37,23 +38,36 @@ class Chef
       instance
     end
 
-    @@node_search_cache = nil
-    @@node_search_cache_time = nil
-
     def node_search_with_cache(query, bc_instance = nil)
-      if @@node_search_cache_time != node[:ohai_time]
-        Chef::Log.info("Invalidating node search cache") if @@node_search_cache
-        @@node_search_cache = {}
-        @@node_search_cache_time = node[:ohai_time]
+      CrowbarUtilsSearch.node_search_with_cache(node, query, cookbook_name, bc_instance)
+    end
+  end
+end
+
+class CrowbarUtilsSearch
+  class << self
+    @node_search_cache = nil
+    @node_search_cache_time = nil
+
+    def node_search_with_cache(node, query, cookbook_name = nil, bc_instance = nil)
+      if @node_search_cache_time != node[:ohai_time]
+        Chef::Log.info("Invalidating node search cache") if @node_search_cache
+        @node_search_cache = {}
+        @node_search_cache_time = node[:ohai_time]
       end
 
-      real_query = "#{query}#{crowbar_filter_env(query, bc_instance)}"
-      @@node_search_cache[real_query] ||= search(:node, real_query)
+      filter = crowbar_filter_env(node, query, cookbook_name, bc_instance)
+      real_query = "#{query}#{filter}"
+      @node_search_cache[real_query] ||= begin
+        results = Array.new
+        Chef::Search::Query.new.search(:node, real_query) do |o|
+          results << o
+        end
+        results
+      end
     end
 
-    private
-
-    def crowbar_filter_env(query, bc_instance = nil)
+    def crowbar_filter_env(node, query, cookbook_name = nil, bc_instance = nil)
       # All cookbooks encode the barclamp name as the role name prefix, thus we can
       # simply grab it from the query (e.g. BC 'keystone' for role 'keystone-server'):
       barclamp = /^(roles|recipes):(\w*).*$/.match(query)[2]
