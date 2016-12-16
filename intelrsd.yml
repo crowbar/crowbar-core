@@ -34,4 +34,4 @@ nav:
   utils:
     rsd:
       order: 91
-      route: 'rsd_edit_path'
+      route: 'rsd_settings_path'

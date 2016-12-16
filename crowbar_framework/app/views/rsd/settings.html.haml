@@ -1,0 +1,24 @@
+.row
+  .col-xs-12
+    %h1.page-header
+      = t(".title")
+
+      .btn-group.pull-right
+        = link_to t(".show"), rsd_display_path, :class => "btn btn-default"
+
+= form_tag rsd_display_path, :role => "form" do |f|
+  .panel.panel-default
+    .panel-body
+      .form-group
+        %label{ :for => :rsd_rest_server }
+          = t(".rsd_rest_server")
+        = text_field_tag :rsd_rest_server, @rsd_rest_server, :class => "form-control", :disabled => nil
+
+      .form-group
+        %label{ :for => :rsd_server_port }
+          = t(".rsd_server_port")
+        = text_field_tag :rsd_server_port, @rsd_server_port, :class => "form-control", :disabled => nil
+
+    .panel-footer.text-right
+      .btn-group
+        %input.btn.btn-default{ :type => "submit", :name => "show", :value => t(".show") }

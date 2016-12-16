@@ -14,5 +14,7 @@
 # limitations under the License.
 #
 
-get 'rsd/show' => 'rsd#show', as: 'rsd_show'
+post 'rsd/display' => 'rsd#display', as: 'rsd_display'
+get 'rsd/settings' => 'rsd#settings', as: 'rsd_settings'
+post 'rsd/show' => 'rsd#show', as: 'rsd_show'
 post 'rsd/allocate' => 'rsd#allocate', as: 'rsd_allocate'

@@ -36,11 +36,18 @@ class RsdController < ApplicationController
   attr_reader :redfish_client, :logger
 
   # Client setup for the class
-  host = ENV["CROWBAR_REDFISH_HOST"] || "localhost"
-  port = ENV["CROWBAR_REDFISH_PORT"] || "8443"
-  @redfish_client = RedfishHelper::RedfishClient.new(host, port)
+  @host = ENV["CROWBAR_REDFISH_HOST"] || "localhost"
+  @port = ENV["CROWBAR_REDFISH_PORT"] || "8443"
 
-  def show
+  def settings
+    @host = @rsd_rest_server
+    @port = @rsd_server_port
+    Rails.logger.warn "RackScale Server: #{@host}, Port: #{@port}"
+  end
+
+  def display
+    Rails.logger.warn "RackScale Server: #{@host}, Port: #{@port}"
+    @redfish_client = RedfishHelper::RedfishClient.new(@host, @port)
     @title = "Welcome to RackScale Design"
     sys_list = get_all_systems
     @rsd_systems = "Systems not Available"

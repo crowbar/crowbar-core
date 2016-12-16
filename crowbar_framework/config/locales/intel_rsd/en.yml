@@ -19,6 +19,11 @@ en:
     utils:
       rsd: 'Intel RackScale'
   rsd:
+    settings:
+      title: 'Intel Rackscale Server Details'
+      rsd_rest_server: 'PSME Rest Server IP'
+      rsd_server_port: 'PSME Rest Server Port'
+      show: 'Show'
     show:
       title: 'Intel Rackscale'
       rsd_header: 'Lists Systems available from Intel RackScale server by talking to the Redfish APIs'
