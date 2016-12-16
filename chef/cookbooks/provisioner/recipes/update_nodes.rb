@@ -45,7 +45,7 @@ use_elilo = node[:platform_family] != "suse" || (node[:platform] == "suse" && no
 
 nodes = node_search_with_cache("*:*")
 if not nodes.nil? and not nodes.empty?
-  nodes.map{ |n|Node.load(n.name) }.each do |mnode|
+  nodes.each do |mnode|
     next if mnode[:state].nil?
 
     new_group = states[mnode[:state]]

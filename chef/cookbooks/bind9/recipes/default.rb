@@ -182,7 +182,6 @@ temporary_dhcp = {}
 nodes = node_search_with_cache("*:*")
 fqdns = []
 nodes.each do |n|
-  n = Node.load(n.name)
   fqdns.push(n[:fqdn])
   cname = n["crowbar"]["display"]["alias"] rescue nil
   cname = nil unless cname && ! cname.empty?
