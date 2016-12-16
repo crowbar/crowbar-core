@@ -43,7 +43,7 @@ uefi_subdir = "efi"
 
 use_elilo = node[:platform_family] != "suse" || (node[:platform] == "suse" && node["platform_version"].to_f < 12.0)
 
-nodes = search(:node, "*:*")
+nodes = node_search_with_cache("*:*")
 if not nodes.nil? and not nodes.empty?
   nodes.map{ |n|Node.load(n.name) }.each do |mnode|
     next if mnode[:state].nil?
