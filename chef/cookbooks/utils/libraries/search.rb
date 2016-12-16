@@ -56,7 +56,7 @@ class Chef
     def crowbar_filter_env(query)
       # All cookbooks encode the barclamp name as the role name prefix, thus we can
       # simply grab it from the query (e.g. BC 'keystone' for role 'keystone-server'):
-      barclamp = /^\w*:(\w*).*$/.match(query)[1]
+      barclamp = /^(roles|recipes):(\w*).*$/.match(query)[2]
 
       # There are two conventions to filter by barclamp proposal:
       #  1) Other barclamp cookbook: node[@cookbook_name][$OTHER_BC_NAME_instance]
