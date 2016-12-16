@@ -82,7 +82,7 @@ if test -n "$SSH_CONNECTION" -a -z "$STY"; then
 fi
 
 if test $CROWBAR_FORCE -ne 1; then
-    echo    "Running this tool will alter the system for integration with SUSE OpenStack Cloud."
+    echo    "Running this tool will alter the system for integration with Crowbar."
     echo -n "Continue? [y/N]: "
     read ANSWER
     if test "x$ANSWER" != xy -a "x$ANSWER" != xY; then
@@ -324,7 +324,11 @@ zypper --non-interactive install -t pattern $PATTERNS_INSTALL
 <% if @platform == "suse" && @target_platform_version.to_f < 12.0 -%>
 zypper --non-interactive install --auto-agree-with-licenses suse-sle11-openstack-cloud-release
 <% elsif @platform == "suse" && @target_platform_version.to_f >= 12.1 -%>
+<% if @is_ses -%>
+zypper --non-interactive install --auto-agree-with-licenses ses-release supportutils-plugin-ses
+<% else -%>
 zypper --non-interactive install --auto-agree-with-licenses suse-openstack-cloud-release supportutils-plugin-suse-openstack-cloud
+<% end -%>
 <% end -%>
 zypper --non-interactive install $PACKAGES_INSTALL<%= " '#{@packages.join("' '")}'" unless @packages.empty? %>
 

@@ -331,7 +331,7 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
       packages = node[:provisioner][:packages][os] || []
 
       # Need to know if we're doing a storage-only deploy so we can tweak
-      # the autoyast profile slightly
+      # the autoyast profile slightly (same as in setup_base_images.rb)
       storage_available = false
       cloud_available = false
       repos.each do |name, repo|
