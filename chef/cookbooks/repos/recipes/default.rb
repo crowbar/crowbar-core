@@ -15,8 +15,11 @@
 
 return if node[:platform_family] == "suse" || node[:platform_family] == "windows"
 
-provisioners = search(:node, "roles:provisioner-server")
-provisioner = provisioners[0] if provisioners
+# the attribute always exist as this is run as part of the provisioner-base role
+provisioner_instance = node[:provisioner][:config][:environment].gsub(/^provisioner-config-/, "")
+provisioners = node_search_with_cache("roles:provisioner-server", provisioner_instance)
+provisioner = provisioners.first if provisioners
+
 os_token = "#{node[:platform]}-#{node[:platform_version]}"
 arch = node[:kernel][:machine]
 

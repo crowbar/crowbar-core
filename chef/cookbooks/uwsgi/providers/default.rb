@@ -3,7 +3,11 @@ action :enable do
   package "python-pip"
   package "python-dev"
 
-  provisioner = search(:node, "roles:provisioner-server").first
+  provisioner_instance = node[:provisioner][:config][:environment].gsub(/^provisioner-config-/, "")
+  provisioner = CrowbarUtilsSearch.node_search_with_cache(node,
+                                                          "roles:provisioner-server",
+                                                          "uwsgi",
+                                                          provisioner_instance).first
   proxy_addr = provisioner[:fqdn]
   proxy_port = provisioner[:provisioner][:web_port]
 
