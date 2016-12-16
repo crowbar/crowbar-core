@@ -1,6 +1,7 @@
 admin_ip = Barclamp::Inventory.get_network_by_type(node, "admin").address
 
-dns_servers = search(:node, "roles:dns-server").map do |n|
+dns_instance = node[:dns][:config][:environment].gsub(/^dns-config-/, "") rescue "default"
+dns_servers = node_search_with_cache("roles:dns-server", dns_instance).map do |n|
   Barclamp::Inventory.get_network_by_type(n, "admin").address
 end
 dns_servers.sort!

@@ -34,7 +34,8 @@ new_repos = Provisioner::Repositories.get_repos(
 )
 
 # Find out the location of the base system repository
-provisioner = search(:node, "roles:provisioner-server")[0]
+provisioner_instance = node[:provisioner][:config][:environment].gsub(/^provisioner-config-/, "") rescue "default"
+provisioner = node_search_with_cache("roles:provisioner-server", provisioner_instance).first
 admin_ip = Barclamp::Inventory.get_network_by_type(provisioner, "admin").address
 
 web_port = provisioner[:provisioner][:web_port]

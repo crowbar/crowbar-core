@@ -476,7 +476,8 @@ node[:provisioner][:supported_oses].each do |os, arches|
       # Add base OS install repo for suse
       node.set[:provisioner][:repositories][os][arch]["base"] = { "baseurl=#{install_url}" => true }
 
-      ntp_servers = search(:node, "roles:ntp-server")
+      ntp_instance = node[:ntp][:config][:environment].gsub(/^ntp-config-/, "") rescue "default"
+      ntp_servers = node_search_with_cache("roles:ntp-server", ntp_instance)
       ntp_servers_ips = ntp_servers.map { |n| Chef::Recipe::Barclamp::Inventory.get_network_by_type(n, "admin").address }
 
       target_platform_distro = os.gsub(/-.*$/, "")

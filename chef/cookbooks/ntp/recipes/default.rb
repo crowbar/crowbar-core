@@ -16,8 +16,7 @@
 #
 
 unless Chef::Config[:solo]
-  env_filter = " AND environment:#{node[:ntp][:config][:environment]}"
-  servers = search(:node, "roles:ntp\\-server#{env_filter}")
+  servers = node_search_with_cache("roles:ntp-server")
 else
   servers = []
 end

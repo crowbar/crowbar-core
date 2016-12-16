@@ -18,8 +18,7 @@ return if node[:platform_family] == "windows"
 
 include_recipe "logging::common"
 
-env_filter = " AND environment:#{node[:logging][:config][:environment]}"
-servers = search(:node, "roles:logging\\-server#{env_filter}")
+servers = node_search_with_cache("roles:logging-server")
 
 if servers.nil?
   servers = []
