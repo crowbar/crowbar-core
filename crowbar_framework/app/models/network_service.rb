@@ -276,8 +276,8 @@ class NetworkService < ServiceObject
     super(params)
   end
 
-  def transition(inst, name, state)
-    @logger.debug("Network transition: entering: #{name} for #{state}")
+  def transition(inst, node, state)
+    @logger.debug("Network transition: entering: #{node.name} for #{state}")
 
     # we need one state before "installed" (and after allocation) because we
     # need the node to have the admin network fully defined for
@@ -286,27 +286,27 @@ class NetworkService < ServiceObject
       db = Proposal.where(barclamp: @bc_name, name: inst).first
       role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
 
-      unless add_role_to_instance_and_node(@bc_name, inst, name, db, role, "network")
-        msg = "Failed to add network role to #{name}!"
+      unless add_role_to_instance_and_node(@bc_name, inst, node, db, role, "network")
+        msg = "Failed to add network role to #{node.name}!"
         @logger.error(msg)
         return [400, msg]
       end
     end
 
     if state == "hardware-installing"
-      node = NodeObject.find_node_by_name name
-
       # Allocate required addresses
       range = node.admin? ? "admin" : "host"
-      @logger.debug("Deployer transition: Allocate admin address for #{name}")
-      result = allocate_ip("default", "admin", range, name)
+      @logger.debug("Deployer transition: Allocate admin address for #{node.name}")
+      result = allocate_ip("default", "admin", range, node.name)
       @logger.error("Failed to allocate admin address for: #{node.name}: #{result[0]}") if result[0] != 200
       if result[0] == 200
         address = result[1]["address"]
         boot_ip_hex = sprintf("%08X", address.split(".").inject(0) { |acc, i| (acc << 8) + i.to_i })
       end
 
-      @logger.debug("Deployer transition: Done Allocate admin address for #{name} boot file:#{boot_ip_hex}")
+      @logger.debug(
+        "Deployer transition: Done Allocate admin address for #{node.name} boot file:#{boot_ip_hex}"
+      )
 
       if node.admin?
         # If we are the admin node, we may need to add a vlan bmc address.
@@ -315,17 +315,17 @@ class NetworkService < ServiceObject
         admin_net = Chef::DataBag.load "crowbar/admin_network" rescue nil
         bmc_net = Chef::DataBag.load "crowbar/bmc_network" rescue nil
         if admin_net["network"]["subnet"] != bmc_net["network"]["subnet"]
-          @logger.debug("Deployer transition: Allocate bmc_vlan address for #{name}")
-          result = allocate_ip("default", "bmc_vlan", "host", name)
+          @logger.debug("Deployer transition: Allocate bmc_vlan address for #{node.name}")
+          result = allocate_ip("default", "bmc_vlan", "host", node.name)
           @logger.error("Failed to allocate bmc_vlan address for: #{node.name}: #{result[0]}") if result[0] != 200
-          @logger.debug("Deployer transition: Done Allocate bmc_vlan address for #{name}")
+          @logger.debug("Deployer transition: Done Allocate bmc_vlan address for #{node.name}")
         end
 
         # Allocate the bastion network ip for the admin node if a bastion
         # network is defined in the network proposal
         bastion_net = Chef::DataBag.load "crowbar/bastion_network" rescue nil
         unless bastion_net.nil?
-          result = allocate_ip("default", "bastion", range, name)
+          result = allocate_ip("default", "bastion", range, node.name)
           if result[0] != 200
             @logger.error("Failed to allocate bastion address for: #{node.name}: #{result[0]}")
           else
@@ -335,23 +335,22 @@ class NetworkService < ServiceObject
       end
 
       # save this on the node after it's been refreshed with the network info.
-      node = NodeObject.find_node_by_name node.name
+      node = NodeObject.find_node_by_name node.name # FIXME: Why should we do this?
       node.crowbar["crowbar"]["boot_ip_hex"] = boot_ip_hex if boot_ip_hex
       node.save
     end
 
     if ["delete", "reset"].include? state
-      node = NodeObject.find_node_by_name name
       nets = node.crowbar["crowbar"]["network"].keys
       nets.each do |net|
         next if net == "admin"
-        ret, msg = deallocate_ip(inst, net, name)
+        ret, msg = deallocate_ip(inst, net, node.name)
         return [ret, msg] if ret != 200
       end
     end
 
-    @logger.debug("Network transition: exiting: #{name} for #{state}")
-    [200, { name: name }]
+    @logger.debug("Network transition: exiting: #{node.name} for #{state}")
+    [200, { name: node.name }]
   end
 
   def enable_interface(bc_instance, network, name)

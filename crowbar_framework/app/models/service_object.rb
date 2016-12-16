@@ -1381,13 +1381,7 @@ class ServiceObject
     []
   end
 
-  def add_role_to_instance_and_node(barclamp, instance, name, prop, role, newrole)
-    node = NodeObject.find_node_by_name name
-    if node.nil?
-      @logger.debug("ARTOI: couldn't find node #{name}. bailing")
-      return false
-    end
-
+  def add_role_to_instance_and_node(barclamp, instance, node, prop, role, newrole)
     runlist_priority_map = prop["deployment"][barclamp]["element_run_list_order"] rescue {}
     runlist_priority_map ||= {}
 

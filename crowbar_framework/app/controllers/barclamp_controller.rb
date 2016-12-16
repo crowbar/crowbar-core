@@ -115,18 +115,30 @@ class BarclampController < ApplicationController
     id = params[:id]       # Provisioner id
     state = params[:state] # State of node transitioning
     name = params[:name] # Name of node transitioning
+    barclamp = params[:barclamp]
+
+    node = NodeObject.find_node_by_name(name) # TODO: onyl if not in service_object
+
+    # TODO: remove dirty hack
+    if !node && barclamp == "crowbar"
+      node = name
+    end
+
+    unless node
+      render text: "Could not find node #{name}", status: 404
+    end
 
     unless valid_transition_states.include?(state)
       render text: "State '#{state}' is not valid.", status: 400
     else
-      status, response = @service_object.transition(id, name, state)
+      status, response = @service_object.transition(id, node, state)
       if status != 200
         render text: response, status: status
       else
         # Be backward compatible with barclamps returning a node hash, passing
         # them intact.
         if response[:name]
-          render json: NodeObject.find_node_by_name(response[:name]).to_hash
+          render json: node.to_hash
         else
           render json: response
         end

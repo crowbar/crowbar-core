@@ -38,7 +38,7 @@ class IpmiService < ServiceObject
     super(params)
   end
 
-  def transition(inst, name, state)
+  def transition(inst, node, state)
     @logger.debug("IPMI transition: entering: #{name} for #{state}")
 
     # discovering because mandatory for discovery image
@@ -46,8 +46,8 @@ class IpmiService < ServiceObject
       db = Proposal.where(barclamp: @bc_name, name: inst).first
       role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
 
-      unless add_role_to_instance_and_node(@bc_name, inst, name, db, role, "ipmi")
-        msg = "Failed to add ipmi role to #{name}!"
+      unless add_role_to_instance_and_node(@bc_name, inst, node, db, role, "ipmi")
+        msg = "Failed to add ipmi role to #{node.name}!"
         @logger.error(msg)
         return [400, msg]
       end
@@ -55,13 +55,12 @@ class IpmiService < ServiceObject
 
     # hardware-installing because BMC is enabled during that step
     if ["hardware-installing", "installed", "readying"].include? state
-      node = NodeObject.find_node_by_name(name)
       unless node.role?("bmc-nat-router")
         db = Proposal.where(barclamp: @bc_name, name: inst).first
         role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
 
-        unless add_role_to_instance_and_node(@bc_name, inst, name, db, role, "bmc-nat-client")
-          msg = "Failed to add ipmi role to #{name}!"
+        unless add_role_to_instance_and_node(@bc_name, inst, node, db, role, "bmc-nat-client")
+          msg = "Failed to add ipmi role to #{node.name}!"
           @logger.error(msg)
           return [400, msg]
         end
@@ -75,35 +74,34 @@ class IpmiService < ServiceObject
       role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
 
       if role && !role.default_attributes["ipmi"]["use_dhcp"]
-        @logger.debug("IPMI transition: Allocate bmc address for #{name}")
-        node = NodeObject.find_node_by_name(name)
+        @logger.debug("IPMI transition: Allocate bmc address for #{node.name}")
         suggestion = if role.default_attributes["ipmi"]["ignore_address_suggestions"]
           nil
         else
           node["crowbar_wall"]["ipmi"]["address"] rescue nil
         end
 
-        result = ns.allocate_ip("default", "bmc", "host", name, suggestion)
+        result = ns.allocate_ip("default", "bmc", "host", node.name, suggestion)
         if result[0] != 200
-          msg = "Failed to allocate bmc address for: #{name}: #{result[0]}"
+          msg = "Failed to allocate bmc address for: #{node.name}: #{result[0]}"
           @logger.error(msg)
           return [400, msg]
         end
       else
         # This enables other system to function because the bmc data is on the node,
         # but no address is assigned.
-        @logger.debug("IPMI transition: Enable bmc interface for #{name}")
+        @logger.debug("IPMI transition: Enable bmc interface for #{node.name}")
 
-        result = ns.enable_interface("default", "bmc", name)
+        result = ns.enable_interface("default", "bmc", node.name)
         if result[0] != 200
-          msg = "Failed to enable bmc interface for: #{name}: #{result[0]}"
+          msg = "Failed to enable bmc interface for: #{node.name}: #{result[0]}"
           @logger.error(msg)
           return [400, msg]
         end
       end
     end
 
-    @logger.debug("IPMI transition: leaving: #{name} for #{state}")
-    [200, { name: name }]
+    @logger.debug("IPMI transition: leaving: #{node.name} for #{state}")
+    [200, { name: node.name }]
   end
 end

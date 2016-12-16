@@ -52,22 +52,21 @@ class NtpService < ServiceObject
     super(params)
   end
 
-  def transition(inst, name, state)
-    @logger.debug("NTP transition: entering: #{name} for #{state}")
+  def transition(inst, node, state)
+    @logger.debug("NTP transition: entering: #{node.name} for #{state}")
 
-    node = NodeObject.find_node_by_name name
     if node.allocated? && !node.role?("ntp-server")
       db = Proposal.where(barclamp: @bc_name, name: inst).first
       role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
 
-      unless add_role_to_instance_and_node(@bc_name, inst, name, db, role, "ntp-client")
-        msg = "Failed to add ntp-client role to #{name}!"
+      unless add_role_to_instance_and_node(@bc_name, inst, node, db, role, "ntp-client")
+        msg = "Failed to add ntp-client role to #{node.name}!"
         @logger.error(msg)
         return [400, msg]
       end
     end
 
-    @logger.debug("NTP transition: leaving: #{name} for #{state}")
-    [200, { name: name }]
+    @logger.debug("NTP transition: leaving: #{node.name} for #{state}")
+    [200, { name: node.name }]
   end
 end
