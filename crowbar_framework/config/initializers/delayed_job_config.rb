@@ -17,6 +17,7 @@
 Delayed::Worker.destroy_failed_jobs = false
 Delayed::Worker.delay_jobs = !Rails.env.test?
 Delayed::Worker.raise_signal_exceptions = :term
+Delayed::Worker.max_attempts = 1
 if Rails.env.production?
   Delayed::Worker.logger = Logger.new(File.join(ENV["CROWBAR_LOG_DIR"], "background_jobs.log"))
 else
