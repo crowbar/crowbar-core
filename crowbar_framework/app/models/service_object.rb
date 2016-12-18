@@ -549,12 +549,12 @@ class ServiceObject
     elsif prop["deployment"][@bc_name]["crowbar-committing"]
       [402, "#{I18n.t('.already_commit', scope: 'model.service')}: #{@bc_name}.#{inst}"]
     else
-      response = nil
+      response = [500, "Internal Error: Something went wrong."]
       begin
         # Put mark on the wall
         prop["deployment"][@bc_name]["crowbar-committing"] = true
         save_proposal!(prop, validate_after_save: validate_after_save)
-        response = active_update prop.raw_data, inst, in_queue, bootstrap
+        response = active_update(prop.raw_data, inst, in_queue, bootstrap)
       rescue Chef::Exceptions::ValidationFailed => e
         @logger.error ([e.message] + e.backtrace).join("\n")
         response = [400, "Failed to validate proposal: #{e.message}"]
