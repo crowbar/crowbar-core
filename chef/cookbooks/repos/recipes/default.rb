@@ -13,6 +13,8 @@
 # limitations under the License.
 #
 
+return if node[:platform_family] == "suse" || node[:platform_family] == "windows"
+
 provisioners = search(:node, "roles:provisioner-server")
 provisioner = provisioners[0] if provisioners
 os_token = "#{node[:platform]}-#{node[:platform_version]}"

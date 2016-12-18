@@ -22,12 +22,11 @@ bmc_net = Barclamp::Inventory.get_network_by_type(node, "bmc")
 admin_net = Barclamp::Inventory.get_network_by_type(node, "admin")
 
 return if bmc_net.nil? || admin_net.nil?
+return if admin_net.subnet == bmc_net.subnet && admin_net.netmask == bmc_net.netmask
 
 nat_node = search(:node, "roles:bmc-nat-router").first rescue return
 return if nat_node.nil?
 nat_admin_net = Barclamp::Inventory.get_network_by_type(nat_node, "admin")
-
-return if admin_net.subnet == bmc_net.subnet && admin_net.netmask == bmc_net.netmask
 
 bmc_cidr = IP::IP4.netmask_to_subnet(bmc_net.netmask)
 
