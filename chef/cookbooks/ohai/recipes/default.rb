@@ -102,7 +102,6 @@ end
 node.automatic_attrs.delete("counters")
 
 # drop relatively big attributes that we know we won't use
-node.automatic_attrs.delete("etc")
 node.automatic_attrs["kernel"].delete("modules")
 
 # duplicates the cpu data
