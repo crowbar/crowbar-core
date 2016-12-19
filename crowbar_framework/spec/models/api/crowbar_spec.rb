@@ -16,7 +16,9 @@ describe Api::Crowbar do
       )
     )
   end
-  let!(:node) { Node.find_node_by_name("testing") }
+  let!(:node) do
+    Node.where(name: "testing.crowbar.com").first_or_create(name: "testing.crowbar.com")
+  end
 
   before(:each) do
     allow_any_instance_of(Kernel).to(
@@ -110,9 +112,9 @@ describe Api::Crowbar do
     it "succeeds to check ceph cluster health" do
       allow(Node).to(
         receive(:find).with("roles:ceph-mon AND ceph_config_environment:*").
-        and_return([Node.find_node_by_name("testing.crowbar.com")])
+        and_return([ChefNode.find_node_by_name("testing.crowbar.com")])
       )
-      allow_any_instance_of(Node).to(
+      allow_any_instance_of(ChefNode).to(
         receive(:run_ssh_cmd).with("LANG=C ceph health 2>&1").
         and_return(exit_code: 0, stdout: "HEALTH_OK\n", stderr: "")
       )
@@ -124,9 +126,9 @@ describe Api::Crowbar do
     it "fails when checking ceph cluster health" do
       allow(Node).to(
         receive(:find).with("roles:ceph-mon AND ceph_config_environment:*").
-        and_return([Node.find_node_by_name("testing.crowbar.com")])
+        and_return([ChefNode.find_node_by_name("testing.crowbar.com")])
       )
-      allow_any_instance_of(Node).to(
+      allow_any_instance_of(ChefNode).to(
         receive(:run_ssh_cmd).with("LANG=C ceph health 2>&1").
         and_return(exit_code: 1, stdout: "HEALTH_ERR\n", stderr: "")
       )
@@ -136,9 +138,9 @@ describe Api::Crowbar do
     it "fails when exit value of ceph check is 0 but stdout still not correct" do
       allow(Node).to(
         receive(:find).with("roles:ceph-mon AND ceph_config_environment:*").
-        and_return([Node.find_node_by_name("testing.crowbar.com")])
+        and_return([ChefNode.find_node_by_name("testing.crowbar.com")])
       )
-      allow_any_instance_of(Node).to(
+      allow_any_instance_of(ChefNode).to(
         receive(:run_ssh_cmd).with("LANG=C ceph health 2>&1").
         and_return(exit_code: 0, stdout: "HEALTH_WARN", stderr: "")
       )

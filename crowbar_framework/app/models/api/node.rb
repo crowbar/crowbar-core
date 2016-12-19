@@ -17,7 +17,7 @@
 module Api
   class Node < Tableless
     def initialize(name = nil)
-      @node = ::Node.find_node_by_name name
+      @node = ::Node.find_by_name(name)
     end
 
     # execute script in background and wait for it to finish

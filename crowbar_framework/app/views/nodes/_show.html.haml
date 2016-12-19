@@ -1,13 +1,13 @@
 .panel.panel-default
   .panel-heading
     %h2
-      %span.led{ :class => @node.status, :title => t(@node.state, :scope => "state", :default => @node.state.titlecase), "data-node" => @node.handle }
+      %span.led{ :class => @node.status, :title => t(@node.state, :scope => "state", :default => @node.state.titlecase), "data-node" => @node.name }
 
-      %a{ :href => node_path(@node.handle), :title => @node.description }
+      %a{ :href => node_path(@node.name), :title => @node.description }
         = @node.alias
 
       .btn-group.pull-right
-        = link_to t("edit"), edit_node_path(@node.handle), :class => "btn btn-default"
+        = link_to t("edit"), edit_node_path(@node.name), :class => "btn btn-default"
 
   %table.table.table-hover.table-attributes
     %tbody

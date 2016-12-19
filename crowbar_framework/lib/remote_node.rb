@@ -30,8 +30,8 @@ module RemoteNode
     ip = resolve_host(host)
     msg = "Waiting for host #{host} (#{ip}); next attempt in #{sleep_time} seconds until #{timeout_at}"
 
-    nobj = Node.find_node_by_name(host)
-    reboot_requesttime = nobj[:crowbar_wall][:wait_for_reboot_requesttime] || 0
+    nobj = Node.find_by_name(host)
+    reboot_requesttime = nobj.crowbar_wall[:wait_for_reboot_requesttime] || 0
 
     wait_until(msg, timeout_at.to_i, sleep_time, options) do
       port_open?(ip, 22) && reboot_done?(ip, reboot_requesttime, options) && ssh_cmd(ip, runlevel_check_cmd(host))
@@ -123,7 +123,7 @@ module RemoteNode
   end
 
   def node_redhat?(host)
-    nobj = Node.find_node_by_name(host)
+    nobj = Node.find_by_name(host)
     nobj && nobj[:platform_family] == "rhel"
   end
 

@@ -55,7 +55,7 @@ class LoggingService < ServiceObject
   def transition(inst, name, state)
     @logger.debug("Logging transition: entering: #{name} for #{state}")
 
-    node = Node.find_node_by_name name
+    node = Node.find_by_name(name)
     if node.allocated? && !node.role?("logging-server")
       db = Proposal.where(barclamp: @bc_name, name: inst).first
       role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"

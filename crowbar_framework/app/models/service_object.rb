@@ -154,7 +154,7 @@ class ServiceObject
       nodes.each do |node_name|
         node = pre_cached_nodes[node_name]
         if node.nil?
-          node = Node.find_node_by_name(node_name)
+          node = Node.find_by_name(node_name)
         end
         next if node.nil?
 
@@ -174,7 +174,7 @@ class ServiceObject
   def restore_to_ready(nodes)
     with_lock "BA-LOCK" do
       nodes.each do |node_name|
-        node = Node.find_node_by_name(node_name)
+        node = Node.find_by_name(node_name)
         # Nodes with 'crowbar_upgrade' state need to stay in that state
         # even after applying relevant roles. They could be brought back to
         # being ready only by explicit user's action.
@@ -260,7 +260,6 @@ class ServiceObject
   # FIXME: refactor into Proposal#status=()
   def update_proposal_status(inst, status, message, bc = @bc_name)
     @logger.debug("update_proposal_status: enter #{inst} #{bc} #{status} #{message}")
-
     prop = Proposal.where(barclamp: bc, name: inst).first
     unless prop.nil?
       prop["deployment"][bc]["crowbar-status"] = status
@@ -347,7 +346,7 @@ class ServiceObject
   end
 
   def element_info(role = nil)
-    nodes = Node.find_all_nodes.map(&:name)
+    nodes = Node.all.pluck(:name)
 
     return [200, nodes] unless role
 
@@ -626,8 +625,7 @@ class ServiceObject
         elsif element.include? ":"
           raise I18n.t("proposal.failures.unknown_node") + " " + element
         else
-          nodes = Node.find_nodes_by_name element
-          if nodes.nil? || nodes.empty?
+          if Node.find_by_name(element).blank?
             raise I18n.t("proposal.failures.unknown_node") + " " + element
           end
         end
@@ -709,7 +707,7 @@ class ServiceObject
       elements[role].each do |element|
         next if is_cluster?(element) || is_remotes?(element)
         unless nodes_is_admin.key? element
-          node = Node.find_node_by_name(element)
+          node = Node.find_by_name(element)
           nodes_is_admin[element] = (!node.nil? && node.admin?)
         end
         return true if nodes_is_admin[element]
@@ -723,10 +721,12 @@ class ServiceObject
       constraints = role_constraints[role]["platform"]
       elements[role].each do |element|
         next if is_cluster?(element) || is_remotes?(element)
-        node = Node.find_node_by_name(element)
+        node = Node.find_by_name(element)
 
         return true if !constraints.any? do |platform, version|
-          PlatformRequirement.new(platform, version).satisfied_by?(node[:platform], node[:platform_version])
+          PlatformRequirement.new(platform, version).satisfied_by?(
+            node.chef_node[:platform], node.chef_node[:platform_version]
+          )
         end
       end
     end
@@ -738,10 +738,12 @@ class ServiceObject
       constraints = role_constraints[role]["exclude_platform"]
       elements[role].each do |element|
         next if is_cluster?(element) || is_remotes?(element)
-        node = Node.find_node_by_name(element)
+        node = Node.find_by_name(element)
 
         return true if constraints.any? do |platform, version|
-          PlatformRequirement.new(platform, version).satisfied_by?(node[:platform], node[:platform_version])
+          PlatformRequirement.new(platform, version).satisfied_by?(
+            node.chef_node[:platform], node.chef_node[:platform_version]
+          )
         end
       end
     end
@@ -1089,7 +1091,7 @@ class ServiceObject
           use_remove_role = !tmprole.nil?
 
           old_nodes.each do |node_name|
-            pre_cached_nodes[node_name] ||= Node.find_node_by_name(node_name)
+            pre_cached_nodes[node_name] ||= Node.find_by_name(node_name)
 
             # Don't add deleted nodes to the run order, they clearly won't have
             # the old role
@@ -1126,7 +1128,7 @@ class ServiceObject
         # If new_nodes is empty, we are just removing the proposal.
         unless new_nodes.empty?
           new_nodes.each do |node_name|
-            pre_cached_nodes[node_name] ||= Node.find_node_by_name(node_name)
+            pre_cached_nodes[node_name] ||= Node.find_by_name(node_name)
 
             # Don't add deleted nodes to the run order
             #
@@ -1223,7 +1225,7 @@ class ServiceObject
     pending_node_actions.each do |node_name, lists|
       # pre_cached_nodes contains only new_nodes, we need to look up the
       # old ones as well.
-      pre_cached_nodes[node_name] ||= Node.find_node_by_name(node_name)
+      pre_cached_nodes[node_name] ||= Node.find_by_name(node_name)
       node = pre_cached_nodes[node_name]
       next if node.nil?
 
@@ -1350,7 +1352,7 @@ class ServiceObject
       nodes_with_role_to_remove.each do |node_name|
         # Do not use pre_cached_nodes, as nodes might have been saved in
         # apply_role_pre_chef_call
-        pre_cached_nodes[node_name] ||= Node.find_node_by_name(node_name)
+        pre_cached_nodes[node_name] ||= Node.find_by_name(node_name)
         node = pre_cached_nodes[node_name]
         node.save if node.delete_from_run_list(role_to_remove)
       end
@@ -1390,7 +1392,7 @@ class ServiceObject
   end
 
   def add_role_to_instance_and_node(barclamp, instance, name, prop, role, newrole)
-    node = Node.find_node_by_name name
+    node = Node.find_by_name(name)
     if node.nil?
       @logger.debug("ARTOI: couldn't find node #{name}. bailing")
       return false
@@ -1400,7 +1402,6 @@ class ServiceObject
     runlist_priority_map ||= {}
 
     local_chef_order = runlist_priority_map[newrole] || BarclampCatalog.chef_order(barclamp)
-
     prop["deployment"][barclamp]["elements"][newrole] = [] if prop["deployment"][barclamp]["elements"][newrole].nil?
     unless prop["deployment"][barclamp]["elements"][newrole].include?(node.name)
       @logger.debug("ARTOI: updating proposal with node #{node.name}, role #{newrole} for deployment of #{barclamp}")
@@ -1448,7 +1449,7 @@ class ServiceObject
 
       # don't use a cached node object here, as there might have been some chef
       # run we were blocking on in the wait_for_chef_clients call before
-      node_wall = Node.find_node_by_name(node)[:crowbar_wall]
+      node_wall = Node.find_by_name(node).crowbar_wall
       old_reboot_time = node_wall[:wait_for_reboot_requesttime] || 0
 
       ret = 0
@@ -1460,7 +1461,7 @@ class ServiceObject
         # the run was actually successful.
         # And of course, we need to reload the node object from chef to get the
         # latest attributes.
-        node_wall = Node.find_node_by_name(node)[:crowbar_wall]
+        node_wall = Node.find_by_name(node).crowbar_wall
         if success ||
             (node_wall[:wait_for_reboot] &&
                 node_wall[:wait_for_reboot_requesttime] > old_reboot_time)
@@ -1475,7 +1476,7 @@ class ServiceObject
 
   def wait_for_chef_daemons(node_list)
     node_list.each do |node_name|
-      node = Node.find_node_by_name(node_name)
+      node = Node.find_by_name(node_name)
 
       # we can't connect to windows nodes
       next if node[:platform_family] == "windows"
@@ -1499,27 +1500,27 @@ class ServiceObject
     end
   end
 
-  def wait_for_reboot(node)
-    nobj = Node.find_node_by_name(node)
-    if nobj[:crowbar_wall][:wait_for_reboot]
-      puts "Waiting for reboot of node #{node}"
-      if RemoteNode.ready?(node, 1200)
-        puts "Waiting for reboot of node #{node} done. Node is back"
+  def wait_for_reboot(node_name)
+    node = Node.find_by_name(node_name)
+    if node.crowbar_wall[:wait_for_reboot]
+      puts "Waiting for reboot of node #{node_name}"
+      if RemoteNode.ready?(node_name, 1200)
+        puts "Waiting for reboot of node #{node_name} done. Node is back"
         # Check node state - crowbar_join's chef-client run should successfully finish
-        puts "Waiting to finish chef-client run on node #{node}"
+        puts "Waiting to finish chef-client run on node #{node_name}"
         begin
           Timeout.timeout(600) do
             loop do
-              nobj = Node.find_node_by_name(node)
-              case nobj[:state]
+              node = Node.find_by_name(node_name)
+              case node.state
               when "ready"
-                puts "Node state after reboot is: #{nobj[:state]}. Continue"
+                puts "Node state after reboot is: #{node.state}. Continue"
                 break
               when "problem"
-                STDERR.puts "Node state after reboot is: #{nobj[:state]}. Exit"
+                STDERR.puts "Node state after reboot is: #{node.state}. Exit"
                 exit(1)
               else
-                puts "Node state after reboot is: #{nobj[:state]}. Waiting"
+                puts "Node state after reboot is: #{node.state}. Waiting"
                 sleep(10)
               end
             end
@@ -1529,7 +1530,7 @@ class ServiceObject
           exit(1)
         end
       else
-        STDERR.puts "Waiting for reboot of node #{node} failed"
+        STDERR.puts "Waiting for reboot of node #{node_name} failed"
         exit(1)
       end
     end

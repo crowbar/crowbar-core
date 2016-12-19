@@ -49,7 +49,7 @@ class MachinesController < BarclampController
       raise "Could not find chef key at #{ENV["CHEF_CLIENT_KEY"]}"
     end
 
-    @nodes = Node.find_all_nodes.map do |node|
+    @nodes = Node.all.map do |node|
       {
         name: node.name,
         alias: node.alias,
@@ -142,7 +142,6 @@ class MachinesController < BarclampController
     :powercycle,
     :poweroff,
     :allocate,
-    :delete,
     :identify
   ].each do |action|
     add_help(action, [:id], [:post])
@@ -165,6 +164,23 @@ class MachinesController < BarclampController
         end
       end
     end
+
+    def delete
+      if @machine.admin?
+        render json: {
+          error: "Deleting the admin node is not allowd"
+        }, status: :forbidden
+        return
+      end
+
+      if @machine.destroy
+        head :ok
+      else
+        render json: {
+          error: "Failed to destroy #{@machine.name}"
+        }, status: :unprocessable_entity
+      end
+    end
   end
 
   protected
@@ -180,8 +196,11 @@ class MachinesController < BarclampController
   end
 
   def load_machine
-    @machine = Node.find_node_by_name_or_alias(
-      params[:name] || params[:id]
-    )
+    @machine = Node.find_by_name(params[:name])
+    unless @machine
+      node = ChefNode.find_node_by_alias(params[:name] || params[:id])
+      @machine = Node.find_by_name(node.name) if node
+    end
+    @machine
   end
 end

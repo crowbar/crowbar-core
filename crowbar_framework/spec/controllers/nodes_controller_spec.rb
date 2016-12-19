@@ -22,7 +22,9 @@ describe NodesController do
 
   before do
     Proposal.where(barclamp: "crowbar", name: "default").first_or_create(barclamp: "crowbar", name: "default")
-    allow_any_instance_of(Node).to receive(:system).and_return(true)
+    Node.where(name: "testing.crowbar.com").first_or_create(name: "testing.crowbar.com")
+    Node.where(name: "admin.crowbar.com").first_or_create(name: "admin.crowbar.com")
+    allow_any_instance_of(ChefNode).to receive(:system).and_return(true)
   end
 
   describe "GET index" do
@@ -56,7 +58,7 @@ describe NodesController do
   describe "POST update" do
     before do
       allow(Node).to receive(:find_node_by_public_name).and_return(nil)
-      @node = Node.find_node_by_name("admin")
+      @node = Node.where(name: "admin.crowbar.com").take
     end
 
     describe "coming from the allocate form" do
@@ -100,8 +102,8 @@ describe NodesController do
   end
 
   describe "POST bulk" do
-    let(:admin) { Node.find_node_by_name("admin") }
-    let(:node) { Node.find_node_by_name("testing") }
+    let(:admin) { Node.where(name: "admin.crowbar.com").take }
+    let(:node) { Node.where(name: "testing.crowbar.com").take }
 
     it "redirects to nodes list on success if return param passed" do
       post :bulk, node: { node.name => { "allocate" => true, "alias" => "newalias" } }, return: "true"
@@ -144,7 +146,7 @@ describe NodesController do
   end
 
   describe "GET families" do
-    let(:node) { Node.find_node_by_name("testing") }
+    let(:node) { Node.where(name: "testing.crowbar.com").take }
 
     it "is successful" do
       get :families
@@ -180,17 +182,17 @@ describe NodesController do
       get :status, format: "json"
       json = JSON.parse(response.body)
 
-      expect(json["nodes"]["admin"].keys).to include("status")
-      expect(json["nodes"]["testing"].keys).to include("status")
+      expect(json["nodes"]["admin.crowbar.com"].keys).to include("status")
+      expect(json["nodes"]["testing.crowbar.com"].keys).to include("status")
 
-      expect(json["nodes"]["admin"]["status"]).to be == "No Data (Off)"
-      expect(json["nodes"]["testing"]["status"]).to be == "Discovered"
+      expect(json["nodes"]["admin.crowbar.com"]["status"]).to be == "No Data (Off)"
+      expect(json["nodes"]["testing.crowbar.com"]["status"]).to be == "Discovered"
     end
   end
 
   describe "GET show" do
     it "is successful" do
-      get :show, id: "testing"
+      get :show, id: "testing.crowbar.com"
       expect(response).to be_success
     end
 
@@ -202,7 +204,7 @@ describe NodesController do
       end
 
       it "renders json" do
-        get :show, id: "testing", format: "json"
+        get :show, id: "testing.crowbar.com", format: "json"
         expect(response).to be_success
       end
     end
@@ -222,50 +224,50 @@ describe NodesController do
     end
 
     it "returns 500 for invalid action" do
-      post :hit, req: "some nonsense", id: "testing"
+      post :hit, req: "some nonsense", id: "testing.crowbar.com"
       expect(response).to be_server_error
     end
 
     it "sets the machine state" do
-      ["reinstall", "reset", "update", "delete"].each do |action|
-        post :hit, req: action, id: "testing"
+      ["reinstall", "reset", "update"].each do |action|
+        post :hit, req: action, id: "testing.crowbar.com"
         expect(response).to redirect_to(node_url("testing"))
       end
 
       ["reboot", "shutdown", "poweron", "powercycle", "poweroff", "identify", "allocate"].each do |action|
-        expect_any_instance_of(Node).to receive(action.to_sym)
-        post :hit, req: action, id: "testing"
+        expect_any_instance_of(ChefNode).to receive(action.to_sym)
+        post :hit, req: action, id: "testing.crowbar.com"
       end
+
+      post :hit, req: "delete", id: "testing.crowbar.com"
+      expect(response).to redirect_to(node_url("testing"))
+      Node.where(name: "testing.crowbar.com").first_or_create(name: "testing.crowbar.com")
     end
   end
 
   describe "POST group_change" do
     before do
-      @node = Node.find_node_by_name("testing")
+      @node = Node.where(name: "testing.crowbar.com").take
+      @chef_node = ChefNode.find_node_by_name("testing.crowbar.com")
     end
 
     it "returns not found for nonexistent node" do
       expect {
-        new_group = "new_group"
-        post :group_change, id: "missing", group: new_group
+        post :group_change, id: "missing", group: "new_group"
       }.to raise_error(ActionController::RoutingError)
     end
 
     it "assigns a node to a group" do
-      allow(Node).to receive(:find_node_by_name).and_return(@node)
+      allow_any_instance_of(Node).to receive(:chef_node).and_return(@chef_node)
 
-      new_group = "new_group"
-      post :group_change, id: @node.name, group: new_group
+      post :group_change, id: @node.name, group: "new_group"
 
       expect(@node.display_set?("group")).to be true
-      expect(@node.group).to be == new_group
+      expect(@node.group).to be == "new_group"
     end
 
     it "sets node group to blank if 'automatic' passed" do
-      allow(Node).to receive(:find_node_by_name).and_return(@node)
-
-      new_group = "automatic"
-      post :group_change, id: @node.name, group: new_group
+      post :group_change, id: @node.name, group: "automatic"
 
       expect(@node.display_set?("group")).to be false
       expect(@node.group).to be == "sw-#{@node.switch}"
@@ -274,7 +276,7 @@ describe NodesController do
 
   describe "GET attribute" do
     before do
-      @node = Node.find_node_by_name("testing")
+      @node = Node.where(name: "testing.crowbar.com").take
     end
 
     # FIXME: maybe regular 404 would be better?

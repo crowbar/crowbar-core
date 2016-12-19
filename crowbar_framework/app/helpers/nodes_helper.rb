@@ -541,7 +541,7 @@ module NodesHelper
   def node_link_list(node)
     link_list = [].tap do |result|
       if node.bmc_set?
-        path = node["crowbar_wall"]["ipmi"]["address"] rescue "none"
+        path = node.crowbar_wall["ipmi"]["address"] rescue "none"
 
         result.push content_tag(
           :li,
@@ -552,8 +552,8 @@ module NodesHelper
         )
       end
 
-      unless node["crowbar"]["links"].nil?
-        node["crowbar"]["links"].sort_by { |name, link| name }.each do |name, link|
+      unless node.crowbar["crowbar"]["links"].nil?
+        node.crowbar["crowbar"]["links"].sort_by { |name, link| name }.each do |name, link|
           result.push content_tag(
             :li,
             link_to(

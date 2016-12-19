@@ -18,12 +18,18 @@
 require "spec_helper"
 
 describe ServiceObject do
+
+  before do
+    Node.where(name: "testing.crowbar.com").first_or_create(name: "testing.crowbar.com")
+    Node.where(name: "admin.crowbar.com").first_or_create(name: "admin.crowbar.com")
+  end
+
   let(:service_object) { so = ServiceObject.new(Logger.new("/dev/null")); so.bc_name = "crowbar"; so }
   let(:proposal) { Proposal.where(barclamp: "crowbar", name:"default").first_or_create(barclamp: "crowbar", name: "default") }
   let(:proposal_elements) {
     [
-      ["crowbar", ["admin"]],
-      ["dns",     ["admin", "testing"]]
+      ["crowbar", ["admin.crowbar.com"]],
+      ["dns",     ["admin.crowbar.com", "testing.crowbar.com"]]
     ]}
 
   describe "service object" do
@@ -35,7 +41,7 @@ describe ServiceObject do
   describe "validate_proposal_elements" do
     it "raises on duplicate nodes" do
       pe = proposal_elements
-      pe.first.last.push("admin")
+      pe.first.last.push("admin.crowbar.com")
 
       expect {
         service_object.validate_proposal_elements(pe)
@@ -83,10 +89,10 @@ describe ServiceObject do
 
     describe "count" do
       it "limits the number of elements in a role" do
-        dns_proposal.elements["dns-client"] = ["admin"]
+        dns_proposal.elements["dns-client"] = ["admin.crowbar.com"]
 
         allow(dns_service).to receive(:role_constraints).
-          and_return("dns-client" => { "count" => 0, "admin" => true })
+          and_return("dns-client" => { "count" => 0, "admin.crowbar.com" => true })
         dns_service.validate_proposal_constraints(dns_proposal)
         expect(dns_service.validation_errors).to_not be_empty
         expect(dns_service.validation_errors.first).to match(/accept up to 0 elements only/)
@@ -95,7 +101,7 @@ describe ServiceObject do
 
     describe "admin" do
       it "does not allow admin nodes to be assigned by default" do
-        dns_proposal.elements["dns-client"] = ["admin"]
+        dns_proposal.elements["dns-client"] = ["admin.crowbar.com"]
 
         allow(dns_service).to receive(:role_constraints).and_return("dns-client" => {})
         dns_service.validate_proposal_constraints(dns_proposal)
@@ -148,7 +154,7 @@ describe ServiceObject do
 
     describe "platform" do
       before do
-        dns_proposal.elements["dns-client"] = ["admin"]
+        dns_proposal.elements["dns-client"] = ["admin.crowbar.com"]
       end
 
       it "allows nodes of matched platform using operator >=" do

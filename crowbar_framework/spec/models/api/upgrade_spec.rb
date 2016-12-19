@@ -2,6 +2,10 @@ require "spec_helper"
 require "crowbar/error/upgrade_cancel"
 
 describe Api::Upgrade do
+  before do
+    Node.where(name: "testing.crowbar.com").first_or_create(name: "testing.crowbar.com")
+  end
+
   let!(:upgrade_prechecks) do
     JSON.parse(
       File.read(
@@ -57,9 +61,6 @@ describe Api::Upgrade do
         "ceph" => ["x86_64"],
         "ha" => ["x86_64"]
       )
-    )
-    allow(Node).to(
-      receive(:all).and_return([Node.find_node_by_name("testing")])
     )
     allow(Api::Upgrade).to(
       receive(:target_platform).and_return("suse-12.2")
@@ -127,7 +128,7 @@ describe Api::Upgrade do
       ).and_return(true)
       allow(Node).to(
         receive(:find).with("state:crowbar_upgrade").
-        and_return([Node.find_node_by_name("testing.crowbar.com")])
+        and_return([Node.find_by_name("testing.crowbar.com")])
       )
       allow_any_instance_of(Node).to(
         receive(:shutdown_services_before_upgrade).
@@ -136,7 +137,7 @@ describe Api::Upgrade do
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :end_step
       ).and_return(true)
-      allow_any_instance_of(Node).to(
+      allow_any_instance_of(ChefNode).to(
         receive(:wait_for_script_to_finish).with(
           "/usr/sbin/crowbar-delete-cinder-services-before-upgrade.sh", 300
         ).and_return(true)
@@ -340,22 +341,22 @@ describe Api::Upgrade do
 
   context "upgrading the nodes" do
     it "successfully upgrades nodes with DRBD backend" do
-      drbd_master = Node.find_node_by_name("testing.crowbar.com")
-      drbd_slave = Node.find_node_by_name("testing.crowbar.com")
+      drbd_master = Node.find_by_name("testing.crowbar.com")
+      drbd_slave = Node.find_by_name("testing.crowbar.com")
       allow(Node).to(
         receive(:find).
         with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
-        and_return([Node.find_node_by_name("testing.crowbar.com")])
+        and_return([Node.find_by_name("testing.crowbar.com")])
       )
       allow(Node).to(
         receive(:find).
         with("drbd_rsc:*").
-        and_return([Node.find_node_by_name("testing.crowbar.com")])
+        and_return([Node.find_by_name("testing.crowbar.com")])
       )
       allow(Node).to(
         receive(:find).
         with("pacemaker_founder:true AND drbd_rsc:*").
-        and_return([Node.find_node_by_name("testing.crowbar.com")])
+        and_return([Node.find_by_name("testing.crowbar.com")])
       )
       allow(Node).to(
         receive(:find).
@@ -393,6 +394,10 @@ describe Api::Upgrade do
       allow_any_instance_of(Api::Node).to receive(:post_upgrade).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:join_and_chef).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:save_node_state).and_return(true)
+      allow(Node).to(
+        receive(:find).
+        and_return([Node.find_by_name("testing.crowbar.com")])
+      )
       allow(Api::Upgrade).to receive(:upgrade_all_compute_nodes).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
@@ -406,7 +411,7 @@ describe Api::Upgrade do
       allow(Node).to(
         receive(:find).
         with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
-        and_return([Node.find_node_by_name("testing.crowbar.com")])
+        and_return([ChefNode.find_node_by_name("testing.crowbar.com")])
       )
       allow(Api::Upgrade).to receive(:upgrade_controller_nodes).and_return(true)
       allow(Node).to(
@@ -448,12 +453,12 @@ describe Api::Upgrade do
       allow(Node).to(
         receive(:find).
         with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
-        and_return([Node.find_node_by_name("testing.crowbar.com")])
+        and_return([ChefNode.find_node_by_name("testing.crowbar.com")])
       )
       allow(Api::Upgrade).to receive(:upgrade_controller_nodes).and_return(true)
       allow(Node).to(
         receive(:find).with("roles:nova-compute-kvm").
-        and_return([Node.find_node_by_name("testing.crowbar.com")])
+        and_return([ChefNode.find_node_by_name("testing.crowbar.com")])
       )
       allow(Node).to(
         receive(:find).with("roles:nova-controller").and_return([])
@@ -475,17 +480,17 @@ describe Api::Upgrade do
     it "successfully upgrades KVM compute nodes" do
       allow(Node).to(
         receive(:find).with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
-        and_return([Node.find_node_by_name("testing.crowbar.com")])
+        and_return([ChefNode.find_node_by_name("testing.crowbar.com")])
       )
       allow(Api::Upgrade).to receive(:upgrade_controller_nodes).and_return(true)
       allow(Node).to(
         receive(:find).with("roles:nova-compute-kvm").
-        and_return([Node.find_node_by_name("testing.crowbar.com")])
+        and_return([ChefNode.find_node_by_name("testing.crowbar.com")])
       )
       allow(Node).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
       allow(Node).to(
         receive(:find).with("roles:nova-controller").
-        and_return([Node.find_node_by_name("testing.crowbar.com")])
+        and_return([ChefNode.find_node_by_name("testing.crowbar.com")])
       )
       allow(Api::Upgrade).to receive(:execute_scripts_and_wait_for_finish).and_return(true)
       allow_any_instance_of(Node).to receive(:upgraded?).and_return(false)
@@ -495,7 +500,7 @@ describe Api::Upgrade do
       allow_any_instance_of(Api::Node).to receive(:reboot_and_wait).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:post_upgrade).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:join_and_chef).and_return(true)
-      allow_any_instance_of(Node).to receive(:run_ssh_cmd).and_return(exit_code: 0)
+      allow_any_instance_of(ChefNode).to receive(:run_ssh_cmd).and_return(exit_code: 0)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
       ).with(:nodes_upgrade).and_return(true)
