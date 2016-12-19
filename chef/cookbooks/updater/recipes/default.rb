@@ -20,7 +20,6 @@
 if !node[:updater].key?(:one_shot_run) || !node[:updater][:one_shot_run]
 
   node[:updater][:one_shot_run] = true
-  node.save
 
   if node[:platform_family] == "suse"
     zypper_params = ["--non-interactive"]
@@ -66,12 +65,10 @@ if !node[:updater].key?(:one_shot_run) || !node[:updater][:one_shot_run]
               Chef::Log.info("Will reboot node at the end of chef run.")
               node.run_state[:reboot] = true
               node[:updater][:need_reboot] = false
-              node.save
             else
               Chef::Log.info("Marking node as needing a reboot.")
               node[:updater][:need_reboot] = true
               node[:updater][:need_reboot_time] = Time.now.to_i
-              node.save
             end
             break
           when 103
@@ -79,12 +76,14 @@ if !node[:updater].key?(:one_shot_run) || !node[:updater][:one_shot_run]
             if count >= 5
               message = "Ran \"#{zypper_command}\" more than five times, and it still requires more runs."
               Chef::Log.fatal(message)
+              node.save # node is always dirty due to one_shot_run
               raise message
             end
             next
           else
             message = "\"#{zypper_command}\" returned #{exitstatus}"
             Chef::Log.fatal(message)
+            node.save # node is always dirty due to one_shot_run
             raise message
           end # case
         end # while
@@ -101,7 +100,7 @@ if !node[:updater].key?(:one_shot_run) || !node[:updater][:one_shot_run]
       node.run_state[:reboot] = true
     end
     node[:updater][:need_reboot] = false
-    node.save
   end
 
+  node.save # node is always dirty due to one_shot_run
 end # if
