@@ -169,7 +169,7 @@ module Batch
     def nodes_to_aliases
       @nodes_to_aliases ||= begin
         {}.tap do |aliases|
-          NodeObject.find_all_nodes.each do |node|
+          Node.find_all_nodes.each do |node|
             aliases[node.name] = node.alias
           end
         end

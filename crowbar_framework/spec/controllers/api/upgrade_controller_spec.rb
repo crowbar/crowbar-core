@@ -82,7 +82,7 @@ describe Api::UpgradeController, type: :request do
     end
 
     it "initiates the upgrade of nodes" do
-      allow_any_instance_of(NodeObject).to receive(:run_ssh_cmd).and_return(
+      allow_any_instance_of(Node).to receive(:run_ssh_cmd).and_return(
         stdout: "",
         tderr: "",
         exit_code: 0
@@ -99,7 +99,7 @@ describe Api::UpgradeController, type: :request do
     end
 
     it "initiates the upgrade of nodes and fails" do
-      allow_any_instance_of(NodeObject).to receive(:run_ssh_cmd).and_return(
+      allow_any_instance_of(Node).to receive(:run_ssh_cmd).and_return(
         stdout: "",
         tderr: "",
         exit_code: 1
@@ -167,11 +167,11 @@ describe Api::UpgradeController, type: :request do
     end
 
     it "checks for node repositories" do
-      allow_any_instance_of(NodeObject).to(
+      allow_any_instance_of(Node).to(
         receive(:roles).and_return(["crowbar"])
       )
-      allow(NodeObject).to(
-        receive(:all).and_return([NodeObject.find_node_by_name("testing")])
+      allow(Node).to(
+        receive(:all).and_return([Node.find_node_by_name("testing")])
       )
       allow(Api::Upgrade).to(
         receive(:target_platform).and_return("suse-12.2")

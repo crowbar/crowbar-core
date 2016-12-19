@@ -19,7 +19,7 @@ require "chef/mixin/deep_merge"
 require "timeout"
 require "open3"
 
-class NodeObject < ChefObject
+class Node < ChefObject
   include Crowbar::ConduitResolver
 
   self.chef_type = "node"
@@ -36,7 +36,7 @@ class NodeObject < ChefObject
       nodes[0].delete_if { |x| x.nil? }
       answer = nodes[0].map do |x|
         begin
-          NodeObject.new x
+          Node.new x
         rescue Crowbar::Error::NotFound
           nil
         end
@@ -67,7 +67,7 @@ class NodeObject < ChefObject
 
   def self.default_platform
     @default_platform ||= begin
-      provisioner = NodeObject.find("roles:provisioner-server").first
+      provisioner = Node.find("roles:provisioner-server").first
       unless provisioner.nil? || provisioner["provisioner"]["default_os"].nil?
          provisioner["provisioner"]["default_os"]
       else
@@ -83,7 +83,7 @@ class NodeObject < ChefObject
 
   def self.available_platforms(architecture)
     @available_platforms ||= begin
-      provisioner = NodeObject.find("roles:provisioner-server").first
+      provisioner = Node.find("roles:provisioner-server").first
       if provisioner.nil?
         {}
       else
@@ -133,7 +133,7 @@ class NodeObject < ChefObject
 
   def self.disabled_platforms(architecture)
     @disabled_platforms ||= begin
-      provisioner = NodeObject.find("roles:provisioner-server").first
+      provisioner = Node.find("roles:provisioner-server").first
       if provisioner.nil?
         {}
       else
@@ -178,7 +178,7 @@ class NodeObject < ChefObject
     begin
       chef_node = Chef::Node.load(name)
       unless chef_node.nil?
-        NodeObject.new(chef_node)
+        Node.new(chef_node)
       else
         nil
       end
@@ -233,9 +233,9 @@ class NodeObject < ChefObject
     machine = Chef::Node.new
     machine.name "#{new_name}"
     machine["fqdn"] = "#{new_name}"
-    role = RoleObject.find_role_by_name NodeObject.make_role_name(new_name)
-    role = NodeObject.create_new_role(new_name, machine) if role.nil?
-    NodeObject.new machine
+    role = RoleObject.find_role_by_name Node.make_role_name(new_name)
+    role = Node.create_new_role(new_name, machine) if role.nil?
+    Node.new machine
   end
 
   def method_missing(method, *args, &block)
@@ -247,11 +247,11 @@ class NodeObject < ChefObject
   end
 
   def initialize(node)
-    @role = RoleObject.find_role_by_name NodeObject.make_role_name(node.name)
+    @role = RoleObject.find_role_by_name Node.make_role_name(node.name)
     if @role.nil?
       # An admin node can exist without a role - so create one
       if !node["crowbar"].nil? and node["crowbar"]["admin_node"]
-        @role = NodeObject.create_new_role(node.name, node)
+        @role = Node.create_new_role(node.name, node)
       else
         Rails.logger.fatal("Node exists without role!! #{node.name}")
         raise Crowbar::Error::NotFound.new
@@ -404,7 +404,7 @@ class NodeObject < ChefObject
     end
 
     if unique_check
-      node = NodeObject.find_node_by_alias value
+      node = Node.find_node_by_alias value
 
       if node and node.handle != handle
         Rails.logger.warn "Alias #{value} not saved because #{node.name} already has the same alias."
@@ -464,7 +464,7 @@ class NodeObject < ChefObject
       end
 
       if unique_check
-        node = NodeObject.find_node_by_public_name value
+        node = Node.find_node_by_public_name value
 
         if node and !node.handle == handle
           Rails.logger.warn "Public name #{value} not saved because #{node.name} already has the same public name."

@@ -158,9 +158,9 @@ class NetworkController < BarclampController
     @nodes = {}
 
     nodes = if params[:node]
-      NodeObject.find_nodes_by_name params[:node]
+      Node.find_nodes_by_name params[:node]
     else
-      NodeObject.all
+      Node.all
     end
 
     nodes.each do |node|
@@ -232,7 +232,7 @@ class NetworkController < BarclampController
       @vlans = net_bc.default_attributes["network"]["networks"]
     end
     @nodes = {}
-    NodeObject.all.each do |node|
+    Node.all.each do |node|
       @nodes[node.handle] = { alias: node.alias, description: node.description(false, true), vlans: {} }
       @nodes[node.handle][:vlans] = node_vlans(node)
     end
@@ -258,7 +258,7 @@ class NetworkController < BarclampController
     end
 
     @nodes = {}
-    NodeObject.all.each do |node|
+    Node.all.each do |node|
       @nodes[node.handle] = {
         alias: node.alias,
         description: node.description,

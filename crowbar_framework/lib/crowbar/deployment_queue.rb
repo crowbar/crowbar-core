@@ -278,7 +278,7 @@ module Crowbar
       # Remove the entries from the nodes.
       new_lock("BA-LOCK").with_lock do
         nodes_map.each do |node_name, data|
-          node = NodeObject.find_node_by_name(node_name)
+          node = Node.find_node_by_name(node_name)
           next if node.nil?
           unless node.crowbar["crowbar"]["pending"].nil? or node.crowbar["crowbar"]["pending"]["#{bc}-#{inst}"].nil?
             node.crowbar["crowbar"]["pending"]["#{bc}-#{inst}"] = {}
@@ -306,7 +306,7 @@ module Crowbar
 
         # Add the role to node's list
         nodes.each do |node_name|
-          if NodeObject.find_node_by_name(node_name).nil?
+          if Node.find_node_by_name(node_name).nil?
             logger.debug "elements_to_nodes_to_roles_map: skipping deleted node #{node_name}"
             next
           end
@@ -345,7 +345,7 @@ module Crowbar
           nodes_map.each do |node_name, val|
             # Make sure we have a node.
             node = pre_cached_nodes[node_name]
-            node = NodeObject.find_node_by_name(node_name) if node.nil?
+            node = Node.find_node_by_name(node_name) if node.nil?
             next if node.nil?
             pre_cached_nodes[node_name] = node
 
@@ -370,7 +370,7 @@ module Crowbar
       # Check to see if we should delay our commit until nodes are ready.
       delay = []
       nodes.each do |n|
-        node = NodeObject.find_node_by_name(n)
+        node = Node.find_node_by_name(n)
         next if node.nil?
 
         pre_cached_nodes[n] = node

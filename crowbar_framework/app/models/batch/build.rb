@@ -35,7 +35,7 @@ module Batch
     def aliases_to_nodes
       @aliases_to_nodes ||= begin
         {}.tap do |aliases|
-          NodeObject.find_all_nodes.each do |node|
+          Node.find_all_nodes.each do |node|
             aliases[node.alias] = node.name
           end
         end

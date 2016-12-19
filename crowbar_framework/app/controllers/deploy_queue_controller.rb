@@ -10,7 +10,7 @@ class DeployQueueController < ApplicationController
 
   def node_name_map
     nodes = {}
-    NodeObject.all.each { |node| nodes[node.name] = node }
+    Node.all.each { |node| nodes[node.name] = node }
     nodes
   end
 

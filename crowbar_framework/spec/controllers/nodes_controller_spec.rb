@@ -22,7 +22,7 @@ describe NodesController do
 
   before do
     Proposal.where(barclamp: "crowbar", name: "default").first_or_create(barclamp: "crowbar", name: "default")
-    allow_any_instance_of(NodeObject).to receive(:system).and_return(true)
+    allow_any_instance_of(Node).to receive(:system).and_return(true)
   end
 
   describe "GET index" do
@@ -47,7 +47,7 @@ describe NodesController do
     end
 
     it "sets a flash notice if no nodes found" do
-      allow(NodeObject).to receive(:all).and_return([])
+      allow(Node).to receive(:all).and_return([])
       get :index
       expect(flash[:notice]).to_not be_empty
     end
@@ -55,8 +55,8 @@ describe NodesController do
 
   describe "POST update" do
     before do
-      allow(NodeObject).to receive(:find_node_by_public_name).and_return(nil)
-      @node = NodeObject.find_node_by_name("admin")
+      allow(Node).to receive(:find_node_by_public_name).and_return(nil)
+      @node = Node.find_node_by_name("admin")
     end
 
     describe "coming from the allocate form" do
@@ -100,8 +100,8 @@ describe NodesController do
   end
 
   describe "POST bulk" do
-    let(:admin) { NodeObject.find_node_by_name("admin") }
-    let(:node) { NodeObject.find_node_by_name("testing") }
+    let(:admin) { Node.find_node_by_name("admin") }
+    let(:node) { Node.find_node_by_name("testing") }
 
     it "redirects to nodes list on success if return param passed" do
       post :bulk, node: { node.name => { "allocate" => true, "alias" => "newalias" } }, return: "true"
@@ -132,8 +132,8 @@ describe NodesController do
     end
 
     it "reports nodes for which update failed" do
-      allow_any_instance_of(NodeObject).to receive(:force_alias=) { raise StandardError }
-      allow_any_instance_of(NodeObject).to receive(:force_public_name=) { raise StandardError }
+      allow_any_instance_of(Node).to receive(:force_alias=) { raise StandardError }
+      allow_any_instance_of(Node).to receive(:force_public_name=) { raise StandardError }
 
       post :bulk, node: { node.name => { "allocate" => true, "alias" => "newalias" } }
       expect(assigns(:report)[:failed]).to include(node.name)
@@ -144,7 +144,7 @@ describe NodesController do
   end
 
   describe "GET families" do
-    let(:node) { NodeObject.find_node_by_name("testing") }
+    let(:node) { Node.find_node_by_name("testing") }
 
     it "is successful" do
       get :families
@@ -170,7 +170,7 @@ describe NodesController do
     end
 
     it "renders error if fetch fails" do
-      allow(NodeObject).to receive(:all) { raise Errno::ECONNREFUSED }
+      allow(Node).to receive(:all) { raise Errno::ECONNREFUSED }
       get :status, format: "json"
       json = JSON.parse(response.body)
       expect(json["error"]).to_not be_empty
@@ -233,7 +233,7 @@ describe NodesController do
       end
 
       ["reboot", "shutdown", "poweron", "powercycle", "poweroff", "identify", "allocate"].each do |action|
-        expect_any_instance_of(NodeObject).to receive(action.to_sym)
+        expect_any_instance_of(Node).to receive(action.to_sym)
         post :hit, req: action, id: "testing"
       end
     end
@@ -241,7 +241,7 @@ describe NodesController do
 
   describe "POST group_change" do
     before do
-      @node = NodeObject.find_node_by_name("testing")
+      @node = Node.find_node_by_name("testing")
     end
 
     it "returns not found for nonexistent node" do
@@ -252,7 +252,7 @@ describe NodesController do
     end
 
     it "assigns a node to a group" do
-      allow(NodeObject).to receive(:find_node_by_name).and_return(@node)
+      allow(Node).to receive(:find_node_by_name).and_return(@node)
 
       new_group = "new_group"
       post :group_change, id: @node.name, group: new_group
@@ -262,7 +262,7 @@ describe NodesController do
     end
 
     it "sets node group to blank if 'automatic' passed" do
-      allow(NodeObject).to receive(:find_node_by_name).and_return(@node)
+      allow(Node).to receive(:find_node_by_name).and_return(@node)
 
       new_group = "automatic"
       post :group_change, id: @node.name, group: new_group
@@ -274,7 +274,7 @@ describe NodesController do
 
   describe "GET attribute" do
     before do
-      @node = NodeObject.find_node_by_name("testing")
+      @node = Node.find_node_by_name("testing")
     end
 
     # FIXME: maybe regular 404 would be better?

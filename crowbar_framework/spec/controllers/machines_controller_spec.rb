@@ -19,7 +19,7 @@ require "spec_helper"
 
 describe MachinesController do
   before do
-    allow_any_instance_of(NodeObject).to receive(:system).and_return(true)
+    allow_any_instance_of(Node).to receive(:system).and_return(true)
   end
 
   describe "GET index" do
@@ -68,7 +68,7 @@ describe MachinesController do
 
     context "without nodes" do
       before do
-        allow(NodeObject).to receive(:find_all_nodes).and_return([])
+        allow(Node).to receive(:find_all_nodes).and_return([])
       end
 
       it "renders json" do
@@ -124,7 +124,7 @@ describe MachinesController do
   describe "POST role" do
     context "for existent node" do
       it "assignes role compute" do
-        expect_any_instance_of(NodeObject).to receive(:intended_role=).with("compute")
+        expect_any_instance_of(Node).to receive(:intended_role=).with("compute")
 
         post :role, name: "testing", role: "compute", format: "json"
         expect(response).to have_http_status(:ok)
@@ -137,8 +137,8 @@ describe MachinesController do
     end
 
     it "return 422 (unprocessable_entity) http status when save fails" do
-      allow_any_instance_of(NodeObject).to receive(:save).and_return(false)
-      expect_any_instance_of(NodeObject).to receive(:intended_role=).with("compute")
+      allow_any_instance_of(Node).to receive(:save).and_return(false)
+      expect_any_instance_of(Node).to receive(:intended_role=).with("compute")
 
       post :role, name: "testing", role: "compute", format: "json"
 
@@ -149,7 +149,7 @@ describe MachinesController do
   describe "POST rename" do
     context "for existent node" do
       it "renames a node to tester" do
-        expect_any_instance_of(NodeObject).to receive(:alias=).with("tester")
+        expect_any_instance_of(Node).to receive(:alias=).with("tester")
 
         post :rename, name: "testing", alias: "tester", format: "json"
         expect(response).to have_http_status(:ok)
@@ -162,8 +162,8 @@ describe MachinesController do
     end
 
     it "return 422 (unprocessable_entity) http status when save fails" do
-      allow_any_instance_of(NodeObject).to receive(:save).and_return(false)
-      expect_any_instance_of(NodeObject).to receive(:alias=).with("tester")
+      allow_any_instance_of(Node).to receive(:save).and_return(false)
+      expect_any_instance_of(Node).to receive(:alias=).with("tester")
 
       post :rename, name: "testing", alias: "tester", format: "json"
 
@@ -178,7 +178,7 @@ describe MachinesController do
     describe "POST #{action}" do
       context "for existent node" do
         it "invokes #{action}" do
-          expect_any_instance_of(NodeObject).to receive(action)
+          expect_any_instance_of(Node).to receive(action)
 
           post action, name: "testing", format: "json"
           expect(response).to have_http_status(:ok)
@@ -208,14 +208,14 @@ describe MachinesController do
     describe "POST #{action}" do
       context "for existent node" do
         it "invokes #{action}" do
-          expect_any_instance_of(NodeObject).to receive(action)
+          expect_any_instance_of(Node).to receive(action)
 
           post action, name: "testing", format: "json"
           expect(response).to have_http_status(:ok)
         end
 
         it "return 403 (forbidden) http status for admin node" do
-          allow_any_instance_of(NodeObject).to receive(:admin?).and_return(true)
+          allow_any_instance_of(Node).to receive(:admin?).and_return(true)
           post action, name: "testing", format: "json"
           expect(response).to have_http_status(:forbidden)
         end

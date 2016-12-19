@@ -109,7 +109,7 @@ class SupportController < ApplicationController
         file.unlink if file.extname == ".json"
       end
 
-      NodeObject.all.each { |n| n.export }
+      Node.all.each { |n| n.export }
       RoleObject.all.each { |r| r.export }
       Proposal.all.each { |p| p.export }
 

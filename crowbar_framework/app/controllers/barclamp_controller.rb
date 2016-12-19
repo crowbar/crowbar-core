@@ -126,7 +126,7 @@ class BarclampController < ApplicationController
         # Be backward compatible with barclamps returning a node hash, passing
         # them intact.
         if response[:name]
-          render json: NodeObject.find_node_by_name(response[:name]).to_hash
+          render json: Node.find_node_by_name(response[:name]).to_hash
         else
           render json: response
         end
@@ -928,7 +928,7 @@ class BarclampController < ApplicationController
           flash[:notice] = answer[1] if answer[0] >= 300 and answer[0] < 400
           flash[:notice] = t("barclamp.proposal_show.commit_proposal_success") if answer[0] == 200
           if answer[0] == 202
-            missing_nodes = answer[1].map { |node_dns| NodeObject.find_node_by_name(node_dns) }
+            missing_nodes = answer[1].map { |node_dns| Node.find_node_by_name(node_dns) }
 
             unready_nodes = missing_nodes.select { |n| n.state != "ready" }.map(&:alias)
             unallocated_nodes = missing_nodes.reject(&:allocated?).map(&:alias)

@@ -45,7 +45,7 @@ class NetworkService < ServiceObject
     return [404, "No type specified"] if type.nil?
 
     if type == :node
-      node = NodeObject.find_node_by_name object
+      node = Node.find_node_by_name object
       @logger.error("Network allocate ip from node: return node not found: #{object} #{network}") if node.nil?
       return [404, "No node found"] if node.nil?
       name = node.name.to_s
@@ -152,7 +152,7 @@ class NetworkService < ServiceObject
 
     if type == :node
       # Find the node
-      node = NodeObject.find_node_by_name object
+      node = Node.find_node_by_name object
       @logger.error("Network deallocate ip from node: return node not found: #{object} #{network}") if node.nil?
       return [404, "No node found"] if node.nil?
     end
@@ -275,7 +275,7 @@ class NetworkService < ServiceObject
   end
 
   def proposal_create_bootstrap(params)
-    params["deployment"][@bc_name]["elements"]["switch_config"] = [NodeObject.admin_node.name]
+    params["deployment"][@bc_name]["elements"]["switch_config"] = [Node.admin_node.name]
     super(params)
   end
 
@@ -296,7 +296,7 @@ class NetworkService < ServiceObject
       end
 
       if state == "hardware-installing"
-        node = NodeObject.find_node_by_name name
+        node = Node.find_node_by_name name
 
         # Allocate required addresses
         range = node.admin? ? "admin" : "host"
@@ -342,14 +342,14 @@ class NetworkService < ServiceObject
         end
 
         # save this on the node after it's been refreshed with the network info.
-        node = NodeObject.find_node_by_name node.name
+        node = Node.find_node_by_name node.name
         node.crowbar["crowbar"]["boot_ip_hex"] = boot_ip_hex if boot_ip_hex
         node.save
       end
     end
 
     if ["delete", "reset"].include? state
-      node = NodeObject.find_node_by_name name
+      node = Node.find_node_by_name name
       nets = node.crowbar["crowbar"]["network"].keys
       nets.each do |net|
         next if net == "admin"
@@ -369,7 +369,7 @@ class NetworkService < ServiceObject
     return [404, "No name specified"] if name.nil?
 
     # Find the node
-    node = NodeObject.find_node_by_name name
+    node = Node.find_node_by_name name
     @logger.error("Network enable_interface: return node not found: #{name} #{network}") if node.nil?
     return [404, "No node found"] if node.nil?
 

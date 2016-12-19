@@ -80,7 +80,7 @@ module Api
 
       def ceph_status
         {}.tap do |ret|
-          ceph_node = NodeObject.find("roles:ceph-mon AND ceph_config_environment:*").first
+          ceph_node = ::Node.find("roles:ceph-mon AND ceph_config_environment:*").first
           return ret if ceph_node.nil?
           ssh_retval = ceph_node.run_ssh_cmd("LANG=C ceph health 2>&1")
           unless ssh_retval[:stdout].include? "HEALTH_OK"
@@ -94,7 +94,7 @@ module Api
       def compute_resources_status
         {}.tap do |ret|
           ["kvm", "xen"].each do |virt|
-            compute_nodes = NodeObject.find("roles:nova-compute-#{virt}")
+            compute_nodes = ::Node.find("roles:nova-compute-#{virt}")
             next unless compute_nodes.size == 1
             ret["errors"] ||= []
             ret["errors"].push(

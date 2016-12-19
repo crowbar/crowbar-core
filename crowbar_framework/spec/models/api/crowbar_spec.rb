@@ -16,7 +16,7 @@ describe Api::Crowbar do
       )
     )
   end
-  let!(:node) { NodeObject.find_node_by_name("testing") }
+  let!(:node) { Node.find_node_by_name("testing") }
 
   before(:each) do
     allow_any_instance_of(Kernel).to(
@@ -108,11 +108,11 @@ describe Api::Crowbar do
 
   context "with ceph cluster healthy" do
     it "succeeds to check ceph cluster health" do
-      allow(NodeObject).to(
+      allow(Node).to(
         receive(:find).with("roles:ceph-mon AND ceph_config_environment:*").
-        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+        and_return([Node.find_node_by_name("testing.crowbar.com")])
       )
-      allow_any_instance_of(NodeObject).to(
+      allow_any_instance_of(Node).to(
         receive(:run_ssh_cmd).with("LANG=C ceph health 2>&1").
         and_return(exit_code: 0, stdout: "HEALTH_OK\n", stderr: "")
       )
@@ -122,11 +122,11 @@ describe Api::Crowbar do
 
   context "with ceph cluster not healthy" do
     it "fails when checking ceph cluster health" do
-      allow(NodeObject).to(
+      allow(Node).to(
         receive(:find).with("roles:ceph-mon AND ceph_config_environment:*").
-        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+        and_return([Node.find_node_by_name("testing.crowbar.com")])
       )
-      allow_any_instance_of(NodeObject).to(
+      allow_any_instance_of(Node).to(
         receive(:run_ssh_cmd).with("LANG=C ceph health 2>&1").
         and_return(exit_code: 1, stdout: "HEALTH_ERR\n", stderr: "")
       )
@@ -134,11 +134,11 @@ describe Api::Crowbar do
     end
 
     it "fails when exit value of ceph check is 0 but stdout still not correct" do
-      allow(NodeObject).to(
+      allow(Node).to(
         receive(:find).with("roles:ceph-mon AND ceph_config_environment:*").
-        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+        and_return([Node.find_node_by_name("testing.crowbar.com")])
       )
-      allow_any_instance_of(NodeObject).to(
+      allow_any_instance_of(Node).to(
         receive(:run_ssh_cmd).with("LANG=C ceph health 2>&1").
         and_return(exit_code: 0, stdout: "HEALTH_WARN", stderr: "")
       )
@@ -148,11 +148,11 @@ describe Api::Crowbar do
 
   context "with enough compute resources" do
     it "succeeds to find enough compute nodes" do
-      allow(NodeObject).to(
+      allow(Node).to(
         receive(:find).with("roles:nova-compute-kvm").
         and_return([node, node])
       )
-      allow(NodeObject).to(
+      allow(Node).to(
         receive(:find).with("roles:nova-compute-xen").
         and_return([node, node])
       )
@@ -162,22 +162,22 @@ describe Api::Crowbar do
 
   context "with not enough compute resources" do
     it "finds there is only one KVM compute node and fails" do
-      allow(NodeObject).to(
+      allow(Node).to(
         receive(:find).with("roles:nova-compute-kvm").
         and_return([node])
       )
-      allow(NodeObject).to(
+      allow(Node).to(
         receive(:find).with("roles:nova-compute-xen").
         and_return([node, node])
       )
       expect(subject.class.compute_resources_status).to_not be_empty
     end
     it "finds there is only one XEN compute node and fails" do
-      allow(NodeObject).to(
+      allow(Node).to(
         receive(:find).with("roles:nova-compute-kvm").
         and_return([node, node])
       )
-      allow(NodeObject).to(
+      allow(Node).to(
         receive(:find).with("roles:nova-compute-xen").
         and_return([node])
       )
@@ -187,11 +187,11 @@ describe Api::Crowbar do
 
   context "with no compute resources" do
     it "finds there is no compute node at all" do
-      allow(NodeObject).to(
+      allow(Node).to(
         receive(:find).with("roles:nova-compute-kvm").
         and_return([])
       )
-      allow(NodeObject).to(
+      allow(Node).to(
         receive(:find).with("roles:nova-compute-xen").
         and_return([])
       )

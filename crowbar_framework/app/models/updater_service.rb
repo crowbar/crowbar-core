@@ -40,7 +40,7 @@ class UpdaterService < ServiceObject
     base = super
     @logger.debug("Updater create_proposal: leaving base part")
 
-    nodes = NodeObject.all
+    nodes = Node.all
     # Don't include the admin node by default, you never know...
     nodes.delete_if { |n| n.nil? or n.admin? }
 
@@ -57,7 +57,7 @@ class UpdaterService < ServiceObject
     @logger.debug("Updater apply_role_post_chef_call: entering #{all_nodes.inspect}")
     # Remove [:updater][:one_shot_run] flag from node
     all_nodes.each do |n|
-      node = NodeObject.find_node_by_name n
+      node = Node.find_node_by_name n
       unless node[:updater].nil?
         node[:updater][:one_shot_run] = false
         @logger.debug("Updater apply_role_post_chef_call: delete [:updater][:one_shot_run] for #{node.name} (#{node[:updater].inspect}")
