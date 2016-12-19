@@ -16,6 +16,9 @@
 #
 
 class NodesController < ApplicationController
+  # allow node polling during the upgrade
+  skip_before_filter :upgrade, only: [:index]
+
   api :GET, "/nodes", "List all nodes and their status"
   header "Accept", "application/json", required: true
   example '
