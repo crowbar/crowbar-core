@@ -42,29 +42,26 @@ unless node[:platform_family] == "suse"
   end
 end
 
-node.set["crowbar"]["ssh"] ||= {}
-
 # Start with a blank slate, to ensure that any keys removed from a
 # previously applied proposal will be removed.  It also means that any
 # keys manually added to authorized_keys will be automatically removed
 # by Chef.
-node.set["crowbar"]["ssh"]["access_keys"] = {}
+access_keys = {}
 
 # Build my key
 if ::File.exists?("/root/.ssh/id_rsa.pub") == false
   %x{ssh-keygen -t rsa -f /root/.ssh/id_rsa -N ""}
 end
 
-str = %x{cat /root/.ssh/id_rsa.pub}.chomp
-node.set["crowbar"]["ssh"]["root_pub_key"] = str
-node.set["crowbar"]["ssh"]["access_keys"][node.name] = str
+root_pub_key = %x{cat /root/.ssh/id_rsa.pub}.chomp
+access_keys[node.name] = root_pub_key
 
 # Add additional keys
 node["provisioner"]["access_keys"].strip.split("\n").each do |key|
   key.strip!
   if !key.empty?
     nodename = key.split(" ")[2]
-    node.set["crowbar"]["ssh"]["access_keys"][nodename] = key
+    access_keys[nodename] = key
   end
 end
 
@@ -76,19 +73,32 @@ provisioners.each do |n|
 
   pkey = n["crowbar"]["ssh"]["root_pub_key"] rescue nil
   if !pkey.nil? and pkey != node["crowbar"]["ssh"]["access_keys"][n.name]
-    node.set["crowbar"]["ssh"]["access_keys"][n.name] = pkey
+    access_keys[n.name] = pkey
   end
+end
+
+dirty = false
+node.set["crowbar"]["ssh"] ||= {}
+
+if node["crowbar"]["ssh"]["root_pub_key"] != root_pub_key
+  node.set["crowbar"]["ssh"]["root_pub_key"] = root_pub_key
+  dirty = true
+end
+if node["crowbar"]["ssh"]["access_keys"] != access_keys
+  node.set["crowbar"]["ssh"]["access_keys"] = access_keys
+  dirty = true
 end
 
 # Fix bug we had in stoney and earlier where we never saved the target_platform
 # of the node when the node was installed with the default target platform.
 # This only works because the default target platform didn't change between
 # stoney and tex.
-if node[:target_platform].nil? or node[:target_platform].empty?
+if node[:target_platform].nil? || node[:target_platform].empty?
   node.set[:target_platform] = provisioner_server_node[:provisioner][:default_os]
+  dirty = true
 end
 
-node.save
+node.save if dirty
 
 template "/root/.ssh/authorized_keys" do
   owner "root"
