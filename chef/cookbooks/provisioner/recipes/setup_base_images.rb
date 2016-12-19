@@ -331,8 +331,8 @@ end
 # If the comitted proposal has a default, try it.
 # Otherwise use the OS the provisioner node is using.
 
-unless default_os = node[:provisioner][:default_os]
-  node.set[:provisioner][:default_os] = default = "#{node[:platform]}-#{node[:platform_version]}"
+if node[:provisioner][:default_os].nil?
+  node.set[:provisioner][:default_os] = "#{node[:platform]}-#{node[:platform_version]}"
   node.save
 end
 
