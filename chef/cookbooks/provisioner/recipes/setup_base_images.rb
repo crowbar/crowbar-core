@@ -14,6 +14,8 @@
 # limitations under the License
 #
 
+dirty = false
+
 # Set up the OS images as well
 # Common to all OSes
 admin_net = Barclamp::Inventory.get_network_by_type(node, "admin")
@@ -50,7 +52,10 @@ if crowbar_key != ""
   append_line += " crowbar.install.key=#{crowbar_key}"
 end
 append_line = append_line.split.join(" ")
-node.set[:provisioner][:sledgehammer_append_line] = append_line
+if node[:provisioner][:sledgehammer_append_line] != append_line
+  node.set[:provisioner][:sledgehammer_append_line] = append_line
+  dirty = true
+end
 
 directory discovery_dir do
   mode 0o755
@@ -333,7 +338,7 @@ end
 
 if node[:provisioner][:default_os].nil?
   node.set[:provisioner][:default_os] = "#{node[:platform]}-#{node[:platform_version]}"
-  node.save
+  dirty = true
 end
 
 unless node[:provisioner][:supported_oses].keys.select{ |os| /^(hyperv|windows)/ =~ os }.empty?
@@ -418,8 +423,8 @@ unless node[:provisioner][:supported_oses].keys.select{ |os| /^(hyperv|windows)/
   end
 end
 
-node.set[:provisioner][:repositories] = Mash.new
-node.set[:provisioner][:available_oses] = Mash.new
+repositories = Mash.new
+available_oses = Mash.new
 
 node[:provisioner][:supported_oses].each do |os, arches|
   arches.each do |arch, params|
@@ -441,24 +446,24 @@ node[:provisioner][:supported_oses].each do |os, arches|
     end
 
     # Index known barclamp repositories for this OS
-    node[:provisioner][:repositories][os] ||= Mash.new
-    node[:provisioner][:repositories][os][arch] ||= Mash.new
+    repositories[os] ||= Mash.new
+    repositories[os][arch] = Mash.new
 
     if File.exist?("#{os_dir}/crowbar-extra") && File.directory?("#{os_dir}/crowbar-extra")
       Dir.foreach("#{os_dir}/crowbar-extra") do |f|
         next unless File.symlink? "#{os_dir}/crowbar-extra/#{f}"
-        node[:provisioner][:repositories][os][arch][f] ||= Hash.new
+        repositories[os][arch][f] = Hash.new
         case
         when os =~ /(ubuntu|debian)/
           bin = "deb #{web_path}/crowbar-extra/#{f} /"
           src = "deb-src #{web_path}/crowbar-extra/#{f} /"
-          node.set[:provisioner][:repositories][os][arch][f][bin] = true if
+          repositories[os][arch][f][bin] = true if
             File.exist? "#{os_dir}/crowbar-extra/#{f}/Packages.gz"
-          node.set[:provisioner][:repositories][os][arch][f][src] = true if
+          repositories[os][arch][f][src] = true if
             File.exist? "#{os_dir}/crowbar-extra/#{f}/Sources.gz"
         when os =~ /(redhat|centos|suse)/
           bin = "baseurl=#{web_path}/crowbar-extra/#{f}"
-          node.set[:provisioner][:repositories][os][arch][f][bin] = true
+          repositories[os][arch][f][bin] = true
         else
           raise ::RangeError.new("Cannot handle repos for #{os}")
         end
@@ -479,7 +484,7 @@ node[:provisioner][:supported_oses].each do |os, arches|
     case
     when /^(open)?suse/ =~ os
       # Add base OS install repo for suse
-      node.set[:provisioner][:repositories][os][arch]["base"] = { "baseurl=#{install_url}" => true }
+      repositories[os][arch]["base"] = { "baseurl=#{install_url}" => true }
 
       ntp_config = Barclamp::Config.load("core", "ntp")
       ntp_servers = ntp_config["servers"] || []
@@ -539,9 +544,9 @@ node[:provisioner][:supported_oses].each do |os, arches|
     when /^(redhat|centos)/ =~ os
       # Add base OS install repo for redhat/centos
       if ::File.exist? "#{tftproot}/#{os}/#{arch}/install/repodata"
-        node.set[:provisioner][:repositories][os][arch]["base"] = { "baseurl=#{install_url}" => true }
+        repositories[os][arch]["base"] = { "baseurl=#{install_url}" => true }
       else
-        node.set[:provisioner][:repositories][os][arch]["base"] = { "baseurl=#{install_url}/Server" => true }
+        repositories[os][arch]["base"] = { "baseurl=#{install_url}/Server" => true }
       end
       # Default kickstarts and crowbar_join scripts for redhat.
 
@@ -559,7 +564,7 @@ node[:provisioner][:supported_oses].each do |os, arches|
       end
 
     when /^ubuntu/ =~ os
-      node.set[:provisioner][:repositories][os][arch]["base"] = { install_url => true }
+      repositories[os][arch]["base"] = { install_url => true }
       # Default files needed for Ubuntu.
 
       template "#{os_dir}/net-post-install.sh" do
@@ -568,7 +573,7 @@ node[:provisioner][:supported_oses].each do |os, arches|
         group "root"
         variables(admin_web: install_url,
                   os_codename: os_codename,
-                  repos: node[:provisioner][:repositories][os][arch],
+                  repos: repositories[os][arch],
                   admin_ip: admin_ip,
                   provisioner_web: provisioner_web,
                   web_path: web_path)
@@ -623,21 +628,30 @@ node[:provisioner][:supported_oses].each do |os, arches|
       missing_files = !File.exist?("#{os_dir}/boot/bootmgr.exe")
     end
 
-    node.set[:provisioner][:available_oses][os] ||= Mash.new
-    node.set[:provisioner][:available_oses][os][arch] ||= Mash.new
+    available_oses[os] ||= Mash.new
+    available_oses[os][arch] = Mash.new
     if /^(hyperv|windows)/ =~ os
-      node.set[:provisioner][:available_oses][os][arch][:kernel] = "#{os}/#{kernel}"
-      node.set[:provisioner][:available_oses][os][arch][:initrd] = " "
-      node.set[:provisioner][:available_oses][os][arch][:append_line] = " "
+      available_oses[os][arch][:kernel] = "#{os}/#{kernel}"
+      available_oses[os][arch][:initrd] = " "
+      available_oses[os][arch][:append_line] = " "
     else
-      node.set[:provisioner][:available_oses][os][arch][:kernel] = "#{os}/#{arch}/install/#{kernel}"
-      node.set[:provisioner][:available_oses][os][arch][:initrd] = "#{os}/#{arch}/install/#{initrd}"
-      node.set[:provisioner][:available_oses][os][arch][:append_line] = append
+      available_oses[os][arch][:kernel] = "#{os}/#{arch}/install/#{kernel}"
+      available_oses[os][arch][:initrd] = "#{os}/#{arch}/install/#{initrd}"
+      available_oses[os][arch][:append_line] = append
     end
-    node.set[:provisioner][:available_oses][os][arch][:disabled] = missing_files
-    node.set[:provisioner][:available_oses][os][arch][:install_name] = role
+    available_oses[os][arch][:disabled] = missing_files
+    available_oses[os][arch][:install_name] = role
   end
 end
 
+if node[:provisioner][:repositories] != repositories
+  node.set[:provisioner][:repositories] = repositories
+  dirty = true
+end
+if node[:provisioner][:available_oses] != available_oses
+  node.set[:provisioner][:available_oses] = available_oses
+  dirty = true
+end
+
 # Save this node config.
-node.save
+node.save if dirty
