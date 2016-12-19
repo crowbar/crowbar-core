@@ -77,6 +77,7 @@ end
 
 # Find out now if we have HA setup and pass that info to the script
 use_ha = node["run_list_map"].key? "pacemaker-cluster-member"
+cluster_founder = use_ha && node["pacemaker"]["founder"]
 
 template "/usr/sbin/crowbar-shutdown-services-before-upgrade.sh" do
   source "crowbar-shutdown-services-before-upgrade.sh.erb"
@@ -85,12 +86,12 @@ template "/usr/sbin/crowbar-shutdown-services-before-upgrade.sh" do
   group "root"
   action :create
   variables(
-    use_ha: use_ha
+    use_ha: use_ha,
+    cluster_founder: cluster_founder
   )
 end
 
 cinder_controller = node["run_list_map"].key? "cinder-controller"
-cluster_founder = use_ha && node["pacemaker"]["founder"]
 
 template "/usr/sbin/crowbar-delete-cinder-services-before-upgrade.sh" do
   source "crowbar-delete-cinder-services-before-upgrade.sh.erb"
