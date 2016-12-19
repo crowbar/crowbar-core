@@ -25,6 +25,9 @@ describe MachinesController do
   describe "GET index" do
     before do
       allow(File).to receive(:exist?).and_return(true)
+      allow(File).to receive(:exist?).with(
+        "/var/lib/crowbar/upgrade/6-to-7-progress.yml"
+      ).and_return(false)
     end
 
     it "is successful" do
