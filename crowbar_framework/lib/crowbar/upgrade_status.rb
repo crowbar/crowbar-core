@@ -99,6 +99,7 @@ module Crowbar
         end
         progress[:current_step] = step_name
         progress[:steps][step_name][:status] = :running
+        progress[:steps][step_name][:errors] = {}
         save
       end
     end
