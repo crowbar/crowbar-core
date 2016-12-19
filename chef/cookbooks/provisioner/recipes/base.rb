@@ -53,7 +53,7 @@ if ::File.exists?("/root/.ssh/id_rsa.pub") == false
   %x{ssh-keygen -t rsa -f /root/.ssh/id_rsa -N ""}
 end
 
-root_pub_key = %x{cat /root/.ssh/id_rsa.pub}.chomp
+root_pub_key = `cat /root/.ssh/id_rsa.pub`.chomp
 access_keys[node.name] = root_pub_key
 
 # Add additional keys
