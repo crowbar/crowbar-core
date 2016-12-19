@@ -510,10 +510,20 @@ ifs.each {|k,v|
 }
 Chef::Log.info("Saving interfaces to crowbar_wall: #{saved_ifs.inspect}")
 
-node.set["crowbar_wall"]["network"]["interfaces"] = saved_ifs
-node.set["crowbar_wall"]["network"]["nets"] = if_mapping
-node.set["crowbar_wall"]["network"]["addrs"] = addr_mapping
-node.save
+dirty = false
+if node["crowbar_wall"]["network"]["interfaces"] != saved_ifs
+  node.set["crowbar_wall"]["network"]["interfaces"] = saved_ifs
+  dirty = true
+end
+if node["crowbar_wall"]["network"]["nets"] != if_mapping
+  node.set["crowbar_wall"]["network"]["nets"] = if_mapping
+  dirty = true
+end
+if node["crowbar_wall"]["network"]["addrs"] != addr_mapping
+  node.set["crowbar_wall"]["network"]["addrs"] = addr_mapping
+  dirty = true
+end
+node.save if dirty
 
 # Flag to let us know that networking on this node
 # is now managed by the netowrk barclamp.
