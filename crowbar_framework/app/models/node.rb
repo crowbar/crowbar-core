@@ -24,228 +24,6 @@ class Node < ChefObject
 
   self.chef_type = "node"
 
-  def self.find(search)
-    answer = []
-    nodes = if search.nil?
-      ChefObject.query_chef.search "node"
-    else
-      ChefObject.query_chef.search "node", "#{chef_escape(search)}"
-    end
-
-    if nodes.is_a?(Array) and nodes[2] != 0 and !nodes[0].nil?
-      nodes[0].delete_if { |x| x.nil? }
-      answer = nodes[0].map do |x|
-        begin
-          Node.new x
-        rescue Crowbar::Error::NotFound
-          nil
-        end
-      end
-      answer.compact!
-    end
-    return answer
-  end
-
-  def self.find_all_nodes
-    self.find nil
-  end
-
-  def self.find_nodes_by_name(name)
-    self.find "name:#{chef_escape(name)}"
-  end
-
-  def self.find_node_by_alias(name)
-    nodes = self.find_all_nodes.select { |n| n.alias.downcase == name.downcase }
-    if nodes.length == 1
-      return nodes[0]
-    elsif nodes.length == 0
-      nil
-    else
-      raise "#{I18n.t('multiple_node_alias', scope: 'model.node')}: #{nodes.join(',')}"
-    end
-  end
-
-  def self.default_platform
-    @default_platform ||= begin
-      provisioner = Node.find("roles:provisioner-server").first
-      unless provisioner.nil? || provisioner["provisioner"]["default_os"].nil?
-         provisioner["provisioner"]["default_os"]
-      else
-        admin = admin_node
-        if admin.nil?
-          ""
-        else
-          "#{admin[:platform]}-#{admin[:platform_version]}"
-        end
-      end
-    end
-  end
-
-  def self.available_platforms(architecture)
-    @available_platforms ||= begin
-      provisioner = Node.find("roles:provisioner-server").first
-      if provisioner.nil?
-        {}
-      else
-        platforms = {}
-
-        arches = provisioner["provisioner"]["available_oses"].keys.map do |p|
-          provisioner["provisioner"]["available_oses"][p].keys
-        end.flatten.uniq
-
-        arches.each do |arch|
-          availables_oses = provisioner["provisioner"]["available_oses"].keys.select do |p|
-            provisioner["provisioner"]["available_oses"][p].key? arch
-          end
-
-          # Sort the platforms:
-          #  - first, the default platform
-          #  - between first and the Hyper-V/Windows bits: others, sorted
-          #    alphabetically
-          #  - last Hyper-V, and just before that Windows
-          platform_order = { "windows" => 90, "hyperv" => 100 }
-          platforms[arch] = availables_oses.uniq.sort do |x, y|
-            platform_x, version_x = x.split("-")
-            platform_y, version_y = y.split("-")
-            platform_order_x = platform_order[platform_x] || 1
-            platform_order_y = platform_order[platform_y] || 1
-
-            if x == default_platform
-              -1
-            elsif y == default_platform
-              1
-            elsif platform_x == platform_y
-              version_y <=> version_x
-            elsif platform_order_x == platform_order_y
-              x <=> y
-            else
-              platform_order_x <=> platform_order_y
-            end
-          end
-        end
-
-        platforms
-      end
-    end
-
-    @available_platforms[architecture] || []
-  end
-
-  def self.disabled_platforms(architecture)
-    @disabled_platforms ||= begin
-      provisioner = Node.find("roles:provisioner-server").first
-      if provisioner.nil?
-        {}
-      else
-        platforms = {}
-
-        arches = provisioner["provisioner"]["available_oses"].keys.map do |p|
-          provisioner["provisioner"]["available_oses"][p].keys
-        end.flatten.uniq
-
-        arches.each do |arch|
-          available_oses = provisioner["provisioner"]["available_oses"].keys.select do |p|
-            provisioner["provisioner"]["available_oses"][p].key? arch
-          end
-
-          platforms[arch] = available_oses.select do |p|
-            # Only allow one platform for SUSE Enterprise Storage
-            provisioner["provisioner"]["available_oses"][p][arch]["disabled"] ||
-              (Crowbar::Product::is_ses? ? p != Crowbar::Product::ses_platform : false)
-          end
-        end
-
-        platforms
-      end
-    end
-
-    @disabled_platforms[architecture] || []
-  end
-
-  def self.find_node_by_public_name(name)
-    nodes = self.find "crowbar_public_name:#{chef_escape(name)}"
-    if nodes.length == 1
-      return nodes[0]
-    elsif nodes.length == 0
-      nil
-    else
-      raise "#{I18n.t('multiple_node_public_name', scope: 'model.node')}: #{nodes.join(',')}"
-    end
-  end
-
-  def self.find_node_by_name(name)
-    name += ".#{Crowbar::Settings.domain}" unless name =~ /(.*)\.(.)/
-    begin
-      chef_node = Chef::Node.load(name)
-      unless chef_node.nil?
-        Node.new(chef_node)
-      else
-        nil
-      end
-    rescue Errno::ECONNREFUSED => e
-      raise Crowbar::Error::ChefOffline.new
-    rescue Crowbar::Error::NotFound => e
-      nil
-    rescue StandardError => e
-      Rails.logger.warn("Could not recover Chef Crowbar Node on load #{name}: #{e.inspect}")
-      nil
-    end
-  end
-
-  def self.find_node_by_name_or_alias(name)
-    node = find_node_by_name(name)
-
-    if node.nil?
-      find_node_by_alias(name)
-    else
-      node
-    end
-  end
-
-  def self.all
-    self.find nil
-  end
-
-  def self.admin_node
-    find("role:crowbar").detect(&:admin?)
-  end
-
-  def self.make_role_name(name)
-    "crowbar-#{name.gsub(".", "_")}"
-  end
-
-  def self.create_new_role(new_name, machine)
-    name = make_role_name new_name
-    role = RoleObject.new Chef::Role.new
-    role.name = name
-    role.default_attributes["crowbar"] = {}
-    role.default_attributes["crowbar"]["network"] = {}
-    role.save
-
-    # This run_list call is to add the crowbar tracking role to the node. (SAFE)
-    machine.run_list.run_list_items << "role[#{role.name}]"
-    machine.save
-
-    role
-  end
-
-  def self.create_new(new_name)
-    machine = Chef::Node.new
-    machine.name "#{new_name}"
-    machine["fqdn"] = "#{new_name}"
-    role = RoleObject.find_role_by_name Node.make_role_name(new_name)
-    role = Node.create_new_role(new_name, machine) if role.nil?
-    Node.new machine
-  end
-
-  def method_missing(method, *args, &block)
-    if @node.respond_to? method
-      @node.send(method, *args, &block)
-    else
-      super
-    end
-  end
-
   def initialize(node)
     @role = RoleObject.find_role_by_name Node.make_role_name(node.name)
     if @role.nil?
@@ -1660,4 +1438,228 @@ class Node < ChefObject
     Rails.logger.error(s)
   end
   ## End of Crowbar::ConduitResolver overrides
+
+  def method_missing(method, *args, &block)
+    if @node.respond_to? method
+      @node.send(method, *args, &block)
+    else
+      super
+    end
+  end
+
+  class << self
+    def find(search)
+      answer = []
+      nodes = if search.nil?
+        ChefObject.query_chef.search "node"
+      else
+        ChefObject.query_chef.search "node", "#{chef_escape(search)}"
+      end
+
+      if nodes.is_a?(Array) and nodes[2] != 0 and !nodes[0].nil?
+        nodes[0].delete_if { |x| x.nil? }
+        answer = nodes[0].map do |x|
+          begin
+            Node.new x
+          rescue Crowbar::Error::NotFound
+            nil
+          end
+        end
+        answer.compact!
+      end
+      return answer
+    end
+
+    def find_all_nodes
+      self.find nil
+    end
+
+    def find_nodes_by_name(name)
+      self.find "name:#{chef_escape(name)}"
+    end
+
+    def find_node_by_alias(name)
+      nodes = self.find_all_nodes.select { |n| n.alias.downcase == name.downcase }
+      if nodes.length == 1
+        return nodes[0]
+      elsif nodes.length == 0
+        nil
+      else
+        raise "#{I18n.t('multiple_node_alias', scope: 'model.node')}: #{nodes.join(',')}"
+      end
+    end
+
+    def default_platform
+      @default_platform ||= begin
+        provisioner = Node.find("roles:provisioner-server").first
+        unless provisioner.nil? || provisioner["provisioner"]["default_os"].nil?
+           provisioner["provisioner"]["default_os"]
+        else
+          admin = admin_node
+          if admin.nil?
+            ""
+          else
+            "#{admin[:platform]}-#{admin[:platform_version]}"
+          end
+        end
+      end
+    end
+
+    def available_platforms(architecture)
+      @available_platforms ||= begin
+        provisioner = Node.find("roles:provisioner-server").first
+        if provisioner.nil?
+          {}
+        else
+          platforms = {}
+
+          arches = provisioner["provisioner"]["available_oses"].keys.map do |p|
+            provisioner["provisioner"]["available_oses"][p].keys
+          end.flatten.uniq
+
+          arches.each do |arch|
+            availables_oses = provisioner["provisioner"]["available_oses"].keys.select do |p|
+              provisioner["provisioner"]["available_oses"][p].key? arch
+            end
+
+            # Sort the platforms:
+            #  - first, the default platform
+            #  - between first and the Hyper-V/Windows bits: others, sorted
+            #    alphabetically
+            #  - last Hyper-V, and just before that Windows
+            platform_order = { "windows" => 90, "hyperv" => 100 }
+            platforms[arch] = availables_oses.uniq.sort do |x, y|
+              platform_x, version_x = x.split("-")
+              platform_y, version_y = y.split("-")
+              platform_order_x = platform_order[platform_x] || 1
+              platform_order_y = platform_order[platform_y] || 1
+
+              if x == default_platform
+                -1
+              elsif y == default_platform
+                1
+              elsif platform_x == platform_y
+                version_y <=> version_x
+              elsif platform_order_x == platform_order_y
+                x <=> y
+              else
+                platform_order_x <=> platform_order_y
+              end
+            end
+          end
+
+          platforms
+        end
+      end
+
+      @available_platforms[architecture] || []
+    end
+
+    def disabled_platforms(architecture)
+      @disabled_platforms ||= begin
+        provisioner = Node.find("roles:provisioner-server").first
+        if provisioner.nil?
+          {}
+        else
+          platforms = {}
+
+          arches = provisioner["provisioner"]["available_oses"].keys.map do |p|
+            provisioner["provisioner"]["available_oses"][p].keys
+          end.flatten.uniq
+
+          arches.each do |arch|
+            available_oses = provisioner["provisioner"]["available_oses"].keys.select do |p|
+              provisioner["provisioner"]["available_oses"][p].key? arch
+            end
+
+            platforms[arch] = available_oses.select do |p|
+              # Only allow one platform for SUSE Enterprise Storage
+              provisioner["provisioner"]["available_oses"][p][arch]["disabled"] ||
+                (Crowbar::Product::is_ses? ? p != Crowbar::Product::ses_platform : false)
+            end
+          end
+
+          platforms
+        end
+      end
+
+      @disabled_platforms[architecture] || []
+    end
+
+    def find_node_by_public_name(name)
+      nodes = self.find "crowbar_public_name:#{chef_escape(name)}"
+      if nodes.length == 1
+        return nodes[0]
+      elsif nodes.length == 0
+        nil
+      else
+        raise "#{I18n.t('multiple_node_public_name', scope: 'model.node')}: #{nodes.join(',')}"
+      end
+    end
+
+    def find_node_by_name(name)
+      name += ".#{Crowbar::Settings.domain}" unless name =~ /(.*)\.(.)/
+      begin
+        chef_node = Chef::Node.load(name)
+        unless chef_node.nil?
+          Node.new(chef_node)
+        else
+          nil
+        end
+      rescue Errno::ECONNREFUSED => e
+        raise Crowbar::Error::ChefOffline.new
+      rescue Crowbar::Error::NotFound => e
+        nil
+      rescue StandardError => e
+        Rails.logger.warn("Could not recover Chef Crowbar Node on load #{name}: #{e.inspect}")
+        nil
+      end
+    end
+
+    def find_node_by_name_or_alias(name)
+      node = find_node_by_name(name)
+
+      if node.nil?
+        find_node_by_alias(name)
+      else
+        node
+      end
+    end
+
+    def all
+      self.find nil
+    end
+
+    def admin_node
+      find("role:crowbar").detect(&:admin?)
+    end
+
+    def make_role_name(name)
+      "crowbar-#{name.gsub(".", "_")}"
+    end
+
+    def create_new_role(new_name, machine)
+      name = make_role_name new_name
+      role = RoleObject.new Chef::Role.new
+      role.name = name
+      role.default_attributes["crowbar"] = {}
+      role.default_attributes["crowbar"]["network"] = {}
+      role.save
+
+      # This run_list call is to add the crowbar tracking role to the node. (SAFE)
+      machine.run_list.run_list_items << "role[#{role.name}]"
+      machine.save
+
+      role
+    end
+
+    def create_new(new_name)
+      machine = Chef::Node.new
+      machine.name "#{new_name}"
+      machine["fqdn"] = "#{new_name}"
+      role = RoleObject.find_role_by_name Node.make_role_name(new_name)
+      role = Node.create_new_role(new_name, machine) if role.nil?
+      Node.new machine
+    end
+  end
 end
