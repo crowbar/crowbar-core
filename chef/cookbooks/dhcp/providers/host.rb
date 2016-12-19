@@ -36,11 +36,6 @@ action :add do
     file "/etc/dhcp3/hosts.d/host_list.conf"
     notifies :restart, resources(service: "dhcp3-server"), :delayed
   end
-  if ::File.exists?(filename)
-    Chef::Log.debug "#{filename} created."
-  else
-    Chef::Log.error "#{filename} not created, #{new_resource.name} will loop in hardware-installing forever."
-  end
 end
 
 action :remove do
