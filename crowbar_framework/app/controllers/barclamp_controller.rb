@@ -126,7 +126,7 @@ class BarclampController < ApplicationController
         # Be backward compatible with barclamps returning a node hash, passing
         # them intact.
         if response[:name]
-          render json: Node.find_by_name(response[:name]).to_hash
+          render json: Node.find_by_name(response[:name])
         else
           render json: response
         end

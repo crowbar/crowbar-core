@@ -22,7 +22,9 @@ describe NodesController do
 
   before do
     Proposal.where(barclamp: "crowbar", name: "default").first_or_create(barclamp: "crowbar", name: "default")
-    allow_any_instance_of(Node).to receive(:system).and_return(true)
+    Node.where(name: "testing.crowbar.com").first_or_create(name: "testing.crowbar.com")
+    Node.where(name: "admin.crowbar.com").first_or_create(name: "admin.crowbar.com")
+    allow_any_instance_of(ChefNode).to receive(:system).and_return(true)
   end
 
   describe "GET index" do
@@ -180,11 +182,11 @@ describe NodesController do
       get :status, format: "json"
       json = JSON.parse(response.body)
 
-      expect(json["nodes"]["admin"].keys).to include("status")
-      expect(json["nodes"]["testing"].keys).to include("status")
+      expect(json["nodes"]["admin.crowbar.com"].keys).to include("status")
+      expect(json["nodes"]["testing.crowbar.com"].keys).to include("status")
 
-      expect(json["nodes"]["admin"]["status"]).to be == "No Data (Off)"
-      expect(json["nodes"]["testing"]["status"]).to be == "Discovered"
+      expect(json["nodes"]["admin.crowbar.com"]["status"]).to be == "No Data (Off)"
+      expect(json["nodes"]["testing.crowbar.com"]["status"]).to be == "Discovered"
     end
   end
 
@@ -227,38 +229,41 @@ describe NodesController do
     end
 
     it "sets the machine state" do
-      ["reinstall", "reset", "confupdate", "delete"].each do |action|
+      ["reinstall", "reset", "confupdate"].each do |action|
         post :hit, req: action, id: "testing.crowbar.com"
         expect(response).to redirect_to(node_url("testing"))
       end
 
       ["reboot", "shutdown", "poweron", "powercycle", "poweroff", "identify", "allocate"].each do |action|
-        expect_any_instance_of(Node).to receive(action.to_sym)
+        expect_any_instance_of(ChefNode).to receive(action.to_sym)
         post :hit, req: action, id: "testing.crowbar.com"
       end
+
+      post :hit, req: "delete", id: "testing.crowbar.com"
+      expect(response).to redirect_to(node_url("testing"))
+      Node.where(name: "testing.crowbar.com").first_or_create(name: "testing.crowbar.com")
     end
   end
 
   describe "POST group_change" do
     before do
       @node = Node.find_by_name("testing.crowbar.com")
+      @chef_node = ChefNode.find_node_by_name("testing.crowbar.com")
     end
 
     it "returns not found for nonexistent node" do
       expect {
-        new_group = "new_group"
-        post :group_change, id: "missing", group: new_group
+        post :group_change, id: "missing", group: "new_group"
       }.to raise_error(ActionController::RoutingError)
     end
 
     it "assigns a node to a group" do
       allow(Node).to receive(:find_by_name).and_return(@node)
 
-      new_group = "new_group"
-      post :group_change, id: @node.name, group: new_group
+      post :group_change, id: @node.name, group: "new_group"
 
       expect(@node.display_set?("group")).to be true
-      expect(@node.group).to be == new_group
+      expect(@node.group).to be == "new_group"
     end
 
     it "sets node group to blank if 'automatic' passed" do

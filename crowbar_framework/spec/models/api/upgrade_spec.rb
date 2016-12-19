@@ -2,6 +2,10 @@ require "spec_helper"
 require "crowbar/error/upgrade_cancel"
 
 describe Api::Upgrade do
+  before do
+    Node.where(name: "testing.crowbar.com").first_or_create(name: "testing.crowbar.com")
+  end
+
   let!(:prechecks) do
     JSON.parse(
       File.read(
@@ -57,9 +61,6 @@ describe Api::Upgrade do
         "ceph" => ["x86_64"],
         "ha" => ["x86_64"]
       )
-    )
-    allow(Node).to(
-      receive(:all).and_return([Node.find_by_name("testing.crowbar.com")])
     )
     allow(Api::Upgrade).to(
       receive(:target_platform).and_return("suse-12.2")
@@ -136,7 +137,7 @@ describe Api::Upgrade do
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :end_step
       ).and_return(true)
-      allow_any_instance_of(Node).to(
+      allow_any_instance_of(ChefNode).to(
         receive(:wait_for_script_to_finish).with(
           "/usr/sbin/crowbar-delete-cinder-services-before-upgrade.sh", 300
         ).and_return(true)
@@ -393,6 +394,10 @@ describe Api::Upgrade do
       allow_any_instance_of(Api::Node).to receive(:post_upgrade).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:join_and_chef).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:save_node_state).and_return(true)
+      allow(Node).to(
+        receive(:find).
+        and_return([Node.find_by_name("testing.crowbar.com")])
+      )
       allow(Api::Upgrade).to receive(:upgrade_all_compute_nodes).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
@@ -445,18 +450,18 @@ describe Api::Upgrade do
         :start_step
       ).with(:nodes).and_return(true)
 
-      allow(Node).to(
+      allow(ChefNode).to(
         receive(:find).
         with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
       allow(Api::Upgrade).to receive(:upgrade_controller_nodes).and_return(true)
-      allow(Node).to(
+      allow(ChefNode).to(
         receive(:find).with("roles:nova-compute-kvm").
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
       allow_any_instance_of(Node).to receive(:upgraded?).and_return(false)
-      allow(Node).to(
+      allow(ChefNode).to(
         receive(:find).with("roles:nova-controller").and_return([])
       )
       allow_any_instance_of(Crowbar::UpgradeStatus).to(
@@ -482,17 +487,17 @@ describe Api::Upgrade do
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
       ).with(:nodes_upgrade).and_return(true)
-      allow(Node).to(
+      allow(ChefNode).to(
         receive(:find).
         with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
-      allow(Node).to(receive(:find).with("drbd_rsc:*").and_return([]))
-      allow(Node).to(
+      allow(ChefNode).to(receive(:find).with("drbd_rsc:*").and_return([]))
+      allow(ChefNode).to(
         receive(:find).with("pacemaker_founder:true").
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
-      allow(Node).to(
+      allow(ChefNode).to(
         receive(:find).with("pacemaker_founder:false AND pacemaker_config_environment:data").
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
@@ -507,34 +512,34 @@ describe Api::Upgrade do
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
       ).with(:nodes_upgrade).and_return(true)
-      allow(Node).to(
+      allow(ChefNode).to(
         receive(:find).with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
       allow(Api::Upgrade).to receive(:upgrade_controller_nodes).and_return(true)
-      allow(Node).to(
+      allow(ChefNode).to(
         receive(:find).with("roles:nova-compute-kvm").
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
       allow_any_instance_of(Node).to receive(:upgraded?).and_return(true)
-      allow(Node).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
+      allow(ChefNode).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
       expect(subject.class.nodes).to be_a(Delayed::Backend::ActiveRecord::Job)
     end
 
     it "successfully upgrades KVM compute nodes" do
-      allow(Node).to(
+      allow(ChefNode).to(
         receive(:find).with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
       allow(Api::Upgrade).to receive(:upgrade_controller_nodes).and_return(true)
-      allow(Node).to(
+      allow(ChefNode).to(
         receive(:find).with("roles:nova-compute-kvm").
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
-      allow(Node).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
-      allow(Node).to(
+      allow(ChefNode).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
+      allow(ChefNode).to(
         receive(:find).with("roles:nova-controller").
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
@@ -546,7 +551,7 @@ describe Api::Upgrade do
       allow_any_instance_of(Api::Node).to receive(:reboot_and_wait).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:post_upgrade).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:join_and_chef).and_return(true)
-      allow_any_instance_of(Node).to receive(:run_ssh_cmd).and_return(exit_code: 0)
+      allow_any_instance_of(ChefNode).to receive(:run_ssh_cmd).and_return(exit_code: 0)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
       ).with(:nodes).and_return(true)
@@ -673,7 +678,6 @@ describe Api::Upgrade do
       allow(Api::Pacemaker).to receive(
         :clusters_health_report
       ).and_return(crm_failures: "error", failed_actions: "error")
-
       expect(subject.class.best_method).to eq("none")
     end
   end

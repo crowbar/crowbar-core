@@ -19,7 +19,8 @@ require "spec_helper"
 
 describe MachinesController do
   before do
-    allow_any_instance_of(Node).to receive(:system).and_return(true)
+    allow_any_instance_of(ChefNode).to receive(:system).and_return(true)
+    Node.where(name: "testing.crowbar.com").first_or_create(name: "testing.crowbar.com")
   end
 
   describe "GET index" do
@@ -68,7 +69,7 @@ describe MachinesController do
 
     context "without nodes" do
       before do
-        allow(Node).to receive(:find_all_nodes).and_return([])
+        allow(Node).to receive(:all).and_return(Node.none)
       end
 
       it "renders json" do
@@ -178,7 +179,7 @@ describe MachinesController do
     describe "POST #{action}" do
       context "for existent node" do
         it "invokes #{action}" do
-          expect_any_instance_of(Node).to receive(action)
+          expect_any_instance_of(ChefNode).to receive(action)
 
           post action, name: "testing.crowbar.com", format: "json"
           expect(response).to have_http_status(:ok)
@@ -208,7 +209,7 @@ describe MachinesController do
     describe "POST #{action}" do
       context "for existent node" do
         it "invokes #{action}" do
-          expect_any_instance_of(Node).to receive(action)
+          expect_any_instance_of(ChefNode).to receive(action)
 
           post action, name: "testing.crowbar.com", format: "json"
           expect(response).to have_http_status(:ok)

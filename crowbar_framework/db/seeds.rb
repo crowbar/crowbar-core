@@ -14,4 +14,4 @@
 # limitations under the License.
 #
 
-NodeObject = ChefNode
+Node.find_or_create_by(name: `hostname -f`.strip)
