@@ -16,6 +16,8 @@
 
 return if node[:platform_family] == "windows"
 
+dirty = false
+
 # Make sure packages we need will be present
 node[:network][:base_pkgs].each do |pkg|
   p = package pkg do
@@ -236,8 +238,11 @@ sorted_networks.each do |network|
     bond.miimon = miimon
     bond.xmit_hash_policy = xmit_hash_policy
     our_iface = bond
-    node.set["crowbar"]["bond_list"] = {} if node["crowbar"]["bond_list"].nil?
-    node.set["crowbar"]["bond_list"][bond.name] = ifs[bond.name]["slaves"]
+    node.set["crowbar"]["bond_list"] ||= {}
+    if node["crowbar"]["bond_list"][bond.name] != ifs[bond.name]["slaves"]
+      node.set["crowbar"]["bond_list"][bond.name] = ifs[bond.name]["slaves"]
+      dirty = true
+    end
   end
   net_ifs << our_iface.name
   # If we want a vlan interface, create one on top of the base physical
@@ -510,7 +515,6 @@ ifs.each {|k,v|
 }
 Chef::Log.info("Saving interfaces to crowbar_wall: #{saved_ifs.inspect}")
 
-dirty = false
 if node["crowbar_wall"]["network"]["interfaces"] != saved_ifs
   node.set["crowbar_wall"]["network"]["interfaces"] = saved_ifs
   dirty = true
@@ -523,7 +527,6 @@ if node["crowbar_wall"]["network"]["addrs"] != addr_mapping
   node.set["crowbar_wall"]["network"]["addrs"] = addr_mapping
   dirty = true
 end
-node.save if dirty
 
 # Flag to let us know that networking on this node
 # is now managed by the netowrk barclamp.
@@ -661,3 +664,5 @@ when "suse"
     end
   end
 end
+
+node.save if dirty
