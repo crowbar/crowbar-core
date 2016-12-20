@@ -88,7 +88,7 @@ describe Api::UpgradeController, type: :request do
         exit_code: 0
       )
       allow(Api::Upgrade).to receive(:upgrade_controller_nodes).and_return(true)
-      allow_any_instance_of(Api::Node).to receive(:upgrade).and_return(true)
+      allow(Api::Upgrade).to receive(:upgrade_compute_nodes).and_return(true)
 
       post "/api/upgrade/nodes", {}, headers
       expect(response).to have_http_status(:ok)
@@ -101,7 +101,6 @@ describe Api::UpgradeController, type: :request do
         exit_code: 1
       )
       allow(Api::Upgrade).to receive(:upgrade_controller_nodes).and_return(false)
-      allow_any_instance_of(Api::Node).to receive(:upgrade).and_return(true)
 
       post "/api/upgrade/nodes", {}, headers
       expect(response).to have_http_status(:unprocessable_entity)

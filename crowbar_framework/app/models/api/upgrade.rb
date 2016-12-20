@@ -281,17 +281,26 @@ module Api
         # FIXME: start the 'nodes' step
 
         status = ::Crowbar::UpgradeStatus.new
+
+        remaining = status.progress[:remaining_nodes]
         substep = status.current_substep
+
+        if remaining.nil?
+          remaining = NodeObject.find(
+            "state:crowbar_upgrade AND NOT run_list_map:ceph_*"
+          ).size
+          ::Crowbar::UpgradeStatus.new.save_nodes(0, remaining)
+        end
 
         if substep.nil? || substep.empty?
           substep = "controllers"
-          status.save_substep(substep)
+          ::Crowbar::UpgradeStatus.new.save_substep(substep)
         end
 
         if substep == "controllers"
           return false unless upgrade_controller_nodes
           substep = "computes"
-          status.save_substep(substep)
+          ::Crowbar::UpgradeStatus.new.save_substep(substep)
         end
 
         if substep == "computes"
@@ -318,9 +327,11 @@ module Api
       # Method for upgrading first node of the cluster
       # other_node_name argument is the name of any other node in the same cluster
       def upgrade_first_cluster_node(node_name, other_node_name)
-        save_upgrade_state("Starting the upgrade of node #{node_name}")
         node_api = Api::Node.new node_name
+        return true if node_api.upgraded?
         other_node_api = Api::Node.new other_node_name
+        node_api.save_node_state("controller")
+        save_upgrade_state("Starting the upgrade of node #{node_name}")
         # upgrade the first node
         return false unless node_api.upgrade
 
@@ -338,19 +349,23 @@ module Api
         return false unless node_api.post_upgrade
         return false unless node_api.join_and_chef
         # migrate routers from nodes being upgraded
-        node_api.router_migration
+        return false unless node_api.router_migration
+        node_api.save_node_state("controller", "upgraded")
       end
 
       def upgrade_next_cluster_node(node_name)
-        save_upgrade_state("Starting the upgrade of node #{node_name}")
         node_api = Api::Node.new node_name
+        return true if node_api.upgraded?
+        node_api.save_node_state("controller")
+        save_upgrade_state("Starting the upgrade of node #{node_name}")
         return false unless node_api.upgrade
         return false unless node_api.post_upgrade
         return false unless node_api.join_and_chef
         # Remove pre-upgrade attribute _after_ chef-client run because pacemaker is already running
         # and we want the configuration to be updated first
         # (disabling attribute causes starting the services on the node)
-        node_api.disable_pre_upgrade_attribute_for node_name
+        return false unless node_api.disable_pre_upgrade_attribute_for node_name
+        node_api.save_node_state("controller", "upgraded")
       end
 
       def upgrade_controller_nodes
