@@ -278,28 +278,26 @@ module Api
 
       # Orchestrate the upgrade of the nodes
       def nodes
-        # check for current global status
-        # 1. TODO: return if upgrade has finished
-        # 2. TODO: find the next big step
-        next_step = "controllers"
+        # FIXME: start the 'nodes' step
 
-        if next_step == "controllers"
+        status = ::Crowbar::UpgradeStatus.new
+        substep = status.current_substep
 
-          # TODO: Save the "current_step" to global status
-          if upgrade_controller_nodes
-            # upgrading controller nodes succeeded, we can continue with computes
-            next_step = "computes"
-          else
-            # upgrading controller nodes has failed, exiting
-            # leaving next_step as "controllers", so we continue from correct point on retry
-            return false
-          end
+        if substep.nil? || substep.empty?
+          substep = "controllers"
+          status.save_substep(substep)
         end
 
-        if next_step == "computes"
-          # TODO: Save the "current_step" to global status
-          upgrade_compute_nodes
+        if substep == "controllers"
+          return false unless upgrade_controller_nodes
+          substep = "computes"
+          status.save_substep(substep)
         end
+
+        if substep == "computes"
+          return false unless upgrade_compute_nodes
+        end
+        # FIXME: mark the whole step as done
         true
       end
 
