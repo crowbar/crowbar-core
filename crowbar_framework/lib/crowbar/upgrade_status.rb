@@ -31,10 +31,12 @@ module Crowbar
     # external applications and different crowbar versions.
     def initialize(
       logger = Rails.logger,
-      yaml_file = "/var/lib/crowbar/upgrade/6-to-7-progress.yml"
+      yaml_file = "/var/lib/crowbar/upgrade/6-to-7-progress.yml",
+      lock = true
     )
       @logger = logger
       @progress_file_path = Pathname.new(yaml_file)
+      @lock = lock
       load
     end
 
@@ -65,7 +67,11 @@ module Crowbar
     end
 
     def load!
-      ::Crowbar::Lock::LocalBlocking.with_lock(shared: true, logger: @logger, path: lock_path) do
+      if @lock
+        ::Crowbar::Lock::LocalBlocking.with_lock(shared: true, logger: @logger, path: lock_path) do
+          @progress = YAML.load(progress_file_path.read)
+        end
+      else
         @progress = YAML.load(progress_file_path.read)
       end
     end

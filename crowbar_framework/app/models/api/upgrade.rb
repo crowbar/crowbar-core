@@ -20,7 +20,11 @@ module Api
   class Upgrade < Tableless
     class << self
       def status
-        ::Crowbar::UpgradeStatus.new.progress
+        ::Crowbar::UpgradeStatus.new(
+          Rails.logger,
+          "/var/lib/crowbar/upgrade/6-to-7-progress.yml",
+          false
+        ).progress
       end
 
       def checks
