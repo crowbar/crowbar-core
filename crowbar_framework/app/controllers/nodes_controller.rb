@@ -48,7 +48,7 @@ class NodesController < ApplicationController
     @groups = {}
     session[:node] = params[:name]
     if params.key?(:role)
-      result = Node.all #this is not efficient, please update w/ a search!
+      result = Node.all # this is not efficient, please update w/ a search!
       @nodes = result.find_all { |node| node.role? params[:role] }
       if params.key?(:names_only)
          names = @nodes.map { |node| node.handle }
@@ -598,27 +598,27 @@ class NodesController < ApplicationController
     @sum = 0
     @groups = {}
     @nodes  = {}
-      raw_nodes = Node.all
-      raw_nodes.each do |node|
-        @sum = @sum + node.name.hash
-        @nodes[node.handle] = { alias: node.alias, description: node.description, status: node.status, state: node.state }
-        group = node.group
-        @groups[group] = { automatic: !node.display_set?("group"),
-                           status: { "ready" => 0,
-                                     "failed" => 0,
-                                     "unknown" => 0,
-                                     "unready" => 0,
-                                     "pending" => 0,
-                                     "crowbar_upgrade" => 0 },
-                           nodes: {}
-                         } unless @groups.key? group
-        @groups[group][:nodes][node.group_order] = node.handle
-        @groups[group][:status][node.status] = (@groups[group][:status][node.status] || 0).to_i + 1
-        if node.handle === node_name
-          @node = node
-          get_node_and_network(node.handle)
-        end
+    raw_nodes = Node.all
+    raw_nodes.each do |node|
+      @sum = @sum + node.name.hash
+      @nodes[node.handle] = { alias: node.alias, description: node.description, status: node.status, state: node.state }
+      group = node.group
+      @groups[group] = { automatic: !node.display_set?("group"),
+                         status: { "ready" => 0,
+                                   "failed" => 0,
+                                   "unknown" => 0,
+                                   "unready" => 0,
+                                   "pending" => 0,
+                                   "crowbar_upgrade" => 0 },
+                         nodes: {}
+                       } unless @groups.key? group
+      @groups[group][:nodes][node.group_order] = node.handle
+      @groups[group][:status][node.status] = (@groups[group][:status][node.status] || 0).to_i + 1
+      if node.handle === node_name
+        @node = node
+        get_node_and_network(node.handle)
       end
+    end
     @draggable = draggable
   end
 end
