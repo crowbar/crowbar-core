@@ -1459,29 +1459,53 @@ class ServiceObject
 
   private
 
+  THREAD_POOL_SIZE = 20
+
   def release_chef_locks(locks)
     return if locks.empty?
 
-    locks.each_slice(20) do |lock_batch|
-      threads = []
-      lock_batch.each do |lock|
-        threads.push(Thread.new { lock.release })
+    queue = Queue.new
+    locks.each { |l| queue.push l }
+
+    workers = (1...THREAD_POOL_SIZE).map do
+      Thread.new do
+        loop do
+          begin
+            lock = queue.pop(true)
+          rescue ThreadError
+            break
+          end
+
+          lock.release
+        end
       end
-      logger.debug "Waiting for #{threads.length} unlock threads to finish..."
-      ThreadsWait.all_waits(threads)
     end
+
+    logger.debug "Waiting for #{THREAD_POOL_SIZE} unlock threads to finish..."
+    workers.map(&:join)
   end
 
   def lock_and_wait_for_chef_clients(nodes, lock_owner, lock_reason)
     locks = []
     errors = {}
+
+    return [locks, errors] if nodes.empty?
+
     locks_mutex = Mutex.new
     errors_mutex = Mutex.new
 
-    nodes.each_slice(20) do |node_batch|
-      threads = {}
-      node_batch.each do |node|
-        thread = Thread.new do
+    queue = Queue.new
+    nodes.each { |n| queue.push n }
+
+    workers = (1...THREAD_POOL_SIZE).map do
+      Thread.new do
+        loop do
+          begin
+            node = queue.pop(true)
+          rescue ThreadError
+            break
+          end
+
           begin
             lock = Crowbar::Lock::SharedNonBlocking.new(
               logger: @logger,
@@ -1490,23 +1514,20 @@ class ServiceObject
               owner: lock_owner,
               reason: lock_reason
             ).acquire
-            locks_mutex.synchronize { locks.push(lock) }
-            # Now that we've ensured no new intervallic runs can be started,
-            # wait for any which started before we paused the daemons.
-            wait_for_chef_clients(node, logger: true)
           rescue Crowbar::Error::LockingFailure => e
             errors_mutex.synchronize { errors[node] = e.message }
           end
+
+          locks_mutex.synchronize { locks.push(lock) }
+          # Now that we've ensured no new intervallic runs can be started,
+          # wait for any which started before we paused the daemons.
+          wait_for_chef_clients(node, logger: true)
         end
-        threads[thread] = node
       end
-
-      # wait for all running threads and collect the ones with a non-zero return value
-      logger.debug "Waiting for #{threads.keys.length} lock threads to finish..."
-      ThreadsWait.all_waits(threads.keys)
-
-      break unless errors.empty?
     end
+
+    logger.debug "Waiting for #{THREAD_POOL_SIZE} lock threads to finish..."
+    workers.map(&:join)
 
     [locks, errors]
   end
