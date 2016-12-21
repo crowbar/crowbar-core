@@ -1123,6 +1123,16 @@ class NodeObject < ChefObject
     end
   end
 
+  # Removes the -ok/-failed files that might have been created by a script
+  # running via "wait_for_script_to_finish"
+  def delete_script_exit_files(script)
+    base = "/var/lib/crowbar/upgrade/" + File.basename(script, ".sh")
+    ok_file = base + "-ok"
+    failed_file = base + "-failed"
+    out = run_ssh_cmd("rm -f #{ok_file} #{failed_file}")
+    out[:exit_code].zero?
+  end
+
   def shutdown_services_before_upgrade
     if @node.roles.include?("pacemaker-cluster-member")
       # For all nodes in cluster, set the pre-upgrade attribute
