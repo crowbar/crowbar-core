@@ -4,6 +4,8 @@
 
 LOGFILE=/var/log/crowbar/node-upgrade.log
 UPGRADEDIR=/var/lib/crowbar/upgrade
+RUNDIR=/var/run/crowbar
+RUNFILE=$RUNDIR/node-pre-upgrading
 mkdir -p "`dirname "$LOGFILE"`"
 exec >>"$LOGFILE" 2>&1
 
@@ -11,6 +13,7 @@ echo "Executing $BASH_SOURCE"
 
 set -x
 
+mkdir -p $RUNDIR
 mkdir -p $UPGRADEDIR
 rm -f $UPGRADEDIR/crowbar-pre-upgrade-failed
 
@@ -18,6 +21,26 @@ if [[ -f $UPGRADEDIR/crowbar-pre-upgrade-ok ]] ; then
     echo "Pre upgrade actions were already successfully executed"
     exit 0
 fi
+
+cleanup()
+{
+    echo "cleaning up after interrupt or exit"
+
+    # cleanup upgrading indication so that the action can be restarted
+    rm -f $RUNFILE
+
+    exit 2
+}
+
+if [[ -f $RUNFILE ]] ; then
+    echo "Exit: Pre-Upgrade is already running..."
+    exit 1
+fi
+
+# Signalize that the pre-upgrade script is running
+touch $RUNFILE
+
+trap cleanup INT EXIT
 
 <% if @use_ha %>
 
