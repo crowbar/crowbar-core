@@ -73,4 +73,13 @@ module CrowbarHelper
     states = ["ready", "readying", "recovering", "applying"]
     not states.include?(node[:state])
   end
+
+  def self.get_proposal_instance(node, barclamp, fallback = nil)
+    env = node.fetch(barclamp, {}).fetch(:config, {})[:environment]
+    if env.nil?
+      fallback
+    else
+      env.gsub(/^#{barclamp}-config-/, "")
+    end
+  end
 end

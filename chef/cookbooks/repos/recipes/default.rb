@@ -15,8 +15,8 @@
 
 return if node[:platform_family] == "suse" || node[:platform_family] == "windows"
 
-# the attribute always exist as this is run as part of the provisioner-base role
-provisioner_instance = node[:provisioner][:config][:environment].gsub(/^provisioner-config-/, "")
+# no need to have a fallback as this recipe is run as part of the provisioner-base role
+provisioner_instance = CrowbarHelper.get_proposal_instance(node, "provisioner")
 provisioners = node_search_with_cache("roles:provisioner-server", provisioner_instance)
 provisioner = provisioners.first if provisioners
 
