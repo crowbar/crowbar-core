@@ -3,7 +3,7 @@ action :enable do
   package "python-pip"
   package "python-dev"
 
-  provisioner_instance = node[:provisioner][:config][:environment].gsub(/^provisioner-config-/, "")
+  provisioner_instance = CrowbarHelper.get_proposal_instance(node, "provisioner", "default")
   provisioner = CrowbarUtilsSearch.node_search_with_cache(node,
                                                           "roles:provisioner-server",
                                                           "uwsgi",

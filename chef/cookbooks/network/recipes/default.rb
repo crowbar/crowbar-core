@@ -90,7 +90,7 @@ execute "enable netfilter for bridges" do
   subscribes :run, resources(cookbook_file: "modprobe-bridge.conf"), :delayed
 end
 
-provisioner_instance = node[:provisioner][:config][:environment].gsub(/^provisioner-config-/, "") rescue "default"
+provisioner_instance = CrowbarHelper.get_proposal_instance(node, "provisioner", "default")
 provisioner = node_search_with_cache("roles:provisioner-server", provisioner_instance).first
 conduit_map = Barclamp::Inventory.build_node_map(node)
 Chef::Log.debug("Conduit mapping for this node:  #{conduit_map.inspect}")
