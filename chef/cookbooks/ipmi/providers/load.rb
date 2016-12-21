@@ -17,6 +17,7 @@ action :run do
   name = new_resource.name
   settle_time = new_resource.settle_time
 
+  ### run systemctl start ipmi.service if available
   unless ::File.exists?("/sys/module/ipmi_devintf")
     bash "install-devintf" do
       code "/sbin/modprobe ipmi_devintf"
