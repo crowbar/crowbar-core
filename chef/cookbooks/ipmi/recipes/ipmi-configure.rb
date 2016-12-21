@@ -120,12 +120,5 @@ if node[:ipmi][:bmc_enable]
       action :run
     end
   end
-
-  unless node[:platform_family] == "windows"
-    ipmi_unload "ipmi_unload" do
-      action :run
-    end
-  end
-
 end
 

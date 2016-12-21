@@ -94,10 +94,6 @@ elsif node[:ipmi][:bmc_enable]
         end
       end
       node.save
-      if node[:platform_family] == "debian"
-        %x{rmmod ipmi_si}
-      end
-      %x{rmmod ipmi_devintf ; rmmod ipmi_msghandler}
     end
     action :create
   end
