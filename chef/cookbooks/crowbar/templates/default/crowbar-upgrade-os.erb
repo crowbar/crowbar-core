@@ -30,6 +30,19 @@ cleanup()
     exit 2
 }
 
+# check if a .rpmnew file exists and use that
+function default_package_config()
+{
+    local config_file=$1
+    if [ -f "${config_file}" ]; then
+        # does the rpmnew file also exists?
+        if [ -f "${config_file}.rpmnew" ]; then
+            mv "${config_file}.rpmnew" "${config_file}"
+            echo "Moved ${config_file}.rpmnew to ${config_file}"
+        fi
+    fi
+}
+
 initiate_node_upgrade()
 {
     if [[ -f $RUNFILE ]] ; then
@@ -56,6 +69,52 @@ initiate_node_upgrade()
         echo "$ret" > $UPGRADEDIR/crowbar-upgrade-os-failed
         exit $ret
     fi
+
+    # move the openstack configurations after the upgrade. We want the default
+    # configs from the packages because Crowbar now uses config snippets in the
+    # conf.d/ dirs
+    local config_files=" \
+          /etc/aodh/aodh.conf \
+          /etc/barbican/barbican.conf \
+          /etc/ceilometer/ceilometer.conf \
+          /etc/cinder/cinder.conf \
+          /etc/designate/designate.conf \
+          /etc/glance/glance.conf \
+          /etc/glance/glance-api.conf \
+          /etc/glance/glance-cache.conf \
+          /etc/glance/glance-glare.conf \
+          /etc/glance/glance-registry.conf \
+          /etc/glance/glance-scrubber.conf \
+          /etc/glance/glance-swift.conf \
+          /etc/gnocchi/gnocchi.conf \
+          /etc/heat/heat.conf \
+          /etc/ironic/ironic.conf \
+          /etc/keystone/keystone.conf \
+          /etc/magnum/magnum.conf \
+          /etc/manila/manila.conf \
+          /etc/murano/murano.conf \
+          /etc/neutron/neutron.conf \
+          /etc/neutron/dhcp_agent.ini \
+          /etc/neutron/fwaas_driver.ini \
+          /etc/neutron/l3_agent.ini \
+          /etc/neutron/lbaas_agent.ini \
+          /etc/neutron/metadata_agent.ini \
+          /etc/neutron/neutron_lbaas.conf \
+          /etc/neutron/services_lbaas.conf \
+          /etc/nova/nova.conf \
+          /etc/octavia/octavia.conf \
+          /etc/sahara/sahara.conf \
+          /etc/swift/swift.conf \
+          /etc/swift/account-server.conf \
+          /etc/swift/dispersion.conf \
+          /etc/swift/proxy-server.conf \
+          /etc/trove/trove.conf \
+          /etc/trove/trove-conductor.conf \
+          /etc/trove/trove-taskmanager.conf
+"
+    for c in $config_files; do
+        default_package_config $c
+    done
 
     # Signalize that the upgrade correctly ended
     echo "<%= @target_platform_version %>" >> $UPGRADEDIR/crowbar-upgrade-os-ok
