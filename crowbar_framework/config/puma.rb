@@ -41,7 +41,6 @@ on_worker_boot do
 end
 
 [
-  "tmp/pids",
   "tmp/sessions",
   "tmp/sockets",
   "tmp/cache"
