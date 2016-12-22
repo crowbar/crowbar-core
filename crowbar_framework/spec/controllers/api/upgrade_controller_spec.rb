@@ -132,6 +132,12 @@ describe Api::UpgradeController, type: :request do
       allow_any_instance_of(CrowbarService).to receive(
         :revert_nodes_from_crowbar_upgrade
       ).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :initialize_state
+      ).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :cancel_allowed?
+      ).and_return(true)
 
       post "/api/upgrade/cancel", {}, headers
       expect(response).to have_http_status(:ok)

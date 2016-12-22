@@ -818,8 +818,10 @@ en:
         help:
           default: 'Refer to the error message in the response'
       cancel:
+        failed: 'Failed to cancel the upgrade; please look at the server logs'
         help:
           default: 'Refer to the error message in the response'
+          not_allowed: 'Not possible to cancel the upgrade process at this stage'
 
   # Global
   overview: 'Overview'

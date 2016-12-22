@@ -1,4 +1,5 @@
 require "spec_helper"
+require "crowbar/error/upgrade_cancel"
 
 describe Api::Upgrade do
   let!(:upgrade_prechecks) do
@@ -395,22 +396,91 @@ describe Api::Upgrade do
       allow_any_instance_of(CrowbarService).to receive(
         :revert_nodes_from_crowbar_upgrade
       ).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :initialize_state
+      ).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :cancel_allowed?
+      ).and_return(true)
 
-      expect(subject.class.cancel).to eq(
-        status: :ok,
-        message: ""
-      )
+      expect(subject.class.cancel).to be true
     end
 
     it "fails to cancel the upgrade" do
       allow_any_instance_of(CrowbarService).to receive(
         :revert_nodes_from_crowbar_upgrade
       ).and_raise("Some Error")
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:current_step).and_return(:database)
 
-      expect(subject.class.cancel).to eq(
-        status: :unprocessable_entity,
-        message: "Some Error"
-      )
+      expect { subject.class.cancel }.to raise_error(Crowbar::Error::UpgradeCancelError)
+    end
+
+    it "is allowed to cancel the upgrade" do
+      allow_any_instance_of(CrowbarService).to receive(
+        :revert_nodes_from_crowbar_upgrade
+      ).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :save
+      ).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :running?
+      ).with(:admin_upgrade).and_return(false)
+      [
+        :upgrade_prechecks,
+        :upgrade_prepare,
+        :admin_backup,
+        :admin_repo_checks,
+        :admin_upgrade
+      ].each do |allowed_step|
+        allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+          :current_step
+        ).and_return(allowed_step)
+
+        expect(subject.class.cancel).to be true
+      end
+    end
+
+    it "is not allowed to cancel the upgrade" do
+      allow_any_instance_of(CrowbarService).to receive(
+        :revert_nodes_from_crowbar_upgrade
+      ).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :save
+      ).and_return(true)
+      [
+        :admin_upgrade,
+        :database,
+        :nodes_repo_checks,
+        :nodes_services,
+        :nodes_db_dump,
+        :nodes_upgrade,
+        :finished
+      ].each do |allowed_step|
+        if allowed_step == :admin_upgrade
+          allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+            :running?
+          ).with(:admin_upgrade).and_return(true)
+        end
+        allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+          :current_step
+        ).and_return(allowed_step)
+
+        expect { subject.class.cancel }.to raise_error(Crowbar::Error::UpgradeCancelError)
+      end
+    end
+
+    it "is not allowed to cancel the upgrade while admin_upgrade is running" do
+      allow_any_instance_of(CrowbarService).to receive(
+        :revert_nodes_from_crowbar_upgrade
+      ).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :current_step
+      ).and_return(:admin_upgrade)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :running?
+      ).and_return(true)
+
+      expect { subject.class.cancel }.to raise_error(Crowbar::Error::UpgradeCancelError)
     end
   end
 
