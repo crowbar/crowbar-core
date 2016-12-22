@@ -230,7 +230,9 @@ describe Crowbar::UpgradeStatus do
 
     it "prevents repeating steps that do not allow repetition" do
       expect { subject.start_step(:upgrade_prepare) }.to raise_error(
-        Crowbar::Error::StartStepOrderError
+        Crowbar::Error::StartStepOrderError,
+        "Start of step 'upgrade_prepare' requested in the wrong order. " \
+        "Correct next step is 'upgrade_prechecks'."
       )
       expect { subject.start_step(:admin_backup) }.to raise_error(
         Crowbar::Error::StartStepOrderError
