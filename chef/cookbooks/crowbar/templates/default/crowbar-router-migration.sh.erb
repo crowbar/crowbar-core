@@ -10,36 +10,30 @@ UPGRADEDIR=/var/lib/crowbar/upgrade
 mkdir -p "`dirname "$LOGFILE"`"
 exec >>"$LOGFILE" 2>&1
 
+hostname=$1
+if [[ "$2" = "delete-ns" ]]; then
+    delete_ns="--ssh-delete-namespace"
+else
+    delete_ns=""
+fi
+
 echo "Executing $BASH_SOURCE"
 
 set -x
 
 mkdir -p $UPGRADEDIR
 
-if [[ -f $UPGRADEDIR/crowbar-router-migration-ok ]] ; then
-    echo "router migration actions were already successfully executed"
-    exit 0
-fi
-
 set +x
 source /root/.openrc
 set -x
 
-upgraded_agent=$(neutron agent-list --binary neutron-l3-agent --host $(hostname) -f value -c id)
-routers=$(neutron router-list -f value -c id)
-for router in $routers; do
-    agent=$(neutron l3-agent-list-hosting-router $router -f value -c id)
-    old_host=$(neutron agent-show $agent -f value -c host)
+/usr/bin/neutron-ha-tool --l3-agent-evacuate $hostname --wait-for-router $delete_ns
+ret=$?
+if [ $ret != 0 ] ; then
+    echo "Failed to evacuate l3 agent on host: $hostname"
+    echo $ret > $UPGRADEDIR/crowbar-router-migration-failed
+    exit $ret
+fi
 
-    # delete old router assignment to agent
-    neutron l3-agent-router-remove $agent $router
-
-    # assign router to agent in upgraded node
-    neutron l3-agent-router-add $upgraded_agent $router
-
-    # delete old routers namespaces. Unassignment didn't delete the namespaces
-    ssh $old_host ip netns delete qrouter-$router
-
-done
 
 touch $UPGRADEDIR/crowbar-router-migration-ok

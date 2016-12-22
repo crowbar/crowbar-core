@@ -322,6 +322,8 @@ module Api
         other_node_api = Api::Node.new other_node.name
         node_api.save_node_state("controller")
         save_upgrade_state("Starting the upgrade of node #{node.name}")
+        return false unless evacuate_network_node(node, node["hostname"])
+
         # upgrade the first node
         return false unless node_api.upgrade
 
@@ -338,12 +340,11 @@ module Api
         # start crowbar-join at the first node
         return false unless node_api.post_upgrade
         return false unless node_api.join_and_chef
-        # migrate routers from nodes being upgraded
-        return false unless node_api.router_migration
         node_api.save_node_state("controller", "upgraded")
       end
 
-      def upgrade_next_cluster_node(node)
+      def upgrade_next_cluster_node(node, founder)
+        evacuate_network_node(founder, node["hostname"], true)
         node_api = Api::Node.new node.name
         return true if node_api.upgraded?
         node_api.save_node_state("controller")
@@ -379,7 +380,7 @@ module Api
         NodeObject.find(
           "state:crowbar_upgrade AND pacemaker_config_environment:#{cluster_env}"
         ).each do |node|
-          return false unless upgrade_next_cluster_node node
+          return false unless upgrade_next_cluster_node node.name, founder.name
         end
         true
       end
@@ -394,7 +395,8 @@ module Api
       end
 
       def upgrade_drbd_cluster(cluster)
-        save_upgrade_state("Upgrading controller nodes with DRBD-based storage")
+        save_upgrade_state("Upgrading controller nodes with DRBD-based storage " \
+                           "in cluster \"#{cluster}\"")
 
         drbd_nodes = NodeObject.find(
           "state:crowbar_upgrade AND "\
@@ -422,11 +424,15 @@ module Api
             drbd_slave = drbd_node
           end
         end
-        return false if drbd_slave.nil?
+
+        if drbd_slave.nil? || drbd_master.nil?
+          save_error_state("Unable to detect drb master and/or slave nodes")
+          return false
+        end
 
         return false unless upgrade_first_cluster_node drbd_slave, drbd_master
 
-        return false unless upgrade_next_cluster_node drbd_master
+        return false unless upgrade_next_cluster_node drbd_master, drbd_slave
 
         save_upgrade_state("Nodes in DRBD-based cluster successfully upgraded")
         true
@@ -449,6 +455,28 @@ module Api
           )
           return false
         end
+      end
+
+      # Evacuate all routers away from the specified network node to other
+      # available network nodes. The evacuation procedure is started on the
+      # specified controller node
+      def evacuate_network_node(controller, network_node, delete_namespaces = false)
+        args = [network_node]
+        args << "delete-ns" if delete_namespaces
+        controller.wait_for_script_to_finish(
+          "/usr/sbin/crowbar-router-migration.sh", 600, args
+        )
+        save_upgrade_state("Migrating routers away from #{network_node} was successful.")
+
+        # Cleanup up the ok/failed state files, as we likely need to
+        # run the script again on this node (to evacuate other nodes)
+        controller.delete_script_exit_files("/usr/sbin/crowbar-router-migration.sh")
+      rescue StandardError => e
+        save_error_state(
+          e.message +
+          " Check /var/log/crowbar/node-upgrade.log at #{controller.name} for details."
+        )
+        return false
       end
 
       # Live migrate all instances of the specified

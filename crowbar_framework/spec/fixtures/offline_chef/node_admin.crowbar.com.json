@@ -10,7 +10,8 @@
       "icondir": "\/usr\/share\/apache2\/icons",
       "user": "www-data",
       "log_dir": "\/var\/log\/apache2"
-    }
+    },
+    "hostname": "admin"
   },
   "name": "admin.crowbar.com",
   "_rev": "5-0f8acf1a222c820bf9d8cacbb71e544a",

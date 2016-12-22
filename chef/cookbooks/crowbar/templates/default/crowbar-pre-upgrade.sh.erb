@@ -43,16 +43,6 @@ touch $RUNFILE
 trap cleanup INT EXIT
 
 <% if @use_ha %>
-
-echo "Evacuating l3 agents out of this node..."
-
-if [[ -f /usr/bin/neutron-ha-tool ]] ; then
-    set +x
-    source /root/.openrc
-    set -x
-    neutron-ha-tool --l3-agent-evacuate $(hostname)
-fi
-
 # Shutdown pacemaker so the remaining OpenStack services are stopped
 # This is needed so that the zypper dup won't trigger any db migrations on package update
 service pacemaker stop
