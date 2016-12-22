@@ -136,10 +136,7 @@ describe Api::Upgrade do
         :end_step
       ).and_return(true)
 
-      expect(subject.class.services).to eq(
-        status: :ok,
-        message: ""
-      )
+      expect(subject.class.services).to be_a(Delayed::Backend::ActiveRecord::Job)
     end
   end
 
@@ -151,10 +148,7 @@ describe Api::Upgrade do
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:start_step).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
-      expect(subject.class.services).to eq(
-        status: :unprocessable_entity,
-        message: "some Error"
-      )
+      expect(subject.class.services).to be_a(Delayed::Backend::ActiveRecord::Job)
     end
   end
 

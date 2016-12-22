@@ -114,20 +114,9 @@ class Api::UpgradeController < ApiController
   api_version "2.0"
   error 422, "Failed to stop services on all nodes"
   def services
-    stop_services = Api::Upgrade.services
-
-    if stop_services[:status] == :ok
-      head :ok
-    else
-      render json: {
-        errors: {
-          services: {
-            data: stop_services[:message],
-            help: I18n.t("api.upgrade.services.help.default")
-          }
-        }
-      }, status: stop_services[:status]
-    end
+    ::Crowbar::UpgradeStatus.new.start_step(:nodes_services)
+    Api::Upgrade.services
+    head :ok
   rescue Crowbar::Error::StartStepRunningError,
          Crowbar::Error::StartStepOrderError,
          Crowbar::Error::EndStepRunningError => e
