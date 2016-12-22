@@ -340,6 +340,11 @@ describe Api::Upgrade do
     it "successfully upgrades nodes with DRBD backend" do
       allow(NodeObject).to(
         receive(:find).
+        with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
+        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+      )
+      allow(NodeObject).to(
+        receive(:find).
         with("drbd_rsc:*").
         and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
       )
@@ -354,6 +359,7 @@ describe Api::Upgrade do
         "AND (roles:database-server OR roles:rabbitmq-server)").
         and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
       )
+      allow_any_instance_of(Api::Node).to receive(:upgraded?).and_return(false)
       allow_any_instance_of(NodeObject).to receive(:run_ssh_cmd).and_return(
         stdout: "",
         stderr: "",
@@ -370,6 +376,7 @@ describe Api::Upgrade do
       allow_any_instance_of(Api::Node).to receive(:post_upgrade).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:router_migration).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:join_and_chef).and_return(true)
+      allow_any_instance_of(Api::Node).to receive(:save_node_state).and_return(true)
 
       expect(subject.class.nodes).to be true
     end

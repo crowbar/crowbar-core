@@ -34,7 +34,7 @@ module Api
 
     def pre_upgrade
       if execute_and_wait_for_finish("/usr/sbin/crowbar-pre-upgrade.sh", 300)
-        save_node_state("Pre upgrade script run was successful.")
+        Rails.logger.info("Pre upgrade script run was successful.")
         return true
       end
       false
@@ -42,7 +42,7 @@ module Api
 
     def os_upgrade
       if execute_and_wait_for_finish("/usr/sbin/crowbar-upgrade-os.sh", 600)
-        save_node_state("Package upgrade was successful.")
+        Rails.logger.info("Package upgrade was successful.")
         return true
       end
       false
@@ -50,7 +50,7 @@ module Api
 
     def router_migration
       if execute_and_wait_for_finish("/usr/sbin/crowbar-router-migration.sh", 600)
-        save_node_state("Router migration was successful.")
+        Rails.logger.info("Router migration was successful.")
         return true
       end
       false
@@ -59,7 +59,7 @@ module Api
     # Execute post upgrade actions: prepare drbd and start pacemaker
     def post_upgrade
       if execute_and_wait_for_finish("/usr/sbin/crowbar-post-upgrade.sh", 600)
-        save_node_state("Post upgrade script run was successful.")
+        Rails.logger.info("Post upgrade script run was successful.")
         return true
       end
       false
@@ -67,7 +67,7 @@ module Api
 
     def join_and_chef
       if execute_and_wait_for_finish("/usr/sbin/crowbar-chef-upgraded.sh", 600)
-        save_node_state("Initial chef-client run was successful.")
+        Rails.logger.info("Initial chef-client run was successful.")
         return true
       end
       false
@@ -102,15 +102,12 @@ module Api
       wait_for_ssh_state(:up, "come up")
     end
 
-    # Do the complete upgrade of one node
+    def upgraded?
+      @node.file_exist? "/var/lib/crowbar/upgrade/node-upgraded-ok"
+    end
+
+    # Do the complete package upgrade of one node
     def upgrade
-      # FIXME: check the global status:
-      # if we failed in some previous attempt (pre/os/post), continue from the failed substep
-
-      # this is just a fallback check, we should know by checking the global status that the action
-      # should not be executed on already upgraded node
-      return true if @node.file_exist? "/var/lib/crowbar/upgrade/node-upgraded-ok"
-
       unless pre_upgrade
         save_error_state("Error while executing pre upgrade script")
         return false
@@ -136,9 +133,22 @@ module Api
       true
     end
 
-    def save_node_state(message = "")
-      # FIXME: save the node status to global status
-      Rails.logger.info(message)
+    def save_node_state(role, state = "upgrading")
+      status = ::Crowbar::UpgradeStatus.new
+      status.save_current_node(
+        name: @node.name,
+        alias: @node.alias,
+        ip: @node.public_ip,
+        state: state,
+        role: role
+      )
+      if state == "upgraded"
+        progress = status.progress
+        remaining = progress[:remaining_nodes] - 1
+        upgraded = progress[:upgraded_nodes] + 1
+        ::Crowbar::UpgradeStatus.new.save_nodes(upgraded, remaining)
+        @node.run_ssh_cmd("touch /var/lib/crowbar/upgrade/node-upgraded-ok")
+      end
     end
 
     def save_error_state(message = "")
