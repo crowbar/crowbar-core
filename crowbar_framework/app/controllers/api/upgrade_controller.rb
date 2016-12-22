@@ -58,20 +58,36 @@ class Api::UpgradeController < ApiController
   end
 
   def cancel
-    cancel_upgrade = Api::Upgrade.cancel
-
-    if cancel_upgrade[:status] == :ok
+    if Api::Upgrade.cancel
       head :ok
     else
       render json: {
         errors: {
           cancel: {
-            data: cancel_upgrade[:message],
+            data: I18n.t("api.upgrade.cancel.failed"),
             help: I18n.t("api.upgrade.cancel.help.default")
           }
         }
-      }, status: cancel_upgrade[:status]
+      }, status: :unprocessable_entity
     end
+  rescue Crowbar::Error::UpgradeCancelError => e
+    render json: {
+      errors: {
+        cancel: {
+          data: e.message,
+          help: I18n.t("api.upgrade.cancel.help.not_allowed")
+        }
+      }
+    }, status: :locked
+  rescue StandardError => e
+    render json: {
+      errors: {
+        cancel: {
+          data: e.message,
+          help: I18n.t("api.upgrade.cancel.help.default")
+        }
+      }
+    }, status: :unprocessable_entity
   end
 
   def adminrepocheck
