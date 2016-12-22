@@ -36,7 +36,7 @@ else
   gem "sass-rails", version: "~> 5.0.3"
   require "sass-rails"
 
-  gem "puma", version: "~> 2.11.3"
+  gem "puma", version: "~> 2.11"
   require "puma"
 
   gem "puma_worker_killer", version: "~> 0.0.7"
