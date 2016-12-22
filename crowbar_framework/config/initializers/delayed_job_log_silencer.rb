@@ -14,12 +14,22 @@
 # limitations under the License.
 #
 
-Delayed::Worker.destroy_failed_jobs = false
-Delayed::Worker.delay_jobs = !Rails.env.test?
-Delayed::Worker.raise_signal_exceptions = :term
-Delayed::Worker.max_attempts = 1
-if Rails.env.production?
-  Delayed::Worker.logger = Logger.new(File.join(ENV["CROWBAR_LOG_DIR"], "background_jobs.log"))
-else
-  Delayed::Worker.logger = Logger.new(File.join(Rails.root, "log", "background_jobs.log"))
+module Delayed
+  module Backend
+    module ActiveRecord
+      class Job
+        class << self
+          alias_method :reserve_old, :reserve
+
+          def reserve(worker, max_run_time = Worker.max_run_time)
+            log_level = ::ActiveRecord::Base.logger.level
+            ::ActiveRecord::Base.logger.level = Logger::WARN
+            ret = reserve_old(worker, max_run_time)
+            ::ActiveRecord::Base.logger.level = log_level
+            ret
+          end
+        end
+      end
+    end
+  end
 end
