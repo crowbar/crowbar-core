@@ -1,6 +1,6 @@
 #
 # Copyright 2011-2013, Dell
-# Copyright 2013-2014, SUSE LINUX Products GmbH
+# Copyright 2013-2016, SUSE LINUX GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ else
   gem "sass-rails", version: "~> 5.0.3"
   require "sass-rails"
 
-  gem "puma", version: "~> 2.11.3"
+  gem "puma", version: "~> 2.11"
   require "puma"
 
   # general stuff
