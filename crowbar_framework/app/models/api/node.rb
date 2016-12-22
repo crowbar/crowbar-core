@@ -16,16 +16,20 @@
 
 module Api
   class Node < Tableless
+    attr_reader :name
+    attr_reader :ssh
+
     def initialize(name = nil)
-      @node = NodeObject.find_node_by_name name
+      @name = name
+      @ssh = ::Crowbar::Connection::SSH.new("root", name)
     end
 
     # execute script in background and wait for it to finish
     def execute_and_wait_for_finish(script, seconds)
-      Rails.logger.info("Executing #{script} at #{@node.name}...")
-      @node.wait_for_script_to_finish(script, seconds)
+      Rails.logger.info("Executing #{script} at #{name}...")
+      ssh.exec_script(script, seconds)
       true
-    rescue StandardError => e
+    rescue RuntimeError => e
       save_error_state(
         e.message + "Check /var/log/crowbar/node-upgrade.log for details."
       )
@@ -76,15 +80,15 @@ module Api
     def wait_for_ssh_state(desired_state, action)
       Timeout.timeout(300) do
         loop do
-          ssh_status = @node.ssh_cmd("").first
-          break if desired_state == :up ? ssh_status == 200 : ssh_status != 200
+          ssh_status = ssh.exec_in_background("")
+          break if ssh_status == (desired_state == :up)
           sleep(5)
         end
       end
       true
     rescue Timeout::Error
       save_error_state(
-        "Possible error at node #{@node.name}" \
+        "Possible error at node #{name}" \
         "Node did not #{action} after 5 minutes of trying."
       )
       false
@@ -92,8 +96,7 @@ module Api
 
     # Reboot the node and wait until it comes back online
     def reboot_and_wait
-      ssh_status = @node.ssh_cmd("/sbin/reboot")
-      if ssh_status[0] != 200
+      unless ssh.exec_in_background("/sbin/reboot")
         save_error_state("Failed to reboot the machine. Could not ssh.")
         return false
       end
@@ -109,7 +112,7 @@ module Api
 
       # this is just a fallback check, we should know by checking the global status that the action
       # should not be executed on already upgraded node
-      return true if @node.file_exist? "/var/lib/crowbar/upgrade/node-upgraded-ok"
+      return true if ssh.file_exist? "/var/lib/crowbar/upgrade/node-upgraded-ok"
 
       unless pre_upgrade
         save_error_state("Error while executing pre upgrade script")
@@ -126,11 +129,11 @@ module Api
 
     # Disable "pre-upgrade" attribute for given node
     # We must do it from a node where pacemaker is running
-    def disable_pre_upgrade_attribute_for(name)
-      hostname = name.split(".").first
-      out = @node.run_ssh_cmd("crm node attribute #{hostname} set pre-upgrade false")
+    def disable_pre_upgrade_attribute_for(node_name)
+      hostname = node_name.split(".").first
+      out = ssh.exec("crm node attribute #{hostname} set pre-upgrade false")
       unless out[:exit_code].zero?
-        save_error_state("Changing the pre-upgrade role for #{hostname} from #{@node.name} failed")
+        save_error_state("Changing the pre-upgrade role for #{hostname} from #{name} failed")
         return false
       end
       true
