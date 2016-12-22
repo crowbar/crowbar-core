@@ -7,14 +7,21 @@ UPGRADEDIR=/var/lib/crowbar/upgrade
 mkdir -p "`dirname "$LOGFILE"`"
 exec >>"$LOGFILE" 2>&1
 
-echo "Executing $BASH_SOURCE"
+log()
+{
+    set +x
+    echo "[$(date --iso-8601=ns)] [$$] $@"
+    set -x
+}
+
+log "Executing $BASH_SOURCE"
 
 set -x
 
 mkdir -p $UPGRADEDIR
 
 if [[ -f $UPGRADEDIR/crowbar-delete-pacemaker-resources-ok ]] ; then
-    echo "Pacemaker resources already successfully deleted"
+    log "Pacemaker resources already successfully deleted"
     exit 0
 fi
 
@@ -22,28 +29,30 @@ rm -f $UPGRADEDIR/crowbar-delete-pacemaker-resources-failed
 
 <% if @use_ha %>
 
-echo "Stopping pacemaker resources..."
+log "Stopping pacemaker resources..."
 
 # Services need to be stopped before deletion.
 # Otherwise we could have services starting up in unwanted locations while deleting constraints.
 
 for type in clone group ms primitive; do
     for resource in $(crm configure show | awk "\$1 == \"$type\" && ! (\$2 ~ /drbd|stonith|vip-/) {print \$2}"); do
+        log "Stopping resource $resource"
         crm --wait resource stop $resource
     done
 done
 
 ret=$?
 if [ $ret != 0 ] ; then
-    echo "Error occured during stopping resources."
+    log "Error occured during stopping resources."
     echo $ret > $UPGRADEDIR/crowbar-delete-pacemaker-resources-failed
     exit $ret
 fi
 
-echo "Deleting pacemaker resources..."
+log "Deleting pacemaker resources..."
 
 crm_cmd=""
 for type in location clone group ms primitive; do
+    log "Looking at typ $type of resources..."
     for resource in $(crm configure show | awk "\$1 == \"$type\" && ! (\$2 ~ /drbd|stonith|vip-/) {print \$2}"); do
         printf -v crm_cmd "${crm_cmd}delete $resource\n"
     done
@@ -56,15 +65,16 @@ EOF
 
 ret=$?
 if [ $ret != 0 ] ; then
-    echo "Error occured during deleting resources"
+    log "Error occured during deleting resources"
     echo $ret > $UPGRADEDIR/crowbar-delete-pacemaker-resources-failed
     exit $ret
 fi
 
 <% else %>
 
-echo "No HA setup found..."
+log "No HA setup found..."
 
 <% end %>
 
 touch $UPGRADEDIR/crowbar-delete-pacemaker-resources-ok
+log "$BASH_SOURCE is finished."

@@ -8,20 +8,28 @@ UPGRADEDIR=/var/lib/crowbar/upgrade
 mkdir -p "`dirname "$LOGFILE"`"
 exec >>"$LOGFILE" 2>&1
 
-echo "Executing $BASH_SOURCE"
+log()
+{
+    set +x
+    echo "[$(date --iso-8601=ns)] [$$] $@"
+    set -x
+}
+
+log "Executing $BASH_SOURCE"
 
 set -x
 
 <% if @use_ha %>
 
 <% if @cluster_founder %>
-echo "Stopping pacemaker resources..."
+log "Stopping pacemaker resources..."
 
 exclude="postgresql|vip|rabbitmq|keystone|neutron|haproxy"
 
 for type in clone ms primitive; do
     for resource in $(crm configure show | grep ^$type | grep -Ev $exclude | cut -d " " -f2);
     do
+        log "Stopping resource $resource"
         crm --force --wait resource stop $resource
     done
 done
@@ -30,6 +38,7 @@ done
 
 # stop cinder-volume at all nodes so the service could be removed from the database later
 if test -e /etc/init.d/openstack-cinder-volume; then
+    log "Stopping cinder-volume service"
     /etc/init.d/openstack-cinder-volume stop
 fi
 
@@ -37,7 +46,7 @@ fi
 
 # Stop openstack services on this node.
 # Note that for HA setup, they should be stopped by pacemaker.
-echo "Stopping OpenStack services..."
+log "Stopping OpenStack services..."
 
 for i in /etc/init.d/openstack-* \
          /etc/init.d/apache2 \
@@ -46,8 +55,10 @@ for i in /etc/init.d/openstack-* \
          /etc/init.d/hawk;
 do
     if test -e $i; then
+        log "Stopping service $i"
         $i stop
     fi
 done
 
 <% end %>
+log "$BASH_SOURCE is finished."

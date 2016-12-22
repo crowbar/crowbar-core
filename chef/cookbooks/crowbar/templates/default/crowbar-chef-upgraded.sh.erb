@@ -7,14 +7,21 @@ UPGRADEDIR=/var/lib/crowbar/upgrade
 mkdir -p "`dirname "$LOGFILE"`"
 exec >>"$LOGFILE" 2>&1
 
-echo "Executing $BASH_SOURCE"
+log()
+{
+    set +x
+    echo "[$(date --iso-8601=ns)] [$$] $@"
+    set -x
+}
+
+log "Executing $BASH_SOURCE"
 
 set -x
 
 mkdir -p $UPGRADEDIR
 
 if [[ -f $UPGRADEDIR/crowbar-chef-upgraded-ok ]] ; then
-    echo "crowbar_join and chef-client actions were already successfully executed"
+    log "crowbar_join and chef-client actions were already successfully executed"
     exit 0
 fi
 
@@ -22,3 +29,4 @@ fi
 crowbar_join --start
 
 touch $UPGRADEDIR/crowbar-chef-upgraded-ok
+log "$BASH_SOURCE is finished."

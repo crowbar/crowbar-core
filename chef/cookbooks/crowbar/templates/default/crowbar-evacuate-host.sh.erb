@@ -9,12 +9,19 @@ UPGRADEDIR=/var/lib/crowbar/upgrade
 mkdir -p "`dirname "$LOGFILE"`"
 exec >>"$LOGFILE" 2>&1
 
-echo "Executing $BASH_SOURCE"
+log()
+{
+    set +x
+    echo "[$(date --iso-8601=ns)] [$$] $@"
+    set -x
+}
+
+log "Executing $BASH_SOURCE"
 
 host=$1
 
 if [ "$host" = "" ]; then
-    echo "No argument was given! Exiting..."
+    log "No argument was given! Exiting..."
     touch $UPGRADEDIR/crowbar-evacuate-host-failed
     exit 1
 fi
@@ -33,7 +40,7 @@ blockmigrate="--block-migrate"
 blockmigrate=""
 <% end %>
 if ! nova host-evacuate-live "$host" $blockmigrate; then
-    echo "Live migration of instances from host $host has failed!"
+    log "Live migration of instances from host $host has failed!"
     touch $UPGRADEDIR/crowbar-evacuate-host-failed
     exit 2
 fi
@@ -41,9 +48,10 @@ fi
 # FIXME: here we need checks for potential errors during the evacuation
 
 while nova list --host "$host" --fields host 2>/dev/null | grep "$host"; do
-    echo "There is still some VM running at $host..."
+    log "There is still some VM running at $host..."
     sleep 10
 done
 
 
 touch $UPGRADEDIR/crowbar-evacuate-host-ok
+log "$BASH_SOURCE is finished."
