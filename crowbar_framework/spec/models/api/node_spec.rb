@@ -92,6 +92,7 @@ describe Api::Node do
           "os", "suse-12.2", "x86_64"
         ).and_return([true, {}])
       )
+      allow_any_instance_of(ProvisionerService).to receive(:enable_repository).and_return(true)
 
       os_repo_fixture = node_repocheck.tap do |k|
         k.delete("ceph")
@@ -103,6 +104,7 @@ describe Api::Node do
     end
 
     it "finds the os and addon repositories required to upgrade the nodes" do
+      allow_any_instance_of(ProvisionerService).to receive(:enable_repository).and_return(true)
       ["os", "ceph", "ha", "openstack"].each do |feature|
         allow(::Crowbar::Repository).to(
           receive(:provided_and_enabled_with_repolist).with(
@@ -119,6 +121,7 @@ describe Api::Node do
 
   context "with a failed nodes repocheck" do
     it "doesn't find the repositories required to upgrade the nodes" do
+      allow_any_instance_of(ProvisionerService).to receive(:enable_repository).and_return(true)
       expected = {}
       got = {}
 
@@ -141,6 +144,7 @@ describe Api::Node do
           "ceph", "suse-12.2", "x86_64"
         ).and_return([true, {}])
       )
+      allow_any_instance_of(ProvisionerService).to receive(:enable_repository).and_return(true)
 
       expected = node_repocheck.tap do |k|
         k.delete("os")
@@ -158,6 +162,7 @@ describe Api::Node do
           "openstack" => ["x86_64"]
         )
       )
+      allow_any_instance_of(ProvisionerService).to receive(:enable_repository).and_return(true)
 
       expected = node_repocheck.tap do |k|
         k.delete("os")
