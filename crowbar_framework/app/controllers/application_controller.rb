@@ -194,7 +194,9 @@ class ApplicationController < ActionController::Base
         redirect_to sanity_path
       end
       format.json do
-        render json: { error: I18n.t("error.before_install") }, status: :unprocessable_entity
+        render json: {
+          error: Rails.cache.fetch(:sanity_check_errors)
+        }, status: :unprocessable_entity
       end
     end
   end
