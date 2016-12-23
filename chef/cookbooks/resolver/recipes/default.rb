@@ -18,8 +18,8 @@
 # limitations under the License.
 #
 
-env_filter = " AND dns_config_environment:#{node[:dns][:config][:environment]}"
-nodes = search(:node, "roles:dns-server#{env_filter}")
+dns_instance = CrowbarHelper.get_proposal_instance(node, "dns")
+nodes = node_search_with_cache("roles:dns-server", dns_instance)
 
 dns_list = []
 if !nodes.nil? and !nodes.empty?

@@ -183,13 +183,11 @@ cluster_zone[:hosts] = Mash.new
 # As DHCP addresses can be re-used, we make sure to use the one node which is
 # the most recent; this requires two passes
 temporary_dhcp = {}
-# Get the config environment filter
-#env_filter = "dns_config_environment:#{node[:dns][:config][:environment]}"
-env_filter = "*:*" # Get all nodes for now.  This is a hack around a timing issue in ganglia.
 # Get the list of nodes
-nodes = search(:node, "#{env_filter}")
+nodes = node_search_with_cache("*:*")
+fqdns = []
 nodes.each do |n|
-  n = Node.load(n.name)
+  fqdns.push(n[:fqdn])
   cname = n["crowbar"]["display"]["alias"] rescue nil
   cname = nil unless cname && ! cname.empty?
   base_name_no_net = n[:fqdn].chomp(".#{node[:dns][:domain]}")
@@ -247,8 +245,8 @@ search(:crowbar, "id:*_network").each do |network|
   next unless network.key?("allocated_by_name")
   net_name=network[:id].gsub(/_network$/, "").gsub("_","-")
   network[:allocated_by_name].each_key do |host|
-    if search(:node, "fqdn:#{host}").size > 0 or not host.match(/.#{node[:dns][:domain]}$/)
-      #this is node in crowbar terms or it not belong to our domain, so lets skip it
+    if !host.match(/.#{node[:dns][:domain]}$/) || fqdns.include?(host)
+      # this is node in crowbar terms or it not belong to our domain, so lets skip it
       next
     end
     base_name=host.chomp(".#{node[:dns][:domain]}")

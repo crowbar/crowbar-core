@@ -15,8 +15,11 @@
 
 return if node[:platform_family] == "suse" || node[:platform_family] == "windows"
 
-provisioners = search(:node, "roles:provisioner-server")
-provisioner = provisioners[0] if provisioners
+# no need to have a fallback as this recipe is run as part of the provisioner-base role
+provisioner_instance = CrowbarHelper.get_proposal_instance(node, "provisioner")
+provisioners = node_search_with_cache("roles:provisioner-server", provisioner_instance)
+provisioner = provisioners.first if provisioners
+
 os_token = "#{node[:platform]}-#{node[:platform_version]}"
 arch = node[:kernel][:machine]
 
