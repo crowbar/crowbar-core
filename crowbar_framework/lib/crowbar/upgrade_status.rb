@@ -139,6 +139,16 @@ module Crowbar
       current_step == upgrade_steps_6_7.last
     end
 
+    def cancel_allowed?
+      [
+        :upgrade_prechecks,
+        :upgrade_prepare,
+        :admin_backup,
+        :admin_repo_checks,
+        :admin_upgrade
+      ].include?(current_step) && !running?(:admin_upgrade)
+    end
+
     def save_current_node(node_data = {})
       ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
         progress[:current_node] = node_data

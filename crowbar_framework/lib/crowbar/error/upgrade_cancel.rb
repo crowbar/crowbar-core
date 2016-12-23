@@ -1,6 +1,5 @@
 #
-# Copyright 2011-2013, Dell
-# Copyright 2013-2015, SUSE LINUX GmbH
+# Copyright 2016, SUSE LINUX GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,18 +15,11 @@
 #
 
 module Crowbar
-  autoload :Backup,
-    File.expand_path("../crowbar/backup", __FILE__)
-
-  autoload :Error,
-    File.expand_path("../crowbar/error", __FILE__)
-
-  autoload :Installer,
-    File.expand_path("../crowbar/installer", __FILE__)
-
-  autoload :Migrate,
-    File.expand_path("../crowbar/migrate", __FILE__)
-
-  autoload :Upgrade,
-    File.expand_path("../crowbar/upgrade", __FILE__)
+  module Error
+    class UpgradeCancelError < StandardError
+      def initialize(step_name = "")
+        super("Not possible to cancel the upgrade at the step #{step_name}")
+      end
+    end
+  end
 end
