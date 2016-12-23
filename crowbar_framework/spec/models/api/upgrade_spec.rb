@@ -131,11 +131,16 @@ describe Api::Upgrade do
       )
       allow_any_instance_of(NodeObject).to(
         receive(:shutdown_services_before_upgrade).
-        and_return([200, "Some Error"])
+        and_return([200, ""])
       )
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :end_step
       ).and_return(true)
+      allow_any_instance_of(NodeObject).to(
+        receive(:wait_for_script_to_finish).with(
+          "/usr/sbin/crowbar-delete-cinder-services-before-upgrade.sh", 300
+        ).and_return(true)
+      )
 
       expect(subject.class.services).to be_a(Delayed::Backend::ActiveRecord::Job)
     end
