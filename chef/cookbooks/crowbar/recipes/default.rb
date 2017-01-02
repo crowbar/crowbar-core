@@ -316,27 +316,6 @@ if node[:platform_family] == "suse"
     subscribes :run, resources("cookbook_file[/etc/tmpfiles.d/crowbar.conf]"), :immediately
   end
 
-  # Use a systemd .service file on recent SUSE platforms
-  cookbook_file "/etc/systemd/system/crowbar.service" do
-    owner "root"
-    group "root"
-    mode "0644"
-    action :create
-    source "crowbar.service"
-  end
-
-  # Make sure that any dependency change is taken into account
-  bash "reload systemd after crowbar update" do
-    code "systemctl daemon-reload"
-    action :nothing
-    subscribes :run, resources("cookbook_file[/etc/systemd/system/crowbar.service]"), :immediately
-  end
-
-  link "/usr/sbin/rccrowbar" do
-    action :create
-    to "service"
-  end
-
   service "crowbar" do
     action :enable
   end
