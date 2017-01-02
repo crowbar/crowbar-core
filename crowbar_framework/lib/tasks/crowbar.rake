@@ -63,4 +63,34 @@ namespace :crowbar do
       end
     end
   end
+
+  desc "Update configuration database used by nodes, from applied proposals"
+  task :update_config_db, [:barclamps] => :environment do |t, args|
+    args.with_defaults(barclamps: "all")
+    barclamps = args[:barclamps].split(" ")
+
+    if barclamps.include?("all")
+      barclamps = BarclampCatalog.barclamps.keys
+    end
+
+    barclamps.each do |barclamp|
+      begin
+        cls = ServiceObject.get_service(barclamp)
+      rescue NameError
+        # catalog may contain barclamps which don't have services
+        next
+      end
+
+      next unless cls.method_defined?(:save_config_to_databag)
+
+      service = cls.new(Rails.logger)
+
+      proposals = Proposal.where(barclamp: barclamp)
+      proposals.each do |proposal|
+        role = proposal.role
+        next if role.nil?
+        service.save_config_to_databag(nil, role)
+      end
+    end
+  end
 end
