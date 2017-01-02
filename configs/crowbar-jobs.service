@@ -1,6 +1,6 @@
 [Unit]
 Description=Crowbar Background jobs
-After=network.target syslog.target remote-fs.target chef-server.service crowbar.service
+After=network.target syslog.target remote-fs.target chef-server.service
 Requires=postgresql.service
 
 [Service]
