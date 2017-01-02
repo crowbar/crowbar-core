@@ -288,7 +288,7 @@ module Api
         end
 
         if substep == "computes"
-          return false unless upgrade_compute_nodes
+          return false unless upgrade_all_compute_nodes
         end
         # FIXME: mark the whole step as done
         true
@@ -444,6 +444,23 @@ module Api
         end
       end
 
+      # Live migrate all instances of the specified
+      # node to other available hosts.
+      def live_evacuate_compute_node(controller, compute)
+        controller.wait_for_script_to_finish(
+          "/usr/sbin/crowbar-evacuate-host.sh", 300, [compute]
+        )
+        save_upgrade_state(
+          "Migrating instances from node #{compute} was successful."
+        )
+      rescue StandardError => e
+        save_error_state(
+          e.message +
+          "Check /var/log/crowbar/node-upgrade.log at #{controller.name} for details."
+        )
+        return false
+      end
+
       def save_upgrade_state(message = "")
         # FIXME: update the global status
         Rails.logger.info(message)
@@ -454,8 +471,103 @@ module Api
         Rails.logger.error(message)
       end
 
-      def upgrade_compute_nodes
-        # TODO: not implemented
+      def upgrade_all_compute_nodes
+        ["kvm", "xen"].each do |virt|
+          return false unless upgrade_compute_nodes virt
+        end
+        true
+      end
+
+      # Take a list of nodes and execute given script at each node in the background
+      # Wait until all scripts at all nodes correctly finish or until some error is detected
+      def execute_scripts_and_wait_for_finish(nodes, script, seconds)
+        nodes.each do |node|
+          ssh_status = node.ssh_cmd(script).first
+          if ssh_status != 200
+            save_error_state("Failed to connect to node #{node.name}!")
+            raise "Execution of script #{script} has failed on node #{node.name}."
+          end
+        end
+
+        scripts_status = {}
+        begin
+          Timeout.timeout(seconds) do
+            nodes.each do |node|
+              # wait until sript on this node finishes, than move to check next one
+              loop do
+                status = node.script_status(script)
+                scripts_status[node.name] = status
+                break if status != "running"
+                sleep 1
+              end
+            end
+          end
+          failed = scripts_status.select { |_, v| v == "failed" }.keys
+          unless failed.empty?
+            raise "Execution of script #{script} has failed at node(s) " \
+            "#{failed.join(",")}. " \
+            "Check /var/log/crowbar/node-upgrade.log for details."
+          end
+        rescue Timeout::Error
+          running = scripts_status.select { |_, v| v == "running" }.keys
+          raise "Possible error during execution of #{script} at node(s) " \
+            "#{running.join(",")}. " \
+            "Action did not finish after #{seconds} seconds."
+        end
+      end
+
+      def upgrade_compute_nodes(virt)
+        save_upgrade_state("Upgrading compute nodes of #{virt} type")
+        compute_nodes = NodeObject.find("roles:nova-compute-#{virt}")
+        return true if compute_nodes.empty?
+
+        controller = NodeObject.find("roles:nova-controller").first
+        if controller.nil?
+          save_error_state("No nova controller node was found!")
+          return false
+        end
+
+        # First batch of actions can be executed in parallel for all compute nodes
+        begin
+          execute_scripts_and_wait_for_finish(
+            compute_nodes,
+            "/usr/sbin/crowbar-prepare-repositories.sh",
+            120
+          )
+          save_upgrade_state("Repositories prepared successfully.")
+          execute_scripts_and_wait_for_finish(
+            compute_nodes,
+            "/usr/sbin/crowbar-pre-upgrade.sh",
+            300
+          )
+          save_upgrade_state("Services at compute nodes upgraded and prepared.")
+        rescue StandardError => e
+          save_error_state(e.message)
+          return false
+        end
+
+        # Next part must be done sequentially, only one compute node can be upgraded at a time
+        compute_nodes.each do |n|
+          node_api = Api::Node.new n.name
+          return false unless live_evacuate_compute_node(controller, n.name)
+          return false unless node_api.os_upgrade
+          return false unless node_api.reboot_and_wait
+          return false unless node_api.post_upgrade
+          return false unless node_api.join_and_chef
+
+          out = controller.run_ssh_cmd(
+            "source /root/.openrc; nova service-enable #{n.name} nova-compute"
+          )
+          unless out[:exit_code].zero?
+            save_error_state(
+              "Enabling nova-compute service for #{n.name} has failed!" \
+              "Check nova log files at #{controller.name} and #{n.name}."
+            )
+            return false
+          end
+          save_upgrade_state("Node #{n.name} successfully upgraded.")
+        end
+        # FIXME: finalize compute nodes (move upgrade_step to done etc.)
         true
       end
 

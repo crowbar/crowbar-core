@@ -1072,11 +1072,29 @@ class NodeObject < ChefObject
     out[:exit_code].zero?
   end
 
+  # Check the status of script that was previously executed on the node.
+  # The script is supposed to create specific files on success and failure.
+  # Returns: "ok"/"failed"/"runnning"
+  def script_status(script)
+    base = "/var/lib/crowbar/upgrade/" + File.basename(script, ".sh")
+    ok_file = base + "-ok"
+    failed_file = base + "-failed"
+
+    out = run_ssh_cmd(
+      "(test -e #{ok_file} && echo ok) " \
+      "|| (test -e #{failed_file} && echo failed) " \
+      "|| echo running"
+    )
+    out[:stdout].chop
+  end
+
   # Executes a script in background and Waits until it finishes.
   # We expect that the script generates two kinds of files to indicate success or failure.
   # Raise a timeout exception if the waiting time exceedes 'seconds'
-  def wait_for_script_to_finish(script, seconds)
-    ssh_status = ssh_cmd(script)
+  def wait_for_script_to_finish(script, seconds, args = [])
+    cmd = script
+    cmd += " " + args.join(" ") unless args.empty?
+    ssh_status = ssh_cmd(cmd)
     if ssh_status[0] != 200
       raise "Executing of script #{script} has failed on node #{@node.name}."
     end

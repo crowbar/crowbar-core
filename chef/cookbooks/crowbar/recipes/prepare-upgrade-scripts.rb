@@ -23,6 +23,7 @@
 # 3. runs zypper dup to upgrade the node
 
 arch = node[:kernel][:machine]
+roles = node["run_list_map"].keys
 
 old_repos = Provisioner::Repositories.get_repos(
   node[:platform], node[:platform_version], arch
@@ -56,8 +57,8 @@ end
 
 new_alias = repo_alias.gsub("SP1", "SP2").gsub(node[:platform_version], target_platform_version)
 
-template "/usr/sbin/crowbar-upgrade-os.sh" do
-  source "crowbar-upgrade-os.erb"
+template "/usr/sbin/crowbar-prepare-repositories.sh" do
+  source "crowbar-prepare-repositories.sh.erb"
   mode "0755"
   owner "root"
   group "root"
@@ -65,10 +66,20 @@ template "/usr/sbin/crowbar-upgrade-os.sh" do
   variables(
     old_repos: old_repos,
     new_repos: new_repos,
-    target_platform_version: target_platform_version,
     old_base_repo: old_install_url,
     new_base_repo: new_install_url,
     new_alias: new_alias
+  )
+end
+
+template "/usr/sbin/crowbar-upgrade-os.sh" do
+  source "crowbar-upgrade-os.sh.erb"
+  mode "0755"
+  owner "root"
+  group "root"
+  action :create
+  variables(
+    target_platform_version: target_platform_version
   )
 end
 
@@ -77,7 +88,7 @@ end
 # and services necessary for managing network traffic of running instances.
 
 # Find out now if we have HA setup and pass that info to the script
-use_ha = node["run_list_map"].key? "pacemaker-cluster-member"
+use_ha = roles.include? "pacemaker-cluster-member"
 cluster_founder = use_ha && node["pacemaker"]["founder"]
 
 template "/usr/sbin/crowbar-shutdown-services-before-upgrade.sh" do
@@ -92,7 +103,7 @@ template "/usr/sbin/crowbar-shutdown-services-before-upgrade.sh" do
   )
 end
 
-cinder_controller = node["run_list_map"].key? "cinder-controller"
+cinder_controller = roles.include? "cinder-controller"
 
 template "/usr/sbin/crowbar-delete-cinder-services-before-upgrade.sh" do
   source "crowbar-delete-cinder-services-before-upgrade.sh.erb"
@@ -111,6 +122,33 @@ Barclamp::Inventory.list_networks(node).each do |network|
   bridges_to_reset << network.bridge_name
 end
 
+template "/usr/sbin/crowbar-evacuate-host.sh" do
+  source "crowbar-evacuate-host.sh.erb"
+  mode "0755"
+  owner "root"
+  group "root"
+  action :create
+  only_if { roles.include? "nova-controller" }
+end
+
+compute_node = (roles & ["nova-compute-kvm", "nova-compute-xen"]).any?
+cinder_volume = roles.include? "cinder-volume"
+neutron = search(:node, "run_list_map:neutron-server").first
+
+if neutron[:neutron][:networking_plugin] == "ml2"
+  ml2_mech_drivers = neutron[:neutron][:ml2_mechanism_drivers]
+  if ml2_mech_drivers.include?("openvswitch")
+    neutron_agent = "openstack-neutron-openvswitch-agent"
+  elsif ml2_mech_drivers.include?("linuxbridge")
+    neutron_agent = "openstack-neutron-linuxbridge-agent"
+  end
+end
+
+if neutron[:neutron][:use_dvr]
+  l3_agent = "openstack-neutron-l3-agent"
+  metadata_agent = "openstack-neutron-metadata-agent"
+end
+
 # Following script executes all actions that are needed directly on the node
 # directly before the OS upgrade is initiated.
 template "/usr/sbin/crowbar-pre-upgrade.sh" do
@@ -121,7 +159,12 @@ template "/usr/sbin/crowbar-pre-upgrade.sh" do
   action :create
   variables(
     use_ha: use_ha,
-    bridges_to_reset: bridges_to_reset
+    compute_node: compute_node,
+    bridges_to_reset: bridges_to_reset,
+    cinder_volume: cinder_volume,
+    neutron_agent: neutron_agent,
+    l3_agent: l3_agent,
+    metadata_agent: metadata_agent
   )
 end
 

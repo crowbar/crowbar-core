@@ -1,0 +1,34 @@
+#!/bin/bash
+#
+# This script prepares the repositories needed for following node upgrade.
+
+LOGFILE=/var/log/crowbar/node-upgrade.log
+mkdir -p "`dirname "$LOGFILE"`"
+exec >>"$LOGFILE" 2>&1
+
+echo "Executing $BASH_SOURCE"
+
+set -x
+
+UPGRADEDIR=/var/lib/crowbar/upgrade
+mkdir -p $UPGRADEDIR
+
+if [[ -f $UPGRADEDIR/crowbar-prepare-repositories-ok ]] ; then
+    echo "Repositories already correctly prepared"
+    exit 0
+fi
+
+
+echo "Removing old repositories..."
+<% @old_repos.each do |name, _| %>
+zypper --non-interactive removerepo <%= name %>
+<% end %>
+zypper --non-interactive removerepo <%= @old_base_repo %>
+
+echo "Adding new repositories..."
+<% @new_repos.each do |name, attrs| %>
+zypper --non-interactive addrepo <%= attrs[:url] %> <%= name %>
+<% end %>
+zypper --non-interactive addrepo <%= @new_base_repo %> <%= @new_alias %>
+
+touch $UPGRADEDIR/crowbar-prepare-repositories-ok

@@ -372,16 +372,74 @@ describe Api::Upgrade do
       allow_any_instance_of(Api::Node).to receive(:router_migration).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:join_and_chef).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:save_node_state).and_return(true)
+      allow(NodeObject).to(
+        receive(:find).
+        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+      )
+      allow(Api::Upgrade).to receive(:upgrade_all_compute_nodes).and_return(true)
 
       expect(subject.class.nodes).to be true
     end
 
-    it "fails during the upgrade of controller nodes" do
-      allow(subject.class).to(
-        receive(:upgrade_controller_nodes).and_return(false)
+    it "successfully completes the upgrade when they are no compute nodes" do
+      allow(NodeObject).to(
+        receive(:find).
+        with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
+        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+      )
+      allow(Api::Upgrade).to receive(:upgrade_controller_nodes).and_return(true)
+      allow(NodeObject).to(
+        receive(:find).with("roles:nova-compute-kvm").and_return([])
+      )
+      allow(NodeObject).to(
+        receive(:find).with("roles:nova-compute-xen").and_return([])
+      )
+
+      expect(subject.class.nodes).to be true
+    end
+
+    it "fails to upgrade compute nodes when there is no nova-controller" do
+      allow(NodeObject).to(
+        receive(:find).
+        with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
+        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+      )
+      allow(Api::Upgrade).to receive(:upgrade_controller_nodes).and_return(true)
+      allow(NodeObject).to(
+        receive(:find).with("roles:nova-compute-kvm").
+        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+      )
+      allow(NodeObject).to(
+        receive(:find).with("roles:nova-controller").and_return([])
       )
 
       expect(subject.class.nodes).to be false
+    end
+
+    it "successfully upgrades KVM compute nodes" do
+      allow(NodeObject).to(
+        receive(:find).with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
+        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+      )
+      allow(Api::Upgrade).to receive(:upgrade_controller_nodes).and_return(true)
+      allow(NodeObject).to(
+        receive(:find).with("roles:nova-compute-kvm").
+        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+      )
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
+      allow(NodeObject).to(
+        receive(:find).with("roles:nova-controller").
+        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+      )
+      allow(Api::Upgrade).to receive(:execute_scripts_and_wait_for_finish).and_return(true)
+      allow(Api::Upgrade).to receive(:live_evacuate_compute_node).and_return(true)
+      allow_any_instance_of(Api::Node).to receive(:os_upgrade).and_return(true)
+      allow_any_instance_of(Api::Node).to receive(:reboot_and_wait).and_return(true)
+      allow_any_instance_of(Api::Node).to receive(:post_upgrade).and_return(true)
+      allow_any_instance_of(Api::Node).to receive(:join_and_chef).and_return(true)
+      allow_any_instance_of(NodeObject).to receive(:run_ssh_cmd).and_return(exit_code: 0)
+
+      expect(subject.class.nodes).to be true
     end
   end
 
