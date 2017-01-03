@@ -280,13 +280,21 @@ module Api
         end
 
         if substep == "controllers"
-          return false unless upgrade_controller_nodes
+          # FIXME: return some meaningful error from upgrade_controller_nodes
+          unless upgrade_controller_nodes
+            status.end_step(false, "Failed to upgrade controller nodes")
+            return false
+          end
           substep = "computes"
           ::Crowbar::UpgradeStatus.new.save_substep(substep)
         end
 
         if substep == "computes"
-          return false unless upgrade_all_compute_nodes
+          # FIXME: return some meaningful error from upgrade_all_compute_nodes
+          unless upgrade_all_compute_nodes
+            status.end_step(false, "Failed to upgrade compute nodes")
+            return false
+          end
         end
         status.end_step
       end
