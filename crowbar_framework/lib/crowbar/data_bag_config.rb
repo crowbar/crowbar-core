@@ -40,6 +40,11 @@ module Crowbar
         end
       end
 
+      def load(group, instance, barclamp)
+        data_bag_item = databag_config(group)
+        data_bag_item.fetch(instance, {}).fetch(barclamp, {})
+      end
+
       private
 
       def databag_config(group)
