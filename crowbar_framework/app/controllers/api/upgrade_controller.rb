@@ -147,7 +147,7 @@ class Api::UpgradeController < ApiController
     else
       render json: {
         errors: {
-          nodes: {
+          nodes_upgrade: {
             data: I18n.t("api.upgrade.nodes.failed"),
             help: I18n.t("api.upgrade.nodes.help.default")
           }
