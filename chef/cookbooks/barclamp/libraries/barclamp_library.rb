@@ -393,8 +393,6 @@ module BarclampLibrary
         # Accept environments passed as instances
         if instance =~ /^#{barclamp}-config-(.*)/
           instance = $1
-        elsif instance.nil?
-          instance = "default"
         end
 
         # Cache the config we load from data bag items.
@@ -415,6 +413,20 @@ module BarclampLibrary
           Chef::DataBagItem.load("crowbar-config", group)
         rescue Net::HTTPServerException
           {}
+        end
+
+        if instance.nil?
+          # try the "default" instance, and fallback on any existing instance
+          instance = "default"
+          unless @cache["groups"][group].fetch("default", {}).key?(barclamp)
+            # sort to guarantee a consistent order
+            @cache["groups"][group].keys.sort.each do |key|
+              if @cache["groups"][group][key].key?(barclamp)
+                instance = key
+                break
+              end
+            end
+          end
         end
 
         @cache["groups"][group].fetch(instance, {}).fetch(barclamp, {})
