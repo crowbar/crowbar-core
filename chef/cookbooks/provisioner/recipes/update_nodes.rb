@@ -148,22 +148,26 @@ node_search_with_cache("*:*").each do |mnode|
     end
 
     [pxefile, windows_tftp_file].each do |f|
+      next if f.nil?
       file f do
         action :delete
-      end unless f.nil?
+      end
     end
 
-    file grubfile do
-      action :delete
-      # Do not backup binary files
-      backup false
-    end unless grubfile.nil?
+    unless grubfile.nil?
+      file grubfile do
+        action :delete
+        # Do not backup binary files
+        backup false
+      end
+    end
 
     [grubdir].each do |d|
+      next if d.nil?
       directory d do
         recursive true
         action :delete
-      end unless d.nil?
+      end
     end
 
     directory "#{tftproot}/nodes/#{mnode[:fqdn]}" do
@@ -183,21 +187,26 @@ node_search_with_cache("*:*").each do |mnode|
       end
     end
 
-    file pxefile do
-      action :delete
-    end unless pxefile.nil?
+    unless pxefile.nil?
+      file pxefile do
+        action :delete
+      end
+    end
 
-    file grubfile do
-      action :delete
-      # Do not backup binary files
-      backup false
-    end unless grubfile.nil?
+    unless grubfile.nil?
+      file grubfile do
+        action :delete
+        # Do not backup binary files
+        backup false
+      end
+    end
 
     [grubdir].each do |d|
+      next if d.nil?
       directory d do
         recursive true
         action :delete
-      end unless d.nil?
+      end
     end
 
   else
@@ -289,15 +298,16 @@ node_search_with_cache("*:*").each do |mnode|
           owner "root"
           group "root"
           variables(
-                    admin_node_ip: admin_ip,
-                    web_port: web_port,
-                    node_name: mnode[:fqdn],
-                    boot_device: (mnode[:crowbar_wall][:boot_device] rescue nil),
-                    repos: node[:provisioner][:repositories][os][arch],
-                    uefi: mnode[:uefi],
-                    admin_web: install_url,
-                    timezone: timezone,
-                    crowbar_join: "#{os_url}/crowbar_join.sh")
+            admin_node_ip: admin_ip,
+            web_port: web_port,
+            node_name: mnode[:fqdn],
+            boot_device: (mnode[:crowbar_wall][:boot_device] rescue nil),
+            repos: node[:provisioner][:repositories][os][arch],
+            uefi: mnode[:uefi],
+            admin_web: install_url,
+            timezone: timezone,
+            crowbar_join: "#{os_url}/crowbar_join.sh"
+          )
         end
 
       when os =~ /^(open)?suse/
@@ -347,26 +357,25 @@ node_search_with_cache("*:*").each do |mnode|
           owner "root"
           group "root"
           variables(
-                    admin_node_ip: admin_ip,
-                    web_port: web_port,
-                    packages: packages,
-                    repos: repos,
-                    rootpw_hash: node[:provisioner][:root_password_hash] || "",
-                    timezone: timezone,
-                    boot_device: (mnode[:crowbar_wall][:boot_device] rescue nil),
-                    raid_type: (mnode[:crowbar_wall][:raid_type] || "single"),
-                    raid_disks: (mnode[:crowbar_wall][:raid_disks] || []),
-                    node_ip: node_ip,
-                    node_fqdn: mnode[:fqdn],
-                    node_hostname: mnode[:hostname],
-                    platform: target_platform_distro,
-                    target_platform_version: target_platform_version,
-                    architecture: arch,
-                    is_ses: storage_available && !cloud_available,
-                    crowbar_join: "#{os_url}/crowbar_join.sh",
-                    default_fs: mnode[:crowbar_wall][:default_fs] || "ext4",
-                    needs_openvswitch:
-                      (mnode[:network] && mnode[:network][:needs_openvswitch]) || false
+            admin_node_ip: admin_ip,
+            web_port: web_port,
+            packages: packages,
+            repos: repos,
+            rootpw_hash: node[:provisioner][:root_password_hash] || "",
+            timezone: timezone,
+            boot_device: (mnode[:crowbar_wall][:boot_device] rescue nil),
+            raid_type: (mnode[:crowbar_wall][:raid_type] || "single"),
+            raid_disks: (mnode[:crowbar_wall][:raid_disks] || []),
+            node_ip: node_ip,
+            node_fqdn: mnode[:fqdn],
+            node_hostname: mnode[:hostname],
+            platform: target_platform_distro,
+            target_platform_version: target_platform_version,
+            architecture: arch,
+            is_ses: storage_available && !cloud_available,
+            crowbar_join: "#{os_url}/crowbar_join.sh",
+            default_fs: mnode[:crowbar_wall][:default_fs] || "ext4",
+            needs_openvswitch: (mnode[:network] && mnode[:network][:needs_openvswitch]) || false
           )
         end
 
@@ -385,12 +394,12 @@ node_search_with_cache("*:*").each do |mnode|
         else
           raise "Unsupported version of Windows Server / Hyper-V Server"
         end
-        if os =~ /^hyperv/
+        license_key = if os =~ /^hyperv/
           # hyper-v server doesn't need one, and having one might actually
           # result in broken installation
-          license_key = ""
+          ""
         else
-          license_key = mnode[:license_key] || ""
+          mnode[:license_key] || ""
         end
         template "#{os_dir_win}/unattend/unattended.xml" do
           mode 0o644
@@ -413,7 +422,7 @@ node_search_with_cache("*:*").each do |mnode|
           to "../../#{os}"
           # Only for upgrade purpose: the directory is created in
           # setup_base_images recipe, which is run later
-          only_if { ::File.exists? File.dirname(windows_tftp_file) }
+          only_if { ::File.exist? File.dirname(windows_tftp_file) }
         end
 
       else
@@ -440,16 +449,18 @@ node_search_with_cache("*:*").each do |mnode|
 
     end
 
-    template pxefile do
-      mode 0o644
-      owner "root"
-      group "root"
-      source "default.erb"
-      variables(append_line: append_line,
-                install_name: install_name,
-                initrd: "#{relative_to_pxelinux}#{initrd}",
-                kernel: "#{relative_to_pxelinux}#{kernel}")
-    end unless pxefile.nil?
+    unless pxefile.nil?
+      template pxefile do
+        mode 0o644
+        owner "root"
+        group "root"
+        source "default.erb"
+        variables(append_line: append_line,
+                  install_name: install_name,
+                  initrd: "#{relative_to_pxelinux}#{initrd}",
+                  kernel: "#{relative_to_pxelinux}#{kernel}")
+      end
+    end
 
     unless grubfile.nil?
       # grub.cfg has to be in boot/grub/ subdirectory
