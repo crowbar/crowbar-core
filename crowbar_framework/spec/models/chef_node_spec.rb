@@ -40,7 +40,7 @@ describe ChefNode do
       it "returns all nodes" do
         nodes = ChefNode.all
         expect(nodes).to_not be_empty
-        expect(nodes).to all(be_a ChefNode)
+        expect(nodes).to all(be_a(ChefNode))
       end
     end
 

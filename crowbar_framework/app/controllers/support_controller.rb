@@ -109,9 +109,9 @@ class SupportController < ApplicationController
         file.unlink if file.extname == ".json"
       end
 
-      Node.all.each { |n| n.export }
-      RoleObject.all.each { |r| r.export }
-      Proposal.all.each { |p| p.export }
+      Node.all.each(&:export)
+      RoleObject.all.each(&:export)
+      Proposal.all.each(&:export)
 
       filename = "crowbar-chef-#{Time.now.strftime("%Y%m%d-%H%M%S")}.tgz"
 

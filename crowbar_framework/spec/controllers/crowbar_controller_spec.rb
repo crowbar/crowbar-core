@@ -68,37 +68,61 @@ describe CrowbarController do
 
   describe "POST transition" do
     it "does not allow invalid states" do
-      post :transition, barclamp: "crowbar", id: "default", state: "foobarz", name: "testing.crowbar.com"
+      post :transition,
+        barclamp: "crowbar",
+        id: "default",
+        state: "foobarz",
+        name: "testing.crowbar.com"
       expect(response).to be_bad_request
     end
 
     it "does not allow upcased states" do
-      post :transition, barclamp: "crowbar", id: "default", state: "Discovering", name: "testing.crowbar.com"
+      post :transition,
+        barclamp: "crowbar",
+        id: "default",
+        state: "Discovering",
+        name: "testing.crowbar.com"
       expect(response).to be_bad_request
     end
 
     it "transitions the node into desired state" do
       allow_any_instance_of(RoleObject).to receive(:find_roles_by_search).and_return([])
-      post :transition, barclamp: "crowbar", id: "default", state: "discovering", name: "testing.crowbar.com"
+      post :transition,
+        barclamp: "crowbar",
+        id: "default",
+        state: "discovering",
+        name: "testing.crowbar.com"
       expect(response).to be_success
     end
 
     it "returns plain text message if transitioning fails" do
       allow_any_instance_of(CrowbarService).to receive(:transition).and_return([500, "error"])
-      post :transition, barclamp: "crowbar", id: "default", state: "discovering", name: "testing.crowbar.com"
+      post :transition,
+        barclamp: "crowbar",
+        id: "default",
+        state: "discovering",
+        name: "testing.crowbar.com"
       expect(response).to be_server_error
       expect(response.body).to be == "error"
     end
 
     it "returns node as a hash on success when passed a name" do
-      post :transition, barclamp: "crowbar", id: "default", state: "discovering", name: "testing.crowbar.com"
+      post :transition,
+        barclamp: "crowbar",
+        id: "default",
+        state: "discovering",
+        name: "testing.crowbar.com"
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json["name"]).to be == "testing.crowbar.com"
     end
 
     it "returns node as a hash on success when passed a node (backward compatibility)" do
-      post :transition, barclamp: "crowbar", id: "default", state: "discovering", name: "testing.crowbar.com"
+      post :transition,
+        barclamp: "crowbar",
+        id: "default",
+        state: "discovering",
+        name: "testing.crowbar.com"
       expect(response).to be_success
       json = JSON.parse(response.body)
       expect(json["name"]).to be == "testing.crowbar.com"

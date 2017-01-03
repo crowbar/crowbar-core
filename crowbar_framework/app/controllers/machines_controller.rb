@@ -170,10 +170,7 @@ class MachinesController < BarclampController
         render json: {
           error: "Deleting the admin node is not allowd"
         }, status: :forbidden
-        return
-      end
-
-      if @machine.destroy
+      elsif @machine.destroy
         head :ok
       else
         render json: {

@@ -624,10 +624,8 @@ class ServiceObject
           end
         elsif element.include? ":"
           raise I18n.t("proposal.failures.unknown_node") + " " + element
-        else
-          if Node.find_by_name(element).blank?
-            raise I18n.t("proposal.failures.unknown_node") + " " + element
-          end
+        elsif Node.find_by_name(element).blank?
+          raise I18n.t("proposal.failures.unknown_node") + " " + element
         end
       end
     end

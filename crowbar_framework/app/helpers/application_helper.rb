@@ -266,6 +266,8 @@ module ApplicationHelper
   end
 
   def disabled_platforms(architecture)
-    (Node.disabled_platforms(architecture) + Crowbar::Repository.disabled_platforms(architecture)).uniq
+    Node.disabled_platforms(architecture).concat(
+      Crowbar::Repository.disabled_platforms(architecture)
+    ).uniq
   end
 end
