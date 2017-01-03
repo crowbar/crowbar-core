@@ -159,6 +159,7 @@ end
 if node[:platform_family] == "suse"
 
   include_recipe "apache2"
+  include_recipe "apache2::mod_authn_core"
 
   template "#{node[:apache][:dir]}/vhosts.d/provisioner.conf" do
     source "base-apache.conf.erb"
