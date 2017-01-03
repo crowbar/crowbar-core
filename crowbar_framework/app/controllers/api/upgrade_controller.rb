@@ -22,49 +22,54 @@ class Api::UpgradeController < ApiController
   api_version "2.0"
   example '
   {
-    "current_step": "upgrade_prechecks",
-    "substep": null,
+    "current_step": "admin_upgrade",
+    "current_substep": null,
     "current_node": null,
+    "remaining_nodes": null,
+    "upgraded_nodes": null,
     "steps": {
       "upgrade_prechecks": {
-        "status": "pending",
+        "status": "passed",
+        "errors": {}
+      },
+      "upgrade_prepare": {
+        "status": "passed",
         "errors": {}
       },
       "admin_backup": {
-        "status": "pending",
+        "status": "passed",
         "errors": {}
       },
       "admin_repo_checks": {
-        "status": "pending",
+        "status": "passed",
         "errors": {}
       },
       "admin_upgrade": {
-        "status": "pending",
-        "errors": {}
+        "status": "failed",
+        "errors": {
+          "admin_upgrade": {
+            "data": "zypper dist-upgrade has failed with 8, check zypper logs",
+            "help": "Failed to upgrade admin server. Refer to the error message in the response."
+          }
+        }
       },
       "database": {
-        "status": "pending",
-        "errors": {}
+        "status": "pending"
       },
       "nodes_repo_checks": {
-        "status": "pending",
-        "errors": {}
+        "status": "pending"
       },
       "nodes_services": {
-        "status": "pending",
-        "errors": {}
+        "status": "pending"
       },
       "nodes_db_dump": {
-        "status": "pending",
-        "errors": {}
+        "status": "pending"
       },
       "nodes_upgrade": {
-        "status": "pending",
-        "errors": {}
+        "status": "pending"
       },
       "finished": {
-        "status": "pending",
-        "errors": {}
+        "status": "pending"
       }
     }
   }
