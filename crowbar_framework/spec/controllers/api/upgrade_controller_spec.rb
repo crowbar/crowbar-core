@@ -192,6 +192,7 @@ describe Api::UpgradeController, type: :request do
       end
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:start_step).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
+      allow_any_instance_of(ProvisionerService).to receive(:enable_repository).and_return(true)
 
       get "/api/upgrade/noderepocheck", {}, headers
       expect(response).to have_http_status(:ok)
