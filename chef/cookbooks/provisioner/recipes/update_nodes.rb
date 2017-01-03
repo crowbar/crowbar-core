@@ -50,7 +50,7 @@ end
 
 states = node["provisioner"]["dhcp"]["state_machine"]
 tftproot = node["provisioner"]["root"]
-timezone = (node["provisioner"]["timezone"] rescue "UTC") || "UTC"
+timezone = node["provisioner"]["timezone"]
 admin_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
 web_port = node[:provisioner][:web_port]
 provisioner_web = "http://#{admin_ip}:#{web_port}"
@@ -70,7 +70,7 @@ node_search_with_cache("*:*").each do |mnode|
     next
   end
 
-  boot_ip_hex = mnode["crowbar"]["boot_ip_hex"] rescue nil
+  boot_ip_hex = mnode.fetch("crowbar", {})["boot_ip_hex"]
   Chef::Log.info("#{mnode[:fqdn]}: transition to #{new_group} boot file: #{boot_ip_hex}")
 
   mac_list = []
@@ -87,7 +87,9 @@ node_search_with_cache("*:*").each do |mnode|
     end
     mac_list.sort!
   end
-  Chef::Log.warn("#{mnode[:fqdn]}: no MAC address found; DHCP will not work for that node!") if mac_list.empty?
+  if mac_list.empty?
+    Chef::Log.warn("#{mnode[:fqdn]}: no MAC address found; DHCP will not work for that node!")
+  end
 
   # delete dhcp hosts that we will not overwrite/delete (ie, index is too
   # high); this happens if there were more mac addresses at some point in the
@@ -96,14 +98,13 @@ node_search_with_cache("*:*").each do |mnode|
   host_files = Dir.glob("#{dhcp_hosts_dir}/#{mnode.name}-*.conf")
   host_files.each do |absolute_host_file|
     host_file = ::File.basename(absolute_host_file, ".conf")
-    unless valid_host_files.include? host_file
-      dhcp_host host_file do
-        action :remove
-      end
+    next if valid_host_files.include?(host_file)
+    dhcp_host host_file do
+      action :remove
     end
   end
 
-  arch = mnode[:kernel][:machine] rescue "x86_64"
+  arch = mnode.fetch(:kernel, {})[:machine] || "x86_64"
   pxefile = nil
   grubcfgfile = nil
   grubfile = nil
@@ -138,8 +139,9 @@ node_search_with_cache("*:*").each do |mnode|
   if new_group == "delete"
     Chef::Log.info("Deleting #{mnode[:fqdn]}")
     # Delete the node
-    system("knife node delete -y #{mnode.name} -u chef-webui -k /etc/chef/webui.pem")
-    system("knife role delete -y crowbar-#{mnode.name.gsub(".","_")} -u chef-webui -k /etc/chef/webui.pem")
+    chef_credentials = "-u chef-webui -k /etc/chef/webui.pem"
+    system("knife node delete -y #{mnode.name} #{chef_credentials}")
+    system("knife role delete -y crowbar-#{mnode.name.tr(".", "_")} #{chef_credentials}")
 
     # find all dhcp hosts for a node (not just ones matching currently known MACs)
     host_files = Dir.glob("#{dhcp_hosts_dir}/#{mnode.name}-*.conf")
@@ -205,10 +207,10 @@ node_search_with_cache("*:*").each do |mnode|
       if admin_mac_addresses.include?(mac_list[i])
         ipaddress admin_ip_address
         options [
-          'if exists dhcp-parameter-request-list {
+          "if exists dhcp-parameter-request-list {
 # Always send the PXELINUX options (specified in hexadecimal)
 option dhcp-parameter-request-list = concat(option dhcp-parameter-request-list,d0,d1,d2,d3);
-}',
+}",
           "if option arch = 00:06 {
 filename = \"discovery/ia32/efi/#{boot_ip_hex}.efi\";
 } else if option arch = 00:07 {
@@ -233,12 +235,13 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
   if new_group == "os_install"
     # This eventually needs to be configurable on a per-node basis
     # We select the os based on the target platform specified.
-    os=mnode[:target_platform]
-    if os.nil? or os.empty?
+    os = mnode[:target_platform]
+    if os.nil? || os.empty?
       os = node[:provisioner][:default_os]
     end
 
     node_ip = Barclamp::Inventory.get_network_by_type(mnode, "admin").address
+    boot_device = mnode.fetch(:crowbar_wall, {})[:boot_device]
 
     append << node[:provisioner][:available_oses][os][arch][:append_line]
 
@@ -255,12 +258,12 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
       recursive true
     end
 
-    if mnode["uefi"] and mnode["uefi"]["boot"]["last_mac"]
-      append << "BOOTIF=01-#{mnode["uefi"]["boot"]["last_mac"].gsub(':', "-")}"
+    if mnode["uefi"] && mnode["uefi"]["boot"]["last_mac"]
+      append << "BOOTIF=01-#{mnode["uefi"]["boot"]["last_mac"].tr(":", "-")}"
     end
 
-    case
-    when os =~ /^ubuntu/
+    case os
+    when /^ubuntu/
       append << "url=#{node_url}/net_seed"
       template "#{node_cfg_dir}/net_seed" do
         mode 0o644
@@ -270,14 +273,14 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
         variables(install_name: os,
                   cc_use_local_security: node[:provisioner][:use_local_security],
                   cc_install_web_port: web_port,
-                  boot_device: (mnode[:crowbar_wall][:boot_device] rescue nil),
+                  boot_device: boot_device,
                   cc_built_admin_node_ip: admin_ip,
                   timezone: timezone,
                   node_name: mnode[:fqdn],
                   install_path: "#{os}/install")
       end
 
-    when os =~ /^(redhat|centos)/
+    when /^(redhat|centos)/
       append << "ks=#{node_url}/compute.ks method=#{install_url}"
       template "#{node_cfg_dir}/compute.ks" do
         mode 0o644
@@ -288,7 +291,7 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
           admin_node_ip: admin_ip,
           web_port: web_port,
           node_name: mnode[:fqdn],
-          boot_device: (mnode[:crowbar_wall][:boot_device] rescue nil),
+          boot_device: boot_device,
           repos: node[:provisioner][:repositories][os][arch],
           uefi: mnode[:uefi],
           admin_web: install_url,
@@ -297,7 +300,7 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
         )
       end
 
-    when os =~ /^(open)?suse/
+    when /^(open)?suse/
       append << "install=#{install_url} autoyast=#{node_url}/autoyast.xml"
       if node[:provisioner][:use_serial_console]
         append << "textmode=1"
@@ -319,11 +322,10 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
       repos.reject! { |k, _v| k =~ /Cloud-6/ } if mnode[:state] == "os-upgrading"
       Chef::Log.info("repos: #{repos.inspect}")
 
-      if node[:provisioner][:suse]
-        if node[:provisioner][:suse][:autoyast]
-          ssh_password = node[:provisioner][:suse][:autoyast][:ssh_password]
-          append << "UseSSH=1 SSHPassword=#{ssh_password}" if ssh_password
-        end
+      if node[:provisioner][:suse] &&
+          node[:provisioner][:suse][:autoyast] &&
+          node[:provisioner][:suse][:autoyast][:ssh_password]
+        append << "UseSSH=1 SSHPassword=#{ssh_password}"
       end
 
       packages = node[:provisioner][:packages][os] || []
@@ -350,7 +352,7 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
           repos: repos,
           rootpw_hash: node[:provisioner][:root_password_hash] || "",
           timezone: timezone,
-          boot_device: (mnode[:crowbar_wall][:boot_device] rescue nil),
+          boot_device: boot_device,
           raid_type: (mnode[:crowbar_wall][:raid_type] || "single"),
           raid_disks: (mnode[:crowbar_wall][:raid_disks] || []),
           node_ip: node_ip,
@@ -366,9 +368,10 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
         )
       end
 
-    when os =~ /^(hyperv|windows)/
+    when /^(hyperv|windows)/
       os_dir_win = "#{tftproot}/#{os}"
       crowbar_key = ::File.read("/etc/crowbar.install.key").chomp.strip
+
       case os
       when "windows-6.3"
         image_name = "Windows Server 2012 R2 SERVERSTANDARD"
@@ -381,6 +384,7 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
       else
         raise "Unsupported version of Windows Server / Hyper-V Server"
       end
+
       license_key = if os =~ /^hyperv/
         # hyper-v server doesn't need one, and having one might actually
         # result in broken installation
@@ -388,6 +392,7 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
       else
         mnode[:license_key] || ""
       end
+
       template "#{os_dir_win}/unattend/unattended.xml" do
         mode 0o644
         owner "root"
@@ -400,7 +405,7 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
                   admin_name: node[:hostname],
                   crowbar_key: crowbar_key,
                   admin_password: node[:provisioner][:windows][:admin_password],
-                  domain_name: node[:dns].nil? ? node[:domain] : (node[:dns][:domain] || node[:domain]))
+                  domain_name: node.fetch(:dns, {})[:domain] || node[:domain])
       end
 
       link windows_tftp_file do
