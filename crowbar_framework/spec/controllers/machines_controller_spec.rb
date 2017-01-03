@@ -173,7 +173,7 @@ describe MachinesController do
   end
 
   [
-    :update,
+    :confupdate,
     :identify
   ].each do |action|
     describe "POST #{action}" do

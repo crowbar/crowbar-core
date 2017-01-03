@@ -229,7 +229,7 @@ describe NodesController do
     end
 
     it "sets the machine state" do
-      ["reinstall", "reset", "update"].each do |action|
+      ["reinstall", "reset", "confupdate"].each do |action|
         post :hit, req: action, id: "testing.crowbar.com"
         expect(response).to redirect_to(node_url("testing"))
       end

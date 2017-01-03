@@ -28,7 +28,7 @@ class MachinesController < BarclampController
                   :identify,
                   :delete,
                   :reinstall,
-                  :update,
+                  :confupdate,
                   :reset,
                   :shutdown,
                   :reboot,
@@ -113,7 +113,7 @@ class MachinesController < BarclampController
   end
 
   [
-    :update,
+    :confupdate,
     :identify
   ].each do |action|
     add_help(action, [:id], [:post])

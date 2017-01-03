@@ -306,7 +306,7 @@ hwupdate () {
 case $DHCP_STATE in
     reset|discovery) discover && hardware_install;;
     hwinstall) hardware_install;;
-    update) hwupdate;;
+    confupdate) hwupdate;;
 esac 2>&1 | tee -a /var/log/crowbar/sledgehammer/$HOSTNAME.log
 [[ $DHCP_STATE = 'debug' ]] && exit
 reboot_system
