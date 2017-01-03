@@ -384,8 +384,12 @@ describe Api::Upgrade do
         and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
       )
       allow(Api::Upgrade).to receive(:upgrade_all_compute_nodes).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:nodes_upgrade).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
-      expect(subject.class.nodes).to be true
+      expect(subject.class.nodes).to be_a(Delayed::Backend::ActiveRecord::Job)
     end
 
     it "successfully completes the upgrade when they are no compute nodes" do
@@ -401,8 +405,12 @@ describe Api::Upgrade do
       allow(NodeObject).to(
         receive(:find).with("roles:nova-compute-xen").and_return([])
       )
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:nodes_upgrade).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
-      expect(subject.class.nodes).to be true
+      expect(subject.class.nodes).to be_a(Delayed::Backend::ActiveRecord::Job)
     end
 
     it "fails to upgrade compute nodes when there is no nova-controller" do
@@ -419,8 +427,12 @@ describe Api::Upgrade do
       allow(NodeObject).to(
         receive(:find).with("roles:nova-controller").and_return([])
       )
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:nodes_upgrade).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
-      expect(subject.class.nodes).to be false
+      expect(subject.class.nodes).to be_a(Delayed::Backend::ActiveRecord::Job)
     end
 
     it "successfully upgrades KVM compute nodes" do
@@ -445,8 +457,12 @@ describe Api::Upgrade do
       allow_any_instance_of(Api::Node).to receive(:post_upgrade).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:join_and_chef).and_return(true)
       allow_any_instance_of(NodeObject).to receive(:run_ssh_cmd).and_return(exit_code: 0)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:nodes_upgrade).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
-      expect(subject.class.nodes).to be true
+      expect(subject.class.nodes).to be_a(Delayed::Backend::ActiveRecord::Job)
     end
   end
 

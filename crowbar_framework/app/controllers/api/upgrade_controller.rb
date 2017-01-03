@@ -141,19 +141,20 @@ class Api::UpgradeController < ApiController
   # This is gonna initiate the upgrade of all nodes.
   # The method runs asynchronously, so there's a need to poll for the status and possible errors
   def nodes
-    # FIXME: implement this as asynchronous call!
-    if Api::Upgrade.nodes
-      head :ok
-    else
-      render json: {
-        errors: {
-          nodes_upgrade: {
-            data: I18n.t("api.upgrade.nodes.failed"),
-            help: I18n.t("api.upgrade.nodes.help.default")
-          }
+    ::Crowbar::UpgradeStatus.new.start_step(:nodes_upgrade)
+    Api::Upgrade.nodes
+    head :ok
+  rescue Crowbar::Error::StartStepRunningError,
+         Crowbar::Error::StartStepOrderError,
+         Crowbar::Error::EndStepRunningError => e
+    render json: {
+      errors: {
+        nodes_upgrade: {
+          data: e.message,
+          help: I18n.t("api.upgrade.nodes.help.default")
         }
-      }, status: :unprocessable_entity
-    end
+      }
+    }, status: :unprocessable_entity
   end
 
   api :GET, "/api/upgrade/prechecks", "Shows a sanity check in preparation for the upgrade"

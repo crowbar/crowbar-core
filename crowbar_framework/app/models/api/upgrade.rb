@@ -262,8 +262,6 @@ module Api
 
       # Orchestrate the upgrade of the nodes
       def nodes
-        # FIXME: start the 'nodes' step
-
         status = ::Crowbar::UpgradeStatus.new
 
         remaining = status.progress[:remaining_nodes]
@@ -290,9 +288,9 @@ module Api
         if substep == "computes"
           return false unless upgrade_all_compute_nodes
         end
-        # FIXME: mark the whole step as done
-        true
+        status.end_step
       end
+      handle_asynchronously :nodes
 
       def prepare(options = {})
         ::Crowbar::UpgradeStatus.new.start_step(:upgrade_prepare)
