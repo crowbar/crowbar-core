@@ -343,13 +343,11 @@ module Api
         drbd_nodes = ::Node.find("drbd_rsc:*")
         return upgrade_drbd_clusters unless drbd_nodes.empty?
 
-        founder = ::Node.find(
-          "state:crowbar_upgrade AND pacemaker_founder:true"
-        ).first
+        founder = ::Node.find("pacemaker_founder:true").first
         cluster_env = founder[:pacemaker][:config][:environment]
 
         non_founder = ::Node.find(
-          "state:crowbar_upgrade AND pacemaker_founder:false AND " \
+          "pacemaker_founder:false AND " \
           "pacemaker_config_environment:#{cluster_env}"
         ).first
 
@@ -357,7 +355,7 @@ module Api
 
         # upgrade the rest of nodes in the same cluster
         ::Node.find(
-          "state:crowbar_upgrade AND pacemaker_config_environment:#{cluster_env}"
+          "pacemaker_config_environment:#{cluster_env}"
         ).each do |node|
           upgrade_next_cluster_node node.name, founder.name
         end
@@ -411,7 +409,7 @@ module Api
 
       def upgrade_drbd_clusters
         ::Node.find(
-          "state:crowbar_upgrade AND pacemaker_founder:true"
+          "pacemaker_founder:true AND drbd_rsc:*"
         ).each do |founder|
           cluster_env = founder[:pacemaker][:config][:environment]
           upgrade_drbd_cluster cluster_env
@@ -423,7 +421,6 @@ module Api
                            "in cluster \"#{cluster}\"")
 
         drbd_nodes = ::Node.find(
-          "state:crowbar_upgrade AND "\
           "pacemaker_config_environment:#{cluster} AND " \
           "(roles:database-server OR roles:rabbitmq-server)"
         )

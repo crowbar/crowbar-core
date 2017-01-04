@@ -354,14 +354,13 @@ describe Api::Upgrade do
       )
       allow(Node).to(
         receive(:find).
-        with("state:crowbar_upgrade AND pacemaker_founder:true").
+        with("pacemaker_founder:true AND drbd_rsc:*").
         and_return([Node.find_node_by_name("testing.crowbar.com")])
       )
       allow(Node).to(
         receive(:find).
-        with("state:crowbar_upgrade AND "\
-             "pacemaker_config_environment:data AND " \
-             "(roles:database-server OR roles:rabbitmq-server)").
+        with("pacemaker_config_environment:data "\
+        "AND (roles:database-server OR roles:rabbitmq-server)").
         and_return([drbd_master, drbd_slave])
       )
       allow_any_instance_of(Api::Node).to receive(:upgraded?).and_return(false)
