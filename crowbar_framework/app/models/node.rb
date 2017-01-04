@@ -912,7 +912,7 @@ class Node < ChefObject
         end
       end
     rescue Timeout::Error
-      raise "Possible error during execution of #{script}." \
+      raise "Possible error during execution of #{script} at #{@node.name}. " \
             "Action did not finish after #{seconds} seconds."
     end
   end
