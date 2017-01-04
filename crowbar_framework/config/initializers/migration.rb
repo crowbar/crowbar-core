@@ -15,7 +15,7 @@
 #
 
 Rails.application.config.tap do |config|
-  if caller.grep(/rake/).empty?
+  if caller.grep(/(rake|delayed_job)/).empty?
     Crowbar::Migrate.migrate!
   end
 end
