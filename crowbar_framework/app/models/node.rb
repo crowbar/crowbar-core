@@ -16,6 +16,7 @@
 #
 
 require "chef/mixin/deep_merge"
+require "set"
 require "timeout"
 require "open3"
 
@@ -37,6 +38,7 @@ class Node < ChefObject
     end
     # deep clone of @role.default_attributes, used when saving node
     @attrs_last_saved = @role.default_attributes.deep_dup
+    @attributes_changed = Set.new
     @node = node
   end
 
@@ -67,7 +69,10 @@ class Node < ChefObject
   def availability_zone=(value)
     @node["crowbar_wall"] ||= {}
     @node["crowbar_wall"]["openstack"] ||= {}
-    @node["crowbar_wall"]["openstack"]["availability_zone"] = value
+    if @node["crowbar_wall"]["openstack"]["availability_zone"] != value
+      @node["crowbar_wall"]["openstack"]["availability_zone"] = value
+      @attributes_changed.add("availability_zone")
+    end
   end
 
   def intended_role
@@ -257,6 +262,7 @@ class Node < ChefObject
   def update_public_name(value)
     unless value.nil?
       crowbar["crowbar"]["public_name"] = value
+      @attributes_changed.add("public_name")
     end
   end
 
@@ -619,6 +625,20 @@ class Node < ChefObject
     @attrs_last_saved = @role.default_attributes.deep_dup
 
     Rails.logger.debug("Done saving node: #{@node.name} - #{crowbar_revision}")
+
+    unless @attributes_changed.empty?
+      Rails.logger.debug("Notifying about saved node: #{@node.name}")
+
+      details = {
+        node: @node.name,
+        attributes: @attributes_changed
+      }
+      Crowbar::EventDispatcher.trigger_hooks(:node_changed, details)
+
+      @attributes_changed = Set.new
+
+      Rails.logger.debug("Done notifying about saved node: #{@node.name}")
+    end
   end
 
   def destroy
