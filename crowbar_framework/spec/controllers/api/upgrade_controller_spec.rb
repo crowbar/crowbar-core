@@ -231,5 +231,17 @@ describe Api::UpgradeController, type: :request do
       post "/api/upgrade/adminbackup", { backup: { name: "crowbar_upgrade" } }, headers
       expect(response).to have_http_status(:ok)
     end
+
+    it "creates a backup of the openstack database" do
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:nodes_db_dump).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :end_step
+      ).and_return(true)
+
+      post "/api/upgrade/openstackbackup", {}, headers
+      expect(response).to have_http_status(:ok)
+    end
   end
 end

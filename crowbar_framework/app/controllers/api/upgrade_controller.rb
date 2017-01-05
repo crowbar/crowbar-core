@@ -390,6 +390,28 @@ class Api::UpgradeController < ApiController
     @backup.cleanup unless @backup.nil?
   end
 
+  api :POST, "/api/upgrade/openstackbackup", "Create a backup of Openstack"
+  api_version "2.0"
+  error 422, "Failed to save backup, error details are provided in the response"
+  def openstackbackup
+    # FIXME: fake the nodes_db_dump step for now until it is implemented
+    nodes_db_dump = ::Crowbar::UpgradeStatus.new
+    nodes_db_dump.start_step(:nodes_db_dump)
+    nodes_db_dump.end_step
+    head :ok
+  rescue Crowbar::Error::StartStepRunningError,
+         Crowbar::Error::StartStepOrderError,
+         Crowbar::Error::EndStepRunningError => e
+    render json: {
+      errors: {
+        nodes_db_dump: {
+          data: e.message,
+          help: "Please refer to the error message in the response."
+        }
+      }
+    }, status: :unprocessable_entity
+  end
+
   protected
 
   api :POST, "/api/upgrade/new",
