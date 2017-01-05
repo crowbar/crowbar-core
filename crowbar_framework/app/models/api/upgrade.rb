@@ -23,6 +23,9 @@ module Api
         ::Crowbar::UpgradeStatus.new.progress
       end
 
+      #
+      # prechecks
+      #
       def checks
         upgrade_status = ::Crowbar::UpgradeStatus.new
         # the check for current_step means to allow running the step at any point in time
@@ -99,28 +102,24 @@ module Api
         end
       end
 
-      def noderepocheck
-        upgrade_status = ::Crowbar::UpgradeStatus.new
-        upgrade_status.start_step(:nodes_repo_checks)
+      #
+      # prepare upgrade
+      #
+      def prepare(options = {})
+        ::Crowbar::UpgradeStatus.new.start_step(:upgrade_prepare)
 
-        response = {}
-        addons = Api::Crowbar.addons
-        addons.push("os", "openstack").each do |addon|
-          response.merge!(Api::Node.repocheck(addon: addon))
-        end
+        background = options.fetch(:background, false)
 
-        unavailable_repos = response.select { |_k, v| !v["available"] }
-        if unavailable_repos.any?
-          upgrade_status.end_step(
-            false,
-            nodes_repo_checks: "#{unavailable_repos.keys.join(", ")} repositories are missing"
-          )
+        if background
+          prepare_nodes_for_crowbar_upgrade_background
         else
-          upgrade_status.end_step
+          prepare_nodes_for_crowbar_upgrade
         end
-        response
       end
 
+      #
+      # repocheck
+      #
       def adminrepocheck
         upgrade_status = ::Crowbar::UpgradeStatus.new
         upgrade_status.start_step(:admin_repo_checks)
@@ -184,6 +183,28 @@ module Api
         end
       end
 
+      def noderepocheck
+        upgrade_status = ::Crowbar::UpgradeStatus.new
+        upgrade_status.start_step(:nodes_repo_checks)
+
+        response = {}
+        addons = Api::Crowbar.addons
+        addons.push("os", "openstack").each do |addon|
+          response.merge!(Api::Node.repocheck(addon: addon))
+        end
+
+        unavailable_repos = response.select { |_k, v| !v["available"] }
+        if unavailable_repos.any?
+          upgrade_status.end_step(
+            false,
+            nodes_repo_checks: "#{unavailable_repos.keys.join(", ")} repositories are missing"
+          )
+        else
+          upgrade_status.end_step
+        end
+        response
+      end
+
       def target_platform(options = {})
         platform_exception = options.fetch(:platform_exception, nil)
 
@@ -197,7 +218,9 @@ module Api
         end
       end
 
-      # Shutdown non-essential services on all nodes.
+      #
+      # service shutdown
+      #
       def services
         begin
           # prepare the scripts for various actions necessary for the upgrade
@@ -246,6 +269,9 @@ module Api
       end
       handle_asynchronously :services
 
+      #
+      # cancel upgrade
+      #
       def cancel
         upgrade_status = ::Crowbar::UpgradeStatus.new
         unless upgrade_status.cancel_allowed?
@@ -260,7 +286,9 @@ module Api
         upgrade_status.initialize_state
       end
 
-      # Orchestrate the upgrade of the nodes
+      #
+      # nodes upgrade
+      #
       def nodes
         status = ::Crowbar::UpgradeStatus.new
 
@@ -297,19 +325,34 @@ module Api
       end
       handle_asynchronously :nodes
 
-      def prepare(options = {})
-        ::Crowbar::UpgradeStatus.new.start_step(:upgrade_prepare)
+      protected
 
-        background = options.fetch(:background, false)
+      #
+      # controller nodes upgrade
+      #
+      def upgrade_controller_nodes
+        drbd_nodes = Node.find("drbd_rsc:*")
+        return upgrade_drbd_clusters unless drbd_nodes.empty?
 
-        if background
-          prepare_nodes_for_crowbar_upgrade_background
-        else
-          prepare_nodes_for_crowbar_upgrade
+        founder = Node.find(
+          "state:crowbar_upgrade AND pacemaker_founder:true"
+        ).first
+        cluster_env = founder[:pacemaker][:config][:environment]
+
+        non_founder = Node.find(
+          "state:crowbar_upgrade AND pacemaker_founder:false AND " \
+          "pacemaker_config_environment:#{cluster_env}"
+        ).first
+
+        upgrade_first_cluster_node founder, non_founder
+
+        # upgrade the rest of nodes in the same cluster
+        Node.find(
+          "state:crowbar_upgrade AND pacemaker_config_environment:#{cluster_env}"
+        ).each do |node|
+          upgrade_next_cluster_node node.name, founder.name
         end
       end
-
-      protected
 
       # Method for upgrading first node of the cluster
       # other_node_name argument is the name of any other node in the same cluster
@@ -355,30 +398,6 @@ module Api
         # (disabling attribute causes starting the services on the node)
         node_api.disable_pre_upgrade_attribute_for node.name
         node_api.save_node_state("controller", "upgraded")
-      end
-
-      def upgrade_controller_nodes
-        drbd_nodes = ::Node.find("drbd_rsc:*")
-        return upgrade_drbd_clusters unless drbd_nodes.empty?
-
-        founder = ::Node.find(
-          "state:crowbar_upgrade AND pacemaker_founder:true"
-        ).first
-        cluster_env = founder[:pacemaker][:config][:environment]
-
-        non_founder = ::Node.find(
-          "state:crowbar_upgrade AND pacemaker_founder:false AND " \
-          "pacemaker_config_environment:#{cluster_env}"
-        ).first
-
-        upgrade_first_cluster_node founder, non_founder
-
-        # upgrade the rest of nodes in the same cluster
-        ::Node.find(
-          "state:crowbar_upgrade AND pacemaker_config_environment:#{cluster_env}"
-        ).each do |node|
-          upgrade_next_cluster_node node.name, founder.name
-        end
       end
 
       def upgrade_drbd_clusters
@@ -472,32 +491,9 @@ module Api
         )
       end
 
-      # Live migrate all instances of the specified
-      # node to other available hosts.
-      def live_evacuate_compute_node(controller, compute)
-        controller.wait_for_script_to_finish(
-          "/usr/sbin/crowbar-evacuate-host.sh", 300, [compute]
-        )
-        save_upgrade_state(
-          "Migrating instances from node #{compute} was successful."
-        )
-      rescue StandardError => e
-        raise_upgrade_error(
-          e.message +
-          "Check /var/log/crowbar/node-upgrade.log at #{controller.name} for details."
-        )
-      end
-
-      def save_upgrade_state(message = "")
-        # FIXME: update the global status
-        Rails.logger.info(message)
-      end
-
-      def raise_upgrade_error(message = "")
-        Rails.logger.error(message)
-        raise message
-      end
-
+      #
+      # compute nodes upgrade
+      #
       def upgrade_all_compute_nodes
         ["kvm", "xen"].each do |virt|
           return false unless upgrade_compute_nodes virt
@@ -505,50 +501,12 @@ module Api
         true
       end
 
-      # Take a list of nodes and execute given script at each node in the background
-      # Wait until all scripts at all nodes correctly finish or until some error is detected
-      def execute_scripts_and_wait_for_finish(nodes, script, seconds)
-        nodes.each do |node|
-          ssh_status = node.ssh_cmd(script).first
-          if ssh_status != 200
-            raise_upgrade_error("Failed to connect to node #{node.name}!")
-            raise "Execution of script #{script} has failed on node #{node.name}."
-          end
-        end
-
-        scripts_status = {}
-        begin
-          Timeout.timeout(seconds) do
-            nodes.each do |node|
-              # wait until sript on this node finishes, than move to check next one
-              loop do
-                status = node.script_status(script)
-                scripts_status[node.name] = status
-                break if status != "running"
-                sleep 1
-              end
-            end
-          end
-          failed = scripts_status.select { |_, v| v == "failed" }.keys
-          unless failed.empty?
-            raise "Execution of script #{script} has failed at node(s) " \
-            "#{failed.join(",")}. " \
-            "Check /var/log/crowbar/node-upgrade.log for details."
-          end
-        rescue Timeout::Error
-          running = scripts_status.select { |_, v| v == "running" }.keys
-          raise "Possible error during execution of #{script} at node(s) " \
-            "#{running.join(",")}. " \
-            "Action did not finish after #{seconds} seconds."
-        end
-      end
-
       def upgrade_compute_nodes(virt)
         save_upgrade_state("Upgrading compute nodes of #{virt} type")
-        compute_nodes = ::Node.find("roles:nova-compute-#{virt}")
+        compute_nodes = Node.find("roles:nova-compute-#{virt}")
         return true if compute_nodes.empty?
 
-        controller = ::Node.find("roles:nova-controller").first
+        controller = Node.find("roles:nova-controller").first
         if controller.nil?
           raise_upgrade_error("No nova controller node was found!")
           return false
@@ -598,11 +556,77 @@ module Api
         true
       end
 
+      # Live migrate all instances of the specified
+      # node to other available hosts.
+      def live_evacuate_compute_node(controller, compute)
+        controller.wait_for_script_to_finish(
+          "/usr/sbin/crowbar-evacuate-host.sh", 300, [compute]
+        )
+        save_upgrade_state(
+          "Migrating instances from node #{compute} was successful."
+        )
+      rescue StandardError => e
+        raise_upgrade_error(
+          e.message +
+          "Check /var/log/crowbar/node-upgrade.log at #{controller.name} for details."
+        )
+      end
+
+      def save_upgrade_state(message = "")
+        # FIXME: update the global status
+        Rails.logger.info(message)
+      end
+
+      def raise_upgrade_error(message = "")
+        Rails.logger.error(message)
+        raise message
+      end
+
+      # Take a list of nodes and execute given script at each node in the background
+      # Wait until all scripts at all nodes correctly finish or until some error is detected
+      def execute_scripts_and_wait_for_finish(nodes, script, seconds)
+        nodes.each do |node|
+          ssh_status = node.ssh_cmd(script).first
+          if ssh_status != 200
+            raise_upgrade_error("Failed to connect to node #{node.name}!")
+            raise "Execution of script #{script} has failed on node #{node.name}."
+          end
+        end
+
+        scripts_status = {}
+        begin
+          Timeout.timeout(seconds) do
+            nodes.each do |node|
+              # wait until sript on this node finishes, than move to check next one
+              loop do
+                status = node.script_status(script)
+                scripts_status[node.name] = status
+                break if status != "running"
+                sleep 1
+              end
+            end
+          end
+          failed = scripts_status.select { |_, v| v == "failed" }.keys
+          unless failed.empty?
+            raise "Execution of script #{script} has failed at node(s) " \
+            "#{failed.join(",")}. " \
+            "Check /var/log/crowbar/node-upgrade.log for details."
+          end
+        rescue Timeout::Error
+          running = scripts_status.select { |_, v| v == "running" }.keys
+          raise "Possible error during execution of #{script} at node(s) " \
+            "#{running.join(",")}. " \
+            "Action did not finish after #{seconds} seconds."
+        end
+      end
+
       def crowbar_upgrade_status
         Api::Crowbar.upgrade
       end
 
-      # Check Errors
+      #
+      # prechecks helpers
+      #
       # all of the below errors return a hash with the following schema:
       # code: {
       #   data: ... whatever data type ...,
@@ -674,16 +698,9 @@ module Api
         }
       end
 
-      def repo_version_available?(products, product, version)
-        products.any? do |p|
-          p["version"] == version && p["name"] == product
-        end
-      end
-
-      def admin_architecture
-        ::Node.admin_node.architecture
-      end
-
+      #
+      # prepare upgrade helpers
+      #
       def prepare_nodes_for_crowbar_upgrade_background
         @thread = Thread.new do
           Rails.logger.debug("Started prepare in a background thread")
@@ -708,6 +725,19 @@ module Api
         Rails.logger.error message
 
         false
+      end
+
+      #
+      # repocheck helpers
+      #
+      def repo_version_available?(products, product, version)
+        products.any? do |p|
+          p["version"] == version && p["name"] == product
+        end
+      end
+
+      def admin_architecture
+        ::Node.admin_node.architecture
       end
     end
   end
