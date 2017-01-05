@@ -112,7 +112,7 @@ class NetworkService < ServiceObject
         db.save
       end
     rescue Exception => e
-      @logger.error("Error finding address: #{e.message}")
+      @logger.error("Error finding address: Exception #{e.message} #{e.backtrace.join("\n")}")
     ensure
       lock.release
     end
@@ -208,7 +208,7 @@ class NetworkService < ServiceObject
         db.save
       end
     rescue Exception => e
-      @logger.error("Error finding address: #{e.message}")
+      @logger.error("Error finding address: Exception #{e.message} #{e.backtrace.join("\n")}")
     ensure
       lock.release
     end
@@ -381,7 +381,7 @@ class NetworkService < ServiceObject
     begin # Rescue block
       net_info = build_net_info(network, name)
     rescue Exception => e
-      @logger.error("Error finding address: #{e.message}")
+      @logger.error("Error finding address: Exception #{e.message} #{e.backtrace.join("\n")}")
     ensure
     end
 
