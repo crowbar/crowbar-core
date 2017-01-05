@@ -365,7 +365,7 @@ module Api
       # other_node_name argument is the name of any other node in the same cluster
       def upgrade_first_cluster_node(node, other_node)
         node_api = Api::Node.new node.name
-        return true if node_api.upgraded?
+        return true if node.upgraded?
         other_node_api = Api::Node.new other_node.name
         node_api.save_node_state("controller")
         save_upgrade_state("Starting the upgrade of node #{node.name}")
@@ -393,7 +393,7 @@ module Api
       def upgrade_next_cluster_node(node, founder)
         evacuate_network_node(founder, node["hostname"], true)
         node_api = Api::Node.new node.name
-        return true if node_api.upgraded?
+        return true if node.upgraded?
         node_api.save_node_state("controller")
         save_upgrade_state("Starting the upgrade of node #{node.name}")
 
@@ -426,32 +426,59 @@ module Api
         )
         if drbd_nodes.empty?
           save_upgrade_state("There's no DRBD-based node in cluster #{cluster}")
-          return true
+          return
         end
 
         # First node to upgrade is DRBD slave. There might be more resources using DRBD backend
         # but the Master/Slave distribution might be different among them.
         # Therefore, we decide only by looking at the first DRBD resource we find in the cluster.
-        drbd_slave = nil
-        drbd_master = nil
+        #
+        # But we have to make sure that when this method is invoked for a second time
+        # (probably after previous failure), same order of nodes is selected as in the first case.
+        # Looking at the DRBD state could be problematic, because master and slave are normally
+        # switched during the upgrade. So in such case we have to look at the data we have about
+        # the upgraded nodes.
+        first = nil
+        second = nil
 
-        drbd_nodes.each do |drbd_node|
-          cmd = "LANG=C crm resource status ms-drbd-{postgresql,rabbitmq}\
-          | sort | head -n 2 | grep \\$(hostname) | grep -q Master"
-          out = drbd_node.run_ssh_cmd(cmd)
-          if out[:exit_code].zero?
-            drbd_master = drbd_node
-          else
-            drbd_slave = drbd_node
+        nodes_processed = drbd_nodes.select(&:upgraded?)
+        if nodes_processed.size == drbd_nodes.size
+          save_upgrade_state("All nodes in cluster #{cluster} have already been upgraded.")
+          return
+        end
+
+        # if no node is fully upgraded already, check if the upgrade was started on any of the nodes
+        if nodes_processed.empty?
+          nodes_processed = drbd_nodes.select(&:upgrading?)
+        end
+
+        if nodes_processed.empty?
+          # No DRBD node upgrade has started yet, so let's pick the first/second as slave/master
+          drbd_nodes.each do |drbd_node|
+            cmd = "LANG=C crm resource status ms-drbd-{postgresql,rabbitmq}\
+            | sort | head -n 2 | grep \\$(hostname) | grep -q Master"
+            out = drbd_node.run_ssh_cmd(cmd)
+            if out[:exit_code].zero?
+              second = drbd_node
+            else
+              # this is DRBD slave
+              first = drbd_node
+            end
           end
+        else
+          # If one node is already fully upgraded, we can continue with the other one.
+          # If one node is being upgraded (and we know none is fully upgraded),
+          # we can continue with that one as it is still the first node.
+          first = nodes_processed.first # there is only one item here anyway
+          second = drbd_nodes.detect { |n| n.name != first.name }
         end
 
-        if drbd_slave.nil? || drbd_master.nil?
-          raise_upgrade_error("Unable to detect drb master and/or slave nodes")
+        if first.nil? || second.nil?
+          raise_upgrade_error("Unable to detect DRBD master and/or slave nodes")
         end
 
-        upgrade_first_cluster_node drbd_slave, drbd_master
-        upgrade_next_cluster_node drbd_master, drbd_slave
+        upgrade_first_cluster_node first, second
+        upgrade_next_cluster_node second, first
 
         save_upgrade_state("Nodes in DRBD-based cluster successfully upgraded")
       end

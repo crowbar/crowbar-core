@@ -363,7 +363,8 @@ describe Api::Upgrade do
         "AND (roles:database-server OR roles:rabbitmq-server)").
         and_return([drbd_master, drbd_slave])
       )
-      allow_any_instance_of(Api::Node).to receive(:upgraded?).and_return(false)
+      allow_any_instance_of(Node).to receive(:upgraded?).and_return(false)
+      allow_any_instance_of(Node).to receive(:upgrading?).and_return(false)
 
       allow(drbd_slave).to receive(:run_ssh_cmd).and_return(
         stdout: "",

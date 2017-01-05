@@ -118,10 +118,6 @@ module Api
       @node.run_ssh_cmd("touch #{rebooted_file}")
     end
 
-    def upgraded?
-      @node.file_exist? "/var/lib/crowbar/upgrade/node-upgraded-ok"
-    end
-
     # Do the complete package upgrade of one node
     def upgrade
       prepare_repositories
