@@ -199,7 +199,7 @@ module Crowbar
     def commit_proposal(bc, inst)
       logger.debug("process queue: committing item: #{bc}:#{inst}")
 
-      service = eval("#{bc.camelize}Service.new logger")
+      service = ServiceObject.get_service(bc).new(logger)
 
       # This will call apply_role and chef-client.
       # Params: (inst, in_queue, validate_after_save)

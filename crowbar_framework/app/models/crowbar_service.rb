@@ -266,9 +266,8 @@ class CrowbarService < ServiceObject
           # proposal.
           bc_lock = acquire_lock "#{bc}:#{rname}"
           begin
-            svc_name = "#{bc.camelize}Service"
-            @logger.info("Crowbar transition: calling #{bc}:#{rname} for #{name} for #{state} - svc: #{svc_name}")
-            service = eval("#{svc_name}.new @logger")
+            @logger.info("Crowbar transition: calling #{bc}:#{rname} for #{name} for #{state}")
+            service = ServiceObject.get_service(bc).new(@logger)
             answer = service.transition(rname, name, state)
             if answer[0] != 200
               @logger.error("Crowbar transition: finished #{bc}:#{rname} for #{name} for #{state}: FAILED #{answer[1]}")
@@ -526,7 +525,7 @@ class CrowbarService < ServiceObject
       return [404, msg]
     end
 
-    service = eval("#{bc.camelize}Service.new @logger")
+    service = ServiceObject.get_service(bc).new(@logger)
     answer = service.proposals
 
     if answer[0] != 200

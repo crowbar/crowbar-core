@@ -90,7 +90,7 @@ module FormHelper
   end
 
   def instance_selector_select(bc, name, field, proposal)
-    service = eval("#{bc.camelize}Service.new nil")
+    service = ServiceObject.get_service(bc).new(nil)
     options = service.list_active[1] | service.proposals[1]
 
     if options.empty?
