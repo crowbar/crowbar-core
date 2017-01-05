@@ -333,7 +333,7 @@ class NodesController < ApplicationController
             group[:tooltip] = view_context.piechart_tooltip(view_context.piechart_values(group))
           end
 
-          result[:nodes][node.handle] = {
+          result[:nodes][node.name] = {
             class: node.status,
             status: I18n.t(node.state, scope: :state, default: node.state.titlecase)
           }
@@ -601,7 +601,7 @@ class NodesController < ApplicationController
     raw_nodes = Node.all
     raw_nodes.each do |node|
       @sum += node.name.hash
-      @nodes[node.handle] = {
+      @nodes[node.name] = {
         alias: node.alias,
         description: node.description,
         status: node.status,
@@ -620,11 +620,11 @@ class NodesController < ApplicationController
         },
         nodes: {}
       } unless @groups.key? group
-      @groups[group][:nodes][node.group_order] = node.handle
+      @groups[group][:nodes][node.group_order] = node.name
       @groups[group][:status][node.status] = (@groups[group][:status][node.status] || 0).to_i + 1
       if node.handle == node_name
         @node = node
-        get_node_and_network(node.handle)
+        get_node_and_network(node.name)
       end
     end
     @draggable = draggable
