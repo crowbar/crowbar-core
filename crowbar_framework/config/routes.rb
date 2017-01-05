@@ -256,6 +256,7 @@ Rails.application.routes.draw do
       get :noderepocheck
       get :adminrepocheck
       post :adminbackup
+      post :openstackbackup
     end
 
     resources :nodes,
