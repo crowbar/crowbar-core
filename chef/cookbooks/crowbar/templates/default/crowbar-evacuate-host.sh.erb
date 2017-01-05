@@ -27,7 +27,12 @@ set -x
 
 nova service-disable "$host" nova-compute
 
-if ! nova host-evacuate-live "$host"; then
+<% if @needs_block_migrate %>
+blockmigrate="--block-migrate"
+<% else %>
+blockmigrate=""
+<% end %>
+if ! nova host-evacuate-live "$host" $blockmigrate; then
     echo "Live migration of instances from host $host has failed!"
     touch $UPGRADEDIR/crowbar-evacuate-host-failed
     exit 2
