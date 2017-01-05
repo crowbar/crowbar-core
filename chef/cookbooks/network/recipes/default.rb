@@ -428,7 +428,7 @@ provisioner_config = Barclamp::Config.load("core", "provisioner")
 provisioner_address = provisioner_config["server"]
 
 if provisioner_address
-  Chef::Log.info("Checking we can ping #{provisioner_address}; " +
+  Chef::Log.info("Checking we can ping #{provisioner_address}; " \
                  "will wait up to 60 seconds")
   60.times do
     break if ::Kernel.system("ping -c 1 -w 1 -q #{provisioner_address} > /dev/null")

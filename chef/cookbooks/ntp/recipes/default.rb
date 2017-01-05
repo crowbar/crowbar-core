@@ -72,10 +72,10 @@ else
     mode 0644
     source "ntp.conf.erb"
     variables(ntp_servers: ntp_servers,
-            admin_interface: local_admin_address,
-            is_server: is_server,
-            fudgevalue: 10,
-            driftfile: driftfile)
+              admin_interface: local_admin_address,
+              is_server: is_server,
+              fudgevalue: 10,
+              driftfile: driftfile)
     notifies :restart, "service[ntp]"
   end
 
