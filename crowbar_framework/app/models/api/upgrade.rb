@@ -620,10 +620,6 @@ module Api
         end
       end
 
-      def crowbar_upgrade_status
-        Api::Crowbar.upgrade
-      end
-
       #
       # prechecks helpers
       #
