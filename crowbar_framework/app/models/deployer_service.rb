@@ -33,24 +33,22 @@ class DeployerService < ServiceObject
     end
   end
 
-  def transition(inst, name, state)
-    @logger.debug("Deployer transition: entering: #{name} for #{state}")
+  def transition(inst, node, state)
+    @logger.debug("Deployer transition: entering: #{node.name} for #{state}")
 
     # discovering because mandatory for discovery image
     if ["discovering", "readying"].include? state
       db = Proposal.where(barclamp: @bc_name, name: inst).first
       role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
 
-      unless add_role_to_instance_and_node(@bc_name, inst, name, db, role, "deployer-client")
-        msg = "Failed to add deployer-client role to #{name}!"
+      unless add_role_to_instance_and_node(@bc_name, inst, node, db, role, "deployer-client")
+        msg = "Failed to add deployer-client role to #{node.name}!"
         @logger.error(msg)
         return [400, msg]
       end
     end
 
     if state == "discovered"
-      node = NodeObject.find_node_by_name(name)
-
       if node.admin?
         # We are an admin node - display bios updates for now.
         node.crowbar["bios"] ||= {}
@@ -63,7 +61,7 @@ class DeployerService < ServiceObject
         # do we auto-allocate?
         role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
         unless role.default_attributes["deployer"]["use_allocate"]
-          @logger.debug("Automatically allocating node #{name}")
+          @logger.debug("Automatically allocating node #{node.name}")
           node.allocate!
         end
       end
@@ -75,7 +73,6 @@ class DeployerService < ServiceObject
     #
     # Once we have been allocated, we setup the raid/bios info
     if state == "hardware-installing"
-      node = NodeObject.find_node_by_name(name)
       # build a list of current and pending roles to check against
       roles = node.roles ? node.roles.dup : []
       unless node.crowbar["crowbar"]["pending"].nil?
@@ -118,10 +115,9 @@ class DeployerService < ServiceObject
       "reset", "reinstall",
       "update"
     ].member?(state)
-      node = NodeObject.find_node_by_name(name)
-      client = ClientObject.find_client_by_name name
+      client = ClientObject.find_client_by_name(node.name)
       unless node.admin? || client.nil?
-        @logger.debug("Deployer transition: deleting a chef client for #{name}")
+        @logger.debug("Deployer transition: deleting a chef client for #{node.name}")
         client.destroy
       end
     end
@@ -135,8 +131,7 @@ class DeployerService < ServiceObject
       # Do more work here - one day.
     end
 
-    @logger.debug("Deployer transition: exiting: #{name} for #{state}")
-    return [200, { name: name }]
+    @logger.debug("Deployer transition: exiting: #{node.name} for #{state}")
+    [200, { name: node.name }]
   end
 end
-

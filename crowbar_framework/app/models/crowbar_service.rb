@@ -167,22 +167,23 @@ class CrowbarService < ServiceObject
   # This routine handles name-based state transitions.  The system will then inform barclamps.
   # It will create a node and assign it an admin address.
   #
-  def transition(inst, name, state)
-    self.transition_save_node = false
-
-    return [404, "No state specified"] if state.nil?
-    # FIXME: validate state
-
+  def transition(inst, node, state)
     @logger.info("Crowbar transition enter: #{name} to #{state}")
 
+    # TODO: Remove too
+    if node.class = "String"
+      name = node
+    else
+      name = node.name
+    end
+
+    self.transition_save_node = false
     pop_it = false
-    node = nil
 
     with_lock "BA-LOCK" do
-      node = NodeObject.find_node_by_name name
       if node.nil? and (state == "discovering" or state == "testing")
         @logger.debug("Crowbar transition: creating new node for #{name} to #{state}")
-        node = NodeObject.create_new name
+        node = NodeObject.create_new(name) # TODO: Split this out to a separate method
         self.transition_save_node = true
       end
       if node.nil?
@@ -229,7 +230,7 @@ class CrowbarService < ServiceObject
       if state == "discovering" and node.admin?
         crole = RoleObject.find_role_by_name("crowbar-config-#{inst}")
         db = Proposal.where(barclamp: "crowbar", name: inst).first
-        add_role_to_instance_and_node("crowbar", inst, name, db, crole, "crowbar")
+        add_role_to_instance_and_node("crowbar", inst, node, db, crole, "crowbar")
       end
 
       if Crowbar::Product::is_ses?

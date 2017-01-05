@@ -60,23 +60,22 @@ class DnsService < ServiceObject
     super(params)
   end
 
-  def transition(inst, name, state)
-    @logger.debug("DNS transition: entering: #{name} for #{state}")
+  def transition(inst, node, state)
+    @logger.debug("DNS transition: entering: #{node.name} for #{state}")
 
-    node = NodeObject.find_node_by_name name
     if node.allocated?
       db = Proposal.where(barclamp: @bc_name, name: inst).first
       role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
 
-      unless add_role_to_instance_and_node(@bc_name, inst, name, db, role, "dns-client")
-        msg = "Failed to add dns-client role to #{name}!"
+      unless add_role_to_instance_and_node(@bc_name, inst, node, db, role, "dns-client")
+        msg = "Failed to add dns-client role to #{node.name}!"
         @logger.error(msg)
         return [400, msg]
       end
     end
 
-    @logger.debug("DNS transition: leaving: #{name} for #{state}")
-    [200, { name: name }]
+    @logger.debug("DNS transition: leaving: #{node.name} for #{state}")
+    [200, { name: node.name }]
   end
 
   def apply_role_pre_chef_call(old_role, role, all_nodes)
