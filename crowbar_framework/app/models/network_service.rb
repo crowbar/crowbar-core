@@ -54,62 +54,64 @@ class NetworkService < ServiceObject
     end
 
     role = RoleObject.find_role_by_name "network-config-#{bc_instance}"
-    @logger.error("Network allocate ip by type: No network data found: #{object} #{network} #{range}") if role.nil?
-    return [404, "No network data found"] if role.nil?
+    if role.nil? || !role.default_attributes["network"]["networks"].key?(network)
+      @logger.error("Network allocate ip by type: No network data found: #{name} #{network}")
+      return [404, "No network data found"]
+    end
 
     net_info = {}
+    address = nil
     found = false
+
     begin
       lock = acquire_ip_lock
       db = Chef::DataBag.load("crowbar/#{network}_network") rescue nil
-      net_info = build_net_info(network, db)
+      net_info = build_net_info(role, network)
 
-      rangeH = db["network"]["ranges"][range]
-      rangeH = db["network"]["ranges"]["host"] if rangeH.nil?
-
-      index = IPAddr.new(rangeH["start"]) & ~IPAddr.new(net_info["netmask"])
-      index = index.to_i
-      stop_address = IPAddr.new(rangeH["end"]) & ~IPAddr.new(net_info["netmask"])
-      stop_address = IPAddr.new(net_info["subnet"]) | (stop_address.to_i + 1)
-      address = IPAddr.new(net_info["subnet"]) | index
-
-      if suggestion.present?
-        @logger.info("Allocating with suggestion: #{suggestion}")
-        subsug = IPAddr.new(suggestion) & IPAddr.new(net_info["netmask"])
-        subnet = IPAddr.new(net_info["subnet"]) & IPAddr.new(net_info["netmask"])
-        if subnet == subsug
-          if db["allocated"][suggestion].nil?
-            @logger.info("Using suggestion for #{type}: #{name} #{network} #{suggestion}")
-            address = suggestion
-            found = true
+      # Did we already allocate this, but the node lost it?
+      if db["allocated_by_name"].key?(name)
+        address = db["allocated_by_name"][name]["address"]
+        found = true
+      else
+        if suggestion.present?
+          @logger.info("Allocating with suggestion: #{suggestion}")
+          subsug = IPAddr.new(suggestion) & IPAddr.new(net_info["netmask"])
+          subnet = IPAddr.new(net_info["subnet"]) & IPAddr.new(net_info["netmask"])
+          if subnet == subsug
+            if db["allocated"][suggestion].nil?
+              @logger.info("Using suggestion for #{type}: #{name} #{network} #{suggestion}")
+              address = suggestion
+              found = true
+            end
           end
         end
-      end
 
-      unless found
-        # Did we already allocate this, but the node lose it?
-        unless db["allocated_by_name"][name].nil?
-          found = true
-          address = db["allocated_by_name"][name]["address"]
+        unless found
+          # Let's search for an empty one.
+          range_def = net_info["ranges"][range]
+          range_def = net_info["ranges"]["host"] if range_def.nil?
+
+          index = IPAddr.new(range_def["start"]) & ~IPAddr.new(net_info["netmask"])
+          index = index.to_i
+          stop_address = IPAddr.new(range_def["end"]) & ~IPAddr.new(net_info["netmask"])
+          stop_address = IPAddr.new(net_info["subnet"]) | (stop_address.to_i + 1)
+
+          until found
+            address = IPAddr.new(net_info["subnet"]) | index
+            if db["allocated"][address.to_s].nil?
+              found = true
+              break
+            end
+            index += 1
+            break if address == stop_address
+          end
         end
-      end
 
-      # Let's search for an empty one.
-      while !found do
-        if db["allocated"][address.to_s].nil?
-          found = true
-          break
+        if found
+          db["allocated_by_name"][name] = { "machine" => name, "interface" => net_info["conduit"], "address" => address.to_s }
+          db["allocated"][address.to_s] = { "machine" => name, "interface" => net_info["conduit"], "address" => address.to_s }
+          db.save
         end
-        index = index + 1
-        address = IPAddr.new(net_info["subnet"]) | index
-        break if address == stop_address
-      end
-
-      if found
-        net_info["address"] = address.to_s
-        db["allocated_by_name"][name] = { "machine" => name, "interface" => net_info["conduit"], "address" => address.to_s }
-        db["allocated"][address.to_s] = { "machine" => name, "interface" => net_info["conduit"], "address" => address.to_s }
-        db.save
       end
     rescue Exception => e
       @logger.error("Error finding address: Exception #{e.message} #{e.backtrace.join("\n")}")
@@ -119,6 +121,8 @@ class NetworkService < ServiceObject
 
     @logger.info("Network allocate ip for #{type}: no address available: #{name} #{network} #{range}") if !found
     return [404, "No Address Available"] if !found
+
+    net_info["address"] = address.to_s if found
 
     if type == :node
       # Save the information (only what we override from the network definition).
@@ -261,7 +265,6 @@ class NetworkService < ServiceObject
         db = Chef::DataBagItem.new
         db.data_bag databag_name
         db["id"] = "#{k}_network"
-        db["network"] = net
         db["allocated"] = {}
         db["allocated_by_name"] = {}
         db.save
@@ -291,53 +294,58 @@ class NetworkService < ServiceObject
         @logger.error(msg)
         return [400, msg]
       end
-    end
 
-    if state == "hardware-installing"
-      node = NodeObject.find_node_by_name name
+      if state == "hardware-installing"
+        node = NodeObject.find_node_by_name name
 
-      # Allocate required addresses
-      range = node.admin? ? "admin" : "host"
-      @logger.debug("Deployer transition: Allocate admin address for #{name}")
-      result = allocate_ip("default", "admin", range, name)
-      @logger.error("Failed to allocate admin address for: #{node.name}: #{result[0]}") if result[0] != 200
-      if result[0] == 200
-        address = result[1]["address"]
-        boot_ip_hex = sprintf("%08X", address.split(".").inject(0) { |acc, i| (acc << 8) + i.to_i })
-      end
-
-      @logger.debug("Deployer transition: Done Allocate admin address for #{name} boot file:#{boot_ip_hex}")
-
-      if node.admin?
-        # If we are the admin node, we may need to add a vlan bmc address.
-        # Add the vlan bmc if the bmc network and the admin network are not the same.
-        # not great to do it this way, but hey.
-        admin_net = Chef::DataBag.load "crowbar/admin_network" rescue nil
-        bmc_net = Chef::DataBag.load "crowbar/bmc_network" rescue nil
-        if admin_net["network"]["subnet"] != bmc_net["network"]["subnet"]
-          @logger.debug("Deployer transition: Allocate bmc_vlan address for #{name}")
-          result = allocate_ip("default", "bmc_vlan", "host", name)
-          @logger.error("Failed to allocate bmc_vlan address for: #{node.name}: #{result[0]}") if result[0] != 200
-          @logger.debug("Deployer transition: Done Allocate bmc_vlan address for #{name}")
+        # Allocate required addresses
+        range = node.admin? ? "admin" : "host"
+        @logger.debug("Network transition: Allocate admin address for #{name}")
+        result = allocate_ip("default", "admin", range, name)
+        @logger.error("Failed to allocate admin address for: #{node.name}: #{result[0]}") if result[0] != 200
+        if result[0] == 200
+          address = result[1]["address"]
+          boot_ip_hex = sprintf("%08X", address.split(".").inject(0) { |acc, i| (acc << 8) + i.to_i })
         end
 
-        # Allocate the bastion network ip for the admin node if a bastion
-        # network is defined in the network proposal
-        bastion_net = Chef::DataBag.load "crowbar/bastion_network" rescue nil
-        unless bastion_net.nil?
-          result = allocate_ip("default", "bastion", range, name)
-          if result[0] != 200
-            @logger.error("Failed to allocate bastion address for: #{node.name}: #{result[0]}")
-          else
-            @logger.debug("Allocated bastion address: #{result[1]["address"]} for the admin node.")
+        @logger.debug("Network transition: Done Allocate admin address for #{name} boot file:#{boot_ip_hex}")
+
+        if node.admin?
+          # If we are the admin node, we may need to add a vlan bmc address.
+          # Add the vlan bmc if the bmc network and the admin network are not the same.
+          # not great to do it this way, but hey.
+          # Use the network definitions from the network proposal role here, since they're
+          # not available on the node attributes yet. (We just assigned the networks roles,
+          # but chef-client didn't run yet)
+          admin_net = role.default_attributes["network"]["networks"]["admin"]
+          bmc_net = role.default_attributes["network"]["networks"]["bmc"]
+          @logger.debug("admin_net: #{admin_net.inspect}")
+          @logger.debug("bmc_net: #{bmc_net.inspect}")
+          if admin_net["subnet"] != bmc_net["subnet"]
+            @logger.debug("Network transition: Allocate bmc_vlan address for #{name}")
+            result = allocate_ip("default", "bmc_vlan", "host", name)
+            @logger.error("Failed to allocate bmc_vlan address for: #{node.name}: #{result[0]}") if result[0] != 200
+            @logger.debug("Network transition: Done Allocate bmc_vlan address for #{name}")
+          end
+
+          # Allocate the bastion network ip for the admin node if a bastion
+          # network is defined in the network proposal
+          bastion_net = role.default_attributes["network"]["networks"]["bastion"]
+          unless bastion_net.nil?
+            result = allocate_ip("default", "bastion", range, name)
+            if result[0] != 200
+              @logger.error("Failed to allocate bastion address for: #{node.name}: #{result[0]}")
+            else
+              @logger.debug("Allocated bastion address: #{result[1]["address"]} for the admin node.")
+            end
           end
         end
-      end
 
-      # save this on the node after it's been refreshed with the network info.
-      node = NodeObject.find_node_by_name node.name
-      node.crowbar["crowbar"]["boot_ip_hex"] = boot_ip_hex if boot_ip_hex
-      node.save
+        # save this on the node after it's been refreshed with the network info.
+        node = NodeObject.find_node_by_name node.name
+        node.crowbar["crowbar"]["boot_ip_hex"] = boot_ip_hex if boot_ip_hex
+        node.save
+      end
     end
 
     if ["delete", "reset"].include? state
@@ -367,8 +375,10 @@ class NetworkService < ServiceObject
 
     # Find an interface based upon config
     role = RoleObject.find_role_by_name "network-config-#{bc_instance}"
-    @logger.error("Network enable_interface: No network data found: #{name} #{network}") if role.nil?
-    return [404, "No network data found"] if role.nil?
+    if role.nil? || !role.default_attributes["network"]["networks"].key?(network)
+      @logger.error("Network enable_interface: No network data found: #{name} #{network}")
+      return [404, "No network data found"]
+    end
 
     # If we already have on allocated, return success
     net_info = node.get_network_by_type(network)
@@ -377,31 +387,19 @@ class NetworkService < ServiceObject
       return [200, net_info]
     end
 
-    net_info={}
-    begin # Rescue block
-      net_info = build_net_info(network)
-    rescue Exception => e
-      @logger.error("Error finding address: Exception #{e.message} #{e.backtrace.join("\n")}")
-    ensure
-    end
-
     # Save the information (only what we override from the network definition).
     node.crowbar["crowbar"]["network"][network] ||= {}
     node.save
 
     @logger.info("Network enable_interface: Assigned: #{name} #{network}")
-    [200, net_info]
+    [200, build_net_info(role, network)]
   end
 
-  def build_net_info(network, db = nil)
-    unless db
-      db = Chef::DataBag.load("crowbar/#{network}_network") rescue nil
-    end
-
+  def build_net_info(role, network)
     net_info = {}
-    db["network"].each { |k,v|
+    role.default_attributes["network"]["networks"][network].each do |k, v|
       net_info[k] = v unless v.nil?
-    }
+    end
     net_info
   end
 end
