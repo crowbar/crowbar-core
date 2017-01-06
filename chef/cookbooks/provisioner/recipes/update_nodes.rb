@@ -342,6 +342,9 @@ if not nodes.nil? and not nodes.empty?
             cloud_available = true if name.include? "Cloud"
           end
 
+          ntp_servers = search(:node, "roles:ntp-server")
+          ntp_servers_ips = ntp_servers.map { |n| Chef::Recipe::Barclamp::Inventory.get_network_by_type(n, "admin").address }
+
           autoyast_template = mnode[:state] == "os-upgrading" ? "autoyast-upgrade" : "autoyast"
           template "#{node_cfg_dir}/autoyast.xml" do
             mode 0o644
@@ -361,6 +364,7 @@ if not nodes.nil? and not nodes.empty?
                       node_ip: node_ip,
                       node_fqdn: mnode[:fqdn],
                       node_hostname: mnode[:hostname],
+                      ntp_servers: ntp_servers_ips,
                       platform: target_platform_distro,
                       target_platform_version: target_platform_version,
                       architecture: arch,
