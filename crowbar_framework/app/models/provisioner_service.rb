@@ -144,9 +144,17 @@ class ProvisionerService < ServiceObject
     else
       server_nodes_names = role.override_attributes["provisioner"]["elements"]["provisioner-server"]
       server_node = NodeObject.find_node_by_name(server_nodes_names.first)
+      admin_net = server_node.get_network_by_type("admin")
 
       protocol = "http"
-      server_address = server_node.get_network_by_type("admin")["address"]
+      server_address = if admin_net.nil?
+        # admin_net may be nil in the bootstrap case, because admin server only
+        # gets its IP on hardware-installing, which is after this is first
+        # called
+        "127.0.0.1"
+      else
+        server_node.get_network_by_type("admin")["address"]
+      end
       port = role.default_attributes["provisioner"]["web_port"]
       url = "#{protocol}://#{server_address}:#{port}"
 

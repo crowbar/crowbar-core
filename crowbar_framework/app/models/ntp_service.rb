@@ -86,7 +86,14 @@ class NtpService < ServiceObject
       server_nodes_names = role.override_attributes["ntp"]["elements"]["ntp-server"]
       server_nodes = server_nodes_names.map { |n| NodeObject.find_node_by_name n }
 
-      addresses = server_nodes.map { |n| n.get_network_by_type("admin")["address"] }.sort
+      addresses = server_nodes.map do |n|
+        admin_net = n.get_network_by_type("admin")
+        # admin_net may be nil in the bootstrap case, because admin server only
+        # gets its IP on hardware-installing, which is after this is first
+        # called
+        admin_net["address"] unless admin_net.nil?
+      end
+      addresses.sort!.compact!
 
       config = { servers: addresses }
     end
