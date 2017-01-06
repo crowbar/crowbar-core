@@ -191,6 +191,7 @@ class ServiceObject
         # being ready only by explicit user's action.
         next if node.nil? || node.crowbar["state"] == "crowbar_upgrade"
 
+        @logger.debug("Restoring #{node_name} to ready")
         restore_node_to_ready(node)
       end
     end
@@ -1324,11 +1325,13 @@ class ServiceObject
           pre_cached_nodes[node] ||= NodeObject.find_node_by_name(node)
           nobj = pre_cached_nodes[node]
           unless nobj[:platform_family] == "windows"
+            @logger.debug("Running chef-client on #{node.name}")
             filename = "#{ENV['CROWBAR_LOG_DIR']}/chef-client/#{node}.log"
             pid = run_remote_chef_client(node, "chef-client", filename)
             pids[pid] = node
           end
         end
+        @logger.debug("Waiting for chef-client to finish on #{node.name}")
         status = Process.waitall
         badones = status.select { |x| x[1].exitstatus != 0 }
 
@@ -1341,6 +1344,7 @@ class ServiceObject
               pid = run_remote_chef_client(node, "chef-client", filename)
               pids[pid] = node
             end
+            @logger.debug("Waiting for chef-client to finish on #{node.name}")
             status = Process.waitall
             badones = status.select { |x| x[1].exitstatus != 0 }
           end
@@ -1360,10 +1364,12 @@ class ServiceObject
 
       unless admin_list.empty?
         admin_list.each do |node|
+          @logger.debug("Running chef-client on admin #{node.name}")
           filename = "#{ENV['CROWBAR_LOG_DIR']}/chef-client/#{node}.log"
           pid = run_remote_chef_client(node, Rails.root.join("..", "bin", "single_chef_client.sh").expand_path.to_s, filename)
           pids[node] = pid
         end
+        @logger.debug("Waiting for chef-client to finish on admin #{node.name}")
         status = Process.waitall
         badones = status.select { |x| x[1].exitstatus != 0 }
 
@@ -1376,6 +1382,7 @@ class ServiceObject
               pid = run_remote_chef_client(node, Rails.root.join("..", "bin", "single_chef_client.sh").expand_path.to_s, filename)
               pids[pid] = node
             end
+            @logger.debug("Waiting for chef-client to finish on admin #{node.name}")
             status = Process.waitall
             badones = status.select { |x| x[1].exitstatus != 0 }
           end
