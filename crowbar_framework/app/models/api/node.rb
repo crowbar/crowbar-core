@@ -74,10 +74,16 @@ module Api
     end
 
     def join_and_chef
-      if execute_and_wait_for_finish("/usr/sbin/crowbar-chef-upgraded.sh", 600)
+      return false unless execute_and_wait_for_finish("/usr/sbin/crowbar-chef-upgraded.sh", 600)
+      # We know that the script has succeeded, but it does not necessary mean we're fine:
+      if @node.ready?
         Rails.logger.info("Initial chef-client run was successful.")
         return true
       end
+      save_error_state(
+        "Possible error during initial chef-client run at node #{@node.name}. " \
+        "Check /var/log/crowbar/crowbar_join/chef.log."
+      )
       false
     end
 
