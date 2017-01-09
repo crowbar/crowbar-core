@@ -39,7 +39,8 @@ class Api::UpgradeController < ApiController
       }, status: :unprocessable_entity
     end
   rescue Crowbar::Error::StartStepRunningError,
-         Crowbar::Error::StartStepOrderError => e
+         Crowbar::Error::StartStepOrderError,
+         Crowbar::Error::SaveUpgradeStatusError => e
     render json: {
       errors: {
         prepare: {
@@ -102,7 +103,8 @@ class Api::UpgradeController < ApiController
     end
   rescue Crowbar::Error::StartStepRunningError,
          Crowbar::Error::StartStepOrderError,
-         Crowbar::Error::EndStepRunningError => e
+         Crowbar::Error::EndStepRunningError,
+         Crowbar::Error::SaveUpgradeStatusError => e
     render json: {
       errors: {
         repocheck_crowbar: {
@@ -137,7 +139,8 @@ class Api::UpgradeController < ApiController
     end
   rescue Crowbar::Error::StartStepRunningError,
          Crowbar::Error::StartStepOrderError,
-         Crowbar::Error::EndStepRunningError => e
+         Crowbar::Error::EndStepRunningError,
+         Crowbar::Error::SaveUpgradeStatusError => e
     render json: {
       errors: {
         backup_crowbar: {

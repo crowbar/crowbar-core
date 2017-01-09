@@ -180,7 +180,7 @@ module Crowbar
       true
     rescue StandardError => e
       @logger.error("Exception during saving the status file: #{e.message}")
-      false
+      raise ::Crowbar::Error::SaveUpgradeStatusError.new(e.message)
     end
 
     # advance the current step if the latest one finished successfully

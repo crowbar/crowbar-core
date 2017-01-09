@@ -84,7 +84,7 @@ describe Api::Upgrade do
       )
 
       expect(subject.class).to respond_to(:checks)
-      expect(subject.class.checks.deep_stringify_keys).to eq(upgrade_prechecks["checks"])
+      expect(subject.class.checks.deep_stringify_keys).to eq(prechecks["checks"])
     end
   end
 
