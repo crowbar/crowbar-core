@@ -25,7 +25,8 @@ set +x
 source /root/.openrc
 set -x
 
-upgraded_agent=$(neutron agent-list --binary neutron-l3-agent --host $(hostname) -f value -c id)
+hostname=$(hostname)
+upgraded_agent=$(neutron agent-list --binary neutron-l3-agent --host $hostname -f value -c id)
 routers=$(neutron router-list -f value -c id)
 for router in $routers; do
     agent=$(neutron l3-agent-list-hosting-router $router -f value -c id)
@@ -39,6 +40,18 @@ for router in $routers; do
 
     # delete old routers namespaces. Unassignment didn't delete the namespaces
     ssh $old_host ip netns delete qrouter-$router
+
+    # wait for router ports to migrate
+    ports=$(neutron router-port-list $router -f value -c id)
+    for port in $ports; do
+        port_host=$(neutron port-show $port -c binding:host_id -f value)
+        num_tries=60
+        while [ $port_host != $hostname ] || [ $num_tries -gt 0 ]; do
+            sleep 1
+            num_tries=$(( $num_tries - 1 ))
+            port_host=$(neutron port-show $router -c binding:host_id -f value)
+        done
+    done
 
 done
 
