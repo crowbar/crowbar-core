@@ -373,7 +373,14 @@ class Api::UpgradeController < ApiController
         false,
         admin_backup: @backup.errors.full_messages.first
       )
-      render json: { error: @backup.errors.full_messages.first }, status: :unprocessable_entity
+      render json: {
+        errors: {
+          admin_backup: {
+            data: @backup.errors.full_messages,
+            help: I18n.t("api.upgrade.adminbackup.help.default")
+          }
+        }
+      }, status: :unprocessable_entity
     end
   rescue Crowbar::Error::StartStepRunningError,
          Crowbar::Error::StartStepOrderError,
