@@ -16,6 +16,9 @@
 #
 
 class NodesController < ApplicationController
+  # allow node polling during the upgrade
+  skip_before_filter :upgrade, only: [:index]
+
   def index
     @sum = 0
     @groups = {}
