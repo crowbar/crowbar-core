@@ -1189,6 +1189,43 @@ class NodeObject < ChefObject
     [200, {}]
   end
 
+  def redfish_rest_cmd(cmd, rackscale_id)
+    host = ENV["CROWBAR_REDFISH_HOST"] || "localhost"
+    port = ENV["CROWBAR_REDFISH_PORT"] || "8443"
+    redfish_client = RedfishHelper::RedfishClient.new(host, port)
+    case cmd
+    when :reboot
+      unless redfish_client.restart(rackscale_id)
+        Rails.logger.warn("rackscale reboot rest cmd failed - node in unknown state")
+        [422, I18n.t("unknown_state", scope: "error")]
+      end
+    when :shutdown
+      unless redfish_client.shutdown(rackscale_id)
+        Rails.logger.warn("rackscale shutdown rest cmd failed - node in unknown state")
+        [422, I18n.t("unknown_state", scope: "error")]
+      end
+    when :poweron
+      unless redfish_client.poweron(rackscale_id)
+        Rails.logger.warn("rackscale poweron rest cmd failed - node in unknown state")
+        [422, I18n.t("unknown_state", scope: "error")]
+      end
+    when :powercycle
+      unless redfish_client.powercycle(rackscale_id)
+        Rails.logger.warn("rackscale powercycle rest cmd failed - node in unknown state")
+        [422, I18n.t("unknown_state", scope: "error")]
+      end
+    when :poweroff
+      unless redfish_client.poweroff(rackscale_id)
+        Rails.logger.warn("rackscale poweroff rest cmd failed - node in unknown state")
+        [422, I18n.t("unknown_state", scope: "error")]
+      end
+    else
+      Rails.logger.warn("Unknown command #{cmd} for #{@node.name}.")
+      [400, I18n.t("unknown_cmd", scope: "error", cmd: cmd)]
+    end
+    [200, {}]
+  end
+
   def set_state(state)
     # use the real transition function for this
     cb = CrowbarService.new Rails.logger
@@ -1289,6 +1326,8 @@ class NodeObject < ChefObject
     set_state("reboot")
     if @node[:platform_family] == "windows"
       net_rpc_cmd(:reboot)
+    elsif @node["rackscale"]
+      redfish_rest_cmd(:reboot, @node["rackscale_id"])
     else
       ssh_cmd("/sbin/reboot")
     end
@@ -1298,6 +1337,8 @@ class NodeObject < ChefObject
     set_state("shutdown")
     if @node[:platform_family] == "windows"
       net_rpc_cmd(:shutdown)
+    elsif @node["rackscale"]
+      redfish_rest_cmd(:shutdown, @node["rackscale_id"])
     else
       ssh_cmd("/sbin/poweroff")
     end
@@ -1305,13 +1346,19 @@ class NodeObject < ChefObject
 
   def poweron
     set_state("poweron")
-    bmc_cmd("power on")
+    if @node["rackscale"]
+      redfish_rest_cmd(:poweron, @node["rackscale_id"])
+    else
+      bmc_cmd("power on")
+    end
   end
 
   def powercycle
     set_state("reboot")
     if @node[:platform_family] == "windows"
       net_rpc_cmd(:power_cycle)
+    elsif @node["rackscale"]
+      redfish_rest_cmd(:powercycle, @node["rackscale_id"])
     else
       bmc_cmd("power cycle")
     end
@@ -1321,6 +1368,8 @@ class NodeObject < ChefObject
     set_state("shutdown")
     if @node[:platform_family] == "windows"
       net_rpc_cmd(:power_off)
+    elsif @node["rackscale"]
+      redfish_rest_cmd(:poweroff, @node["rackscale_id"])
     else
       bmc_cmd("power off")
     end

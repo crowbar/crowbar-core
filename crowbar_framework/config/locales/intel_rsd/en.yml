@@ -1,0 +1,41 @@
+#
+# Copyright 2016, SUSE LINUX GmbH
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+en:
+  nav:
+    utils:
+      rsd: 'Intel RackScale'
+  rsd:
+    settings:
+      title: 'Intel Rackscale Server Details'
+      rsd_rest_server: 'PSME Rest Server IP'
+      rsd_server_port: 'PSME Rest Server Port'
+      show: 'Show'
+    show:
+      title: 'Intel Rackscale'
+      rsd_header: 'Lists Systems available from Intel RackScale server by talking to the Redfish APIs'
+      man_header: 'Managers'
+      sys_header: 'Systems'
+      sw_header:  'Switches'
+      ch_header:  'Chassis'
+      allocate_switch: 'Allocate'
+      rsd_selection: 'Selection'
+      system_id:  'System ID'
+  barclamp:
+    rsd:
+      login:
+        provide_creds: 'Please provide Rackscale login credentials.'
+        please_login: 'No active Rackscale session; please login.'

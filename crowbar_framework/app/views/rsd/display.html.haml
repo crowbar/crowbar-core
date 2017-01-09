@@ -1,0 +1,32 @@
+.row
+  .col-xs-12
+    %h1.page-header
+      = t(".title")
+
+.row
+  .col-xs-12
+    .panel.panel-default
+      .panel-body
+        .alert.alert-info
+          = t(".rsd_header")
+
+= form_for :node, :url => rsd_allocate_path, :html => { :role => "form" } do |f|
+  = hidden_field_tag "return", @allocated
+  .panel.panel-default#accordion
+    %h2
+      = t(".sys_header")
+      .panel-panel-body
+        %table.table.table-hover.table-middle{ :style => "border: 1px; width: 100%" }
+          %thead
+            %tr
+              %th
+                = t(".rsd_selection")
+              %th
+                = t(".system_id")
+          %tbody
+          - @rsd_systems.each do |rsd_system|
+            %tr
+              %td= check_box_tag "#{rsd_system['SystemId']}"
+              %td= link_to("System-#{rsd_system['SystemId']}")
+          .btn-group.pull-right
+            %input.btn.btn-default{ :type => "submit", :name => "allocate", :value => t(".allocate_switch") }
