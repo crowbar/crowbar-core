@@ -176,22 +176,17 @@ module Api
       end
 
       def cancel
+        upgrade_status = ::Crowbar::UpgradeStatus.new
+        unless upgrade_status.cancel_allowed?
+          Rails.logger.error(
+            "Not possible to cancel the upgrade at the step #{upgrade_status.current_step}"
+          )
+          raise ::Crowbar::Error::UpgradeCancelError.new(upgrade_status.current_step)
+        end
+
         service_object = CrowbarService.new(Rails.logger)
         service_object.revert_nodes_from_crowbar_upgrade
-
-        {
-          status: :ok,
-          message: ""
-        }
-      rescue => e
-        Rails.logger.error(e.message)
-
-        {
-          status: :unprocessable_entity,
-          message: e.message
-        }
-      ensure
-        ::Crowbar::UpgradeStatus.new.initialize_state
+        upgrade_status.initialize_state
       end
 
       def prepare(options = {})
