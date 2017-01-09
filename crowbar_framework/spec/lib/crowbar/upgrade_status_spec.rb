@@ -283,5 +283,24 @@ describe Crowbar::UpgradeStatus do
       expect(subject.progress[:remaining_nodes]).to be 2
       expect(subject.progress[:upgraded_nodes]).to be 1
     end
+
+    it "fails while saving the status initially" do
+      allow_any_instance_of(Pathname).to(
+        receive(:open).and_raise("Failed to write File")
+      )
+      expect { subject.start_step(:upgrade_prechecks) }.to raise_error(
+        Crowbar::Error::SaveUpgradeStatusError
+      )
+    end
+
+    it "fails while saving the status" do
+      expect(subject.start_step(:upgrade_prechecks)).to be true
+      allow_any_instance_of(Pathname).to(
+        receive(:open).and_raise("Failed to write File")
+      )
+      expect { subject.end_step(:upgrade_prechecks) }.to raise_error(
+        Crowbar::Error::SaveUpgradeStatusError
+      )
+    end
   end
 end
