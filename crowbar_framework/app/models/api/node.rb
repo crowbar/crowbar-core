@@ -24,59 +24,64 @@ module Api
     def execute_and_wait_for_finish(script, seconds)
       Rails.logger.info("Executing #{script} at #{@node.name}...")
       @node.wait_for_script_to_finish(script, seconds)
-      true
     rescue StandardError => e
-      save_error_state(
-        e.message + "Check /var/log/crowbar/node-upgrade.log for details."
-      )
-      false
+      raise e.message + " Check /var/log/crowbar/node-upgrade.log for details."
     end
 
     def pre_upgrade
-      if execute_and_wait_for_finish("/usr/sbin/crowbar-pre-upgrade.sh", 300)
-        Rails.logger.info("Pre upgrade script run was successful.")
-        return true
-      end
-      false
+      execute_and_wait_for_finish("/usr/sbin/crowbar-pre-upgrade.sh", 300)
+      Rails.logger.info("Pre upgrade script run was successful.")
+    rescue StandardError => e
+      raise_upgrade_error(
+        "Error while executing pre upgrade script. " + e.message
+      )
     end
 
     def prepare_repositories
-      if execute_and_wait_for_finish("/usr/sbin/crowbar-prepare-repositories.sh", 100)
-        Rails.logger.info("Prepare of repositories was successful.")
-        return true
-      end
-      false
+      execute_and_wait_for_finish("/usr/sbin/crowbar-prepare-repositories.sh", 100)
+      Rails.logger.info("Prepare of repositories was successful.")
+    rescue StandardError => e
+      raise_upgrade_error(
+        "Error while executing prepare repositories script. " + e.message
+      )
     end
 
     def os_upgrade
-      if execute_and_wait_for_finish("/usr/sbin/crowbar-upgrade-os.sh", 600)
-        Rails.logger.info("Package upgrade was successful.")
-        return true
-      end
-      false
+      execute_and_wait_for_finish("/usr/sbin/crowbar-upgrade-os.sh", 600)
+      Rails.logger.info("Package upgrade was successful.")
+    rescue StandardError => e
+      raise_upgrade_error(
+        "Error while executing OS upgrade script. " + e.message
+      )
     end
 
     # Execute post upgrade actions: prepare drbd and start pacemaker
     def post_upgrade
-      if execute_and_wait_for_finish("/usr/sbin/crowbar-post-upgrade.sh", 600)
-        Rails.logger.info("Post upgrade script run was successful.")
-        return true
-      end
-      false
+      execute_and_wait_for_finish("/usr/sbin/crowbar-post-upgrade.sh", 600)
+      Rails.logger.info("Post upgrade script run was successful.")
+    rescue StandardError => e
+      raise_upgrade_error(
+        "Error while executing post upgrade script. " + e.message
+      )
     end
 
     def join_and_chef
-      return false unless execute_and_wait_for_finish("/usr/sbin/crowbar-chef-upgraded.sh", 600)
+      begin
+        execute_and_wait_for_finish("/usr/sbin/crowbar-chef-upgraded.sh", 600)
+      rescue StandardError => e
+        raise_upgrade_error(
+          "Error while running the initial chef-client. " + e.message
+        )
+      end
       # We know that the script has succeeded, but it does not necessary mean we're fine:
       if @node.ready?
         Rails.logger.info("Initial chef-client run was successful.")
-        return true
+      else
+        raise_upgrade_error(
+          "Possible error during initial chef-client run at node #{@node.name}. " \
+          "Check /var/log/crowbar/crowbar_join/chef.log."
+        )
       end
-      save_error_state(
-        "Possible error during initial chef-client run at node #{@node.name}. " \
-        "Check /var/log/crowbar/crowbar_join/chef.log."
-      )
-      false
     end
 
     def wait_for_ssh_state(desired_state, action)
@@ -87,24 +92,21 @@ module Api
           sleep(5)
         end
       end
-      true
     rescue Timeout::Error
-      save_error_state(
+      raise_upgrade_error(
         "Possible error at node #{@node.name}" \
         "Node did not #{action} after 5 minutes of trying."
       )
-      false
     end
 
     # Reboot the node and wait until it comes back online
     def reboot_and_wait
       ssh_status = @node.ssh_cmd("/sbin/reboot")
       if ssh_status[0] != 200
-        save_error_state("Failed to reboot the machine. Could not ssh.")
-        return false
+        raise_upgrade_error("Failed to reboot the machine. Could not ssh.")
       end
 
-      return false unless wait_for_ssh_state(:down, "reboot")
+      wait_for_ssh_state(:down, "reboot")
       wait_for_ssh_state(:up, "come up")
     end
 
@@ -114,21 +116,9 @@ module Api
 
     # Do the complete package upgrade of one node
     def upgrade
-      unless prepare_repositories
-        save_error_state("Error while executing prepare repositories script")
-        return false
-      end
-
-      unless pre_upgrade
-        save_error_state("Error while executing pre upgrade script")
-        return false
-      end
-
-      unless os_upgrade
-        save_error_state("Error while executing upgrade script")
-        return false
-      end
-
+      prepare_repositories
+      pre_upgrade
+      os_upgrade
       reboot_and_wait
     end
 
@@ -138,10 +128,10 @@ module Api
       hostname = name.split(".").first
       out = @node.run_ssh_cmd("crm node attribute #{hostname} set pre-upgrade false")
       unless out[:exit_code].zero?
-        save_error_state("Changing the pre-upgrade role for #{hostname} from #{@node.name} failed")
-        return false
+        raise_upgrade_error(
+          "Changing the pre-upgrade role for #{name} from #{@node.name} failed"
+        )
       end
-      true
     end
 
     def save_node_state(role, state = "upgrading")
@@ -162,9 +152,9 @@ module Api
       end
     end
 
-    def save_error_state(message = "")
-      # FIXME: save the error to global status
+    def raise_upgrade_error(message = "")
       Rails.logger.error(message)
+      raise message
     end
 
     class << self

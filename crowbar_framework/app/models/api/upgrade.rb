@@ -280,23 +280,20 @@ module Api
         end
 
         if substep == "controllers"
-          # FIXME: return some meaningful error from upgrade_controller_nodes
-          unless upgrade_controller_nodes
-            status.end_step(false, "Failed to upgrade controller nodes")
-            return false
-          end
+          upgrade_controller_nodes
           substep = "computes"
           ::Crowbar::UpgradeStatus.new.save_substep(substep)
         end
 
         if substep == "computes"
-          # FIXME: return some meaningful error from upgrade_all_compute_nodes
-          unless upgrade_all_compute_nodes
-            status.end_step(false, "Failed to upgrade compute nodes")
-            return false
-          end
+          upgrade_all_compute_nodes
         end
         status.end_step
+      rescue StandardError => e
+        ::Crowbar::UpgradeStatus.new.end_step(
+          false,
+          nodes_upgrade: e.message
+        )
       end
       handle_asynchronously :nodes
 
@@ -325,21 +322,21 @@ module Api
         return false unless evacuate_network_node(node, node["hostname"])
 
         # upgrade the first node
-        return false unless node_api.upgrade
+        node_api.upgrade
 
         # Explicitly mark the first node as cluster founder
         # and in case of DRBD setup, adapt DRBD config accordingly.
         unless Api::Pacemaker.set_node_as_founder node.name
-          save_error_state("Changing the cluster founder to #{node.name} has failed")
+          raise_error_state("Changing the cluster founder to #{node.name} has failed")
           return false
         end
         # remove pre-upgrade attribute, so the services can start
-        return false unless other_node_api.disable_pre_upgrade_attribute_for node.name
+        other_node_api.disable_pre_upgrade_attribute_for node.name
         # delete old pacemaker resources (from the node where old pacemaker is running)
-        return false unless delete_pacemaker_resources other_node.name
+        delete_pacemaker_resources other_node.name
         # start crowbar-join at the first node
-        return false unless node_api.post_upgrade
-        return false unless node_api.join_and_chef
+        node_api.post_upgrade
+        node_api.join_and_chef
         node_api.save_node_state("controller", "upgraded")
       end
 
@@ -350,13 +347,13 @@ module Api
         node_api.save_node_state("controller")
         save_upgrade_state("Starting the upgrade of node #{node.name}")
 
-        return false unless node_api.upgrade
-        return false unless node_api.post_upgrade
-        return false unless node_api.join_and_chef
+        node_api.upgrade
+        node_api.post_upgrade
+        node_api.join_and_chef
         # Remove pre-upgrade attribute _after_ chef-client run because pacemaker is already running
         # and we want the configuration to be updated first
         # (disabling attribute causes starting the services on the node)
-        return false unless node_api.disable_pre_upgrade_attribute_for node.name
+        node_api.disable_pre_upgrade_attribute_for node.name
         node_api.save_node_state("controller", "upgraded")
       end
 
@@ -374,15 +371,14 @@ module Api
           "pacemaker_config_environment:#{cluster_env}"
         ).first
 
-        return false unless upgrade_first_cluster_node founder, non_founder
+        upgrade_first_cluster_node founder, non_founder
 
         # upgrade the rest of nodes in the same cluster
         NodeObject.find(
           "state:crowbar_upgrade AND pacemaker_config_environment:#{cluster_env}"
         ).each do |node|
-          return false unless upgrade_next_cluster_node node.name, founder.name
+          upgrade_next_cluster_node node.name, founder.name
         end
-        true
       end
 
       def upgrade_drbd_clusters
@@ -390,7 +386,7 @@ module Api
           "state:crowbar_upgrade AND pacemaker_founder:true"
         ).each do |founder|
           cluster_env = founder[:pacemaker][:config][:environment]
-          return false unless upgrade_drbd_cluster cluster_env
+          upgrade_drbd_cluster cluster_env
         end
       end
 
@@ -426,22 +422,21 @@ module Api
         end
 
         if drbd_slave.nil? || drbd_master.nil?
-          save_error_state("Unable to detect drb master and/or slave nodes")
-          return false
+          raise_error_state("Unable to detect drb master and/or slave nodes")
         end
 
-        return false unless upgrade_first_cluster_node drbd_slave, drbd_master
-
-        return false unless upgrade_next_cluster_node drbd_master, drbd_slave
+        upgrade_first_cluster_node drbd_slave, drbd_master
+        upgrade_next_cluster_node drbd_master, drbd_slave
 
         save_upgrade_state("Nodes in DRBD-based cluster successfully upgraded")
-        true
       end
 
       # Delete existing pacemaker resources, from other node in the cluster
       def delete_pacemaker_resources(node_name)
         node = NodeObject.find_node_by_name node_name
-        return false if node.nil?
+        raise_upgrade_error(
+          "Node #{node_name} was not found, cannot delete pacemaker resources."
+        )
 
         begin
           node.wait_for_script_to_finish(
@@ -449,11 +444,10 @@ module Api
           )
           save_upgrade_state("Deleting pacemaker resources was successful.")
         rescue StandardError => e
-          save_error_state(
+          raise_upgrade_error(
             e.message +
             "Check /var/log/crowbar/node-upgrade.log for details."
           )
-          return false
         end
       end
 
@@ -472,11 +466,10 @@ module Api
         # run the script again on this node (to evacuate other nodes)
         controller.delete_script_exit_files("/usr/sbin/crowbar-router-migration.sh")
       rescue StandardError => e
-        save_error_state(
+        raise_upgrade_error(
           e.message +
           " Check /var/log/crowbar/node-upgrade.log at #{controller.name} for details."
         )
-        return false
       end
 
       # Live migrate all instances of the specified
@@ -489,11 +482,10 @@ module Api
           "Migrating instances from node #{compute} was successful."
         )
       rescue StandardError => e
-        save_error_state(
+        raise_upgrade_error(
           e.message +
           "Check /var/log/crowbar/node-upgrade.log at #{controller.name} for details."
         )
-        return false
       end
 
       def save_upgrade_state(message = "")
@@ -501,9 +493,9 @@ module Api
         Rails.logger.info(message)
       end
 
-      def save_error_state(message = "")
-        # FIXME: save the error to global status
+      def raise_upgrade_error(message = "")
         Rails.logger.error(message)
+        raise message
       end
 
       def upgrade_all_compute_nodes
@@ -519,7 +511,7 @@ module Api
         nodes.each do |node|
           ssh_status = node.ssh_cmd(script).first
           if ssh_status != 200
-            save_error_state("Failed to connect to node #{node.name}!")
+            raise_upgrade_error("Failed to connect to node #{node.name}!")
             raise "Execution of script #{script} has failed on node #{node.name}."
           end
         end
@@ -558,7 +550,7 @@ module Api
 
         controller = NodeObject.find("roles:nova-controller").first
         if controller.nil?
-          save_error_state("No nova controller node was found!")
+          raise_upgrade_error("No nova controller node was found!")
           return false
         end
 
@@ -577,28 +569,28 @@ module Api
           )
           save_upgrade_state("Services at compute nodes upgraded and prepared.")
         rescue StandardError => e
-          save_error_state(e.message)
-          return false
+          raise_upgrade_error(
+            "Error while preparing services at compute nodes. " + e.message
+          )
         end
 
         # Next part must be done sequentially, only one compute node can be upgraded at a time
         compute_nodes.each do |n|
           node_api = Api::Node.new n.name
-          return false unless live_evacuate_compute_node(controller, n.name)
-          return false unless node_api.os_upgrade
-          return false unless node_api.reboot_and_wait
-          return false unless node_api.post_upgrade
-          return false unless node_api.join_and_chef
+          live_evacuate_compute_node(controller, n.name)
+          node_api.os_upgrade
+          node_api.reboot_and_wait
+          node_api.post_upgrade
+          node_api.join_and_chef
 
           out = controller.run_ssh_cmd(
             "source /root/.openrc; nova service-enable #{n.name} nova-compute"
           )
           unless out[:exit_code].zero?
-            save_error_state(
+            raise_upgrade_error(
               "Enabling nova-compute service for #{n.name} has failed!" \
               "Check nova log files at #{controller.name} and #{n.name}."
             )
-            return false
           end
           save_upgrade_state("Node #{n.name} successfully upgraded.")
         end
