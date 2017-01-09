@@ -49,7 +49,7 @@ class MachinesController < BarclampController
       raise "Could not find chef key at #{ENV["CHEF_CLIENT_KEY"]}"
     end
 
-    @nodes = NodeObject.find_all_nodes.map do |node|
+    @nodes = Node.find_all_nodes.map do |node|
       {
         name: node.name,
         alias: node.alias,
@@ -180,7 +180,7 @@ class MachinesController < BarclampController
   end
 
   def load_machine
-    @machine = NodeObject.find_node_by_name_or_alias(
+    @machine = Node.find_node_by_name_or_alias(
       params[:name] || params[:id]
     )
   end

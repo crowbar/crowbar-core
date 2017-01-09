@@ -8,7 +8,7 @@ def upgrade(ta, td, a, d)
   d["elements"].delete("ipmi-discover")
 
   # ipmi roles are on all nodes
-  NodeObject.all.each do |node|
+  Node.all.each do |node|
     node.add_to_run_list("ipmi",
                          td["element_run_list_order"]["ipmi"],
                          td["element_states"]["ipmi"])
@@ -29,7 +29,7 @@ def downgrade(ta, td, a, d)
   d["elements"].delete("ipmi")
 
   # ipmi roles are on all nodes
-  NodeObject.all.each do |node|
+  Node.all.each do |node|
     node.add_to_run_list("ipmi-configure",
                          td["element_run_list_order"]["ipmi-configure"],
                          td["element_states"]["ipmi-configure"])

@@ -145,7 +145,7 @@ module CrowbarPacemakerProxy
   # Based on the status of its nodes, returns the overall cluster status
   def cluster_status(cluster_nodes)
     node_states = cluster_nodes.map(&:status)
-    # Needs to be synced w/ NodeObject#status
+    # Needs to be synced w/ Node#status
     possible_states = ["unready", "building", "failed", "unknown", "pending", "ready"]
     possible_states.find { |s| node_states.include?(s) } || "unknown"
   end

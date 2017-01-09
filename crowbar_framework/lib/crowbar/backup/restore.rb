@@ -220,7 +220,7 @@ module Crowbar
           "-i",
           "/usr/bin/chef-client",
           "-L",
-          "#{ENV["CROWBAR_LOG_DIR"]}/chef-client/#{NodeObject.admin_node.name}.log"
+          "#{ENV["CROWBAR_LOG_DIR"]}/chef-client/#{Node.admin_node.name}.log"
         )
       end
 

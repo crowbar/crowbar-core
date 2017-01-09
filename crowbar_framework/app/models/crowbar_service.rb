@@ -49,7 +49,7 @@ class CrowbarService < ServiceObject
     # check if error message is saved in one of the nodes
     if answer.first != 200
       found_errors = []
-      NodeObject.find("state:crowbar_upgrade").each do |node|
+      Node.find("state:crowbar_upgrade").each do |node|
         error = node["crowbar_wall"]["chef_error"] || ""
         next if error.empty?
         found_errors.push error
@@ -84,7 +84,7 @@ class CrowbarService < ServiceObject
   end
 
   def shutdown_services_at_non_db_nodes
-    upgrade_nodes = NodeObject.find("state:crowbar_upgrade")
+    upgrade_nodes = Node.find("state:crowbar_upgrade")
     check_if_nodes_are_available upgrade_nodes
     upgrade_nodes.each do |node|
       # Find the nodes with Database role.
@@ -103,7 +103,7 @@ class CrowbarService < ServiceObject
 
   def dump_openstack_database
     db_nodes = []
-    upgrade_nodes = NodeObject.find("state:crowbar_upgrade")
+    upgrade_nodes = Node.find("state:crowbar_upgrade")
     check_if_nodes_are_available upgrade_nodes
 
     upgrade_nodes.each do |node|
@@ -137,9 +137,9 @@ class CrowbarService < ServiceObject
   # This needs to be done in separate step because user might want
   # to download DB dump before the database is shut down.
   def finalize_openstack_shutdown
-    check_if_nodes_are_available NodeObject.find("state:crowbar_upgrade")
+    check_if_nodes_are_available Node.find("state:crowbar_upgrade")
 
-    NodeObject.find("state:crowbar_upgrade AND roles:database-config-default").each do |node|
+    Node.find("state:crowbar_upgrade AND roles:database-config-default").each do |node|
       # mark the position in the upgrade process
       node["crowbar_wall"]["crowbar_upgrade_step"] = "db_shutdown"
       node.save
@@ -150,7 +150,7 @@ class CrowbarService < ServiceObject
 
     # Finally, set the upgrade step to the point where no further action is done
     # even when the upgrade recipes are accidentally executed
-    NodeObject.find("state:crowbar_upgrade AND roles:database-config-default").each do |node|
+    Node.find("state:crowbar_upgrade AND roles:database-config-default").each do |node|
       node["crowbar_wall"]["crowbar_upgrade_step"] = "done_openstack_shutdown"
       node.save
     end
@@ -179,10 +179,10 @@ class CrowbarService < ServiceObject
     node = nil
 
     with_lock "BA-LOCK" do
-      node = NodeObject.find_node_by_name name
+      node = Node.find_node_by_name name
       if node.nil? and (state == "discovering" or state == "testing")
         @logger.debug("Crowbar transition: creating new node for #{name} to #{state}")
-        node = NodeObject.create_new name
+        node = Node.create_new name
         self.transition_save_node = true
       end
       if node.nil?
@@ -302,7 +302,7 @@ class CrowbarService < ServiceObject
     nodes_to_upgrade = []
     not_ready_for_upgrade = []
     admin_with_dns_server_role = false
-    all_nodes = NodeObject.all
+    all_nodes = Node.all
     all_nodes.each do |n|
       not_ready_for_upgrade.push n.name if !n.admin? && !%w(ready crowbar_upgrade).include?(n.state)
       admin_with_dns_server_role = true if n.admin? && n.role?("dns-server")
@@ -339,7 +339,7 @@ class CrowbarService < ServiceObject
   end
 
   def disable_non_core_proposals
-    upgrade_nodes = NodeObject.all.reject(&:admin?)
+    upgrade_nodes = Node.all.reject(&:admin?)
     check_if_nodes_are_available upgrade_nodes
 
     # Find all non-core proposals and remove all roles that belong
@@ -375,11 +375,11 @@ class CrowbarService < ServiceObject
   # After the admin serve has been upgraded, and once it has repositories
   # correctly prepared for nodes, prepare the upgrade script at the nodes
   def prepare_nodes_for_os_upgrade
-    upgrade_nodes = NodeObject.all.reject do |node|
+    upgrade_nodes = Node.all.reject do |node|
       node.admin? || node[:platform] == "windows" || node.state != "crowbar_upgrade"
     end
     check_if_nodes_are_available upgrade_nodes
-    admin_node = NodeObject.admin_node
+    admin_node = Node.admin_node
 
     upgrade_nodes.each do |node|
       node["target_platform"] = admin_node["provisioner"]["default_os"]
@@ -400,11 +400,11 @@ class CrowbarService < ServiceObject
   # Prepare the upgrade AutoYaST profile for nodes and let them use it for the upgrade
   # This is the method from 5-6 upgrade. To be removed once we have full replacement
   def initiate_nodes_upgrade
-    upgrade_nodes = NodeObject.all.reject do |node|
+    upgrade_nodes = Node.all.reject do |node|
       node.admin? || node[:platform] == "windows" || node.state != "crowbar_upgrade"
     end
     check_if_nodes_are_available upgrade_nodes
-    admin_node = NodeObject.admin_node
+    admin_node = Node.admin_node
     upgrade_nodes_failed = []
 
     upgrade_nodes.each do |node|
@@ -414,7 +414,7 @@ class CrowbarService < ServiceObject
     end
 
     # wait for the pxe_config to be updated, then reboot the nodes
-    discovery_dir = "#{NodeObject.admin_node[:provisioner][:root]}/discovery/"
+    discovery_dir = "#{Node.admin_node[:provisioner][:root]}/discovery/"
     pxecfg_subdir = "bios/pxelinux.cfg"
 
     upgrade_nodes.each do |node|
@@ -454,7 +454,7 @@ class CrowbarService < ServiceObject
   def revert_nodes_from_crowbar_upgrade
     proposal = Proposal.find_by(barclamp: "crowbar", name: "default")
 
-    NodeObject.all.each do |node|
+    Node.all.each do |node|
       next unless node.state == "crowbar_upgrade"
       # revert nodes to previous state; mark the wall so apply does not change state again
       node["crowbar_wall"]["crowbar_upgrade_step"] = "revert_to_ready"
@@ -473,7 +473,7 @@ class CrowbarService < ServiceObject
   def apply_role_pre_chef_call(old_role, role, all_nodes)
     @logger.debug("crowbar apply_role_pre_chef_call: entering #{all_nodes.inspect}")
     all_nodes.each do |n|
-      node = NodeObject.find_node_by_name n
+      node = Node.find_node_by_name n
       # value of crowbar_wall["crowbar_upgrade"] indicates that the role should be executed
       # but node state should not be changed: this is needed when reverting node state to ready
       if node.role?("crowbar-upgrade") &&

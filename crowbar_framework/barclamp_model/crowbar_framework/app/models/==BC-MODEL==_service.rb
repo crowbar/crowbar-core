@@ -32,7 +32,7 @@ class ==^BC-MODEL==Service < ServiceObject
     @logger.debug("==*BC-MODEL== create_proposal: entering")
     base = super
 
-    nodes = NodeObject.all
+    nodes = Node.all
     nodes.delete_if { |n| n.nil? or n.admin? }
     if nodes.size >= 1
       base["deployment"]["==BC-MODEL=="]["elements"] = {
@@ -50,7 +50,7 @@ class ==^BC-MODEL==Service < ServiceObject
 
     # Make sure the bind hosts are in the admin network
     all_nodes.each do |n|
-      node = NodeObject.find_node_by_name n
+      node = Node.find_node_by_name n
 
       admin_address = node.get_network_by_type("admin")["address"]
       node.crowbar[:==BC-MODEL==] = {} if node.crowbar[:==BC-MODEL==].nil?

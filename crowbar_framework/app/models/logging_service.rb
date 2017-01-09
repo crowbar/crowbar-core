@@ -48,14 +48,14 @@ class LoggingService < ServiceObject
   end
 
   def proposal_create_bootstrap(params)
-    params["deployment"][@bc_name]["elements"]["logging-server"] = [NodeObject.admin_node.name]
+    params["deployment"][@bc_name]["elements"]["logging-server"] = [Node.admin_node.name]
     super(params)
   end
 
   def transition(inst, name, state)
     @logger.debug("Logging transition: entering: #{name} for #{state}")
 
-    node = NodeObject.find_node_by_name name
+    node = Node.find_node_by_name name
     if node.allocated? && !node.role?("logging-server")
       db = Proposal.where(barclamp: @bc_name, name: inst).first
       role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"

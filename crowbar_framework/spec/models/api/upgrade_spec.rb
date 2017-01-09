@@ -58,8 +58,8 @@ describe Api::Upgrade do
         "ha" => ["x86_64"]
       )
     )
-    allow(NodeObject).to(
-      receive(:all).and_return([NodeObject.find_node_by_name("testing")])
+    allow(Node).to(
+      receive(:all).and_return([Node.find_node_by_name("testing")])
     )
     allow(Api::Upgrade).to(
       receive(:target_platform).and_return("suse-12.2")
@@ -125,18 +125,18 @@ describe Api::Upgrade do
       allow_any_instance_of(CrowbarService).to receive(
         :prepare_nodes_for_os_upgrade
       ).and_return(true)
-      allow(NodeObject).to(
+      allow(Node).to(
         receive(:find).with("state:crowbar_upgrade").
-        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+        and_return([Node.find_node_by_name("testing.crowbar.com")])
       )
-      allow_any_instance_of(NodeObject).to(
+      allow_any_instance_of(Node).to(
         receive(:shutdown_services_before_upgrade).
         and_return([200, ""])
       )
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :end_step
       ).and_return(true)
-      allow_any_instance_of(NodeObject).to(
+      allow_any_instance_of(Node).to(
         receive(:wait_for_script_to_finish).with(
           "/usr/sbin/crowbar-delete-cinder-services-before-upgrade.sh", 300
         ).and_return(true)
@@ -340,24 +340,24 @@ describe Api::Upgrade do
 
   context "upgrading the nodes" do
     it "successfully upgrades nodes with DRBD backend" do
-      drbd_master = NodeObject.find_node_by_name("testing.crowbar.com")
-      drbd_slave = NodeObject.find_node_by_name("testing.crowbar.com")
-      allow(NodeObject).to(
+      drbd_master = Node.find_node_by_name("testing.crowbar.com")
+      drbd_slave = Node.find_node_by_name("testing.crowbar.com")
+      allow(Node).to(
         receive(:find).
         with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
-        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+        and_return([Node.find_node_by_name("testing.crowbar.com")])
       )
-      allow(NodeObject).to(
+      allow(Node).to(
         receive(:find).
         with("drbd_rsc:*").
-        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+        and_return([Node.find_node_by_name("testing.crowbar.com")])
       )
-      allow(NodeObject).to(
+      allow(Node).to(
         receive(:find).
         with("state:crowbar_upgrade AND pacemaker_founder:true").
-        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+        and_return([Node.find_node_by_name("testing.crowbar.com")])
       )
-      allow(NodeObject).to(
+      allow(Node).to(
         receive(:find).
         with("state:crowbar_upgrade AND "\
              "pacemaker_config_environment:data AND " \
@@ -376,10 +376,10 @@ describe Api::Upgrade do
         stderr: "",
         exit_code: 0
       )
-      allow_any_instance_of(NodeObject).to(
+      allow_any_instance_of(Node).to(
         receive(:wait_for_script_to_finish).and_return(true)
       )
-      allow_any_instance_of(NodeObject).to(
+      allow_any_instance_of(Node).to(
         receive(:delete_script_exit_files).and_return(true)
       )
       allow_any_instance_of(Api::Node).to receive(:upgrade).and_return(true)
@@ -403,16 +403,16 @@ describe Api::Upgrade do
     end
 
     it "successfully completes the upgrade when they are no compute nodes" do
-      allow(NodeObject).to(
+      allow(Node).to(
         receive(:find).
         with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
-        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+        and_return([Node.find_node_by_name("testing.crowbar.com")])
       )
       allow(Api::Upgrade).to receive(:upgrade_controller_nodes).and_return(true)
-      allow(NodeObject).to(
+      allow(Node).to(
         receive(:find).with("roles:nova-compute-kvm").and_return([])
       )
-      allow(NodeObject).to(
+      allow(Node).to(
         receive(:find).with("roles:nova-compute-xen").and_return([])
       )
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
@@ -424,17 +424,17 @@ describe Api::Upgrade do
     end
 
     it "fails to upgrade compute nodes when there is no nova-controller" do
-      allow(NodeObject).to(
+      allow(Node).to(
         receive(:find).
         with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
-        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+        and_return([Node.find_node_by_name("testing.crowbar.com")])
       )
       allow(Api::Upgrade).to receive(:upgrade_controller_nodes).and_return(true)
-      allow(NodeObject).to(
+      allow(Node).to(
         receive(:find).with("roles:nova-compute-kvm").
-        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+        and_return([Node.find_node_by_name("testing.crowbar.com")])
       )
-      allow(NodeObject).to(
+      allow(Node).to(
         receive(:find).with("roles:nova-controller").and_return([])
       )
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
@@ -446,19 +446,19 @@ describe Api::Upgrade do
     end
 
     it "successfully upgrades KVM compute nodes" do
-      allow(NodeObject).to(
+      allow(Node).to(
         receive(:find).with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
-        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+        and_return([Node.find_node_by_name("testing.crowbar.com")])
       )
       allow(Api::Upgrade).to receive(:upgrade_controller_nodes).and_return(true)
-      allow(NodeObject).to(
+      allow(Node).to(
         receive(:find).with("roles:nova-compute-kvm").
-        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+        and_return([Node.find_node_by_name("testing.crowbar.com")])
       )
-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
-      allow(NodeObject).to(
+      allow(Node).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
+      allow(Node).to(
         receive(:find).with("roles:nova-controller").
-        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+        and_return([Node.find_node_by_name("testing.crowbar.com")])
       )
       allow(Api::Upgrade).to receive(:execute_scripts_and_wait_for_finish).and_return(true)
       allow(Api::Upgrade).to receive(:live_evacuate_compute_node).and_return(true)
@@ -466,7 +466,7 @@ describe Api::Upgrade do
       allow_any_instance_of(Api::Node).to receive(:reboot_and_wait).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:post_upgrade).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:join_and_chef).and_return(true)
-      allow_any_instance_of(NodeObject).to receive(:run_ssh_cmd).and_return(exit_code: 0)
+      allow_any_instance_of(Node).to receive(:run_ssh_cmd).and_return(exit_code: 0)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
       ).with(:nodes_upgrade).and_return(true)

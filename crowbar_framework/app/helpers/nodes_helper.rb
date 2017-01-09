@@ -17,15 +17,15 @@
 
 module NodesHelper
   def all_non_admin_nodes
-    NodeObject.find("NOT admin_node:true")
+    Node.find("NOT admin_node:true")
   end
 
   def upgrading_nodes_count
-    NodeObject.find("state:crowbar_upgrade OR state:os-upgrading OR state:os-upgraded").count
+    Node.find("state:crowbar_upgrade OR state:os-upgrading OR state:os-upgraded").count
   end
 
   def failed_nodes_count
-    NodeObject.find("state:problem").count
+    Node.find("state:problem").count
   end
 
   def nodes_ready?
@@ -33,7 +33,7 @@ module NodesHelper
   end
 
   def nodes_by_role(role)
-    NodeObject.find("roles:#{role}").sort_by(&:alias)
+    Node.find("roles:#{role}").sort_by(&:alias)
   end
 
   def piechart_for(group)
@@ -107,7 +107,7 @@ module NodesHelper
 
     @nodes_hash[group] ||= begin
       {}.tap do |nodes|
-        NodeObject.all.each do |node|
+        Node.all.each do |node|
           nodes[node.name] = {
             handle: node.handle,
             alias: node.alias,

@@ -36,19 +36,19 @@ class RoleObject < ChefObject
     end
   end
 
-  def cluster_nodes(nodes = NodeObject.all)
+  def cluster_nodes(nodes = Node.all)
     @cluster_nodes ||= begin
       proposal_nodes(nodes, nil, ["pacemaker-remote"]).values.flatten.uniq
     end
   end
 
-  def cluster_remote_nodes(nodes = NodeObject.all)
+  def cluster_remote_nodes(nodes = Node.all)
     @cluster_remote_nodes ||= begin
       proposal_nodes(nodes, ["pacemaker-remote"], nil).values.flatten.uniq
     end
   end
 
-  def proposal_nodes(nodes = NodeObject.all, include_roles = nil, exclude_roles = nil)
+  def proposal_nodes(nodes = Node.all, include_roles = nil, exclude_roles = nil)
     assigned_nodes = {}
     elements.each do |role_name, node_names|
       next if !include_roles.nil? && !include_roles.include?(role_name)
@@ -92,7 +92,7 @@ class RoleObject < ChefObject
   end
 
   # Returns all nodes which have this role applied
-  def element_nodes(roles = self.class.all, nodes = NodeObject.all)
+  def element_nodes(roles = self.class.all, nodes = Node.all)
     assigned_nodes = []
 
     # Get all nodes from proposal roles mentioning this one

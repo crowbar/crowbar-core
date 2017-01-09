@@ -258,7 +258,7 @@ module BarclampLibrary
           # just rely on by-path. This means you can't go reordering disks
           # in VirtualBox, but we can probably live with that.
           #
-          # Keep these paths in sync with NodeObject#unique_device_for
+          # Keep these paths in sync with Node#unique_device_for
           # within the crowbar barclamp to return always similar values.
           disk_lookups = ["by-path"]
 

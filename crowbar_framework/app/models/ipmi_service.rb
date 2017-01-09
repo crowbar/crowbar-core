@@ -34,7 +34,7 @@ class IpmiService < ServiceObject
   end
 
   def proposal_create_bootstrap(params)
-    params["deployment"][@bc_name]["elements"]["bmc-nat-router"] = [NodeObject.admin_node.name]
+    params["deployment"][@bc_name]["elements"]["bmc-nat-router"] = [Node.admin_node.name]
     super(params)
   end
 
@@ -55,7 +55,7 @@ class IpmiService < ServiceObject
 
     # hardware-installing because BMC is enabled during that step
     if ["hardware-installing", "installed", "readying"].include? state
-      node = NodeObject.find_node_by_name(name)
+      node = Node.find_node_by_name(name)
       unless node.role?("bmc-nat-router")
         db = Proposal.where(barclamp: @bc_name, name: inst).first
         role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
@@ -76,7 +76,7 @@ class IpmiService < ServiceObject
 
       if role && !role.default_attributes["ipmi"]["use_dhcp"]
         @logger.debug("IPMI transition: Allocate bmc address for #{name}")
-        node = NodeObject.find_node_by_name(name)
+        node = Node.find_node_by_name(name)
         suggestion = if role.default_attributes["ipmi"]["ignore_address_suggestions"]
           nil
         else

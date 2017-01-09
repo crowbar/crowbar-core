@@ -258,14 +258,14 @@ module ApplicationHelper
   end
 
   def default_platform
-    NodeObject.default_platform
+    Node.default_platform
   end
 
   def available_platforms(architecture)
-    NodeObject.available_platforms(architecture)
+    Node.available_platforms(architecture)
   end
 
   def disabled_platforms(architecture)
-    (NodeObject.disabled_platforms(architecture) + Crowbar::Repository.disabled_platforms(architecture)).uniq
+    (Node.disabled_platforms(architecture) + Crowbar::Repository.disabled_platforms(architecture)).uniq
   end
 end

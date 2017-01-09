@@ -48,7 +48,7 @@ class NodesController < ApplicationController
     @groups = {}
     session[:node] = params[:name]
     if params.key?(:role)
-      result = NodeObject.all #this is not efficient, please update w/ a search!
+      result = Node.all # this is not efficient, please update w/ a search!
       @nodes = result.find_all { |node| node.role? params[:role] }
       if params.key?(:names_only)
          names = @nodes.map { |node| node.handle }
@@ -71,7 +71,7 @@ class NodesController < ApplicationController
     @allocated = true
 
     @nodes = {}.tap do |nodes|
-      NodeObject.all.each do |node|
+      Node.all.each do |node|
         nodes[node.handle] = node
       end
     end
@@ -85,7 +85,7 @@ class NodesController < ApplicationController
     @allocated = false
 
     @nodes = {}.tap do |nodes|
-      NodeObject.all.each do |node|
+      Node.all.each do |node|
         unless node.allocated?
           nodes[node.handle] = node
         end
@@ -131,7 +131,7 @@ class NodesController < ApplicationController
         node_values.each do |node_name, node_attributes|
           begin
             dirty = false
-            node = NodeObject.find_node_by_name node_name
+            node = Node.find_node_by_name node_name
             is_allocated = node.allocated?
 
             if node_attributes["allocate"] and not is_allocated
@@ -210,7 +210,7 @@ class NodesController < ApplicationController
 
   def families
     @families = {}.tap do |families|
-      NodeObject.all.each do |node|
+      Node.all.each do |node|
         family = node.family.to_s
 
         unless families.key? family
@@ -240,7 +240,7 @@ class NodesController < ApplicationController
   param :group, String, desc: "Group name", required: true
   error 404, "Node not found"
   def group_change
-    NodeObject.find_node_by_name(params[:id]).tap do |node|
+    Node.find_node_by_name(params[:id]).tap do |node|
       raise ActionController::RoutingError.new("Not Found") if node.nil?
 
       if params[:group].downcase.eql? "automatic"
@@ -310,7 +310,7 @@ class NodesController < ApplicationController
       groups: {}
     }.tap do |result|
       begin
-        NodeObject.all.each do |node|
+        Node.all.each do |node|
           group_name = node.group || I18n.t("unknown")
 
           result[:groups][group_name] ||= begin
@@ -368,7 +368,7 @@ class NodesController < ApplicationController
   ], desc: "Action that needs to be performed on the node", required: true
   def hit
     name = params[:name] || params[:id]
-    machine = NodeObject.find_node_by_name name
+    machine = Node.find_node_by_name name
 
     respond_to do |format|
       format.json do
@@ -494,7 +494,7 @@ class NodesController < ApplicationController
 
   #this code allow us to get values of attributes by path of node
   def attribute
-    @node = NodeObject.find_node_by_name(params[:name])
+    @node = Node.find_node_by_name(params[:name])
     raise ActionController::RoutingError.new("Node #{params[:name]} not found.") if @node.nil?
     @attribute = @node.to_hash
     params[:path].to_a.each do |element|
@@ -559,7 +559,7 @@ class NodesController < ApplicationController
   def get_node_and_network(node_name)
     network = {}
     @network = []
-    @node = NodeObject.find_node_by_name(node_name) if @node.nil?
+    @node = Node.find_node_by_name(node_name) if @node.nil?
     if @node
       # If we're in discovery mode, then we have a temporary DHCP IP address.
       if !["discovering", "discovered"].include?(@node.state)
@@ -598,27 +598,27 @@ class NodesController < ApplicationController
     @sum = 0
     @groups = {}
     @nodes  = {}
-      raw_nodes = NodeObject.all
-      raw_nodes.each do |node|
-        @sum = @sum + node.name.hash
-        @nodes[node.handle] = { alias: node.alias, description: node.description, status: node.status, state: node.state }
-        group = node.group
-        @groups[group] = { automatic: !node.display_set?("group"),
-                           status: { "ready" => 0,
-                                     "failed" => 0,
-                                     "unknown" => 0,
-                                     "unready" => 0,
-                                     "pending" => 0,
-                                     "crowbar_upgrade" => 0 },
-                           nodes: {}
-                         } unless @groups.key? group
-        @groups[group][:nodes][node.group_order] = node.handle
-        @groups[group][:status][node.status] = (@groups[group][:status][node.status] || 0).to_i + 1
-        if node.handle === node_name
-          @node = node
-          get_node_and_network(node.handle)
-        end
+    raw_nodes = Node.all
+    raw_nodes.each do |node|
+      @sum = @sum + node.name.hash
+      @nodes[node.handle] = { alias: node.alias, description: node.description, status: node.status, state: node.state }
+      group = node.group
+      @groups[group] = { automatic: !node.display_set?("group"),
+                         status: { "ready" => 0,
+                                   "failed" => 0,
+                                   "unknown" => 0,
+                                   "unready" => 0,
+                                   "pending" => 0,
+                                   "crowbar_upgrade" => 0 },
+                         nodes: {}
+                       } unless @groups.key? group
+      @groups[group][:nodes][node.group_order] = node.handle
+      @groups[group][:status][node.status] = (@groups[group][:status][node.status] || 0).to_i + 1
+      if node.handle === node_name
+        @node = node
+        get_node_and_network(node.handle)
       end
+    end
     @draggable = draggable
   end
 end

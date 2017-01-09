@@ -17,7 +17,7 @@
 module Api
   class Node < Tableless
     def initialize(name = nil)
-      @node = NodeObject.find_node_by_name name
+      @node = ::Node.find_node_by_name name
     end
 
     # execute script in background and wait for it to finish
@@ -202,7 +202,7 @@ module Api
 
       def node_architectures
         {}.tap do |ret|
-          NodeObject.all.each do |node|
+          ::Node.all.each do |node|
             arch = node.architecture
             ret["os"] ||= []
             ret["os"].push(arch) unless ret["os"].include?(arch)

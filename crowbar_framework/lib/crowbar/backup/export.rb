@@ -149,7 +149,7 @@ module Crowbar
         meta = Hash.new
         meta["version"] = ENV["CROWBAR_VERSION"]
         meta["created_at"] = Time.zone.now.to_s
-        meta["platform"] = NodeObject.admin_node.target_platform
+        meta["platform"] = Node.admin_node.target_platform
         meta["migration_level"] = ActiveRecord::Migrator.current_version
 
         workdir.join("meta.yml").open("w") do |file|

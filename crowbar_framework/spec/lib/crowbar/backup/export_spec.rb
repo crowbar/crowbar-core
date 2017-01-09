@@ -120,8 +120,8 @@ describe Crowbar::Backup::Export do
 
   context "metadata" do
     it "exports metadata" do
-      allow(NodeObject).to receive(:admin_node).and_return(
-        NodeObject.find_node_by_name("testing")
+      allow(Node).to receive(:admin_node).and_return(
+        Node.find_node_by_name("testing")
       )
       # we skip created_at here as it will always be different
       # so we just compare the classes

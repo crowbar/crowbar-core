@@ -192,7 +192,7 @@ module Api
           if platform_exception == :ceph
             ::Crowbar::Product.ses_platform
           else
-            NodeObject.admin_node.target_platform
+            ::Node.admin_node.target_platform
           end
         end
       end
@@ -211,7 +211,7 @@ module Api
 
         # Initiate the services shutdown for all nodes
         errors = []
-        upgrade_nodes = NodeObject.find("state:crowbar_upgrade")
+        upgrade_nodes = ::Node.find("state:crowbar_upgrade")
         cinder_node = nil
         upgrade_nodes.each do |node|
           if node.roles.include?("cinder-controller") &&
@@ -268,7 +268,7 @@ module Api
         substep = status.current_substep
 
         if remaining.nil?
-          remaining = NodeObject.find(
+          remaining = ::Node.find(
             "state:crowbar_upgrade AND NOT run_list_map:ceph_*"
           ).size
           ::Crowbar::UpgradeStatus.new.save_nodes(0, remaining)
@@ -358,15 +358,15 @@ module Api
       end
 
       def upgrade_controller_nodes
-        drbd_nodes = NodeObject.find("drbd_rsc:*")
+        drbd_nodes = ::Node.find("drbd_rsc:*")
         return upgrade_drbd_clusters unless drbd_nodes.empty?
 
-        founder = NodeObject.find(
+        founder = ::Node.find(
           "state:crowbar_upgrade AND pacemaker_founder:true"
         ).first
         cluster_env = founder[:pacemaker][:config][:environment]
 
-        non_founder = NodeObject.find(
+        non_founder = ::Node.find(
           "state:crowbar_upgrade AND pacemaker_founder:false AND " \
           "pacemaker_config_environment:#{cluster_env}"
         ).first
@@ -374,7 +374,7 @@ module Api
         upgrade_first_cluster_node founder, non_founder
 
         # upgrade the rest of nodes in the same cluster
-        NodeObject.find(
+        ::Node.find(
           "state:crowbar_upgrade AND pacemaker_config_environment:#{cluster_env}"
         ).each do |node|
           upgrade_next_cluster_node node.name, founder.name
@@ -382,7 +382,7 @@ module Api
       end
 
       def upgrade_drbd_clusters
-        NodeObject.find(
+        ::Node.find(
           "state:crowbar_upgrade AND pacemaker_founder:true"
         ).each do |founder|
           cluster_env = founder[:pacemaker][:config][:environment]
@@ -394,7 +394,7 @@ module Api
         save_upgrade_state("Upgrading controller nodes with DRBD-based storage " \
                            "in cluster \"#{cluster}\"")
 
-        drbd_nodes = NodeObject.find(
+        drbd_nodes = ::Node.find(
           "state:crowbar_upgrade AND "\
           "pacemaker_config_environment:#{cluster} AND " \
           "(roles:database-server OR roles:rabbitmq-server)"
@@ -433,7 +433,7 @@ module Api
 
       # Delete existing pacemaker resources, from other node in the cluster
       def delete_pacemaker_resources(node_name)
-        node = NodeObject.find_node_by_name node_name
+        node = ::Node.find_node_by_name node_name
         raise_upgrade_error(
           "Node #{node_name} was not found, cannot delete pacemaker resources."
         )
@@ -545,10 +545,10 @@ module Api
 
       def upgrade_compute_nodes(virt)
         save_upgrade_state("Upgrading compute nodes of #{virt} type")
-        compute_nodes = NodeObject.find("roles:nova-compute-#{virt}")
+        compute_nodes = ::Node.find("roles:nova-compute-#{virt}")
         return true if compute_nodes.empty?
 
-        controller = NodeObject.find("roles:nova-controller").first
+        controller = ::Node.find("roles:nova-controller").first
         if controller.nil?
           raise_upgrade_error("No nova controller node was found!")
           return false
@@ -681,7 +681,7 @@ module Api
       end
 
       def admin_architecture
-        NodeObject.admin_node.architecture
+        ::Node.admin_node.architecture
       end
 
       def prepare_nodes_for_crowbar_upgrade_background

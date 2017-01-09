@@ -55,7 +55,7 @@ class DnsService < ServiceObject
   def proposal_create_bootstrap(params)
     # nil means "default value", which is "true"
     if params.fetch("attributes", {}).fetch(@bc_name, {})["auto_assign_server"] != false
-      params["deployment"][@bc_name]["elements"]["dns-server"] = [NodeObject.admin_node.name]
+      params["deployment"][@bc_name]["elements"]["dns-server"] = [Node.admin_node.name]
     end
     super(params)
   end
@@ -63,7 +63,7 @@ class DnsService < ServiceObject
   def transition(inst, name, state)
     @logger.debug("DNS transition: entering: #{name} for #{state}")
 
-    node = NodeObject.find_node_by_name name
+    node = Node.find_node_by_name name
     if node.allocated?
       db = Proposal.where(barclamp: @bc_name, name: inst).first
       role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
@@ -84,7 +84,7 @@ class DnsService < ServiceObject
     return if all_nodes.empty?
 
     tnodes = role.override_attributes["dns"]["elements"]["dns-server"]
-    nodes = tnodes.map { |n| NodeObject.find_node_by_name n }
+    nodes = tnodes.map { |n| Node.find_node_by_name n }
 
     if nodes.length == 1
       # remember that this node will stick as master node, in case we add some

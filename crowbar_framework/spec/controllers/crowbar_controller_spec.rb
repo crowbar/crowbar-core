@@ -99,7 +99,7 @@ describe CrowbarController do
 
     it "returns node as a hash on success when passed a node (backward compatibility)" do
       allow_any_instance_of(CrowbarService).to receive(:transition).
-        and_return([200, NodeObject.find_node_by_name("testing").to_hash])
+        and_return([200, Node.find_node_by_name("testing").to_hash])
       post :transition, barclamp: "crowbar", id: "default", state: "discovering", name: "testing"
       expect(response).to be_success
       json = JSON.parse(response.body)

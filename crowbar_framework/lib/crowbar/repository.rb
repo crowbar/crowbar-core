@@ -169,7 +169,7 @@ module Crowbar
       end
 
       def admin_ip
-        @admin_ip ||= NodeObject.admin_node.ip
+        @admin_ip ||= Node.admin_node.ip
       end
 
       def web_port

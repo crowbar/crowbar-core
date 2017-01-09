@@ -250,7 +250,7 @@ def aliases
       names   = body.nodes.map(&:name)
       aliases = body.nodes.map { |node|
         # FIXME: This code is a duplicate of the fallback value in
-        # NodeObject#alias.
+        # Node#alias.
         hostname = node.name.split(".")[0]
         node.alias == hostname ? "-" : node.alias
       }

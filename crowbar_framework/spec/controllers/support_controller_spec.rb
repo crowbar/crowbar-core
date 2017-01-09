@@ -43,7 +43,7 @@ describe SupportController do
 
   describe "GET export_chef" do
     it "displays flash message on error" do
-      allow(NodeObject).to receive(:all) { raise StandardError }
+      allow(Node).to receive(:all) { raise StandardError }
       get :export_chef
       expect(response).to redirect_to(utils_url)
       expect(flash[:alert]).to_not be_empty

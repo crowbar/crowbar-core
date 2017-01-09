@@ -17,7 +17,7 @@
 
 require "spec_helper"
 
-describe NodeObject do
+describe Node do
   describe "finders" do
     describe "interface" do
       [
@@ -31,22 +31,22 @@ describe NodeObject do
         :find_node_by_name_or_alias
       ].each do |method|
         it "responds to #{method}" do
-          expect(NodeObject).to respond_to(method)
+          expect(Node).to respond_to(method)
         end
       end
     end
 
     describe "all" do
       it "returns all nodes" do
-        nodes = NodeObject.all
+        nodes = Node.all
         expect(nodes).to_not be_empty
-        expect(nodes).to all(be_a NodeObject)
+        expect(nodes).to all(be_a Node)
       end
     end
 
     describe "find_nodes_by_name" do
       it "returns nodes with a given name only" do
-        nodes = NodeObject.find_nodes_by_name("testing.crowbar.com")
+        nodes = Node.find_nodes_by_name("testing.crowbar.com")
         expect(nodes).to_not be_empty
         expect(nodes.map(&:name)).to all(include("testing"))
       end
@@ -54,7 +54,7 @@ describe NodeObject do
 
     describe "find_node_by_name" do
       it "returns nodes matching name" do
-        node = NodeObject.find_node_by_name("testing")
+        node = Node.find_node_by_name("testing")
         expect(node).to_not be_nil
         expect(node.name).to include("testing")
       end
@@ -62,7 +62,7 @@ describe NodeObject do
 
     describe "find_node_by_alias" do
       it "returns nodes matching alias" do
-        node = NodeObject.find_node_by_alias("testing")
+        node = Node.find_node_by_alias("testing")
         expect(node).to_not be_nil
         expect(node.alias).to be == "testing"
       end
@@ -71,7 +71,7 @@ describe NodeObject do
 
   describe "license_key" do
     describe "assignment" do
-      let(:node) { NodeObject.find_node_by_name("testing") }
+      let(:node) { Node.find_node_by_name("testing") }
       let(:key) { "a key" }
 
       it "sets the key if the platform requires one" do
@@ -89,12 +89,12 @@ describe NodeObject do
   end
 
   describe "alias" do
-    let(:testing_node) { NodeObject.find_node_by_name("testing") }
-    let(:admin_node) { NodeObject.find_node_by_name("admin") }
+    let(:testing_node) { Node.find_node_by_name("testing") }
+    let(:admin_node) { Node.find_node_by_name("admin") }
 
     it "doesnt allow duplicates" do
       # Stub out chef call
-      allow_any_instance_of(NodeObject).to receive(:update_alias).and_return(true)
+      allow_any_instance_of(Node).to receive(:update_alias).and_return(true)
 
       expect {
         testing_node.alias = "admin"
