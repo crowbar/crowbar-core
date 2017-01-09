@@ -539,6 +539,7 @@ class ServiceObject
     clean_proposal(prop.raw_data)
     validate_proposal(prop.raw_data)
     validate_proposal_elements(prop.elements)
+    prop.latest_applied = false
     prop.save
     validate_proposal_after_save(prop.raw_data) if options[:validate_after_save]
   end
@@ -559,7 +560,7 @@ class ServiceObject
         # Put mark on the wall
         prop["deployment"][@bc_name]["crowbar-committing"] = true
         save_proposal!(prop, validate_after_save: validate_after_save)
-        response = active_update prop.raw_data, inst, in_queue
+        response = active_update(prop.raw_data, inst, in_queue)
       rescue Chef::Exceptions::ValidationFailed => e
         @logger.error ([e.message] + e.backtrace).join("\n")
         response = [400, "Failed to validate proposal: #{e.message}"]
@@ -919,6 +920,10 @@ class ServiceObject
   def apply_role(role, inst, in_queue)
     @logger.debug "apply_role(#{role.name}, #{inst}, #{in_queue})"
 
+    # Variables used in the global ensure
+    apply_locks = []
+    applying_nodes = []
+
     # Part I: Looking up data & checks
     #
     # we look up the role in the database (if there is one), the new one is
@@ -949,7 +954,13 @@ class ServiceObject
     #
     deps = proposal_dependencies(role)
     delay, pre_cached_nodes = queue_proposal(inst, element_order, new_elements, deps)
-    return [202, delay] unless delay.empty?
+    unless delay.empty?
+      # force not processing the queue further
+      in_queue = true
+      # FIXME: this breaks the convention that we return a string; but really,
+      # we should return a hash everywhere, to avoid this...
+      return [202, delay]
+    end
 
     @logger.debug "delay empty - running proposal"
 
@@ -961,7 +972,6 @@ class ServiceObject
         @logger.fatal("apply_role: Failed to expand items #{failures.inspect} for role \"#{role_name}\"")
         message = "Failed to apply the proposal: cannot expand list of nodes for role \"#{role_name}\", following items do not exist: #{failures.join(", ")}"
         update_proposal_status(inst, "failed", message)
-        process_queue unless in_queue
         return [405, message]
       end
     end
@@ -1004,6 +1014,9 @@ class ServiceObject
     role_map = new_deployment["element_states"]
     role_map = {} unless role_map
 
+    # List of all *new* nodes which will be changed (sans deleted ones)
+    all_nodes = new_elements.values.flatten
+
     # deployment["element_order"] tells us which order the various
     # roles should be applied, and deployment["elements"] tells us
     # which nodes each role should be applied to.  We need to "join
@@ -1021,16 +1034,9 @@ class ServiceObject
     #   }
     pending_node_actions = {}
 
-    # List of all *new* nodes which will be changed (sans deleted ones)
-    all_nodes = []
-
     # We'll build an Array where each item represents a batch of work,
     # and the batches must be performed sequentially in this order.
-    # This will mirror the ordering specified by element_order below,
-    # but the sub-arrays of run_order will be Arrays of names of the
-    # involved nodes, whereas the sub-arrays of element_order are Arrays
-    # of names of Chef roles.
-    run_order = []
+    batches = []
 
     # get proposal to remember potential removal of a role
     proposal = Proposal.where(barclamp: @bc_name, name: inst).first
@@ -1041,7 +1047,7 @@ class ServiceObject
     element_order.each do |roles|
       # roles is an Array of names of Chef roles which can all be
       # applied in parallel.
-      @logger.debug "elems #{roles.inspect}"
+      @logger.debug "Preparing batch with following roles: #{roles.inspect}"
 
       # A list of nodes changed when applying roles from this batch
       nodes_in_batch = []
@@ -1054,9 +1060,9 @@ class ServiceObject
         old_nodes = old_elements[role_name] || []
         new_nodes = new_elements[role_name] || []
 
-        @logger.debug "role_name #{role_name.inspect}"
-        @logger.debug "old_nodes #{old_nodes.inspect}"
-        @logger.debug "new_nodes #{new_nodes.inspect}"
+        @logger.debug "Preparing role #{role_name} for batch:"
+        @logger.debug "  Nodes in old applied proposal for role: #{old_nodes.inspect}"
+        @logger.debug "  Nodes in new applied proposal for role: #{new_nodes.inspect}"
 
         remove_role_name = "#{role_name}_remove"
 
@@ -1132,8 +1138,6 @@ class ServiceObject
 
             pre_cached_nodes[node_name] = node
 
-            all_nodes << node_name unless all_nodes.include?(node_name)
-
             # A new node that we did not know before
             unless old_nodes.include?(node_name)
               @logger.debug "add node #{node_name}"
@@ -1145,15 +1149,14 @@ class ServiceObject
         end
       end # roles.each
 
-      @logger.debug "nodes_in_batch #{nodes_in_batch.inspect}"
-      run_order << nodes_in_batch unless nodes_in_batch.empty?
-      @logger.debug "run_order #{run_order.inspect}"
+      batches << nodes_in_batch unless nodes_in_batch.empty?
     end
+    @logger.debug "batches: #{batches.inspect}"
 
     # save databag with the role removal intention
     proposal.save if save_proposal
 
-    applying_nodes = run_order.flatten.uniq.sort
+    applying_nodes = batches.flatten.uniq.sort
 
     # Mark nodes as applying; beware that all_nodes do not contain nodes that
     # are actually removed.
@@ -1190,8 +1193,6 @@ class ServiceObject
     rescue Crowbar::Error::LockingFailure => e
       message = "Failed to apply the proposal: #{e.message}"
       update_proposal_status(inst, "failed", message)
-      restore_to_ready(applying_nodes)
-      process_queue unless in_queue
       return [409, message] # 409 is 'Conflict'
     end
 
@@ -1205,7 +1206,7 @@ class ServiceObject
 
     # Part III: Update run lists of nodes to reflect new deployment. I.e. write
     # through the deployment schedule in pending node actions into run lists.
-    @logger.debug "Clean the run_lists for #{pending_node_actions.inspect}"
+    @logger.debug "Update the run_lists for #{pending_node_actions.inspect}"
 
     admin_nodes = []
 
@@ -1222,9 +1223,6 @@ class ServiceObject
 
       rlist = lists[:remove]
       alist = lists[:add]
-
-      @logger.debug "rlist #{rlist.pretty_inspect}"
-      @logger.debug "alist #{alist.pretty_inspect}"
 
       # Remove the roles being lost
       rlist.each do |item|
@@ -1264,7 +1262,6 @@ class ServiceObject
         end
       end
 
-      @logger.debug("AR: Saving node #{node.name}") if save_it
       node.save if save_it
     end
 
@@ -1282,35 +1279,30 @@ class ServiceObject
       @logger.fatal("apply_role: Exception #{e.message} #{e.backtrace.join("\n")}")
       message = "Failed to apply the proposal: exception before calling chef (#{e.message})"
       update_proposal_status(inst, "failed", message)
-      restore_to_ready(applying_nodes)
-      process_queue unless in_queue
       return [405, message]
     end
+
+    ran_admin = false
 
     # Invalidate cache as apply_role_pre_chef_call can save nodes
     pre_cached_nodes = {}
 
     # Each batch is a list of nodes that can be done in parallel.
-    ran_admin = false
-    run_order.each do |batch|
-      next if batch.empty?
-      @logger.debug "batch #{batch.inspect}"
+    batches.each do |nodes|
+      next if nodes.empty?
+      @logger.debug "Applying batch: #{nodes.inspect}"
 
       non_admin_nodes = []
       admin_list = []
-      batch.each do |node_name|
+      nodes.each do |node_name|
         # Run admin nodes a different way.
         if admin_nodes.include?(node_name)
-          @logger.debug "#{node_name} is in admin_nodes #{admin_nodes.inspect}"
           admin_list << node_name
           ran_admin = true
           next
         end
         non_admin_nodes << node_name
       end
-
-      @logger.debug("AR: Calling chef-client for #{role.name} on non-admin nodes #{non_admin_nodes.join(" ")}")
-      @logger.debug("AR: Calling chef-client for #{role.name} on admin nodes #{admin_list.join(" ")}")
 
       #
       # XXX: We used to do this twice - do we really need twice???
@@ -1320,6 +1312,9 @@ class ServiceObject
       #
       pids = {}
       unless non_admin_nodes.empty?
+        @logger.debug(
+          "AR: Calling chef-client for #{role.name} on non-admin nodes #{non_admin_nodes.join(" ")}"
+        )
         non_admin_nodes.each do |node|
           pre_cached_nodes[node] ||= NodeObject.find_node_by_name(node)
           nobj = pre_cached_nodes[node]
@@ -1351,14 +1346,15 @@ class ServiceObject
               message = message + "#{pids[baddie[0]]} \n"+ get_log_lines("#{pids[baddie[0]]}")
             end
             update_proposal_status(inst, "failed", message)
-            restore_to_ready(applying_nodes)
-            process_queue unless in_queue
             return [405, message]
           end
         end
       end
 
       unless admin_list.empty?
+        @logger.debug(
+          "AR: Calling chef-client for #{role.name} on admin nodes #{admin_list.join(" ")}"
+        )
         admin_list.each do |node|
           filename = "#{ENV['CROWBAR_LOG_DIR']}/chef-client/#{node}.log"
           pid = run_remote_chef_client(node, Rails.root.join("..", "bin", "single_chef_client.sh").expand_path.to_s, filename)
@@ -1386,8 +1382,6 @@ class ServiceObject
               message = message + "#{pids[baddie[0]]} \n "+ get_log_lines("#{pids[baddie[0]]}")
             end
             update_proposal_status(inst, "failed", message)
-            restore_to_ready(applying_nodes)
-            process_queue unless in_queue
             return [405, message]
           end
         end
@@ -1404,8 +1398,6 @@ class ServiceObject
       @logger.fatal("apply_role: Exception #{e.message} #{e.backtrace.join("\n")}")
       message = "Failed to apply the proposal: exception after calling chef (#{e.message})"
       update_proposal_status(inst, "failed", message)
-      restore_to_ready(applying_nodes)
-      process_queue unless in_queue
       return [405, message]
     end
 
@@ -1440,11 +1432,16 @@ class ServiceObject
     proposal.save unless roles_to_remove.empty?
 
     update_proposal_status(inst, "success", "")
-    restore_to_ready(applying_nodes)
-    process_queue unless in_queue
     [200, {}]
+  rescue StandardError => e
+    @logger.fatal("apply_role: Uncaught exception #{e.message} #{e.backtrace.join("\n")}")
+    message = "Failed to apply the proposal: uncaught exception (#{e.message})"
+    update_proposal_status(inst, "failed", message)
+    [405, message]
   ensure
-    apply_locks.each(&:release) if apply_locks
+    apply_locks.each(&:release) if apply_locks.any?
+    restore_to_ready(applying_nodes) if applying_nodes.any?
+    process_queue unless in_queue
   end
 
   def apply_role_pre_chef_call(old_role, role, all_nodes)
