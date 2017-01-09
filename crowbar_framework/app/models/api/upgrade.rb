@@ -364,12 +364,12 @@ module Api
       # Method for upgrading first node of the cluster
       # other_node_name argument is the name of any other node in the same cluster
       def upgrade_first_cluster_node(node, other_node)
-        node_api = Api::Node.new node.name
         return true if node.upgraded?
+        node_api = Api::Node.new node.name
         other_node_api = Api::Node.new other_node.name
         node_api.save_node_state("controller")
         save_upgrade_state("Starting the upgrade of node #{node.name}")
-        return false unless evacuate_network_node(node, node["hostname"])
+        evacuate_network_node(node, node["hostname"])
 
         # upgrade the first node
         node_api.upgrade
@@ -391,15 +391,17 @@ module Api
       end
 
       def upgrade_next_cluster_node(node, founder)
-        evacuate_network_node(founder, node["hostname"], true)
-        node_api = Api::Node.new node.name
         return true if node.upgraded?
+        node_api = Api::Node.new node.name
         node_api.save_node_state("controller")
-        save_upgrade_state("Starting the upgrade of node #{node.name}")
 
-        node_api.upgrade
-        node_api.post_upgrade
-        node_api.join_and_chef
+        unless node.ready?
+          evacuate_network_node(founder, node["hostname"], true)
+          save_upgrade_state("Starting the upgrade of node #{node.name}")
+          node_api.upgrade
+          node_api.post_upgrade
+          node_api.join_and_chef
+        end
         # Remove pre-upgrade attribute _after_ chef-client run because pacemaker is already running
         # and we want the configuration to be updated first
         # (disabling attribute causes starting the services on the node)
