@@ -340,6 +340,8 @@ describe Api::Upgrade do
 
   context "upgrading the nodes" do
     it "successfully upgrades nodes with DRBD backend" do
+      drbd_master = NodeObject.find_node_by_name("testing.crowbar.com")
+      drbd_slave = NodeObject.find_node_by_name("testing.crowbar.com")
       allow(NodeObject).to(
         receive(:find).
         with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
@@ -357,15 +359,28 @@ describe Api::Upgrade do
       )
       allow(NodeObject).to(
         receive(:find).
-        with("state:crowbar_upgrade AND pacemaker_config_environment:data "\
-        "AND (roles:database-server OR roles:rabbitmq-server)").
-        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+        with("state:crowbar_upgrade AND "\
+             "pacemaker_config_environment:data AND " \
+             "(roles:database-server OR roles:rabbitmq-server)").
+        and_return([drbd_master, drbd_slave])
       )
       allow_any_instance_of(Api::Node).to receive(:upgraded?).and_return(false)
-      allow_any_instance_of(NodeObject).to receive(:run_ssh_cmd).and_return(
+
+      allow(drbd_slave).to receive(:run_ssh_cmd).and_return(
         stdout: "",
         stderr: "",
         exit_code: 1
+      )
+      allow(drbd_master).to receive(:run_ssh_cmd).and_return(
+        stdout: "",
+        stderr: "",
+        exit_code: 0
+      )
+      allow_any_instance_of(NodeObject).to(
+        receive(:wait_for_script_to_finish).and_return(true)
+      )
+      allow_any_instance_of(NodeObject).to(
+        receive(:delete_script_exit_files).and_return(true)
       )
       allow_any_instance_of(Api::Node).to receive(:upgrade).and_return(true)
       stub_const("Api::Pacemaker", pacemaker)
@@ -376,13 +391,8 @@ describe Api::Upgrade do
         and_return(true)
       allow(Api::Upgrade).to receive(:delete_pacemaker_resources).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:post_upgrade).and_return(true)
-      allow_any_instance_of(Api::Node).to receive(:router_migration).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:join_and_chef).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:save_node_state).and_return(true)
-      allow(NodeObject).to(
-        receive(:find).
-        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
-      )
       allow(Api::Upgrade).to receive(:upgrade_all_compute_nodes).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step

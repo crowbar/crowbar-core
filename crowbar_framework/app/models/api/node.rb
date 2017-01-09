@@ -56,14 +56,6 @@ module Api
       false
     end
 
-    def router_migration
-      if execute_and_wait_for_finish("/usr/sbin/crowbar-router-migration.sh", 600)
-        Rails.logger.info("Router migration was successful.")
-        return true
-      end
-      false
-    end
-
     # Execute post upgrade actions: prepare drbd and start pacemaker
     def post_upgrade
       if execute_and_wait_for_finish("/usr/sbin/crowbar-post-upgrade.sh", 600)

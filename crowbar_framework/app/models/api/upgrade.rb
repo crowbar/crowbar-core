@@ -316,45 +316,47 @@ module Api
 
       # Method for upgrading first node of the cluster
       # other_node_name argument is the name of any other node in the same cluster
-      def upgrade_first_cluster_node(node_name, other_node_name)
-        node_api = Api::Node.new node_name
+      def upgrade_first_cluster_node(node, other_node)
+        node_api = Api::Node.new node.name
         return true if node_api.upgraded?
-        other_node_api = Api::Node.new other_node_name
+        other_node_api = Api::Node.new other_node.name
         node_api.save_node_state("controller")
-        save_upgrade_state("Starting the upgrade of node #{node_name}")
+        save_upgrade_state("Starting the upgrade of node #{node.name}")
+        return false unless evacuate_network_node(node, node["hostname"])
+
         # upgrade the first node
         return false unless node_api.upgrade
 
         # Explicitly mark the first node as cluster founder
         # and in case of DRBD setup, adapt DRBD config accordingly.
-        unless Api::Pacemaker.set_node_as_founder node_name
-          save_error_state("Changing the cluster founder to #{node_name} has failed")
+        unless Api::Pacemaker.set_node_as_founder node.name
+          save_error_state("Changing the cluster founder to #{node.name} has failed")
           return false
         end
         # remove pre-upgrade attribute, so the services can start
-        return false unless other_node_api.disable_pre_upgrade_attribute_for node_name
+        return false unless other_node_api.disable_pre_upgrade_attribute_for node.name
         # delete old pacemaker resources (from the node where old pacemaker is running)
-        return false unless delete_pacemaker_resources other_node_name
+        return false unless delete_pacemaker_resources other_node.name
         # start crowbar-join at the first node
         return false unless node_api.post_upgrade
         return false unless node_api.join_and_chef
-        # migrate routers from nodes being upgraded
-        return false unless node_api.router_migration
         node_api.save_node_state("controller", "upgraded")
       end
 
-      def upgrade_next_cluster_node(node_name)
-        node_api = Api::Node.new node_name
+      def upgrade_next_cluster_node(node, founder)
+        evacuate_network_node(founder, node["hostname"], true)
+        node_api = Api::Node.new node.name
         return true if node_api.upgraded?
         node_api.save_node_state("controller")
-        save_upgrade_state("Starting the upgrade of node #{node_name}")
+        save_upgrade_state("Starting the upgrade of node #{node.name}")
+
         return false unless node_api.upgrade
         return false unless node_api.post_upgrade
         return false unless node_api.join_and_chef
         # Remove pre-upgrade attribute _after_ chef-client run because pacemaker is already running
         # and we want the configuration to be updated first
         # (disabling attribute causes starting the services on the node)
-        return false unless node_api.disable_pre_upgrade_attribute_for node_name
+        return false unless node_api.disable_pre_upgrade_attribute_for node.name
         node_api.save_node_state("controller", "upgraded")
       end
 
@@ -372,13 +374,13 @@ module Api
           "pacemaker_config_environment:#{cluster_env}"
         ).first
 
-        return false unless upgrade_first_cluster_node founder.name, non_founder.name
+        return false unless upgrade_first_cluster_node founder, non_founder
 
         # upgrade the rest of nodes in the same cluster
         NodeObject.find(
           "state:crowbar_upgrade AND pacemaker_config_environment:#{cluster_env}"
         ).each do |node|
-          return false unless upgrade_next_cluster_node node.name
+          return false unless upgrade_next_cluster_node node.name, founder.name
         end
         true
       end
@@ -393,7 +395,8 @@ module Api
       end
 
       def upgrade_drbd_cluster(cluster)
-        save_upgrade_state("Upgrading controller nodes with DRBD-based storage")
+        save_upgrade_state("Upgrading controller nodes with DRBD-based storage " \
+                           "in cluster \"#{cluster}\"")
 
         drbd_nodes = NodeObject.find(
           "state:crowbar_upgrade AND "\
@@ -408,24 +411,28 @@ module Api
         # First node to upgrade is DRBD slave. There might be more resources using DRBD backend
         # but the Master/Slave distribution might be different among them.
         # Therefore, we decide only by looking at the first DRBD resource we find in the cluster.
-        drbd_slave = ""
-        drbd_master = ""
+        drbd_slave = nil
+        drbd_master = nil
 
         drbd_nodes.each do |drbd_node|
           cmd = "LANG=C crm resource status ms-drbd-{postgresql,rabbitmq}\
           | sort | head -n 2 | grep \\$(hostname) | grep -q Master"
           out = drbd_node.run_ssh_cmd(cmd)
           if out[:exit_code].zero?
-            drbd_master = drbd_node.name
+            drbd_master = drbd_node
           else
-            drbd_slave = drbd_node.name
+            drbd_slave = drbd_node
           end
         end
-        return false if drbd_slave.empty?
+
+        if drbd_slave.nil? || drbd_master.nil?
+          save_error_state("Unable to detect drb master and/or slave nodes")
+          return false
+        end
 
         return false unless upgrade_first_cluster_node drbd_slave, drbd_master
 
-        return false unless upgrade_next_cluster_node drbd_master
+        return false unless upgrade_next_cluster_node drbd_master, drbd_slave
 
         save_upgrade_state("Nodes in DRBD-based cluster successfully upgraded")
         true
@@ -448,6 +455,28 @@ module Api
           )
           return false
         end
+      end
+
+      # Evacuate all routers away from the specified network node to other
+      # available network nodes. The evacuation procedure is started on the
+      # specified controller node
+      def evacuate_network_node(controller, network_node, delete_namespaces = false)
+        args = [network_node]
+        args << "delete-ns" if delete_namespaces
+        controller.wait_for_script_to_finish(
+          "/usr/sbin/crowbar-router-migration.sh", 600, args
+        )
+        save_upgrade_state("Migrating routers away from #{network_node} was successful.")
+
+        # Cleanup up the ok/failed state files, as we likely need to
+        # run the script again on this node (to evacuate other nodes)
+        controller.delete_script_exit_files("/usr/sbin/crowbar-router-migration.sh")
+      rescue StandardError => e
+        save_error_state(
+          e.message +
+          " Check /var/log/crowbar/node-upgrade.log at #{controller.name} for details."
+        )
+        return false
       end
 
       # Live migrate all instances of the specified

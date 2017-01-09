@@ -17,6 +17,7 @@
         "environment": "data"
       }
     },
+    "hostname": "testing",
     "state": "discovered"
   },
   "name": "testing.crowbar.com",
