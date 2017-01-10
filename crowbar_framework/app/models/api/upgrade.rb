@@ -453,9 +453,11 @@ module Api
       # Delete existing pacemaker resources, from other node in the cluster
       def delete_pacemaker_resources(node_name)
         node = ::Node.find_node_by_name node_name
-        raise_upgrade_error(
-          "Node #{node_name} was not found, cannot delete pacemaker resources."
-        )
+        if node.nil?
+          raise_upgrade_error(
+            "Node #{node_name} was not found, cannot delete pacemaker resources."
+          )
+        end
 
         begin
           node.wait_for_script_to_finish(
