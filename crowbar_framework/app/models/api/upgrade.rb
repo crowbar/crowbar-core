@@ -370,7 +370,7 @@ module Api
         # Explicitly mark the first node as cluster founder
         # and in case of DRBD setup, adapt DRBD config accordingly.
         unless Api::Pacemaker.set_node_as_founder node.name
-          raise_error_state("Changing the cluster founder to #{node.name} has failed")
+          raise_upgrade_error("Changing the cluster founder to #{node.name} has failed")
           return false
         end
         # remove pre-upgrade attribute, so the services can start
@@ -441,7 +441,7 @@ module Api
         end
 
         if drbd_slave.nil? || drbd_master.nil?
-          raise_error_state("Unable to detect drb master and/or slave nodes")
+          raise_upgrade_error("Unable to detect drb master and/or slave nodes")
         end
 
         upgrade_first_cluster_node drbd_slave, drbd_master
