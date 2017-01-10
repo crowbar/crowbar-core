@@ -149,8 +149,8 @@ module Api
         remaining = progress[:remaining_nodes] - 1
         upgraded = progress[:upgraded_nodes] + 1
         ::Crowbar::UpgradeStatus.new.save_nodes(upgraded, remaining)
-        @node.run_ssh_cmd("touch /var/lib/crowbar/upgrade/node-upgraded-ok")
       end
+      @node.upgrade_state = state
     end
 
     def raise_upgrade_error(message = "")
