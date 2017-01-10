@@ -155,7 +155,7 @@ module Api
 
     def raise_upgrade_error(message = "")
       Rails.logger.error(message)
-      raise message
+      raise ::Crowbar::Error::UpgradeError.new(message)
     end
 
     class << self

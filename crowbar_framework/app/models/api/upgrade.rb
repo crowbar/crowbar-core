@@ -317,11 +317,19 @@ module Api
           upgrade_all_compute_nodes
         end
         status.end_step
-      rescue StandardError => e
+      rescue ::Crowbar::Error::UpgradeError => e
         ::Crowbar::UpgradeStatus.new.end_step(
           false,
           nodes_upgrade: e.message
         )
+      rescue StandardError => e
+        # end the step even for non-upgrade error, so we are not stuck with 'running'
+        ::Crowbar::UpgradeStatus.new.end_step(
+          false,
+          nodes_upgrade: "Crowbar has failed. " \
+            "Check /var/log/crowbar/production.log for details."
+        )
+        raise e
       end
       handle_asynchronously :nodes
 
@@ -581,7 +589,7 @@ module Api
 
       def raise_upgrade_error(message = "")
         Rails.logger.error(message)
-        raise message
+        raise ::Crowbar::Error::UpgradeError.new(message)
       end
 
       # Take a list of nodes and execute given script at each node in the background
