@@ -498,7 +498,7 @@ module Api
       #
       def upgrade_all_compute_nodes
         ["kvm", "xen"].each do |virt|
-          return false unless upgrade_compute_nodes virt
+          upgrade_compute_nodes virt
         end
         true
       end
@@ -506,12 +506,17 @@ module Api
       def upgrade_compute_nodes(virt)
         save_upgrade_state("Upgrading compute nodes of #{virt} type")
         compute_nodes = ::Node.find("roles:nova-compute-#{virt}")
-        return true if compute_nodes.empty?
+        if compute_nodes.empty?
+          save_upgrade_state("There are no compute nodes of #{virt} type.")
+          return
+        end
 
         controller = ::Node.find("roles:nova-controller").first
         if controller.nil?
-          raise_upgrade_error("No nova controller node was found!")
-          return false
+          raise_upgrade_error(
+            "No node with 'nova-controller' role node was found. " \
+            "Cannot proceed with upgrade of compute nodes."
+          )
         end
 
         # First batch of actions can be executed in parallel for all compute nodes
@@ -536,26 +541,29 @@ module Api
 
         # Next part must be done sequentially, only one compute node can be upgraded at a time
         compute_nodes.each do |n|
+          next if n.upgraded?
           node_api = Api::Node.new n.name
-          live_evacuate_compute_node(controller, n.name)
-          node_api.os_upgrade
-          node_api.reboot_and_wait
-          node_api.post_upgrade
-          node_api.join_and_chef
+          node_api.save_node_state("compute")
+          unless n.ready?
+            live_evacuate_compute_node(controller, n.name)
+            node_api.os_upgrade
+            node_api.reboot_and_wait
+            node_api.post_upgrade
+            node_api.join_and_chef
+          end
 
           out = controller.run_ssh_cmd(
             "source /root/.openrc; nova service-enable #{n.name} nova-compute"
           )
           unless out[:exit_code].zero?
             raise_upgrade_error(
-              "Enabling nova-compute service for #{n.name} has failed!" \
+              "Enabling nova-compute service for #{n.name} has failed. " \
               "Check nova log files at #{controller.name} and #{n.name}."
             )
           end
-          save_upgrade_state("Node #{n.name} successfully upgraded.")
+          node_api.save_node_state("compute", "upgraded")
         end
         # FIXME: finalize compute nodes (move upgrade_step to done etc.)
-        true
       end
 
       # Live migrate all instances of the specified
