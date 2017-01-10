@@ -17,20 +17,7 @@
 require "spec_helper"
 
 describe Crowbar::UpgradeStatus do
-  before do
-    @state_file = Tempfile.open("upgrade_status_spec.state.yml", &:path)
-    File.unlink @state_file
-  end
-
-  subject { Crowbar::UpgradeStatus.new(Rails.logger, @state_file) }
-
-  def new_status
-    subject.class.new(Rails.logger, @state_file)
-  end
-
-  after do
-    File.unlink @state_file if File.exist? @state_file
-  end
+  let(:new_status) { subject.class.new }
 
   let(:current_node) do
     {
