@@ -331,15 +331,15 @@ module Api
       # controller nodes upgrade
       #
       def upgrade_controller_nodes
-        drbd_nodes = Node.find("drbd_rsc:*")
+        drbd_nodes = ::Node.find("drbd_rsc:*")
         return upgrade_drbd_clusters unless drbd_nodes.empty?
 
-        founder = Node.find(
+        founder = ::Node.find(
           "state:crowbar_upgrade AND pacemaker_founder:true"
         ).first
         cluster_env = founder[:pacemaker][:config][:environment]
 
-        non_founder = Node.find(
+        non_founder = ::Node.find(
           "state:crowbar_upgrade AND pacemaker_founder:false AND " \
           "pacemaker_config_environment:#{cluster_env}"
         ).first
@@ -347,7 +347,7 @@ module Api
         upgrade_first_cluster_node founder, non_founder
 
         # upgrade the rest of nodes in the same cluster
-        Node.find(
+        ::Node.find(
           "state:crowbar_upgrade AND pacemaker_config_environment:#{cluster_env}"
         ).each do |node|
           upgrade_next_cluster_node node.name, founder.name
@@ -505,10 +505,10 @@ module Api
 
       def upgrade_compute_nodes(virt)
         save_upgrade_state("Upgrading compute nodes of #{virt} type")
-        compute_nodes = Node.find("roles:nova-compute-#{virt}")
+        compute_nodes = ::Node.find("roles:nova-compute-#{virt}")
         return true if compute_nodes.empty?
 
-        controller = Node.find("roles:nova-controller").first
+        controller = ::Node.find("roles:nova-controller").first
         if controller.nil?
           raise_upgrade_error("No nova controller node was found!")
           return false
