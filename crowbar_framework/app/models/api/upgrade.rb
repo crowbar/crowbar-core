@@ -230,6 +230,7 @@ module Api
           msg = e.message
           Rails.logger.error msg
           ::Crowbar::UpgradeStatus.new.end_step(false, nodes_services: msg)
+          return
         end
 
         # Initiate the services shutdown for all nodes
