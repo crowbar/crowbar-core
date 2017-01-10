@@ -176,6 +176,9 @@ class Backup < ActiveRecord::Base
     self.version = ENV["CROWBAR_VERSION"]
     self.size = path.size
     self.migration_level = ActiveRecord::Migrator.current_version
+  rescue StandardError => e
+    errors.add(:base, I18n.t("backups.index.create_backup_failed", msg: e.message))
+    false
   end
 
   def save_archive

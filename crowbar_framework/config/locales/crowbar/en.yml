@@ -745,6 +745,7 @@ en:
       multiple_restore: 'Restore process is already running'
       version_conflict: 'Restoring from different Crowbar version is not allowed'
       restore_successful: 'Successfully restored Crowbar'
+      create_backup_failed: 'Creating backup failed: %{msg}'
     validation:
       hostnames_not_identical: 'Hostnames not identical'
       version_too_low: 'Backup version too low'
