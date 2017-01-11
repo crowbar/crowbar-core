@@ -423,7 +423,28 @@ describe Api::Upgrade do
       expect(subject.class.nodes).to be_a(Delayed::Backend::ActiveRecord::Job)
     end
 
+    it "fails with some non-upgrade error" do
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:nodes_upgrade).and_return(true)
+      allow(Node).to(receive(:find).and_raise("Some Error"))
+      allow_any_instance_of(Crowbar::UpgradeStatus).to(
+        receive(:end_step).
+        with(
+          false, nodes_upgrade:
+          "Crowbar has failed. Check /var/log/crowbar/production.log for details."
+        ).
+        and_return(false)
+      )
+
+      expect { subject.class.nodes }.to raise_error(RuntimeError)
+    end
+
     it "fails to upgrade compute nodes when there is no nova-controller" do
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:nodes_upgrade).and_return(true)
+
       allow(Node).to(
         receive(:find).
         with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
@@ -437,10 +458,11 @@ describe Api::Upgrade do
       allow(Node).to(
         receive(:find).with("roles:nova-controller").and_return([])
       )
-      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
-        :start_step
-      ).with(:nodes_upgrade).and_return(true)
-      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to(
+        receive(:end_step).
+        with(false, nodes_upgrade: "No nova controller node was found!").
+        and_return(false)
+      )
 
       expect(subject.class.nodes).to be_a(Delayed::Backend::ActiveRecord::Job)
     end
