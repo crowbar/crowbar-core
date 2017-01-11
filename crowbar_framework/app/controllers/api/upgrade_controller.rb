@@ -103,7 +103,8 @@ class Api::UpgradeController < ApiController
       }, status: :unprocessable_entity
     end
   rescue Crowbar::Error::StartStepRunningError,
-         Crowbar::Error::StartStepOrderError => e
+         Crowbar::Error::StartStepOrderError,
+         Crowbar::Error::SaveUpgradeStatusError => e
     render json: {
       errors: {
         upgrade_prepare: {
@@ -124,7 +125,8 @@ class Api::UpgradeController < ApiController
     head :ok
   rescue Crowbar::Error::StartStepRunningError,
          Crowbar::Error::StartStepOrderError,
-         Crowbar::Error::EndStepRunningError => e
+         Crowbar::Error::EndStepRunningError,
+         Crowbar::Error::SaveUpgradeStatusError => e
     render json: {
       errors: {
         nodes_services: {
@@ -146,7 +148,8 @@ class Api::UpgradeController < ApiController
     head :ok
   rescue Crowbar::Error::StartStepRunningError,
          Crowbar::Error::StartStepOrderError,
-         Crowbar::Error::EndStepRunningError => e
+         Crowbar::Error::EndStepRunningError,
+         Crowbar::Error::SaveUpgradeStatusError => e
     render json: {
       errors: {
         nodes_upgrade: {
@@ -284,7 +287,8 @@ class Api::UpgradeController < ApiController
     render json: Api::Upgrade.noderepocheck
   rescue Crowbar::Error::StartStepRunningError,
          Crowbar::Error::StartStepOrderError,
-         Crowbar::Error::EndStepRunningError => e
+         Crowbar::Error::EndStepRunningError,
+         Crowbar::Error::SaveUpgradeStatusError => e
     render json: {
       errors: {
         nodes_repo_checks: {
@@ -331,7 +335,8 @@ class Api::UpgradeController < ApiController
     end
   rescue Crowbar::Error::StartStepRunningError,
          Crowbar::Error::StartStepOrderError,
-         Crowbar::Error::EndStepRunningError => e
+         Crowbar::Error::EndStepRunningError,
+         Crowbar::Error::SaveUpgradeStatusError => e
     render json: {
       errors: {
         admin_repo_checks: {
@@ -384,7 +389,8 @@ class Api::UpgradeController < ApiController
     end
   rescue Crowbar::Error::StartStepRunningError,
          Crowbar::Error::StartStepOrderError,
-         Crowbar::Error::EndStepRunningError => e
+         Crowbar::Error::EndStepRunningError,
+         Crowbar::Error::SaveUpgradeStatusError => e
     render json: {
       errors: {
         admin_backup: {
@@ -408,7 +414,8 @@ class Api::UpgradeController < ApiController
     head :ok
   rescue Crowbar::Error::StartStepRunningError,
          Crowbar::Error::StartStepOrderError,
-         Crowbar::Error::EndStepRunningError => e
+         Crowbar::Error::EndStepRunningError,
+         Crowbar::Error::SaveUpgradeStatusError => e
     render json: {
       errors: {
         nodes_db_dump: {

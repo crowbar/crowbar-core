@@ -17,20 +17,7 @@
 require "spec_helper"
 
 describe Crowbar::UpgradeStatus do
-  before do
-    @state_file = Tempfile.open("upgrade_status_spec.state.yml", &:path)
-    File.unlink @state_file
-  end
-
-  subject { Crowbar::UpgradeStatus.new(Rails.logger, @state_file) }
-
-  def new_status
-    subject.class.new(Rails.logger, @state_file)
-  end
-
-  after do
-    File.unlink @state_file if File.exist? @state_file
-  end
+  let(:new_status) { subject.class.new }
 
   let(:current_node) do
     {
@@ -282,6 +269,25 @@ describe Crowbar::UpgradeStatus do
       expect(subject.save_nodes(1, 2)).to be true
       expect(subject.progress[:remaining_nodes]).to be 2
       expect(subject.progress[:upgraded_nodes]).to be 1
+    end
+
+    it "fails while saving the status initially" do
+      allow_any_instance_of(Pathname).to(
+        receive(:open).and_raise("Failed to write File")
+      )
+      expect { subject.start_step(:upgrade_prechecks) }.to raise_error(
+        Crowbar::Error::SaveUpgradeStatusError
+      )
+    end
+
+    it "fails while saving the status" do
+      expect(subject.start_step(:upgrade_prechecks)).to be true
+      allow_any_instance_of(Pathname).to(
+        receive(:open).and_raise("Failed to write File")
+      )
+      expect { subject.end_step(:upgrade_prechecks) }.to raise_error(
+        Crowbar::Error::SaveUpgradeStatusError
+      )
     end
   end
 end

@@ -41,5 +41,11 @@ module Crowbar
         super("Step #{step_name} cannot be finished, as it is not running")
       end
     end
+
+    class SaveUpgradeStatusError < StandardError
+      def initialize(msg)
+        super("Exception during saving the status file: #{msg}")
+      end
+    end
   end
 end
