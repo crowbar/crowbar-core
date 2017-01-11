@@ -850,6 +850,22 @@ class Node < ChefObject
     out[:exit_code].zero?
   end
 
+  def upgraded?
+    upgrade_state = @node["crowbar_wall"]["node_upgrade_state"] || ""
+    return false unless upgrade_state == "upgraded"
+    Rails.logger.info("Node #{@node.name} was already upgraded.")
+    true
+  end
+
+  def upgrading?
+    @node["crowbar_wall"]["node_upgrade_state"] == "upgrading"
+  end
+
+  def upgrade_state=(state)
+    @node["crowbar_wall"]["node_upgrade_state"] = state
+    @node.save
+  end
+
   # Check the status of script that was previously executed on the node.
   # The script is supposed to create specific files on success and failure.
   # Returns: "ok"/"failed"/"runnning"

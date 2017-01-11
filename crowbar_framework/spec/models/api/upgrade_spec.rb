@@ -460,7 +460,12 @@ describe Api::Upgrade do
       )
       allow_any_instance_of(Crowbar::UpgradeStatus).to(
         receive(:end_step).
-        with(false, nodes_upgrade: "No nova controller node was found!").
+        with(
+          false,
+          nodes_upgrade:
+          "No node with 'nova-controller' role node was found. " \
+          "Cannot proceed with upgrade of compute nodes."
+        ).
         and_return(false)
       )
 
@@ -483,6 +488,8 @@ describe Api::Upgrade do
         and_return([Node.find_node_by_name("testing.crowbar.com")])
       )
       allow(Api::Upgrade).to receive(:execute_scripts_and_wait_for_finish).and_return(true)
+      allow_any_instance_of(Node).to receive(:upgraded?).and_return(false)
+      allow_any_instance_of(Api::Node).to receive(:save_node_state).and_return(true)
       allow(Api::Upgrade).to receive(:live_evacuate_compute_node).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:os_upgrade).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:reboot_and_wait).and_return(true)
