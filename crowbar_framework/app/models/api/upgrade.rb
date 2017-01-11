@@ -579,7 +579,9 @@ module Api
           next if n.upgraded?
           node_api = Api::Node.new n.name
           node_api.save_node_state("compute")
-          unless n.ready?
+          if n.ready_after_upgrade?
+            Rails.logger.info("Node #{n.name} is ready after the initial chef-client run.")
+          else
             live_evacuate_compute_node(controller, n.name)
             node_api.os_upgrade
             node_api.reboot_and_wait
