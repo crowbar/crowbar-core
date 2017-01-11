@@ -316,7 +316,7 @@ module Api
         if substep == "computes"
           upgrade_all_compute_nodes
         end
-        status.end_step
+        ::Crowbar::UpgradeStatus.new.end_step
       rescue ::Crowbar::Error::UpgradeError => e
         ::Crowbar::UpgradeStatus.new.end_step(
           false,
