@@ -152,9 +152,13 @@ module Api
               missing_repo_arch = v[:repos].keys.first.to_sym
               v[:repos][missing_repo_arch][:missing]
             end.flatten.compact.join(", ")
-            upgrade_status.end_step(
+            ::Crowbar::UpgradeStatus.new.end_step(
               false,
-              adminrepocheck: "Missing repositories: #{missing_repos}"
+              adminrepocheck: {
+                data: "Missing repositories: #{missing_repos}",
+                help: "Fix the repository setup for the Admin server before " \
+                  "you continue with the upgrade"
+              }
             )
           else
             upgrade_status.end_step
@@ -308,7 +312,10 @@ module Api
         message = e.message
         ::Crowbar::UpgradeStatus.new.end_step(
           false,
-          prepare_nodes_for_crowbar_upgrade: message
+          prepare_nodes_for_crowbar_upgrade: {
+            data: message,
+            help: "Check /var/log/crowbar/production.log at admin server."
+          }
         )
         Rails.logger.error message
 
