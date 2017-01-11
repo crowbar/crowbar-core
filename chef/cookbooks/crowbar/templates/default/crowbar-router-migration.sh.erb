@@ -22,6 +22,7 @@ echo "Executing $BASH_SOURCE"
 set -x
 
 mkdir -p $UPGRADEDIR
+rm -f $UPGRADEDIR/crowbar-router-migration-failed
 
 set +x
 source /root/.openrc
