@@ -331,15 +331,15 @@ module Api
       # controller nodes upgrade
       #
       def upgrade_controller_nodes
-        drbd_nodes = Node.find("drbd_rsc:*")
+        drbd_nodes = ::Node.find("drbd_rsc:*")
         return upgrade_drbd_clusters unless drbd_nodes.empty?
 
-        founder = Node.find(
+        founder = ::Node.find(
           "state:crowbar_upgrade AND pacemaker_founder:true"
         ).first
         cluster_env = founder[:pacemaker][:config][:environment]
 
-        non_founder = Node.find(
+        non_founder = ::Node.find(
           "state:crowbar_upgrade AND pacemaker_founder:false AND " \
           "pacemaker_config_environment:#{cluster_env}"
         ).first
@@ -347,7 +347,7 @@ module Api
         upgrade_first_cluster_node founder, non_founder
 
         # upgrade the rest of nodes in the same cluster
-        Node.find(
+        ::Node.find(
           "state:crowbar_upgrade AND pacemaker_config_environment:#{cluster_env}"
         ).each do |node|
           upgrade_next_cluster_node node.name, founder.name
@@ -370,7 +370,7 @@ module Api
         # Explicitly mark the first node as cluster founder
         # and in case of DRBD setup, adapt DRBD config accordingly.
         unless Api::Pacemaker.set_node_as_founder node.name
-          raise_error_state("Changing the cluster founder to #{node.name} has failed")
+          raise_upgrade_error("Changing the cluster founder to #{node.name} has failed")
           return false
         end
         # remove pre-upgrade attribute, so the services can start
@@ -441,7 +441,7 @@ module Api
         end
 
         if drbd_slave.nil? || drbd_master.nil?
-          raise_error_state("Unable to detect drb master and/or slave nodes")
+          raise_upgrade_error("Unable to detect drb master and/or slave nodes")
         end
 
         upgrade_first_cluster_node drbd_slave, drbd_master
@@ -453,9 +453,11 @@ module Api
       # Delete existing pacemaker resources, from other node in the cluster
       def delete_pacemaker_resources(node_name)
         node = ::Node.find_node_by_name node_name
-        raise_upgrade_error(
-          "Node #{node_name} was not found, cannot delete pacemaker resources."
-        )
+        if node.nil?
+          raise_upgrade_error(
+            "Node #{node_name} was not found, cannot delete pacemaker resources."
+          )
+        end
 
         begin
           node.wait_for_script_to_finish(
@@ -503,10 +505,10 @@ module Api
 
       def upgrade_compute_nodes(virt)
         save_upgrade_state("Upgrading compute nodes of #{virt} type")
-        compute_nodes = Node.find("roles:nova-compute-#{virt}")
+        compute_nodes = ::Node.find("roles:nova-compute-#{virt}")
         return true if compute_nodes.empty?
 
-        controller = Node.find("roles:nova-controller").first
+        controller = ::Node.find("roles:nova-controller").first
         if controller.nil?
           raise_upgrade_error("No nova controller node was found!")
           return false
