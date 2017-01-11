@@ -894,14 +894,23 @@ class Node < ChefObject
   def wait_for_script_to_finish(script, seconds, args = [])
     cmd = script
     cmd += " " + args.join(" ") unless args.empty?
-    ssh_status = ssh_cmd(cmd)
-    if ssh_status[0] != 200
-      raise "Executing of script #{script} has failed on node #{@node.name}."
-    end
 
     base = "/var/lib/crowbar/upgrade/" + File.basename(script, ".sh")
     ok_file = base + "-ok"
     failed_file = base + "-failed"
+
+    # failed_file needs to be removed before starting the script
+    # Otherwise we might detect its presence (from previous failed run) before script itself
+    # can delete it
+    ssh_status = ssh_cmd("rm -f #{failed_file}")
+    if ssh_status[0] != 200
+      raise "Node #{@node.name} does not appear to be reachable by ssh."
+    end
+
+    ssh_status = ssh_cmd(cmd)
+    if ssh_status[0] != 200
+      raise "Executing of script #{script} has failed on node #{@node.name}."
+    end
 
     Rails.logger.debug("Waiting for #{script} started at #{@node.name} to finish ...")
 
