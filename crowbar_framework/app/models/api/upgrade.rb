@@ -579,10 +579,11 @@ module Api
           next if n.upgraded?
           node_api = Api::Node.new n.name
           node_api.save_node_state("compute")
+          hostname = n[:hostname]
           if n.ready_after_upgrade?
             Rails.logger.info("Node #{n.name} is ready after the initial chef-client run.")
           else
-            live_evacuate_compute_node(controller, n.name)
+            live_evacuate_compute_node(controller, hostname)
             node_api.os_upgrade
             node_api.reboot_and_wait
             node_api.post_upgrade
@@ -590,11 +591,11 @@ module Api
           end
 
           out = controller.run_ssh_cmd(
-            "source /root/.openrc; nova service-enable #{n.name} nova-compute"
+            "source /root/.openrc; nova service-enable #{hostname} nova-compute"
           )
           unless out[:exit_code].zero?
             raise_upgrade_error(
-              "Enabling nova-compute service for #{n.name} has failed. " \
+              "Enabling nova-compute service for #{hostname} has failed. " \
               "Check nova log files at #{controller.name} and #{n.name}."
             )
           end
