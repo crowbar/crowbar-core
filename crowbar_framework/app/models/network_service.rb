@@ -127,8 +127,10 @@ class NetworkService < ServiceObject
     if type == :node
       # Save the information (only what we override from the network definition).
       node.crowbar["crowbar"]["network"][network] ||= {}
-      node.crowbar["crowbar"]["network"][network]["address"] = net_info["address"]
-      node.save
+      if node.crowbar["crowbar"]["network"][network]["address"] != net_info["address"]
+        node.crowbar["crowbar"]["network"][network]["address"] = net_info["address"]
+        node.save
+      end
     end
 
     @logger.info("Network allocate ip for #{type}: Assigned: #{name} #{network} #{range} #{net_info["address"]}")
