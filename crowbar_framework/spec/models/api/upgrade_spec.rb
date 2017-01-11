@@ -463,9 +463,14 @@ describe Api::Upgrade do
         receive(:end_step).
         with(
           false,
-          nodes:
-          "No node with 'nova-controller' role node was found. " \
-          "Cannot proceed with upgrade of compute nodes."
+          nodes: {
+            data:
+              "No node with 'nova-controller' role node was found. " \
+              "Cannot proceed with upgrade of compute nodes.",
+            help:
+              "Check the log files at the node that has failed " \
+              "to find possible cause."
+          }
         ).
         and_return(false)
       )

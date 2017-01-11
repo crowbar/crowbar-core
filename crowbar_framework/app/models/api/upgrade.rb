@@ -173,9 +173,13 @@ module Api
               missing_repo_arch = v[:repos].keys.first.to_sym
               v[:repos][missing_repo_arch][:missing]
             end.flatten.compact.join(", ")
-            upgrade_status.end_step(
+            ::Crowbar::UpgradeStatus.new.end_step(
               false,
-              adminrepocheck: "Missing repositories: #{missing_repos}"
+              adminrepocheck: {
+                data: "Missing repositories: #{missing_repos}",
+                help: "Fix the repository setup for the Admin server before " \
+                  "you continue with the upgrade"
+              }
             )
           else
             upgrade_status.end_step
@@ -195,9 +199,14 @@ module Api
 
         unavailable_repos = response.select { |_k, v| !v["available"] }
         if unavailable_repos.any?
-          upgrade_status.end_step(
+          ::Crowbar::UpgradeStatus.new.end_step(
             false,
-            repocheck_nodes: "#{unavailable_repos.keys.join(', ')} repositories are missing"
+            repocheck_nodes: {
+              data: "These repositories are missing: " \
+                "#{unavailable_repos.keys.join(', ')}.",
+              help: "Fix the repository setup for the cloud nodes before " \
+                  "you continue with the upgrade."
+            }
           )
         else
           upgrade_status.end_step
@@ -229,7 +238,13 @@ module Api
         rescue => e
           msg = e.message
           Rails.logger.error msg
-          ::Crowbar::UpgradeStatus.new.end_step(false, services: msg)
+          ::Crowbar::UpgradeStatus.new.end_step(
+            false,
+            services: {
+              data: msg,
+              help: "Check /var/log/crowbar/production.log at admin server."
+            }
+          )
           return
         end
 
@@ -263,7 +278,15 @@ module Api
         end
 
         if errors.any?
-          ::Crowbar::UpgradeStatus.new.end_step(false, services: errors.join(","))
+          ::Crowbar::UpgradeStatus.new.end_step(
+            false,
+            services: {
+              data: errors,
+              help: "Check /var/log/crowbar/production.log at admin server. " \
+                "If the action failed at specific node, " \
+                "check /var/log/crowbar/node_upgrade.log at the node."
+            }
+          )
         else
           ::Crowbar::UpgradeStatus.new.end_step
         end
@@ -321,7 +344,10 @@ module Api
       rescue ::Crowbar::Error::UpgradeError => e
         ::Crowbar::UpgradeStatus.new.end_step(
           false,
-          nodes: e.message
+          nodes: {
+            data: e.message,
+            help: "Check the log files at the node that has failed to find possible cause."
+          }
         )
       rescue StandardError => e
         # end the step even for non-upgrade error, so we are not stuck with 'running'
@@ -787,7 +813,10 @@ module Api
         message = e.message
         ::Crowbar::UpgradeStatus.new.end_step(
           false,
-          prepare_nodes_for_crowbar_upgrade: message
+          prepare_nodes_for_crowbar_upgrade: {
+            data: message,
+            help: "Check /var/log/crowbar/production.log at admin server."
+          }
         )
         Rails.logger.error message
 
