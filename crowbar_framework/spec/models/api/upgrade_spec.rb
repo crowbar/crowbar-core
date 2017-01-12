@@ -255,13 +255,13 @@ describe Api::Upgrade do
       ).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :running?
-      ).with(:crowbar).and_return(false)
+      ).with(:admin).and_return(false)
       [
         :prechecks,
         :prepare,
         :backup_crowbar,
         :repocheck_crowbar,
-        :crowbar
+        :admin
       ].each do |allowed_step|
         allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
           :current_step
@@ -279,7 +279,7 @@ describe Api::Upgrade do
         :save
       ).and_return(true)
       [
-        :crowbar,
+        :admin,
         :database,
         :repocheck_nodes,
         :services,
@@ -287,10 +287,10 @@ describe Api::Upgrade do
         :nodes,
         :finished
       ].each do |allowed_step|
-        if allowed_step == :crowbar
+        if allowed_step == :admin
           allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
             :running?
-          ).with(:crowbar).and_return(true)
+          ).with(:admin).and_return(true)
         end
         allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
           :current_step
@@ -306,7 +306,7 @@ describe Api::Upgrade do
       ).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :current_step
-      ).and_return(:crowbar)
+      ).and_return(:admin)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :running?
       ).and_return(true)

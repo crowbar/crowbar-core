@@ -53,7 +53,7 @@ describe Api::Crowbar do
       allow(NodeObject).to receive(:admin_node).and_return(admin_node)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:crowbar).and_return(true)
+      ).with(:admin).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :end_step
       ).and_return(true)

@@ -17,7 +17,7 @@
     "repocheck_crowbar":{
       "status":"pending"
     },
-    "crowbar":{
+    "admin":{
       "status":"pending"
     },
     "database":{
