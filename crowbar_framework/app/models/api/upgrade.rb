@@ -26,7 +26,7 @@ module Api
       def checks
         upgrade_status = ::Crowbar::UpgradeStatus.new
         # the check for current_step means to allow running the step at any point in time
-        upgrade_status.start_step(:upgrade_prechecks)
+        upgrade_status.start_step(:prechecks)
 
         {}.tap do |ret|
           network = ::Crowbar::Sanity.check
@@ -75,7 +75,7 @@ module Api
             errors: clusters_health.empty? ? {} : clusters_health_report_errors(clusters_health)
           } if Api::Crowbar.addons.include?("ha")
 
-          return ret unless upgrade_status.current_step == :upgrade_prechecks
+          return ret unless upgrade_status.current_step == :prechecks
 
           errors = ret.select { |_k, v| v[:required] && v[:errors].any? }.map { |_k, v| v[:errors] }
           if errors.any?
@@ -101,7 +101,7 @@ module Api
 
       def adminrepocheck
         upgrade_status = ::Crowbar::UpgradeStatus.new
-        upgrade_status.start_step(:admin_repo_checks)
+        upgrade_status.start_step(:repocheck_crowbar)
         # FIXME: once we start working on 7 to 8 upgrade we have to adapt the sles version
         zypper_stream = Hash.from_xml(
           `sudo /usr/bin/zypper-retry --xmlout products`
@@ -190,7 +190,7 @@ module Api
       end
 
       def prepare(options = {})
-        ::Crowbar::UpgradeStatus.new.start_step(:upgrade_prepare)
+        ::Crowbar::UpgradeStatus.new.start_step(:prepare)
 
         background = options.fetch(:background, false)
 

@@ -2,10 +2,10 @@ require "spec_helper"
 require "crowbar/error/upgrade_cancel"
 
 describe Api::Upgrade do
-  let!(:upgrade_prechecks) do
+  let!(:prechecks) do
     JSON.parse(
       File.read(
-        "spec/fixtures/upgrade_prechecks.json"
+        "spec/fixtures/prechecks.json"
       )
     )
   end
@@ -103,7 +103,7 @@ describe Api::Upgrade do
       )
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:admin_repo_checks).and_return(true)
+      ).with(:repocheck_crowbar).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :end_step
       ).and_return(true)
@@ -138,7 +138,7 @@ describe Api::Upgrade do
       )
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:admin_repo_checks).and_return(true)
+      ).with(:repocheck_crowbar).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :end_step
       ).and_return(true)
@@ -161,7 +161,7 @@ describe Api::Upgrade do
       )
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:admin_repo_checks).and_return(true)
+      ).with(:repocheck_crowbar).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :end_step
       ).and_return(true)
@@ -186,7 +186,7 @@ describe Api::Upgrade do
       )
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:admin_repo_checks).and_return(true)
+      ).with(:repocheck_crowbar).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :end_step
       ).and_return(true)
@@ -211,7 +211,7 @@ describe Api::Upgrade do
       )
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:admin_repo_checks).and_return(true)
+      ).with(:repocheck_crowbar).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :end_step
       ).and_return(true)
@@ -255,13 +255,13 @@ describe Api::Upgrade do
       ).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :running?
-      ).with(:admin_upgrade).and_return(false)
+      ).with(:crowbar).and_return(false)
       [
-        :upgrade_prechecks,
-        :upgrade_prepare,
-        :admin_backup,
-        :admin_repo_checks,
-        :admin_upgrade
+        :prechecks,
+        :prepare,
+        :backup_crowbar,
+        :repocheck_crowbar,
+        :crowbar
       ].each do |allowed_step|
         allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
           :current_step
@@ -279,18 +279,18 @@ describe Api::Upgrade do
         :save
       ).and_return(true)
       [
-        :admin_upgrade,
+        :crowbar,
         :database,
-        :nodes_repo_checks,
-        :nodes_services,
-        :nodes_db_dump,
-        :nodes_upgrade,
+        :repocheck_nodes,
+        :services,
+        :backup_openstack,
+        :nodes,
         :finished
       ].each do |allowed_step|
-        if allowed_step == :admin_upgrade
+        if allowed_step == :crowbar
           allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
             :running?
-          ).with(:admin_upgrade).and_return(true)
+          ).with(:crowbar).and_return(true)
         end
         allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
           :current_step
@@ -300,13 +300,13 @@ describe Api::Upgrade do
       end
     end
 
-    it "is not allowed to cancel the upgrade while admin_upgrade is running" do
+    it "is not allowed to cancel the upgrade while crowbar is running" do
       allow_any_instance_of(CrowbarService).to receive(
         :revert_nodes_from_crowbar_upgrade
       ).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :current_step
-      ).and_return(:admin_upgrade)
+      ).and_return(:crowbar)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :running?
       ).and_return(true)
@@ -318,16 +318,16 @@ describe Api::Upgrade do
   context "determining the best upgrade method" do
     it "chooses non-disruptive upgrade" do
       allow(subject.class).to receive(:checks).and_return(
-        upgrade_prechecks["checks"].deep_symbolize_keys
+        prechecks["checks"].deep_symbolize_keys
       )
 
       expect(subject.class.best_method).to eq("non-disruptive")
     end
 
     it "chooses disruptive upgrade" do
-      prechecks = upgrade_prechecks
-      prechecks["checks"]["compute_resources_available"]["passed"] = false
-      allow(subject.class).to receive(:checks).and_return(prechecks["checks"])
+      upgrade_prechecks = prechecks
+      upgrade_prechecks["checks"]["compute_resources_available"]["passed"] = false
+      allow(subject.class).to receive(:checks).and_return(upgrade_prechecks["checks"])
 
       expect(subject.class.best_method).to eq("disruptive")
     end
@@ -348,7 +348,7 @@ describe Api::Upgrade do
       ).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:upgrade_prepare).and_return(true)
+      ).with(:prepare).and_return(true)
 
       expect(subject.class.prepare(background: true)).to be true
     end
@@ -359,7 +359,7 @@ describe Api::Upgrade do
       ).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:upgrade_prepare).and_return(true)
+      ).with(:prepare).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :end_step
       ).and_return(true)
@@ -373,7 +373,7 @@ describe Api::Upgrade do
       ).and_raise("Some error")
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:upgrade_prepare).and_return(true)
+      ).with(:prepare).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :end_step
       ).and_return(true)
