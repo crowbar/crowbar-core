@@ -357,7 +357,7 @@ module Api
         ::Node.find(
           "pacemaker_config_environment:#{cluster_env}"
         ).each do |node|
-          upgrade_next_cluster_node node.name, founder.name
+          upgrade_next_cluster_node node, founder
         end
       end
 
