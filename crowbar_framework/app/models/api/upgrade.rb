@@ -197,7 +197,7 @@ module Api
         if unavailable_repos.any?
           upgrade_status.end_step(
             false,
-            repocheck_nodes: "#{unavailable_repos.keys.join(", ")} repositories are missing"
+            repocheck_nodes: "#{unavailable_repos.keys.join(', ')} repositories are missing"
           )
         else
           upgrade_status.end_step
