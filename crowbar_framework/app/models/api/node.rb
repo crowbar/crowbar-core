@@ -102,6 +102,12 @@ module Api
 
     # Reboot the node and wait until it comes back online
     def reboot_and_wait
+      rebooted_file = "/var/lib/crowbar/upgrade/crowbar-node-rebooted-ok"
+      if @node.file_exist? rebooted_file
+        Rails.logger.info("Node was already rebooted after the package upgrade.")
+        return true
+      end
+
       ssh_status = @node.ssh_cmd("/sbin/reboot")
       if ssh_status[0] != 200
         raise_upgrade_error("Failed to reboot the machine. Could not ssh.")
@@ -109,10 +115,7 @@ module Api
 
       wait_for_ssh_state(:down, "reboot")
       wait_for_ssh_state(:up, "come up")
-    end
-
-    def upgraded?
-      @node.file_exist? "/var/lib/crowbar/upgrade/node-upgraded-ok"
+      @node.run_ssh_cmd("touch #{rebooted_file}")
     end
 
     # Do the complete package upgrade of one node
