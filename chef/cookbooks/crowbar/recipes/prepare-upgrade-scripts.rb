@@ -37,10 +37,10 @@ new_repos = Provisioner::Repositories.get_repos(
 # Find out the location of the base system repository
 provisioner_config = Barclamp::Config.load("core", "provisioner")
 
-web_path = "#{provisioner_config["root_url"]}/#{node[:platform]}-#{node[:platform_version]}/#{arch}"
+web_path = "#{provisioner_config['root_url']}/#{node[:platform]}-#{node[:platform_version]}/#{arch}"
 old_install_url = "#{web_path}/install"
 
-web_path = "#{provisioner_config["root_url"]}/#{node[:target_platform]}/#{arch}"
+web_path = "#{provisioner_config['root_url']}/#{node[:target_platform]}/#{arch}"
 new_install_url = "#{web_path}/install"
 
 # try to create an alias for new base repo from the original base repo
