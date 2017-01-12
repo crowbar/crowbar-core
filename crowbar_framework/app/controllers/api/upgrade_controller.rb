@@ -22,7 +22,7 @@ class Api::UpgradeController < ApiController
   api_version "2.0"
   example '
   {
-    "current_step": "crowbar",
+    "current_step": "admin",
     "current_substep": null,
     "current_node": null,
     "remaining_nodes": null,
@@ -44,10 +44,10 @@ class Api::UpgradeController < ApiController
         "status": "passed",
         "errors": {}
       },
-      "crowbar": {
+      "admin": {
         "status": "failed",
         "errors": {
-          "crowbar": {
+          "admin": {
             "data": "zypper dist-upgrade has failed with 8, check zypper logs",
             "help": "Failed to upgrade admin server. Refer to the error message in the response."
           }

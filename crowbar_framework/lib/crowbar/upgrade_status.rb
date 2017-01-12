@@ -145,8 +145,8 @@ module Crowbar
         :prepare,
         :backup_crowbar,
         :repocheck_crowbar,
-        :crowbar
-      ].include?(current_step) && !running?(:crowbar)
+        :admin
+      ].include?(current_step) && !running?(:admin)
     end
 
     def save_current_node(node_data = {})
@@ -198,7 +198,7 @@ module Crowbar
         :prepare,
         :backup_crowbar,
         :repocheck_crowbar,
-        :crowbar,
+        :admin,
         :database,
         :repocheck_nodes,
         :services,

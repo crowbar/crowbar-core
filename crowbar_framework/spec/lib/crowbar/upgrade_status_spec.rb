@@ -168,8 +168,8 @@ describe Crowbar::UpgradeStatus do
       expect(subject.current_step).to eql :repocheck_crowbar
       expect(subject.start_step(:repocheck_crowbar)).to be true
       expect(subject.end_step).to be true
-      expect(subject.current_step).to eql :crowbar
-      expect(subject.start_step(:crowbar)).to be true
+      expect(subject.current_step).to eql :admin
+      expect(subject.start_step(:admin)).to be true
       expect(subject.end_step).to be true
       expect(subject.current_step).to eql :database
       expect(subject.start_step(:database)).to be true
@@ -224,7 +224,7 @@ describe Crowbar::UpgradeStatus do
       expect { subject.start_step(:backup_crowbar) }.to raise_error(
         Crowbar::Error::StartStepOrderError
       )
-      expect { subject.start_step(:crowbar) }.to raise_error(
+      expect { subject.start_step(:admin) }.to raise_error(
         Crowbar::Error::StartStepOrderError
       )
       expect { subject.start_step(:database) }.to raise_error(

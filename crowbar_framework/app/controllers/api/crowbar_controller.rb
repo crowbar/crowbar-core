@@ -66,7 +66,7 @@ class Api::CrowbarController < ApiController
       else
         render json: {
           errors: {
-            crowbar: {
+            admin: {
               data: crowbar_upgrade[:message],
               help: I18n.t("api.crowbar.upgrade.help.default")
             }
@@ -80,7 +80,7 @@ class Api::CrowbarController < ApiController
          Crowbar::Error::StartStepOrderError => e
     render json: {
       errors: {
-        crowbar: {
+        admin: {
           data: e.message,
           help: I18n.t("api.crowbar.upgrade.help.default")
         }
