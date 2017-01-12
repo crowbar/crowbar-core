@@ -227,6 +227,7 @@ Rails.application.routes.draw do
       get :upgrade
       post :upgrade
       get :maintenance
+      put :ping
 
       resources :backups,
         only: [:index, :show, :create, :destroy] do

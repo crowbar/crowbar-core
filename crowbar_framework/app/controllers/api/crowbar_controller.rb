@@ -101,4 +101,28 @@ class Api::CrowbarController < ApiController
   def maintenance
     render json: ::Crowbar::Checks::Maintenance.updates_status
   end
+
+  api :PUT, "/api/crowbar/ping", "Mark a node as seen recently"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
+  param :hostname, String, desc: "Hostname of the caller", required: true
+  api_version "2.0"
+  def ping
+    node = ::Node.find_by(name: ping_params)
+
+    unless node
+      return render json: {
+        status: :failed,
+        reason: "Unkown node"
+      }, status: :not_found
+    end
+
+    node.last_seen = DateTime.now
+    node.save
+
+    render json: {status: :updated}
+  end
+
+  def ping_params
+    params.require(:hostname)
+  end
 end
