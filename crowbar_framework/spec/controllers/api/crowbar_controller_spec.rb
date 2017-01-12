@@ -67,7 +67,7 @@ describe Api::CrowbarController, type: :request do
       )
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:admin_upgrade).and_return(true)
+      ).with(:crowbar).and_return(true)
 
       post "/api/crowbar/upgrade", {}, headers
       expect(response).to have_http_status(:ok)

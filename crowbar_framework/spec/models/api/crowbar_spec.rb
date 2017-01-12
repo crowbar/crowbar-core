@@ -51,7 +51,7 @@ describe Api::Crowbar do
       )
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:admin_upgrade).and_return(true)
+      ).with(:crowbar).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :end_step
       ).and_return(true)

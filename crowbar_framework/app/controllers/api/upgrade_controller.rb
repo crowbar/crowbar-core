@@ -22,32 +22,32 @@ class Api::UpgradeController < ApiController
   api_version "2.0"
   example '
   {
-    "current_step": "admin_upgrade",
+    "current_step": "crowbar",
     "current_substep": null,
     "current_node": null,
     "remaining_nodes": null,
     "upgraded_nodes": null,
     "steps": {
-      "upgrade_prechecks": {
+      "prechecks": {
         "status": "passed",
         "errors": {}
       },
-      "upgrade_prepare": {
+      "prepare": {
         "status": "passed",
         "errors": {}
       },
-      "admin_backup": {
+      "backup_crowbar": {
         "status": "passed",
         "errors": {}
       },
-      "admin_repo_checks": {
+      "repocheck_crowbar": {
         "status": "passed",
         "errors": {}
       },
-      "admin_upgrade": {
+      "crowbar": {
         "status": "failed",
         "errors": {
-          "admin_upgrade": {
+          "crowbar": {
             "data": "zypper dist-upgrade has failed with 8, check zypper logs",
             "help": "Failed to upgrade admin server. Refer to the error message in the response."
           }
@@ -56,16 +56,16 @@ class Api::UpgradeController < ApiController
       "database": {
         "status": "pending"
       },
-      "nodes_repo_checks": {
+      "repocheck_nodes": {
         "status": "pending"
       },
-      "nodes_services": {
+      "services": {
         "status": "pending"
       },
-      "nodes_db_dump": {
+      "backup_openstack": {
         "status": "pending"
       },
-      "nodes_upgrade": {
+      "nodes": {
         "status": "pending"
       },
       "finished": {
@@ -107,7 +107,7 @@ class Api::UpgradeController < ApiController
          Crowbar::Error::SaveUpgradeStatusError => e
     render json: {
       errors: {
-        upgrade_prepare: {
+        prepare: {
           data: e.message,
           help: I18n.t("api.upgrade.prepare.help.default")
         }
@@ -120,7 +120,7 @@ class Api::UpgradeController < ApiController
   api_version "2.0"
   error 422, "Failed to stop services on all nodes"
   def services
-    ::Crowbar::UpgradeStatus.new.start_step(:nodes_services)
+    ::Crowbar::UpgradeStatus.new.start_step(:services)
     Api::Upgrade.services
     head :ok
   rescue Crowbar::Error::StartStepRunningError,
@@ -129,7 +129,7 @@ class Api::UpgradeController < ApiController
          Crowbar::Error::SaveUpgradeStatusError => e
     render json: {
       errors: {
-        nodes_services: {
+        services: {
           data: e.message,
           help: I18n.t("api.upgrade.services.help.default")
         }
@@ -143,7 +143,7 @@ class Api::UpgradeController < ApiController
   # This is gonna initiate the upgrade of all nodes.
   # The method runs asynchronously, so there's a need to poll for the status and possible errors
   def nodes
-    ::Crowbar::UpgradeStatus.new.start_step(:nodes_upgrade)
+    ::Crowbar::UpgradeStatus.new.start_step(:nodes)
     Api::Upgrade.nodes
     head :ok
   rescue Crowbar::Error::StartStepRunningError,
@@ -152,7 +152,7 @@ class Api::UpgradeController < ApiController
          Crowbar::Error::SaveUpgradeStatusError => e
     render json: {
       errors: {
-        nodes_upgrade: {
+        nodes: {
           data: e.message,
           help: I18n.t("api.upgrade.nodes.help.default")
         }
@@ -291,7 +291,7 @@ class Api::UpgradeController < ApiController
          Crowbar::Error::SaveUpgradeStatusError => e
     render json: {
       errors: {
-        nodes_repo_checks: {
+        repocheck_nodes: {
           data: e.message,
           help: I18n.t("api.upgrade.noderepocheck.help.default")
         }
@@ -339,7 +339,7 @@ class Api::UpgradeController < ApiController
          Crowbar::Error::SaveUpgradeStatusError => e
     render json: {
       errors: {
-        admin_repo_checks: {
+        repocheck_crowbar: {
           data: e.message,
           help: I18n.t("api.upgrade.adminrepocheck.help.default")
         }
@@ -367,7 +367,7 @@ class Api::UpgradeController < ApiController
   error 422, "Failed to save backup, error details are provided in the response"
   def adminbackup
     upgrade_status = ::Crowbar::UpgradeStatus.new
-    upgrade_status.start_step(:admin_backup)
+    upgrade_status.start_step(:backup_crowbar)
     @backup = Api::Backup.new(backup_params)
 
     if @backup.save
@@ -376,11 +376,11 @@ class Api::UpgradeController < ApiController
     else
       upgrade_status.end_step(
         false,
-        admin_backup: @backup.errors.full_messages.first
+        backup_crowbar: @backup.errors.full_messages.first
       )
       render json: {
         errors: {
-          admin_backup: {
+          backup_crowbar: {
             data: @backup.errors.full_messages,
             help: I18n.t("api.upgrade.adminbackup.help.default")
           }
@@ -393,7 +393,7 @@ class Api::UpgradeController < ApiController
          Crowbar::Error::SaveUpgradeStatusError => e
     render json: {
       errors: {
-        admin_backup: {
+        backup_crowbar: {
           data: e.message,
           help: I18n.t("api.upgrade.adminbackup.help.default")
         }
@@ -407,10 +407,10 @@ class Api::UpgradeController < ApiController
   api_version "2.0"
   error 422, "Failed to save backup, error details are provided in the response"
   def openstackbackup
-    # FIXME: fake the nodes_db_dump step for now until it is implemented
-    nodes_db_dump = ::Crowbar::UpgradeStatus.new
-    nodes_db_dump.start_step(:nodes_db_dump)
-    nodes_db_dump.end_step
+    # FIXME: fake the backup_openstack step for now until it is implemented
+    backup_openstack = ::Crowbar::UpgradeStatus.new
+    backup_openstack.start_step(:backup_openstack)
+    backup_openstack.end_step
     head :ok
   rescue Crowbar::Error::StartStepRunningError,
          Crowbar::Error::StartStepOrderError,
@@ -418,7 +418,7 @@ class Api::UpgradeController < ApiController
          Crowbar::Error::SaveUpgradeStatusError => e
     render json: {
       errors: {
-        nodes_db_dump: {
+        backup_openstack: {
           data: e.message,
           help: "Please refer to the error message in the response."
         }
