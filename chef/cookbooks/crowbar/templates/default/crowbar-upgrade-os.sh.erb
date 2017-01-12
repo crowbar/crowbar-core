@@ -7,7 +7,14 @@ LOGFILE=/var/log/crowbar/node-upgrade.log
 mkdir -p "`dirname "$LOGFILE"`"
 exec >>"$LOGFILE" 2>&1
 
-echo "Executing $BASH_SOURCE"
+log()
+{
+    set +x
+    echo "[$(date --iso-8601=ns)] [$$] $@"
+    set -x
+}
+
+log "Executing $BASH_SOURCE"
 
 set -x
 
@@ -22,7 +29,7 @@ rm -f $UPGRADEDIR/crowbar-upgrade-os-failed
 
 cleanup()
 {
-    echo "cleaning up after interrupt or exit"
+    log "Cleaning up after interrupt or exit"
 
     # cleanup upgrading indication so that the action can be restarted
     rm -f $RUNFILE
@@ -38,7 +45,7 @@ function default_package_config()
         # does the rpmnew file also exists?
         if [ -f "${config_file}.rpmnew" ]; then
             mv "${config_file}.rpmnew" "${config_file}"
-            echo "Moved ${config_file}.rpmnew to ${config_file}"
+            log "Moved ${config_file}.rpmnew to ${config_file}"
         fi
     fi
 }
@@ -46,12 +53,12 @@ function default_package_config()
 initiate_node_upgrade()
 {
     if [[ -f $RUNFILE ]] ; then
-        echo "Exit: Upgrade is already running..."
+        log "Exit: Upgrade is already running..."
         exit 1
     fi
 
     if [[ -f $UPGRADEDIR/crowbar-upgrade-os-ok ]] && grep -q "<%= @target_platform_version %>" $UPGRADEDIR/crowbar-upgrade-os-ok ; then
-        echo "Exit: Node already upgraded"
+        log "Exit: Node already upgraded"
         exit 0
     fi
 
@@ -61,11 +68,13 @@ initiate_node_upgrade()
     trap cleanup INT EXIT
 
     # Upgrade the distribution non-interactively
+    log "Executing zypper ref"
     zypper --no-color --releasever <%= @target_platform_version %> ref -f
+    log "Executing zypper dist-upgrade"
     zypper --no-color --non-interactive dist-upgrade -l --recommends --replacefiles
     ret=$?
     if [ $ret != 0 ]; then
-        echo "zypper dist-upgrade has failed with $ret, check zypper logs"
+        log "zypper dist-upgrade has failed with $ret, check zypper logs"
         echo "$ret" > $UPGRADEDIR/crowbar-upgrade-os-failed
         exit $ret
     fi
@@ -119,6 +128,7 @@ initiate_node_upgrade()
     # Signalize that the upgrade correctly ended
     echo "<%= @target_platform_version %>" >> $UPGRADEDIR/crowbar-upgrade-os-ok
 
+    log "$BASH_SOURCE is finished."
     exit 0
 }
 

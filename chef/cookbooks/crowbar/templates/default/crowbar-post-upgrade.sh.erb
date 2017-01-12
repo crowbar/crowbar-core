@@ -7,7 +7,14 @@ UPGRADEDIR=/var/lib/crowbar/upgrade
 mkdir -p "`dirname "$LOGFILE"`"
 exec >>"$LOGFILE" 2>&1
 
-echo "Executing $BASH_SOURCE"
+log()
+{
+    set +x
+    echo "[$(date --iso-8601=ns)] [$$] $@"
+    set -x
+}
+
+log "Executing $BASH_SOURCE"
 
 set -x
 
@@ -15,7 +22,7 @@ mkdir -p $UPGRADEDIR
 rm -f $UPGRADEDIR/crowbar-post-upgrade-failed
 
 if [[ -f $UPGRADEDIR/crowbar-post-upgrade-ok ]] ; then
-    echo "Post upgrade actions were already successfully executed"
+    log "Post upgrade actions were already successfully executed"
     exit 0
 fi
 
@@ -24,15 +31,16 @@ fi
 <% if @has_drbd %>
 
 if [[ -f /sbin/drbdadm ]] ; then
-    echo "Recreating DRBD metadata after the upgrade to new DRBD version..."
+    log "Recreating DRBD metadata after the upgrade to new DRBD version..."
 
     # FIXME: workaround for bnc#1006105 : creating metatata works after 2nd run...
     for i in 1 2; do
+        log "Recreating DRBD metadata, attempt no. $i"
         drbdadm -- --force create-md all
 
         ret=$?
         if [ $ret != 0 ] ; then
-            echo "Error occured during DRBD metadata upgrade"
+            log "Error occured during DRBD metadata upgrade"
             echo $ret > $UPGRADEDIR/crowbar-post-upgrade-failed
             exit $ret
         fi
@@ -42,12 +50,12 @@ if [[ -f /sbin/drbdadm ]] ; then
 fi
 
 # Starting pacemaker will cause DRBD service to start and synchronize with the other node
-echo "Starting pacemaker..."
+log "Starting pacemaker..."
 service pacemaker start
 
 ret=$?
 if [ $ret != 0 ] ; then
-    echo "Error occured during starting pacemaker service"
+    log "Error occured during starting pacemaker service"
     echo $ret > $UPGRADEDIR/crowbar-post-upgrade-failed
     exit $ret
 fi
@@ -55,12 +63,12 @@ fi
 if [[ -f /sbin/drbdadm ]] ; then
     # Wait until DRBD is started
     while [[ $(drbdadm status | wc -c) -eq 0 ]]; do
-        echo "Waiting for DRBD to bring the devices up..."
+        log "Waiting for DRBD to bring the devices up..."
         sleep 1
     done
     # Now wait after DRBD data are synced with the other node
     while drbdadm status | grep -q Inconsistent; do
-        echo "Replication status: `drbdadm status`"
+        log "Replication status: `drbdadm status`"
         sleep 10
     done
 fi
@@ -69,8 +77,9 @@ fi
 
 <% else %>
 
-echo "No HA setup found..."
+log "No HA setup found..."
 
 <% end %>
 
 touch $UPGRADEDIR/crowbar-post-upgrade-ok
+log "$BASH_SOURCE is finished."
