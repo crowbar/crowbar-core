@@ -75,11 +75,12 @@ module Api
       end
       # We know that the script has succeeded, but it does not necessary mean we're fine:
       @node = ::Node.find_node_by_name @node.name
-      if @node.ready?
+      if @node.ready_after_upgrade?
         Rails.logger.info("Initial chef-client run was successful.")
       else
         raise_upgrade_error(
           "Possible error during initial chef-client run at node #{@node.name}. " \
+          "Node is currently in state #{@node.state}. " \
           "Check /var/log/crowbar/crowbar_join/chef.log."
         )
       end

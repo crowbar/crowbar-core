@@ -302,6 +302,12 @@ class Node < ChefObject
     state === "ready"
   end
 
+  # Right after node upgrade, chef-client is not yet running thus the state
+  # might not be updated for some time.
+  def ready_after_upgrade?
+    ["ready", "noupdate"].include? state
+  end
+
   def state
     return "unknown" if (@node.nil? or @role.nil?)
     if self.crowbar["state"] === "ready" and @node["ohai_time"]
