@@ -78,7 +78,7 @@ module Crowbar
       rescue StandardError => e
         logger.error("Error queuing proposal for #{bc}:#{inst}: #{e.message} #{e.backtrace.join("\n")}")
       ensure
-        lock.release
+        lock.release if lock
       end
 
       # Mark the proposal as in the queue
@@ -101,7 +101,7 @@ module Crowbar
         logger.debug("dequeue proposal: exit for #{bc}:#{inst}: error")
         return [400, e.message]
       ensure
-        lock.release
+        lock.release if lock
       end
       logger.debug("dequeue proposal: exit for #{bc}:#{inst}")
       dequeued ? [200, {}] : [400, I18n.t("barclamp.proposal_show.dequeue_proposal_failure")]
@@ -171,7 +171,7 @@ module Crowbar
           logger.debug("process queue: exit: error")
           return
         ensure
-          lock.release
+          lock.release if lock
         end
 
         unless proposal_to_commit.nil?
@@ -363,7 +363,7 @@ module Crowbar
       rescue StandardError => e
         logger.fatal("add_pending_elements: Exception #{e.message} #{e.backtrace.join("\n")}")
       ensure
-        lock.release
+        lock.release if lock
       end
 
       [delay, pre_cached_nodes]
