@@ -546,6 +546,15 @@ module Api
           return
         end
 
+        # remove upgraded compute nodes
+        compute_nodes.select! { |n| !n.upgraded? }
+        if compute_nodes.empty?
+          save_upgrade_state(
+            "All compute nodes of #{virt} type are already upgraded."
+          )
+          return
+        end
+
         controller = ::Node.find("roles:nova-controller").first
         if controller.nil?
           raise_upgrade_error(
@@ -553,6 +562,11 @@ module Api
             "Cannot proceed with upgrade of compute nodes."
           )
         end
+
+        # If there's a compute node which we already started to upgrade,
+        # (and the upgrade process was restarted due to the failure)
+        # continue with that one.
+        compute_nodes.sort! { |n| n.upgrading? ? -1 : 1 }
 
         # First batch of actions can be executed in parallel for all compute nodes
         begin
