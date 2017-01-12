@@ -379,57 +379,57 @@ module BarclampLibrary
     end
 
     class Config
-      def self.node=(node)
-        @node = node
-      end
+      class << self
+        attr_accessor :node
 
-      def self.load(group, barclamp, instance = nil)
-        # If no instance is specified, see if this node uses an instance of
-        # this barclamp and use it
-        if instance.nil? && @node[barclamp] && @node[barclamp][:config]
-          instance = @node[barclamp][:config][:environment]
-        end
-
-        # Accept environments passed as instances
-        if instance =~ /^#{barclamp}-config-(.*)/
-          instance = $1
-        end
-
-        # Cache the config we load from data bag items.
-        # This cache needs to be invalidated for each chef-client run from
-        # chef-client daemon (which are all in the same process); so use the
-        # ohai time as a marker for that.
-        @cache ||= {}
-
-        if @cache["cache_time"] != @node[:ohai_time]
-          unless @cache["groups"].nil?
-            Chef::Log.info("Invalidating cached config loaded from data bag items")
+        def load(group, barclamp, instance = nil)
+          # If no instance is specified, see if this node uses an instance of
+          # this barclamp and use it
+          if instance.nil? && @node[barclamp] && @node[barclamp][:config]
+            instance = @node[barclamp][:config][:environment]
           end
-          @cache["groups"] = {}
-          @cache["cache_time"] = @node[:ohai_time]
-        end
 
-        @cache["groups"][group] ||= begin
-          Chef::DataBagItem.load("crowbar-config", group)
-        rescue Net::HTTPServerException
-          {}
-        end
+          # Accept environments passed as instances
+          if instance =~ /^#{barclamp}-config-(.*)/
+            instance = $1
+          end
 
-        if instance.nil?
-          # try the "default" instance, and fallback on any existing instance
-          instance = "default"
-          unless @cache["groups"][group].fetch("default", {}).key?(barclamp)
-            # sort to guarantee a consistent order
-            @cache["groups"][group].keys.sort.each do |key|
-              if @cache["groups"][group][key].key?(barclamp)
-                instance = key
-                break
+          # Cache the config we load from data bag items.
+          # This cache needs to be invalidated for each chef-client run from
+          # chef-client daemon (which are all in the same process); so use the
+          # ohai time as a marker for that.
+          @cache ||= {}
+
+          if @cache["cache_time"] != @node[:ohai_time]
+            unless @cache["groups"].nil?
+              Chef::Log.info("Invalidating cached config loaded from data bag items")
+            end
+            @cache["groups"] = {}
+            @cache["cache_time"] = @node[:ohai_time]
+          end
+
+          @cache["groups"][group] ||= begin
+            Chef::DataBagItem.load("crowbar-config", group)
+          rescue Net::HTTPServerException
+            {}
+          end
+
+          if instance.nil?
+            # try the "default" instance, and fallback on any existing instance
+            instance = "default"
+            unless @cache["groups"][group].fetch("default", {}).key?(barclamp)
+              # sort to guarantee a consistent order
+              @cache["groups"][group].keys.sort.each do |key|
+                if @cache["groups"][group][key].key?(barclamp)
+                  instance = key
+                  break
+                end
               end
             end
           end
-        end
 
-        @cache["groups"][group].fetch(instance, {}).fetch(barclamp, {})
+          @cache["groups"][group].fetch(instance, {}).fetch(barclamp, {})
+        end
       end
     end
   end
