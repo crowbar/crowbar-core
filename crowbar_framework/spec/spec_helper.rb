@@ -114,6 +114,14 @@ RSpec.configure do |config|
     )
   end
 
+  config.before(:each) do
+    @upgrade_state_file = Tempfile.open("upgrade_status_spec.state.yml", &:path)
+    File.unlink @upgrade_state_file
+    allow(Crowbar::UpgradeStatus).to receive(:new).and_return(
+      Crowbar::UpgradeStatus.new(Rails.logger, @upgrade_state_file)
+    )
+  end
+
   config.append_before(:each) do
     stub_request(:any, /localhost:4000/).to_rack(OfflineChef)
   end

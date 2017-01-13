@@ -51,7 +51,7 @@ module Crowbar
         current_step: upgrade_steps_6_7.first,
         # substep is needed for more complex steps like upgrading the nodes
         current_substep: nil,
-        # current node is relevant only for the nodes_upgrade step
+        # current node is relevant only for the nodes step
         current_node: nil,
         # number of nodes still to be upgraded
         remaining_nodes: nil,
@@ -141,12 +141,12 @@ module Crowbar
 
     def cancel_allowed?
       [
-        :upgrade_prechecks,
-        :upgrade_prepare,
-        :admin_backup,
-        :admin_repo_checks,
-        :admin_upgrade
-      ].include?(current_step) && !running?(:admin_upgrade)
+        :prechecks,
+        :prepare,
+        :backup_crowbar,
+        :repocheck_crowbar,
+        :admin
+      ].include?(current_step) && !running?(:admin)
     end
 
     def save_current_node(node_data = {})
@@ -180,7 +180,7 @@ module Crowbar
       true
     rescue StandardError => e
       @logger.error("Exception during saving the status file: #{e.message}")
-      false
+      raise ::Crowbar::Error::SaveUpgradeStatusError.new(e.message)
     end
 
     # advance the current step if the latest one finished successfully
@@ -194,16 +194,16 @@ module Crowbar
     # global list of the steps of the upgrade process
     def upgrade_steps_6_7
       [
-        :upgrade_prechecks,
-        :upgrade_prepare,
-        :admin_backup,
-        :admin_repo_checks,
-        :admin_upgrade,
+        :prechecks,
+        :prepare,
+        :backup_crowbar,
+        :repocheck_crowbar,
+        :admin,
         :database,
-        :nodes_repo_checks,
-        :nodes_services,
-        :nodes_db_dump,
-        :nodes_upgrade,
+        :repocheck_nodes,
+        :services,
+        :backup_openstack,
+        :nodes,
         :finished
       ]
     end
@@ -214,10 +214,10 @@ module Crowbar
     def step_allowed?(step)
       return true if step == current_step
       if [
-        :upgrade_prechecks,
-        :admin_backup,
-        :admin_repo_checks,
-        :nodes_repo_checks
+        :prechecks,
+        :backup_crowbar,
+        :repocheck_crowbar,
+        :repocheck_nodes
       ].include? step
         # Allow repeating one of these steps if it was the last one finished
         # and no other one has been started yet.

@@ -39,10 +39,11 @@ class Api::UpgradeController < ApiController
       }, status: :unprocessable_entity
     end
   rescue Crowbar::Error::StartStepRunningError,
-         Crowbar::Error::StartStepOrderError => e
+         Crowbar::Error::StartStepOrderError,
+         Crowbar::Error::SaveUpgradeStatusError => e
     render json: {
       errors: {
-        upgrade_prepare: {
+        prepare: {
           data: e.message,
           help: I18n.t("api.upgrade.prepare.help.default")
         }
@@ -102,10 +103,11 @@ class Api::UpgradeController < ApiController
     end
   rescue Crowbar::Error::StartStepRunningError,
          Crowbar::Error::StartStepOrderError,
-         Crowbar::Error::EndStepRunningError => e
+         Crowbar::Error::EndStepRunningError,
+         Crowbar::Error::SaveUpgradeStatusError => e
     render json: {
       errors: {
-        admin_repo_checks: {
+        repocheck_crowbar: {
           data: e.message,
           help: I18n.t("api.upgrade.adminrepocheck.help.default")
         }
@@ -115,7 +117,7 @@ class Api::UpgradeController < ApiController
 
   def adminbackup
     upgrade_status = ::Crowbar::UpgradeStatus.new
-    upgrade_status.start_step(:admin_backup)
+    upgrade_status.start_step(:backup_crowbar)
     @backup = Backup.new(backup_params)
 
     if @backup.save
@@ -124,11 +126,11 @@ class Api::UpgradeController < ApiController
     else
       upgrade_status.end_step(
         false,
-        admin_backup: @backup.errors.full_messages.first
+        backup_crowbar: @backup.errors.full_messages.first
       )
       render json: {
         errors: {
-          admin_backup: {
+          backup_crowbar: {
             data: @backup.errors.full_messages,
             help: I18n.t("api.upgrade.adminbackup.help.default")
           }
@@ -137,10 +139,11 @@ class Api::UpgradeController < ApiController
     end
   rescue Crowbar::Error::StartStepRunningError,
          Crowbar::Error::StartStepOrderError,
-         Crowbar::Error::EndStepRunningError => e
+         Crowbar::Error::EndStepRunningError,
+         Crowbar::Error::SaveUpgradeStatusError => e
     render json: {
       errors: {
-        admin_backup: {
+        backup_crowbar: {
           data: e.message,
           help: I18n.t("api.upgrade.adminbackup.help.default")
         }

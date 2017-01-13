@@ -1,38 +1,38 @@
 {
-  "current_step": "upgrade_prechecks",
+  "current_step": "prechecks",
   "current_substep":null,
   "current_node":null,
   "remaining_nodes": null,
   "upgraded_nodes": null,
   "steps":{
-    "upgrade_prechecks":{
+    "prechecks":{
       "status":"pending"
     },
-    "upgrade_prepare":{
+    "prepare":{
       "status":"pending"
     },
-    "admin_backup":{
+    "backup_crowbar":{
       "status":"pending"
     },
-    "admin_repo_checks":{
+    "repocheck_crowbar":{
       "status":"pending"
     },
-    "admin_upgrade":{
+    "admin":{
       "status":"pending"
     },
     "database":{
       "status":"pending"
     },
-    "nodes_repo_checks":{
+    "repocheck_nodes":{
       "status":"pending"
     },
-    "nodes_services":{
+    "services":{
       "status":"pending"
     },
-    "nodes_db_dump":{
+    "backup_openstack":{
       "status":"pending"
     },
-    "nodes_upgrade":{
+    "nodes":{
       "status":"pending"
     },
     "finished":{
