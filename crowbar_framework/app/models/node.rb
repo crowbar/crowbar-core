@@ -1003,7 +1003,7 @@ class Node < ChefObject
     cb = CrowbarService.new Rails.logger
     result = cb.transition "default", @node.name, state
 
-    if %w(reset reinstall confupdate).include? state
+    if ["reset", "reinstall", "confupdate"].include? state
       # wait with reboot for the finish of configuration update by local chef-client
       # (so dhcp & PXE config is prepared when node is rebooted)
       begin
