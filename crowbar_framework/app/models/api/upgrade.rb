@@ -344,21 +344,30 @@ module Api
         return upgrade_drbd_clusters unless drbd_nodes.empty?
 
         founder = ::Node.find("pacemaker_founder:true").first
-        cluster_env = founder[:pacemaker][:config][:environment]
+        cluster = founder[:pacemaker][:config][:environment]
 
-        non_founder = ::Node.find(
+        non_founder_nodes = ::Node.find(
           "pacemaker_founder:false AND " \
-          "pacemaker_config_environment:#{cluster_env}"
-        ).first
+          "pacemaker_config_environment:#{cluster}"
+        )
+        non_founder_nodes.select! { |n| !n.upgraded? }
 
-        upgrade_first_cluster_node founder, non_founder
+        if founder.upgraded? && non_founder_nodes.empty?
+          save_upgrade_state("All nodes in cluster #{cluster} have already been upgraded.")
+          return
+        end
+
+        upgrade_first_cluster_node founder, non_founder_nodes.first
+
+        # if we started upgrade of some node before, let's continue with it
+        non_founder_nodes.sort! { |n| n.upgrading? ? -1 : 1 }
 
         # upgrade the rest of nodes in the same cluster
-        ::Node.find(
-          "pacemaker_config_environment:#{cluster_env}"
-        ).each do |node|
+        non_founder_nodes.each do |node|
           upgrade_next_cluster_node node, founder
         end
+
+        save_upgrade_state("Nodes in cluster #{cluster} successfully upgraded")
       end
 
       # Method for upgrading first node of the cluster
@@ -546,6 +555,15 @@ module Api
           return
         end
 
+        # remove upgraded compute nodes
+        compute_nodes.select! { |n| !n.upgraded? }
+        if compute_nodes.empty?
+          save_upgrade_state(
+            "All compute nodes of #{virt} type are already upgraded."
+          )
+          return
+        end
+
         controller = ::Node.find("roles:nova-controller").first
         if controller.nil?
           raise_upgrade_error(
@@ -553,6 +571,11 @@ module Api
             "Cannot proceed with upgrade of compute nodes."
           )
         end
+
+        # If there's a compute node which we already started to upgrade,
+        # (and the upgrade process was restarted due to the failure)
+        # continue with that one.
+        compute_nodes.sort! { |n| n.upgrading? ? -1 : 1 }
 
         # First batch of actions can be executed in parallel for all compute nodes
         begin

@@ -455,6 +455,7 @@ describe Api::Upgrade do
         receive(:find).with("roles:nova-compute-kvm").
         and_return([Node.find_node_by_name("testing.crowbar.com")])
       )
+      allow_any_instance_of(Node).to receive(:upgraded?).and_return(false)
       allow(Node).to(
         receive(:find).with("roles:nova-controller").and_return([])
       )
@@ -468,6 +469,51 @@ describe Api::Upgrade do
         ).
         and_return(false)
       )
+
+      expect(subject.class.nodes).to be_a(Delayed::Backend::ActiveRecord::Job)
+    end
+
+    it "during the upgrade of controller nodes, detect that they are upgraded" do
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:nodes_upgrade).and_return(true)
+      allow(Node).to(
+        receive(:find).
+        with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
+        and_return([Node.find_node_by_name("testing.crowbar.com")])
+      )
+      allow(Node).to(receive(:find).with("drbd_rsc:*").and_return([]))
+      allow(Node).to(
+        receive(:find).with("pacemaker_founder:true").
+        and_return([Node.find_node_by_name("testing.crowbar.com")])
+      )
+      allow(Node).to(
+        receive(:find).with("pacemaker_founder:false AND pacemaker_config_environment:data").
+        and_return([Node.find_node_by_name("testing.crowbar.com")])
+      )
+      allow_any_instance_of(Node).to receive(:upgraded?).and_return(true)
+      allow(Api::Upgrade).to receive(:upgrade_all_compute_nodes).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
+
+      expect(subject.class.nodes).to be_a(Delayed::Backend::ActiveRecord::Job)
+    end
+
+    it "during the upgrade of compute nodes, detect that they are upgraded" do
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:nodes_upgrade).and_return(true)
+      allow(Node).to(
+        receive(:find).with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
+        and_return([Node.find_node_by_name("testing.crowbar.com")])
+      )
+      allow(Api::Upgrade).to receive(:upgrade_controller_nodes).and_return(true)
+      allow(Node).to(
+        receive(:find).with("roles:nova-compute-kvm").
+        and_return([Node.find_node_by_name("testing.crowbar.com")])
+      )
+      allow_any_instance_of(Node).to receive(:upgraded?).and_return(true)
+      allow(Node).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
       expect(subject.class.nodes).to be_a(Delayed::Backend::ActiveRecord::Job)
     end
