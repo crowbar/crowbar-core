@@ -2,10 +2,10 @@ require "spec_helper"
 require "crowbar/error/upgrade_cancel"
 
 describe Api::Upgrade do
-  let!(:upgrade_prechecks) do
+  let!(:prechecks) do
     JSON.parse(
       File.read(
-        "spec/fixtures/upgrade_prechecks.json"
+        "spec/fixtures/prechecks.json"
       )
     )
   end
@@ -113,7 +113,7 @@ describe Api::Upgrade do
       ).and_return({})
 
       expect(subject.class).to respond_to(:checks)
-      expect(subject.class.checks.deep_stringify_keys).to eq(upgrade_prechecks["checks"])
+      expect(subject.class.checks.deep_stringify_keys).to eq(prechecks["checks"])
     end
   end
 
@@ -121,7 +121,7 @@ describe Api::Upgrade do
     it "prepares and shuts down services on cluster founder nodes" do
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:nodes_services).and_return(true)
+      ).with(:services).and_return(true)
       allow_any_instance_of(CrowbarService).to receive(
         :prepare_nodes_for_os_upgrade
       ).and_return(true)
@@ -219,7 +219,7 @@ describe Api::Upgrade do
       )
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:admin_repo_checks).and_return(true)
+      ).with(:repocheck_crowbar).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :end_step
       ).and_return(true)
@@ -254,7 +254,7 @@ describe Api::Upgrade do
       )
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:admin_repo_checks).and_return(true)
+      ).with(:repocheck_crowbar).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :end_step
       ).and_return(true)
@@ -277,7 +277,7 @@ describe Api::Upgrade do
       )
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:admin_repo_checks).and_return(true)
+      ).with(:repocheck_crowbar).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :end_step
       ).and_return(true)
@@ -302,7 +302,7 @@ describe Api::Upgrade do
       )
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:admin_repo_checks).and_return(true)
+      ).with(:repocheck_crowbar).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :end_step
       ).and_return(true)
@@ -327,7 +327,7 @@ describe Api::Upgrade do
       )
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:admin_repo_checks).and_return(true)
+      ).with(:repocheck_crowbar).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :end_step
       ).and_return(true)
@@ -396,7 +396,7 @@ describe Api::Upgrade do
       allow(Api::Upgrade).to receive(:upgrade_all_compute_nodes).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:nodes_upgrade).and_return(true)
+      ).with(:nodes).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
       expect(subject.class.nodes).to be_a(Delayed::Backend::ActiveRecord::Job)
@@ -417,7 +417,7 @@ describe Api::Upgrade do
       )
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:nodes_upgrade).and_return(true)
+      ).with(:nodes).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
       expect(subject.class.nodes).to be_a(Delayed::Backend::ActiveRecord::Job)
@@ -426,12 +426,12 @@ describe Api::Upgrade do
     it "fails with some non-upgrade error" do
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:nodes_upgrade).and_return(true)
+      ).with(:nodes).and_return(true)
       allow(Node).to(receive(:find).and_raise("Some Error"))
       allow_any_instance_of(Crowbar::UpgradeStatus).to(
         receive(:end_step).
         with(
-          false, nodes_upgrade:
+          false, nodes:
           "Crowbar has failed. Check /var/log/crowbar/production.log for details."
         ).
         and_return(false)
@@ -443,7 +443,7 @@ describe Api::Upgrade do
     it "fails to upgrade compute nodes when there is no nova-controller" do
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:nodes_upgrade).and_return(true)
+      ).with(:nodes).and_return(true)
 
       allow(Node).to(
         receive(:find).
@@ -463,7 +463,7 @@ describe Api::Upgrade do
         receive(:end_step).
         with(
           false,
-          nodes_upgrade:
+          nodes:
           "No node with 'nova-controller' role node was found. " \
           "Cannot proceed with upgrade of compute nodes."
         ).
@@ -544,7 +544,7 @@ describe Api::Upgrade do
       allow_any_instance_of(Node).to receive(:run_ssh_cmd).and_return(exit_code: 0)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:nodes_upgrade).and_return(true)
+      ).with(:nodes).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
       expect(subject.class.nodes).to be_a(Delayed::Backend::ActiveRecord::Job)
@@ -584,13 +584,13 @@ describe Api::Upgrade do
       ).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :running?
-      ).with(:admin_upgrade).and_return(false)
+      ).with(:admin).and_return(false)
       [
-        :upgrade_prechecks,
-        :upgrade_prepare,
-        :admin_backup,
-        :admin_repo_checks,
-        :admin_upgrade
+        :prechecks,
+        :prepare,
+        :backup_crowbar,
+        :repocheck_crowbar,
+        :admin
       ].each do |allowed_step|
         allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
           :current_step
@@ -608,18 +608,18 @@ describe Api::Upgrade do
         :save
       ).and_return(true)
       [
-        :admin_upgrade,
+        :admin,
         :database,
-        :nodes_repo_checks,
-        :nodes_services,
-        :nodes_db_dump,
-        :nodes_upgrade,
+        :repocheck_nodes,
+        :services,
+        :backup_openstack,
+        :nodes,
         :finished
       ].each do |allowed_step|
-        if allowed_step == :admin_upgrade
+        if allowed_step == :admin
           allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
             :running?
-          ).with(:admin_upgrade).and_return(true)
+          ).with(:admin).and_return(true)
         end
         allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
           :current_step
@@ -629,13 +629,13 @@ describe Api::Upgrade do
       end
     end
 
-    it "is not allowed to cancel the upgrade while admin_upgrade is running" do
+    it "is not allowed to cancel the upgrade while crowbar is running" do
       allow_any_instance_of(CrowbarService).to receive(
         :revert_nodes_from_crowbar_upgrade
       ).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :current_step
-      ).and_return(:admin_upgrade)
+      ).and_return(:admin)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :running?
       ).and_return(true)
@@ -647,16 +647,16 @@ describe Api::Upgrade do
   context "determining the best upgrade method" do
     it "chooses non-disruptive upgrade" do
       allow(subject.class).to receive(:checks).and_return(
-        upgrade_prechecks["checks"].deep_symbolize_keys
+        prechecks["checks"].deep_symbolize_keys
       )
 
       expect(subject.class.best_method).to eq("non-disruptive")
     end
 
     it "chooses disruptive upgrade" do
-      prechecks = upgrade_prechecks
-      prechecks["checks"]["compute_resources_available"]["passed"] = false
-      allow(subject.class).to receive(:checks).and_return(prechecks["checks"])
+      upgrade_prechecks = prechecks
+      upgrade_prechecks["checks"]["compute_resources_available"]["passed"] = false
+      allow(subject.class).to receive(:checks).and_return(upgrade_prechecks["checks"])
 
       expect(subject.class.best_method).to eq("disruptive")
     end
@@ -680,7 +680,7 @@ describe Api::Upgrade do
       ).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:upgrade_prepare).and_return(true)
+      ).with(:prepare).and_return(true)
 
       expect(subject.class.prepare(background: true)).to be true
     end
@@ -691,7 +691,7 @@ describe Api::Upgrade do
       ).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:upgrade_prepare).and_return(true)
+      ).with(:prepare).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :end_step
       ).and_return(true)
@@ -705,7 +705,7 @@ describe Api::Upgrade do
       ).and_raise("Some error")
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:upgrade_prepare).and_return(true)
+      ).with(:prepare).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :end_step
       ).and_return(true)

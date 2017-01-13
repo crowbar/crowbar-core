@@ -10,10 +10,10 @@ describe Api::UpgradeController, type: :request do
         )
       ).to_json
     end
-    let!(:upgrade_prechecks) do
+    let!(:prechecks) do
       JSON.parse(
         File.read(
-          "spec/fixtures/upgrade_prechecks.json"
+          "spec/fixtures/prechecks.json"
         )
       ).to_json
     end
@@ -56,7 +56,7 @@ describe Api::UpgradeController, type: :request do
     it "prepares the crowbar upgrade" do
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:upgrade_prepare).and_return(true)
+      ).with(:prepare).and_return(true)
       post "/api/upgrade/prepare", {}, headers
       expect(response).to have_http_status(:ok)
     end
@@ -91,7 +91,7 @@ describe Api::UpgradeController, type: :request do
       allow(Api::Upgrade).to receive(:upgrade_compute_nodes).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:nodes_upgrade).and_return(true)
+      ).with(:nodes).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
       post "/api/upgrade/nodes", {}, headers
@@ -124,12 +124,12 @@ describe Api::UpgradeController, type: :request do
         :ha_presence_check
       ).and_return({})
       allow(Api::Upgrade).to receive(:checks).and_return(
-        JSON.parse(upgrade_prechecks)["checks"].deep_symbolize_keys
+        JSON.parse(prechecks)["checks"].deep_symbolize_keys
       )
 
       get "/api/upgrade/prechecks", {}, headers
       expect(response).to have_http_status(:ok)
-      expect(response.body).to eq(upgrade_prechecks)
+      expect(response.body).to eq(prechecks)
     end
 
     it "cancels the upgrade" do
@@ -223,7 +223,7 @@ describe Api::UpgradeController, type: :request do
       allow_any_instance_of(Api::Backup).to receive(:create_archive).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:admin_backup).and_return(true)
+      ).with(:backup_crowbar).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :end_step
       ).and_return(true)
@@ -235,7 +235,7 @@ describe Api::UpgradeController, type: :request do
     it "creates a backup of the openstack database" do
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:nodes_db_dump).and_return(true)
+      ).with(:backup_openstack).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :end_step
       ).and_return(true)
