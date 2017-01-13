@@ -4,8 +4,8 @@
   "attributes": {
     "network": {
       "start_up_delay": 30,
-      "enable_rx_offloading": false,
-      "enable_tx_offloading": false,
+      "enable_rx_offloading": true,
+      "enable_tx_offloading": true,
       "mode": "single",
       "teaming": {
         "mode": 1

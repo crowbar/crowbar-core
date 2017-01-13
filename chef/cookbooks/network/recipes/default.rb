@@ -376,8 +376,8 @@ Nic.nics.each do |nic|
   end
 
   unless nic.kind_of?(Nic::Vlan) or nic.kind_of?(Nic::Bond)
-    nic.rx_offloading = node["network"]["enable_rx_offloading"] || false
-    nic.tx_offloading = node["network"]["enable_tx_offloading"] || false
+    nic.rx_offloading = node["network"]["enable_rx_offloading"] || true
+    nic.tx_offloading = node["network"]["enable_tx_offloading"] || true
   end
 
   if ifs[nic.name]["mtu"]
@@ -478,8 +478,8 @@ when "rhel"
 when "suse"
 
   ethtool_options = []
-  ethtool_options << "rx off" unless node["network"]["enable_rx_offloading"] || false
-  ethtool_options << "tx off" unless node["network"]["enable_tx_offloading"] || false
+  ethtool_options << "rx off" unless node["network"]["enable_rx_offloading"] || true
+  ethtool_options << "tx off" unless node["network"]["enable_tx_offloading"] || true
   ethtool_options = ethtool_options.join(" ")
 
   Nic.nics.each do |nic|
