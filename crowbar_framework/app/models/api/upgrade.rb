@@ -154,7 +154,7 @@ module Api
             end.flatten.compact.join(", ")
             ::Crowbar::UpgradeStatus.new.end_step(
               false,
-              adminrepocheck: {
+              repocheck_crowbar: {
                 data: "Missing repositories: #{missing_repos}",
                 help: "Fix the repository setup for the Admin server before " \
                   "you continue with the upgrade"
@@ -312,7 +312,7 @@ module Api
         message = e.message
         ::Crowbar::UpgradeStatus.new.end_step(
           false,
-          prepare_nodes_for_crowbar_upgrade: {
+          prepare: {
             data: message,
             help: "Check /var/log/crowbar/production.log at admin server."
           }
