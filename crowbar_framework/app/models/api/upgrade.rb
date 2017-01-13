@@ -77,9 +77,26 @@ module Api
 
           return ret unless upgrade_status.current_step == :prechecks
 
-          errors = ret.select { |_k, v| v[:required] && v[:errors].any? }.map { |_k, v| v[:errors] }
+          # transform from this:
+          # ret[:clusters_healthy][:errors] = {
+          #     clusters_health_crm_failures: { data: "123", help: "abc" },
+          #     another_error: { ... }
+          # }
+          # ret[:maintenance_updates_installed][:errors] = {
+          #     maintenance_updates_installed: { data: "987", help: "xyz" }
+          # }
+          # to this:
+          # errors = {
+          #     clusters_health_crm_failures: { data: "123", ... },
+          #     another_error: { ... },
+          #     maintenance_updates_installed: { data: "987", ... }
+          # }
+          errors = ret.select { |_k, v| v[:required] && v[:errors].any? }.
+                   map { |_k, v| v[:errors] }.
+                   reduce({}, :merge)
+
           if errors.any?
-            upgrade_status.end_step(false, prechecks: errors)
+            upgrade_status.end_step(false, errors)
           else
             upgrade_status.end_step
           end
