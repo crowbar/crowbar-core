@@ -133,6 +133,36 @@ class DnsService < ServiceObject
       end
     end
 
+    save_config_to_databag(old_role, role, nodes)
+
     @logger.debug("DNS apply_role_pre_chef_call: leaving")
+  end
+
+  def save_config_to_databag(old_role, role, server_nodes = nil)
+    if role.nil?
+      config = nil
+    else
+      if server_nodes.nil?
+        server_nodes_names = role.override_attributes["dns"]["elements"]["dns-server"]
+        server_nodes = server_nodes_names.map { |n| NodeObject.find_node_by_name n }
+      end
+
+      addresses = server_nodes.map do |n|
+        admin_net = n.get_network_by_type("admin")
+        # admin_net may be nil in the bootstrap case, because admin server only
+        # gets its IP on hardware-installing, which is after this is first
+        # called
+        admin_net["address"] unless admin_net.nil?
+      end
+      addresses.sort!.compact!
+
+      addresses.concat(role.default_attributes["dns"]["nameservers"] || [])
+      addresses = addresses.flatten.compact
+
+      config = { servers: addresses }
+    end
+
+    instance = Crowbar::DataBagConfig.instance_from_role(old_role, role)
+    Crowbar::DataBagConfig.save("core", instance, @bc_name, config)
   end
 end

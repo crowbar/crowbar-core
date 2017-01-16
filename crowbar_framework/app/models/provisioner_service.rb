@@ -130,6 +130,46 @@ class ProvisionerService < ServiceObject
     [200, { name: name }]
   end
 
+  def apply_role_pre_chef_call(old_role, role, all_nodes)
+    @logger.debug("Provisioner apply_role_pre_chef_call: entering #{all_nodes.inspect}")
+
+    save_config_to_databag(old_role, role)
+
+    @logger.debug("Provisioner apply_role_pre_chef_call: leaving")
+  end
+
+  def save_config_to_databag(old_role, role)
+    if role.nil?
+      config = nil
+    else
+      server_nodes_names = role.override_attributes["provisioner"]["elements"]["provisioner-server"]
+      server_node = NodeObject.find_node_by_name(server_nodes_names.first)
+      admin_net = server_node.get_network_by_type("admin")
+
+      protocol = "http"
+      server_address = if admin_net.nil?
+        # admin_net may be nil in the bootstrap case, because admin server only
+        # gets its IP on hardware-installing, which is after this is first
+        # called
+        "127.0.0.1"
+      else
+        server_node.get_network_by_type("admin")["address"]
+      end
+      port = role.default_attributes["provisioner"]["web_port"]
+      url = "#{protocol}://#{server_address}:#{port}"
+
+      config = {
+        protocol: protocol,
+        server: server_address,
+        port: port,
+        root_url: url
+      }
+    end
+
+    instance = Crowbar::DataBagConfig.instance_from_role(old_role, role)
+    Crowbar::DataBagConfig.save("core", instance, @bc_name, config)
+  end
+
   def synchronize_repositories(platforms)
     platforms.each do |platform, arches|
       arches.each do |arch, repos|

@@ -1,12 +1,8 @@
 admin_ip = Barclamp::Inventory.get_network_by_type(node, "admin").address
 
-dns_instance = CrowbarHelper.get_proposal_instance(node, "dns", "default")
-dns_servers = node_search_with_cache("roles:dns-server", dns_instance).map do |n|
-  Barclamp::Inventory.get_network_by_type(n, "admin").address
-end
-dns_servers.sort!
-dns_servers.concat(node[:dns][:nameservers]) unless node[:dns].nil?
-dns_servers = admin_ip if dns_servers.empty?
+dns_config = Barclamp::Config.load("core", "dns")
+dns_servers = dns_config["servers"] || []
+dns_servers = [admin_ip] if dns_servers.empty?
 
 domain_name = node[:dns].nil? ? node[:domain] : (node[:dns][:domain] || node[:domain])
 

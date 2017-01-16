@@ -18,13 +18,8 @@ return if node[:platform_family] == "windows"
 
 include_recipe "logging::common"
 
-servers = node_search_with_cache("roles:logging-server")
-
-if servers.nil?
-  servers = []
-else
-  servers = servers.map { |x| Chef::Recipe::Barclamp::Inventory.get_network_by_type(x, "admin").address }
-end
+logging_config = Barclamp::Config.load("core", "logging")
+servers = logging_config["servers"] || []
 
 # We can't be server and client, so remove server file if we were server before
 # No restart notification, as this file can only exist if the node moves from
