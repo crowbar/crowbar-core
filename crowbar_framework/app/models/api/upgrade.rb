@@ -363,7 +363,7 @@ module Api
         end
 
         if substep == "controllers"
-          upgrade_controller_nodes
+          upgrade_controller_clusters
           substep = "computes"
           ::Crowbar::UpgradeStatus.new.save_substep(substep)
         end
@@ -396,9 +396,23 @@ module Api
       #
       # controller nodes upgrade
       #
-      def upgrade_controller_nodes
+      def upgrade_controller_clusters
+        ::Node.find(
+          "pacemaker_founder:true"
+        ).each do |founder|
+          cluster_env = founder[:pacemaker][:config][:environment]
+          upgrade_cluster cluster_env
+        end
+      end
+
+      #
+      # upgrade of controller nodes in given cluster
+      #
+      def upgrade_cluster(cluster)
+        save_upgrade_state("Upgrading controller nodes in cluster #{cluster}")
+
         drbd_nodes = ::Node.find("drbd_rsc:*")
-        return upgrade_drbd_clusters unless drbd_nodes.empty?
+        return upgrade_drbd_cluster(cluster) unless drbd_nodes.empty?
 
         founder = ::Node.find("pacemaker_founder:true").first
         cluster = founder[:pacemaker][:config][:environment]
@@ -473,15 +487,6 @@ module Api
         # (disabling attribute causes starting the services on the node)
         node_api.disable_pre_upgrade_attribute_for node.name
         node_api.save_node_state("controller", "upgraded")
-      end
-
-      def upgrade_drbd_clusters
-        ::Node.find(
-          "pacemaker_founder:true AND drbd_rsc:*"
-        ).each do |founder|
-          cluster_env = founder[:pacemaker][:config][:environment]
-          upgrade_drbd_cluster cluster_env
-        end
       end
 
       def upgrade_drbd_cluster(cluster)
