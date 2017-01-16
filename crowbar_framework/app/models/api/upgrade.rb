@@ -400,7 +400,7 @@ module Api
 
         evacuate_network_node(network_node, network_node)
 
-        delete_pacemaker_resources network_node.name
+        delete_pacemaker_resources network_node
 
         # FIXME: do we need to ensure that this method is run only once?
         # (remember upgrade restarts after failure)
@@ -489,7 +489,7 @@ module Api
         # remove pre-upgrade attribute, so the services can start
         other_node_api.disable_pre_upgrade_attribute_for node.name
         # delete old pacemaker resources (from the node where old pacemaker is running)
-        delete_pacemaker_resources other_node.name
+        delete_pacemaker_resources other_node
         # start crowbar-join at the first node
         node_api.post_upgrade
         node_api.join_and_chef
@@ -583,25 +583,16 @@ module Api
       end
 
       # Delete existing pacemaker resources, from other node in the cluster
-      def delete_pacemaker_resources(node_name)
-        node = ::Node.find_by_name(node_name)
-        if node.nil?
-          raise_upgrade_error(
-            "Node #{node_name} was not found, cannot delete pacemaker resources."
-          )
-        end
-
-        begin
-          node.wait_for_script_to_finish(
-            "/usr/sbin/crowbar-delete-pacemaker-resources.sh", 300
-          )
-          save_upgrade_state("Deleting pacemaker resources was successful.")
-        rescue StandardError => e
-          raise_upgrade_error(
-            e.message +
+      def delete_pacemaker_resources(node)
+        node.wait_for_script_to_finish(
+          "/usr/sbin/crowbar-delete-pacemaker-resources.sh", 300
+        )
+        save_upgrade_state("Deleting pacemaker resources was successful.")
+      rescue StandardError => e
+        raise_upgrade_error(
+          e.message +
             "Check /var/log/crowbar/node-upgrade.log for details."
-          )
-        end
+        )
       end
 
       # Evacuate all routers away from the specified network node to other
