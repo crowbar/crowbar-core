@@ -535,10 +535,10 @@ class ServiceObject
   # FIXME: most of these can be validations on the model itself,
   # preferrably refactored into Validator classes.
   def save_proposal!(prop, options = {})
-    options.reverse_merge!(validate_after_save: true)
+    options.reverse_merge!(validate: true, validate_after_save: true)
     clean_proposal(prop.raw_data)
-    validate_proposal(prop.raw_data)
-    validate_proposal_elements(prop.elements)
+    validate_proposal(prop.raw_data) if options[:validate]
+    validate_proposal_elements(prop.elements) if options[:validate]
     prop.latest_applied = false
     prop.save
     validate_proposal_after_save(prop.raw_data) if options[:validate_after_save]
@@ -547,7 +547,13 @@ class ServiceObject
   # XXX: this is where proposal gets copied into a role, scheduling / ops order
   # is computed (in apply_role) and chef client gets called on the nodes.
   # Hopefully, this will get moved into a background job.
-  def proposal_commit(inst, in_queue = false, validate_after_save = true)
+  def proposal_commit(inst, options = {})
+    options.reverse_merge!(
+      in_queue: false,
+      validate: true,
+      validate_after_save: true
+    )
+
     prop = Proposal.where(barclamp: @bc_name, name: inst).first
 
     if prop.nil?
@@ -559,8 +565,10 @@ class ServiceObject
       begin
         # Put mark on the wall
         prop["deployment"][@bc_name]["crowbar-committing"] = true
-        save_proposal!(prop, validate_after_save: validate_after_save)
-        response = active_update(prop.raw_data, inst, in_queue)
+        save_proposal!(prop,
+                       validate: options[:validate],
+                       validate_after_save: options[:validate_after_save])
+        response = active_update(prop.raw_data, inst, options[:in_queue])
       rescue Chef::Exceptions::ValidationFailed => e
         @logger.error ([e.message] + e.backtrace).join("\n")
         response = [400, "Failed to validate proposal: #{e.message}"]
@@ -924,6 +932,9 @@ class ServiceObject
     apply_locks = []
     applying_nodes = []
 
+    # Cache some node attributes to avoid useless node reloads
+    node_attr_cache = {}
+
     # Part I: Looking up data & checks
     #
     # we look up the role in the database (if there is one), the new one is
@@ -1077,16 +1088,14 @@ class ServiceObject
           use_remove_role = !tmprole.nil?
 
           old_nodes.each do |node_name|
-            node = NodeObject.find_node_by_name(node_name)
+            pre_cached_nodes[node_name] ||= NodeObject.find_node_by_name(node_name)
 
             # Don't add deleted nodes to the run order, they clearly won't have
             # the old role
-            if node.nil?
+            if pre_cached_nodes[node_name].nil?
               @logger.debug "skipping deleted node #{node_name}"
               next
             end
-
-            pre_cached_nodes[node_name] = node
 
             # An old node that is not in the new deployment, drop it
             unless new_nodes.include?(node_name)
@@ -1118,7 +1127,7 @@ class ServiceObject
         # If new_nodes is empty, we are just removing the proposal.
         unless new_nodes.empty?
           new_nodes.each do |node_name|
-            node = NodeObject.find_node_by_name(node_name)
+            pre_cached_nodes[node_name] ||= NodeObject.find_node_by_name(node_name)
 
             # Don't add deleted nodes to the run order
             #
@@ -1131,12 +1140,10 @@ class ServiceObject
             # have some alias that be used to assign all existing nodes to a
             # role (which would be an improvement over the requirement to
             # explicitly list all nodes).
-            if node.nil?
+            if pre_cached_nodes[node_name].nil?
               @logger.debug "skipping deleted node #{node_name}"
               next
             end
-
-            pre_cached_nodes[node_name] = node
 
             # A new node that we did not know before
             unless old_nodes.include?(node_name)
@@ -1152,6 +1159,15 @@ class ServiceObject
       batches << nodes_in_batch unless nodes_in_batch.empty?
     end
     @logger.debug "batches: #{batches.inspect}"
+
+    # Cache attributes that are useful later on
+    pre_cached_nodes.each do |node_name, node|
+      node_attr_cache[node_name] = {
+        "alias" => node.alias,
+        "windows" => node[:platform_family] == "windows",
+        "admin" => node.admin?
+      }
+    end
 
     # save databag with the role removal intention
     proposal.save if save_proposal
@@ -1170,9 +1186,7 @@ class ServiceObject
     # pause-file.lock exists which the daemons will honour due to a
     # custom patch:
     nodes_to_lock = applying_nodes.reject do |node_name|
-      pre_cached_nodes[node_name] ||= NodeObject.find_node_by_name(node_name)
-      node = pre_cached_nodes[node_name]
-      node[:platform_family] == "windows" || node.admin?
+      node_attr_cache[node_name]["windows"] || node_attr_cache[node_name]["admin"]
     end
 
     begin
@@ -1316,13 +1330,10 @@ class ServiceObject
           "AR: Calling chef-client for #{role.name} on non-admin nodes #{non_admin_nodes.join(" ")}"
         )
         non_admin_nodes.each do |node|
-          pre_cached_nodes[node] ||= NodeObject.find_node_by_name(node)
-          nobj = pre_cached_nodes[node]
-          unless nobj[:platform_family] == "windows"
-            filename = "#{ENV['CROWBAR_LOG_DIR']}/chef-client/#{node}.log"
-            pid = run_remote_chef_client(node, "chef-client", filename)
-            pids[pid] = node
-          end
+          next if node_attr_cache[node]["windows"]
+          filename = "#{ENV['CROWBAR_LOG_DIR']}/chef-client/#{node}.log"
+          pid = run_remote_chef_client(node, "chef-client", filename)
+          pids[pid] = node
         end
         status = Process.waitall
         badones = status.select { |x| x[1].exitstatus != 0 }
