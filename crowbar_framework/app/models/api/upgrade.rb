@@ -396,9 +396,14 @@ module Api
       # If there's separate network cluster, we have touch it before we start upgrade of other
       # nodes, specificaly we need to evacuate the network routers from the first network node.
       def prepare_network_node(network_node)
-        # TODO: do something to network node
-        # TODO: do not repeat it!
-        true
+        return if network_node.upgraded?
+
+        evacuate_network_node(network_node, network_node)
+
+        delete_pacemaker_resources network_node.name
+
+        # FIXME: do we need to ensure that this method is run only once?
+        # (remember upgrade restarts after failure)
       end
 
       #
