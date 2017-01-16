@@ -252,33 +252,41 @@ class Api::UpgradeController < ApiController
   api_version "2.0"
   example '
   {
-    "ceph": {
-      "available": false,
-      "repos": {}
-    },
     "ha": {
-      "available": false,
-      "repos": {}
+      "available": true,
+      "repos": [
+        "SLE12-SP2-HA-Pool",
+        "SLE12-SP2-HA-Updates"
+      ],
+      "errors": {
+      }
     },
     "os": {
-      "available": true,
-      "repos": {}
-    },
-    "openstack": {
       "available": false,
-      "repos": {
+      "repos": [
+        "SLES12-SP2-Pool",
+        "SLES12-SP2-Updates"
+      ],
+      "errors": {
         "missing": {
           "x86_64": [
-            "SUSE-OpenStack-Cloud-8-Pool",
-            "SUSE-OpenStack-Cloud-8-Updates"
+            "SLES12-SP2-Pool"
           ]
         },
         "inactive": {
           "x86_64": [
-            "SUSE-OpenStack-Cloud-8-Pool",
-            "SUSE-OpenStack-Cloud-8-Updates"
+            "SLES12-SP2-Pool"
           ]
         }
+      }
+    },
+    "openstack": {
+      "available": true,
+      "repos": [
+        "SUSE-OpenStack-Cloud-7-Pool",
+        "SUSE-OpenStack-Cloud-7-Updates"
+      ],
+      "errors": {
       }
     }
   }
@@ -311,7 +319,11 @@ class Api::UpgradeController < ApiController
     },
     "openstack": {
       "available": false,
-      "repos": {
+      "repos": [
+        "SUSE-OpenStack-Cloud-8-Pool",
+        "SUSE-OpenStack-Cloud-8-Updates"
+      ],
+      "errors":
         "x86_64": {
           "missing": [
             "SUSE-OpenStack-Cloud-8-Pool",
