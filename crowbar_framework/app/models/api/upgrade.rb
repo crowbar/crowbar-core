@@ -470,7 +470,7 @@ module Api
         other_node_api = Api::Node.new other_node.name
         node_api.save_node_state("controller")
         save_upgrade_state("Starting the upgrade of node #{node.name}")
-        evacuate_network_node(node, node["hostname"])
+        evacuate_network_node(node, node)
 
         # upgrade the first node
         node_api.upgrade
@@ -497,7 +497,7 @@ module Api
         node_api.save_node_state("controller")
 
         unless node.ready?
-          evacuate_network_node(founder, node["hostname"], true)
+          evacuate_network_node(founder, node, true)
           save_upgrade_state("Starting the upgrade of node #{node.name}")
           node_api.upgrade
           node_api.post_upgrade
@@ -603,12 +603,19 @@ module Api
       # available network nodes. The evacuation procedure is started on the
       # specified controller node
       def evacuate_network_node(controller, network_node, delete_namespaces = false)
-        args = [network_node]
+        hostname = network_node["hostname"]
+        unless network_node[:run_list_map].key? "neutron-network"
+          Rails.logger.info(
+            "Node #{hostname} does not have 'neutron-network' role. Nothing to evacuate."
+          )
+          return
+        end
+        args = [hostname]
         args << "delete-ns" if delete_namespaces
         controller.wait_for_script_to_finish(
           "/usr/sbin/crowbar-router-migration.sh", 600, args
         )
-        save_upgrade_state("Migrating routers away from #{network_node} was successful.")
+        save_upgrade_state("Migrating routers away from #{hostname} was successful.")
 
         # Cleanup up the ok/failed state files, as we likely need to
         # run the script again on this node (to evacuate other nodes)
