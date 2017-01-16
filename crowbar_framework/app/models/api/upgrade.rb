@@ -393,29 +393,50 @@ module Api
 
       protected
 
+      # If there's separate network cluster, we have touch it before we start upgrade of other
+      # nodes, specificaly we need to evacuate the network routers from the first network node.
+      def prepare_network_node(network_node)
+        # TODO: do something to network node
+        # TODO: do not repeat it!
+        true
+      end
+
       #
       # controller nodes upgrade
       #
       def upgrade_controller_clusters
-        ::Node.find(
-          "pacemaker_founder:true"
-        ).each do |founder|
+        network_node = ::Node.find(
+          "pacemaker_founder:true AND " \
+          "run_list_map:neutron-network AND NOT " \
+          "run_list_map:neutron-server"
+        ).first
+        prepare_network_node(network_node) unless network_node.nil?
+
+        # Now we must upgrade the clusters in the correct order:
+        # 1. data, 2. API, 3. network
+        cluster_founders = ::Node.find("pacemaker_founder:true")
+
+        sorted_founders = cluster_founders.sort do |n1, n2|
+          first_data = n1[:run_list_map].key? "database-server"
+          first_api = n1[:run_list_map].key? "keystone-server"
+          second_net = n2[:run_list_map].key? "neutron-network"
+          first_data || (first_api && second_net) ? -1 : 1
+        end
+        sorted_founders.each do |founder|
           cluster_env = founder[:pacemaker][:config][:environment]
-          upgrade_cluster cluster_env
+          upgrade_cluster founder, cluster_env
         end
       end
 
       #
       # upgrade of controller nodes in given cluster
       #
-      def upgrade_cluster(cluster)
+      def upgrade_cluster(founder, cluster)
+        if founder["drbd"] && founder["drbd"]["rsc"] && founder["drbd"]["rsc"].any?
+          return upgrade_drbd_cluster(cluster)
+        end
+
         save_upgrade_state("Upgrading controller nodes in cluster #{cluster}")
-
-        drbd_nodes = ::Node.find("drbd_rsc:*")
-        return upgrade_drbd_cluster(cluster) unless drbd_nodes.empty?
-
-        founder = ::Node.find("pacemaker_founder:true").first
-        cluster = founder[:pacemaker][:config][:environment]
 
         non_founder_nodes = ::Node.find(
           "pacemaker_founder:false AND " \
