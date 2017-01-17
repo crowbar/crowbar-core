@@ -28,7 +28,7 @@ class Node < ChefObject
     @role = RoleObject.find_role_by_name Node.make_role_name(node.name)
     if @role.nil?
       # An admin node can exist without a role - so create one
-      if !node["crowbar"].nil? and node["crowbar"]["admin_node"]
+      if !node.crowbar["crowbar"].nil? and node.crowbar["crowbar"]["admin_node"]
         @role = Node.create_new_role(node.name, node)
       else
         Rails.logger.fatal("Node exists without role!! #{node.name}")
@@ -370,7 +370,7 @@ class Node < ChefObject
 
   def ipmi_enabled?
     #placeholder until we have a better mechanism
-    @node.nil? ? false : @node["crowbar"]["allocated"]
+    @node.nil? ? false : @node.crowbar["crowbar"]["allocated"]
   end
 
   # creates a hash with key attributes of the node from ohai for comparison
@@ -660,9 +660,9 @@ class Node < ChefObject
   #
   def admin?
     return false if @node.nil?
-    return false if @node["crowbar"].nil?
-    return false if @node["crowbar"]["admin_node"].nil?
-    @node["crowbar"]["admin_node"]
+    return false if @node.crowbar["crowbar"].nil?
+    return false if @node.crowbar["crowbar"]["admin_node"].nil?
+    @node.crowbar["crowbar"]["admin_node"]
   end
 
   def interface_list

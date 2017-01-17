@@ -277,7 +277,7 @@ module Crowbar
 
     ## Return the list of bonds from the node
     def cr_node_bond_list
-      @node["crowbar"]["bond_list"] || {}
+      @node.crowbar["crowbar"]["bond_list"] || {}
     end
 
     ## Output an error message
