@@ -1283,17 +1283,17 @@ class ServiceObject
     pre_cached_nodes = {}
 
     # Each batch is a list of nodes that can be done in parallel.
-    batches.each do |nodes|
-      @logger.debug "Applying batch: #{nodes.inspect}"
+    batches.each do |node_names|
+      @logger.debug "Applying batch: #{node_names.inspect}"
 
       threads = {}
-      nodes.each do |node|
-        next if node_attr_cache[node]["windows"]
-        ran_admin = true if node_attr_cache[node]["admin"]
+      node_names.each do |node_name|
+        next if node_attr_cache[node_name]["windows"]
+        ran_admin = true if node_attr_cache[node_name]["admin"]
 
-        filename = "#{ENV["CROWBAR_LOG_DIR"]}/chef-client/#{node}.log"
-        thread = run_remote_chef_client(node, "chef-client", filename)
-        threads[thread] = node
+        filename = "#{ENV["CROWBAR_LOG_DIR"]}/chef-client/#{node_name}.log"
+        thread = run_remote_chef_client(node_name, "chef-client", filename)
+        threads[thread] = node_name
       end
 
       # wait for all running threads and collect the ones with a non-zero return value
