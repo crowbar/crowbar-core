@@ -89,6 +89,10 @@ describe Api::Crowbar do
           receive(:addon_installed?).with(addon).
           and_return(true)
         )
+        allow(Api::Crowbar).to(
+          receive(:addon_deployed?).with(addon).
+          and_return(true)
+        )
         allow(Api::Node).to(
           receive(:repocheck).with(addon: addon).and_return(
             addon => { "available" => true }
