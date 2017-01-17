@@ -62,7 +62,7 @@ class Api::NodesController < ApiController
       }, status: :not_found
     end
 
-    node.last_seen = DateTime.now
+    node.seen_at = DateTime.now
     node.save
 
     render json: {status: :updated}

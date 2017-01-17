@@ -47,7 +47,7 @@ describe Api::NodesController, type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to be('{"status":"updated"}')
-      expect(sample.last_seen).to_not be_nil
+      expect(sample.seen_at).to_not be_nil
     end
   end
 end
