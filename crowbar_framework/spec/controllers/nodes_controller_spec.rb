@@ -56,7 +56,7 @@ describe NodesController do
   describe "POST update" do
     before do
       allow(Node).to receive(:find_node_by_public_name).and_return(nil)
-      @node = Node.find_node_by_name("admin")
+      @node = Node.find_node_by_name("admin.crowbar.com")
     end
 
     describe "coming from the allocate form" do
@@ -100,8 +100,8 @@ describe NodesController do
   end
 
   describe "POST bulk" do
-    let(:admin) { Node.find_node_by_name("admin") }
-    let(:node) { Node.find_node_by_name("testing") }
+    let(:admin) { Node.find_node_by_name("admin.crowbar.com") }
+    let(:node) { Node.find_node_by_name("testing.crowbar.com") }
 
     it "redirects to nodes list on success if return param passed" do
       post :bulk, node: { node.name => { "allocate" => true, "alias" => "newalias" } }, return: "true"
@@ -144,7 +144,7 @@ describe NodesController do
   end
 
   describe "GET families" do
-    let(:node) { Node.find_node_by_name("testing") }
+    let(:node) { Node.find_node_by_name("testing.crowbar.com") }
 
     it "is successful" do
       get :families
@@ -190,7 +190,7 @@ describe NodesController do
 
   describe "GET show" do
     it "is successful" do
-      get :show, id: "testing"
+      get :show, id: "testing.crowbar.com"
       expect(response).to be_success
     end
 
@@ -202,7 +202,7 @@ describe NodesController do
       end
 
       it "renders json" do
-        get :show, id: "testing", format: "json"
+        get :show, id: "testing.crowbar.com", format: "json"
         expect(response).to be_success
       end
     end
@@ -222,26 +222,26 @@ describe NodesController do
     end
 
     it "returns 500 for invalid action" do
-      post :hit, req: "some nonsense", id: "testing"
+      post :hit, req: "some nonsense", id: "testing.crowbar.com"
       expect(response).to be_server_error
     end
 
     it "sets the machine state" do
       ["reinstall", "reset", "confupdate", "delete"].each do |action|
-        post :hit, req: action, id: "testing"
+        post :hit, req: action, id: "testing.crowbar.com"
         expect(response).to redirect_to(node_url("testing"))
       end
 
       ["reboot", "shutdown", "poweron", "powercycle", "poweroff", "identify", "allocate"].each do |action|
         expect_any_instance_of(Node).to receive(action.to_sym)
-        post :hit, req: action, id: "testing"
+        post :hit, req: action, id: "testing.crowbar.com"
       end
     end
   end
 
   describe "POST group_change" do
     before do
-      @node = Node.find_node_by_name("testing")
+      @node = Node.find_node_by_name("testing.crowbar.com")
     end
 
     it "returns not found for nonexistent node" do
@@ -274,7 +274,7 @@ describe NodesController do
 
   describe "GET attribute" do
     before do
-      @node = Node.find_node_by_name("testing")
+      @node = Node.find_node_by_name("testing.crowbar.com")
     end
 
     # FIXME: maybe regular 404 would be better?

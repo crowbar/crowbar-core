@@ -88,18 +88,18 @@ describe MachinesController do
 
   describe "GET show" do
     it "is successful" do
-      get :show, name: "testing", format: "json"
+      get :show, name: "testing.crowbar.com", format: "json"
       expect(response).to have_http_status(:ok)
     end
 
     it "renders json" do
-      get :show, name: "testing", format: "json"
+      get :show, name: "testing.crowbar.com", format: "json"
       expect(JSON.parse(response.body)).to be_a(Hash)
     end
 
     context "for existent node" do
       it "fetches with name" do
-        get :show, name: "testing", format: "json"
+        get :show, name: "testing.crowbar.com", format: "json"
         json = JSON.parse(response.body)
 
         expect(json["name"]).to eq("testing.crowbar.com")
@@ -126,7 +126,7 @@ describe MachinesController do
       it "assignes role compute" do
         expect_any_instance_of(Node).to receive(:intended_role=).with("compute")
 
-        post :role, name: "testing", role: "compute", format: "json"
+        post :role, name: "testing.crowbar.com", role: "compute", format: "json"
         expect(response).to have_http_status(:ok)
       end
     end
@@ -140,7 +140,7 @@ describe MachinesController do
       allow_any_instance_of(Node).to receive(:save).and_return(false)
       expect_any_instance_of(Node).to receive(:intended_role=).with("compute")
 
-      post :role, name: "testing", role: "compute", format: "json"
+      post :role, name: "testing.crowbar.com", role: "compute", format: "json"
 
       expect(response).to have_http_status(:unprocessable_entity)
     end
@@ -151,7 +151,7 @@ describe MachinesController do
       it "renames a node to tester" do
         expect_any_instance_of(Node).to receive(:alias=).with("tester")
 
-        post :rename, name: "testing", alias: "tester", format: "json"
+        post :rename, name: "testing.crowbar.com", alias: "tester", format: "json"
         expect(response).to have_http_status(:ok)
       end
     end
@@ -165,7 +165,7 @@ describe MachinesController do
       allow_any_instance_of(Node).to receive(:save).and_return(false)
       expect_any_instance_of(Node).to receive(:alias=).with("tester")
 
-      post :rename, name: "testing", alias: "tester", format: "json"
+      post :rename, name: "testing.crowbar.com", alias: "tester", format: "json"
 
       expect(response).to have_http_status(:unprocessable_entity)
     end
@@ -180,7 +180,7 @@ describe MachinesController do
         it "invokes #{action}" do
           expect_any_instance_of(Node).to receive(action)
 
-          post action, name: "testing", format: "json"
+          post action, name: "testing.crowbar.com", format: "json"
           expect(response).to have_http_status(:ok)
         end
       end
@@ -210,13 +210,13 @@ describe MachinesController do
         it "invokes #{action}" do
           expect_any_instance_of(Node).to receive(action)
 
-          post action, name: "testing", format: "json"
+          post action, name: "testing.crowbar.com", format: "json"
           expect(response).to have_http_status(:ok)
         end
 
         it "return 403 (forbidden) http status for admin node" do
           allow_any_instance_of(Node).to receive(:admin?).and_return(true)
-          post action, name: "testing", format: "json"
+          post action, name: "testing.crowbar.com", format: "json"
           expect(response).to have_http_status(:forbidden)
         end
       end

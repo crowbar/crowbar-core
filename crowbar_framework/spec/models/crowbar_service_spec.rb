@@ -27,7 +27,7 @@ describe CrowbarService do
 
   describe "transition" do
     it "returns 404 without state" do
-      response = crowbar.transition("default", "testing", nil)
+      response = crowbar.transition("default", "testing.crowbar.com", nil)
       expect(response.first).to be == 404
     end
 
@@ -39,13 +39,13 @@ describe CrowbarService do
 
     it "returns 200 on successful transition" do
       allow(RoleObject).to receive(:find_roles_by_search).and_return([])
-      response = crowbar.transition("default", "testing", "a state")
+      response = crowbar.transition("default", "testing.crowbar.com", "a state")
       expect(response.first).to be == 200
     end
 
     describe "to another state" do
       before do
-        @node = Node.find_node_by_name("testing")
+        @node = Node.find_node_by_name("testing.crowbar.com")
       end
 
       it "sets the state debug and state" do
@@ -71,7 +71,7 @@ describe CrowbarService do
 
     describe "to discovering" do
       before do
-        @node = Node.find_node_by_name("testing")
+        @node = Node.find_node_by_name("testing.crowbar.com")
       end
 
       it "adds role to the node if admin" do
@@ -88,43 +88,43 @@ describe CrowbarService do
 
       it "check that the node is initially not allocated" do
         allow(Node).to receive(:find_node_by_name).and_return(@node)
-        crowbar.transition("default", "testing", "discovering")
+        crowbar.transition("default", "testing.crowbar.com", "discovering")
         expect(@node.allocated?).to be false
       end
     end
 
     describe "to hardware-installing" do
       before do
-        @node = Node.find_node_by_name("testing")
+        @node = Node.find_node_by_name("testing.crowbar.com")
       end
 
       it "forces nodes transition to a given state" do
         allow(Node).to receive(:find_node_by_name).and_return(@node)
-        crowbar.transition("default", "testing", "hardware-installing")
+        crowbar.transition("default", "testing.crowbar.com", "hardware-installing")
         expect(@node.state).to be == "hardware-installing"
       end
     end
 
     describe "to hardware-updating" do
       before do
-        @node = Node.find_node_by_name("testing")
+        @node = Node.find_node_by_name("testing.crowbar.com")
       end
 
       it "forces nodes transition to a given state" do
         allow(Node).to receive(:find_node_by_name).and_return(@node)
-        crowbar.transition("default", "testing", "hardware-updating")
+        crowbar.transition("default", "testing.crowbar.com", "hardware-updating")
         expect(@node.state).to be == "hardware-updating"
       end
     end
 
     describe "to update" do
       before do
-        @node = Node.find_node_by_name("testing")
+        @node = Node.find_node_by_name("testing.crowbar.com")
       end
 
       it "forces nodes transition to a given state" do
         allow(Node).to receive(:find_node_by_name).and_return(@node)
-        crowbar.transition("default", "testing", "update")
+        crowbar.transition("default", "testing.crowbar.com", "update")
         expect(@node.state).to be == "update"
       end
     end
