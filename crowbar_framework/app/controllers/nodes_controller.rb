@@ -131,7 +131,7 @@ class NodesController < ApplicationController
         node_values.each do |node_name, node_attributes|
           begin
             dirty = false
-            node = Node.find_node_by_name node_name
+            node = Node.find_by_name(node_name)
             is_allocated = node.allocated?
 
             if node_attributes["allocate"] and not is_allocated
@@ -240,7 +240,7 @@ class NodesController < ApplicationController
   param :group, String, desc: "Group name", required: true
   error 404, "Node not found"
   def group_change
-    Node.find_node_by_name(params[:id]).tap do |node|
+    Node.find_by_name(params[:id]).tap do |node|
       raise ActionController::RoutingError.new("Not Found") if node.nil?
 
       if params[:group].downcase.eql? "automatic"
@@ -368,7 +368,7 @@ class NodesController < ApplicationController
   ], desc: "Action that needs to be performed on the node", required: true
   def hit
     name = params[:name] || params[:id]
-    machine = Node.find_node_by_name name
+    machine = Node.find_by_name(name)
 
     respond_to do |format|
       format.json do
@@ -494,7 +494,7 @@ class NodesController < ApplicationController
 
   #this code allow us to get values of attributes by path of node
   def attribute
-    @node = Node.find_node_by_name(params[:name])
+    @node = Node.find_by_name(params[:name])
     raise ActionController::RoutingError.new("Node #{params[:name]} not found.") if @node.nil?
     @attribute = @node.to_hash
     params[:path].to_a.each do |element|
@@ -559,7 +559,7 @@ class NodesController < ApplicationController
   def get_node_and_network(node_name)
     network = {}
     @network = []
-    @node = Node.find_node_by_name(node_name) if @node.nil?
+    @node = Node.find_by_name(node_name) if @node.nil?
     if @node
       # If we're in discovery mode, then we have a temporary DHCP IP address.
       if !["discovering", "discovered"].include?(@node.state)

@@ -49,7 +49,7 @@ class DeployerService < ServiceObject
     end
 
     if state == "discovered"
-      node = Node.find_node_by_name(name)
+      node = Node.find_by_name(name)
 
       if node.admin?
         # We are an admin node - display bios updates for now.
@@ -75,7 +75,7 @@ class DeployerService < ServiceObject
     #
     # Once we have been allocated, we setup the raid/bios info
     if state == "hardware-installing"
-      node = Node.find_node_by_name(name)
+      node = Node.find_by_name(name)
       # build a list of current and pending roles to check against
       roles = node.roles ? node.roles.dup : []
       unless node.crowbar["crowbar"]["pending"].nil?
@@ -118,7 +118,7 @@ class DeployerService < ServiceObject
       "reset", "reinstall",
       "update"
     ].member?(state)
-      node = Node.find_node_by_name(name)
+      node = Node.find_by_name(name)
       client = ClientObject.find_client_by_name name
       unless node.admin? || client.nil?
         @logger.debug("Deployer transition: deleting a chef client for #{name}")
@@ -139,4 +139,3 @@ class DeployerService < ServiceObject
     return [200, { name: name }]
   end
 end
-

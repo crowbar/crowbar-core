@@ -1628,7 +1628,7 @@ class Node < ChefObject
       end
     end
 
-    def find_node_by_name(name)
+    def find_by_name(name)
       name += ".#{Crowbar::Settings.domain}" unless name =~ /(.*)\.(.)/
       begin
         chef_node = Chef::Node.load(name)
@@ -1647,8 +1647,13 @@ class Node < ChefObject
       end
     end
 
+    def find_node_by_name(name)
+      Rails.logger.warn("find_node_by_name is deprecated, please use find_by_name!")
+      find_by_name(name)
+    end
+
     def find_node_by_name_or_alias(name)
-      node = find_node_by_name(name)
+      node = find_by_name(name)
 
       if node.nil?
         find_node_by_alias(name)

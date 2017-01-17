@@ -17,7 +17,7 @@
 module Api
   class Node < Tableless
     def initialize(name = nil)
-      @node = ::Node.find_node_by_name name
+      @node = ::Node.find_by_name(name)
     end
 
     # execute script in background and wait for it to finish
@@ -74,7 +74,7 @@ module Api
         )
       end
       # We know that the script has succeeded, but it does not necessary mean we're fine:
-      @node = ::Node.find_node_by_name @node.name
+      @node = ::Node.find_by_name(@node.name)
       if @node.ready_after_upgrade?
         Rails.logger.info("Initial chef-client run was successful.")
       else
