@@ -227,7 +227,6 @@ Rails.application.routes.draw do
       get :upgrade
       post :upgrade
       get :maintenance
-      put :ping
 
       resources :backups,
         only: [:index, :show, :create, :destroy] do
@@ -259,6 +258,9 @@ Rails.application.routes.draw do
       post :adminbackup
       post :openstackbackup
     end
+
+    # put this not into resources
+    put :ping, to: "nodes#ping"
 
     resources :nodes,
       only: [:index, :show, :update] do

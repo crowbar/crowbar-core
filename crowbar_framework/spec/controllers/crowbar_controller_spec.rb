@@ -296,24 +296,5 @@ describe CrowbarController do
         put :proposal_update, name: "default", barclamp: "crowbar", submit: I18n.t("barclamp.proposal_show.save_proposal"), proposal_attributes: "{}", proposal_deployment: "{}"
       end
     end
-
-    describe "PUT ping" do
-      it "returns a error if unkown hostname was submitted" do
-        put :ping, hostname: "unkown_hostname"
-        expect(response).to have_http_status(:not_found)
-        expect(response.body).to be('{"status":"failed","reason":"Unkown node"}')
-      end
-
-      it "returns updated if hostname was found" do
-        Node.create(name: "sample")
-
-        put :ping, hostname: "sample"
-        sample = Node.find_by(name: "sample")
-
-        expect(response).to have_http_status(:ok)
-        expect(response.body).to be('{"status":"updated"}')
-        expect(sample.last_seen).to_not be_nil
-      end
-    end
   end
 end
