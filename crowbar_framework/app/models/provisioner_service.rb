@@ -97,11 +97,11 @@ class ProvisionerService < ServiceObject
       node = Node.find_node_by_name(name)
       save_it = false
 
-      node["crowbar_wall"] ||= {}
+      node.crowbar_wall ||= {}
 
       ["boot_device", "claimed_disks"].each do |key|
-        next unless node["crowbar_wall"].key?(key)
-        node["crowbar_wall"].delete(key)
+        next unless node.crowbar_wall.key?(key)
+        node.crowbar_wall.delete(key)
         save_it = true
       end
 
