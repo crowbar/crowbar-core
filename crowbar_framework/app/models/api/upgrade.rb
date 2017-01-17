@@ -162,18 +162,23 @@ module Api
             }
           end
 
-          unless zypper_stream["prompt"].nil?
+          prompt = zypper_stream["prompt"]
+          unless prompt.nil?
+            # keep only first prompt for easier formatting
+            prompt = prompt.first if prompt.is_a?(Array)
+
             upgrade_status.end_step(
               false,
               repocheck_crowbar: {
-                data: zypper_stream["prompt"]["text"],
+                data: prompt["text"],
                 help: "Make sure you complete the required action and try again."
               }
             )
+
             return {
               status: :service_unavailable,
               error: I18n.t(
-                "api.crowbar.zypper_prompt", zypper_prompt_text: zypper_stream["prompt"]["text"]
+                "api.crowbar.zypper_prompt", zypper_prompt_text: prompt["text"]
               )
             }
           end
