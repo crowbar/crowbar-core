@@ -16,7 +16,7 @@ describe Api::Crowbar do
       )
     )
   end
-  let!(:node) { Node.find_node_by_name("testing") }
+  let!(:node) { Node.find_node_by_name("testing.crowbar.com") }
 
   before(:each) do
     allow_any_instance_of(Kernel).to(
