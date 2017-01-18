@@ -56,7 +56,7 @@ describe NodesController do
   describe "POST update" do
     before do
       allow(Node).to receive(:find_node_by_public_name).and_return(nil)
-      @node = Node.find_node_by_name("admin.crowbar.com")
+      @node = Node.find_by_name("admin.crowbar.com")
     end
 
     describe "coming from the allocate form" do
@@ -100,8 +100,8 @@ describe NodesController do
   end
 
   describe "POST bulk" do
-    let(:admin) { Node.find_node_by_name("admin.crowbar.com") }
-    let(:node) { Node.find_node_by_name("testing.crowbar.com") }
+    let(:admin) { Node.find_by_name("admin.crowbar.com") }
+    let(:node) { Node.find_by_name("testing.crowbar.com") }
 
     it "redirects to nodes list on success if return param passed" do
       post :bulk, node: { node.name => { "allocate" => true, "alias" => "newalias" } }, return: "true"
@@ -144,7 +144,7 @@ describe NodesController do
   end
 
   describe "GET families" do
-    let(:node) { Node.find_node_by_name("testing.crowbar.com") }
+    let(:node) { Node.find_by_name("testing.crowbar.com") }
 
     it "is successful" do
       get :families
@@ -241,7 +241,7 @@ describe NodesController do
 
   describe "POST group_change" do
     before do
-      @node = Node.find_node_by_name("testing.crowbar.com")
+      @node = Node.find_by_name("testing.crowbar.com")
     end
 
     it "returns not found for nonexistent node" do
@@ -252,7 +252,7 @@ describe NodesController do
     end
 
     it "assigns a node to a group" do
-      allow(Node).to receive(:find_node_by_name).and_return(@node)
+      allow(Node).to receive(:find_by_name).and_return(@node)
 
       new_group = "new_group"
       post :group_change, id: @node.name, group: new_group
@@ -262,7 +262,7 @@ describe NodesController do
     end
 
     it "sets node group to blank if 'automatic' passed" do
-      allow(Node).to receive(:find_node_by_name).and_return(@node)
+      allow(Node).to receive(:find_by_name).and_return(@node)
 
       new_group = "automatic"
       post :group_change, id: @node.name, group: new_group
@@ -274,7 +274,7 @@ describe NodesController do
 
   describe "GET attribute" do
     before do
-      @node = Node.find_node_by_name("testing.crowbar.com")
+      @node = Node.find_by_name("testing.crowbar.com")
     end
 
     # FIXME: maybe regular 404 would be better?

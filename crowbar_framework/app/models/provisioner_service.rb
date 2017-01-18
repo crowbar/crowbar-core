@@ -77,7 +77,7 @@ class ProvisionerService < ServiceObject
 
     if state == "hardware-installing"
       # ensure target platform is set before we claim a disk for boot OS
-      node = Node.find_node_by_name(name)
+      node = Node.find_by_name(name)
       if node[:target_platform].nil? or node[:target_platform].empty?
         node[:target_platform] = Node.default_platform
         node.save
@@ -85,7 +85,7 @@ class ProvisionerService < ServiceObject
     end
 
     if state == "readying"
-      node = Node.find_node_by_name(name)
+      node = Node.find_by_name(name)
       node.process_raid_claims
     end
 
@@ -94,7 +94,7 @@ class ProvisionerService < ServiceObject
       # after a reset.
       @logger.debug("Provisioner transition: clearing node data (claimed disks, boot device, etc.)")
 
-      node = Node.find_node_by_name(name)
+      node = Node.find_by_name(name)
       save_it = false
 
       node["crowbar_wall"] ||= {}
@@ -110,13 +110,13 @@ class ProvisionerService < ServiceObject
 
     if state == "delete"
       # BA LOCK NOT NEEDED HERE.  NODE IS DELETING
-      node = Node.find_node_by_name(name)
+      node = Node.find_by_name(name)
       node.crowbar["state"] = "delete-final"
       node.save
     end
 
     # test state machine and call chef-client if state changes
-    node = Node.find_node_by_name(name)
+    node = Node.find_by_name(name)
     role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
 
     unless node.admin? ||
@@ -143,7 +143,7 @@ class ProvisionerService < ServiceObject
       config = nil
     else
       server_nodes_names = role.override_attributes["provisioner"]["elements"]["provisioner-server"]
-      server_node = NodeObject.find_node_by_name(server_nodes_names.first)
+      server_node = Node.find_by_name(server_nodes_names.first)
       admin_net = server_node.get_network_by_type("admin")
 
       protocol = "http"

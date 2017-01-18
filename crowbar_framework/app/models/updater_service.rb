@@ -57,7 +57,7 @@ class UpdaterService < ServiceObject
     @logger.debug("Updater apply_role_post_chef_call: entering #{all_nodes.inspect}")
     # Remove [:updater][:one_shot_run] flag from node
     all_nodes.each do |n|
-      node = Node.find_node_by_name n
+      node = Node.find_by_name(n)
       unless node[:updater].nil?
         node[:updater][:one_shot_run] = false
         @logger.debug("Updater apply_role_post_chef_call: delete [:updater][:one_shot_run] for #{node.name} (#{node[:updater].inspect}")

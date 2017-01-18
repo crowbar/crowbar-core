@@ -171,7 +171,7 @@ describe Api::UpgradeController, type: :request do
         receive(:roles).and_return(["crowbar"])
       )
       allow(Node).to(
-        receive(:all).and_return([Node.find_node_by_name("testing.crowbar.com")])
+        receive(:all).and_return([Node.find_by_name("testing.crowbar.com")])
       )
       allow(Api::Upgrade).to(
         receive(:target_platform).and_return("suse-12.2")

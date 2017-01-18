@@ -55,7 +55,7 @@ class NtpService < ServiceObject
   def transition(inst, name, state)
     @logger.debug("NTP transition: entering: #{name} for #{state}")
 
-    node = Node.find_node_by_name name
+    node = Node.find_by_name(name)
     if node.allocated? && !node.role?("ntp-server")
       db = Proposal.where(barclamp: @bc_name, name: inst).first
       role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
@@ -84,7 +84,7 @@ class NtpService < ServiceObject
       config = nil
     else
       server_nodes_names = role.override_attributes["ntp"]["elements"]["ntp-server"]
-      server_nodes = server_nodes_names.map { |n| NodeObject.find_node_by_name n }
+      server_nodes = server_nodes_names.map { |n| Node.find_by_name(n) }
 
       addresses = server_nodes.map do |n|
         admin_net = n.get_network_by_type("admin")

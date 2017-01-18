@@ -27,7 +27,7 @@ describe Node do
         :find_nodes_by_name,
         :find_node_by_alias,
         :find_node_by_public_name,
-        :find_node_by_name,
+        :find_by_name,
         :find_node_by_name_or_alias
       ].each do |method|
         it "responds to #{method}" do
@@ -52,9 +52,9 @@ describe Node do
       end
     end
 
-    describe "find_node_by_name" do
+    describe "find_by_name" do
       it "returns nodes matching name" do
-        node = Node.find_node_by_name("testing")
+        node = Node.find_by_name("testing")
         expect(node).to_not be_nil
         expect(node.name).to include("testing")
       end
@@ -71,7 +71,7 @@ describe Node do
 
   describe "license_key" do
     describe "assignment" do
-      let(:node) { Node.find_node_by_name("testing") }
+      let(:node) { Node.find_by_name("testing") }
       let(:key) { "a key" }
 
       it "sets the key if the platform requires one" do
@@ -89,8 +89,8 @@ describe Node do
   end
 
   describe "alias" do
-    let(:testing_node) { Node.find_node_by_name("testing") }
-    let(:admin_node) { Node.find_node_by_name("admin") }
+    let(:testing_node) { Node.find_by_name("testing") }
+    let(:admin_node) { Node.find_by_name("admin") }
 
     it "doesnt allow duplicates" do
       # Stub out chef call

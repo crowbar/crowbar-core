@@ -184,7 +184,7 @@ class CrowbarService < ServiceObject
     node = nil
 
     with_lock "BA-LOCK" do
-      node = Node.find_node_by_name name
+      node = Node.find_by_name(name)
       if node.nil? and (state == "discovering" or state == "testing")
         @logger.debug("Crowbar transition: creating new node for #{name} to #{state}")
         node = Node.create_new name
@@ -478,7 +478,7 @@ class CrowbarService < ServiceObject
   def apply_role_pre_chef_call(old_role, role, all_nodes)
     @logger.debug("crowbar apply_role_pre_chef_call: entering #{all_nodes.inspect}")
     all_nodes.each do |n|
-      node = Node.find_node_by_name n
+      node = Node.find_by_name(n)
       # value of crowbar_wall["crowbar_upgrade"] indicates that the role should be executed
       # but node state should not be changed: this is needed when reverting node state to ready
       if node.role?("crowbar-upgrade") &&
