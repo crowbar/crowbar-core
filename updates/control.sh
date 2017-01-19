@@ -187,6 +187,7 @@ nuke_everything() {
         [[ -b /dev/$name && -w /dev/$name && $name != name ]] || continue
         [[ $name = loop* ]] && continue
         [[ $name = dm* ]] && continue
+        [[ $name = sr* ]] && continue
         if [[ $name = md* ]] ; then
             mdadm --stop /dev/$name
         fi
