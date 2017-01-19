@@ -111,6 +111,9 @@ describe Api::Upgrade do
       allow(Api::Pacemaker).to receive(
         :clusters_health_report
       ).and_return({})
+      allow(Api::Crowbar).to receive(
+        :health_check
+      ).and_return({})
 
       expect(subject.class).to respond_to(:checks)
       expect(subject.class.checks.deep_stringify_keys).to eq(prechecks["checks"])
@@ -140,6 +143,9 @@ describe Api::Upgrade do
         receive(:wait_for_script_to_finish).with(
           "/usr/sbin/crowbar-delete-cinder-services-before-upgrade.sh", 300
         ).and_return(true)
+      )
+      allow(Api::Crowbar).to(
+        receive(:health_check).and_return({})
       )
 
       expect(subject.class.services).to be_a(Delayed::Backend::ActiveRecord::Job)

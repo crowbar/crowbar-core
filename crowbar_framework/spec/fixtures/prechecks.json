@@ -5,6 +5,11 @@
       "passed": true,
       "errors": {}
     },
+    "cloud_healthy": {
+      "required": true,
+      "passed": true,
+      "errors": {}
+    },
     "maintenance_updates_installed": {
       "required": true,
       "passed": true,

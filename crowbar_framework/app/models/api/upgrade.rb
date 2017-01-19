@@ -39,6 +39,13 @@ module Api
             errors: network.empty? ? {} : sanity_check_errors(network)
           }
 
+          health_check = Api::Crowbar.health_check
+          ret[:cloud_healthy] = {
+            required: true,
+            passed: health_check.empty?,
+            errors: health_check.empty? ? {} : health_check_errors(health_check)
+          }
+
           maintenance_updates = ::Crowbar::Checks::Maintenance.updates_status
           ret[:maintenance_updates_installed] = {
             required: true,
@@ -808,6 +815,18 @@ module Api
             help: I18n.t("api.upgrade.prechecks.network_checks.help.default")
           }
         }
+      end
+
+      def health_check_errors(check)
+        ret = {}
+        if check[:nodes_not_ready]
+          ret[:nodes_not_ready] = {
+            data: I18n.t("api.upgrade.prechecks.not_ready.error",
+              nodes: check[:nodes_not_ready].join(",")),
+            help: I18n.t("api.upgrade.prechecks.not_ready.help")
+          }
+        end
+        ret
       end
 
       def maintenance_updates_check_errors(check)

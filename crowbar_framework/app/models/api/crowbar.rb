@@ -78,6 +78,17 @@ module Api
         end
       end
 
+      # Various cloud health checks that must pass before we can upgrade
+      def health_check
+        ret = {}
+        unready = []
+        NodeObject.find_all_nodes.each do |node|
+          unready << node.name unless node.ready?
+        end
+        ret[:nodes_not_ready] = unready unless unready.empty?
+        ret
+      end
+
       def ceph_status
         {}.tap do |ret|
           ceph_node = ::Node.find("roles:ceph-mon AND ceph_config_environment:*").first
