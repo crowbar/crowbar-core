@@ -162,26 +162,38 @@ module Api
           os_available = repo_version_available?(products, "SLES", "12.2")
           ret[:os] = {
             available: os_available,
-            repos: {}
+            repos: [
+              "SLES12-SP2-Pool",
+              "SLES12-SP2-Updates"
+            ],
+            errors: {}
           }
-          ret[:os][:repos][admin_architecture.to_sym] = {
-            missing: ["SLES-12-SP2-Pool", "SLES12-SP2-Updates"]
-          } unless os_available
+          unless os_available
+            ret[:os][:errors][admin_architecture.to_sym] = {
+              missing: ret[:os][:repos]
+            }
+          end
 
           cloud_available = repo_version_available?(products, "suse-openstack-cloud", "7")
           ret[:openstack] = {
             available: cloud_available,
-            repos: {}
+            repos: [
+              "SUSE-OpenStack-Cloud-7-Pool",
+              "SUSE-OpenStack-Cloud-7-Updates"
+            ],
+            errors: {}
           }
-          ret[:openstack][:repos][admin_architecture.to_sym] = {
-            missing: ["SUSE-OpenStack-Cloud-7-Pool", "SUSE-OpenStack-Cloud-7-Updates"]
-          } unless cloud_available
+          unless cloud_available
+            ret[:openstack][:errors][admin_architecture.to_sym] = {
+              missing: ret[:openstack][:repos]
+            }
+          end
 
           if ret.any? { |_k, v| !v[:available] }
             missing_repos = ret.collect do |k, v|
-              next if v[:repos].empty?
-              missing_repo_arch = v[:repos].keys.first.to_sym
-              v[:repos][missing_repo_arch][:missing]
+              next if v[:errors].empty?
+              missing_repo_arch = v[:errors].keys.first.to_sym
+              v[:errors][missing_repo_arch][:missing]
             end.flatten.compact.join(", ")
             ::Crowbar::UpgradeStatus.new.end_step(
               false,

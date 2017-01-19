@@ -1,10 +1,18 @@
 {
   "os":{
     "available":true,
-    "repos": {}
+    "repos":[
+      "SLES12-SP2-Pool",
+      "SLES12-SP2-Updates"
+    ],
+    "errors":{}
   },
   "openstack":{
     "available":true,
-    "repos": {}
+    "repos":[
+      "SUSE-OpenStack-Cloud-7-Pool",
+      "SUSE-OpenStack-Cloud-7-Updates"
+    ],
+    "errors":{}
   }
 }
