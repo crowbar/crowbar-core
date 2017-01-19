@@ -328,7 +328,12 @@ class Api::UpgradeController < ApiController
 
     if check.key?(:error)
       render json: {
-        error: check[:error]
+        errors: {
+          repocheck_crowbar: {
+            data: check[:error],
+            help: I18n.t("api.upgrade.adminrepocheck.help.default")
+          }
+        }
       }, status: check[:status]
     else
       render json: check
