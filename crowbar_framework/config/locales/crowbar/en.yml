@@ -780,6 +780,9 @@ en:
         network_checks:
           help:
             default: 'Examine the error messages'
+        not_ready:
+          error: 'Some nodes are not in the state "ready": %{nodes}.'
+          help: 'Check the chef logs for identifying the problem. Make sure all the nodes are in state "ready" before proceeding with the upgrade.'
         maintenance_updates_check:
           help:
             default: 'Make sure maintenance updates are installed'

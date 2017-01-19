@@ -82,6 +82,9 @@ describe Api::Upgrade do
       allow(Api::Crowbar).to(
         receive(:clusters_health_report).and_return({})
       )
+      allow(Api::Crowbar).to(
+        receive(:health_check).and_return({})
+      )
 
       expect(subject.class).to respond_to(:checks)
       expect(subject.class.checks.deep_stringify_keys).to eq(prechecks["checks"])
