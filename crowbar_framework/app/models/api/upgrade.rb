@@ -29,7 +29,7 @@ module Api
       def checks
         upgrade_status = ::Crowbar::UpgradeStatus.new
         # the check for current_step means to allow running the step at any point in time
-        upgrade_status.start_step(:prechecks)
+        upgrade_status.start_step(:prechecks) if upgrade_status.current_step == :prechecks
 
         {}.tap do |ret|
           network = ::Crowbar::Sanity.check
