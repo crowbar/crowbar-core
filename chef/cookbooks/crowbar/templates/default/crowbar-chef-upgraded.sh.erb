@@ -19,7 +19,6 @@ log "Executing $BASH_SOURCE"
 set -x
 
 mkdir -p $UPGRADEDIR
-rm -f $UPGRADEDIR/crowbar-chef-upgraded-failed
 
 if [[ -f $UPGRADEDIR/crowbar-chef-upgraded-ok ]] ; then
     log "crowbar_join and chef-client actions were already successfully executed"
@@ -28,19 +27,6 @@ fi
 
 # Move node to ready state and execute chef-client for the first time
 crowbar_join --start
-
-<% if @compute_node %>
-<% # FIXME: manually starting nova-compute service as it might not be running (bsc#1016302) %>
-systemctl start openstack-nova-compute.service
-
-ret=$?
-if [ $ret != 0 ] ; then
-    echo "Error occured while starting openstack-nova-compute service"
-    echo $ret > $UPGRADEDIR/crowbar-chef-upgraded-failed
-    return $ret
-fi
-<% end %>
-
 
 touch $UPGRADEDIR/crowbar-chef-upgraded-ok
 log "$BASH_SOURCE is finished."
