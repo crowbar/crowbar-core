@@ -57,12 +57,14 @@ module Api
             )
           }
 
-          ceph_status = Api::Crowbar.ceph_status
-          ret[:ceph_healthy] = {
-            required: true,
-            passed: ceph_status.empty?,
-            errors: ceph_status.empty? ? {} : ceph_health_check_errors(ceph_status)
-          } if Api::Crowbar.addons.include?("ceph")
+          if Api::Crowbar.addons.include?("ceph")
+            ceph_status = Api::Crowbar.ceph_status
+            ret[:ceph_healthy] = {
+              required: true,
+              passed: ceph_status.empty?,
+              errors: ceph_status.empty? ? {} : ceph_health_check_errors(ceph_status)
+            }
+          end
 
           ha_presence = Api::Pacemaker.ha_presence_check
           ret[:ha_configured] = {
@@ -71,12 +73,14 @@ module Api
             errors: ha_presence.empty? ? {} : ha_presence_errors(ha_presence)
           }
 
-          clusters_health = Api::Pacemaker.health_report
-          ret[:clusters_healthy] = {
-            required: true,
-            passed: clusters_health.empty?,
-            errors: clusters_health.empty? ? {} : clusters_health_report_errors(clusters_health)
-          } if Api::Crowbar.addons.include?("ha")
+          if Api::Crowbar.addons.include?("ha")
+            clusters_health = Api::Pacemaker.health_report
+            ret[:clusters_healthy] = {
+              required: true,
+              passed: clusters_health.empty?,
+              errors: clusters_health.empty? ? {} : clusters_health_report_errors(clusters_health)
+            }
+          end
 
           return ret unless upgrade_status.current_step == :prechecks
 
