@@ -179,7 +179,8 @@ module Api
         {}.tap do |ret|
           ret[addon] = {
             "available" => true,
-            "repos" => {}
+            "repos" => ::Crowbar::Repository.feature_repository_map(platform)[addon],
+            "errors" => {}
           }
 
           features.each do |feature|
@@ -194,7 +195,7 @@ module Api
                   feature, platform, architecture
                 )
                 ret[addon]["available"] &&= available
-                ret[addon]["repos"].deep_merge!(repolist.deep_stringify_keys)
+                ret[addon]["errors"].deep_merge!(repolist.deep_stringify_keys)
               end
             else
               ret[addon]["available"] = false

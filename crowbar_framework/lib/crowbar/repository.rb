@@ -181,6 +181,28 @@ module Crowbar
         Chef::DataBag.chef_server_rest.delete_rest("data/#{name}")
       end
 
+      # returns a map of features to repository names
+      # {
+      #   "os" => ["SLES12-SP2-Pool", "SLES12-SP2-Updates"],
+      #   "openstack" => ["SUSE-OpenStack-Cloud-7-Pool", "SUSE-OpenStack-Cloud-7-Updates"],
+      #   "ha" => ["SLE12-SP2-HA-Pool", "SLE12-SP2-HA-Updates"],
+      #   "ceph" => ["SUSE-Enterprise-Storage-4-Pool", "SUSE-Enterprise-Storage-4-Updates"]
+      # }
+      def feature_repository_map(platform)
+        {}.tap do |ret|
+          where(platform: platform).each do |r|
+            # skip Cloud repo as it is only necessary to check it during installation
+            # and there is the SUSE-OpenStack-Cloud-X-Pool repo
+            next if r.config["name"] == "Cloud"
+            features = r.config["features"]
+            next unless features
+            feature = features.first
+            ret[feature] ||= []
+            ret[feature].push(r.config["name"]) unless ret[feature].include?(r.config["name"])
+          end
+        end
+      end
+
       private
 
       def provided_with_enabled(feature,

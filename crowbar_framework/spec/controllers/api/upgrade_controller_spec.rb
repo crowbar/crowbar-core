@@ -200,8 +200,25 @@ describe Api::UpgradeController, type: :request do
 
       get "/api/upgrade/noderepocheck", {}, headers
       expect(response).to have_http_status(:ok)
-      expect(response.body).to eq(
-        "{\"os\":{\"available\":true,\"repos\":{}},\"openstack\":{\"available\":true,\"repos\":{}}}"
+      expect(JSON.parse(response.body)).to eq(
+        "os" => {
+          "available" => true,
+          "repos" => [
+            "SLES12-SP2-Pool",
+            "SLES12-SP2-Updates"
+          ],
+          "errors" => {
+          }
+        },
+        "openstack" => {
+          "available" => true,
+          "repos" => [
+            "SUSE-OpenStack-Cloud-7-Pool",
+            "SUSE-OpenStack-Cloud-7-Updates"
+          ],
+          "errors" => {
+          }
+        }
       )
     end
 

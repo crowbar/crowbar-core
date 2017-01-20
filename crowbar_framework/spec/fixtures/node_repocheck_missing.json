@@ -1,7 +1,11 @@
 {
   "os": {
     "available": false,
-    "repos": {
+    "repos": [
+      "SLES12-SP2-Pool",
+      "SLES12-SP2-Updates"
+    ],
+    "errors": {
       "missing": {
         "x86_64": [
           "SLES12-SP2-Pool",
@@ -18,7 +22,11 @@
   },
   "openstack": {
     "available": false,
-    "repos": {
+    "repos": [
+      "SUSE-OpenStack-Cloud-7-Pool",
+      "SUSE-OpenStack-Cloud-7-Updates"
+    ],
+    "errors": {
       "missing": {
         "x86_64": [
           "Cloud",
