@@ -207,7 +207,4 @@ template "/usr/sbin/crowbar-chef-upgraded.sh" do
   owner "root"
   group "root"
   action :create
-  variables(
-    compute_node: compute_node
-  )
 end
