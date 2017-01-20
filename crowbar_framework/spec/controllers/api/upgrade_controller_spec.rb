@@ -253,6 +253,18 @@ describe Api::UpgradeController, type: :request do
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
       ).with(:backup_openstack).and_return(true)
+      allow(::Node).to receive(:find).with("roles:database-config-default").and_return(
+        [::Node.find_by_name("testing.crowbar.com")]
+      )
+      allow(Api::Upgrade).to receive(:run_cmd).and_return(
+        exit_code: 0,
+        stdout_and_stderr: ""
+      )
+      allow(Api::Upgrade).to receive(:postgres_params).and_return(
+        user: "postgres",
+        pass: "password",
+        host: "8.8.8.8"
+      )
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :end_step
       ).and_return(true)

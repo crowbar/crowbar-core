@@ -1,5 +1,4 @@
 require "spec_helper"
-require "crowbar/error/upgrade_cancel"
 
 describe Api::Upgrade do
   let!(:prechecks) do
@@ -736,6 +735,185 @@ describe Api::Upgrade do
       ).and_return(true)
 
       expect(subject.class.prepare).to be false
+    end
+  end
+
+  context "with a successful backup creation for OpenStack" do
+    it "creates a backup for OpenStack" do
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:backup_openstack).and_return(true)
+      allow(::Node).to receive(:find).with("roles:database-config-default").and_return(
+        [::Node.find_by_name("testing.crowbar.com")]
+      )
+      allow(File).to receive(:exist?).with(
+        "/var/lib/crowbar/upgrade/6-to-7-openstack_dump.sql"
+      ).and_return(false)
+      allow(Api::Upgrade).to receive(:run_cmd).and_return(
+        exit_code: 0,
+        stdout_and_stderr: ""
+      )
+      allow(Api::Upgrade).to receive(:postgres_params).and_return(
+        user: "postgres",
+        pass: "password",
+        host: "8.8.8.8"
+      )
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :end_step
+      ).and_return(true)
+
+      expect(subject.class.openstackbackup).to be_a(Delayed::Backend::ActiveRecord::Job)
+    end
+
+    it "finds out that an OpenStack backup has already been created" do
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:backup_openstack).and_return(true)
+      allow(File).to receive(:exist?).with(
+        "/var/lib/crowbar/upgrade/6-to-7-openstack_dump.sql"
+      ).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :end_step
+      ).and_return(true)
+
+      expect(subject.class.openstackbackup).to be_a(Delayed::Backend::ActiveRecord::Job)
+    end
+  end
+
+  context "with a failed backup creation for OpenStack" do
+    let(:crowbar_lib_dir) { "/var/lib/crowbar" }
+    let(:dump_path) { "#{crowbar_lib_dir}/upgrade/6-to-7-openstack_dump.sql" }
+    let(:query) { "SELECT SUM(pg_database_size(pg_database.datname)) FROM pg_database;" }
+    let(:size_cmd) { "PGPASSWORD=password psql -t -h 8.8.8.8 -U postgres -c '#{query}'" }
+    let(:dump_cmd) { "PGPASSWORD=password pg_dumpall -h 8.8.8.8 -U postgres > #{dump_path}" }
+    let(:disk_space_cmd) do
+      "LANG=C df -x 'tmpfs' -x 'devtmpfs' -B1 -l --output='avail' #{crowbar_lib_dir} | tail -n1"
+    end
+
+    it "fails to create a backup for OpenStack" do
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:backup_openstack).and_return(true)
+      allow(::Node).to receive(:find).with("roles:database-config-default").and_return(
+        [::Node.find_by_name("testing.crowbar.com")]
+      )
+      allow(File).to receive(:exist?).with(dump_path).and_return(false)
+      allow(Api::Upgrade).to receive(:postgres_params).and_return(
+        user: "postgres",
+        pass: "password",
+        host: "8.8.8.8"
+      )
+      allow(Api::Upgrade).to receive(:run_cmd).with(
+        size_cmd
+      ).and_return(
+        exit_code: 0,
+        stdout_and_stderr: ""
+      )
+      allow(Api::Upgrade).to receive(:run_cmd).with(
+        disk_space_cmd
+      ).and_return(
+        exit_code: 0,
+        stdout_and_stderr: ""
+      )
+      allow(Api::Upgrade).to receive(:run_cmd).with(
+        dump_cmd
+      ).and_return(
+        exit_code: 1,
+        stdout_and_stderr: "Error"
+      )
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :end_step
+      ).and_return("rescued and set status to failed")
+
+      expect(subject.class.openstackbackup_without_delay).to eq "rescued and set status to failed"
+    end
+
+    it "fails to determine the accumulated size of the OpenStack databases" do
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:backup_openstack).and_return(true)
+      allow(::Node).to receive(:find).with("roles:database-config-default").and_return(
+        [::Node.find_by_name("testing.crowbar.com")]
+      )
+      allow(File).to receive(:exist?).with(dump_path).and_return(false)
+      allow(Api::Upgrade).to receive(:postgres_params).and_return(
+        user: "postgres",
+        pass: "password",
+        host: "8.8.8.8"
+      )
+      allow(Api::Upgrade).to receive(:run_cmd).with(size_cmd).and_return(
+        exit_code: 1,
+        stdout_and_stderr: "Error"
+      )
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :end_step
+      ).and_return("rescued and set status to failed")
+
+      expect(subject.class.openstackbackup_without_delay).to eq "rescued and set status to failed"
+    end
+
+    it "fails to determine the free disk space on the system" do
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:backup_openstack).and_return(true)
+      allow(::Node).to receive(:find).with("roles:database-config-default").and_return(
+        [::Node.find_by_name("testing.crowbar.com")]
+      )
+      allow(File).to receive(:exist?).with(dump_path).and_return(false)
+      allow(Api::Upgrade).to receive(:postgres_params).and_return(
+        user: "postgres",
+        pass: "password",
+        host: "8.8.8.8"
+      )
+      allow(Api::Upgrade).to receive(:run_cmd).with(disk_space_cmd).and_return(
+        exit_code: 1,
+        stdout_and_stderr: "Error"
+      )
+      allow(Api::Upgrade).to receive(:run_cmd).with(
+        size_cmd
+      ).and_return(
+        exit_code: 0,
+        stdout_and_stderr: ""
+      )
+      allow(Api::Upgrade).to receive(:run_cmd).with(
+        dump_cmd
+      ).and_return(
+        exit_code: 0,
+        stdout_and_stderr: ""
+      )
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :end_step
+      ).and_return("rescued and set status to failed")
+
+      expect(subject.class.openstackbackup_without_delay).to eq "rescued and set status to failed"
+    end
+
+    it "fails to create the OpenStack backup due to not enough disk space available" do
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:backup_openstack).and_return(true)
+      allow(::Node).to receive(:find).with("roles:database-config-default").and_return(
+        [::Node.find_by_name("testing.crowbar.com")]
+      )
+      allow(File).to receive(:exist?).with(dump_path).and_return(false)
+      allow(Api::Upgrade).to receive(:postgres_params).and_return(
+        user: "postgres",
+        pass: "password",
+        host: "8.8.8.8"
+      )
+      allow(Api::Upgrade).to receive(:run_cmd).with(size_cmd).and_return(
+        exit_code: 0,
+        stdout_and_stderr: "1000000"
+      )
+      allow(Api::Upgrade).to receive(:run_cmd).with(disk_space_cmd).and_return(
+        exit_code: 0,
+        stdout_and_stderr: "999999"
+      )
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :end_step
+      ).and_return("rescued and set status to failed")
+
+      expect(subject.class.openstackbackup_without_delay).to eq "rescued and set status to failed"
     end
   end
 end
