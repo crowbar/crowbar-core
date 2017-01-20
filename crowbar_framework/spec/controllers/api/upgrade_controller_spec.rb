@@ -77,7 +77,7 @@ describe Api::UpgradeController, type: :request do
         receive(:ha_presence_check).and_return({})
       )
       allow(Api::Upgrade).to receive(:checks).and_return(
-        JSON.parse(prechecks)["checks"].deep_symbolize_keys
+        JSON.parse(prechecks).deep_symbolize_keys
       )
 
       get "/api/upgrade/prechecks", {}, headers
