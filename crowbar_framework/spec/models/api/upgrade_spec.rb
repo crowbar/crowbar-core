@@ -499,7 +499,7 @@ describe Api::Upgrade do
     it "during the upgrade of controller nodes, detect that they are upgraded" do
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:nodes_upgrade).and_return(true)
+      ).with(:nodes).and_return(true)
       allow(Node).to(
         receive(:find).
         with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
@@ -530,7 +530,7 @@ describe Api::Upgrade do
     it "during the upgrade of compute nodes, detect that they are upgraded" do
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:nodes_upgrade).and_return(true)
+      ).with(:nodes).and_return(true)
       allow(Node).to(
         receive(:find).with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
         and_return([Node.find_by_name("testing.crowbar.com")])
