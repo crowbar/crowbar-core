@@ -52,13 +52,11 @@ module Api
             )
           }
 
-          compute_resources = Api::Crowbar.compute_resources_status
-          ret[:compute_resources_available] = {
+          compute = Api::Crowbar.compute_status
+          ret[:compute_status] = {
             required: false,
-            passed: compute_resources.empty?,
-            errors: compute_resources.empty? ? {} : compute_resources_check_errors(
-              compute_resources
-            )
+            passed: compute.empty?,
+            errors: compute.empty? ? {} : compute_status_errors(compute)
           }
 
           ceph_status = Api::Crowbar.ceph_status
@@ -310,13 +308,21 @@ module Api
         ret
       end
 
-      def compute_resources_check_errors(check)
-        {
-          compute_resources_available: {
-            data: check[:errors],
-            help: I18n.t("api.upgrade.prechecks.compute_resources_check.help.default")
+      def compute_status_errors(check)
+        ret = {}
+        if check[:no_resources]
+          ret[:no_resources] = {
+            data: check[:no_resources],
+            help: I18n.t("api.upgrade.prechecks.no_resources.help")
           }
-        }
+        end
+        if check[:no_live_migration]
+          ret[:no_live_migration] = {
+            data: I18n.t("api.upgrade.prechecks.no_live_migration.error"),
+            help: I18n.t("api.upgrade.prechecks.no_resources.help")
+          }
+        end
+        ret
       end
 
       def repo_version_available?(products, product, version)

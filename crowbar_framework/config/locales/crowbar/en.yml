@@ -794,9 +794,13 @@ en:
           failed_actions: '"crm status" is showing some failed actions at nodes %{nodes}.'
           help:
             default: 'Make sure clusters are healthy'
-        compute_resources_check:
-          help:
-            default: 'Make sure there is enough compute power'
+        no_resources:
+          help: 'Make sure you have enough compute nodes so the live migration of instances is possible.'
+        no_live_migration:
+          error: 'Live migration is not configured in nova barclamp.'
+          help: 'Adapt the nova barclamp configuration to support live migration before proceeding with the upgrade.'
+        resources:
+          help: 'Make sure you have enough compute nodes so the live migration of instances is possible.'
         ha_configured:
           not_installed: 'HA add-on is not installed.'
           not_configured: 'No Pacemaker cluster is configured.'
