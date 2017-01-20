@@ -32,22 +32,23 @@ module Api
         upgrade_status.start_step(:prechecks) if upgrade_status.current_step == :prechecks
 
         {}.tap do |ret|
+          ret[:checks] = {}
           network = ::Crowbar::Sanity.check
-          ret[:network_checks] = {
+          ret[:checks][:network_checks] = {
             required: true,
             passed: network.empty?,
             errors: network.empty? ? {} : sanity_check_errors(network)
           }
 
           health_check = Api::Crowbar.health_check
-          ret[:cloud_healthy] = {
+          ret[:checks][:cloud_healthy] = {
             required: true,
             passed: health_check.empty?,
             errors: health_check.empty? ? {} : health_check_errors(health_check)
           }
 
           maintenance_updates = ::Crowbar::Checks::Maintenance.updates_status
-          ret[:maintenance_updates_installed] = {
+          ret[:checks][:maintenance_updates_installed] = {
             required: true,
             passed: maintenance_updates.empty?,
             errors: maintenance_updates.empty? ? {} : maintenance_updates_check_errors(
@@ -56,7 +57,7 @@ module Api
           }
 
           compute = Api::Crowbar.compute_status
-          ret[:compute_status] = {
+          ret[:checks][:compute_status] = {
             required: false,
             passed: compute.empty?,
             errors: compute.empty? ? {} : compute_status_errors(compute)
@@ -64,7 +65,7 @@ module Api
 
           if Api::Crowbar.addons.include?("ceph")
             ceph_status = Api::Crowbar.ceph_status
-            ret[:ceph_healthy] = {
+            ret[:checks][:ceph_healthy] = {
               required: true,
               passed: ceph_status.empty?,
               errors: ceph_status.empty? ? {} : ceph_health_check_errors(ceph_status)
@@ -72,7 +73,7 @@ module Api
           end
 
           ha_presence = Api::Pacemaker.ha_presence_check
-          ret[:ha_configured] = {
+          ret[:checks][:ha_configured] = {
             required: false,
             passed: ha_presence.empty?,
             errors: ha_presence.empty? ? {} : ha_presence_errors(ha_presence)
@@ -80,11 +81,21 @@ module Api
 
           if Api::Crowbar.addons.include?("ha")
             clusters_health = Api::Pacemaker.health_report
-            ret[:clusters_healthy] = {
+            ret[:checks][:clusters_healthy] = {
               required: true,
               passed: clusters_health.empty?,
               errors: clusters_health.empty? ? {} : clusters_health_report_errors(clusters_health)
             }
+          end
+
+          ret[:best_method] = if ret[:checks].any? { |_id, c| c[:required] && !c[:passed] }
+            "none"
+          elsif !ret[:checks].any? { |_id, c| (c[:required] || !c[:required]) && !c[:passed] }
+            "non-disruptive"
+          elsif !ret[:checks].any? do |_id, c|
+            (c[:required] && !c[:passed]) && (!c[:required] && c[:passed])
+          end
+            "disruptive"
           end
 
           return ret unless upgrade_status.current_step == :prechecks
@@ -103,7 +114,7 @@ module Api
           #     another_error: { ... },
           #     maintenance_updates_installed: { data: "987", ... }
           # }
-          errors = ret.select { |_k, v| v[:required] && v[:errors].any? }.
+          errors = ret[:checks].select { |_k, v| v[:required] && v[:errors].any? }.
                    map { |_k, v| v[:errors] }.
                    reduce({}, :merge)
 
@@ -112,19 +123,6 @@ module Api
           else
             upgrade_status.end_step
           end
-        end
-      end
-
-      def best_method
-        checks_cached = checks
-        return "none" if checks_cached.any? do |_id, c|
-          c[:required] && !c[:passed]
-        end
-        return "non-disruptive" unless checks_cached.any? do |_id, c|
-          (c[:required] || !c[:required]) && !c[:passed]
-        end
-        return "disruptive" unless checks_cached.any? do |_id, c|
-          (c[:required] && !c[:passed]) && (!c[:required] && c[:passed])
         end
       end
 
