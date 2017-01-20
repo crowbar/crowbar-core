@@ -126,6 +126,13 @@ module Api
 
         {}.tap do |ret|
           if zypper_stream["message"] =~ /^System management is locked/
+            upgrade_status.end_step(
+              false,
+              repocheck_crowbar: {
+                data: zypper_stream["message"],
+                help: "Make sure zypper is not running and try again."
+              }
+            )
             return {
               status: :service_unavailable,
               error: I18n.t(
@@ -135,6 +142,13 @@ module Api
           end
 
           unless zypper_stream["prompt"].nil?
+            upgrade_status.end_step(
+              false,
+              repocheck_crowbar: {
+                data: zypper_stream["prompt"]["text"],
+                help: "Make sure you complete the required action and try again."
+              }
+            )
             return {
               status: :service_unavailable,
               error: I18n.t(
