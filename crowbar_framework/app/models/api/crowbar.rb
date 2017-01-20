@@ -73,7 +73,7 @@ module Api
       def addons
         [].tap do |list|
           ["ceph", "ha"].each do |addon|
-            list.push(addon) if addon_installed?(addon) && addon_enabled?(addon)
+            list.push(addon) if addon_installed?(addon) && addon_deployed?(addon)
           end
         end
       end
@@ -125,7 +125,7 @@ module Api
       def ceph_status
         {}.tap do |ret|
           ceph_node = NodeObject.find("roles:ceph-mon AND ceph_config_environment:*").first
-          return ret if ceph_node.nil?
+          next unless ceph_node
           ssh_retval = ceph_node.run_ssh_cmd("LANG=C ceph health 2>&1")
           unless ssh_retval[:stdout].include? "HEALTH_OK"
             ret[:errors] = [
@@ -195,10 +195,14 @@ module Api
         false
       end
 
-      def addon_enabled?(addon)
-        Api::Node.repocheck(addon: addon)[addon]["available"]
+      def addon_deployed?(addon)
+        case addon
+        when "ceph"
+          NodeObject.find("roles:ceph-mon AND ceph_config_environment:*").any?
+        when "ha"
+          NodeObject.find("pacemaker_founder:true AND pacemaker_config_environment:*").any?
+        end
       end
-
     end
   end
 end
