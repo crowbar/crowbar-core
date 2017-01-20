@@ -281,6 +281,7 @@ module Api
       # service shutdown
       #
       def services
+        ::Crowbar::UpgradeStatus.new.start_step(:services)
         begin
           # prepare the scripts for various actions necessary for the upgrade
           service_object = CrowbarService.new(Rails.logger)
@@ -365,6 +366,7 @@ module Api
       #
       def nodes
         status = ::Crowbar::UpgradeStatus.new
+        status.start_step(:nodes)
 
         remaining = status.progress[:remaining_nodes]
         substep = status.current_substep

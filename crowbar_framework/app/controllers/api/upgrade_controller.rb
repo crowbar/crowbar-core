@@ -120,7 +120,6 @@ class Api::UpgradeController < ApiController
   api_version "2.0"
   error 422, "Failed to stop services on all nodes"
   def services
-    ::Crowbar::UpgradeStatus.new.start_step(:services)
     Api::Upgrade.services
     head :ok
   rescue Crowbar::Error::StartStepRunningError,
@@ -143,7 +142,6 @@ class Api::UpgradeController < ApiController
   # This is gonna initiate the upgrade of all nodes.
   # The method runs asynchronously, so there's a need to poll for the status and possible errors
   def nodes
-    ::Crowbar::UpgradeStatus.new.start_step(:nodes)
     Api::Upgrade.nodes
     head :ok
   rescue Crowbar::Error::StartStepRunningError,
@@ -380,6 +378,7 @@ class Api::UpgradeController < ApiController
   '
   error 422, "Failed to save backup, error details are provided in the response"
   def adminbackup
+    # FIXME: move this logic into the model
     upgrade_status = ::Crowbar::UpgradeStatus.new
     upgrade_status.start_step(:backup_crowbar)
     @backup = Api::Backup.new(backup_params)
