@@ -15,7 +15,7 @@
       "passed": true,
       "errors": {}
     },
-    "compute_resources_available": {
+    "compute_status": {
       "required": false,
       "passed": true,
       "errors": {}
