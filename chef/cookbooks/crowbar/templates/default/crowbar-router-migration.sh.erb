@@ -35,10 +35,11 @@ set +x
 source /root/.openrc
 set -x
 
-/usr/bin/neutron-ha-tool --l3-agent-evacuate $hostname --wait-for-router $delete_ns
+log "Evacuating l3 agent(s)"
+/usr/bin/neutron-ha-tool --retry --l3-agent-evacuate $hostname --wait-for-router $delete_ns
 ret=$?
 if [ $ret != 0 ] ; then
-    echo "Failed to evacuate l3 agent on host: $hostname"
+    log "Failed to evacuate l3 agent on host: $hostname"
     echo $ret > $UPGRADEDIR/crowbar-router-migration-failed
     exit $ret
 fi
