@@ -65,6 +65,7 @@ service "apache2" do
     "default" => { "default" => [:restart, :reload] }
   )
   action :enable
+  provider Chef::Provider::CrowbarPacemakerService if node[:apache][:ha][:enabled]
 end
 
 if platform_family?("rhel", "fedora", "arch")
