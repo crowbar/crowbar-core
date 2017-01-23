@@ -31,6 +31,10 @@ state_path File.join(ROOT, "tmp", "pids", "puma.state")
 
 bind "tcp://#{LISTEN}:#{PORT}"
 
+before_fork do
+  PumaWorkerKiller.start
+end
+
 on_worker_boot do
   ::ActiveSupport.on_load(:active_record) do
     config = Rails.application.config.database_configuration[Rails.env]
