@@ -44,7 +44,7 @@ define :web_app, template: "web_app.conf.erb" do
       params: params
     )
     if ::File.exists?(vhost_conf)
-      notifies :reload, resources(service: "apache2"), :delayed
+      notifies :reload, "service[apache2]", :delayed
     end
   end
 
