@@ -1287,8 +1287,12 @@ class ServiceObject
     pre_cached_nodes = {}
 
     # Each batch is a list of nodes that can be done in parallel.
-    batches.each do |roles, node_names|
-      @logger.debug "Applying batch: #{node_names.inspect} for #{roles.inspect}"
+    batches.each_with_index do |batch, index|
+      roles, node_names = batch
+      @logger.debug(
+        "Applying batch #{index + 1}/#{batches.count}: " \
+        "#{node_names.join(", ")} for #{roles.join(", ")}"
+      )
 
       ran_admin = true if node_names.detect do |node_name|
         node_attr_cache[node_name]["admin"]
