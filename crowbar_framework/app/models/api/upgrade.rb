@@ -379,7 +379,7 @@ module Api
         end
 
         if substep == "controllers"
-          upgrade_controller_nodes
+          upgrade_controller_clusters
           substep = "computes"
           ::Crowbar::UpgradeStatus.new.save_substep(substep)
         end
@@ -409,15 +409,55 @@ module Api
 
       protected
 
+      # If there's separate network cluster, we have touch it before we start upgrade of other
+      # nodes, specificaly we need to evacuate the network routers from the first network node.
+      def prepare_network_node(network_node)
+        return if network_node.upgraded?
+
+        evacuate_network_node(network_node, network_node)
+
+        delete_pacemaker_resources network_node
+
+        # FIXME: do we need to ensure that this method is run only once?
+        # (remember upgrade restarts after failure)
+      end
+
       #
       # controller nodes upgrade
       #
-      def upgrade_controller_nodes
-        drbd_nodes = ::Node.find("drbd_rsc:*")
-        return upgrade_drbd_clusters unless drbd_nodes.empty?
+      def upgrade_controller_clusters
+        network_node = ::Node.find(
+          "pacemaker_founder:true AND " \
+          "run_list_map:neutron-network AND NOT " \
+          "run_list_map:neutron-server"
+        ).first
+        prepare_network_node(network_node) unless network_node.nil?
 
-        founder = ::Node.find("pacemaker_founder:true").first
-        cluster = founder[:pacemaker][:config][:environment]
+        # Now we must upgrade the clusters in the correct order:
+        # 1. data, 2. API, 3. network
+        cluster_founders = ::Node.find("pacemaker_founder:true")
+
+        sorted_founders = cluster_founders.sort do |n1, n2|
+          first_data = n1[:run_list_map].key? "database-server"
+          first_api = n1[:run_list_map].key? "keystone-server"
+          second_net = n2[:run_list_map].key? "neutron-network"
+          first_data || (first_api && second_net) ? -1 : 1
+        end
+        sorted_founders.each do |founder|
+          cluster_env = founder[:pacemaker][:config][:environment]
+          upgrade_cluster founder, cluster_env
+        end
+      end
+
+      #
+      # upgrade of controller nodes in given cluster
+      #
+      def upgrade_cluster(founder, cluster)
+        if founder["drbd"] && founder["drbd"]["rsc"] && founder["drbd"]["rsc"].any?
+          return upgrade_drbd_cluster(cluster)
+        end
+
+        save_upgrade_state("Upgrading controller nodes in cluster #{cluster}")
 
         non_founder_nodes = ::Node.find(
           "pacemaker_founder:false AND " \
@@ -451,7 +491,7 @@ module Api
         other_node_api = Api::Node.new other_node.name
         node_api.save_node_state("controller")
         save_upgrade_state("Starting the upgrade of node #{node.name}")
-        evacuate_network_node(node, node["hostname"])
+        evacuate_network_node(node, node)
 
         # upgrade the first node
         node_api.upgrade
@@ -465,7 +505,7 @@ module Api
         # remove pre-upgrade attribute, so the services can start
         other_node_api.disable_pre_upgrade_attribute_for node.name
         # delete old pacemaker resources (from the node where old pacemaker is running)
-        delete_pacemaker_resources other_node.name
+        delete_pacemaker_resources other_node
         # start crowbar-join at the first node
         node_api.post_upgrade
         node_api.join_and_chef
@@ -478,7 +518,7 @@ module Api
         node_api.save_node_state("controller")
 
         unless node.ready?
-          evacuate_network_node(founder, node["hostname"], true)
+          evacuate_network_node(founder, node, true)
           save_upgrade_state("Starting the upgrade of node #{node.name}")
           node_api.upgrade
           node_api.post_upgrade
@@ -489,15 +529,6 @@ module Api
         # (disabling attribute causes starting the services on the node)
         node_api.disable_pre_upgrade_attribute_for node.name
         node_api.save_node_state("controller", "upgraded")
-      end
-
-      def upgrade_drbd_clusters
-        ::Node.find(
-          "pacemaker_founder:true AND drbd_rsc:*"
-        ).each do |founder|
-          cluster_env = founder[:pacemaker][:config][:environment]
-          upgrade_drbd_cluster cluster_env
-        end
       end
 
       def upgrade_drbd_cluster(cluster)
@@ -568,37 +599,35 @@ module Api
       end
 
       # Delete existing pacemaker resources, from other node in the cluster
-      def delete_pacemaker_resources(node_name)
-        node = ::Node.find_by_name(node_name)
-        if node.nil?
-          raise_upgrade_error(
-            "Node #{node_name} was not found, cannot delete pacemaker resources."
-          )
-        end
-
-        begin
-          node.wait_for_script_to_finish(
-            "/usr/sbin/crowbar-delete-pacemaker-resources.sh", 300
-          )
-          save_upgrade_state("Deleting pacemaker resources was successful.")
-        rescue StandardError => e
-          raise_upgrade_error(
-            e.message +
+      def delete_pacemaker_resources(node)
+        node.wait_for_script_to_finish(
+          "/usr/sbin/crowbar-delete-pacemaker-resources.sh", 300
+        )
+        save_upgrade_state("Deleting pacemaker resources was successful.")
+      rescue StandardError => e
+        raise_upgrade_error(
+          e.message +
             "Check /var/log/crowbar/node-upgrade.log for details."
-          )
-        end
+        )
       end
 
       # Evacuate all routers away from the specified network node to other
       # available network nodes. The evacuation procedure is started on the
       # specified controller node
       def evacuate_network_node(controller, network_node, delete_namespaces = false)
-        args = [network_node]
+        hostname = network_node["hostname"]
+        unless network_node[:run_list_map].key? "neutron-network"
+          Rails.logger.info(
+            "Node #{hostname} does not have 'neutron-network' role. Nothing to evacuate."
+          )
+          return
+        end
+        args = [hostname]
         args << "delete-ns" if delete_namespaces
         controller.wait_for_script_to_finish(
           "/usr/sbin/crowbar-router-migration.sh", 600, args
         )
-        save_upgrade_state("Migrating routers away from #{network_node} was successful.")
+        save_upgrade_state("Migrating routers away from #{hostname} was successful.")
 
         # Cleanup up the ok/failed state files, as we likely need to
         # run the script again on this node (to evacuate other nodes)

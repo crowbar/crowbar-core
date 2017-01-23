@@ -340,8 +340,8 @@ describe Api::Upgrade do
 
   context "upgrading the nodes" do
     it "successfully upgrades nodes with DRBD backend" do
-      drbd_master = Node.find_by_name("testing.crowbar.com")
-      drbd_slave = Node.find_by_name("testing.crowbar.com")
+      drbd_master = Node.find_by_name("drbd.crowbar.com")
+      drbd_slave = Node.find_by_name("drbd.crowbar.com")
       allow(Node).to(
         receive(:find).
         with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
@@ -349,13 +349,14 @@ describe Api::Upgrade do
       )
       allow(Node).to(
         receive(:find).
-        with("drbd_rsc:*").
-        and_return([Node.find_by_name("testing.crowbar.com")])
+        with(
+          "pacemaker_founder:true AND run_list_map:neutron-network " \
+          "AND NOT run_list_map:neutron-server"
+        ).and_return([])
       )
       allow(Node).to(
-        receive(:find).
-        with("pacemaker_founder:true AND drbd_rsc:*").
-        and_return([Node.find_by_name("testing.crowbar.com")])
+        receive(:find).with("pacemaker_founder:true").
+        and_return([Node.find_by_name("drbd")])
       )
       allow(Node).to(
         receive(:find).
@@ -408,7 +409,7 @@ describe Api::Upgrade do
         with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
-      allow(Api::Upgrade).to receive(:upgrade_controller_nodes).and_return(true)
+      allow(Api::Upgrade).to receive(:upgrade_controller_clusters).and_return(true)
       allow(Node).to(
         receive(:find).with("roles:nova-compute-kvm").and_return([])
       )
@@ -450,7 +451,7 @@ describe Api::Upgrade do
         with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
-      allow(Api::Upgrade).to receive(:upgrade_controller_nodes).and_return(true)
+      allow(Api::Upgrade).to receive(:upgrade_controller_clusters).and_return(true)
       allow(Node).to(
         receive(:find).with("roles:nova-compute-kvm").
         and_return([Node.find_by_name("testing.crowbar.com")])
@@ -487,7 +488,13 @@ describe Api::Upgrade do
         with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
-      allow(Node).to(receive(:find).with("drbd_rsc:*").and_return([]))
+      allow(Node).to(
+        receive(:find).
+        with(
+          "pacemaker_founder:true AND run_list_map:neutron-network " \
+          "AND NOT run_list_map:neutron-server"
+        ).and_return([])
+      )
       allow(Node).to(
         receive(:find).with("pacemaker_founder:true").
         and_return([Node.find_by_name("testing.crowbar.com")])
@@ -511,7 +518,7 @@ describe Api::Upgrade do
         receive(:find).with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
-      allow(Api::Upgrade).to receive(:upgrade_controller_nodes).and_return(true)
+      allow(Api::Upgrade).to receive(:upgrade_controller_clusters).and_return(true)
       allow(Node).to(
         receive(:find).with("roles:nova-compute-kvm").
         and_return([Node.find_by_name("testing.crowbar.com")])
@@ -528,7 +535,7 @@ describe Api::Upgrade do
         receive(:find).with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
-      allow(Api::Upgrade).to receive(:upgrade_controller_nodes).and_return(true)
+      allow(Api::Upgrade).to receive(:upgrade_controller_clusters).and_return(true)
       allow(Node).to(
         receive(:find).with("roles:nova-compute-kvm").
         and_return([Node.find_by_name("testing.crowbar.com")])

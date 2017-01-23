@@ -191,7 +191,7 @@ describe CrowbarController do
       get :element_info, id: "crowbar"
       expect(response).to be_success
       json = JSON.parse(response.body)
-      nodes = ["admin.crowbar.com", "testing.crowbar.com"]
+      nodes = ["admin.crowbar.com", "drbd.crowbar.com", "testing.crowbar.com"]
       expect(json.sort).to be == nodes.sort
     end
   end
