@@ -82,6 +82,12 @@ describe Api::Upgrade do
       allow(Api::Crowbar).to(
         receive(:clusters_health_report).and_return({})
       )
+      allow(Api::Crowbar).to(
+        receive(:health_check).and_return({})
+      )
+      allow(Api::Crowbar).to(
+        receive(:compute_status).and_return({})
+      )
 
       expect(subject.class).to respond_to(:checks)
       expect(subject.class.checks.deep_stringify_keys).to eq(prechecks["checks"])
@@ -326,7 +332,7 @@ describe Api::Upgrade do
 
     it "chooses disruptive upgrade" do
       upgrade_prechecks = prechecks
-      upgrade_prechecks["checks"]["compute_resources_available"]["passed"] = false
+      upgrade_prechecks["checks"]["compute_status"]["passed"] = false
       allow(subject.class).to receive(:checks).and_return(upgrade_prechecks["checks"])
 
       expect(subject.class.best_method).to eq("disruptive")
@@ -336,6 +342,7 @@ describe Api::Upgrade do
       allow(Api::Upgrade).to receive(
         :maintenance_updates_status
       ).and_return(errors: ["Some Error"])
+      allow(Api::Crowbar).to receive(:compute_status).and_return({})
 
       expect(subject.class.best_method).to eq("none")
     end

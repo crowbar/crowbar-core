@@ -122,6 +122,17 @@ module Api
         cluster_health
       end
 
+      # Various cloud health checks that must pass before we can upgrade
+      def health_check
+        ret = {}
+        unready = []
+        NodeObject.find_all_nodes.each do |node|
+          unready << node.name unless node.ready?
+        end
+        ret[:nodes_not_ready] = unready unless unready.empty?
+        ret
+      end
+
       def ceph_status
         {}.tap do |ret|
           ceph_node = NodeObject.find("roles:ceph-mon AND ceph_config_environment:*").first
@@ -135,17 +146,19 @@ module Api
         end
       end
 
-      def compute_resources_status
-        {}.tap do |ret|
-          ["kvm", "xen"].each do |virt|
-            compute_nodes = NodeObject.find("roles:nova-compute-#{virt}")
-            next unless compute_nodes.size == 1
-            ret[:errors] ||= []
-            ret[:errors].push(
-              "Found only one compute node of #{virt} type; non-disruptive upgrade is not possible"
-            )
-          end
+      def compute_status
+        ret = {}
+        ["kvm", "xen"].each do |virt|
+          compute_nodes = NodeObject.find("roles:nova-compute-#{virt}")
+          next unless compute_nodes.size == 1
+          ret[:no_resources] ||= []
+          ret[:no_resources].push(
+            "Found only one compute node of #{virt} type; non-disruptive upgrade is not possible"
+          )
         end
+        nova = NodeObject.find("roles:nova-controller").first
+        ret[:no_live_migration] = true unless nova["nova"]["use_migration"]
+        ret
       end
 
       # Check for presence of HA setup, which is a requirement for non-disruptive upgrade
