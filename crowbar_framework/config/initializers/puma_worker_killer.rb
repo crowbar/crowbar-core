@@ -6,4 +6,3 @@ PumaWorkerKiller.config do |config|
   config.rolling_restart_frequency = 60 * 60 * 12 # 12 hours in seconds
   config.reaper_status_logs = true # enable logging
 end
-PumaWorkerKiller.start
