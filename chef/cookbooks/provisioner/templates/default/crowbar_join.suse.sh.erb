@@ -133,17 +133,9 @@ sync_time() {
     local tries_left=120
 
     while [[ $tries_left > 0 ]] ; do
-<% if @target_platform_version.to_f < 12.0 -%>
-        for ntpserver in $VALID_NTP_SERVERS ; do
-            if sntp -P no -r $ntpserver; then
-                break 2
-            fi
-        done
-<% else -%>
         if /usr/sbin/ntpdate -u $VALID_NTP_SERVERS; then
             break
         fi
-<% end -%>
         tries_left=$(($tries_left-1))
         echo_verbose "Waiting for NTP server(s) $VALID_NTP_SERVERS"
         sleep 1
@@ -168,11 +160,7 @@ do_setup() {
         echo "zypper_check_gpg true" >> $cfg
     fi
 
-<% if @platform == "suse" && @target_platform_version.to_f < 12.0 %>
-    log_to chef chkconfig -a chef-client
-<% else %>
     log_to chef systemctl enable chef-client
-<% end %>
 }
 
 do_ensure_chef_configuration() {
@@ -458,11 +446,7 @@ if [ "$MODE" == "setup" -o "$MODE" == "start" ]; then
     HOSTNAME=$(hostname -f)
 
     # stop ntpd before we run ntpdate, and start it again afterwards.
-<% if @platform == "suse" && @target_platform_version.to_f < 12.0 then %>
-    NTP_SERVICE=ntp
-<% else %>
     NTP_SERVICE=ntpd
-<% end %>
     NTP_START=0
     if service $NTP_SERVICE status > /dev/null; then
         log_to time service $NTP_SERVICE stop
