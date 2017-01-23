@@ -17,7 +17,7 @@
 
 require "spec_helper"
 
-describe Node do
+describe ChefNode do
   describe "finders" do
     describe "interface" do
       [
@@ -27,26 +27,26 @@ describe Node do
         :find_nodes_by_name,
         :find_node_by_alias,
         :find_node_by_public_name,
-        :find_by_name,
+        :find_node_by_name,
         :find_node_by_name_or_alias
       ].each do |method|
         it "responds to #{method}" do
-          expect(Node).to respond_to(method)
+          expect(ChefNode).to respond_to(method)
         end
       end
     end
 
     describe "all" do
       it "returns all nodes" do
-        nodes = Node.all
+        nodes = ChefNode.all
         expect(nodes).to_not be_empty
-        expect(nodes).to all(be_a Node)
+        expect(nodes).to all(be_a(ChefNode))
       end
     end
 
     describe "find_nodes_by_name" do
       it "returns nodes with a given name only" do
-        nodes = Node.find_nodes_by_name("testing.crowbar.com")
+        nodes = ChefNode.find_nodes_by_name("testing.crowbar.com")
         expect(nodes).to_not be_empty
         expect(nodes.map(&:name)).to all(include("testing"))
       end
@@ -54,7 +54,7 @@ describe Node do
 
     describe "find_by_name" do
       it "returns nodes matching name" do
-        node = Node.find_by_name("testing")
+        node = ChefNode.find_node_by_name("testing")
         expect(node).to_not be_nil
         expect(node.name).to include("testing")
       end
@@ -62,7 +62,7 @@ describe Node do
 
     describe "find_node_by_alias" do
       it "returns nodes matching alias" do
-        node = Node.find_node_by_alias("testing")
+        node = ChefNode.find_node_by_alias("testing")
         expect(node).to_not be_nil
         expect(node.alias).to be == "testing"
       end
@@ -71,7 +71,7 @@ describe Node do
 
   describe "license_key" do
     describe "assignment" do
-      let(:node) { Node.find_by_name("testing") }
+      let(:node) { ChefNode.find_node_by_name("testing") }
       let(:key) { "a key" }
 
       it "sets the key if the platform requires one" do
@@ -89,12 +89,12 @@ describe Node do
   end
 
   describe "alias" do
-    let(:testing_node) { Node.find_by_name("testing") }
-    let(:admin_node) { Node.find_by_name("admin") }
+    let(:testing_node) { ChefNode.find_node_by_name("testing") }
+    let(:admin_node) { ChefNode.find_node_by_name("admin") }
 
     it "doesnt allow duplicates" do
       # Stub out chef call
-      allow_any_instance_of(Node).to receive(:update_alias).and_return(true)
+      allow_any_instance_of(ChefNode).to receive(:update_alias).and_return(true)
 
       expect {
         testing_node.alias = "admin"

@@ -22,6 +22,8 @@ describe CrowbarController do
 
   before do
     Proposal.where(barclamp: "crowbar", name: "default").first_or_create(barclamp: "crowbar", name: "default")
+    Node.where(name: "testing.crowbar.com").first_or_create(name: "testing.crowbar.com")
+    Node.where(name: "admin.crowbar.com").first_or_create(name: "admin.crowbar.com")
     allow_any_instance_of(CrowbarService).to receive(:apply_role).and_return([200, "OK"])
   end
 
@@ -119,7 +121,7 @@ describe CrowbarController do
 
     it "returns node as a hash on success when passed a node (backward compatibility)" do
       allow_any_instance_of(CrowbarService).to receive(:transition).
-        and_return([200, Node.find_by_name("testing.crowbar.com").to_hash])
+        and_return([200, Node.find_by_name("testing.crowbar.com")])
       post :transition,
         barclamp: "crowbar",
         id: "default",

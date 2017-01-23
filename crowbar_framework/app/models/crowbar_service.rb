@@ -187,7 +187,7 @@ class CrowbarService < ServiceObject
       node = Node.find_by_name(name)
       if node.nil? and (state == "discovering" or state == "testing")
         @logger.debug("Crowbar transition: creating new node for #{name} to #{state}")
-        node = Node.create_new name
+        node = Node.find_or_create_by(name: name)
         self.transition_save_node = true
       end
       if node.nil?
@@ -222,7 +222,6 @@ class CrowbarService < ServiceObject
         self.transition_save_node = true
         pop_it = true
       end
-
       node.save if transition_save_node
     end
 

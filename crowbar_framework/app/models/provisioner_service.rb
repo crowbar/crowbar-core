@@ -79,7 +79,7 @@ class ProvisionerService < ServiceObject
       # ensure target platform is set before we claim a disk for boot OS
       node = Node.find_by_name(name)
       if node[:target_platform].nil? or node[:target_platform].empty?
-        node[:target_platform] = Node.default_platform
+        node.set[:target_platform] = Node.default_platform
         node.save
       end
     end

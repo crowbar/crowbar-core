@@ -6,10 +6,12 @@ AllCops:
     Enabled: true
   DisplayStyleGuide: true
   DisplayCopNames: true
+  Exclude:
+    - "crowbar_framework/app/models/chef_node.rb"
 
 Style/RedundantReturn:
-  Exclude:
-    - "chef/data_bags/crowbar/migrate/**/*"
+Exclude:
+  - "chef/data_bags/crowbar/migrate/**/*"
 
 Style/FileName:
   Exclude:

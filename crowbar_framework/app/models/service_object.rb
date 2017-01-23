@@ -351,7 +351,7 @@ class ServiceObject
   end
 
   def element_info(role = nil)
-    nodes = Node.find_all_nodes.map(&:name)
+    nodes = Node.pluck(:name)
 
     return [200, nodes] unless role
 
@@ -629,11 +629,8 @@ class ServiceObject
           end
         elsif element.include? ":"
           raise I18n.t("proposal.failures.unknown_node") + " " + element
-        else
-          nodes = Node.find_nodes_by_name element
-          if nodes.nil? || nodes.empty?
-            raise I18n.t("proposal.failures.unknown_node") + " " + element
-          end
+        elsif Node.find_by_name(element).blank?
+          raise I18n.t("proposal.failures.unknown_node") + " " + element
         end
       end
     end
@@ -730,7 +727,9 @@ class ServiceObject
         node = Node.find_by_name(element)
 
         return true if !constraints.any? do |platform, version|
-          PlatformRequirement.new(platform, version).satisfied_by?(node[:platform], node[:platform_version])
+          PlatformRequirement.new(platform, version).satisfied_by?(
+            node[:platform], node[:platform_version]
+          )
         end
       end
     end
@@ -745,7 +744,9 @@ class ServiceObject
         node = Node.find_by_name(element)
 
         return true if constraints.any? do |platform, version|
-          PlatformRequirement.new(platform, version).satisfied_by?(node[:platform], node[:platform_version])
+          PlatformRequirement.new(platform, version).satisfied_by?(
+            node.chef_node[:platform], node.chef_node[:platform_version]
+          )
         end
       end
     end
@@ -1408,7 +1409,6 @@ class ServiceObject
     runlist_priority_map ||= {}
 
     local_chef_order = runlist_priority_map[newrole] || BarclampCatalog.chef_order(barclamp)
-
     prop["deployment"][barclamp]["elements"][newrole] = [] if prop["deployment"][barclamp]["elements"][newrole].nil?
     unless prop["deployment"][barclamp]["elements"][newrole].include?(node.name)
       @logger.debug("ARTOI: updating proposal with node #{node.name}, role #{newrole} for deployment of #{barclamp}")
@@ -1524,27 +1524,27 @@ class ServiceObject
     end
   end
 
-  def wait_for_reboot(node)
-    nobj = Node.find_by_name(node)
-    if nobj[:crowbar_wall][:wait_for_reboot]
-      puts "Waiting for reboot of node #{node}"
-      if RemoteNode.ready?(node, 1200)
-        puts "Waiting for reboot of node #{node} done. Node is back"
+  def wait_for_reboot(node_name)
+    node = Node.find_by_name(node_name)
+    if node.crowbar_wall[:wait_for_reboot]
+      puts "Waiting for reboot of node #{node_name}"
+      if RemoteNode.ready?(node_name, 1200)
+        puts "Waiting for reboot of node #{node_name} done. Node is back"
         # Check node state - crowbar_join's chef-client run should successfully finish
-        puts "Waiting to finish chef-client run on node #{node}"
+        puts "Waiting to finish chef-client run on node #{node_name}"
         begin
           Timeout.timeout(600) do
             loop do
-              nobj = Node.find_by_name(node)
-              case nobj[:state]
+              node = Node.find_by_name(node_name)
+              case node.state
               when "ready"
-                puts "Node state after reboot is: #{nobj[:state]}. Continue"
+                puts "Node state after reboot is: #{node.state}. Continue"
                 break
               when "problem"
-                STDERR.puts "Node state after reboot is: #{nobj[:state]}. Exit"
+                STDERR.puts "Node state after reboot is: #{node.state}. Exit"
                 exit(1)
               else
-                puts "Node state after reboot is: #{nobj[:state]}. Waiting"
+                puts "Node state after reboot is: #{node.state}. Waiting"
                 sleep(10)
               end
             end
@@ -1554,7 +1554,7 @@ class ServiceObject
           exit(1)
         end
       else
-        STDERR.puts "Waiting for reboot of node #{node} failed"
+        STDERR.puts "Waiting for reboot of node #{node_name} failed"
         exit(1)
       end
     end
