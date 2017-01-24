@@ -51,3 +51,9 @@ end
 ].each do |name|
   FileUtils.mkdir_p File.join(ROOT, name)
 end
+
+stdout_redirect(
+  "/var/log/crowbar/production.log",
+  "/var/log/crowbar/production.log",
+  true
+)
