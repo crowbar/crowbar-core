@@ -25,7 +25,11 @@ module SchemaMigration
   end
 
   def self.run_for_bc bc_name
-    template = Proposal.new(barclamp: bc_name)
+    begin
+      template = Proposal.new(barclamp: bc_name)
+    rescue TemplateMissing
+      return
+    end
 
     return if template.nil?
     return if template["deployment"].nil?
