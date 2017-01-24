@@ -103,9 +103,7 @@ module Api
           #     another_error: { ... },
           #     maintenance_updates_installed: { data: "987", ... }
           # }
-          errors = ret.select { |_k, v| v[:required] && v[:errors].any? }.
-                   map { |_k, v| v[:errors] }.
-                   reduce({}, :merge)
+          errors = ret.map { |_k, v| v[:errors] }.reduce({}, :merge)
 
           if errors.any?
             upgrade_status.end_step(false, errors)
