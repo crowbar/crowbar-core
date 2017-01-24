@@ -160,7 +160,11 @@ describe Api::Crowbar do
         receive(:find).with("roles:nova-compute-xen").
         and_return([node, node])
       )
-      expect(subject.class.compute_resources_status).to be_empty
+      allow(NodeObject).to(
+        receive(:find).with("roles:nova-controller").
+        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+      )
+      expect(subject.class.compute_status).to be_empty
     end
   end
 
@@ -174,7 +178,10 @@ describe Api::Crowbar do
         receive(:find).with("roles:nova-compute-xen").
         and_return([node, node])
       )
-      expect(subject.class.compute_resources_status).to_not be_empty
+      allow(NodeObject).to(
+        receive(:find).with("roles:nova-controller").and_return([node])
+      )
+      expect(subject.class.compute_status).to_not be_empty
     end
     it "finds there is only one XEN compute node and fails" do
       allow(Node).to(
@@ -185,7 +192,10 @@ describe Api::Crowbar do
         receive(:find).with("roles:nova-compute-xen").
         and_return([node])
       )
-      expect(subject.class.compute_resources_status).to_not be_empty
+      allow(NodeObject).to(
+        receive(:find).with("roles:nova-controller").and_return([node])
+      )
+      expect(subject.class.compute_status).to_not be_empty
     end
   end
 
@@ -199,7 +209,10 @@ describe Api::Crowbar do
         receive(:find).with("roles:nova-compute-xen").
         and_return([])
       )
-      expect(subject.class.compute_resources_status).to be_empty
+      allow(NodeObject).to(
+        receive(:find).with("roles:nova-controller").and_return([node])
+      )
+      expect(subject.class.compute_status).to be_empty
     end
   end
 end

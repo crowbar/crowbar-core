@@ -782,6 +782,9 @@ en:
         network_checks:
           help:
             default: 'Examine the error messages'
+        not_ready:
+          error: 'Some nodes are not in the state "ready": %{nodes}.'
+          help: 'Check the chef logs for identifying the problem. Make sure all the nodes are in state "ready" before proceeding with the upgrade.'
         maintenance_updates_check:
           help:
             default: 'Make sure maintenance updates are installed'
@@ -793,9 +796,13 @@ en:
           failed_actions: '"crm status" is showing some failed actions at nodes %{nodes}.'
           help:
             default: 'Make sure clusters are healthy'
-        compute_resources_check:
-          help:
-            default: 'Make sure there is enough compute power'
+        no_resources:
+          help: 'Make sure you have enough compute nodes so the live migration of instances is possible.'
+        no_live_migration:
+          error: 'Live migration is not configured in nova barclamp.'
+          help: 'Adapt the nova barclamp configuration to support live migration before proceeding with the upgrade.'
+        resources:
+          help: 'Make sure you have enough compute nodes so the live migration of instances is possible.'
         ha_configured:
           help:
             default: 'Without HA setup, non-disruptive upgrade is not possible.'

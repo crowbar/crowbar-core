@@ -39,6 +39,13 @@ module Api
             errors: network.empty? ? {} : sanity_check_errors(network)
           }
 
+          health_check = Api::Crowbar.health_check
+          ret[:cloud_healthy] = {
+            required: true,
+            passed: health_check.empty?,
+            errors: health_check.empty? ? {} : health_check_errors(health_check)
+          }
+
           maintenance_updates = ::Crowbar::Checks::Maintenance.updates_status
           ret[:maintenance_updates_installed] = {
             required: true,
@@ -48,13 +55,11 @@ module Api
             )
           }
 
-          compute_resources = Api::Crowbar.compute_resources_status
-          ret[:compute_resources_available] = {
+          compute = Api::Crowbar.compute_status
+          ret[:compute_status] = {
             required: false,
-            passed: compute_resources.empty?,
-            errors: compute_resources.empty? ? {} : compute_resources_check_errors(
-              compute_resources
-            )
+            passed: compute.empty?,
+            errors: compute.empty? ? {} : compute_status_errors(compute)
           }
 
           if Api::Crowbar.addons.include?("ceph")
@@ -810,6 +815,18 @@ module Api
         }
       end
 
+      def health_check_errors(check)
+        ret = {}
+        if check[:nodes_not_ready]
+          ret[:nodes_not_ready] = {
+            data: I18n.t("api.upgrade.prechecks.not_ready.error",
+              nodes: check[:nodes_not_ready].join(",")),
+            help: I18n.t("api.upgrade.prechecks.not_ready.help")
+          }
+        end
+        ret
+      end
+
       def maintenance_updates_check_errors(check)
         {
           maintenance_updates_installed: {
@@ -858,13 +875,21 @@ module Api
         ret
       end
 
-      def compute_resources_check_errors(check)
-        {
-          compute_resources_available: {
-            data: check[:errors],
-            help: I18n.t("api.upgrade.prechecks.compute_resources_check.help.default")
+      def compute_status_errors(check)
+        ret = {}
+        if check[:no_resources]
+          ret[:no_resources] = {
+            data: check[:no_resources],
+            help: I18n.t("api.upgrade.prechecks.no_resources.help")
           }
-        }
+        end
+        if check[:no_live_migration]
+          ret[:no_live_migration] = {
+            data: I18n.t("api.upgrade.prechecks.no_live_migration.error"),
+            help: I18n.t("api.upgrade.prechecks.no_resources.help")
+          }
+        end
+        ret
       end
 
       #
