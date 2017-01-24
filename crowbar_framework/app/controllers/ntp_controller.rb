@@ -19,6 +19,6 @@ class NtpController < BarclampController
   protected
 
   def initialize_service
-    @service_object = NtpService.new logger
+    @service_object = NtpService.new
   end
 end

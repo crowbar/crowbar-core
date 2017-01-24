@@ -16,8 +16,8 @@
 #
 
 class LoggingService < ServiceObject
-  def initialize(thelogger)
-    super(thelogger)
+  def initialize(thelogger = nil)
+    super
     @bc_name = "logging"
   end
 
@@ -53,7 +53,7 @@ class LoggingService < ServiceObject
   end
 
   def transition(inst, name, state)
-    @logger.debug("Logging transition: entering: #{name} for #{state}")
+    Rails.logger.debug("Logging transition: entering: #{name} for #{state}")
 
     node = Node.find_by_name(name)
     if node.allocated? && !node.role?("logging-server")
@@ -62,21 +62,21 @@ class LoggingService < ServiceObject
 
       unless add_role_to_instance_and_node(@bc_name, inst, name, db, role, "logging-client")
         msg = "Failed to add logging-client role to #{name}!"
-        @logger.error(msg)
+        Rails.logger.error(msg)
         return [400, msg]
       end
     end
 
-    @logger.debug("Logging transition: leaving: #{name} for #{state}")
+    Rails.logger.debug("Logging transition: leaving: #{name} for #{state}")
     [200, { name: name }]
   end
 
   def apply_role_pre_chef_call(old_role, role, all_nodes)
-    @logger.debug("Logging apply_role_pre_chef_call: entering #{all_nodes.inspect}")
+    Rails.logger.debug("Logging apply_role_pre_chef_call: entering #{all_nodes.inspect}")
 
     save_config_to_databag(old_role, role)
 
-    @logger.debug("Logging apply_role_pre_chef_call: leaving")
+    Rails.logger.debug("Logging apply_role_pre_chef_call: leaving")
   end
 
   def save_config_to_databag(old_role, role)

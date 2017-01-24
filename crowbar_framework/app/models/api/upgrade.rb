@@ -421,7 +421,7 @@ module Api
       def services
         begin
           # prepare the scripts for various actions necessary for the upgrade
-          service_object = CrowbarService.new(Rails.logger)
+          service_object = CrowbarService.new
           service_object.prepare_nodes_for_os_upgrade
         rescue => e
           msg = e.message
@@ -596,10 +596,10 @@ module Api
           raise ::Crowbar::Error::Upgrade::CancelError.new(upgrade_status.current_step)
         end
 
-        provisioner_service = ProvisionerService.new(Rails.logger)
+        provisioner_service = ProvisionerService.new
         provisioner_service.enable_all_repositories
 
-        crowbar_service = CrowbarService.new(Rails.logger)
+        crowbar_service = CrowbarService.new
         crowbar_service.revert_nodes_from_crowbar_upgrade
         upgrade_status.initialize_state
       end
@@ -1695,10 +1695,10 @@ module Api
       end
 
       def prepare_nodes_for_crowbar_upgrade
-        crowbar_service = CrowbarService.new(Rails.logger)
+        crowbar_service = CrowbarService.new
         crowbar_service.prepare_nodes_for_crowbar_upgrade
 
-        provisioner_service = ProvisionerService.new(Rails.logger)
+        provisioner_service = ProvisionerService.new
         provisioner_service.disable_all_repositories
 
         ::Crowbar::UpgradeStatus.new.end_step

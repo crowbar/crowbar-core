@@ -18,6 +18,6 @@ class NfsClientController < BarclampController
   protected
 
   def initialize_service
-    @service_object = NfsClientService.new logger
+    @service_object = NfsClientService.new
   end
 end

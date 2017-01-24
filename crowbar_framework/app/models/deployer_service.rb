@@ -16,8 +16,8 @@
 #
 
 class DeployerService < ServiceObject
-  def initialize(thelogger)
-    super(thelogger)
+  def initialize(thelogger = nil)
+    super
     @bc_name = "deployer"
   end
 
@@ -34,7 +34,7 @@ class DeployerService < ServiceObject
   end
 
   def transition(inst, name, state)
-    @logger.debug("Deployer transition: entering: #{name} for #{state}")
+    Rails.logger.debug("Deployer transition: entering: #{name} for #{state}")
 
     # discovering because mandatory for discovery image
     if ["discovering", "readying"].include? state
@@ -43,7 +43,7 @@ class DeployerService < ServiceObject
 
       unless add_role_to_instance_and_node(@bc_name, inst, name, db, role, "deployer-client")
         msg = "Failed to add deployer-client role to #{name}!"
-        @logger.error(msg)
+        Rails.logger.error(msg)
         return [400, msg]
       end
     end
@@ -63,7 +63,7 @@ class DeployerService < ServiceObject
         # do we auto-allocate?
         role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
         unless role.default_attributes["deployer"]["use_allocate"]
-          @logger.debug("Automatically allocating node #{name}")
+          Rails.logger.debug("Automatically allocating node #{name}")
           node.allocate!
         end
       end
@@ -121,7 +121,7 @@ class DeployerService < ServiceObject
       node = Node.find_by_name(name)
       client = ClientObject.find_client_by_name name
       unless node.admin? || client.nil?
-        @logger.debug("Deployer transition: deleting a chef client for #{name}")
+        Rails.logger.debug("Deployer transition: deleting a chef client for #{name}")
         client.destroy
       end
     end
@@ -135,7 +135,7 @@ class DeployerService < ServiceObject
       # Do more work here - one day.
     end
 
-    @logger.debug("Deployer transition: exiting: #{name} for #{state}")
+    Rails.logger.debug("Deployer transition: exiting: #{name} for #{state}")
     return [200, { name: name }]
   end
 end

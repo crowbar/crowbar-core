@@ -16,8 +16,8 @@
 #
 
 class NetworkService < ServiceObject
-  def initialize(thelogger)
-    super(thelogger)
+  def initialize(thelogger = nil)
+    super
     @bc_name = "network"
   end
 
@@ -38,7 +38,7 @@ class NetworkService < ServiceObject
   end
 
   def allocate_ip_by_type(bc_instance, network, range, object, type, suggestion = nil)
-    @logger.debug("Network allocate ip for #{type}: entering #{object} #{network} #{range}")
+    Rails.logger.debug("Network allocate ip for #{type}: entering #{object} #{network} #{range}")
     return [404, "No network specified"] if network.nil?
     return [404, "No range specified"] if range.nil?
     return [404, "No object specified"] if object.nil?
@@ -46,7 +46,11 @@ class NetworkService < ServiceObject
 
     if type == :node
       node = Node.find_by_name(object)
-      @logger.error("Network allocate ip from node: return node not found: #{object} #{network}") if node.nil?
+      if node.nil?
+        Rails.logger.error(
+          "Network allocate ip from node: return node not found: #{object} #{network}"
+        )
+      end
       return [404, "No node found"] if node.nil?
       name = node.name.to_s
     else
@@ -55,7 +59,7 @@ class NetworkService < ServiceObject
 
     role = RoleObject.find_role_by_name "network-config-#{bc_instance}"
     if role.nil? || !role.default_attributes["network"]["networks"].key?(network)
-      @logger.error("Network allocate ip by type: No network data found: #{name} #{network}")
+      Rails.logger.error("Network allocate ip by type: No network data found: #{name} #{network}")
       return [404, "No network data found"]
     end
 
@@ -74,12 +78,12 @@ class NetworkService < ServiceObject
         found = true
       else
         if suggestion.present?
-          @logger.info("Allocating with suggestion: #{suggestion}")
+          Rails.logger.info("Allocating with suggestion: #{suggestion}")
           subsug = IPAddr.new(suggestion) & IPAddr.new(net_info["netmask"])
           subnet = IPAddr.new(net_info["subnet"]) & IPAddr.new(net_info["netmask"])
           if subnet == subsug
             if db["allocated"][suggestion].nil?
-              @logger.info("Using suggestion for #{type}: #{name} #{network} #{suggestion}")
+              Rails.logger.info("Using suggestion for #{type}: #{name} #{network} #{suggestion}")
               address = suggestion
               found = true
             end
@@ -114,15 +118,20 @@ class NetworkService < ServiceObject
         end
       end
     rescue Exception => e
-      @logger.error("Error finding address: Exception #{e.message} #{e.backtrace.join("\n")}")
+      Rails.logger.error("Error finding address: Exception #{e.message} #{e.backtrace.join("\n")}")
     ensure
       lock.release
     end
 
-    @logger.info("Network allocate ip for #{type}: no address available: #{name} #{network} #{range}") if !found
-    return [404, "No Address Available"] if !found
+    if found
+      net_info["address"] = address.to_s
+    else
+      Rails.logger.info(
+        "Network allocate ip for #{type}: no address available: #{name} #{network} #{range}"
+      )
+      return [404, "No Address Available"]
+    end
 
-    net_info["address"] = address.to_s if found
 
     if type == :node
       # Save the information (only what we override from the network definition).
@@ -133,7 +142,10 @@ class NetworkService < ServiceObject
       end
     end
 
-    @logger.info("Network allocate ip for #{type}: Assigned: #{name} #{network} #{range} #{net_info["address"]}")
+    Rails.logger.info(
+      "Network allocate ip for #{type}: " \
+      "Assigned: #{name} #{network} #{range} #{net_info["address"]}"
+    )
     [200, net_info]
   end
 
@@ -146,7 +158,7 @@ class NetworkService < ServiceObject
   end
 
   def deallocate_ip_by_type(bc_instance, network, object, type)
-    @logger.debug("Network deallocate ip from #{type}: entering #{object} #{network}")
+    Rails.logger.debug("Network deallocate ip from #{type}: entering #{object} #{network}")
 
     return [404, "No network specified"] if network.nil?
     return [404, "No type specified"] if type.nil?
@@ -155,14 +167,22 @@ class NetworkService < ServiceObject
     if type == :node
       # Find the node
       node = Node.find_by_name(object)
-      @logger.error("Network deallocate ip from node: return node not found: #{object} #{network}") if node.nil?
-      return [404, "No node found"] if node.nil?
+      if node.nil?
+        Rails.logger.error(
+          "Network deallocate ip from node: return node not found: #{object} #{network}"
+        )
+        return [404, "No node found"]
+      end
     end
 
     # Find an interface based upon config
     role = RoleObject.find_role_by_name "network-config-#{bc_instance}"
-    @logger.error("Network deallocate ip from #{type}: No network data found: #{object} #{network}") if role.nil?
-    return [404, "No network data found"] if role.nil?
+    if role.nil?
+      Rails.logger.error(
+        "Network deallocate ip from #{type}: No network data found: #{object} #{network}"
+      )
+      return [404, "No network data found"]
+    end
 
     db = Chef::DataBag.load("crowbar/#{network}_network") rescue nil
 
@@ -170,7 +190,9 @@ class NetworkService < ServiceObject
       # If we already have on allocated, return success
       net_info = node.get_network_by_type(network)
       if net_info.nil? or net_info["address"].nil?
-        @logger.error("Network deallocate ip from #{type}: node does not have address: #{object} #{network}")
+        Rails.logger.error(
+          "Network deallocate ip from #{type}: node does not have address: #{object} #{network}"
+        )
         return [404, "Node does not have address in #{network}"]
       end
       name = node.name
@@ -215,7 +237,7 @@ class NetworkService < ServiceObject
         db.save
       end
     rescue Exception => e
-      @logger.error("Error finding address: Exception #{e.message} #{e.backtrace.join("\n")}")
+      Rails.logger.error("Error finding address: Exception #{e.message} #{e.backtrace.join("\n")}")
     ensure
       lock.release
     end
@@ -227,7 +249,7 @@ class NetworkService < ServiceObject
         node.save
       end
     end
-    @logger.info("Network deallocate_ip: removed: #{name} #{network}")
+    Rails.logger.info("Network deallocate_ip: removed: #{name} #{network}")
     [200, nil]
   end
 
@@ -247,12 +269,12 @@ class NetworkService < ServiceObject
   end
 
   def apply_role_pre_chef_call(old_role, role, all_nodes)
-    @logger.debug("Network apply_role_pre_chef_call: entering #{all_nodes.inspect}")
+    Rails.logger.debug("Network apply_role_pre_chef_call: entering #{all_nodes.inspect}")
 
     role.default_attributes["network"]["networks"].each do |k,net|
       db = Chef::DataBag.load("crowbar/#{k}_network") rescue nil
       if db.nil?
-        @logger.debug("Network: creating #{k} in the network")
+        Rails.logger.debug("Network: creating #{k} in the network")
 
         # ensure that crowbar data bag exists
         databag_name = "crowbar"
@@ -273,7 +295,7 @@ class NetworkService < ServiceObject
       end
     end
 
-    @logger.debug("Network apply_role_pre_chef_call: leaving")
+    Rails.logger.debug("Network apply_role_pre_chef_call: leaving")
   end
 
   def proposal_create_bootstrap(params)
@@ -282,7 +304,7 @@ class NetworkService < ServiceObject
   end
 
   def transition(inst, name, state)
-    @logger.debug("Network transition: entering: #{name} for #{state}")
+    Rails.logger.debug("Network transition: entering: #{name} for #{state}")
 
     # we need one state before "installed" (and after allocation) because we
     # need the node to have the admin network fully defined for
@@ -293,7 +315,7 @@ class NetworkService < ServiceObject
 
       unless add_role_to_instance_and_node(@bc_name, inst, name, db, role, "network")
         msg = "Failed to add network role to #{name}!"
-        @logger.error(msg)
+        Rails.logger.error(msg)
         return [400, msg]
       end
 
@@ -302,15 +324,18 @@ class NetworkService < ServiceObject
 
         # Allocate required addresses
         range = node.admin? ? "admin" : "host"
-        @logger.debug("Network transition: Allocate admin address for #{name}")
+        Rails.logger.debug("Network transition: Allocate admin address for #{name}")
         result = allocate_ip("default", "admin", range, name)
-        @logger.error("Failed to allocate admin address for: #{node.name}: #{result[0]}") if result[0] != 200
         if result[0] == 200
           address = result[1]["address"]
           boot_ip_hex = sprintf("%08X", address.split(".").inject(0) { |acc, i| (acc << 8) + i.to_i })
+        else
+          Rails.logger.error("Failed to allocate admin address for: #{node.name}: #{result[0]}")
         end
 
-        @logger.debug("Network transition: Done Allocate admin address for #{name} boot file:#{boot_ip_hex}")
+        Rails.logger.debug(
+          "Network transition: Done Allocate admin address for #{name} boot file:#{boot_ip_hex}"
+        )
 
         if node.admin?
           # If we are the admin node, we may need to add a vlan bmc address.
@@ -321,13 +346,16 @@ class NetworkService < ServiceObject
           # but chef-client didn't run yet)
           admin_net = role.default_attributes["network"]["networks"]["admin"]
           bmc_net = role.default_attributes["network"]["networks"]["bmc"]
-          @logger.debug("admin_net: #{admin_net.inspect}")
-          @logger.debug("bmc_net: #{bmc_net.inspect}")
+          Rails.logger.debug("admin_net: #{admin_net.inspect}")
+          Rails.logger.debug("bmc_net: #{bmc_net.inspect}")
           if admin_net["subnet"] != bmc_net["subnet"]
-            @logger.debug("Network transition: Allocate bmc_vlan address for #{name}")
+            Rails.logger.debug("Network transition: Allocate bmc_vlan address for #{name}")
             result = allocate_ip("default", "bmc_vlan", "host", name)
-            @logger.error("Failed to allocate bmc_vlan address for: #{node.name}: #{result[0]}") if result[0] != 200
-            @logger.debug("Network transition: Done Allocate bmc_vlan address for #{name}")
+            if result[0] != 200
+              Rails.logger.error("Failed to allocate bmc_vlan address for: " \
+                "#{node.name}: #{result[0]}")
+            end
+            Rails.logger.debug("Network transition: Done Allocate bmc_vlan address for #{name}")
           end
 
           # Allocate the bastion network ip for the admin node if a bastion
@@ -336,9 +364,13 @@ class NetworkService < ServiceObject
           unless bastion_net.nil?
             result = allocate_ip("default", "bastion", range, name)
             if result[0] != 200
-              @logger.error("Failed to allocate bastion address for: #{node.name}: #{result[0]}")
+              Rails.logger.error(
+                "Failed to allocate bastion address for: #{node.name}: #{result[0]}"
+              )
             else
-              @logger.debug("Allocated bastion address: #{result[1]["address"]} for the admin node.")
+              Rails.logger.debug(
+                "Allocated bastion address: #{result[1]["address"]} for the admin node."
+              )
             end
           end
         end
@@ -360,32 +392,34 @@ class NetworkService < ServiceObject
       end
     end
 
-    @logger.debug("Network transition: exiting: #{name} for #{state}")
+    Rails.logger.debug("Network transition: exiting: #{name} for #{state}")
     [200, { name: name }]
   end
 
   def enable_interface(bc_instance, network, name)
-    @logger.debug("Network enable_interface: entering #{name} #{network}")
+    Rails.logger.debug("Network enable_interface: entering #{name} #{network}")
 
     return [404, "No network specified"] if network.nil?
     return [404, "No name specified"] if name.nil?
 
     # Find the node
     node = Node.find_by_name(name)
-    @logger.error("Network enable_interface: return node not found: #{name} #{network}") if node.nil?
-    return [404, "No node found"] if node.nil?
+    if node.nil?
+      Rails.logger.error("Network enable_interface: return node not found: #{name} #{network}")
+      return [404, "No node found"]
+    end
 
     # Find an interface based upon config
     role = RoleObject.find_role_by_name "network-config-#{bc_instance}"
     if role.nil? || !role.default_attributes["network"]["networks"].key?(network)
-      @logger.error("Network enable_interface: No network data found: #{name} #{network}")
+      Rails.logger.error("Network enable_interface: No network data found: #{name} #{network}")
       return [404, "No network data found"]
     end
 
     # If we already have on allocated, return success
     net_info = node.get_network_by_type(network)
     unless net_info.nil?
-      @logger.error("Network enable_interface: node already has address: #{name} #{network}")
+      Rails.logger.error("Network enable_interface: node already has address: #{name} #{network}")
       return [200, net_info]
     end
 
@@ -393,7 +427,7 @@ class NetworkService < ServiceObject
     node.crowbar["crowbar"]["network"][network] ||= {}
     node.save
 
-    @logger.info("Network enable_interface: Assigned: #{name} #{network}")
+    Rails.logger.info("Network enable_interface: Assigned: #{name} #{network}")
     [200, build_net_info(role, network)]
   end
 

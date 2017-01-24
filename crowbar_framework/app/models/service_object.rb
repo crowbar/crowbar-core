@@ -32,9 +32,10 @@ class ServiceObject
   attr_accessor :logger
   attr_accessor :validation_errors
 
-  def initialize(thelogger)
+  def initialize(thelogger = nil)
     @bc_name = "unknown"
-    @logger = thelogger
+    # Still needed for compatibility reasons
+    @logger = Rails.logger
     @validation_errors = []
   end
 
@@ -68,7 +69,7 @@ class ServiceObject
   end
 
   def validation_error message
-    @logger.warn message
+    Rails.logger.warn message
     @validation_errors << message
   end
 
@@ -132,7 +133,7 @@ class ServiceObject
 # Locking Routines
 #
   def new_lock(name)
-    Crowbar::Lock::LocalBlocking.new(name: name, logger: @logger)
+    Crowbar::Lock::LocalBlocking.new(name: name, logger: Rails.logger)
   end
 
   def acquire_lock(name)
@@ -248,22 +249,24 @@ class ServiceObject
 #
 
   def queue_proposal(inst, element_order, elements, deps, bc = @bc_name)
-    Crowbar::DeploymentQueue.new(logger: @logger).queue_proposal(bc, inst, elements, element_order, deps)
+    Crowbar::DeploymentQueue.new(logger: Rails.logger).queue_proposal(
+      bc, inst, elements, element_order, deps
+    )
   end
 
   def dequeue_proposal(inst, bc = @bc_name)
-    Crowbar::DeploymentQueue.new(logger: @logger).dequeue_proposal(bc, inst)
+    Crowbar::DeploymentQueue.new(logger: Rails.logger).dequeue_proposal(bc, inst)
   end
 
   def process_queue
-    Crowbar::DeploymentQueue.new(logger: @logger).process_queue
+    Crowbar::DeploymentQueue.new(logger: Rails.logger).process_queue
   end
 #
 # update proposal status information
 #
   # FIXME: refactor into Proposal#status=()
   def update_proposal_status(inst, status, message, bc = @bc_name)
-    @logger.debug("update_proposal_status: enter #{inst} #{bc} #{status} #{message}")
+    Rails.logger.debug("update_proposal_status: enter #{inst} #{bc} #{status} #{message}")
 
     prop = Proposal.where(barclamp: bc, name: inst).first
     unless prop.nil?
@@ -274,7 +277,7 @@ class ServiceObject
       res = true
     end
 
-    @logger.debug("update_proposal_status: exit #{inst} #{bc} #{status} #{message}")
+    Rails.logger.debug("update_proposal_status: exit #{inst} #{bc} #{status} #{message}")
     res
   end
 
@@ -309,7 +312,7 @@ class ServiceObject
 
   # FIXME: Move into proposal before_save filter
   def clean_proposal(proposal)
-    @logger.debug "clean_proposal"
+    Rails.logger.debug "clean_proposal"
     proposal.delete("controller")
     proposal.delete("action")
     proposal.delete("barclamp")
@@ -322,7 +325,7 @@ class ServiceObject
   def destroy_active(inst)
 
     role_name = "#{@bc_name}-config-#{inst}"
-    @logger.debug "Trying to deactivate role #{role_name}"
+    Rails.logger.debug "Trying to deactivate role #{role_name}"
     role = RoleObject.find_role_by_name(role_name)
     return [404, {}] if role.nil?
     reverse_deps = RoleObject.reverse_dependencies(role_name)
@@ -333,7 +336,9 @@ class ServiceObject
       dep = role.override_attributes
       dep[@bc_name]["elements"] = {}
       dep[@bc_name].delete("elements_expanded")
-      @logger.debug "#{inst} proposal has a crowbar-committing key" if dep[@bc_name]["config"].key? "crowbar-committing"
+      if dep[@bc_name]["config"].key?("crowbar-committing")
+        Rails.logger.debug "#{inst} proposal has a crowbar-committing key"
+      end
       dep[@bc_name]["config"].delete("crowbar-committing")
       dep[@bc_name]["config"].delete("crowbar-queued")
       role.override_attributes = dep
@@ -411,17 +416,19 @@ class ServiceObject
     begin
       const_service = self.class.get_service(bc)
     rescue
-      @logger.info "Barclamp \"#{bc}\" is not available."
+      Rails.logger.info "Barclamp \"#{bc}\" is not available."
       proposals = []
     else
-      service = const_service.new @logger
+      service = const_service.new Rails.logger
       proposals = service.list_active[1]
       proposals = service.proposals[1] if proposals.empty?
     end
 
     if proposals.empty? || proposals[0].blank?
       if optional
-        @logger.info "No optional \"#{bc}\" dependency proposal found for \"#{@bc_name}\" proposal."
+        Rails.logger.info(
+          "No optional \"#{bc}\" dependency proposal found for \"#{@bc_name}\" proposal."
+        )
       else
         raise(I18n.t("model.service.dependency_missing", name: @bc_name, dependson: bc))
       end
@@ -569,10 +576,10 @@ class ServiceObject
                        validate_after_save: options[:validate_after_save])
         response = active_update(prop.raw_data, inst, options[:in_queue], options[:bootstrap])
       rescue Chef::Exceptions::ValidationFailed => e
-        @logger.error ([e.message] + e.backtrace).join("\n")
+        Rails.logger.error([e.message] + e.backtrace).join("\n")
         response = [400, "Failed to validate proposal: #{e.message}"]
       rescue StandardError => e
-        @logger.error ([e.message] + e.backtrace).join("\n")
+        Rails.logger.error([e.message] + e.backtrace).join("\n")
         response = [500, e.message]
       ensure
         # Make sure we unmark the wall
@@ -856,7 +863,7 @@ class ServiceObject
 
   def validate_dep_proposal_is_active(bc, proposal)
     const_service = self.class.get_service(bc)
-    service = const_service.new @logger
+    service = const_service.new Rails.logger
     proposals = service.list_active[1].to_a
     unless proposals.include?(proposal)
       if const_service.allow_multiple_proposals?
@@ -928,8 +935,8 @@ class ServiceObject
   # The bootstrap parameter tells if we're in bootstrapping mode, in which case
   # we simply do not run chef.
   def apply_role(role, inst, in_queue, bootstrap = false)
-    @logger.debug "apply_role(#{role.name}, #{inst}, #{in_queue}, #{bootstrap})"
-    @logger.progress("Start applying role #{role.name}")
+    Rails.logger.debug "apply_role(#{role.name}, #{inst}, #{in_queue}, #{bootstrap})"
+    Rails.logger.progress("Start applying role #{role.name}")
 
     # Variables used in the global ensure
     apply_locks = []
@@ -980,7 +987,7 @@ class ServiceObject
         return [202, delay]
       end
 
-      @logger.debug "delay empty - running proposal"
+      Rails.logger.debug "delay empty - running proposal"
     end
 
     # expand items in elements that are not nodes
@@ -988,9 +995,11 @@ class ServiceObject
     new_deployment["elements"].each do |role_name, nodes|
       expanded_new_elements[role_name], failures = expand_nodes_for_all(nodes)
       unless failures.nil? || failures.empty?
-        @logger.fatal("apply_role: Failed to expand items #{failures.inspect} for role \"#{role_name}\"")
+        Rails.logger.fatal(
+          "apply_role: Failed to expand items #{failures.inspect} for role \"#{role_name}\""
+        )
         message = "Failed to apply the proposal: cannot expand list of nodes for role \"#{role_name}\", following items do not exist: #{failures.join(", ")}"
-        @logger.progress("Failed to apply role #{role.name}")
+        Rails.logger.progress("Failed to apply role #{role.name}")
         update_proposal_status(inst, "failed", message)
         return [405, message]
       end
@@ -1023,8 +1032,8 @@ class ServiceObject
     end
     element_order = old_deployment["element_order"] if (!old_deployment.nil? and element_order.nil?)
 
-    @logger.debug "old_deployment #{old_deployment.pretty_inspect}"
-    @logger.debug "new_deployment #{new_deployment.pretty_inspect}"
+    Rails.logger.debug "old_deployment #{old_deployment.pretty_inspect}"
+    Rails.logger.debug "new_deployment #{new_deployment.pretty_inspect}"
 
     # Part II. Creating add/remove changesets.
     #
@@ -1065,7 +1074,7 @@ class ServiceObject
     element_order.each do |roles|
       # roles is an Array of names of Chef roles which can all be
       # applied in parallel.
-      @logger.progress(
+      Rails.logger.progress(
         "Preparing batch with following roles: #{roles.join(", ")}"
       )
 
@@ -1080,9 +1089,9 @@ class ServiceObject
         old_nodes = old_elements[role_name] || []
         new_nodes = new_elements[role_name] || []
 
-        @logger.debug "Preparing role #{role_name} for batch:"
-        @logger.debug "  Nodes in old applied proposal for role: #{old_nodes.inspect}"
-        @logger.debug "  Nodes in new applied proposal for role: #{new_nodes.inspect}"
+        Rails.logger.debug "Preparing role #{role_name} for batch:"
+        Rails.logger.debug "  Nodes in old applied proposal for role: #{old_nodes.inspect}"
+        Rails.logger.debug "  Nodes in new applied proposal for role: #{new_nodes.inspect}"
 
         remove_role_name = "#{role_name}_remove"
 
@@ -1102,7 +1111,7 @@ class ServiceObject
             # Don't add deleted nodes to the run order, they clearly won't have
             # the old role
             if pre_cached_nodes[node_name].nil?
-              @logger.debug "skipping deleted node #{node_name}"
+              Rails.logger.debug "skipping deleted node #{node_name}"
               next
             end
 
@@ -1148,7 +1157,7 @@ class ServiceObject
             # role (which would be an improvement over the requirement to
             # explicitly list all nodes).
             if pre_cached_nodes[node_name].nil?
-              @logger.debug "skipping deleted node #{node_name}"
+              Rails.logger.debug "skipping deleted node #{node_name}"
               next
             end
 
@@ -1162,7 +1171,7 @@ class ServiceObject
 
       batches << [roles, nodes_in_batch] unless nodes_in_batch.empty?
     end
-    @logger.debug "batches: #{batches.inspect}"
+    Rails.logger.debug "batches: #{batches.inspect}"
 
     # Cache attributes that are useful later on
     pre_cached_nodes.each do |node_name, node|
@@ -1201,7 +1210,7 @@ class ServiceObject
         # variable would be empty.
         nodes_to_lock.each do |node|
           apply_lock = Crowbar::Lock::SharedNonBlocking.new(
-            logger: @logger,
+            logger: Rails.logger,
             path: "/var/chef/cache/pause-file.lock",
             node: node,
             owner: "apply_role-#{role.name}-#{inst}-#{Process.pid}",
@@ -1210,7 +1219,7 @@ class ServiceObject
           apply_locks.push(apply_lock)
         end
       rescue Crowbar::Error::LockingFailure => e
-        @logger.progress("Failed to apply role #{role.name}")
+        Rails.logger.progress("Failed to apply role #{role.name}")
         message = "Failed to apply the proposal: #{e.message}"
         update_proposal_status(inst, "failed", message)
         return [409, message] # 409 is 'Conflict'
@@ -1227,7 +1236,7 @@ class ServiceObject
 
     # Part III: Update run lists of nodes to reflect new deployment. I.e. write
     # through the deployment schedule in pending node actions into run lists.
-    @logger.progress("Update the run_lists for #{pending_node_actions.inspect}")
+    Rails.logger.progress("Update the run_lists for #{pending_node_actions.inspect}")
 
     pending_node_actions.each do |node_name, lists|
       # pre_cached_nodes contains only new_nodes, we need to look up the
@@ -1274,8 +1283,8 @@ class ServiceObject
     begin
       apply_role_pre_chef_call(old_role, role, all_nodes)
     rescue StandardError => e
-      @logger.fatal("apply_role: Exception #{e.message} #{e.backtrace.join("\n")}")
-      @logger.progress("Failed to apply role #{role.name} before calling chef")
+      Rails.logger.fatal("apply_role: Exception #{e.message} #{e.backtrace.join("\n")}")
+      Rails.logger.progress("Failed to apply role #{role.name} before calling chef")
       message = "Failed to apply the proposal: exception before calling chef (#{e.message})"
       update_proposal_status(inst, "failed", message)
       return [405, message]
@@ -1295,7 +1304,7 @@ class ServiceObject
     # Each batch is a list of nodes that can be done in parallel.
     batches.each_with_index do |batch, index|
       roles, node_names = batch
-      @logger.progress(
+      Rails.logger.progress(
         "Applying batch #{index + 1}/#{batches.count}: " \
         "#{node_names.join(", ")} for #{roles.join(", ")}"
       )
@@ -1316,10 +1325,10 @@ class ServiceObject
 
       # wait for all running threads and collect the ones with a non-zero return value
       bad_nodes = []
-      @logger.progress("Waiting for #{threads.keys.length} threads to finish...")
+      Rails.logger.progress("Waiting for #{threads.keys.length} threads to finish...")
       ThreadsWait.all_waits(threads.keys) do |t|
-        @logger.progress("Thread #{t} for node #{threads[t]} finished")
-        logger.debug "thread #{t} for node #{threads[t]} finished (return value '#{t.value}')"
+        Rails.logger.progress("Thread #{t} for node #{threads[t]} finished")
+        Rails.logger.debug("Thread #{t} for node #{threads[t]} finished (return '#{t.value}')")
         unless t.value == 0
           bad_nodes << threads[t]
         end
@@ -1334,7 +1343,7 @@ class ServiceObject
         nodes_alias.push(node_attr_cache[node]["alias"])
         message += get_log_lines(node)
       end
-      @logger.progress("Failed to apply the role to #{nodes_alias.join(", ")}")
+      Rails.logger.progress("Failed to apply the role to #{nodes_alias.join(", ")}")
       update_proposal_status(inst, "failed", message)
       return [405, message]
     end
@@ -1346,7 +1355,7 @@ class ServiceObject
     begin
       apply_role_post_chef_call(old_role, role, all_nodes)
     rescue StandardError => e
-      @logger.fatal("apply_role: Exception #{e.message} #{e.backtrace.join("\n")}")
+      Rails.logger.fatal("apply_role: Exception #{e.message} #{e.backtrace.join("\n")}")
       message = "Failed to apply the proposal: exception after calling chef (#{e.message})"
       update_proposal_status(inst, "failed", message)
       return [405, message]
@@ -1384,8 +1393,8 @@ class ServiceObject
     update_proposal_status(inst, "success", "")
     [200, {}]
   rescue StandardError => e
-    @logger.progress("Failed to apply proposal")
-    @logger.fatal("apply_role: Uncaught exception #{e.message} #{e.backtrace.join("\n")}")
+    Rails.logger.progress("Failed to apply proposal")
+    Rails.logger.fatal("apply_role: Uncaught exception #{e.message} #{e.backtrace.join("\n")}")
     message = "Failed to apply the proposal: uncaught exception (#{e.message})"
     update_proposal_status(inst, "failed", message)
     [405, message]
@@ -1415,7 +1424,7 @@ class ServiceObject
   def add_role_to_instance_and_node(barclamp, instance, name, prop, role, newrole)
     node = Node.find_by_name(name)
     if node.nil?
-      @logger.debug("ARTOI: couldn't find node #{name}. bailing")
+      Rails.logger.debug("ARTOI: couldn't find node #{name}. bailing")
       return false
     end
 
@@ -1426,20 +1435,25 @@ class ServiceObject
 
     prop["deployment"][barclamp]["elements"][newrole] = [] if prop["deployment"][barclamp]["elements"][newrole].nil?
     unless prop["deployment"][barclamp]["elements"][newrole].include?(node.name)
-      @logger.debug("ARTOI: updating proposal with node #{node.name}, role #{newrole} for deployment of #{barclamp}")
+      Rails.logger.debug("ARTOI: updating proposal with node #{node.name}, role #{newrole} " \
+        "for deployment of #{barclamp}")
       prop["deployment"][barclamp]["elements"][newrole] << node.name
       prop.save
     else
-      @logger.debug("ARTOI: node #{node.name} already in proposal: role #{newrole} for #{barclamp}")
+      Rails.logger.debug(
+        "ARTOI: node #{node.name} already in proposal: role #{newrole} for #{barclamp}"
+      )
     end
 
     role.override_attributes[barclamp]["elements"][newrole] = [] if role.override_attributes[barclamp]["elements"][newrole].nil?
     unless role.override_attributes[barclamp]["elements"][newrole].include?(node.name)
-      @logger.debug("ARTOI: updating role #{role.name} for node #{node.name} for barclamp: #{barclamp}/#{newrole}")
+      Rails.logger.debug("ARTOI: updating role #{role.name} for node #{node.name} " \
+        "for barclamp: #{barclamp}/#{newrole}")
       role.override_attributes[barclamp]["elements"][newrole] << node.name
       role.save
     else
-      @logger.debug("ARTOI: role #{role.name} already has node #{node.name} for barclamp: #{barclamp}/#{newrole}")
+      Rails.logger.debug("ARTOI: role #{role.name} already has node #{node.name} " \
+       "for barclamp: #{barclamp}/#{newrole}")
     end
 
     save_it = false
@@ -1447,7 +1461,7 @@ class ServiceObject
     save_it = node.add_to_run_list("#{barclamp}-config-#{instance}", local_chef_order) || save_it
 
     if save_it
-      @logger.debug("saving node")
+      Rails.logger.debug("saving node")
       node.save
     end
     true
@@ -1527,14 +1541,12 @@ class ServiceObject
   private
 
   def wait_for_chef_clients(node_name, options = {})
-    options = if options.fetch(:logger)
-      {logger: @logger}
-    else
-      {}
-    end
-    @logger.debug("wait_for_chef_clients: Waiting for already running chef-clients on #{node_name}.")
+    options = options.include?(:logger) ? { logger: Rails.logger } : {}
+    Rails.logger.debug(
+      "wait_for_chef_clients: Waiting for already running chef-clients on #{node_name}."
+    )
     unless RemoteNode.chef_ready?(node_name, 1200, 10, options)
-      @logger.error("Waiting for already running chef-clients on #{node_name} failed.")
+      Rails.logger.error("Waiting for already running chef-clients on #{node_name} failed.")
       exit(1)
     end
   end
@@ -1600,7 +1612,7 @@ class ServiceObject
         "Most recent logged lines from the Chef run: \n\n" + f.readlines[l_counter-50..l_counter].join(" ")
       end
     rescue
-      @logger.error("Error reporting: Couldn't open /var/log/crowbar/chef-client/#{pid}.log ")
+      Rails.logger.error("Error reporting: Couldn't open /var/log/crowbar/chef-client/#{pid}.log ")
       raise "Error reporting: Couldn't open  /var/log/crowbar/chef-client/#{pid}.log"
     end
   end

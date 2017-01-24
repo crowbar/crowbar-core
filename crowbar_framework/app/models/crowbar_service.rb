@@ -18,8 +18,8 @@
 class CrowbarService < ServiceObject
   attr_accessor :transition_save_node
 
-  def initialize(thelogger)
-    super(thelogger)
+  def initialize(thelogger = nil)
+    super
     @bc_name = "crowbar"
   end
 
@@ -58,7 +58,7 @@ class CrowbarService < ServiceObject
         error = node["crowbar_wall"]["chef_error"] || ""
         next if error.empty?
         found_errors.push error
-        @logger.error("Chef run ended with an error on the node #{node.name}: #{error}")
+        Rails.logger.error("Chef run ended with an error on the node #{node.name}: #{error}")
         node["crowbar_wall"]["chef_error"] = ""
         node.save
       end
@@ -100,7 +100,7 @@ class CrowbarService < ServiceObject
     return [404, "No state specified"] if state.nil?
     # FIXME: validate state
 
-    @logger.info("Crowbar transition enter: #{name} to #{state}")
+    Rails.logger.info("Crowbar transition enter: #{name} to #{state}")
 
     pop_it = false
     node = nil
@@ -108,27 +108,31 @@ class CrowbarService < ServiceObject
     with_lock "BA-LOCK" do
       node = Node.find_by_name(name)
       if node.nil? and (state == "discovering" or state == "testing")
-        @logger.debug("Crowbar transition: creating new node for #{name} to #{state}")
+        Rails.logger.debug("Crowbar transition: creating new node for #{name} to #{state}")
         node = Node.create_new name
         self.transition_save_node = true
       end
       if node.nil?
-        @logger.error("Crowbar transition leaving: node not found nor created - #{name} to #{state}")
+        Rails.logger.error(
+          "Crowbar transition leaving: node not found nor created - #{name} to #{state}"
+        )
         return [404, "Node not found"]
       end
 
       if %w(hardware-installing hardware-updating update).include? state
-        @logger.debug("Crowbar transition: force run because of state #{name} to #{state}")
+        Rails.logger.debug("Crowbar transition: force run because of state #{name} to #{state}")
         pop_it = true
       end
 
       if node.crowbar["state"] != state
-        @logger.debug("Crowbar transition: state has changed so we need to do stuff for #{name} to #{state}")
+        Rails.logger.debug(
+          "Crowbar transition: state has changed so we need to do stuff for #{name} to #{state}"
+        )
 
         # Do not allow change to shutdown state from crowbar_upgrade
         # (we need to reboot the nodes for upgrade, but without changing the state)
         if node.crowbar["state"] == "crowbar_upgrade" && state == "shutdown"
-          @logger.debug("current node state is crowbar_upgrade; ignoring change to shutdown")
+          Rails.logger.debug("current node state is crowbar_upgrade; ignoring change to shutdown")
           return [200, { name: name }]
         end
 
@@ -193,20 +197,25 @@ class CrowbarService < ServiceObject
           # proposal.
           bc_lock = acquire_lock "#{bc}:#{rname}"
           begin
-            @logger.info("Crowbar transition: calling #{bc}:#{rname} for #{name} for #{state}")
-            service = ServiceObject.get_service(bc).new(@logger)
+            Rails.logger.info("Crowbar transition: calling #{bc}:#{rname} for #{name} for #{state}")
+            service = ServiceObject.get_service(bc).new
             answer = service.transition(rname, name, state)
             if answer[0] != 200
-              @logger.error("Crowbar transition: finished #{bc}:#{rname} for #{name} for #{state}: FAILED #{answer[1]}")
+              Rails.logger.error(
+                "Crowbar transition: finished #{bc}:#{rname} for #{name} for " \
+                "#{state}: FAILED #{answer[1]}"
+              )
             else
-              @logger.debug("Crowbar transition: finished #{bc}:#{rname} for #{name} for #{state}")
+              Rails.logger.debug(
+                "Crowbar transition: finished #{bc}:#{rname} for #{name} for #{state}"
+              )
               unless answer[1]["name"].nil?
                 name = answer[1]["name"]
               end
             end
           rescue StandardError => e
-            @logger.fatal("json/transition for #{bc}:#{rname} failed: #{e.message}")
-            @logger.fatal("#{e.backtrace.join("\n")}")
+            Rails.logger.fatal("json/transition for #{bc}:#{rname} failed: #{e.message}")
+            Rails.logger.fatal(e.backtrace.join("\n"))
             return [500, "#{bc} transition to #{rname} failed.\n#{e.message}\n#{e.backtrace.join("\n")}"]
           ensure
             bc_lock.release
@@ -218,7 +227,7 @@ class CrowbarService < ServiceObject
       process_queue if state == "ready"
     end
 
-    @logger.debug("Crowbar transition leaving: #{name} to #{state}")
+    Rails.logger.debug("Crowbar transition leaving: #{name} to #{state}")
     [200, { name: name }]
   end
 
@@ -351,7 +360,7 @@ class CrowbarService < ServiceObject
       ready_for_reboot = false
 
       while Time.now.to_i < Time.now.to_i + 120 && !ready_for_reboot
-        @logger.debug("waiting for pxe configuration to be updated for #{node.name}")
+        Rails.logger.debug("waiting for pxe configuration to be updated for #{node.name}")
         if File.file?(pxe_conf)
           File.open(pxe_conf).each_line do |line|
             line.chomp!
@@ -363,14 +372,14 @@ class CrowbarService < ServiceObject
         sleep(5) unless ready_for_reboot
       end
       if ready_for_reboot
-        @logger.debug("Rebooting node #{node.name} for operating system upgrade")
+        Rails.logger.debug("Rebooting node #{node.name} for operating system upgrade")
         ssh_status = node.ssh_cmd("/sbin/reboot")
         if ssh_status[0] != 200
-          @logger.error("Upgrade failed for machine #{node.name}. Could not ssh.")
+          Rails.logger.error("Upgrade failed for machine #{node.name}. Could not ssh.")
           upgrade_nodes_failed.push(node.name)
         end
       else
-        @logger.error("Upgrade failed for #{node.name}. Node not ready for reboot")
+        Rails.logger.error("Upgrade failed for #{node.name}. Node not ready for reboot")
         upgrade_nodes_failed.push(node.name)
       end
     end
@@ -399,7 +408,7 @@ class CrowbarService < ServiceObject
   end
 
   def apply_role_pre_chef_call(old_role, role, all_nodes)
-    @logger.debug("crowbar apply_role_pre_chef_call: entering #{all_nodes.inspect}")
+    Rails.logger.debug("crowbar apply_role_pre_chef_call: entering #{all_nodes.inspect}")
     all_nodes.each do |n|
       node = Node.find_by_name(n)
       # value of node.crowbar["crowbar_upgrade_step"] indicates that the role should be executed
@@ -412,20 +421,20 @@ class CrowbarService < ServiceObject
   end
 
   def apply_role(role, inst, in_queue, bootstrap = false)
-    @logger.debug("Crowbar apply_role: enter")
+    Rails.logger.debug("Crowbar apply_role: enter")
     answer = super
     if answer.first != 200
-      @logger.error("Crowbar apply_role: super apply_role finished with error")
+      Rails.logger.error("Crowbar apply_role: super apply_role finished with error")
       return answer
     end
-    @logger.debug("Crowbar apply_role: super apply_role finished")
+    Rails.logger.debug("Crowbar apply_role: super apply_role finished")
 
     answer = bootstrap_proposals(role, inst)
 
     if answer[0] != 200
-      @logger.error("Crowbar apply_role: #{answer.inspect}")
+      Rails.logger.error("Crowbar apply_role: #{answer.inspect}")
     else
-      @logger.debug("Crowbar apply_role: leaving: #{answer.inspect}")
+      Rails.logger.debug("Crowbar apply_role: leaving: #{answer.inspect}")
     end
     answer
   end
@@ -440,24 +449,24 @@ class CrowbarService < ServiceObject
     #sort by the order value (x,y are an array with the value of
     #the hash entry
     t = tmp.sort{ |x,y| x[1][:order] <=> y[1][:order] }
-    @logger.debug("ordered instances: #{t.inspect}")
+    Rails.logger.debug("ordered instances: #{t.inspect}")
     t
   end
 
   def bootstrap_ensure_proposal(bc, override_attr_path)
-    @logger.info("Bootstrap: ensure proposal for bc: #{bc}, name: #{override_attr_path}")
+    Rails.logger.info("Bootstrap: ensure proposal for bc: #{bc}, name: #{override_attr_path}")
 
     unless override_attr_path == "default" || File.exist?(override_attr_path)
       msg = "Cannot ensure proposal for #{bc} exists: #{override_attr_path} does not exist."
-      @logger.error(msg)
+      Rails.logger.error(msg)
       return [404, msg]
     end
 
-    service = ServiceObject.get_service(bc).new(@logger)
+    service = ServiceObject.get_service(bc).new
     answer = service.proposals
 
     if answer[0] != 200
-      @logger.error("Failed to list proposals for #{bc}: #{answer[0]}: #{answer[1]}")
+      Rails.logger.error("Failed to list proposals for #{bc}: #{answer[0]}: #{answer[1]}")
       return answer
     end
     proposals = answer[1]
@@ -475,7 +484,7 @@ class CrowbarService < ServiceObject
     end
 
     unless proposals.include?(id)
-      @logger.debug("Bootstrap: creating proposal for #{bc}.#{id}")
+      Rails.logger.debug("Bootstrap: creating proposal for #{bc}.#{id}")
       # on bootstrap, we'll generally want to add the admin server to some
       # roles, so prefill what we know will be needed
       if data["deployment"].nil? ||
@@ -491,7 +500,7 @@ class CrowbarService < ServiceObject
       if answer[0] != 200
         msg = "Failed to create proposal '#{id}' for barclamp '#{bc}' " \
             "(The error message was: #{answer[1].strip})"
-        @logger.error(msg)
+        Rails.logger.error(msg)
         answer[1] = msg
         return answer
       end
@@ -501,14 +510,14 @@ class CrowbarService < ServiceObject
     if answer[0] != 200
       msg = "Failed to list active '#{bc}' proposals " \
           "(The error message was: #{answer[1].strip})"
-      @logger.error(msg)
+      Rails.logger.error(msg)
       answer[1] = msg
       return answer
     end
     active_proposals = answer[1]
 
     unless active_proposals.include?(id)
-      @logger.debug("Bootstrap: applying proposal for #{bc}.#{id}")
+      Rails.logger.debug("Bootstrap: applying proposal for #{bc}.#{id}")
       answer = service.proposal_commit(
         id,
         in_queue: false,
@@ -518,13 +527,15 @@ class CrowbarService < ServiceObject
       if answer[0] != 200
         msg = "Failed to commit proposal '#{id}' for '#{bc}' " \
             "(The error message was: #{answer[1].strip})"
-        @logger.error(msg)
+        Rails.logger.error(msg)
         answer[1] = msg
         return answer
       end
     end
 
-    @logger.info("Bootstrap: done ensuring proposal for bc: #{bc}, name: #{override_attr_path}")
+    Rails.logger.info(
+      "Bootstrap: done ensuring proposal for bc: #{bc}, name: #{override_attr_path}"
+    )
 
     answer
   end
@@ -537,7 +548,7 @@ class CrowbarService < ServiceObject
         role["crowbar"]["instances"].nil? ||
         role["crowbar"]["instances"].empty?
 
-    @logger.info("Bootstrap: create initial proposals")
+    Rails.logger.info("Bootstrap: create initial proposals")
 
     ordered_bcs = order_instances role["crowbar"]["instances"]
     ordered_bcs.each do |bc, plist|
@@ -549,7 +560,7 @@ class CrowbarService < ServiceObject
     end
 
     if answer[0] == 200
-      @logger.info("Bootstrap successful!")
+      Rails.logger.info("Bootstrap successful!")
 
       # removing bootstrap info to not do this anymore
       proposal = Proposal.where(barclamp: @bc_name, name: inst).first

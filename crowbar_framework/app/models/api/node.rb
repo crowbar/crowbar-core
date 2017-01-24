@@ -217,7 +217,7 @@ module Api
         platform = Api::Upgrade.target_platform(platform_exception: addon)
 
         # as the ptf repo is not registered as a feature we need to enable it manually
-        provisioner_service = ProvisionerService.new(Rails.logger)
+        provisioner_service = ProvisionerService.new
         architectures.values.flatten.uniq.each do |architecture|
           provisioner_service.enable_repository(platform, architecture, "ptf")
         end
