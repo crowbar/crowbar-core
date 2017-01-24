@@ -785,6 +785,9 @@ en:
         not_ready:
           error: 'Some nodes are not in the state "ready": %{nodes}.'
           help: 'Check the chef logs for identifying the problem. Make sure all the nodes are in state "ready" before proceeding with the upgrade.'
+        failed_proposals:
+          error: 'These proposals report deployment failures: %{proposals}.'
+          help: 'Check the state of the specific barclamps and redeploy them correctly or disable failing proposals.'
         maintenance_updates_check:
           help:
             default: 'Make sure maintenance updates are installed'
