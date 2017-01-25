@@ -292,6 +292,13 @@ module Api
             help: I18n.t("api.upgrade.prechecks.not_ready.help")
           }
         end
+        if check[:failed_proposals]
+          ret[:failed_proposals] = {
+            data: I18n.t("api.upgrade.prechecks.failed_proposals.error",
+              proposals: check[:failed_proposals].join(",")),
+            help: I18n.t("api.upgrade.prechecks.failed_proposals.help")
+          }
+        end
         ret
       end
 

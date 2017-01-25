@@ -168,6 +168,45 @@ describe Api::Crowbar do
       expect(subject.class.addons).to eq([])
     end
   end
+  context "with cloud healthy" do
+    it "succeeds to check cloud health" do
+      allow(NodeObject).to(
+        receive(:find_all_nodes).
+        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+      )
+      allow_any_instance_of(NodeObject).to(receive(:ready?).and_return(true))
+
+      expect(subject.class.health_check).to be_empty
+    end
+  end
+
+  context "with cloud not healthy" do
+    it "finds a node that is not ready" do
+      allow(NodeObject).to(
+        receive(:find_all_nodes).
+        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+      )
+      allow_any_instance_of(NodeObject).to(receive(:ready?).and_return(false))
+
+      expect(subject.class.health_check).to have_key(:nodes_not_ready)
+    end
+
+    it "finds a failed and active proposal" do
+      allow(NodeObject).to(
+        receive(:find_all_nodes).
+        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+      )
+      allow_any_instance_of(NodeObject).to(receive(:ready?).and_return(true))
+
+      allow(Proposal).to(
+        receive(:all).and_return([Proposal.new(barclamp: "crowbar")])
+      )
+      allow_any_instance_of(Proposal).to(receive(:active?).and_return(true))
+      allow_any_instance_of(Proposal).to(receive(:failed?).and_return(true))
+
+      expect(subject.class.health_check).to eq(failed_proposals: ["Crowbar"])
+    end
+  end
 
   context "with ceph cluster healthy" do
     it "succeeds to check ceph cluster health" do
