@@ -162,6 +162,11 @@ class Api::UpgradeController < ApiController
         "passed": true,
         "errors": {}
       },
+      "cloud_healthy": {
+        "required": true,
+        "passed": true,
+        "errors": {}
+      },
       "maintenance_updates_installed": {
         "required": true,
         "passed": false,
@@ -174,17 +179,22 @@ class Api::UpgradeController < ApiController
           }
         }
       },
-      "clusters_healthy": {
-        "required": true,
-        "passed": true,
-        "errors": {}
-      },
-      "compute_resources_available": {
+      "compute_status": {
         "required": false,
         "passed": true,
         "errors": {}
       },
       "ceph_healthy": {
+        "required": true,
+        "passed": true,
+        "errors": {}
+      },
+      "ha_configured": {
+        "required": false,
+        "passed": true,
+        "errors": {}
+      },
+      "clusters_healthy": {
         "required": true,
         "passed": true,
         "errors": {}
