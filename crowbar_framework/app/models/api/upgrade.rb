@@ -139,6 +139,15 @@ module Api
         else
           prepare_nodes_for_crowbar_upgrade
         end
+      rescue StandardError => e
+        ::Crowbar::UpgradeStatus.new.end_step(
+          false,
+          prepare: {
+            data: e.message,
+            help: "Crowbar has failed. Check /var/log/crowbar/production.log for details."
+          }
+        )
+        raise e
       end
 
       #
@@ -235,6 +244,15 @@ module Api
             upgrade_status.end_step
           end
         end
+      rescue StandardError => e
+        ::Crowbar::UpgradeStatus.new.end_step(
+          false,
+          repocheck_crowbar: {
+            data: e.message,
+            help: "Crowbar has failed. Check /var/log/crowbar/production.log for details."
+          }
+        )
+        raise e
       end
 
       def noderepocheck
@@ -262,6 +280,15 @@ module Api
           upgrade_status.end_step
         end
         response
+      rescue StandardError => e
+        ::Crowbar::UpgradeStatus.new.end_step(
+          false,
+          repocheck_nodes: {
+            data: e.message,
+            help: "Crowbar has failed. Check /var/log/crowbar/production.log for details."
+          }
+        )
+        raise e
       end
 
       def target_platform(options = {})
@@ -341,6 +368,15 @@ module Api
         else
           ::Crowbar::UpgradeStatus.new.end_step
         end
+      rescue StandardError => e
+        ::Crowbar::UpgradeStatus.new.end_step(
+          false,
+          services: {
+            data: e.message,
+            help: "Crowbar has failed. Check /var/log/crowbar/production.log for details."
+          }
+        )
+        raise e
       end
       handle_asynchronously :services
 
@@ -415,6 +451,15 @@ module Api
             data: e.message
           }
         )
+      rescue StandardError => e
+        ::Crowbar::UpgradeStatus.new.end_step(
+          false,
+          backup_openstack: {
+            data: e.message,
+            help: "Crowbar has failed. Check /var/log/crowbar/production.log for details."
+          }
+        )
+        raise e
       end
       handle_asynchronously :openstackbackup
 
@@ -440,7 +485,6 @@ module Api
       #
       def nodes
         status = ::Crowbar::UpgradeStatus.new
-        status.start_step(:nodes)
 
         remaining = status.progress[:remaining_nodes]
         substep = status.current_substep
