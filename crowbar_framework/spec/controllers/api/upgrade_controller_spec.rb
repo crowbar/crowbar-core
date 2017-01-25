@@ -44,11 +44,6 @@ describe Api::UpgradeController, type: :request do
       expect(response.body).to eq(upgrade_status)
     end
 
-    it "updates the upgrade status object" do
-      patch "/api/upgrade", {}, headers
-      expect(response).to have_http_status(:not_implemented)
-    end
-
     it "prepares the crowbar upgrade" do
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step

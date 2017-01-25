@@ -19,10 +19,6 @@ class Api::CrowbarController < ApiController
     render json: Api::Crowbar.status
   end
 
-  def update
-    head :not_implemented
-  end
-
   def upgrade
     if request.post?
       crowbar_upgrade = Api::Crowbar.upgrade!

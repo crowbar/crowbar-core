@@ -36,11 +36,6 @@ describe Api::CrowbarController, type: :request do
       expect(response.body).to eq(crowbar_object)
     end
 
-    it "updates the crowbar object" do
-      patch "/api/crowbar", {}, headers
-      expect(response).to have_http_status(:not_implemented)
-    end
-
     it "shows the status of the crowbar upgrade" do
       get "/api/crowbar/upgrade", {}, headers
       expect(response).to have_http_status(:ok)

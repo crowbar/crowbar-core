@@ -21,10 +21,6 @@ class Api::UpgradeController < ApiController
     render json: Api::Upgrade.status
   end
 
-  def update
-    head :not_implemented
-  end
-
   def prepare
     if Api::Upgrade.prepare(background: true)
       head :ok
