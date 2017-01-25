@@ -31,13 +31,6 @@ class Api::CrowbarController < ApiController
     render json: Api::Crowbar.status
   end
 
-  api :PATCH, "/api/crowbar", "Update Crowbar object"
-  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
-  api_version "2.0"
-  def update
-    head :not_implemented
-  end
-
   api :GET, "/api/crowbar/upgrade", "Status of Crowbar Upgrade"
   header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   example '

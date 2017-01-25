@@ -78,13 +78,6 @@ class Api::UpgradeController < ApiController
     render json: Api::Upgrade.status
   end
 
-  api :PATCH, "/api/upgrade", "Update Upgrade status object"
-  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
-  api_version "2.0"
-  def update
-    head :not_implemented
-  end
-
   api :POST, "/api/upgrade/prepare", "Prepare Crowbar Upgrade"
   header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
