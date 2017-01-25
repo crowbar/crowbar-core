@@ -80,7 +80,7 @@ class IpmiService < ServiceObject
         suggestion = if role.default_attributes["ipmi"]["ignore_address_suggestions"]
           nil
         else
-          node["crowbar_wall"]["ipmi"]["address"] rescue nil
+          node.crowbar_wall["ipmi"]["address"] rescue nil
         end
 
         result = ns.allocate_ip("default", "bmc", "host", name, suggestion)

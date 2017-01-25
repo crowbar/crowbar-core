@@ -55,11 +55,11 @@ class CrowbarService < ServiceObject
     if answer.first != 200
       found_errors = []
       Node.find("state:crowbar_upgrade").each do |node|
-        error = node["crowbar_wall"]["chef_error"] || ""
+        error = node.crowbar_wall["chef_error"] || ""
         next if error.empty?
         found_errors.push error
         @logger.error("Chef run ended with an error on the node #{node.name}: #{error}")
-        node["crowbar_wall"]["chef_error"] = ""
+        node.crowbar_wall["chef_error"] = ""
         node.save
       end
       unless found_errors.empty?
@@ -98,7 +98,7 @@ class CrowbarService < ServiceObject
       step = "wait_for_openstack_shutdown" if node.roles.include? "database-config-default"
 
       # mark the position in the upgrade process
-      node["crowbar_wall"]["crowbar_upgrade_step"] = step
+      node.crowbar_wall["crowbar_upgrade_step"] = step
       node.save
     end
 
@@ -121,7 +121,7 @@ class CrowbarService < ServiceObject
       end
 
       # mark the position in the upgrade process
-      node["crowbar_wall"]["crowbar_upgrade_step"] = step
+      node.crowbar_wall["crowbar_upgrade_step"] = step
       node.save
     end
 
@@ -146,7 +146,7 @@ class CrowbarService < ServiceObject
 
     Node.find("state:crowbar_upgrade AND roles:database-config-default").each do |node|
       # mark the position in the upgrade process
-      node["crowbar_wall"]["crowbar_upgrade_step"] = "db_shutdown"
+      node.crowbar_wall["crowbar_upgrade_step"] = "db_shutdown"
       node.save
     end
 
@@ -156,7 +156,7 @@ class CrowbarService < ServiceObject
     # Finally, set the upgrade step to the point where no further action is done
     # even when the upgrade recipes are accidentally executed
     Node.find("state:crowbar_upgrade AND roles:database-config-default").each do |node|
-      node["crowbar_wall"]["crowbar_upgrade_step"] = "done_openstack_shutdown"
+      node.crowbar_wall["crowbar_upgrade_step"] = "done_openstack_shutdown"
       node.save
     end
 
@@ -330,7 +330,7 @@ class CrowbarService < ServiceObject
         # for Hyper-V nodes, only change the state, but do not run chef-client
         node.set_state("crowbar_upgrade")
       else
-        node["crowbar_wall"]["crowbar_upgrade_step"] = "crowbar_upgrade"
+        node.crowbar_wall["crowbar_upgrade_step"] = "crowbar_upgrade"
         node.save
         nodes_to_upgrade.push node.name
       end
@@ -388,7 +388,7 @@ class CrowbarService < ServiceObject
 
     upgrade_nodes.each do |node|
       node["target_platform"] = admin_node["provisioner"]["default_os"]
-      node["crowbar_wall"]["crowbar_upgrade_step"] = "prepare-os-upgrade"
+      node.crowbar_wall["crowbar_upgrade_step"] = "prepare-os-upgrade"
       # skip initial keystone bootstrapping
       if node["run_list_map"].key? "keystone-server"
         node["keystone"]["bootstrap"] = true
@@ -423,7 +423,7 @@ class CrowbarService < ServiceObject
     pxecfg_subdir = "bios/pxelinux.cfg"
 
     upgrade_nodes.each do |node|
-      boot_ip_hex = node["crowbar"]["boot_ip_hex"]
+      boot_ip_hex = node.crowbar["crowbar"]["boot_ip_hex"]
       node_arch = node["kernel"]["machine"]
       pxe_conf = "#{discovery_dir}/#{node_arch}/#{pxecfg_subdir}/#{boot_ip_hex}"
       ready_for_reboot = false
@@ -462,7 +462,7 @@ class CrowbarService < ServiceObject
     Node.all.each do |node|
       next unless node.state == "crowbar_upgrade"
       # revert nodes to previous state; mark the wall so apply does not change state again
-      node["crowbar_wall"]["crowbar_upgrade_step"] = "revert_to_ready"
+      node.crowbar_wall["crowbar_upgrade_step"] = "revert_to_ready"
       node.save
       node.set_state("ready")
     end

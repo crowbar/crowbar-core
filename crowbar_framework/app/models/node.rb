@@ -28,7 +28,7 @@ class Node < ChefObject
     @role = RoleObject.find_role_by_name Node.make_role_name(node.name)
     if @role.nil?
       # An admin node can exist without a role - so create one
-      if !node["crowbar"].nil? and node["crowbar"]["admin_node"]
+      if !node.crowbar["crowbar"].nil? and node.crowbar["crowbar"]["admin_node"]
         @role = Node.create_new_role(node.name, node)
       else
         Rails.logger.fatal("Node exists without role!! #{node.name}")
@@ -65,9 +65,9 @@ class Node < ChefObject
   end
 
   def availability_zone=(value)
-    @node["crowbar_wall"] ||= {}
-    @node["crowbar_wall"]["openstack"] ||= {}
-    @node["crowbar_wall"]["openstack"]["availability_zone"] = value
+    @node.crowbar_wall ||= {}
+    @node.crowbar_wall["openstack"] ||= {}
+    @node.crowbar_wall["openstack"]["availability_zone"] = value
   end
 
   def intended_role
@@ -75,8 +75,8 @@ class Node < ChefObject
   end
 
   def intended_role=(value)
-    @node["crowbar_wall"] ||= {}
-    @node["crowbar_wall"]["intended_role"] = value
+    @node.crowbar_wall ||= {}
+    @node.crowbar_wall["intended_role"] = value
   end
 
   def default_fs
@@ -84,8 +84,8 @@ class Node < ChefObject
   end
 
   def default_fs=(value)
-    @node["crowbar_wall"] ||= {}
-    @node["crowbar_wall"]["default_fs"] = value
+    @node.crowbar_wall ||= {}
+    @node.crowbar_wall["default_fs"] = value
   end
 
   def raid_type
@@ -93,8 +93,8 @@ class Node < ChefObject
   end
 
   def raid_type=(value)
-    @node["crowbar_wall"] ||= {}
-    @node["crowbar_wall"]["raid_type"] = value
+    @node.crowbar_wall ||= {}
+    @node.crowbar_wall["raid_type"] = value
   end
 
   def raid_disks
@@ -102,8 +102,8 @@ class Node < ChefObject
   end
 
   def raid_disks=(value)
-    @node["crowbar_wall"] ||= {}
-    @node["crowbar_wall"]["raid_disks"] = value
+    @node.crowbar_wall ||= {}
+    @node.crowbar_wall["raid_disks"] = value
   end
 
   def license_key
@@ -370,7 +370,7 @@ class Node < ChefObject
 
   def ipmi_enabled?
     #placeholder until we have a better mechanism
-    @node.nil? ? false : @node["crowbar"]["allocated"]
+    @node.nil? ? false : @node.crowbar["crowbar"]["allocated"]
   end
 
   # creates a hash with key attributes of the node from ohai for comparison
@@ -417,7 +417,7 @@ class Node < ChefObject
 
   def drive_info
     volumes = []
-    controllers = @node["crowbar_wall"]["raid"]["controllers"] rescue []
+    controllers = @node.crowbar_wall["raid"]["controllers"] rescue []
     controllers = [] unless controllers
     controllers.each do |c,k|
       k["volumes"].each do |v|
@@ -660,9 +660,9 @@ class Node < ChefObject
   #
   def admin?
     return false if @node.nil?
-    return false if @node["crowbar"].nil?
-    return false if @node["crowbar"]["admin_node"].nil?
-    @node["crowbar"]["admin_node"]
+    return false if @node.crowbar["crowbar"].nil?
+    return false if @node.crowbar["crowbar"]["admin_node"].nil?
+    @node.crowbar["crowbar"]["admin_node"]
   end
 
   def interface_list
@@ -802,7 +802,7 @@ class Node < ChefObject
   end
 
   def bmc_address
-    @node["crowbar_wall"]["ipmi"]["address"] rescue nil
+    @node.crowbar_wall["ipmi"]["address"] rescue nil
   end
 
   def get_bmc_user
@@ -857,18 +857,18 @@ class Node < ChefObject
   end
 
   def upgraded?
-    upgrade_state = @node["crowbar_wall"]["node_upgrade_state"] || ""
+    upgrade_state = @node.crowbar_wall["node_upgrade_state"] || ""
     return false unless upgrade_state == "upgraded"
     Rails.logger.info("Node #{@node.name} was already upgraded.")
     true
   end
 
   def upgrading?
-    @node["crowbar_wall"]["node_upgrade_state"] == "upgrading"
+    @node.crowbar_wall["node_upgrade_state"] == "upgrading"
   end
 
   def upgrade_state=(state)
-    @node["crowbar_wall"]["node_upgrade_state"] = state
+    @node.crowbar_wall["node_upgrade_state"] = state
     @node.save
   end
 
@@ -1140,10 +1140,10 @@ class Node < ChefObject
   end
 
   def bmc_set?
-    return false if @node.nil? or @node["crowbar_wall"].nil? or @node["crowbar_wall"]["status"].nil?
-    return false if @node["crowbar_wall"]["status"]["ipmi"].nil?
-    return false if @node["crowbar_wall"]["status"]["ipmi"]["address_set"].nil?
-    @node["crowbar_wall"]["status"]["ipmi"]["address_set"]
+    return false if @node.nil? or @node.crowbar_wall.nil? or @node.crowbar_wall["status"].nil?
+    return false if @node.crowbar_wall["status"]["ipmi"].nil?
+    return false if @node.crowbar_wall["status"]["ipmi"]["address_set"].nil?
+    @node.crowbar_wall["status"]["ipmi"]["address_set"]
   end
 
   def disk_owner(device)
