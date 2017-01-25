@@ -448,8 +448,9 @@ describe Api::Upgrade do
       allow_any_instance_of(Crowbar::UpgradeStatus).to(
         receive(:end_step).
         with(
-          false, nodes:
-          "Crowbar has failed. Check /var/log/crowbar/production.log for details."
+          false, nodes: {
+            data: "Crowbar has failed. Check /var/log/crowbar/production.log for details."
+          }
         ).
         and_return(false)
       )

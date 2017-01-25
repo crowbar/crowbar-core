@@ -479,8 +479,9 @@ module Api
         # end the step even for non-upgrade error, so we are not stuck with 'running'
         ::Crowbar::UpgradeStatus.new.end_step(
           false,
-          nodes: "Crowbar has failed. " \
-            "Check /var/log/crowbar/production.log for details."
+          nodes: {
+            data: "Crowbar has failed. Check /var/log/crowbar/production.log for details."
+          }
         )
         raise e
       end
