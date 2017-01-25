@@ -117,9 +117,14 @@ describe Api::Upgrade do
       allow(Api::Crowbar).to receive(
         :compute_status
       ).and_return({})
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:prechecks).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :end_step
+      ).and_return(true)
 
-      expect(subject.class).to respond_to(:checks)
-      expect(subject.class.checks.deep_stringify_keys).to eq(prechecks["checks"])
+      expect(subject.class.checks[:checks][:maintenance_updates_installed][:passed]).to be true
     end
   end
 
@@ -494,7 +499,7 @@ describe Api::Upgrade do
     it "during the upgrade of controller nodes, detect that they are upgraded" do
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:nodes_upgrade).and_return(true)
+      ).with(:nodes).and_return(true)
       allow(Node).to(
         receive(:find).
         with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
@@ -525,7 +530,7 @@ describe Api::Upgrade do
     it "during the upgrade of compute nodes, detect that they are upgraded" do
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
-      ).with(:nodes_upgrade).and_return(true)
+      ).with(:nodes).and_return(true)
       allow(Node).to(
         receive(:find).with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
         and_return([Node.find_by_name("testing.crowbar.com")])
@@ -671,18 +676,19 @@ describe Api::Upgrade do
   context "determining the best upgrade method" do
     it "chooses non-disruptive upgrade" do
       allow(subject.class).to receive(:checks).and_return(
-        prechecks["checks"].deep_symbolize_keys
+        prechecks.deep_symbolize_keys
       )
 
-      expect(subject.class.best_method).to eq("non-disruptive")
+      expect(subject.class.checks.deep_symbolize_keys[:best_method]).to eq("non-disruptive")
     end
 
     it "chooses disruptive upgrade" do
       upgrade_prechecks = prechecks
       upgrade_prechecks["checks"]["compute_status"]["passed"] = false
-      allow(subject.class).to receive(:checks).and_return(upgrade_prechecks["checks"])
+      upgrade_prechecks["best_method"] = "disruptive"
+      allow(subject.class).to receive(:checks).and_return(upgrade_prechecks)
 
-      expect(subject.class.best_method).to eq("disruptive")
+      expect(subject.class.checks.deep_symbolize_keys[:best_method]).to eq("disruptive")
     end
 
     it "chooses none" do
@@ -694,7 +700,7 @@ describe Api::Upgrade do
       ).and_return(crm_failures: "error", failed_actions: "error")
       allow(Api::Crowbar).to receive(:compute_status).and_return({})
 
-      expect(subject.class.best_method).to eq("none")
+      expect(subject.class.checks[:best_method]).to eq("none")
     end
   end
 
