@@ -480,7 +480,8 @@ module Api
         ::Crowbar::UpgradeStatus.new.end_step(
           false,
           nodes: {
-            data: "Crowbar has failed. Check /var/log/crowbar/production.log for details."
+            data: e.message,
+            help: "Crowbar has failed. Check /var/log/crowbar/production.log for details."
           }
         )
         raise e

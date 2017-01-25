@@ -446,13 +446,7 @@ describe Api::Upgrade do
       ).with(:nodes).and_return(true)
       allow(Node).to(receive(:find).and_raise("Some Error"))
       allow_any_instance_of(Crowbar::UpgradeStatus).to(
-        receive(:end_step).
-        with(
-          false, nodes: {
-            data: "Crowbar has failed. Check /var/log/crowbar/production.log for details."
-          }
-        ).
-        and_return(false)
+        receive(:end_step).and_return(false)
       )
 
       expect { subject.class.nodes }.to raise_error(RuntimeError)
