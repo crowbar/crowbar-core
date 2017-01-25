@@ -148,6 +148,15 @@ class Api::UpgradeController < ApiController
         }
       }
     }, status: :unprocessable_entity
+  rescue StandardError => e
+    ::Crowbar::UpgradeStatus.new.end_step(
+      false,
+      backup_crowbar: {
+        data: e.message,
+        help: "Crowbar has failed. Check /var/log/crowbar/production.log for details."
+      }
+    )
+    raise e
   ensure
     @backup.cleanup unless @backup.nil?
   end

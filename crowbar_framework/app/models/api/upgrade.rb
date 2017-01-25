@@ -219,6 +219,15 @@ module Api
             upgrade_status.end_step
           end
         end
+      rescue StandardError => e
+        ::Crowbar::UpgradeStatus.new.end_step(
+          false,
+          repocheck_crowbar: {
+            data: e.message,
+            help: "Crowbar has failed. Check /var/log/crowbar/production.log for details."
+          }
+        )
+        raise e
       end
 
       def target_platform(options = {})
