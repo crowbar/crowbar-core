@@ -396,7 +396,7 @@ module Api
             db_dump[:stdout_and_stderr]
           )
         end
-
+        ::Crowbar::UpgradeStatus.new.save_openstack_backup dump_path
         ::Crowbar::UpgradeStatus.new.end_step
       rescue ::Crowbar::Error::UpgradeNotEnoughDiskSpaceError => e
         ::Crowbar::UpgradeStatus.new.end_step(
