@@ -152,14 +152,14 @@ module Crowbar
       ].include?(current_step) && !running?(:admin)
     end
 
-    def save_crowbar_backup(backup_location = "")
+    def save_crowbar_backup(backup_location)
       ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
         progress[:crowbar_backup] = backup_location
         save
       end
     end
 
-    def save_openstack_backup(backup_location = "")
+    def save_openstack_backup(backup_location)
       ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
         progress[:openstack_backup] = backup_location
         save
