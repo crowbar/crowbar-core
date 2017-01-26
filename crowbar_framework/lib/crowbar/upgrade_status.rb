@@ -64,6 +64,7 @@ module Crowbar
       @progress[:steps] = upgrade_steps_6_7.map do |step|
         [step, { status: :pending }]
       end.to_h
+      FileUtils.rm_f("/var/lib/crowbar/upgrade/6-to-7-upgrade-running")
       save
     end
 
@@ -103,6 +104,9 @@ module Crowbar
         progress[:current_step] = step_name
         progress[:steps][step_name][:status] = :running
         progress[:steps][step_name][:errors] = {}
+        if step_name == :prepare
+          FileUtils.touch("/var/lib/crowbar/upgrade/6-to-7-upgrade-running")
+        end
         save
       end
     end
@@ -120,7 +124,7 @@ module Crowbar
         next_step
         save
         if finished? && success
-          FileUtils.touch("/var/lib/crowbar/upgrade/6-to-7-upgraded-ok")
+          FileUtils.rm_f("/var/lib/crowbar/upgrade/6-to-7-upgrade-running")
         end
         success
       end
