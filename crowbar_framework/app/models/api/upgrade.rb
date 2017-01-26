@@ -600,9 +600,24 @@ module Api
       # crowbar_upgrade_step will not be needed after node is upgraded
       def finalize_node_upgrade(node)
         return unless node["crowbar_wall"].key? "crowbar_upgrade_step"
+
         node["crowbar_wall"].delete "crowbar_upgrade_step"
         node["crowbar_wall"].delete "node_upgrade_state"
         node.save
+
+        scripts_to_delete = [
+          "prepare-repositories",
+          "upgrade-os",
+          "shutdown-services-before-upgrade",
+          "delete-cinder-services-before-upgrade",
+          "evacuate-host",
+          "pre-upgrade",
+          "delete-pacemaker-resources",
+          "router-migration",
+          "post-upgrade",
+          "chef-upgraded"
+        ].map { |f| "/usr/sbin/crowbar-#{f}.sh" }.join(" ")
+        node.run_ssh_cmd("rm -f #{scripts_to_delete}")
       end
 
       def finalize_nodes_upgrade
