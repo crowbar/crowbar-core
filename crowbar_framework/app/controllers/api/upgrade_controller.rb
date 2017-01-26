@@ -126,7 +126,8 @@ class Api::UpgradeController < ApiController
     @backup = Backup.new(backup_params)
 
     if @backup.save
-      upgrade_status.end_step
+      ::Crowbar::UpgradeStatus.new.save_crowbar_backup @backup.path
+      ::Crowbar::UpgradeStatus.new.end_step
       render json: @backup, status: :ok
     else
       upgrade_status.end_step(
