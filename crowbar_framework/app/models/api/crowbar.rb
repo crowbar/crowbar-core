@@ -86,6 +86,8 @@ module Api
           unready << node.name unless node.ready?
         end
         ret[:nodes_not_ready] = unready unless unready.empty?
+        failed = Proposal.all.select { |p| p.active? && p.failed? }
+        ret[:failed_proposals] = failed.map(&:display_name) unless failed.empty?
         ret
       end
 
