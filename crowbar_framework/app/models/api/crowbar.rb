@@ -113,7 +113,7 @@ module Api
           )
         end
         nova = NodeObject.find("roles:nova-controller").first
-        ret[:no_live_migration] = true unless nova["nova"]["use_migration"]
+        ret[:no_live_migration] = true if nova && !nova["nova"]["use_migration"]
         ret
       end
 
