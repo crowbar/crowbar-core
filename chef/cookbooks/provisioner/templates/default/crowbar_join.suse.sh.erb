@@ -448,6 +448,11 @@ if [ "$MODE" == "setup" -o "$MODE" == "start" ]; then
         exit 1
     fi
 
+    if [ ! -f /etc/chef/validation.pem -a "$MODE" == "start" ]; then
+        echo_error "Please join Crowbar by running with --setup first"
+        exit 1
+    fi
+
     # Get our hostname
     HOSTNAME=$(hostname -f)
 
