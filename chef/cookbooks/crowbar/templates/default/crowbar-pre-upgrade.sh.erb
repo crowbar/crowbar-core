@@ -92,25 +92,25 @@ zypper --non-interactive up <%= @neutron_agent %>
 crudini --set /etc/neutron/neutron-openvswitch-agent.conf.d/200-crowbar-upgrade.conf ovs ovsdb_interface vsctl
 crudini --set /etc/neutron/neutron-openvswitch-agent.conf.d/200-crowbar-upgrade.conf ovs of_interface ovs-ofctl
 <% end %>
-systemctl start <%= @neutron_agent %>
+systemctl restart <%= @neutron_agent %>
 
 <% if @l3_agent %>
 zypper --non-interactive up <%= @l3_agent %>
-systemctl start <%= @l3_agent %>
+systemctl restart <%= @l3_agent %>
 <% end %>
 
 <% if @metadata_agent %>
 zypper --non-interactive up <%= @metadata_agent %>
-systemctl start <%= @metadata_agent %>
+systemctl restart <%= @metadata_agent %>
 <% end %>
 
 log "Starting nova-compute service"
-systemctl start openstack-nova-compute.service
+systemctl restart openstack-nova-compute.service
 
 <% if @cinder_volume %>
 log "Upgrading and setting cinder-volume configuration"
 zypper --non-interactive up openstack-cinder-volume
-systemctl start openstack-cinder-volume.service
+systemctl restart openstack-cinder-volume.service
 <% end %>
 
 # Remove temporary config options
