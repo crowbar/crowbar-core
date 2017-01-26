@@ -124,14 +124,25 @@ module Api
             upgrade_status.end_step
           end
         end
+      rescue ::Crowbar::Error::StartStepRunningError,
+             ::Crowbar::Error::StartStepOrderError,
+             ::Crowbar::Error::SaveUpgradeStatusError => e
+        raise ::Crowbar::Error::UpgradeError.new(e.message)
+      rescue StandardError => e
+        ::Crowbar::UpgradeStatus.new.end_step(
+          false,
+          prechecks: {
+            data: e.message,
+            help: "Crowbar has failed. Check /var/log/crowbar/production.log for details."
+          }
+        )
+        raise e
       end
 
       #
       # prepare upgrade
       #
       def prepare(options = {})
-        ::Crowbar::UpgradeStatus.new.start_step(:prepare)
-
         background = options.fetch(:background, false)
 
         if background
@@ -244,6 +255,10 @@ module Api
             upgrade_status.end_step
           end
         end
+      rescue ::Crowbar::Error::StartStepRunningError,
+             ::Crowbar::Error::StartStepOrderError,
+             ::Crowbar::Error::SaveUpgradeStatusError => e
+        raise ::Crowbar::Error::UpgradeError.new(e.message)
       rescue StandardError => e
         ::Crowbar::UpgradeStatus.new.end_step(
           false,
@@ -280,6 +295,10 @@ module Api
           upgrade_status.end_step
         end
         response
+      rescue ::Crowbar::Error::StartStepRunningError,
+             ::Crowbar::Error::StartStepOrderError,
+             ::Crowbar::Error::SaveUpgradeStatusError => e
+        raise ::Crowbar::Error::UpgradeError.new(e.message)
       rescue StandardError => e
         ::Crowbar::UpgradeStatus.new.end_step(
           false,
@@ -308,7 +327,6 @@ module Api
       # service shutdown
       #
       def services
-        ::Crowbar::UpgradeStatus.new.start_step(:services)
         begin
           # prepare the scripts for various actions necessary for the upgrade
           service_object = CrowbarService.new(Rails.logger)
@@ -381,8 +399,6 @@ module Api
       handle_asynchronously :services
 
       def openstackbackup
-        ::Crowbar::UpgradeStatus.new.start_step(:backup_openstack)
-
         crowbar_lib_dir = "/var/lib/crowbar"
         dump_path = "#{crowbar_lib_dir}/upgrade/6-to-7-openstack_dump.sql"
         if File.exist?(dump_path)
@@ -511,7 +527,7 @@ module Api
           upgrade_all_compute_nodes
         end
         ::Crowbar::UpgradeStatus.new.end_step
-      rescue ::Crowbar::Error::UpgradeError => e
+      rescue ::Crowbar::Error::Upgrade::NodeError => e
         ::Crowbar::UpgradeStatus.new.end_step(
           false,
           nodes: {
@@ -531,6 +547,11 @@ module Api
         raise e
       end
       handle_asynchronously :nodes
+
+      def raise_node_upgrade_error(message = "")
+        Rails.logger.error(message)
+        raise ::Crowbar::Error::Upgrade::NodeError.new(message)
+      end
 
       protected
 
@@ -624,7 +645,7 @@ module Api
         # Explicitly mark the first node as cluster founder
         # and in case of DRBD setup, adapt DRBD config accordingly.
         unless Api::Pacemaker.set_node_as_founder node.name
-          raise_upgrade_error("Changing the cluster founder to #{node.name} has failed")
+          raise_node_upgrade_error("Changing the cluster founder to #{node.name} has failed")
           return false
         end
         # remove pre-upgrade attribute, so the services can start
@@ -714,7 +735,7 @@ module Api
         end
 
         if first.nil? || second.nil?
-          raise_upgrade_error("Unable to detect DRBD master and/or slave nodes")
+          raise_node_upgrade_error("Unable to detect DRBD master and/or slave nodes")
         end
 
         upgrade_first_cluster_node first, second
@@ -730,7 +751,7 @@ module Api
         )
         save_upgrade_state("Deleting pacemaker resources was successful.")
       rescue StandardError => e
-        raise_upgrade_error(
+        raise_node_upgrade_error(
           e.message +
             "Check /var/log/crowbar/node-upgrade.log for details."
         )
@@ -758,7 +779,7 @@ module Api
         # run the script again on this node (to evacuate other nodes)
         controller.delete_script_exit_files("/usr/sbin/crowbar-router-migration.sh")
       rescue StandardError => e
-        raise_upgrade_error(
+        raise_node_upgrade_error(
           e.message +
           " Check /var/log/crowbar/node-upgrade.log at #{controller.name} for details."
         )
@@ -792,8 +813,9 @@ module Api
         end
 
         controller = ::Node.find("roles:nova-controller").first
+
         if controller.nil?
-          raise_upgrade_error(
+          raise_node_upgrade_error(
             "No node with 'nova-controller' role node was found. " \
             "Cannot proceed with upgrade of compute nodes."
           )
@@ -819,7 +841,7 @@ module Api
           )
           save_upgrade_state("Services at compute nodes upgraded and prepared.")
         rescue StandardError => e
-          raise_upgrade_error(
+          raise_node_upgrade_error(
             "Error while preparing services at compute nodes. " + e.message
           )
         end
@@ -844,7 +866,7 @@ module Api
             "source /root/.openrc; nova service-enable #{hostname} nova-compute"
           )
           unless out[:exit_code].zero?
-            raise_upgrade_error(
+            raise_node_upgrade_error(
               "Enabling nova-compute service for #{hostname} has failed. " \
               "Check nova log files at #{controller.name} and #{n.name}."
             )
@@ -864,7 +886,7 @@ module Api
           "Migrating instances from node #{compute} was successful."
         )
       rescue StandardError => e
-        raise_upgrade_error(
+        raise_node_upgrade_error(
           e.message +
           "Check /var/log/crowbar/node-upgrade.log at #{controller.name} for details."
         )
@@ -875,18 +897,13 @@ module Api
         Rails.logger.info(message)
       end
 
-      def raise_upgrade_error(message = "")
-        Rails.logger.error(message)
-        raise ::Crowbar::Error::UpgradeError.new(message)
-      end
-
       # Take a list of nodes and execute given script at each node in the background
       # Wait until all scripts at all nodes correctly finish or until some error is detected
       def execute_scripts_and_wait_for_finish(nodes, script, seconds)
         nodes.each do |node|
           ssh_status = node.ssh_cmd(script).first
           if ssh_status != 200
-            raise_upgrade_error("Failed to connect to node #{node.name}!")
+            raise_node_upgrade_error("Failed to connect to node #{node.name}!")
             raise "Execution of script #{script} has failed on node #{node.name}."
           end
         end

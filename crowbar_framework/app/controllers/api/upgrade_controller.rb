@@ -83,6 +83,8 @@ class Api::UpgradeController < ApiController
   api_version "2.0"
   error 422, "Failed to prepare nodes for Crowbar upgrade"
   def prepare
+    ::Crowbar::UpgradeStatus.new.start_step(:prepare)
+
     if Api::Upgrade.prepare(background: true)
       head :ok
     else
@@ -95,9 +97,9 @@ class Api::UpgradeController < ApiController
         }
       }, status: :unprocessable_entity
     end
-  rescue Crowbar::Error::StartStepRunningError,
-         Crowbar::Error::StartStepOrderError,
-         Crowbar::Error::SaveUpgradeStatusError => e
+  rescue ::Crowbar::Error::StartStepRunningError,
+         ::Crowbar::Error::StartStepOrderError,
+         ::Crowbar::Error::SaveUpgradeStatusError => e
     render json: {
       errors: {
         prepare: {
@@ -113,12 +115,12 @@ class Api::UpgradeController < ApiController
   api_version "2.0"
   error 422, "Failed to stop services on all nodes"
   def services
+    ::Crowbar::UpgradeStatus.new.start_step(:services)
     Api::Upgrade.services
     head :ok
-  rescue Crowbar::Error::StartStepRunningError,
-         Crowbar::Error::StartStepOrderError,
-         Crowbar::Error::EndStepRunningError,
-         Crowbar::Error::SaveUpgradeStatusError => e
+  rescue ::Crowbar::Error::StartStepRunningError,
+         ::Crowbar::Error::StartStepOrderError,
+         ::Crowbar::Error::SaveUpgradeStatusError => e
     render json: {
       errors: {
         services: {
@@ -135,12 +137,12 @@ class Api::UpgradeController < ApiController
   # This is gonna initiate the upgrade of all nodes.
   # The method runs asynchronously, so there's a need to poll for the status and possible errors
   def nodes
+    ::Crowbar::UpgradeStatus.new.start_step(:nodes)
     Api::Upgrade.nodes
     head :ok
-  rescue Crowbar::Error::StartStepRunningError,
-         Crowbar::Error::StartStepOrderError,
-         Crowbar::Error::EndStepRunningError,
-         Crowbar::Error::SaveUpgradeStatusError => e
+  rescue ::Crowbar::Error::StartStepRunningError,
+         ::Crowbar::Error::StartStepOrderError,
+         ::Crowbar::Error::SaveUpgradeStatusError => e
     render json: {
       errors: {
         nodes: {
@@ -291,10 +293,7 @@ class Api::UpgradeController < ApiController
   '
   def noderepocheck
     render json: Api::Upgrade.noderepocheck
-  rescue Crowbar::Error::StartStepRunningError,
-         Crowbar::Error::StartStepOrderError,
-         Crowbar::Error::EndStepRunningError,
-         Crowbar::Error::SaveUpgradeStatusError => e
+  rescue Crowbar::Error::UpgradeError => e
     render json: {
       errors: {
         repocheck_nodes: {
@@ -348,10 +347,7 @@ class Api::UpgradeController < ApiController
     else
       render json: check
     end
-  rescue Crowbar::Error::StartStepRunningError,
-         Crowbar::Error::StartStepOrderError,
-         Crowbar::Error::EndStepRunningError,
-         Crowbar::Error::SaveUpgradeStatusError => e
+  rescue Crowbar::Error::UpgradeError => e
     render json: {
       errors: {
         repocheck_crowbar: {
@@ -432,12 +428,12 @@ class Api::UpgradeController < ApiController
   api_version "2.0"
   error 422, "Failed to save backup, error details are provided in the response"
   def openstackbackup
+    ::Crowbar::UpgradeStatus.new.start_step(:backup_openstack)
     Api::Upgrade.openstackbackup
     head :ok
-  rescue Crowbar::Error::StartStepRunningError,
-         Crowbar::Error::StartStepOrderError,
-         Crowbar::Error::EndStepRunningError,
-         Crowbar::Error::SaveUpgradeStatusError => e
+  rescue ::Crowbar::Error::StartStepRunningError,
+         ::Crowbar::Error::StartStepOrderError,
+         ::Crowbar::Error::SaveUpgradeStatusError => e
     render json: {
       errors: {
         backup_openstack: {

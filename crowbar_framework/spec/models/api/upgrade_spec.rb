@@ -158,7 +158,7 @@ describe Api::Upgrade do
         receive(:compute_status).and_return({})
       )
 
-      expect(subject.class.services).to be_a(Delayed::Backend::ActiveRecord::Job)
+      expect(subject.class.services_without_delay).to be true
     end
   end
 
@@ -170,7 +170,7 @@ describe Api::Upgrade do
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:start_step).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
-      expect(subject.class.services).to be_a(Delayed::Backend::ActiveRecord::Job)
+      expect(subject.class.services_without_delay).to be nil
     end
   end
 
@@ -411,12 +411,13 @@ describe Api::Upgrade do
       allow_any_instance_of(Api::Node).to receive(:join_and_chef).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:save_node_state).and_return(true)
       allow(Api::Upgrade).to receive(:upgrade_all_compute_nodes).and_return(true)
+      allow(Api::Upgrade).to receive(:evacuate_network_node).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
       ).with(:nodes).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
-      expect(subject.class.nodes).to be_a(Delayed::Backend::ActiveRecord::Job)
+      expect(subject.class.nodes_without_delay).to be true
     end
 
     it "successfully completes the upgrade when they are no compute nodes" do
@@ -437,7 +438,7 @@ describe Api::Upgrade do
       ).with(:nodes).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
-      expect(subject.class.nodes).to be_a(Delayed::Backend::ActiveRecord::Job)
+      expect(subject.class.nodes_without_delay).to be true
     end
 
     it "fails with some non-upgrade error" do
@@ -449,7 +450,7 @@ describe Api::Upgrade do
         receive(:end_step).and_return(false)
       )
 
-      expect { subject.class.nodes }.to raise_error(RuntimeError)
+      expect { subject.class.nodes_without_delay }.to raise_error(RuntimeError)
     end
 
     it "fails to upgrade compute nodes when there is no nova-controller" do
@@ -487,7 +488,7 @@ describe Api::Upgrade do
         and_return(false)
       )
 
-      expect(subject.class.nodes).to be_a(Delayed::Backend::ActiveRecord::Job)
+      expect(subject.class.nodes_without_delay).to be false
     end
 
     it "during the upgrade of controller nodes, detect that they are upgraded" do
@@ -518,7 +519,7 @@ describe Api::Upgrade do
       allow(Api::Upgrade).to receive(:upgrade_all_compute_nodes).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
-      expect(subject.class.nodes).to be_a(Delayed::Backend::ActiveRecord::Job)
+      expect(subject.class.nodes_without_delay).to be true
     end
 
     it "during the upgrade of compute nodes, detect that they are upgraded" do
@@ -538,7 +539,7 @@ describe Api::Upgrade do
       allow(Node).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
-      expect(subject.class.nodes).to be_a(Delayed::Backend::ActiveRecord::Job)
+      expect(subject.class.nodes_without_delay).to be true
     end
 
     it "successfully upgrades KVM compute nodes" do
@@ -570,7 +571,7 @@ describe Api::Upgrade do
       ).with(:nodes).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
-      expect(subject.class.nodes).to be_a(Delayed::Backend::ActiveRecord::Job)
+      expect(subject.class.nodes_without_delay).to be true
     end
   end
 
@@ -763,7 +764,7 @@ describe Api::Upgrade do
         :end_step
       ).and_return(true)
 
-      expect(subject.class.openstackbackup).to be_a(Delayed::Backend::ActiveRecord::Job)
+      expect(subject.class.openstackbackup_without_delay).to be true
     end
 
     it "finds out that an OpenStack backup has already been created" do
@@ -777,7 +778,7 @@ describe Api::Upgrade do
         :end_step
       ).and_return(true)
 
-      expect(subject.class.openstackbackup).to be_a(Delayed::Backend::ActiveRecord::Job)
+      expect(subject.class.openstackbackup_without_delay).to be nil
     end
   end
 
