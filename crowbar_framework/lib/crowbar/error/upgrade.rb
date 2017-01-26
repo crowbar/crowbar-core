@@ -51,6 +51,13 @@ module Crowbar
           super("Cannot create dump of OpenStack databases. #{message}")
         end
       end
+
+      # node upgrade
+      class NodeError < UpgradeError
+        def initialize(message)
+          super(message)
+        end
+      end
     end
   end
 end

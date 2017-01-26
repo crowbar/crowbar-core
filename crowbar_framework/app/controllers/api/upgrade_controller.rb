@@ -22,6 +22,8 @@ class Api::UpgradeController < ApiController
   end
 
   def prepare
+    ::Crowbar::UpgradeStatus.new.start_step(:prepare)
+
     if Api::Upgrade.prepare(background: true)
       head :ok
     else
@@ -34,9 +36,9 @@ class Api::UpgradeController < ApiController
         }
       }, status: :unprocessable_entity
     end
-  rescue Crowbar::Error::StartStepRunningError,
-         Crowbar::Error::StartStepOrderError,
-         Crowbar::Error::SaveUpgradeStatusError => e
+  rescue ::Crowbar::Error::StartStepRunningError,
+         ::Crowbar::Error::StartStepOrderError,
+         ::Crowbar::Error::SaveUpgradeStatusError => e
     render json: {
       errors: {
         prepare: {
@@ -99,10 +101,7 @@ class Api::UpgradeController < ApiController
     else
       render json: check
     end
-  rescue Crowbar::Error::StartStepRunningError,
-         Crowbar::Error::StartStepOrderError,
-         Crowbar::Error::EndStepRunningError,
-         Crowbar::Error::SaveUpgradeStatusError => e
+  rescue Crowbar::Error::UpgradeError => e
     render json: {
       errors: {
         repocheck_crowbar: {

@@ -121,6 +121,19 @@ module Api
             upgrade_status.end_step
           end
         end
+      rescue ::Crowbar::Error::StartStepRunningError,
+             ::Crowbar::Error::StartStepOrderError,
+             ::Crowbar::Error::SaveUpgradeStatusError => e
+        raise ::Crowbar::Error::UpgradeError.new(e.message)
+      rescue StandardError => e
+        ::Crowbar::UpgradeStatus.new.end_step(
+          false,
+          prechecks: {
+            data: e.message,
+            help: "Crowbar has failed. Check /var/log/crowbar/production.log for details."
+          }
+        )
+        raise e
       end
 
       def adminrepocheck
@@ -219,6 +232,10 @@ module Api
             upgrade_status.end_step
           end
         end
+      rescue ::Crowbar::Error::StartStepRunningError,
+             ::Crowbar::Error::StartStepOrderError,
+             ::Crowbar::Error::SaveUpgradeStatusError => e
+        raise ::Crowbar::Error::UpgradeError.new(e.message)
       rescue StandardError => e
         ::Crowbar::UpgradeStatus.new.end_step(
           false,
@@ -258,8 +275,6 @@ module Api
       end
 
       def prepare(options = {})
-        ::Crowbar::UpgradeStatus.new.start_step(:prepare)
-
         background = options.fetch(:background, false)
 
         if background
