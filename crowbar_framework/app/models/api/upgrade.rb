@@ -249,7 +249,7 @@ module Api
           Rails.logger.error(
             "Not possible to cancel the upgrade at the step #{upgrade_status.current_step}"
           )
-          raise ::Crowbar::Error::UpgradeCancelError.new(upgrade_status.current_step)
+          raise ::Crowbar::Error::Upgrade::CancelError.new(upgrade_status.current_step)
         end
 
         service_object = CrowbarService.new(Rails.logger)
