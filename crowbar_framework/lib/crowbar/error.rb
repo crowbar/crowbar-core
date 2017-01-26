@@ -19,19 +19,24 @@ module Crowbar
     autoload :UpgradeError,
       File.expand_path("../error/upgrade", __FILE__)
 
-    autoload :UpgradeCancelError,
-      File.expand_path("../error/upgrade", __FILE__)
+    module Upgrade
+      autoload :CancelError,
+        File.expand_path("../error/upgrade", __FILE__)
 
-    autoload :UpgradeNotEnoughDiskSpaceError,
-      File.expand_path("../error/upgrade", __FILE__)
+      autoload :NotEnoughDiskSpaceError,
+        File.expand_path("../error/upgrade", __FILE__)
 
-    autoload :UpgradeFreeDiskSpaceError,
-      File.expand_path("../error/upgrade", __FILE__)
+      autoload :FreeDiskSpaceError,
+        File.expand_path("../error/upgrade", __FILE__)
 
-    autoload :UpgradeDatabaseDumpError,
-      File.expand_path("../error/upgrade", __FILE__)
+      autoload :DatabaseDumpError,
+        File.expand_path("../error/upgrade", __FILE__)
 
-    autoload :UpgradeDatabaseSizeError,
-      File.expand_path("../error/upgrade", __FILE__)
+      autoload :DatabaseSizeError,
+        File.expand_path("../error/upgrade", __FILE__)
+
+      autoload :NodeError,
+        File.expand_path("../error/upgrade", __FILE__)
+    end
   end
 end

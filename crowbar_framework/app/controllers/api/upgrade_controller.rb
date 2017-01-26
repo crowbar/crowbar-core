@@ -225,7 +225,7 @@ class Api::UpgradeController < ApiController
         }
       }, status: :unprocessable_entity
     end
-  rescue Crowbar::Error::UpgradeCancelError => e
+  rescue Crowbar::Error::Upgrade::CancelError => e
     render json: {
       errors: {
         cancel: {

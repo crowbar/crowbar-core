@@ -595,7 +595,7 @@ describe Api::Upgrade do
       ).and_raise("Some Error")
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:current_step).and_return(:database)
 
-      expect { subject.class.cancel }.to raise_error(Crowbar::Error::UpgradeCancelError)
+      expect { subject.class.cancel }.to raise_error(Crowbar::Error::Upgrade::CancelError)
     end
 
     it "is allowed to cancel the upgrade" do
@@ -648,7 +648,7 @@ describe Api::Upgrade do
           :current_step
         ).and_return(allowed_step)
 
-        expect { subject.class.cancel }.to raise_error(Crowbar::Error::UpgradeCancelError)
+        expect { subject.class.cancel }.to raise_error(Crowbar::Error::Upgrade::CancelError)
       end
     end
 
@@ -663,7 +663,7 @@ describe Api::Upgrade do
         :running?
       ).and_return(true)
 
-      expect { subject.class.cancel }.to raise_error(Crowbar::Error::UpgradeCancelError)
+      expect { subject.class.cancel }.to raise_error(Crowbar::Error::Upgrade::CancelError)
     end
   end
 

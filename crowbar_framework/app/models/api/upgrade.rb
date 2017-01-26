@@ -400,7 +400,7 @@ module Api
           Rails.logger.error(
             "Failed to check size of OpenStack database: #{db_size[:stdout_and_stderr]}"
           )
-          raise ::Crowbar::Error::UpgradeDatabaseSizeError.new(
+          raise ::Crowbar::Error::Upgrade::DatabaseSizeError.new(
             db_size[:stdout_and_stderr]
           )
         end
@@ -410,13 +410,13 @@ module Api
         )
         unless free_space[:exit_code].zero?
           Rails.logger.error("Cannot determine free disk space: #{free_space[:stdout_and_stderr]}")
-          raise ::Crowbar::Error::UpgradeFreeDiskSpaceError.new(
+          raise ::Crowbar::Error::Upgrade::FreeDiskSpaceError.new(
             free_space[:stdout_and_stderr]
           )
         end
         if free_space[:stdout_and_stderr].strip.to_i < db_size[:stdout_and_stderr].strip.to_i
           Rails.logger.error("Not enough free disk space to create the OpenStack database dump")
-          raise ::Crowbar::Error::UpgradeNotEnoughDiskSpaceError.new("#{crowbar_lib_dir}/upgrade")
+          raise ::Crowbar::Error::Upgrade::NotEnoughDiskSpaceError.new("#{crowbar_lib_dir}/upgrade")
         end
 
         Rails.logger.debug("Creating OpenStack database dump")
@@ -428,13 +428,13 @@ module Api
             "Failed to create OpenStack database dump: #{db_dump[:stdout_and_stderr]}"
           )
           FileUtils.rm_f(dump_path)
-          raise ::Crowbar::Error::UpgradeDatabaseDumpError.new(
+          raise ::Crowbar::Error::Upgrade::DatabaseDumpError.new(
             db_dump[:stdout_and_stderr]
           )
         end
         ::Crowbar::UpgradeStatus.new.save_openstack_backup dump_path
         ::Crowbar::UpgradeStatus.new.end_step
-      rescue ::Crowbar::Error::UpgradeNotEnoughDiskSpaceError => e
+      rescue ::Crowbar::Error::Upgrade::NotEnoughDiskSpaceError => e
         ::Crowbar::UpgradeStatus.new.end_step(
           false,
           backup_openstack: {
@@ -442,9 +442,9 @@ module Api
             help: "Make sure you have enough disk space to store the OpenStack database dump."
           }
         )
-      rescue ::Crowbar::Error::UpgradeFreeDiskSpaceError,
-             ::Crowbar::Error::UpgradeDatabaseSizeError,
-             ::Crowbar::Error::UpgradeDatabaseDumpError => e
+      rescue ::Crowbar::Error::Upgrade::FreeDiskSpaceError,
+             ::Crowbar::Error::Upgrade::DatabaseSizeError,
+             ::Crowbar::Error::Upgrade::DatabaseDumpError => e
         ::Crowbar::UpgradeStatus.new.end_step(
           false,
           backup_openstack: {
@@ -472,7 +472,7 @@ module Api
           Rails.logger.error(
             "Not possible to cancel the upgrade at the step #{upgrade_status.current_step}"
           )
-          raise ::Crowbar::Error::UpgradeCancelError.new(upgrade_status.current_step)
+          raise ::Crowbar::Error::Upgrade::CancelError.new(upgrade_status.current_step)
         end
 
         service_object = CrowbarService.new(Rails.logger)
