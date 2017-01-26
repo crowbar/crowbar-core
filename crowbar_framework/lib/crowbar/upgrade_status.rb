@@ -117,11 +117,11 @@ module Crowbar
           status: success ? :passed : :failed,
           errors: errors
         }
-        next_step
-        save
         if finished? && success
           FileUtils.touch("/var/lib/crowbar/upgrade/6-to-7-upgraded-ok")
         end
+        next_step
+        save
         success
       end
     end
@@ -220,8 +220,7 @@ module Crowbar
         :repocheck_nodes,
         :services,
         :backup_openstack,
-        :nodes,
-        :finished
+        :nodes
       ]
     end
 

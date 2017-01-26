@@ -187,10 +187,9 @@ describe Crowbar::UpgradeStatus do
       expect(subject.start_step(:backup_openstack)).to be true
       expect(subject.end_step).to be true
       expect(subject.current_step).to eql :nodes
-      expect(subject.start_step(:nodes)).to be true
       allow(FileUtils).to receive(:touch).and_return(true)
+      expect(subject.start_step(:nodes)).to be true
       expect(subject.end_step).to be true
-      expect(subject.current_step).to eql :finished
       expect(subject.finished?).to be true
       expect { subject.end_step }.to raise_error(Crowbar::Error::EndStepRunningError)
     end
