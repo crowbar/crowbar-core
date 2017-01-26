@@ -420,10 +420,7 @@ class Api::UpgradeController < ApiController
   api_version "2.0"
   error 422, "Failed to save backup, error details are provided in the response"
   def openstackbackup
-    # FIXME: fake the backup_openstack step for now until it is implemented
-    backup_openstack = ::Crowbar::UpgradeStatus.new
-    backup_openstack.start_step(:backup_openstack)
-    backup_openstack.end_step
+    Api::Upgrade.openstackbackup
     head :ok
   rescue Crowbar::Error::StartStepRunningError,
          Crowbar::Error::StartStepOrderError,

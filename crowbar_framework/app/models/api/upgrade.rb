@@ -344,6 +344,80 @@ module Api
       end
       handle_asynchronously :services
 
+      def openstackbackup
+        ::Crowbar::UpgradeStatus.new.start_step(:backup_openstack)
+
+        crowbar_lib_dir = "/var/lib/crowbar"
+        dump_path = "#{crowbar_lib_dir}/upgrade/6-to-7-openstack_dump.sql"
+        if File.exist?(dump_path)
+          Rails.logger.debug("OpenStack backup already exists. Skipping...")
+          return
+        end
+
+        psql = postgres_params
+        query = "SELECT SUM(pg_database_size(pg_database.datname)) FROM pg_database;"
+        cmd = "PGPASSWORD=#{psql[:pass]} psql -t -h #{psql[:host]} -U #{psql[:user]} -c '#{query}'"
+
+        Rails.logger.debug("Checking size of OpenStack database")
+        db_size = run_cmd(cmd)
+        unless db_size[:exit_code].zero?
+          Rails.logger.error(
+            "Failed to check size of OpenStack database: #{db_size[:stdout_and_stderr]}"
+          )
+          raise ::Crowbar::Error::UpgradeDatabaseSizeError.new(
+            db_size[:stdout_and_stderr]
+          )
+        end
+
+        free_space = run_cmd(
+          "LANG=C df -x 'tmpfs' -x 'devtmpfs' -B1 -l --output='avail' #{crowbar_lib_dir} | tail -n1"
+        )
+        unless free_space[:exit_code].zero?
+          Rails.logger.error("Cannot determine free disk space: #{free_space[:stdout_and_stderr]}")
+          raise ::Crowbar::Error::UpgradeFreeDiskSpaceError.new(
+            free_space[:stdout_and_stderr]
+          )
+        end
+        if free_space[:stdout_and_stderr].strip.to_i < db_size[:stdout_and_stderr].strip.to_i
+          Rails.logger.error("Not enough free disk space to create the OpenStack database dump")
+          raise ::Crowbar::Error::UpgradeNotEnoughDiskSpaceError.new("#{crowbar_lib_dir}/upgrade")
+        end
+
+        Rails.logger.debug("Creating OpenStack database dump")
+        db_dump = run_cmd(
+          "PGPASSWORD=#{psql[:pass]} pg_dumpall -h #{psql[:host]} -U #{psql[:user]} > #{dump_path}"
+        )
+        unless db_dump[:exit_code].zero?
+          Rails.logger.error(
+            "Failed to create OpenStack database dump: #{db_dump[:stdout_and_stderr]}"
+          )
+          FileUtils.rm_f(dump_path)
+          raise ::Crowbar::Error::UpgradeDatabaseDumpError.new(
+            db_dump[:stdout_and_stderr]
+          )
+        end
+
+        ::Crowbar::UpgradeStatus.new.end_step
+      rescue ::Crowbar::Error::UpgradeNotEnoughDiskSpaceError => e
+        ::Crowbar::UpgradeStatus.new.end_step(
+          false,
+          backup_openstack: {
+            data: e.message,
+            help: "Make sure you have enough disk space to store the OpenStack database dump."
+          }
+        )
+      rescue ::Crowbar::Error::UpgradeFreeDiskSpaceError,
+             ::Crowbar::Error::UpgradeDatabaseSizeError,
+             ::Crowbar::Error::UpgradeDatabaseDumpError => e
+        ::Crowbar::UpgradeStatus.new.end_step(
+          false,
+          backup_openstack: {
+            data: e.message
+          }
+        )
+      end
+      handle_asynchronously :openstackbackup
+
       #
       # cancel upgrade
       #
@@ -942,6 +1016,30 @@ module Api
 
       def admin_architecture
         ::Node.admin_node.architecture
+      end
+
+      #
+      # openstackbackup helpers
+      #
+      def postgres_params
+        db_node = ::Node.find("roles:database-config-default").first
+        {
+          user: "postgres",
+          pass: db_node[:postgresql][:password][:postgres],
+          host: db_node[:postgresql].config[:listen_addresses]
+        }
+      end
+
+      #
+      # general helpers
+      #
+      def run_cmd(*args)
+        Open3.popen2e(*args) do |stdin, stdout_and_stderr, wait_thr|
+          {
+            stdout_and_stderr: stdout_and_stderr.gets(nil),
+            exit_code: wait_thr.value.exitstatus
+          }
+        end
       end
     end
   end

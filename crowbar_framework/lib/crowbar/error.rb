@@ -16,7 +16,22 @@
 
 module Crowbar
   module Error
+    autoload :UpgradeError,
+      File.expand_path("../error/upgrade", __FILE__)
+
     autoload :UpgradeCancelError,
-      File.expand_path("../error/upgrade_cancel", __FILE__)
+      File.expand_path("../error/upgrade", __FILE__)
+
+    autoload :UpgradeNotEnoughDiskSpaceError,
+      File.expand_path("../error/upgrade", __FILE__)
+
+    autoload :UpgradeFreeDiskSpaceError,
+      File.expand_path("../error/upgrade", __FILE__)
+
+    autoload :UpgradeDatabaseDumpError,
+      File.expand_path("../error/upgrade", __FILE__)
+
+    autoload :UpgradeDatabaseSizeError,
+      File.expand_path("../error/upgrade", __FILE__)
   end
 end
