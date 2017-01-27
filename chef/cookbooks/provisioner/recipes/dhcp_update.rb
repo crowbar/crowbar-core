@@ -11,6 +11,8 @@ lease_time = node[:provisioner][:dhcp]["lease-time"]
 
 pool_opts = {
   "dhcp" => ["allow unknown-clients",
+             "default-lease-time #{lease_time}",
+             "max-lease-time #{lease_time}",
              'if exists dhcp-parameter-request-list {
        # Always send the PXELINUX options (specified in hexadecimal)
        option dhcp-parameter-request-list = concat(option dhcp-parameter-request-list,d0,d1,d2,d3);
@@ -41,8 +43,6 @@ dhcp_subnet admin_net["subnet"] do
   options [
     "server-identifier #{admin_ip}",
     "option domain-name \"#{domain_name}\"",
-    "option domain-name-servers #{dns_servers.join(", ")}",
-    "default-lease-time #{lease_time}",
-    "max-lease-time #{lease_time}"
+    "option domain-name-servers #{dns_servers.join(", ")}"
   ]
 end
