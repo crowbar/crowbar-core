@@ -808,6 +808,22 @@ class ::Nic
       ::Kernel.system("ovs-vsctl add-port #{@nic} #{slave}")
     end
 
+    def datapath_id
+      res = ""
+      ::IO.popen("ovs-vsctl get Bridge #{@nic} datapath-id 2> /dev/null") do |f|
+        f.each do |line|
+          # There should only be one line of output, the double quoted
+          # datapath-id
+          res = line.strip.tr('"', '')
+        end
+      end
+      res
+    end
+
+    def datapath_id=(id)
+      ::Kernel.system("ovs-vsctl set Bridge #{@nic} other-config:datapath-id=#{id}")
+    end
+
     def self.create(nic, slaves = [])
       Chef::Log.info("Creating new OVS bridge #{nic}")
       if self.exists?(nic)
