@@ -165,7 +165,9 @@ module Api
           ::Crowbar::UpgradeStatus.new.save_nodes(upgraded, remaining)
         end
       end
-      @node.upgrade_state = state
+      @node = ::Node.find_by_name(@node.name)
+      @node["crowbar_wall"]["node_upgrade_state"] = state
+      @node.save
     end
 
     class << self
