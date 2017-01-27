@@ -29,6 +29,9 @@ describe Crowbar::UpgradeStatus do
     }
   end
 
+  let(:crowbar_backup) { "/var/lib/crowbar.tgz" }
+  let(:openstack_backup) { "/var/lib/openstack.tgz" }
+
   context "with a status file that does not exist" do
     it "ensures the default initial values are correct" do
       expect(subject.current_substep).to be_nil
@@ -267,6 +270,18 @@ describe Crowbar::UpgradeStatus do
       expect(subject.save_nodes(1, 2)).to be true
       expect(subject.progress[:remaining_nodes]).to be 2
       expect(subject.progress[:upgraded_nodes]).to be 1
+    end
+
+    it "saves and checks backup info" do
+      expect(subject.current_substep).to be_nil
+      expect(subject.progress[:crowbar_backup]).to be nil
+      expect(subject.progress[:openstack_backup]).to be nil
+
+      expect(subject.save_crowbar_backup(crowbar_backup)).to be true
+      expect(subject.progress[:crowbar_backup]).to be crowbar_backup
+
+      expect(subject.save_openstack_backup(openstack_backup)).to be true
+      expect(subject.progress[:openstack_backup]).to be openstack_backup
     end
 
     it "fails while saving the status initially" do
