@@ -55,7 +55,10 @@ module Crowbar
         current_node: nil,
         # number of nodes still to be upgraded
         remaining_nodes: nil,
-        upgraded_nodes: nil
+        upgraded_nodes: nil,
+        # locations of the backups taken during the upgrade
+        crowbar_backup: nil,
+        openstack_backup: nil
       }
       # in 'steps', we save the information about each step that was executed
       @progress[:steps] = upgrade_steps_6_7.map do |step|
@@ -147,6 +150,20 @@ module Crowbar
         :repocheck_crowbar,
         :admin
       ].include?(current_step) && !running?(:admin)
+    end
+
+    def save_crowbar_backup(backup_location)
+      ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
+        progress[:crowbar_backup] = backup_location
+        save
+      end
+    end
+
+    def save_openstack_backup(backup_location)
+      ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
+        progress[:openstack_backup] = backup_location
+        save
+      end
     end
 
     def save_current_node(node_data = {})

@@ -4,6 +4,8 @@
   "current_node":null,
   "remaining_nodes": null,
   "upgraded_nodes": null,
+  "crowbar_backup": null,
+  "openstack_backup": null,
   "steps":{
     "prechecks":{
       "status":"pending"
