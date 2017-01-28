@@ -163,6 +163,7 @@ describe Crowbar::UpgradeStatus do
       expect(subject.start_step(:prechecks)).to be true
       expect(subject.end_step).to be true
       expect(subject.current_step).to eql :prepare
+      allow(FileUtils).to receive(:touch).and_return(true)
       expect(subject.start_step(:prepare)).to be true
       expect(subject.end_step).to be true
       expect(subject.current_step).to eql :backup_crowbar
@@ -206,6 +207,7 @@ describe Crowbar::UpgradeStatus do
       )
       expect(subject.running?(:prechecks)).to be true
       expect(subject.end_step).to be true
+      allow(FileUtils).to receive(:touch).and_return(true)
       expect(subject.start_step(:prepare)).to be true
       expect(subject.end_step).to be true
       expect(subject.start_step(:backup_crowbar)).to be true
@@ -245,6 +247,7 @@ describe Crowbar::UpgradeStatus do
     it "prevents repeating steps when it's too late or too early" do
       expect(subject.start_step(:prechecks)).to be true
       expect(subject.end_step).to be true
+      allow(FileUtils).to receive(:touch).and_return(true)
       expect(subject.start_step(:prepare)).to be true
       expect { subject.start_step(:prechecks) }.to raise_error(
         Crowbar::Error::StartStepOrderError
