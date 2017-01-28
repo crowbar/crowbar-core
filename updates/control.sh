@@ -158,10 +158,13 @@ fi
 # Get stuff out of nfs.
 cp /updates/parse_node_data /tmp
 
-# get validation cert
-curl -L -o /etc/chef/validation.pem \
-    --connect-timeout 60 -s \
-    "http://$ADMIN_IP:8091/validation.pem"
+for retry in $(seq 1 30); do
+    curl -f --retry 2 -o /etc/chef/validation.pem \
+        --connect-timeout 60 -s -L \
+        "http://$ADMIN_IP:8091/validation.pem"
+    [ -f /etc/chef/validation.pem ] && break
+    sleep $retry
+done
 
 . "/updates/control_lib.sh"
 

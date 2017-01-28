@@ -388,12 +388,13 @@ until $ntp; do
   sleep 1
 done
 
-####killall dhclient
-####killall dhclient3
-
-curl -L -o /etc/chef/validation.pem \
-    --connect-timeout 60 -s \
-    "$HTTP_SERVER/validation.pem"
+for retry in $(seq 1 30); do
+    curl -f --retry 2 -o /etc/chef/validation.pem \
+        --connect-timeout 60 -s -L \
+        "$HTTP_SERVER/validation.pem"
+    [ -f /etc/chef/validation.pem ] && break
+    sleep $retry
+done
 
 TMP_ATTRIBUTES=$(mktemp --suffix .json)
 

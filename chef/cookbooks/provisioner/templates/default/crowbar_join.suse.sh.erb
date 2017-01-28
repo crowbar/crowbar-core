@@ -148,8 +148,14 @@ sync_time() {
 
 do_setup() {
     mkdir -p /etc/chef
-    curl -o /etc/chef/validation.pem \
-        "http://$HTTP_SERVER/validation.pem"
+
+    for retry in $(seq 1 30); do
+        curl -f --retry 2 -o /etc/chef/validation.pem \
+            --connect-timeout 60 -s -L \
+            "http://$HTTP_SERVER/validation.pem"
+        [ -f /etc/chef/validation.pem ] && break
+        sleep $retry
+    done
 
     # Make sure that the client knows how to talk to the server.
     local cfg=/etc/chef/client.rb
@@ -439,6 +445,11 @@ if [ "$MODE" == "setup" -o "$MODE" == "start" ]; then
     echo_verbose "Getting hostname..."
     if ! wait_for_hostname; then
         echo_error "Cannot get hostname..."
+        exit 1
+    fi
+
+    if [ ! -f /etc/chef/validation.pem -a "$MODE" == "start" ]; then
+        echo_error "Please join Crowbar by running with --setup first"
         exit 1
     fi
 
