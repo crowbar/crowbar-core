@@ -364,7 +364,9 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
           is_ses: storage_available && !cloud_available,
           crowbar_join: "#{os_url}/crowbar_join.sh",
           default_fs: mnode[:crowbar_wall][:default_fs] || "ext4",
-          needs_openvswitch: (mnode[:network] && mnode[:network][:needs_openvswitch]) || false
+          needs_openvswitch: (mnode[:network] && mnode[:network][:needs_openvswitch]) || false,
+          use_uefi: !mnode[:uefi].nil?,
+          domain_name: node.fetch(:dns, {})[:domain] || node[:domain]
         )
       end
 
