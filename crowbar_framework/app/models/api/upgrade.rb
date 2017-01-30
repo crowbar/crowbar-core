@@ -400,7 +400,7 @@ module Api
 
       def openstackbackup
         crowbar_lib_dir = "/var/lib/crowbar"
-        dump_path = "#{crowbar_lib_dir}/upgrade/6-to-7-openstack_dump.sql.gz"
+        dump_path = "#{crowbar_lib_dir}/backup/6-to-7-openstack_dump.sql.gz"
         if File.exist?(dump_path)
           Rails.logger.warn("OpenStack backup already exists. Skipping...")
           ::Crowbar::UpgradeStatus.new.end_step
@@ -433,7 +433,7 @@ module Api
         end
         if free_space[:stdout_and_stderr].strip.to_i < db_size[:stdout_and_stderr].strip.to_i
           Rails.logger.error("Not enough free disk space to create the OpenStack database dump")
-          raise ::Crowbar::Error::Upgrade::NotEnoughDiskSpaceError.new("#{crowbar_lib_dir}/upgrade")
+          raise ::Crowbar::Error::Upgrade::NotEnoughDiskSpaceError.new("#{crowbar_lib_dir}/backup")
         end
 
         Rails.logger.debug("Creating OpenStack database dump")
