@@ -19,35 +19,44 @@ module Crowbar
     class UpgradeError < StandardError
     end
 
-    # cancel upgrade
-    class UpgradeCancelError < StandardError
-      def initialize(step_name = "")
-        super("Not possible to cancel the upgrade at the step #{step_name}")
+    module Upgrade
+      # cancel upgrade
+      class CancelError < UpgradeError
+        def initialize(step_name = "")
+          super("Not possible to cancel the upgrade at the step #{step_name}")
+        end
       end
-    end
 
-    # openstack backup
-    class UpgradeNotEnoughDiskSpaceError < StandardError
-      def initialize(path)
-        super("Not enough space in #{path} to create an OpenStack database dump.")
+      # openstack backup
+      class NotEnoughDiskSpaceError < UpgradeError
+        def initialize(path)
+          super("Not enough space in #{path} to create an OpenStack database dump.")
+        end
       end
-    end
 
-    class UpgradeFreeDiskSpaceError < StandardError
-      def initialize(message = "")
-        super("Cannot determine free disk space. #{message}")
+      class FreeDiskSpaceError < UpgradeError
+        def initialize(message = "")
+          super("Cannot determine free disk space. #{message}")
+        end
       end
-    end
 
-    class UpgradeDatabaseSizeError < StandardError
-      def initialize(message = "")
-        super("Cannot determine size of OpenStack databases. #{message}")
+      class DatabaseSizeError < UpgradeError
+        def initialize(message = "")
+          super("Cannot determine size of OpenStack databases. #{message}")
+        end
       end
-    end
 
-    class UpgradeDatabaseDumpError < StandardError
-      def initialize(message = "")
-        super("Cannot create dump of OpenStack databases. #{message}")
+      class DatabaseDumpError < UpgradeError
+        def initialize(message = "")
+          super("Cannot create dump of OpenStack databases. #{message}")
+        end
+      end
+
+      # node upgrade
+      class NodeError < UpgradeError
+        def initialize(message)
+          super(message)
+        end
       end
     end
   end

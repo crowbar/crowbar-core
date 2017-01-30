@@ -223,7 +223,7 @@ Rails.application.routes.draw do
     constraints: ApiConstraint.new(2.0) do
     resource :crowbar,
       controller: :crowbar,
-      only: [:show, :update] do
+      only: [:show] do
       get :upgrade
       post :upgrade
       get :maintenance
@@ -247,7 +247,7 @@ Rails.application.routes.draw do
 
     resource :upgrade,
       controller: :upgrade,
-      only: [:show, :update] do
+      only: [:show] do
       post :prepare
       post :services
       post :nodes

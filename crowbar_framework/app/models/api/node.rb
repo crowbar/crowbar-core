@@ -32,7 +32,7 @@ module Api
       execute_and_wait_for_finish("/usr/sbin/crowbar-pre-upgrade.sh", 300)
       Rails.logger.info("Pre upgrade script run was successful.")
     rescue StandardError => e
-      raise_upgrade_error(
+      Api::Upgrade.raise_node_upgrade_error(
         "Error while executing pre upgrade script. " + e.message
       )
     end
@@ -41,7 +41,7 @@ module Api
       execute_and_wait_for_finish("/usr/sbin/crowbar-prepare-repositories.sh", 100)
       Rails.logger.info("Prepare of repositories was successful.")
     rescue StandardError => e
-      raise_upgrade_error(
+      Api::Upgrade.raise_node_upgrade_error(
         "Error while executing prepare repositories script. " + e.message
       )
     end
@@ -50,7 +50,7 @@ module Api
       execute_and_wait_for_finish("/usr/sbin/crowbar-upgrade-os.sh", 600)
       Rails.logger.info("Package upgrade was successful.")
     rescue StandardError => e
-      raise_upgrade_error(
+      Api::Upgrade.raise_node_upgrade_error(
         "Error while executing OS upgrade script. " + e.message
       )
     end
@@ -60,7 +60,7 @@ module Api
       execute_and_wait_for_finish("/usr/sbin/crowbar-post-upgrade.sh", 600)
       Rails.logger.info("Post upgrade script run was successful.")
     rescue StandardError => e
-      raise_upgrade_error(
+      Api::Upgrade.raise_node_upgrade_error(
         "Error while executing post upgrade script. " + e.message
       )
     end
@@ -69,7 +69,7 @@ module Api
       begin
         execute_and_wait_for_finish("/usr/sbin/crowbar-chef-upgraded.sh", 600)
       rescue StandardError => e
-        raise_upgrade_error(
+        Api::Upgrade.raise_node_upgrade_error(
           "Error while running the initial chef-client. " + e.message
         )
       end
@@ -78,7 +78,7 @@ module Api
       if @node.ready_after_upgrade?
         Rails.logger.info("Initial chef-client run was successful.")
       else
-        raise_upgrade_error(
+        Api::Upgrade.raise_node_upgrade_error(
           "Possible error during initial chef-client run at node #{@node.name}. " \
           "Node is currently in state #{@node.state}. " \
           "Check /var/log/crowbar/crowbar_join/chef.log."
@@ -95,7 +95,7 @@ module Api
         end
       end
     rescue Timeout::Error
-      raise_upgrade_error(
+      Api::Upgrade.raise_node_upgrade_error(
         "Possible error at node #{@node.name}" \
         "Node did not #{action} after 5 minutes of trying."
       )
@@ -111,7 +111,7 @@ module Api
 
       ssh_status = @node.ssh_cmd("/sbin/reboot")
       if ssh_status[0] != 200
-        raise_upgrade_error("Failed to reboot the machine. Could not ssh.")
+        Api::Upgrade.raise_node_upgrade_error("Failed to reboot the machine. Could not ssh.")
       end
 
       wait_for_ssh_state(:down, "reboot")
@@ -133,7 +133,7 @@ module Api
       hostname = name.split(".").first
       out = @node.run_ssh_cmd("crm node attribute #{hostname} set pre-upgrade false")
       unless out[:exit_code].zero?
-        raise_upgrade_error(
+        Api::Upgrade.raise_node_upgrade_error(
           "Changing the pre-upgrade role for #{name} from #{@node.name} failed"
         )
       end
@@ -155,11 +155,6 @@ module Api
         ::Crowbar::UpgradeStatus.new.save_nodes(upgraded, remaining)
       end
       @node.upgrade_state = state
-    end
-
-    def raise_upgrade_error(message = "")
-      Rails.logger.error(message)
-      raise ::Crowbar::Error::UpgradeError.new(message)
     end
 
     class << self
