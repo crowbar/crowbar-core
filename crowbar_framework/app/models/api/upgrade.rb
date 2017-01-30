@@ -402,7 +402,8 @@ module Api
         crowbar_lib_dir = "/var/lib/crowbar"
         dump_path = "#{crowbar_lib_dir}/upgrade/6-to-7-openstack_dump.sql.gz"
         if File.exist?(dump_path)
-          Rails.logger.debug("OpenStack backup already exists. Skipping...")
+          Rails.logger.warn("OpenStack backup already exists. Skipping...")
+          ::Crowbar::UpgradeStatus.new.end_step
           return
         end
 
