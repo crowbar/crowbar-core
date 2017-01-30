@@ -74,9 +74,6 @@ describe Api::Upgrade do
         :addons
       ).and_return(["ceph", "ha"])
       allow(Api::Crowbar).to(
-        receive(:addon_installed?).and_return(true)
-      )
-      allow(Api::Crowbar).to(
         receive(:ha_presence_check).and_return({})
       )
       allow(Api::Crowbar).to(
@@ -88,9 +85,14 @@ describe Api::Upgrade do
       allow(Api::Crowbar).to(
         receive(:compute_status).and_return({})
       )
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:prechecks).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :end_step
+      ).and_return(true)
 
-      expect(subject.class).to respond_to(:checks)
-      expect(subject.class.checks.deep_stringify_keys).to eq(prechecks["checks"])
+      expect(subject.class.checks[:checks][:maintenance_updates_installed][:passed]).to be true
     end
   end
 
@@ -324,18 +326,19 @@ describe Api::Upgrade do
   context "determining the best upgrade method" do
     it "chooses non-disruptive upgrade" do
       allow(subject.class).to receive(:checks).and_return(
-        prechecks["checks"].deep_symbolize_keys
+        prechecks.deep_symbolize_keys
       )
 
-      expect(subject.class.best_method).to eq("non-disruptive")
+      expect(subject.class.checks.deep_symbolize_keys[:best_method]).to eq("non-disruptive")
     end
 
     it "chooses disruptive upgrade" do
       upgrade_prechecks = prechecks
       upgrade_prechecks["checks"]["compute_status"]["passed"] = false
-      allow(subject.class).to receive(:checks).and_return(upgrade_prechecks["checks"])
+      upgrade_prechecks["best_method"] = "disruptive"
+      allow(subject.class).to receive(:checks).and_return(upgrade_prechecks)
 
-      expect(subject.class.best_method).to eq("disruptive")
+      expect(subject.class.checks.deep_symbolize_keys[:best_method]).to eq("disruptive")
     end
 
     it "chooses none" do
@@ -344,7 +347,7 @@ describe Api::Upgrade do
       ).and_return(errors: ["Some Error"])
       allow(Api::Crowbar).to receive(:compute_status).and_return({})
 
-      expect(subject.class.best_method).to eq("none")
+      expect(subject.class.checks[:best_method]).to eq("none")
     end
   end
 
