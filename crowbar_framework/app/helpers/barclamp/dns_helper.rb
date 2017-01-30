@@ -17,5 +17,14 @@
 
 module Barclamp
   module DnsHelper
+    def dns_record_types(selected)
+      options_for_select(
+        [
+          ["A", "A"],
+          ["CNAME", "CNAME"]
+        ],
+        selected.to_s
+      )
+    end
   end
 end

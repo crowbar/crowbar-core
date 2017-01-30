@@ -14,3 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+window.Handlebars.registerHelper('select', function(value, options) {
+    var $el = $('<select />').html(options.fn(this));
+    $el.find('[value="' + value + '"]').attr({'selected': 'selected'});
+    return $el.html();
+});

@@ -169,6 +169,7 @@
       }
 
       var inputs = self.root.find('tfoot input');
+      var selects = self.root.find('tfoot select');
 
       var data = self.json;
       var namespace = self.options.namespace.split('/');
@@ -191,6 +192,22 @@
         } else {
           values[name] = value;
         }
+      });
+
+      $.each(selects, function(index, select) {
+        var name = $(select).data('name');
+
+        if ($(select).data('type') == "array-string") {
+          // for multi-selects
+          var value = $(select).val();
+        } else {
+          var value = self.parseValue(
+            $(select).data('type'),
+            $(select).val()
+          );
+        }
+
+        values[name] = value;
       });
 
       while (namespace.length > 1) {
@@ -297,6 +314,44 @@
         $(this).data('type'),
         $(this).val()
       );
+
+      self.writeJson();
+
+      $(document).trigger({
+        type: 'dynamicTableUpdatedEntry',
+        json: data,
+        namespaced: namespace,
+        optionals: optionals
+      });
+    });
+
+    self.root.find('tbody select').live('change', function(event) {
+      self.prepareJson();
+
+      var data = self.json;
+      var namespace = $(this).data('update').toString().split('/');
+
+      while (namespace.length > 1) {
+        var current_namespace = namespace.shift();
+
+        if (!data[current_namespace]) {
+          data[current_namespace] = {};
+        }
+
+        data = data[current_namespace];
+      }
+
+      if ($(this).data('type') == "array-string") {
+        // for multi-selects
+        var value = $(this).val();
+      } else {
+        var value = self.parseValue(
+          $(this).data('type'),
+          $(this).val()
+        );
+      }
+
+      data[namespace.shift()] = value;
 
       self.writeJson();
 
