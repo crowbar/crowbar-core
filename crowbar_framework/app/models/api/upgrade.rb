@@ -400,7 +400,7 @@ module Api
 
       def openstackbackup
         crowbar_lib_dir = "/var/lib/crowbar"
-        dump_path = "#{crowbar_lib_dir}/upgrade/6-to-7-openstack_dump.sql"
+        dump_path = "#{crowbar_lib_dir}/upgrade/6-to-7-openstack_dump.sql.gz"
         if File.exist?(dump_path)
           Rails.logger.debug("OpenStack backup already exists. Skipping...")
           return
@@ -437,7 +437,8 @@ module Api
 
         Rails.logger.debug("Creating OpenStack database dump")
         db_dump = run_cmd(
-          "PGPASSWORD=#{psql[:pass]} pg_dumpall -h #{psql[:host]} -U #{psql[:user]} > #{dump_path}"
+          "PGPASSWORD=#{psql[:pass]} pg_dumpall -h #{psql[:host]} -U #{psql[:user]} | " \
+            "gzip > #{dump_path}"
         )
         unless db_dump[:exit_code].zero?
           Rails.logger.error(

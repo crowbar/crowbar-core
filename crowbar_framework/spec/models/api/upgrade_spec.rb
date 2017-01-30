@@ -749,7 +749,7 @@ describe Api::Upgrade do
         [::Node.find_by_name("testing.crowbar.com")]
       )
       allow(File).to receive(:exist?).with(
-        "/var/lib/crowbar/upgrade/6-to-7-openstack_dump.sql"
+        "/var/lib/crowbar/upgrade/6-to-7-openstack_dump.sql.gz"
       ).and_return(false)
       allow(Api::Upgrade).to receive(:run_cmd).and_return(
         exit_code: 0,
@@ -772,7 +772,7 @@ describe Api::Upgrade do
         :start_step
       ).with(:backup_openstack).and_return(true)
       allow(File).to receive(:exist?).with(
-        "/var/lib/crowbar/upgrade/6-to-7-openstack_dump.sql"
+        "/var/lib/crowbar/upgrade/6-to-7-openstack_dump.sql.gz"
       ).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :end_step
@@ -784,10 +784,12 @@ describe Api::Upgrade do
 
   context "with a failed backup creation for OpenStack" do
     let(:crowbar_lib_dir) { "/var/lib/crowbar" }
-    let(:dump_path) { "#{crowbar_lib_dir}/upgrade/6-to-7-openstack_dump.sql" }
+    let(:dump_path) { "#{crowbar_lib_dir}/upgrade/6-to-7-openstack_dump.sql.gz" }
     let(:query) { "SELECT SUM(pg_database_size(pg_database.datname)) FROM pg_database;" }
     let(:size_cmd) { "PGPASSWORD=password psql -t -h 8.8.8.8 -U postgres -c '#{query}'" }
-    let(:dump_cmd) { "PGPASSWORD=password pg_dumpall -h 8.8.8.8 -U postgres > #{dump_path}" }
+    let(:dump_cmd) do
+      "PGPASSWORD=password pg_dumpall -h 8.8.8.8 -U postgres | gzip > #{dump_path}"
+    end
     let(:disk_space_cmd) do
       "LANG=C df -x 'tmpfs' -x 'devtmpfs' -B1 -l --output='avail' #{crowbar_lib_dir} | tail -n1"
     end
