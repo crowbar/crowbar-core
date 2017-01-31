@@ -21,6 +21,7 @@ class Api::CrowbarController < ApiController
 
   def upgrade
     if request.post?
+      ::Crowbar::UpgradeStatus.new.start_step(:admin)
       crowbar_upgrade = Api::Crowbar.upgrade!
 
       if crowbar_upgrade[:status] == :ok
