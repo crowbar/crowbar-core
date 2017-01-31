@@ -103,7 +103,7 @@ module Api
       end
     rescue Timeout::Error
       Api::Upgrade.raise_node_upgrade_error(
-        "Possible error at node #{@node.name}" \
+        "Possible error at node #{@node.name}. " \
         "Node did not #{action} after 5 minutes of trying."
       )
     end
