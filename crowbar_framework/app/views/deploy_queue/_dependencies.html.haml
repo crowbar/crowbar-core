@@ -4,7 +4,8 @@
   - dependencies.map { |dep| all_proposals["#{dep["barclamp"]}_#{dep["inst"]}"] }.each do |dep|
     %div
       - status = dep.real_status(@active)
-      %span.led{ :class => status, :title => t(status, :scope => "state", :default => status.titlecase), "data-node" => dep.name }
+      - barclamp_instance = "#{dep["barclamp"]}_#{dep["inst"]}"
+      = display_led_for(status, barclamp_instance, status_proposal_path(:id => barclamp_instance, :barclamp => dep.barclamp, :name => dep.name))
       %span
         = dep.barclamp
         = dep.name
