@@ -18,13 +18,13 @@ module Crowbar
   module Error
     class StartStepExistenceError < StandardError
       def initialize(step_name = "")
-        super("The step #{step_name} doesn't exist")
+        super("The step '#{step_name}' doesn't exist.")
       end
     end
 
     class StartStepRunningError < StandardError
       def initialize(step_name = "")
-        super("The step #{step_name} has already been started")
+        super("The step '#{step_name}' has already been started.")
       end
     end
 
@@ -38,7 +38,7 @@ module Crowbar
 
     class EndStepRunningError < StandardError
       def initialize(step_name = "")
-        super("Step #{step_name} cannot be finished, as it is not running")
+        super("Step '#{step_name}' cannot be finished, as it is not running.")
       end
     end
 
