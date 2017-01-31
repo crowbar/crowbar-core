@@ -84,6 +84,7 @@ describe Api::UpgradeController, type: :request do
       )
       allow(Api::Upgrade).to receive(:upgrade_controller_nodes).and_return(true)
       allow(Api::Upgrade).to receive(:upgrade_compute_nodes).and_return(true)
+      allow(Api::Upgrade).to receive(:finalize_nodes_upgrade).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
       ).with(:nodes).and_return(true)

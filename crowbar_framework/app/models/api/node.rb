@@ -66,6 +66,13 @@ module Api
     end
 
     def join_and_chef
+      # Mark this upgrade step, so chef-client run can also start disabled services
+      unless @node["crowbar_wall"]["crowbar_upgrade_step"] == "done_os_upgrade"
+        # Make sure we save with the latest node data
+        @node = ::Node.find_by_name(@node.name)
+        @node["crowbar_wall"]["crowbar_upgrade_step"] = "done_os_upgrade"
+        @node.save
+      end
       begin
         execute_and_wait_for_finish("/usr/sbin/crowbar-chef-upgraded.sh", 600)
       rescue StandardError => e
@@ -150,11 +157,17 @@ module Api
       )
       if state == "upgraded"
         progress = status.progress
-        remaining = progress[:remaining_nodes] - 1
-        upgraded = progress[:upgraded_nodes] + 1
-        ::Crowbar::UpgradeStatus.new.save_nodes(upgraded, remaining)
+        # This should not really happen, but in some corner cases,
+        # repeated upgrade of the node could have been invoked
+        if progress[:remaining_nodes] > 0
+          remaining = progress[:remaining_nodes] - 1
+          upgraded = progress[:upgraded_nodes] + 1
+          ::Crowbar::UpgradeStatus.new.save_nodes(upgraded, remaining)
+        end
       end
-      @node.upgrade_state = state
+      @node = ::Node.find_by_name(@node.name)
+      @node["crowbar_wall"]["node_upgrade_state"] = state
+      @node.save
     end
 
     class << self

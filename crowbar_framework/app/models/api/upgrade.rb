@@ -528,6 +528,8 @@ module Api
         if substep == "computes"
           upgrade_all_compute_nodes
         end
+
+        finalize_nodes_upgrade
         ::Crowbar::UpgradeStatus.new.end_step
       rescue ::Crowbar::Error::Upgrade::NodeError => e
         ::Crowbar::UpgradeStatus.new.end_step(
@@ -594,6 +596,35 @@ module Api
         sorted_founders.each do |founder|
           cluster_env = founder[:pacemaker][:config][:environment]
           upgrade_cluster founder, cluster_env
+        end
+      end
+
+      # crowbar_upgrade_step will not be needed after node is upgraded
+      def finalize_node_upgrade(node)
+        return unless node["crowbar_wall"].key? "crowbar_upgrade_step"
+
+        node["crowbar_wall"].delete "crowbar_upgrade_step"
+        node["crowbar_wall"].delete "node_upgrade_state"
+        node.save
+
+        scripts_to_delete = [
+          "prepare-repositories",
+          "upgrade-os",
+          "shutdown-services-before-upgrade",
+          "delete-cinder-services-before-upgrade",
+          "evacuate-host",
+          "pre-upgrade",
+          "delete-pacemaker-resources",
+          "router-migration",
+          "post-upgrade",
+          "chef-upgraded"
+        ].map { |f| "/usr/sbin/crowbar-#{f}.sh" }.join(" ")
+        node.run_ssh_cmd("rm -f #{scripts_to_delete}")
+      end
+
+      def finalize_nodes_upgrade
+        ::Node.find_all_nodes.each do |node|
+          finalize_node_upgrade node
         end
       end
 
@@ -875,7 +906,6 @@ module Api
           end
           node_api.save_node_state("compute", "upgraded")
         end
-        # FIXME: finalize compute nodes (move upgrade_step to done etc.)
       end
 
       # Live migrate all instances of the specified

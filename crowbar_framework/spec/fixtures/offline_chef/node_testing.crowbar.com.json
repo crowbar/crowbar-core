@@ -12,6 +12,8 @@
 
       }
     },
+    "crowbar_wall" : {
+    },
     "pacemaker" : {
       "config": {
         "environment": "data"
