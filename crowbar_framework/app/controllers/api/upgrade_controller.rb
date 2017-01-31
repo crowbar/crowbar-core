@@ -156,6 +156,68 @@ class Api::UpgradeController < ApiController
     @backup.cleanup unless @backup.nil?
   end
 
+  # dummy routes to satisfy a client that calls an endpoint that only exists
+  # in a newer cloud version
+  def database_new
+    render json: {
+      errors: {
+        database: {
+          data: ::Crowbar::Error::StartStepOrderError.new(:database).message
+        }
+      }
+    }, status: :unprocessable_entity
+  end
+
+  def database_connect
+    render json: {
+      errors: {
+        database: {
+          data: ::Crowbar::Error::StartStepOrderError.new(:database).message
+        }
+      }
+    }, status: :unprocessable_entity
+  end
+
+  def noderepocheck
+    render json: {
+      errors: {
+        repocheck_nodes: {
+          data: ::Crowbar::Error::StartStepOrderError.new(:repocheck_nodes).message
+        }
+      }
+    }, status: :unprocessable_entity
+  end
+
+  def services
+    render json: {
+      errors: {
+        services: {
+          data: ::Crowbar::Error::StartStepOrderError.new(:services).message
+        }
+      }
+    }, status: :unprocessable_entity
+  end
+
+  def nodes
+    render json: {
+      errors: {
+        nodes: {
+          data: ::Crowbar::Error::StartStepOrderError.new(:nodes).message
+        }
+      }
+    }, status: :unprocessable_entity
+  end
+
+  def openstackbackup
+    render json: {
+      errors: {
+        backup_openstack: {
+          data: ::Crowbar::Error::StartStepOrderError.new(:backup_openstack).message
+        }
+      }
+    }, status: :unprocessable_entity
+  end
+
   protected
 
   def backup_params

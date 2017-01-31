@@ -208,11 +208,15 @@ Rails.application.routes.draw do
       only: [:show, :update] do
       post :prepare
       post :services
-      get :services
       get :prechecks
       post :cancel
       get :adminrepocheck
       post :adminbackup
+      post :database_new, path: "new"
+      post :database_connect, path: "connect"
+      post :nodes
+      get :noderepocheck
+      post :openstackbackup
     end
   end
 
