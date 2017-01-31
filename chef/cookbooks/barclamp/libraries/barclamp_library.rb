@@ -420,6 +420,9 @@ module BarclampLibrary
             unless @cache["groups"][group].fetch("default", {}).key?(barclamp)
               # sort to guarantee a consistent order
               @cache["groups"][group].keys.sort.each do |key|
+                # ignore the id attribute from the data bag item, which is not
+                # an instance
+                next if key == "id"
                 if @cache["groups"][group][key].key?(barclamp)
                   instance = key
                   break
