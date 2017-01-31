@@ -1,11 +1,17 @@
 - if dependencies.nil? || dependencies.empty?
   = t(".no_dependencies")
 - else
-  - dependencies.map { |dep| all_proposals["#{dep["barclamp"]}_#{dep["inst"]}"] }.each do |proposal_dep|
+  - dependencies.map { |dep| [dep, all_proposals["#{dep["barclamp"]}_#{dep["inst"]}"]] }.each do |dep, proposal_dep|
     %div
-      - status = proposal_dep.real_status(@active)
-      - barclamp_instance = "#{proposal_dep["barclamp"]}_#{proposal_dep["inst"]}"
-      = display_led_for(status, barclamp_instance, status_proposal_path(:id => barclamp_instance, :barclamp => proposal_dep.barclamp, :name => proposal_dep.name))
-      %span
-        = proposal_dep.barclamp
-        = proposal_dep.name
+      - barclamp_instance = "#{dep["barclamp"]}_#{dep["inst"]}"
+      - if proposal_dep.nil?
+        = display_led_for(:none, barclamp_instance)
+        %span
+          = dep["barclamp"]
+          = dep["inst"]
+      - else
+        - status = proposal_dep.real_status(@active)
+        = display_led_for(status, barclamp_instance, status_proposal_path(:id => barclamp_instance, :barclamp => proposal_dep.barclamp, :name => proposal_dep.name))
+        %span
+          = proposal_dep.barclamp
+          = proposal_dep.name

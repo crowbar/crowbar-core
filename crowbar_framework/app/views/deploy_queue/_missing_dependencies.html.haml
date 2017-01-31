@@ -1,5 +1,5 @@
 - if !dependencies.nil? && !dependencies.empty?
-  - deps = dependencies.map { |dep| all_proposals["#{dep["barclamp"]}_#{dep["inst"]}"] }.select { |p| p.real_status(@active) != 'ready' }
+  - deps = dependencies.map { |dep| [dep, all_proposals["#{dep["barclamp"]}_#{dep["inst"]}"]] }.select { |dep, p| p.nil? || p.real_status(@active) != 'ready' }
   - if !deps.empty?
     %div
-      = t(".waiting_for_proposals", :props => deps.map { |p| "#{p.barclamp} #{p.name}" }.to_sentence)
+      = t(".waiting_for_proposals", :props => deps.map { |dep, p| "#{dep["barclamp"]} #{dep["inst"]}" }.to_sentence)
