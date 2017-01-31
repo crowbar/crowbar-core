@@ -417,7 +417,7 @@ module BarclampLibrary
           if instance.nil?
             # try the "default" instance, and fallback on any existing instance
             instance = "default"
-            unless @cache["groups"][group].fetch("default", {}).key?(barclamp)
+            unless @cache["groups"][group].fetch(instance, {}).key?(barclamp)
               # sort to guarantee a consistent order
               @cache["groups"][group].keys.sort.each do |key|
                 # ignore the id attribute from the data bag item, which is not
