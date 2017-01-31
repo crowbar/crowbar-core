@@ -126,13 +126,16 @@ module Api
              ::Crowbar::Error::SaveUpgradeStatusError => e
         raise ::Crowbar::Error::UpgradeError.new(e.message)
       rescue StandardError => e
-        ::Crowbar::UpgradeStatus.new.end_step(
-          false,
-          prechecks: {
-            data: e.message,
-            help: "Crowbar has failed. Check /var/log/crowbar/production.log for details."
-          }
-        )
+        # we need to check if it is actually running, as prechecks can be called at any time
+        if ::Crowbar::UpgradeStatus.new.running?(:prechecks)
+          ::Crowbar::UpgradeStatus.new.end_step(
+            false,
+            prechecks: {
+              data: e.message,
+              help: "Crowbar has failed. Check /var/log/crowbar/production.log for details."
+            }
+          )
+        end
         raise e
       end
 
