@@ -3,7 +3,8 @@
 - else
   - dependencies.map { |dep| all_proposals["#{dep["barclamp"]}_#{dep["inst"]}"] }.each do |dep|
     %div
-      %span.led{ :class => dep.status, :title => t(dep.status, :scope => "state", :default => dep.status.titlecase), "data-node" => dep.name }
+      - status = dep.real_status(@active)
+      %span.led{ :class => status, :title => t(status, :scope => "state", :default => status.titlecase), "data-node" => dep.name }
       %span
         = dep.barclamp
         = dep.name
