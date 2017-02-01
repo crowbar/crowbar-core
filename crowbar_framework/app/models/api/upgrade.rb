@@ -669,7 +669,7 @@ module Api
         return true if node.upgraded?
         node_api = Api::Node.new node.name
         other_node_api = Api::Node.new other_node.name
-        node_api.save_node_state("controller")
+        node_api.save_node_state("controller", "upgrading")
         save_upgrade_state("Starting the upgrade of node #{node.name}")
         evacuate_network_node(node, node)
 
@@ -695,7 +695,7 @@ module Api
       def upgrade_next_cluster_node(node, founder)
         return true if node.upgraded?
         node_api = Api::Node.new node.name
-        node_api.save_node_state("controller")
+        node_api.save_node_state("controller", "upgrading")
 
         unless node.ready?
           evacuate_network_node(founder, node, true)
@@ -919,7 +919,7 @@ module Api
       def upgrade_compute_node(controller, node)
         return if node.upgraded?
         node_api = Api::Node.new node.name
-        node_api.save_node_state("compute")
+        node_api.save_node_state("compute", "upgrading")
         hostname = node[:hostname]
 
         if node.ready_after_upgrade?
