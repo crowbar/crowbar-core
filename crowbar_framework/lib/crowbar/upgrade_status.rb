@@ -99,7 +99,7 @@ module Crowbar
         end
         unless step_allowed? step_name
           @logger.warn("The start of step #{step_name} is requested in the wrong order")
-          raise Crowbar::Error::StartStepOrderError.new(step_name)
+          raise Crowbar::Error::StartStepOrderError.new(step_name, next_step_to_execute)
         end
         progress[:current_step] = step_name
         progress[:steps][step_name][:status] = :running
@@ -245,6 +245,15 @@ module Crowbar
         return upgrade_steps_6_7[i + 1] == current_step && pending?(current_step)
       end
       false
+    end
+
+    # The only case when current step is not the step that should be executed
+    # is when it is already running. In that case, return the next step.
+    def next_step_to_execute
+      step = current_step
+      return step unless running? step
+      i = upgrade_steps_6_7.index step
+      upgrade_steps_6_7[i + 1]
     end
 
     def lock_path
