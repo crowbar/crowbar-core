@@ -38,7 +38,9 @@ set -x
 
 zypper --non-interactive install openstack-neutron-ha-tool
 
-/usr/bin/neutron-ha-tool --l3-agent-evacuate $hostname --wait-for-router $delete_ns
+/usr/bin/neutron-ha-tool --l3-agent-evacuate $hostname \
+                         --wait-for-router $delete_ns \
+                         --exit-on-first-failure
 ret=$?
 if [ $ret != 0 ] ; then
     echo "Failed to evacuate l3 agent on host: $hostname"
