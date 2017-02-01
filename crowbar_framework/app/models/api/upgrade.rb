@@ -911,31 +911,39 @@ module Api
 
         # This part must be done sequentially, only one compute node can be upgraded at a time
         compute_nodes.each do |n|
-          next if n.upgraded?
-          node_api = Api::Node.new n.name
-          node_api.save_node_state("compute")
-          hostname = n[:hostname]
-          if n.ready_after_upgrade?
-            Rails.logger.info("Node #{n.name} is ready after the initial chef-client run.")
-          else
-            live_evacuate_compute_node(controller, hostname)
-            node_api.os_upgrade
-            node_api.reboot_and_wait
-            node_api.post_upgrade
-            node_api.join_and_chef
-          end
-
-          out = controller.run_ssh_cmd(
-            "source /root/.openrc; nova service-enable #{hostname} nova-compute"
-          )
-          unless out[:exit_code].zero?
-            raise_node_upgrade_error(
-              "Enabling nova-compute service for #{hostname} has failed. " \
-              "Check nova log files at #{controller.name} and #{n.name}."
-            )
-          end
-          node_api.save_node_state("compute", "upgraded")
+          upgrade_compute_node(controller, n)
         end
+      end
+
+      # Fully upgrade one compute node
+      def upgrade_compute_node(controller, node)
+        return if node.upgraded?
+        node_api = Api::Node.new node.name
+        node_api.save_node_state("compute")
+        hostname = node[:hostname]
+
+        if node.ready_after_upgrade?
+          save_upgrade_state(
+            "Node #{node.name} is ready after the initial chef-client run."
+          )
+        else
+          live_evacuate_compute_node(controller, hostname)
+          node_api.os_upgrade
+          node_api.reboot_and_wait
+          node_api.post_upgrade
+          node_api.join_and_chef
+        end
+
+        out = controller.run_ssh_cmd(
+          "source /root/.openrc; nova service-enable #{hostname} nova-compute"
+        )
+        unless out[:exit_code].zero?
+          raise_node_upgrade_error(
+            "Enabling nova-compute service for '#{hostname}' has failed. " \
+            "Check nova log files at '#{controller.name}' and '#{hostname}'."
+          )
+        end
+        node_api.save_node_state("compute", "upgraded")
       end
 
       # Live migrate all instances of the specified
