@@ -1,9 +1,18 @@
 - if dependencies.nil? || dependencies.empty?
   = t(".no_dependencies")
 - else
-  - dependencies.map { |dep| all_proposals["#{dep["barclamp"]}_#{dep["inst"]}"] }.each do |dep|
+  - dependencies.map { |dep| [dep, all_proposals["#{dep["barclamp"]}_#{dep["inst"]}"]] }.each do |dep, proposal_dep|
     %div
-      %span.led{ :class => dep.status, :title => t(dep.status, :scope => "state", :default => dep.status.titlecase), "data-node" => dep.name }
-      %span
-        = dep.barclamp
-        = dep.name
+      - barclamp_instance = "#{dep["barclamp"]}_#{dep["inst"]}"
+      - if proposal_dep.nil?
+        = display_led_for(:none, barclamp_instance)
+        %span
+          = dep["barclamp"]
+          = dep["inst"]
+      - else
+        - status = proposal_dep.real_status(@active)
+        - led_update_path = status_proposal_path(:id => barclamp_instance, :barclamp => proposal_dep.barclamp, :name => proposal_dep.name)
+        = display_led_for(status, barclamp_instance, led_update_path)
+        %span
+          = proposal_dep.barclamp
+          = proposal_dep.name

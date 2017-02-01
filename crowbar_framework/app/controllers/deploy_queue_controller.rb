@@ -4,6 +4,7 @@ class DeployQueueController < ApplicationController
     @queue = deployment_queue
     @nodes = node_name_map
     @props = prop_name_map
+    @active = RoleObject.active
   end
 
   private

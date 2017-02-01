@@ -147,6 +147,17 @@ class Proposal < ActiveRecord::Base
     end
   end
 
+  def active_status?(active_roles = nil)
+    return true if ["unready", "pending"].include?(status)
+
+    active_roles ||= RoleObject.active(barclamp, name)
+    active_roles.include?("#{barclamp}_#{name}")
+  end
+
+  def real_status(active_roles = nil)
+    active_status?(active_roles) ? status : "hold"
+  end
+
   # nil if not applicable, true = if success, false if failed
   def failed?
      status === "failed"
