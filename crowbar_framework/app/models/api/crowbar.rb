@@ -43,8 +43,6 @@ module Api
         end
 
         if upgrade_script_path.exist?
-          upgrade_status = ::Crowbar::UpgradeStatus.new
-          upgrade_status.start_step(:admin)
           pid = spawn("sudo #{upgrade_script_path}")
           Process.detach(pid)
           Rails.logger.info("#{upgrade_script_path} executed with pid: #{pid}")
@@ -64,6 +62,15 @@ module Api
             message: msg
           }
         end
+      rescue StandardError => e
+        ::Crowbar::UpgradeStatus.new.end_step(
+          false,
+          admin: {
+            data: e.message,
+            help: "Crowbar has failed. Check /var/log/crowbar/production.log for details."
+          }
+        )
+        raise e
       end
 
       def version

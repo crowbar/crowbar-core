@@ -21,11 +21,9 @@ class Api::UpgradeController < ApiController
     render json: Api::Upgrade.status
   end
 
-  def update
-    head :not_implemented
-  end
-
   def prepare
+    ::Crowbar::UpgradeStatus.new.start_step(:prepare)
+
     if Api::Upgrade.prepare(background: true)
       head :ok
     else
@@ -38,9 +36,9 @@ class Api::UpgradeController < ApiController
         }
       }, status: :unprocessable_entity
     end
-  rescue Crowbar::Error::StartStepRunningError,
-         Crowbar::Error::StartStepOrderError,
-         Crowbar::Error::SaveUpgradeStatusError => e
+  rescue ::Crowbar::Error::StartStepRunningError,
+         ::Crowbar::Error::StartStepOrderError,
+         ::Crowbar::Error::SaveUpgradeStatusError => e
     render json: {
       errors: {
         prepare: {
@@ -68,7 +66,7 @@ class Api::UpgradeController < ApiController
         }
       }, status: :unprocessable_entity
     end
-  rescue Crowbar::Error::UpgradeCancelError => e
+  rescue Crowbar::Error::Upgrade::CancelError => e
     render json: {
       errors: {
         cancel: {
@@ -103,10 +101,8 @@ class Api::UpgradeController < ApiController
     else
       render json: check
     end
-  rescue Crowbar::Error::StartStepRunningError,
-         Crowbar::Error::StartStepOrderError,
-         Crowbar::Error::EndStepRunningError,
-         Crowbar::Error::SaveUpgradeStatusError => e
+  rescue Crowbar::Error::UpgradeError,
+         StandardError => e
     render json: {
       errors: {
         repocheck_crowbar: {
@@ -152,6 +148,15 @@ class Api::UpgradeController < ApiController
         }
       }
     }, status: :unprocessable_entity
+  rescue StandardError => e
+    ::Crowbar::UpgradeStatus.new.end_step(
+      false,
+      backup_crowbar: {
+        data: e.message,
+        help: "Crowbar has failed. Check /var/log/crowbar/production.log for details."
+      }
+    )
+    raise e
   ensure
     @backup.cleanup unless @backup.nil?
   end

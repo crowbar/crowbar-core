@@ -121,6 +121,22 @@ module Api
             upgrade_status.end_step
           end
         end
+      rescue ::Crowbar::Error::StartStepRunningError,
+             ::Crowbar::Error::StartStepOrderError,
+             ::Crowbar::Error::SaveUpgradeStatusError => e
+        raise ::Crowbar::Error::UpgradeError.new(e.message)
+      rescue StandardError => e
+        # we need to check if it is actually running, as prechecks can be called at any time
+        if ::Crowbar::UpgradeStatus.new.running?(:prechecks)
+          ::Crowbar::UpgradeStatus.new.end_step(
+            false,
+            prechecks: {
+              data: e.message,
+              help: "Crowbar has failed. Check /var/log/crowbar/production.log for details."
+            }
+          )
+        end
+        raise e
       end
 
       def adminrepocheck
@@ -219,6 +235,19 @@ module Api
             upgrade_status.end_step
           end
         end
+      rescue ::Crowbar::Error::StartStepRunningError,
+             ::Crowbar::Error::StartStepOrderError,
+             ::Crowbar::Error::SaveUpgradeStatusError => e
+        raise ::Crowbar::Error::UpgradeError.new(e.message)
+      rescue StandardError => e
+        ::Crowbar::UpgradeStatus.new.end_step(
+          false,
+          repocheck_crowbar: {
+            data: e.message,
+            help: "Crowbar has failed. Check /var/log/crowbar/production.log for details."
+          }
+        )
+        raise e
       end
 
       def target_platform(options = {})
@@ -240,7 +269,7 @@ module Api
           Rails.logger.error(
             "Not possible to cancel the upgrade at the step #{upgrade_status.current_step}"
           )
-          raise ::Crowbar::Error::UpgradeCancelError.new(upgrade_status.current_step)
+          raise ::Crowbar::Error::Upgrade::CancelError.new(upgrade_status.current_step)
         end
 
         service_object = CrowbarService.new(Rails.logger)
@@ -249,8 +278,6 @@ module Api
       end
 
       def prepare(options = {})
-        ::Crowbar::UpgradeStatus.new.start_step(:prepare)
-
         background = options.fetch(:background, false)
 
         if background
