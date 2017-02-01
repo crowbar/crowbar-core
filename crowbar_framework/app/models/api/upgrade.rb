@@ -526,6 +526,7 @@ module Api
         end
 
         if substep == "computes"
+          prepare_all_compute_nodes
           upgrade_all_compute_nodes
         end
 
@@ -823,6 +824,51 @@ module Api
         )
       end
 
+      def prepare_all_compute_nodes
+        ["kvm", "xen"].each do |virt|
+          prepare_compute_nodes virt
+        end
+      end
+
+      # Prepare the compute nodes for upgrade by upgrading necessary packages
+      def prepare_compute_nodes(virt)
+        save_upgrade_state("Preparing #{virt} compute nodes for upgrade... ")
+        compute_nodes = ::Node.find("roles:nova-compute-#{virt}")
+        if compute_nodes.empty?
+          save_upgrade_state("There are no compute nodes of #{virt} type.")
+          return
+        end
+
+        # remove upgraded compute nodes
+        compute_nodes.select! { |n| !n.upgraded? }
+        if compute_nodes.empty?
+          save_upgrade_state(
+            "All compute nodes of #{virt} type are already upgraded."
+          )
+          return
+        end
+
+        # This batch of actions can be executed in parallel for all compute nodes
+        begin
+          execute_scripts_and_wait_for_finish(
+            compute_nodes,
+            "/usr/sbin/crowbar-prepare-repositories.sh",
+            120
+          )
+          save_upgrade_state("Repositories prepared successfully.")
+          execute_scripts_and_wait_for_finish(
+            compute_nodes,
+            "/usr/sbin/crowbar-pre-upgrade.sh",
+            300
+          )
+          save_upgrade_state("Services on compute nodes upgraded and prepared.")
+        rescue StandardError => e
+          raise_node_upgrade_error(
+            "Error while preparing services on compute nodes. " + e.message
+          )
+        end
+      end
+
       #
       # compute nodes upgrade
       #
@@ -830,11 +876,10 @@ module Api
         ["kvm", "xen"].each do |virt|
           upgrade_compute_nodes virt
         end
-        true
       end
 
       def upgrade_compute_nodes(virt)
-        save_upgrade_state("Upgrading compute nodes of #{virt} type")
+        save_upgrade_state("Upgrading #{virt} compute nodes... ")
         compute_nodes = ::Node.find("roles:nova-compute-#{virt}")
         if compute_nodes.empty?
           save_upgrade_state("There are no compute nodes of #{virt} type.")
@@ -864,27 +909,7 @@ module Api
         # continue with that one.
         compute_nodes.sort! { |n| n.upgrading? ? -1 : 1 }
 
-        # First batch of actions can be executed in parallel for all compute nodes
-        begin
-          execute_scripts_and_wait_for_finish(
-            compute_nodes,
-            "/usr/sbin/crowbar-prepare-repositories.sh",
-            120
-          )
-          save_upgrade_state("Repositories prepared successfully.")
-          execute_scripts_and_wait_for_finish(
-            compute_nodes,
-            "/usr/sbin/crowbar-pre-upgrade.sh",
-            300
-          )
-          save_upgrade_state("Services at compute nodes upgraded and prepared.")
-        rescue StandardError => e
-          raise_node_upgrade_error(
-            "Error while preparing services at compute nodes. " + e.message
-          )
-        end
-
-        # Next part must be done sequentially, only one compute node can be upgraded at a time
+        # This part must be done sequentially, only one compute node can be upgraded at a time
         compute_nodes.each do |n|
           next if n.upgraded?
           node_api = Api::Node.new n.name
