@@ -795,6 +795,11 @@ module Api
       # specified controller node
       def evacuate_network_node(controller, network_node, delete_namespaces = false)
         hostname = network_node["hostname"]
+        migrated_file = "/var/lib/crowbar/upgrade/crowbar-router-migrated"
+        if network_node.file_exist? migrated_file
+          Rails.logger.info("Routers were already evacuated from #{hostname}.")
+          return
+        end
         unless network_node[:run_list_map].key? "neutron-network"
           Rails.logger.info(
             "Node #{hostname} does not have 'neutron-network' role. Nothing to evacuate."
@@ -807,7 +812,7 @@ module Api
           "/usr/sbin/crowbar-router-migration.sh", 600, args
         )
         save_upgrade_state("Migrating routers away from #{hostname} was successful.")
-
+        network_node.run_ssh_cmd("mkdir -p /var/lib/crowbar/upgrade; touch #{migrated_file}")
         # Cleanup up the ok/failed state files, as we likely need to
         # run the script again on this node (to evacuate other nodes)
         controller.delete_script_exit_files("/usr/sbin/crowbar-router-migration.sh")
