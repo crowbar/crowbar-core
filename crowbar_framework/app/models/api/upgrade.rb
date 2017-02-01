@@ -678,7 +678,7 @@ module Api
         # Explicitly mark the first node as cluster founder
         # and in case of DRBD setup, adapt DRBD config accordingly.
         unless Api::Pacemaker.set_node_as_founder node.name
-          raise_node_upgrade_error("Changing the cluster founder to #{node.name} has failed")
+          raise_node_upgrade_error("Changing the cluster founder to #{node.name} has failed.")
           return false
         end
         # remove pre-upgrade attribute, so the services can start
@@ -768,7 +768,7 @@ module Api
         end
 
         if first.nil? || second.nil?
-          raise_node_upgrade_error("Unable to detect DRBD master and/or slave nodes")
+          raise_node_upgrade_error("Unable to detect DRBD master and/or slave nodes.")
         end
 
         upgrade_first_cluster_node first, second
@@ -786,7 +786,7 @@ module Api
       rescue StandardError => e
         raise_node_upgrade_error(
           e.message +
-            "Check /var/log/crowbar/node-upgrade.log for details."
+            " Check /var/log/crowbar/node-upgrade.log for details."
         )
       end
 
@@ -935,7 +935,6 @@ module Api
         nodes.each do |node|
           ssh_status = node.ssh_cmd(script).first
           if ssh_status != 200
-            raise_node_upgrade_error("Failed to connect to node #{node.name}!")
             raise "Execution of script #{script} has failed on node #{node.name}."
           end
         end
