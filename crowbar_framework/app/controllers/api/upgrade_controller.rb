@@ -20,6 +20,7 @@ class Api::UpgradeController < ApiController
   api :GET, "/api/upgrade", "Show the Upgrade progress"
   header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   api_version "2.0"
+  param :nodes, [true, false], desc: "Status of the nodes upgrade", required: false
   example '
   {
     "current_step": "admin",
@@ -75,7 +76,11 @@ class Api::UpgradeController < ApiController
   }
   '
   def show
-    render json: Api::Upgrade.status
+    if params[:nodes]
+      render json: Api::Upgrade.node_status
+    else
+      render json: Api::Upgrade.status
+    end
   end
 
   api :POST, "/api/upgrade/prepare", "Prepare Crowbar Upgrade"
