@@ -149,6 +149,8 @@ if neutron[:neutron][:use_dvr]
   metadata_agent = "openstack-neutron-metadata-agent"
 end
 
+swift_storage = roles.include? "swift-storage"
+
 # Following script executes all actions that are needed directly on the node
 # directly before the OS upgrade is initiated.
 template "/usr/sbin/crowbar-pre-upgrade.sh" do
@@ -160,6 +162,7 @@ template "/usr/sbin/crowbar-pre-upgrade.sh" do
   variables(
     use_ha: use_ha,
     compute_node: compute_node,
+    swift_storage: swift_storage,
     bridges_to_reset: bridges_to_reset,
     cinder_volume: cinder_volume,
     neutron_agent: neutron_agent,
