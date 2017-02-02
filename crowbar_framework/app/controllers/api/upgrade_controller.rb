@@ -140,28 +140,9 @@ class Api::UpgradeController < ApiController
   # The method runs asynchronously, so there's a need to poll for the status and possible errors
   def nodes
     if params[:component]
-      case params[:component]
-      when "all"
-        ::Crowbar::UpgradeStatus.new.start_step(:nodes)
-        Api::Upgrade.nodes
-        head :ok
-      when "controllers"
-        render json: {
-          errors: {
-            nodes: {
-              data: "Not implemented yet."
-            }
-          }
-        }, status: :not_implemented
-      else
-        render json: {
-          errors: {
-            nodes: {
-              data: "Not implemented yet."
-            }
-          }
-        }, status: :not_implemented
-      end
+      ::Crowbar::UpgradeStatus.new.start_step(:nodes)
+      Api::Upgrade.nodes params[:component]
+      head :ok
     else
       render json: {
         errors: {
@@ -172,7 +153,8 @@ class Api::UpgradeController < ApiController
         }
       }, status: :unprocessable_entity
     end
-  rescue ::Crowbar::Error::StartStepRunningError,
+  rescue ::Crowbar::Error::UpgradeError,
+         ::Crowbar::Error::StartStepRunningError,
          ::Crowbar::Error::StartStepOrderError,
          ::Crowbar::Error::SaveUpgradeStatusError => e
     render json: {
