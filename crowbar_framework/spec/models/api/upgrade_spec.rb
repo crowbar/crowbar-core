@@ -62,6 +62,16 @@ describe Api::Upgrade do
       expect(subject.class.status).to be_a(Hash)
       expect(subject.class.status.to_json).to eq(upgrade_status.to_json)
     end
+
+    it "checks the node upgrade status" do
+      allow(NodeObject).to receive(:all).
+      and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+
+      expect(subject.class.node_status).to eq(
+        not_upgraded: ["testing.crowbar.com"],
+        upgraded: []
+      )
+    end
   end
 
   context "with a successful check" do

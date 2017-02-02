@@ -18,7 +18,11 @@ class Api::UpgradeController < ApiController
   skip_before_filter :upgrade
 
   def show
-    render json: Api::Upgrade.status
+    if params[:nodes]
+      render json: Api::Upgrade.node_status
+    else
+      render json: Api::Upgrade.status
+    end
   end
 
   def prepare

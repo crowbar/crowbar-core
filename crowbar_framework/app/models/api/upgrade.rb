@@ -23,6 +23,13 @@ module Api
         ::Crowbar::UpgradeStatus.new.progress
       end
 
+      def node_status
+        {
+          upgraded: [],
+          not_upgraded: NodeObject.all.reject(&:admin?).map(&:name)
+        }
+      end
+
       #
       # prechecks
       #
