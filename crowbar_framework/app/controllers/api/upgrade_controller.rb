@@ -131,15 +131,47 @@ class Api::UpgradeController < ApiController
     }, status: :unprocessable_entity
   end
 
-  api :POST, "/api/upgrade/nodes", "Initiate the upgrade of all nodes"
+  api :POST, "/api/upgrade/nodes", "Initiate the node upgrade"
   api_version "2.0"
+  param :component, String, desc: "Component to upgrade. 'all', 'controllers' or a node name",
+                            required: true
   error 422, "Failed to upgrade nodes"
   # This is gonna initiate the upgrade of all nodes.
   # The method runs asynchronously, so there's a need to poll for the status and possible errors
   def nodes
-    ::Crowbar::UpgradeStatus.new.start_step(:nodes)
-    Api::Upgrade.nodes
-    head :ok
+    if params[:component]
+      case params[:component]
+      when "all"
+        ::Crowbar::UpgradeStatus.new.start_step(:nodes)
+        Api::Upgrade.nodes
+        head :ok
+      when "controllers"
+        render json: {
+          errors: {
+            nodes: {
+              data: "Not implemented yet."
+            }
+          }
+        }, status: :not_implemented
+      else
+        render json: {
+          errors: {
+            nodes: {
+              data: "Not implemented yet."
+            }
+          }
+        }, status: :not_implemented
+      end
+    else
+      render json: {
+        errors: {
+          nodes: {
+            data: "No component parameter has been specified. " \
+              "Pass 'all', 'controllers' or a node name."
+          }
+        }
+      }, status: :unprocessable_entity
+    end
   rescue ::Crowbar::Error::StartStepRunningError,
          ::Crowbar::Error::StartStepOrderError,
          ::Crowbar::Error::SaveUpgradeStatusError => e

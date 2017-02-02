@@ -76,7 +76,7 @@ describe Api::UpgradeController, type: :request do
       expect(response).to have_http_status(:unprocessable_entity)
     end
 
-    it "initiates the upgrade of nodes" do
+    it "initiates the upgrade of all nodes" do
       allow_any_instance_of(Node).to receive(:run_ssh_cmd).and_return(
         stdout: "",
         tderr: "",
@@ -90,7 +90,7 @@ describe Api::UpgradeController, type: :request do
       ).with(:nodes).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
-      post "/api/upgrade/nodes", {}, headers
+      post "/api/upgrade/nodes", { component: "all" }, headers
       expect(response).to have_http_status(:ok)
     end
 
