@@ -501,6 +501,7 @@ module Api
         service_object = CrowbarService.new(Rails.logger)
         service_object.revert_nodes_from_crowbar_upgrade
         upgrade_status.initialize_state
+        FileUtils.rm_f("/var/lib/crowbar/upgrade/6-to-7-upgrade-running")
       end
 
       #
