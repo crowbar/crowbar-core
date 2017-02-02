@@ -146,7 +146,7 @@ module Api
       end
     end
 
-    def save_node_state(role, state = "upgrading")
+    def save_node_state(role, state)
       status = ::Crowbar::UpgradeStatus.new
       status.save_current_node(
         name: @node.name,
