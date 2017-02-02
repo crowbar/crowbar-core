@@ -370,37 +370,43 @@
         }
       }
 
-      if (constraints.platform !== undefined && constraints.platform) {
-        var platforms = $.map(constraints.platform, function(c_version, c_platform) {
-          return (platform === c_platform) && self.equalOrMatchVersion(platform_version, c_version);
-        });
-        var is_any_true = platforms.some(function (element, index, array) {
-          return element;
-        });
-        if (!is_any_true) {
-          return self.errorMessage(
-            'barclamp.node_selector.platform'.localize().format(
-              alias,
-              role
-            )
-          );
-        }
-      }
+      if (!cluster && !remotes) {
+        // Don't do platform checks for clusters; clusters don't include platform information
+        // so, for example, if a constraint specifies a specific platform requirement, the
+        // check will always fail because there's no platform set for the cluster.
 
-      if (constraints.exclude_platform !== undefined && constraints.exclude_platform) {
-        var platforms = $.map(constraints.exclude_platform, function(c_version, c_platform) {
-          return (platform === c_platform) && self.equalOrMatchVersion(platform_version, c_version);
-        });
-        var is_any_true = platforms.some(function (element, index, array) {
-          return element;
-        });
-        if (is_any_true) {
-          return self.errorMessage(
-            'barclamp.node_selector.exclude_platform'.localize().format(
-              alias,
-              role
-            )
-          );
+        if (constraints.platform !== undefined && constraints.platform) {
+          var platforms = $.map(constraints.platform, function(c_version, c_platform) {
+            return (platform === c_platform) && self.equalOrMatchVersion(platform_version, c_version);
+          });
+          var is_any_true = platforms.some(function (element, index, array) {
+            return element;
+          });
+          if (!is_any_true) {
+            return self.errorMessage(
+              'barclamp.node_selector.platform'.localize().format(
+                alias,
+                role
+              )
+            );
+          }
+        }
+
+        if (constraints.exclude_platform !== undefined && constraints.exclude_platform) {
+          var platforms = $.map(constraints.exclude_platform, function(c_version, c_platform) {
+            return (platform === c_platform) && self.equalOrMatchVersion(platform_version, c_version);
+          });
+          var is_any_true = platforms.some(function (element, index, array) {
+            return element;
+          });
+          if (is_any_true) {
+            return self.errorMessage(
+              'barclamp.node_selector.exclude_platform'.localize().format(
+                alias,
+                role
+              )
+            );
+          }
         }
       }
     }
