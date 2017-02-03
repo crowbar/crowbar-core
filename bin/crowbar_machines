@@ -365,6 +365,7 @@ def role(name, update)
     compute
     network
     storage
+    monitoring
   )
 
   unless available_roles.include? update
