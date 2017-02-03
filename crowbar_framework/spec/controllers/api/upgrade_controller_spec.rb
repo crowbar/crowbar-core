@@ -51,11 +51,8 @@ describe Api::UpgradeController, type: :request do
     it "shows the node status" do
       allow(Node).to receive(:all).and_return([Node.find_by_name("testing.crowbar.com")])
       allow_any_instance_of(Node).to receive(:ready_after_upgrade?).and_return(true)
-      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:pending?).with(:prepare).and_return(
-        false
-      )
-      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:running?).with(:prepare).and_return(
-        false
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:passed?).with(:prepare).and_return(
+        true
       )
 
       get "/api/upgrade", { nodes: true }, headers
