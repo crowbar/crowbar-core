@@ -140,7 +140,39 @@ class Api::UpgradeController < ApiController
   # The method runs asynchronously, so there's a need to poll for the status and possible errors
   def nodes
     if params[:component]
-      ::Crowbar::UpgradeStatus.new.start_step(:nodes)
+      if ["all", "controllers"].include? params[:component]
+        ::Crowbar::UpgradeStatus.new.start_step(:nodes)
+      else
+        upgrade_status = ::Crowbar::UpgradeStatus.new
+        substep = upgrade_status.current_substep
+        status = upgrade_status.current_substep_status
+        if substep != "computes" && status != "finished"
+          raise ::Crowbar::Error::UpgradeError.new(
+            "Controller nodes must be upgraded first!"
+          )
+        end
+
+        if upgrade_status.current_step == :nodes &&
+            ::Crowbar::UpgradeStatus.new.passed?(:nodes)
+          raise ::Crowbar::Error::UpgradeError.new(
+            "Upgrade of nodes is already marked as finished."
+          )
+        end
+
+        if substep == "computes" && status == "running"
+          n = upgrade_status.progress[:current_node]
+          raise ::Crowbar::Error::UpgradeError.new(
+            "Upgrade of node '#{n[:name]}' is already running. " \
+            "Wait until it is finished before proceeding with next one."
+          )
+        end
+        # If the 'nodes' step did not fail, it is still running and user can continue
+        # with upgrading single compute node.
+        if substep == "computes" && status == "failed"
+          Rails.logger.info("Restarting the 'nodes' step after previous failure")
+          ::Crowbar::UpgradeStatus.new.start_step(:nodes)
+        end
+      end
       Api::Upgrade.nodes params[:component]
       head :ok
     else
