@@ -142,6 +142,14 @@ module Crowbar
       step[:status] == :pending
     end
 
+    def failed?(step_name = nil)
+      progress[:steps][step_name || current_step][:status] == :failed
+    end
+
+    def passed?(step_name)
+      progress[:steps][step_name][:status] == :passed
+    end
+
     def finished?
       current_step == upgrade_steps_6_7.last
     end

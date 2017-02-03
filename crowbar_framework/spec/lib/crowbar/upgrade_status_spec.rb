@@ -98,6 +98,40 @@ describe Crowbar::UpgradeStatus do
       expect(subject.running?(:prepare)).to be false
     end
 
+    it "determines whether current step has failed" do
+      allow(FileUtils).to receive(:touch).and_return(true)
+
+      expect(subject.current_step).to eql :prechecks
+      expect(subject.start_step(:prechecks)).to be true
+      expect(subject.failed?).to be false
+      subject.end_step
+      expect(subject.start_step(:prepare)).to be true
+      subject.end_step(false, "Some Error")
+      expect(subject.failed?).to be true
+    end
+
+    it "determines whether given step has failed" do
+      allow(FileUtils).to receive(:touch).and_return(true)
+
+      expect(subject.start_step(:prechecks)).to be true
+      expect(subject.failed?(:prechecks)).to be false
+      subject.end_step
+      expect(subject.start_step(:prepare)).to be true
+      subject.end_step(false, "Some Error")
+      expect(subject.failed?(:prepare)).to be true
+    end
+
+    it "determines whether given step has passed" do
+      allow(FileUtils).to receive(:touch).and_return(true)
+
+      expect(subject.start_step(:prechecks)).to be true
+      expect(subject.failed?(:prechecks)).to be false
+      subject.end_step
+      expect(subject.start_step(:prepare)).to be true
+      subject.end_step(false, "Some Error")
+      expect(subject.failed?(:prepare)).to be true
+    end
+
     it "moves to next step when requested" do
       expect(subject.current_step).to eql :prechecks
       expect(subject.current_step_state[:status]).to eql :pending
