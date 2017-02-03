@@ -52,6 +52,7 @@ class Api::CrowbarController < ApiController
   error 422, "Upgrade is already ongoing or upgrade script is not present, details in the response"
   def upgrade
     if request.post?
+      ::Crowbar::UpgradeStatus.new.start_step(:admin)
       crowbar_upgrade = Api::Crowbar.upgrade!
 
       if crowbar_upgrade[:status] == :ok

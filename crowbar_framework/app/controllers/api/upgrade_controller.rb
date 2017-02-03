@@ -379,7 +379,8 @@ class Api::UpgradeController < ApiController
     else
       render json: check
     end
-  rescue Crowbar::Error::UpgradeError => e
+  rescue Crowbar::Error::UpgradeError,
+         StandardError => e
     render json: {
       errors: {
         repocheck_crowbar: {
