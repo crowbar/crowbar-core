@@ -114,9 +114,9 @@ module Crowbar
           @logger.warn("The step #{step_name} doesn't exist")
           raise Crowbar::Error::StartStepExistenceError.new(step_name)
         end
-        if running? step_name
-          @logger.warn("The step has already been started")
-          raise Crowbar::Error::StartStepRunningError.new(step_name)
+        if running?
+          @logger.warn("Some step is already running.")
+          raise Crowbar::Error::StartStepRunningError.new
         end
         unless step_allowed? step_name
           @logger.warn("The start of step #{step_name} is requested in the wrong order")
@@ -154,8 +154,14 @@ module Crowbar
       end
     end
 
+    # Check if given step is running.
+    # Without argument, check if any step is running
     def running?(step_name = nil)
-      step = progress[:steps][step_name || current_step]
+      if step_name.nil?
+        return progress[:steps].select { |_key, s| s[:status] == :running }.any?
+      end
+
+      step = progress[:steps][step_name]
       return false unless step
       step[:status] == :running
     end
@@ -185,7 +191,7 @@ module Crowbar
         :backup_crowbar,
         :repocheck_crowbar,
         :admin
-      ].include?(current_step) && !running?(:admin)
+      ].include?(current_step) && !running?
     end
 
     def save_crowbar_backup(backup_location)

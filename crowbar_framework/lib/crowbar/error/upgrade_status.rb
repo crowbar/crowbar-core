@@ -24,7 +24,12 @@ module Crowbar
 
     class StartStepRunningError < StandardError
       def initialize(step_name = "")
-        super("The step '#{step_name}' has already been started.")
+        msg = if step_name.empty?
+          "Some step is already running."
+        else
+          "The step '#{step_name}' is already running."
+        end
+        super(msg)
       end
     end
 
