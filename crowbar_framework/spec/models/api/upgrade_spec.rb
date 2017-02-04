@@ -96,6 +96,19 @@ describe Api::Upgrade do
       expect(subject.class.status).to be_a(Hash)
       expect(subject.class.status.to_json).to eq(upgrade_status.to_json)
     end
+
+    it "checks the node upgrade status" do
+      allow(Node).to receive(:all).and_return([Node.find_by_name("testing.crowbar.com")])
+      allow_any_instance_of(Node).to receive(:ready_after_upgrade?).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:passed?).with(:prepare).and_return(
+        true
+      )
+
+      expect(subject.class.node_status).to eq(
+        upgraded: ["testing.crowbar.com"],
+        not_upgraded: []
+      )
+    end
   end
 
   context "with a successful maintenance updates check" do

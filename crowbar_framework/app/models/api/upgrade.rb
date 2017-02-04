@@ -23,6 +23,18 @@ module Api
         ::Crowbar::UpgradeStatus.new.progress
       end
 
+      def node_status
+        not_upgraded = if ::Crowbar::UpgradeStatus.new.passed?(:prepare)
+          ::Node.find("state:crowbar_upgrade").map(&:name)
+        else
+          ::Node.all.reject(&:admin?).map(&:name)
+        end
+        {
+          upgraded: ::Node.all.reject(&:admin?).select(&:ready_after_upgrade?).map(&:name),
+          not_upgraded: not_upgraded
+        }
+      end
+
       #
       # prechecks
       #
