@@ -285,9 +285,10 @@ describe Crowbar::UpgradeStatus do
       allow(FileUtils).to receive(:touch).and_return(true)
       expect(subject.start_step(:prepare)).to be true
       expect { subject.start_step(:prechecks) }.to raise_error(
-        Crowbar::Error::StartStepOrderError
+        Crowbar::Error::StartStepRunningError
       )
-      expect(subject.current_step).to eql :prepare
+      expect(subject.end_step).to be true
+      expect(subject.current_step).to eql :backup_crowbar
       expect { subject.start_step(:repocheck_crowbar) }.to raise_error(
         Crowbar::Error::StartStepOrderError
       )
