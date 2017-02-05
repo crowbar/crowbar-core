@@ -113,6 +113,16 @@ zypper --non-interactive up openstack-cinder-volume
 systemctl restart openstack-cinder-volume.service
 <% end %>
 
+<% if @swift_storage %>
+log "Upgrading swift-storage configuration"
+crudini --set /etc/swift/object-server.conf DEFAULT bind_port 6200
+crudini --set /etc/swift/container-server.conf DEFAULT bind_port 6201
+crudini --set /etc/swift/account-server.conf DEFAULT bind_port 6202
+systemctl restart openstack-swift-account
+systemctl restart openstack-swift-object
+systemctl restart openstack-swift-container
+<% end %>
+
 # Remove temporary config options
 rm -f /etc/nova/nova.conf.d/200-crowbar-upgrade.conf
 rm -f /etc/neutron/neutron-openvswitch-agent.conf.d/200-crowbar-upgrade.conf
