@@ -857,14 +857,14 @@ class Node < ChefObject
   end
 
   def upgraded?
-    upgrade_state = @node["crowbar_wall"]["node_upgrade_state"] || ""
+    upgrade_state = crowbar["node_upgrade_state"] || ""
     return false unless upgrade_state == "upgraded"
     Rails.logger.info("Node #{@node.name} was already upgraded.")
     true
   end
 
   def upgrading?
-    @node["crowbar_wall"]["node_upgrade_state"] == "upgrading"
+    crowbar["node_upgrade_state"] == "upgrading"
   end
 
   # Check the status of script that was previously executed on the node.
