@@ -166,7 +166,7 @@ module Api
         end
       end
       @node = ::Node.find_by_name(@node.name)
-      @node["crowbar_wall"]["node_upgrade_state"] = state
+      @node.crowbar["node_upgrade_state"] = state
       @node.save
     end
 

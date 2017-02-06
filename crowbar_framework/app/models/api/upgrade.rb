@@ -658,7 +658,7 @@ module Api
         return unless node["crowbar_wall"].key? "crowbar_upgrade_step"
 
         node["crowbar_wall"].delete "crowbar_upgrade_step"
-        node["crowbar_wall"].delete "node_upgrade_state"
+        node.crowbar.delete "node_upgrade_state"
         node.save
 
         scripts_to_delete = [
