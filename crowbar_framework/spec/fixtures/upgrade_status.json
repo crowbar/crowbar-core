@@ -1,6 +1,7 @@
 {
   "current_step": "prechecks",
   "current_substep":null,
+  "current_substep_status":null,
   "current_node":null,
   "remaining_nodes": null,
   "upgraded_nodes": null,

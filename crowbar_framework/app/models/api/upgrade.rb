@@ -520,12 +520,14 @@ module Api
       #
       # nodes upgrade
       #
-      def nodes
+      def nodes(component = "all")
         status = ::Crowbar::UpgradeStatus.new
 
         remaining = status.progress[:remaining_nodes]
         substep = status.current_substep
+        substep_status = status.current_substep_status
 
+        # initialize progress info about nodes upgrade
         if remaining.nil?
           remaining = ::Node.find(
             "state:crowbar_upgrade AND NOT run_list_map:ceph_*"
@@ -535,23 +537,54 @@ module Api
 
         if substep.nil? || substep.empty?
           substep = "controllers"
-          ::Crowbar::UpgradeStatus.new.save_substep(substep)
         end
 
-        if substep == "controllers"
-          upgrade_controller_clusters
+        if substep == "controllers" && substep_status == "finished"
           substep = "computes"
-          ::Crowbar::UpgradeStatus.new.save_substep(substep)
         end
 
-        if substep == "computes"
-          prepare_all_compute_nodes
-          upgrade_all_compute_nodes
-        end
+        # decide what needs to be upgraded
+        case component
+        # Upgrade everything
+        when "all"
+          if substep == "controllers"
+            ::Crowbar::UpgradeStatus.new.save_substep(substep, "running")
+            upgrade_controller_clusters
+            prepare_all_compute_nodes
+            ::Crowbar::UpgradeStatus.new.save_substep(substep, "finished")
+            substep = "computes"
+          end
+          if substep == "computes"
+            ::Crowbar::UpgradeStatus.new.save_substep(substep, "running")
+            upgrade_all_compute_nodes
+            finalize_nodes_upgrade
+            ::Crowbar::UpgradeStatus.new.save_substep(substep, "finished")
+            ::Crowbar::UpgradeStatus.new.end_step
+          end
+        # Upgrade controller clusters only
+        when "controllers"
+          if substep == "controllers"
+            ::Crowbar::UpgradeStatus.new.save_substep(substep, "running")
+            upgrade_controller_clusters
+            prepare_all_compute_nodes
+            ::Crowbar::UpgradeStatus.new.save_substep(substep, "finished")
+          end
+        # Upgrade given compute node
+        else
+          ::Crowbar::UpgradeStatus.new.save_substep(substep, "running")
+          upgrade_one_compute_node(component)
+          ::Crowbar::UpgradeStatus.new.save_substep(substep, "node finished")
 
-        finalize_nodes_upgrade
-        ::Crowbar::UpgradeStatus.new.end_step
+          # if we're done with the last one, finalize
+          progress = ::Crowbar::UpgradeStatus.new.progress
+          if progress[:remaining_nodes].zero?
+            ::Crowbar::UpgradeStatus.new.save_substep(substep, "finished")
+            finalize_nodes_upgrade
+            ::Crowbar::UpgradeStatus.new.end_step
+          end
+        end
       rescue ::Crowbar::Error::Upgrade::NodeError => e
+        ::Crowbar::UpgradeStatus.new.save_substep(substep, "failed")
         ::Crowbar::UpgradeStatus.new.end_step(
           false,
           nodes: {
@@ -561,6 +594,7 @@ module Api
         )
       rescue StandardError => e
         # end the step even for non-upgrade error, so we are not stuck with 'running'
+        ::Crowbar::UpgradeStatus.new.save_substep(substep, "failed")
         ::Crowbar::UpgradeStatus.new.end_step(
           false,
           nodes: {
@@ -914,14 +948,7 @@ module Api
           return
         end
 
-        controller = ::Node.find("roles:nova-controller").first
-
-        if controller.nil?
-          raise_node_upgrade_error(
-            "No node with 'nova-controller' role node was found. " \
-            "Cannot proceed with upgrade of compute nodes."
-          )
-        end
+        controller = fetch_nova_controller
 
         # If there's a compute node which we already started to upgrade,
         # (and the upgrade process was restarted due to the failure)
@@ -932,6 +959,28 @@ module Api
         compute_nodes.each do |n|
           upgrade_compute_node(controller, n)
         end
+      end
+
+      def fetch_nova_controller
+        controller = ::Node.find("roles:nova-controller").first
+        if controller.nil?
+          raise_node_upgrade_error(
+            "No node with 'nova-controller' role node was found. " \
+            "Cannot proceed with upgrade of compute nodes."
+          )
+        end
+        controller
+      end
+
+      def upgrade_one_compute_node(name)
+        controller = fetch_nova_controller
+        node = ::Node.find_node_by_name_or_alias(name)
+        if node.nil?
+          raise_node_upgrade_error(
+            "No node with '#{name}' name or alias was found. "
+          )
+        end
+        upgrade_compute_node(controller, node)
       end
 
       # Fully upgrade one compute node
