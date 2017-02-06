@@ -47,7 +47,7 @@ module Api
     end
 
     def os_upgrade
-      execute_and_wait_for_finish("/usr/sbin/crowbar-upgrade-os.sh", 600)
+      execute_and_wait_for_finish("/usr/sbin/crowbar-upgrade-os.sh", 900)
       Rails.logger.info("Package upgrade was successful.")
     rescue StandardError => e
       Api::Upgrade.raise_node_upgrade_error(
@@ -74,7 +74,7 @@ module Api
         @node.save
       end
       begin
-        execute_and_wait_for_finish("/usr/sbin/crowbar-chef-upgraded.sh", 600)
+        execute_and_wait_for_finish("/usr/sbin/crowbar-chef-upgraded.sh", 900)
       rescue StandardError => e
         Api::Upgrade.raise_node_upgrade_error(
           "Error while running the initial chef-client. " + e.message
@@ -94,7 +94,7 @@ module Api
     end
 
     def wait_for_ssh_state(desired_state, action)
-      Timeout.timeout(300) do
+      Timeout.timeout(400) do
         loop do
           ssh_status = @node.ssh_cmd("").first
           break if desired_state == :up ? ssh_status == 200 : ssh_status != 200
