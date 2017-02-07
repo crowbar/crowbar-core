@@ -99,8 +99,8 @@ describe Api::Upgrade do
 
     it "checks the node upgrade status" do
       allow(Node).to receive(:all).and_return([Node.find_by_name("testing.crowbar.com")])
-      allow_any_instance_of(Node).to receive(:ready_after_upgrade?).and_return(true)
-      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:passed?).with(:prepare).and_return(
+      allow_any_instance_of(Node).to receive(:upgraded?).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:passed?).with(:services).and_return(
         true
       )
 
