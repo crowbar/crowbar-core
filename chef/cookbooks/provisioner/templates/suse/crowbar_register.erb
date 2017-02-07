@@ -127,7 +127,7 @@ post_allocate() {
 
 post_state() {
   local curlargs=($(get_common_curl_args) \
-                  -o "/var/log/crowbar/$1-$2.json"
+                  -o /dev/null
                   -X POST --data-binary "{ \"name\": \"$1\", \"state\": \"$2\" }" \
                   -H "Accept: application/json" -H "Content-Type: application/json")
 
