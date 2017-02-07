@@ -24,13 +24,24 @@ module Api
       end
 
       def node_status
-        not_upgraded = if ::Crowbar::UpgradeStatus.new.passed?(:prepare)
-          ::Node.find("state:crowbar_upgrade").map(&:name)
+        not_upgraded = []
+        upgraded = []
+        if ::Crowbar::UpgradeStatus.new.finished?
+          upgraded = ::Node.all.reject(&:admin?).map(&:name)
+        elsif ::Crowbar::UpgradeStatus.new.passed?(:services)
+          ::Node.all.reject(&:admin?).each do |n|
+            if n.upgraded?
+              upgraded << n.name
+            else
+              not_upgraded << n.name
+            end
+          end
         else
-          ::Node.all.reject(&:admin?).map(&:name)
+          not_upgraded = ::Node.all.reject(&:admin?).map(&:name)
         end
+
         {
-          upgraded: ::Node.all.reject(&:admin?).select(&:ready_after_upgrade?).map(&:name),
+          upgraded: upgraded,
           not_upgraded: not_upgraded
         }
       end
