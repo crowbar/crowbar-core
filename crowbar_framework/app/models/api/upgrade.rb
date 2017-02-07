@@ -23,6 +23,16 @@ module Api
         ::Crowbar::UpgradeStatus.new.progress
       end
 
+      def node_status
+        {
+          upgraded: [],
+          not_upgraded: NodeObject.all.reject(&:admin?).map(&:name)
+        }
+      end
+
+      #
+      # prechecks
+      #
       def checks
         upgrade_status = ::Crowbar::UpgradeStatus.new
         # the check for current_step means to allow running the step at any point in time

@@ -44,6 +44,18 @@ describe Api::UpgradeController, type: :request do
       expect(response.body).to eq(upgrade_status)
     end
 
+    it "shows the node status" do
+      allow(NodeObject).to receive(:all).
+      and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+
+      get "/api/upgrade", { nodes: true }, headers
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body)).to eq(
+        "not_upgraded" => ["testing.crowbar.com"],
+        "upgraded" => []
+      )
+    end
+
     it "prepares the crowbar upgrade" do
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
