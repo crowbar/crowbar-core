@@ -654,7 +654,7 @@ describe Api::Upgrade do
       ).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :running?
-      ).with(:admin).and_return(false)
+      ).and_return(false)
       [
         :prechecks,
         :prepare,
@@ -689,7 +689,7 @@ describe Api::Upgrade do
         if allowed_step == :admin
           allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
             :running?
-          ).with(:admin).and_return(true)
+          ).and_return(true)
         end
         allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
           :current_step
