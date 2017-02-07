@@ -64,7 +64,7 @@ module Crowbar
       @progress[:steps] = upgrade_steps_6_7.map do |step|
         [step, { status: :pending }]
       end.to_h
-      FileUtils.rm_f("/var/lib/crowbar/upgrade/6-to-7-upgrade-running")
+      FileUtils.rm_f running_file
       save
     end
 
@@ -105,7 +105,7 @@ module Crowbar
         progress[:steps][step_name][:status] = :running
         progress[:steps][step_name][:errors] = {}
         if step_name == :prepare
-          FileUtils.touch("/var/lib/crowbar/upgrade/6-to-7-upgrade-running")
+          FileUtils.touch running_file
         end
         save
       end
@@ -121,8 +121,9 @@ module Crowbar
           status: success ? :passed : :failed,
           errors: errors
         }
-        if finished? && success
-          FileUtils.rm_f("/var/lib/crowbar/upgrade/6-to-7-upgrade-running")
+        if current_step == upgrade_steps_6_7.last && success
+          # Mark the end of the upgrade process
+          FileUtils.rm_f running_file
         end
         next_step
         save
@@ -143,7 +144,7 @@ module Crowbar
     end
 
     def finished?
-      current_step == upgrade_steps_6_7.last
+      current_step == upgrade_steps_6_7.last && !File.exist?(running_file)
     end
 
     def cancel_allowed?
@@ -258,6 +259,10 @@ module Crowbar
 
     def lock_path
       "/opt/dell/crowbar_framework/tmp/upgrade_status_lock"
+    end
+
+    def running_file
+      "/var/lib/crowbar/upgrade/6-to-7-upgrade-running"
     end
   end
 end
