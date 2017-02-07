@@ -1002,8 +1002,13 @@ module Api
           node_api.join_and_chef
         end
 
-        out = controller.run_ssh_cmd(
+        controller.run_ssh_cmd(
           "source /root/.openrc; nova service-enable #{hostname} nova-compute"
+        )
+        out = controller.run_ssh_cmd(
+          "source /root/.openrc; " \
+          "nova service-list --host #{hostname} --binary nova-compute " \
+          "| grep -q enabled"
         )
         unless out[:exit_code].zero?
           raise_node_upgrade_error(
