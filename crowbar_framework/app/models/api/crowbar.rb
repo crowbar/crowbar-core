@@ -147,9 +147,13 @@ module Api
         ceph_node = NodeObject.find("roles:ceph-mon AND ceph_config_environment:*").first
         return ret if ceph_node.nil?
 
-        ssh_retval = ceph_node.run_ssh_cmd("LANG=C ceph health 2>&1")
+        ssh_retval = ceph_node.run_ssh_cmd("LANG=C ceph health --connect-timeout 5 2>&1")
         unless ssh_retval[:stdout].include? "HEALTH_OK"
           ret[:health_errors] = ssh_retval[:stdout]
+          unless ssh_retval[:stderr].empty?
+            ret[:health_errors] += "; " unless ssh_retval[:stdout].empty?
+            ret[:health_errors] += ssh_retval[:stderr]
+          end
           return ret
         end
         # ceph --version
