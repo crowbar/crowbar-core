@@ -156,7 +156,7 @@ describe Api::Crowbar do
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
       allow_any_instance_of(Node).to(
-        receive(:run_ssh_cmd).with("LANG=C ceph health 2>&1").
+        receive(:run_ssh_cmd).with("LANG=C ceph health --connect-timeout 5 2>&1").
         and_return(exit_code: 0, stdout: "HEALTH_OK\n", stderr: "")
       )
       allow_any_instance_of(Node).to(
@@ -173,7 +173,7 @@ describe Api::Crowbar do
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
       allow_any_instance_of(Node).to(
-        receive(:run_ssh_cmd).with("LANG=C ceph health 2>&1").
+        receive(:run_ssh_cmd).with("LANG=C ceph health --connect-timeout 5 2>&1").
         and_return(exit_code: 0, stdout: "HEALTH_OK\n", stderr: "")
       )
       allow_any_instance_of(Node).to(
@@ -192,7 +192,7 @@ describe Api::Crowbar do
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
       allow_any_instance_of(Node).to(
-        receive(:run_ssh_cmd).with("LANG=C ceph health 2>&1").
+        receive(:run_ssh_cmd).with("LANG=C ceph health --connect-timeout 5 2>&1").
         and_return(exit_code: 1, stdout: "HEALTH_ERR\n", stderr: "")
       )
       expect(subject.class.ceph_status).to_not be_empty
@@ -204,10 +204,29 @@ describe Api::Crowbar do
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
       allow_any_instance_of(Node).to(
-        receive(:run_ssh_cmd).with("LANG=C ceph health 2>&1").
+        receive(:run_ssh_cmd).with("LANG=C ceph health --connect-timeout 5 2>&1").
         and_return(exit_code: 0, stdout: "HEALTH_WARN", stderr: "")
       )
       expect(subject.class.ceph_status).to_not be_empty
+    end
+
+    it "fails when connection to ceph cluster times out" do
+      allow(Node).to(
+        receive(:find).with("roles:ceph-mon AND ceph_config_environment:*").
+        and_return([Node.find_by_name("testing.crowbar.com")])
+      )
+      allow_any_instance_of(Node).to(
+        receive(:run_ssh_cmd).with("LANG=C ceph health --connect-timeout 5 2>&1").
+        and_return(
+          exit_code: 1,
+          stdout: "",
+          stderr: "Error connecting to cluster: InterruptedOrTimeoutError"
+        )
+      )
+
+      expect(subject.class.ceph_status).to eq(
+        health_errors: "Error connecting to cluster: InterruptedOrTimeoutError"
+      )
     end
   end
 
