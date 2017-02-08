@@ -815,6 +815,9 @@ en:
         ceph_not_healthy:
           error: 'Ceph cluster health check has failed with %{error}. Make sure cluster is healthy before proceeding with the upgrade.'
           help: 'Refer to the SUSE Enterprise Storage documentation for possible troubleshooting.'
+        ceph_old_version:
+          error: 'It appears you have an old version of SUSE Enterprise Storage installed. Upgrade to the latest version of SES before proceeding with the Cloud upgrade.'
+          help: 'Refer to the SUSE Enterprise Storage documentation for the information about upgrading.'
       prepare:
         help:
           default: 'Refer to the error message in the response'

@@ -301,6 +301,12 @@ module Api
             help: I18n.t("api.upgrade.prechecks.ceph_not_healthy.help")
           }
         end
+        if check[:old_version]
+          ret[:ceph_old_version] = {
+            data: I18n.t("api.upgrade.prechecks.ceph_old_version.error"),
+            help: I18n.t("api.upgrade.prechecks.ceph_old_version.help")
+          }
+        end
         ret
       end
 
