@@ -84,6 +84,7 @@ en:
       logs: 'Exported Items'
       repositories: 'Repositories'
       backup: 'Backup & Restore'
+      ceph_pre_upgrade: 'Prepare Ceph Upgrade'
       upgrade: 'Upgrade'
     help: 'Help'
 
@@ -568,6 +569,18 @@ en:
       check_failed_fingerprint: 'Unexpected fingerprint'
       active: 'Active'
       active_repo_tooltip: 'Managed nodes will be automatically configured to use repositories only if they are marked as active'
+
+  ceph_pre_upgrade:
+    index:
+      title: 'Preparation of Ceph Nodes'
+      hint_html: |
+        The upgrade from SUSE Enterprise Storage 2.1 to 4 must be performed as outlined in the <a href="https://www.suse.com/documentation/ses-4/book_storage_admin/data/ceph_upgrade_to4.html">SUSE Enterprise Storage 4 documentation</a>.<br>
+        For this to work, the Ceph nodes must first be put into a prepared state, so that Crowbar will stop configuring them for the duration of the upgrade of both SUSE Enterprise Storage and SUSE OpenStack Cloud products.
+      prepare: 'Prepare for the Upgrade'
+      revert: 'Revert to normal state'
+      nodes_prepared: 'Ceph nodes are already prepared for the upgrade.'
+      nodes_not_prepared: 'Ceph nodes are currently not prepared for the upgrade.'
+      blockui_message: 'Processing, please wait...'
 
   installer:
     title: 'Installer'

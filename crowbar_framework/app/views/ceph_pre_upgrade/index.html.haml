@@ -1,0 +1,19 @@
+.row
+  .col-xs-12
+    %h1.page-header
+      = t(".title")
+    .alert.alert-info
+      = t(".hint_html")
+
+    = form_for :ceph_pre_upgrade, url: prepare_ceph_pre_upgrade_path, html: { role: "form" }, data: { blockui: t(".blockui_message") } do |f|
+
+      .panel-body.text-left
+        - if @prepared
+          = t(".nodes_prepared")
+        - else
+          = t(".nodes_not_prepared")
+
+      .panel-body.text-left
+        .btn-group
+          %input{ type: "hidden", name: "nodes_action", value: @prepared ? "revert" : "prepare" }
+          %input.btn.btn-default{ type: "submit", name: "submit", value: @prepared ? t(".revert") : t(".prepare") }
