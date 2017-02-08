@@ -317,20 +317,24 @@ class CrowbarService < ServiceObject
     base
   end
 
-  def prepare_nodes_for_crowbar_upgrade
+  def prepare_nodes_for_crowbar_upgrade(ceph_only = false)
     proposal = Proposal.find_by(barclamp: "crowbar", name: "default")
 
     # To all nodes, add a new role which prepares them for the upgrade
     nodes_to_upgrade = []
     not_ready_for_upgrade = []
     admin_with_dns_server_role = false
-    all_nodes = NodeObject.all
-    all_nodes.each do |n|
+    nodes = if ceph_only
+      NodeObject.find("roles:ceph-* AND ceph_config_environment:*")
+    else
+      NodeObject.all
+    end
+    nodes.each do |n|
       not_ready_for_upgrade.push n.name if !n.admin? && !%w(ready crowbar_upgrade).include?(n.state)
       admin_with_dns_server_role = true if n.admin? && n.role?("dns-server")
     end
 
-    unless admin_with_dns_server_role
+    unless admin_with_dns_server_role || ceph_only
       raise I18n.t("installer.upgrades.prepare.admin_missing_dns_server")
     end
 
@@ -340,7 +344,7 @@ class CrowbarService < ServiceObject
       )
     end
 
-    all_nodes.each do |node|
+    nodes.each do |node|
       next if node.admin?
 
       if node[:platform] == "windows"
@@ -446,10 +450,16 @@ class CrowbarService < ServiceObject
     upgrade_nodes_failed
   end
 
-  def revert_nodes_from_crowbar_upgrade
+  def revert_nodes_from_crowbar_upgrade(ceph_only = false)
     proposal = Proposal.find_by(barclamp: "crowbar", name: "default")
 
-    NodeObject.all.each do |node|
+    nodes = if ceph_only
+      NodeObject.find("roles:ceph-* AND ceph_config_environment:*")
+    else
+      NodeObject.find("NOT roles:ceph-*")
+    end
+
+    nodes.each do |node|
       next unless node.state == "crowbar_upgrade"
       # revert nodes to previous state; mark the wall so apply does not change state again
       node["crowbar_wall"]["crowbar_upgrade_step"] = "revert_to_ready"
