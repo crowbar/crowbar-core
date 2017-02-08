@@ -79,6 +79,9 @@ nav:
     logs:
       order: 20
       route: 'utils_path'
+    ceph_pre_upgrade:
+      order: 30
+      route: 'ceph_pre_upgrade_path'
   help:
     order: 80
     route: 'docs_path'

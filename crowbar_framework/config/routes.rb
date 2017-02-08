@@ -76,6 +76,13 @@ Rails.application.routes.draw do
   post "utils/repositories/activate_all(.:format)", controller: "repositories", action: "activate_all", as: "activate_all_repositories"
   post "utils/repositories/deactivate_all(.:format)", controller: "repositories", action: "deactivate_all", as: "deactivate_all_repositories"
 
+  get "utils/ceph_pre_upgrade(.:format)",
+    controller: "ceph_pre_upgrade", action: "index", as: "ceph_pre_upgrade"
+  post "utils/ceph_pre_upgrade/prepare(.:format)",
+    controller: "ceph_pre_upgrade",
+    action: "prepare",
+    as: "prepare_ceph_pre_upgrade"
+
   scope :utils do
     resources :backups, only: [:index, :create, :destroy] do
       collection do
