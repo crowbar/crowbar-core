@@ -143,16 +143,16 @@ module Api
       end
 
       def ceph_status
-        {}.tap do |ret|
-          ceph_node = NodeObject.find("roles:ceph-mon AND ceph_config_environment:*").first
-          next unless ceph_node
-          ssh_retval = ceph_node.run_ssh_cmd("LANG=C ceph health 2>&1")
-          unless ssh_retval[:stdout].include? "HEALTH_OK"
-            ret[:errors] = [
-              "ceph cluster health check failed with #{ssh_retval[:stdout]}"
-            ]
-          end
+        ret = {}
+        ceph_node = NodeObject.find("roles:ceph-mon AND ceph_config_environment:*").first
+        return ret if ceph_node.nil?
+
+        ssh_retval = ceph_node.run_ssh_cmd("LANG=C ceph health 2>&1")
+        unless ssh_retval[:stdout].include? "HEALTH_OK"
+          ret[:health_errors] = ssh_retval[:stdout]
+          return ret
         end
+        ret
       end
 
       def compute_status
