@@ -1148,6 +1148,13 @@ module Api
             help: I18n.t("api.upgrade.prechecks.ceph_old_version.help")
           }
         end
+        if check[:not_prepared]
+          ret[:ceph_not_prepared] = {
+            data: I18n.t("api.upgrade.prechecks.ceph_not_prepared.error",
+              nodes: check[:not_prepared].join(", ")),
+            help: I18n.t("api.upgrade.prechecks.ceph_not_prepared.help")
+          }
+        end
         ret
       end
 
