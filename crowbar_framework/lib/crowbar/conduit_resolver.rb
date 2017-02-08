@@ -19,7 +19,13 @@ module Crowbar
   module ConduitResolver
     ### Public methods
 
-    ## Bus order for this node
+    # Returns the bus order for this node, which is something like:
+    #   [
+    #     "0000:00/0000:00:03.0/0000:01:00.0",
+    #     "0000:00/0000:00:03.0/0000:01:00.1",
+    #     "0000:00/0000:00:1c.4/0000:06:00.0",
+    #     "0000:00/0000:00:1c.4/0000:06:00.1"
+    #   ]
     # It depends on the DMI information of the node.
     def bus_order
       @bus_order ||= begin
@@ -40,7 +46,8 @@ module Crowbar
       end
     end
 
-    ## List of interfaces, sorted by the interface map
+    # Returns an array of interfaces like ["em1", "em2", "em3", "em4"],
+    # sorted by bus_order
     def sorted_ifs
       @sorted_ifs ||= begin
         result = cr_ohai_network.sort do |a, b|
@@ -52,9 +59,22 @@ module Crowbar
       end
     end
 
-    ## Conduit list for this node.
-    # This depends on the network mode, number of interfaces, and roles of
-    # the node
+    # Each Hash in the network.conduit_map list looks something like:
+    #
+    #   {
+    #     "pattern": "dual/.*/crowbar$",
+    #     "conduit_list": {
+    #       "intf0"   => { "if_list" => ["?1g1"] },
+    #       "intf1"   => { "if_list" => ["?1g2"] },
+    #       "intf2"   => { "if_list" => ["?1g1"] },
+    #       "bastion" => { "if_list" => [ "1g2"] }
+    #     }
+    #   }
+    #
+    # This method searches that list for the Hash whose value of the
+    # "pattern" key matches the selected network mode / number of
+    # interfaces / role, and from the matching Hash, returns the
+    # sub-Hash corresponding to the value of the "conduit_list" key.
     def conduits
       @conduits ||= begin
         result = nil
@@ -161,8 +181,21 @@ module Crowbar
       result
     end
 
-    ## Map of conduits (defined in network.json) to OS interface names (ie,
-    ## names given by the OS: eth0, etc.) and other attributes
+    # Creates a copy of the nested Hash returned by get_conduits,
+    # with every interface designator pattern (e.g. "?1g2") replaced
+    # with a matching interface of the correct speed which the node has.
+    #
+    # So it returns a Hash mapping of conduits (defined in
+    # network.json) to OS interface names (ie, names given by the OS:
+    # eth0, etc.) and other attributes, i.e. something like
+    #
+    #   {
+    #     "intf0"   => { "if_list" => [ "eth0" ] },
+    #     "intf1"   => { "if_list" => [ "eth0" ] },
+    #     "intf2"   => { "if_list" => [ "eth0" ] },
+    #     "bastion" => { "if_list" => [ "eth1" ] }
+    #   }
+    #
     # The conduit is 'stable' in terms of renumbering because of
     # addition/removal of add on cards (across machines)
     def conduit_to_if_map
@@ -188,14 +221,20 @@ module Crowbar
         result
       end
     end
-
-    ## Return details about conduit on this node
-    # The return value has three components:
-    #   1) the OS interface for this conduit (can be a "physical" interface,
-    #      or a bond)
-    #   2) the list of OS interfaces used to create this interface (in case
-    #      of a bond, the slaves for this bond)
-    #   3) the mode for bonding if bonding is used, or nil
+    # Find the interface(s) and teaming mode to use for the given
+    # conduit on the given node.
+    #
+    # Returns an [interface, if_list, teaming_mode] Array:
+    #   interface:
+    #     The interface providing access to the given conduit.
+    #     If teaming is enabled, this will be something like bond0.
+    #   if_list:
+    #     The list of physical interfaces used.  If teaming is enabled,
+    #     this will be the backing interfaces behind bondN, otherwise
+    #     it will be a singleton list.
+    #   team_mode:
+    #     The integer representing the teaming mode, as specified
+    #     by the relevant conduit_list entry in the network barclamp proposal
     def conduit_details(conduit)
       interface = nil
       interface_slaves = nil
@@ -254,7 +293,26 @@ module Crowbar
       @node["network"]
     end
 
-    ## Return the OHAI network attributes from the node
+    # Return the OHAI network attributes from the node.
+    # This looks something like:
+    #   {
+    #     "em4" => {
+    #       "path" => "0000:00/0000:00:1c.4/0000:06:00.1",
+    #       "speeds" => ["10m", "100m", "1g"]
+    #     },
+    #     "em1" => {
+    #       "path" => "0000:00/0000:00:03.0/0000:01:00.0",
+    #       "speeds" => ["100m", "1g", "10g"]
+    #     },
+    #     "em2" => {
+    #       "path" => "0000:00/0000:00:03.0/0000:01:00.1",
+    #       "speeds" => ["100m", "1g", "10g"]
+    #     },
+    #     "em3" => {
+    #       "path" => "0000:00/0000:00:1c.4/0000:06:00.0",
+    #       "speeds" => ["10m", "100m", "1g"]
+    #     }
+    #   }
     def cr_ohai_network
       return {} if @node.automatic_attrs["crowbar_ohai"].nil? ||
           @node.automatic_attrs["crowbar_ohai"]["detected"].nil? ||
