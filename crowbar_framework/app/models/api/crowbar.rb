@@ -133,7 +133,8 @@ module Api
       def health_check
         ret = {}
         unready = []
-        NodeObject.find_all_nodes.each do |node|
+        # We are ignoring the ceph nodes, as they should already be in crowbar_upgrade state
+        NodeObject.find("NOT roles:ceph-*").each do |node|
           unready << node.name unless node.ready?
         end
         ret[:nodes_not_ready] = unready unless unready.empty?
@@ -144,8 +145,9 @@ module Api
 
       def ceph_status
         ret = {}
-        ceph_node = NodeObject.find("roles:ceph-mon AND ceph_config_environment:*").first
-        return ret if ceph_node.nil?
+        ceph_nodes = NodeObject.find("roles:ceph-* AND ceph_config_environment:*")
+        return ret if ceph_nodes.empty?
+        ceph_node = ceph_nodes.first
 
         ssh_retval = ceph_node.run_ssh_cmd("LANG=C ceph health --connect-timeout 5 2>&1")
         unless ssh_retval[:stdout].include? "HEALTH_OK"

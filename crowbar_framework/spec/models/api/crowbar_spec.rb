@@ -183,7 +183,7 @@ describe Api::Crowbar do
   context "with cloud not healthy" do
     it "finds a node that is not ready" do
       allow(NodeObject).to(
-        receive(:find_all_nodes).
+        receive(:find).with("NOT roles:ceph-*").
         and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
       )
       allow_any_instance_of(NodeObject).to(receive(:ready?).and_return(false))
@@ -211,8 +211,8 @@ describe Api::Crowbar do
   context "with ceph cluster healthy" do
     it "succeeds to check ceph cluster health and version" do
       allow(NodeObject).to(
-        receive(:find).with("roles:ceph-mon AND ceph_config_environment:*").
-        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+        receive(:find).with("roles:ceph-* AND ceph_config_environment:*").
+        and_return([NodeObject.find_node_by_name("ceph.crowbar.com")])
       )
       allow_any_instance_of(NodeObject).to(
         receive(:run_ssh_cmd).with("LANG=C ceph health --connect-timeout 5 2>&1").
@@ -226,10 +226,27 @@ describe Api::Crowbar do
       expect(subject.class.ceph_status).to be_empty
     end
 
+    it "succeeds to check ceph cluster health and version but finds unprepared node" do
+      allow(NodeObject).to(
+        receive(:find).with("roles:ceph-* AND ceph_config_environment:*").
+        and_return([NodeObject.find_node_by_name("testing"), NodeObject.find_node_by_name("ceph")])
+      )
+      allow_any_instance_of(NodeObject).to(
+        receive(:run_ssh_cmd).with("LANG=C ceph health --connect-timeout 5 2>&1").
+        and_return(exit_code: 0, stdout: "HEALTH_OK\n", stderr: "")
+      )
+      allow_any_instance_of(NodeObject).to(
+        receive(:run_ssh_cmd).with("LANG=C ceph --version | cut -d ' ' -f 3").
+        and_return(exit_code: 0, stdout: "10.2.4-211-g12b091b\n", stderr: "")
+      )
+
+      expect(subject.class.ceph_status).to eq(not_prepared: ["testing.crowbar.com"])
+    end
+
     it "succeeds to check ceph cluster health but fails on version" do
       allow(NodeObject).to(
-        receive(:find).with("roles:ceph-mon AND ceph_config_environment:*").
-        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+        receive(:find).with("roles:ceph-* AND ceph_config_environment:*").
+        and_return([NodeObject.find_node_by_name("ceph.crowbar.com")])
       )
       allow_any_instance_of(NodeObject).to(
         receive(:run_ssh_cmd).with("LANG=C ceph health --connect-timeout 5 2>&1").
@@ -247,7 +264,7 @@ describe Api::Crowbar do
   context "with ceph cluster not healthy" do
     it "fails when checking ceph cluster health" do
       allow(NodeObject).to(
-        receive(:find).with("roles:ceph-mon AND ceph_config_environment:*").
+        receive(:find).with("roles:ceph-* AND ceph_config_environment:*").
         and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
       )
       allow_any_instance_of(NodeObject).to(
@@ -259,7 +276,7 @@ describe Api::Crowbar do
 
     it "fails when exit value of ceph check is 0 but stdout still not correct" do
       allow(NodeObject).to(
-        receive(:find).with("roles:ceph-mon AND ceph_config_environment:*").
+        receive(:find).with("roles:ceph-* AND ceph_config_environment:*").
         and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
       )
       allow_any_instance_of(NodeObject).to(
@@ -271,7 +288,7 @@ describe Api::Crowbar do
 
     it "fails when connection to ceph cluster times out" do
       allow(NodeObject).to(
-        receive(:find).with("roles:ceph-mon AND ceph_config_environment:*").
+        receive(:find).with("roles:ceph-* AND ceph_config_environment:*").
         and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
       )
       allow_any_instance_of(NodeObject).to(

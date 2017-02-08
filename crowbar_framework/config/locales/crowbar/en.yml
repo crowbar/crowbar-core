@@ -818,6 +818,11 @@ en:
         ceph_old_version:
           error: 'It appears you have an old version of SUSE Enterprise Storage installed. Upgrade to the latest version of SES before proceeding with the Cloud upgrade.'
           help: 'Refer to the SUSE Enterprise Storage documentation for the information about upgrading.'
+        ceph_not_prepared:
+          error: 'Some ceph nodes are not prepared for the upgrade: %{nodes}.'
+          help: |
+            Unlike normal nodes, ceph nodes must already be upgraded and kept waiting in the upgrade state until the upgrade of whole Cloud is finished.
+            Refer to the SUSE Enterprise Storage documentation for the information about upgrading ceph nodes.
       prepare:
         help:
           default: 'Refer to the error message in the response'
