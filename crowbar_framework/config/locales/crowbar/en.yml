@@ -811,6 +811,9 @@ en:
         ha_configured:
           help:
             default: 'Without HA setup, non-disruptive upgrade is not possible.'
+        ceph_not_healthy:
+          error: 'Ceph cluster health check has failed with %{error}. Make sure cluster is healthy before proceeding with the upgrade.'
+          help: 'Refer to the SUSE Enterprise Storage documentation for possible troubleshooting.'
       prepare:
         help:
           default: 'Refer to the error message in the response'

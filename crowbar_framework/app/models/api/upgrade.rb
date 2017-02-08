@@ -1134,12 +1134,15 @@ module Api
       end
 
       def ceph_health_check_errors(check)
-        {
-          ceph_health: {
-            data: check[:errors],
-            help: I18n.t("api.upgrade.prechecks.ceph_health_check.help.default")
+        ret = {}
+        if check[:healh_errors]
+          ret[:ceph_not_healhy] = {
+            data: I18n.t("api.upgrade.prechecks.ceph_not_healthy.error",
+              error: check[:healh_errors]),
+            help: I18n.t("api.upgrade.prechecks.ceph_not_healthy.help")
           }
-        }
+        end
+        ret
       end
 
       def ha_presence_errors(check)
