@@ -108,6 +108,16 @@ module Api
           ret[:health_errors] = ssh_retval[:stdout]
           return ret
         end
+        # ceph --version
+        # SES2.1:
+        # ceph version 0.94.9-93-g239fe15 (239fe153ffde6a22e1efcaf734ff28d6a703a0ba)
+        # SES4:
+        # ceph version 10.2.4-211-g12b091b (12b091b4a40947aa43919e71a318ed0dcedc8734)
+        ssh_retval = ceph_node.run_ssh_cmd("LANG=C ceph --version | cut -d ' ' -f 3")
+        ret[:old_version] = true if ssh_retval[:stdout].to_f < 10.2
+
+        not_prepared = ceph_nodes.select { |n| n.state != "crowbar_upgrade" }.map(&:name)
+        ret[:not_prepared] = not_prepared unless not_prepared.empty?
         ret
       end
 
