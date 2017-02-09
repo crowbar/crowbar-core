@@ -379,6 +379,37 @@ Nic.nics.each do |nic|
     nic.tx_offloading = node["network"]["enable_tx_offloading"] || false
   end
 
+  # Do some MTU checks/configuration for the parent of the vlan nic
+  if nic.is_a?(Nic::Vlan)
+    # 1) validate that the parent of vlan nic is not used by a network directly
+    # and the requested mtu for the parent is lower than the vlan nic mtu.
+    # That would not work and setting the mtu on the vlan would fail.
+    networks_using_parent = if_mapping.select { |net, ifaces| ifaces.include? nic.parent }.keys
+    networks_using_parent.each do |net_name|
+      net = Barclamp::Inventory.get_network_by_type(node, net_name)
+      unless net.use_vlan
+        nic_parent = Nic.new nic.parent
+        if nic_parent.mtu.to_i < ifs[nic.name]["mtu"].to_i
+          msg = "#{nic.name} wants mtu #{ifs[nic.name]["mtu"]} but network #{net_name} " \
+                "using the parent nic #{nic.parent} wants a lower mtu #{net.mtu}. " \
+                "This network mtu configuration is invalid."
+          Chef::Log.fatal(msg)
+          raise msg
+        end
+      end
+    end
+    # 2) set the mtu for the parent if needed
+    if !ifs[nic.parent].key? "mtu" || (ifs[nic.parent]["mtu"].to_i < ifs[nic.name]["mtu"].to_i)
+      # we want the highest mtu to end up in the ifcfg-$parent config
+      ifs[nic.parent]["mtu"] = ifs[nic.name]["mtu"]
+      parent_nic = Nic.new(nic.parent)
+      Chef::Log.info("vlan #{nic.name} wants mtu #{ifs[nic.name]["mtu"]} but " \
+                     "parent #{parent_nic.name} wants no/lower mtu. Set mtu "\
+                     "for #{parent_nic.name} to #{ifs[nic.parent]['mtu']}")
+      parent_nic.mtu = ifs[nic.parent]["mtu"]
+    end
+  end
+
   if ifs[nic.name]["mtu"]
     nic.mtu = ifs[nic.name]["mtu"]
   end
