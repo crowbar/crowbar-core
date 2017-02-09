@@ -376,7 +376,7 @@ module Api
 
         # Initiate the services shutdown for all nodes
         errors = []
-        upgrade_nodes = ::Node.find("state:crowbar_upgrade")
+        upgrade_nodes = ::Node.find("state:crowbar_upgrade AND NOT roles:ceph-*")
         cinder_node = nil
         upgrade_nodes.each do |node|
           if node.roles.include?("cinder-controller") &&
@@ -691,6 +691,7 @@ module Api
         ::Node.find_all_nodes.each do |node|
           finalize_node_upgrade node
         end
+        # FIXME: ceph nodes need to start chef-client/crowbar-join at some point!
       end
 
       #

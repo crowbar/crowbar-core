@@ -149,7 +149,7 @@ describe Api::Upgrade do
         :prepare_nodes_for_os_upgrade
       ).and_return(true)
       allow(Node).to(
-        receive(:find).with("state:crowbar_upgrade").
+        receive(:find).with("state:crowbar_upgrade AND NOT roles:ceph-*").
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
       allow_any_instance_of(Node).to(
