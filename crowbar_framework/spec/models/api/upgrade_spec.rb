@@ -81,6 +81,9 @@ describe Api::Upgrade do
         :updates_status
       ).and_return({})
       allow(Api::Crowbar).to receive(
+        :check_repositories
+      ).with("6").and_return(os: { available: true })
+      allow(Api::Crowbar).to receive(
         :addons
       ).and_return(["ceph", "ha"])
       allow(Api::Crowbar).to(
@@ -108,10 +111,10 @@ describe Api::Upgrade do
 
   context "with repositories not in place" do
     it "lists the repositories that are not available" do
-      allow(Api::Upgrade).to(
+      allow(Api::Crowbar).to(
         receive(:repo_version_available?).and_return(false)
       )
-      allow(Api::Upgrade).to(
+      allow(Api::Crowbar).to(
         receive(:admin_architecture).and_return("x86_64")
       )
       allow_any_instance_of(Kernel).to(
@@ -132,21 +135,21 @@ describe Api::Upgrade do
     end
 
     it "has only one repository that is not available" do
-      allow(Api::Upgrade).to(
+      allow(Api::Crowbar).to(
         receive(:repo_version_available?).with(
           Hash.from_xml(crowbar_repocheck_zypper)["stream"]["product_list"]["product"],
           "SLES",
           "12.2"
         ).and_return(false)
       )
-      allow(Api::Upgrade).to(
+      allow(Api::Crowbar).to(
         receive(:repo_version_available?).with(
           Hash.from_xml(crowbar_repocheck_zypper)["stream"]["product_list"]["product"],
           "suse-openstack-cloud",
           "7"
         ).and_return(true)
       )
-      allow(Api::Upgrade).to(
+      allow(Api::Crowbar).to(
         receive(:admin_architecture).and_return("x86_64")
       )
       allow_any_instance_of(Kernel).to(
@@ -352,6 +355,9 @@ describe Api::Upgrade do
     end
 
     it "chooses none" do
+      allow(Api::Crowbar).to receive(
+        :check_repositories
+      ).with("6").and_return(os: { available: true })
       allow(Api::Upgrade).to receive(
         :maintenance_updates_status
       ).and_return(errors: ["Some Error"])
