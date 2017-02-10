@@ -373,7 +373,7 @@ describe Api::Upgrade do
       drbd_slave = Node.find_by_name("drbd.crowbar.com")
       allow(Node).to(
         receive(:find).
-        with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
+        with("state:crowbar_upgrade AND NOT roles:ceph-*").
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
       allow(Node).to(
@@ -438,7 +438,7 @@ describe Api::Upgrade do
     it "successfully completes the upgrade when they are no compute nodes" do
       allow(Node).to(
         receive(:find).
-        with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
+        with("state:crowbar_upgrade AND NOT roles:ceph-*").
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
       allow(Api::Upgrade).to receive(:upgrade_controller_clusters).and_return(true)
@@ -477,7 +477,7 @@ describe Api::Upgrade do
 
       allow(Node).to(
         receive(:find).
-        with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
+        with("state:crowbar_upgrade AND NOT roles:ceph-*").
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
       allow(Api::Upgrade).to receive(:upgrade_controller_clusters).and_return(true)
@@ -515,7 +515,7 @@ describe Api::Upgrade do
       ).with(:nodes).and_return(true)
       allow(Node).to(
         receive(:find).
-        with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
+        with("state:crowbar_upgrade AND NOT roles:ceph-*").
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
       allow(Node).to(
@@ -547,7 +547,7 @@ describe Api::Upgrade do
         :start_step
       ).with(:nodes).and_return(true)
       allow(Node).to(
-        receive(:find).with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
+        receive(:find).with("state:crowbar_upgrade AND NOT roles:ceph-*").
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
       allow(Api::Upgrade).to receive(:upgrade_controller_clusters).and_return(true)
@@ -569,7 +569,7 @@ describe Api::Upgrade do
         :start_step
       ).with(:nodes).and_return(true)
       allow(Node).to(
-        receive(:find).with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
+        receive(:find).with("state:crowbar_upgrade AND NOT roles:ceph-*").
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
       allow(Api::Upgrade).to receive(:upgrade_controller_clusters).and_return(true)
@@ -588,7 +588,7 @@ describe Api::Upgrade do
 
     it "successfully upgrades KVM compute nodes" do
       allow(Node).to(
-        receive(:find).with("state:crowbar_upgrade AND NOT run_list_map:ceph_*").
+        receive(:find).with("state:crowbar_upgrade AND NOT roles:ceph-*").
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
       allow(Api::Upgrade).to receive(:upgrade_controller_clusters).and_return(true)

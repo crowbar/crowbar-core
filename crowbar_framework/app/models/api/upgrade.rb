@@ -541,7 +541,7 @@ module Api
         # initialize progress info about nodes upgrade
         if remaining.nil?
           remaining = ::Node.find(
-            "state:crowbar_upgrade AND NOT run_list_map:ceph_*"
+            "state:crowbar_upgrade AND NOT roles:ceph-*"
           ).size
           ::Crowbar::UpgradeStatus.new.save_nodes(0, remaining)
         end
