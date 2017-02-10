@@ -351,7 +351,7 @@ class CrowbarService < ServiceObject
         # for Hyper-V nodes, only change the state, but do not run chef-client
         node.set_state("crowbar_upgrade")
       else
-        node["crowbar_wall"]["crowbar_upgrade_step"] = "crowbar_upgrade"
+        node.crowbar["crowbar_upgrade_step"] = "crowbar_upgrade"
         node.save
         nodes_to_upgrade.push node.name
       end
@@ -462,7 +462,7 @@ class CrowbarService < ServiceObject
     nodes.each do |node|
       next unless node.state == "crowbar_upgrade"
       # revert nodes to previous state; mark the wall so apply does not change state again
-      node["crowbar_wall"]["crowbar_upgrade_step"] = "revert_to_ready"
+      node.crowbar["crowbar_upgrade_step"] = "revert_to_ready"
       node.save
       node.set_state("ready")
     end
@@ -479,10 +479,10 @@ class CrowbarService < ServiceObject
     @logger.debug("crowbar apply_role_pre_chef_call: entering #{all_nodes.inspect}")
     all_nodes.each do |n|
       node = NodeObject.find_node_by_name n
-      # value of crowbar_wall["crowbar_upgrade"] indicates that the role should be executed
+      # value of node.crowbar["crowbar_upgrade"] indicates that the role should be executed
       # but node state should not be changed: this is needed when reverting node state to ready
       if node.role?("crowbar-upgrade") &&
-          node.crowbar_wall["crowbar_upgrade_step"] != "revert_to_ready"
+          node.crowbar["crowbar_upgrade_step"] != "revert_to_ready"
         node.set_state("crowbar_upgrade")
       end
     end

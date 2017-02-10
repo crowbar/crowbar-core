@@ -24,7 +24,8 @@
 
 return unless node[:platform_family] == "suse"
 
-upgrade_step = node["crowbar_wall"]["crowbar_upgrade_step"] || "none"
+upgrade_step = node["crowbar_upgrade_step"] ||
+  node["crowbar_wall"]["crowbar_upgrade_step"] || "none"
 
 case upgrade_step
 
