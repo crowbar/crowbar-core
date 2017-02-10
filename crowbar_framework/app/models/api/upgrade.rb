@@ -666,9 +666,9 @@ module Api
 
       # crowbar_upgrade_step will not be needed after node is upgraded
       def finalize_node_upgrade(node)
-        return unless node["crowbar_wall"].key? "crowbar_upgrade_step"
+        return unless node.crowbar.key? "crowbar_upgrade_step"
 
-        node["crowbar_wall"].delete "crowbar_upgrade_step"
+        node.crowbar.delete "crowbar_upgrade_step"
         node.crowbar.delete "node_upgrade_state"
         node.save
 
