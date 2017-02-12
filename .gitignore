@@ -9,3 +9,5 @@ Gemfile.lock
 
 .bundle/config
 /vendor/
+
+.kitchen/
