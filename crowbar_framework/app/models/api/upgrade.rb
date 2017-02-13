@@ -523,8 +523,11 @@ module Api
           raise ::Crowbar::Error::Upgrade::CancelError.new(upgrade_status.current_step)
         end
 
-        service_object = CrowbarService.new(Rails.logger)
-        service_object.revert_nodes_from_crowbar_upgrade
+        provisioner_service = ProvisionerService.new(Rails.logger)
+        provisioner_service.enable_all_repositories
+
+        crowbar_service = CrowbarService.new(Rails.logger)
+        crowbar_service.revert_nodes_from_crowbar_upgrade
         upgrade_status.initialize_state
       end
 
@@ -1218,8 +1221,11 @@ module Api
       end
 
       def prepare_nodes_for_crowbar_upgrade
-        service_object = CrowbarService.new(Rails.logger)
-        service_object.prepare_nodes_for_crowbar_upgrade
+        crowbar_service = CrowbarService.new(Rails.logger)
+        crowbar_service.prepare_nodes_for_crowbar_upgrade
+
+        provisioner_service = ProvisionerService.new(Rails.logger)
+        provisioner_service.disable_all_repositories
 
         ::Crowbar::UpgradeStatus.new.end_step
         true
