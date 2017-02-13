@@ -285,7 +285,7 @@ module Api
 
         if check[:maintenance_updates]
           ret[:maintenance_updates_installed] = {
-            data: check[:maintenance_updates][:errors],
+            data: check[:maintenance_updates][:error],
             help: I18n.t("api.upgrade.prechecks.maintenance_updates_check.help.default")
           }
         end
