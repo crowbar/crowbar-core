@@ -199,11 +199,25 @@ module Api
           return { repositories_missing: missing_repos }
         end
 
+        # Now check if new (Cloud7) products are not yet enabled
+        next_version_repocheck = check_repositories("7")
+        if next_version_repocheck.key? :error
+          return { zypper_errors: next_version_repocheck[:error] }
+        end
+
+        if next_version_repocheck.any? { |_k, v| v[:available] }
+          available = next_version_repocheck.collect do |k, v|
+            next unless v[:available]
+            v[:repos]
+          end.flatten.compact.join(", ")
+          return { repositories_too_soon: available }
+        end
+
         updates_status = ::Crowbar::Checks::Maintenance.updates_status
         updates_status.empty? ? {} : { maintenance_updates: updates_status }
       end
 
-      def check_repositories(soc_version)
+      def check_repositories(soc_version, end_step_on_error = false)
         sp = soc_version == "6" ? "12.1" : "12.2"
         sp_version = soc_version == "6" ? "SP1" : "SP2"
         upgrade_status = ::Crowbar::UpgradeStatus.new
@@ -214,7 +228,7 @@ module Api
 
         {}.tap do |ret|
           if zypper_stream["message"] =~ /^System management is locked/
-            if soc_version == "7"
+            if end_step_on_error
               upgrade_status.end_step(
                 false,
                 repocheck_crowbar: {
@@ -236,7 +250,7 @@ module Api
             # keep only first prompt for easier formatting
             prompt = prompt.first if prompt.is_a?(Array)
 
-            if soc_version == "7"
+            if end_step_on_error
               upgrade_status.end_step(
                 false,
                 repocheck_crowbar: {

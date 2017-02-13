@@ -152,7 +152,7 @@ module Api
       def adminrepocheck
         upgrade_status = ::Crowbar::UpgradeStatus.new
         upgrade_status.start_step(:repocheck_crowbar)
-        ret = Api::Crowbar.check_repositories("7")
+        ret = Api::Crowbar.check_repositories("7", true)
 
         # zypper errors have already ended the step
         return ret if ret.key? :error
@@ -280,6 +280,14 @@ module Api
             data: I18n.t("api.upgrade.prechecks.repos_missing.error",
               missing: check[:repositories_missing]),
             help: I18n.t("api.upgrade.prechecks.repos_missing.help")
+          }
+        end
+
+        if check[:repositories_too_soon]
+          ret[:repositories_too_soon] = {
+            data: I18n.t("api.upgrade.prechecks.repos_too_soon.error",
+              too_soon: check[:repositories_too_soon]),
+            help: I18n.t("api.upgrade.prechecks.repos_too_soon.help")
           }
         end
 
