@@ -54,7 +54,7 @@ module Api
             errors: health_check.empty? ? {} : health_check_errors(health_check)
           }
 
-          maintenance_updates = ::Crowbar::Checks::Maintenance.updates_status
+          maintenance_updates = Api::Crowbar.maintenance_updates_check
           ret[:checks][:maintenance_updates_installed] = {
             required: true,
             passed: maintenance_updates.empty?,
@@ -152,99 +152,29 @@ module Api
       def adminrepocheck
         upgrade_status = ::Crowbar::UpgradeStatus.new
         upgrade_status.start_step(:repocheck_crowbar)
-        # FIXME: once we start working on 7 to 8 upgrade we have to adapt the sles version
-        zypper_stream = Hash.from_xml(
-          `sudo /usr/bin/zypper-retry --xmlout products`
-        )["stream"]
+        ret = Api::Crowbar.check_repositories("7")
 
-        {}.tap do |ret|
-          if zypper_stream["message"] =~ /^System management is locked/
-            upgrade_status.end_step(
-              false,
-              repocheck_crowbar: {
-                data: zypper_stream["message"],
-                help: "Make sure zypper is not running and try again."
-              }
-            )
-            return {
-              status: :service_unavailable,
-              error: I18n.t(
-                "api.crowbar.zypper_locked", zypper_locked_message: zypper_stream["message"]
-              )
+        # zypper errors have already ended the step
+        return ret if ret.key? :error
+
+        if ret.any? { |_k, v| !v[:available] }
+          missing_repos = ret.collect do |k, v|
+            next if v[:errors].empty?
+            missing_repo_arch = v[:errors].keys.first.to_sym
+            v[:errors][missing_repo_arch][:missing]
+          end.flatten.compact.join(", ")
+          ::Crowbar::UpgradeStatus.new.end_step(
+            false,
+            repocheck_crowbar: {
+              data: "Missing repositories: #{missing_repos}",
+              help: "Fix the repository setup for the Admin server before " \
+                    "you continue with the upgrade"
             }
-          end
-
-          prompt = zypper_stream["prompt"]
-          unless prompt.nil?
-            # keep only first prompt for easier formatting
-            prompt = prompt.first if prompt.is_a?(Array)
-
-            upgrade_status.end_step(
-              false,
-              repocheck_crowbar: {
-                data: prompt["text"],
-                help: "Make sure you complete the required action and try again."
-              }
-            )
-
-            return {
-              status: :service_unavailable,
-              error: I18n.t(
-                "api.crowbar.zypper_prompt", zypper_prompt_text: prompt["text"]
-              )
-            }
-          end
-
-          products = zypper_stream["product_list"]["product"]
-
-          os_available = repo_version_available?(products, "SLES", "12.2")
-          ret[:os] = {
-            available: os_available,
-            repos: [
-              "SLES12-SP2-Pool",
-              "SLES12-SP2-Updates"
-            ],
-            errors: {}
-          }
-          unless os_available
-            ret[:os][:errors][admin_architecture.to_sym] = {
-              missing: ret[:os][:repos]
-            }
-          end
-
-          cloud_available = repo_version_available?(products, "suse-openstack-cloud", "7")
-          ret[:openstack] = {
-            available: cloud_available,
-            repos: [
-              "SUSE-OpenStack-Cloud-7-Pool",
-              "SUSE-OpenStack-Cloud-7-Updates"
-            ],
-            errors: {}
-          }
-          unless cloud_available
-            ret[:openstack][:errors][admin_architecture.to_sym] = {
-              missing: ret[:openstack][:repos]
-            }
-          end
-
-          if ret.any? { |_k, v| !v[:available] }
-            missing_repos = ret.collect do |k, v|
-              next if v[:errors].empty?
-              missing_repo_arch = v[:errors].keys.first.to_sym
-              v[:errors][missing_repo_arch][:missing]
-            end.flatten.compact.join(", ")
-            ::Crowbar::UpgradeStatus.new.end_step(
-              false,
-              repocheck_crowbar: {
-                data: "Missing repositories: #{missing_repos}",
-                help: "Fix the repository setup for the Admin server before " \
-                  "you continue with the upgrade"
-              }
-            )
-          else
-            upgrade_status.end_step
-          end
+          )
+        else
+          upgrade_status.end_step
         end
+        ret
       rescue ::Crowbar::Error::StartStepRunningError,
              ::Crowbar::Error::StartStepOrderError,
              ::Crowbar::Error::SaveUpgradeStatusError => e
@@ -338,12 +268,28 @@ module Api
       end
 
       def maintenance_updates_check_errors(check)
-        {
-          maintenance_updates_installed: {
-            data: check[:errors],
+        ret = {}
+        if check[:zypper_errors]
+          ret[:zypper_errors] = {
+            data: check[:zypper_errors]
+          }
+        end
+
+        if check[:repositories_missing]
+          ret[:repositories_missing] = {
+            data: I18n.t("api.upgrade.prechecks.repos_missing.error",
+              missing: check[:repositories_missing].join(", ")),
+            help: I18n.t("api.upgrade.prechecks.repos_missing.help")
+          }
+        end
+
+        if check[:maintenance_updates]
+          ret[:maintenance_updates_installed] = {
+            data: check[:maintenance_updates][:error],
             help: I18n.t("api.upgrade.prechecks.maintenance_updates_check.help.default")
           }
-        }
+        end
+        ret
       end
 
       def ceph_health_check_errors(check)
@@ -400,16 +346,6 @@ module Api
           }
         end
         ret
-      end
-
-      def repo_version_available?(products, product, version)
-        products.any? do |p|
-          p["version"] == version && p["name"] == product
-        end
-      end
-
-      def admin_architecture
-        NodeObject.admin_node.architecture
       end
 
       def prepare_nodes_for_crowbar_upgrade_background

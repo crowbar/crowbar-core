@@ -788,7 +788,10 @@ en:
           help: 'Check the state of the specific barclamps and redeploy them correctly or disable failing proposals.'
         maintenance_updates_check:
           help:
-            default: 'Make sure maintenance updates are installed'
+            default: 'Make sure maintenance updates are installed.'
+        repos_missing:
+          error: 'These repositories are missing: %{misssing}.'
+          help: 'Fix your SOC6 repository setup so the latest maintenance updates can be installed.'
         ceph_health_check:
           help:
             default: 'Make sure Ceph is healthy'

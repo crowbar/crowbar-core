@@ -181,7 +181,124 @@ module Api
           : {}
       end
 
+      def maintenance_updates_check
+        initial_repocheck = check_repositories("6")
+
+        # These are the zypper failures
+        if initial_repocheck.key? :error
+          return { zypper_errors: initial_repocheck[:error] }
+        end
+
+        # Now look for missing repositories
+        if initial_repocheck.any? { |_k, v| !v[:available] }
+          missing_repos = ret.collect do |k, v|
+            next if v[:errors].empty?
+            missing_repo_arch = v[:errors].keys.first.to_sym
+            v[:errors][missing_repo_arch][:missing]
+          end.flatten.compact.join(", ")
+          return { repositories_missing: missing_repos }
+        end
+
+        updates_status = ::Crowbar::Checks::Maintenance.updates_status
+        updates_status.empty? ? {} : { maintenance_updates: updates_status }
+      end
+
+      def check_repositories(soc_version)
+        sp = soc_version == "6" ? "12.1" : "12.2"
+        sp_version = soc_version == "6" ? "SP1" : "SP2"
+        upgrade_status = ::Crowbar::UpgradeStatus.new
+
+        zypper_stream = Hash.from_xml(
+          `sudo /usr/bin/zypper-retry --xmlout products`
+        )["stream"]
+
+        {}.tap do |ret|
+          if zypper_stream["message"] =~ /^System management is locked/
+            if soc_version == "7"
+              upgrade_status.end_step(
+                false,
+                repocheck_crowbar: {
+                  data: zypper_stream["message"],
+                  help: "Make sure zypper is not running and try again."
+                }
+              )
+            end
+            return {
+              status: :service_unavailable,
+              error: I18n.t(
+                "api.crowbar.zypper_locked", zypper_locked_message: zypper_stream["message"]
+              )
+            }
+          end
+
+          prompt = zypper_stream["prompt"]
+          unless prompt.nil?
+            # keep only first prompt for easier formatting
+            prompt = prompt.first if prompt.is_a?(Array)
+
+            if soc_version == "7"
+              upgrade_status.end_step(
+                false,
+                repocheck_crowbar: {
+                  data: prompt["text"],
+                  help: "Make sure you complete the required action and try again."
+                }
+              )
+            end
+
+            return {
+              status: :service_unavailable,
+              error: I18n.t(
+                "api.crowbar.zypper_prompt", zypper_prompt_text: prompt["text"]
+              )
+            }
+          end
+
+          products = zypper_stream["product_list"]["product"]
+
+          os_available = repo_version_available?(products, "SLES", sp)
+          ret[:os] = {
+            available: os_available,
+            repos: [
+              "SLES12-#{sp_version}-Pool",
+              "SLES12-#{sp_version}-Updates"
+            ],
+            errors: {}
+          }
+          unless os_available
+            ret[:os][:errors][admin_architecture.to_sym] = {
+              missing: ret[:os][:repos]
+            }
+          end
+
+          cloud_available = repo_version_available?(products, "suse-openstack-cloud", soc_version)
+          ret[:openstack] = {
+            available: cloud_available,
+            repos: [
+              "SUSE-OpenStack-Cloud-#{soc_version}-Pool",
+              "SUSE-OpenStack-Cloud-#{soc_version}-Updates"
+            ],
+            errors: {}
+          }
+          unless cloud_available
+            ret[:openstack][:errors][admin_architecture.to_sym] = {
+              missing: ret[:openstack][:repos]
+            }
+          end
+        end
+      end
+
       protected
+
+      def repo_version_available?(products, product, version)
+        products.any? do |p|
+          p["version"] == version && p["name"] == product
+        end
+      end
+
+      def admin_architecture
+        NodeObject.admin_node.architecture
+      end
 
       def lib_path
         Pathname.new("/var/lib/crowbar/install")

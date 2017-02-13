@@ -30,7 +30,7 @@ module Crowbar
                 "ZYPPER_EXIT_INF_SEC_UPDATE_NEEDED: security patches available for installation."
               end
             end
-          error ? { errors: [error] } : {}
+          error ? { error: error } : {}
         end
       end
     end
