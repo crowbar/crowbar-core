@@ -191,7 +191,7 @@ module Api
 
         # Now look for missing repositories
         if initial_repocheck.any? { |_k, v| !v[:available] }
-          missing_repos = ret.collect do |k, v|
+          missing_repos = initial_repocheck.collect do |k, v|
             next if v[:errors].empty?
             missing_repo_arch = v[:errors].keys.first.to_sym
             v[:errors][missing_repo_arch][:missing]

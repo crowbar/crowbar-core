@@ -790,7 +790,7 @@ en:
           help:
             default: 'Make sure maintenance updates are installed.'
         repos_missing:
-          error: 'These repositories are missing: %{misssing}.'
+          error: 'These repositories are missing: %{missing}.'
           help: 'Fix your SOC6 repository setup so the latest maintenance updates can be installed.'
         ceph_health_check:
           help:

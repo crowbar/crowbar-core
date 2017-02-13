@@ -278,7 +278,7 @@ module Api
         if check[:repositories_missing]
           ret[:repositories_missing] = {
             data: I18n.t("api.upgrade.prechecks.repos_missing.error",
-              missing: check[:repositories_missing].join(", ")),
+              missing: check[:repositories_missing]),
             help: I18n.t("api.upgrade.prechecks.repos_missing.help")
           }
         end
