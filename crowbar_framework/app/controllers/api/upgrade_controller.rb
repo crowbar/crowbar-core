@@ -145,12 +145,17 @@ class Api::UpgradeController < ApiController
   # The method runs asynchronously, so there's a need to poll for the status and possible errors
   def nodes
     if params[:component]
+      upgrade_status = ::Crowbar::UpgradeStatus.new
+      substep = upgrade_status.current_substep
+      status = upgrade_status.current_substep_status
       if ["all", "controllers"].include? params[:component]
-        ::Crowbar::UpgradeStatus.new.start_step(:nodes)
+        # When controller nodes have been upgraded previously,
+        # whole 'nodes' step was not actually finished, just a substep.
+        # It makes sense at this time to upgrade the rest with 'all'.
+        unless substep == "controllers" && status == "finished"
+          ::Crowbar::UpgradeStatus.new.start_step(:nodes)
+        end
       else
-        upgrade_status = ::Crowbar::UpgradeStatus.new
-        substep = upgrade_status.current_substep
-        status = upgrade_status.current_substep_status
         if substep != "computes" && status != "finished"
           raise ::Crowbar::Error::UpgradeError.new(
             "Controller nodes must be upgraded first!"
