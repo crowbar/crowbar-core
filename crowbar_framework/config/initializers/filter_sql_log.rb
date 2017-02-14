@@ -24,6 +24,10 @@ module ActiveRecord
         Rails.logger.debug(
           "SQL: INSERT/UPDATE transaction: filtering query to not expose potentially sensitive data"
         )
+      elsif event.payload[:sql] =~ /^(INSERT INTO|DELETE FROM|UPDATE) "delayed_jobs".*/
+        Rails.logger.debug(
+          "SQL: delayed_jobs transaction: filtering query to not clutter the logs"
+        )
       else
         old_sql(event)
       end
