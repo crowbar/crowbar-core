@@ -84,6 +84,9 @@ describe Api::Upgrade do
         :check_repositories
       ).with("6").and_return(os: { available: true })
       allow(Api::Crowbar).to receive(
+        :check_repositories
+      ).with("7").and_return(os: { available: false })
+      allow(Api::Crowbar).to receive(
         :addons
       ).and_return(["ceph", "ha"])
       allow(Api::Crowbar).to(
@@ -358,6 +361,9 @@ describe Api::Upgrade do
       allow(Api::Crowbar).to receive(
         :check_repositories
       ).with("6").and_return(os: { available: true })
+      allow(Api::Crowbar).to receive(
+        :check_repositories
+      ).with("7").and_return(os: { available: false })
       allow(Api::Upgrade).to receive(
         :maintenance_updates_status
       ).and_return(errors: ["Some Error"])

@@ -790,8 +790,11 @@ en:
           help:
             default: 'Make sure maintenance updates are installed.'
         repos_missing:
-          error: 'These repositories are missing: %{misssing}.'
+          error: 'These repositories are missing: %{missing}.'
           help: 'Fix your SOC6 repository setup so the latest maintenance updates can be installed.'
+        repos_too_soon:
+          error: 'These repositories are enabled when they should not: %{too_soon}.'
+          help: 'SOC7 repositories cannot be enabled at this stage. First the maintenance updates for SOC6 must be installed.'
         ceph_health_check:
           help:
             default: 'Make sure Ceph is healthy'
