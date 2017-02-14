@@ -1,0 +1,46 @@
+{
+  "normal": {
+    "fqdn": "ceph.crowbar.com",
+    "crowbar-revision": 3,
+    "domain": "crowbar.com",
+    "crowbar": {
+      "state_debug": {
+        "discovering": 1,
+        "discovered": 1
+      },
+      "display": {
+        "alias" : "ceph"
+      }
+    },
+    "pacemaker" : {
+      "config": {
+        "environment": "data"
+      }
+    },
+    "hostname": "ceph",
+    "state": "crowbar_upgrade"
+  },
+  "name": "ceph.crowbar.com",
+  "_rev": "2-169913f4e0b095822a7d66b2543d4641",
+  "override": {
+
+  },
+  "default": {
+    "roles": [
+      "cinder-controller"
+    ]
+  },
+  "json_class": "Chef::Node",
+  "automatic": {
+
+  },
+  "chef_environment": "_default",
+  "run_list": [
+    {
+      "name": "crowbar-ceph_crowbar_com",
+      "version": null,
+      "type": "role"
+    }
+  ],
+  "chef_type": "node"
+}
