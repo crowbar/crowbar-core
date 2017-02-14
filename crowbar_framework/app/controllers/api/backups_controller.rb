@@ -168,6 +168,6 @@ class Api::BackupsController < ApiController
   end
 
   def backup_upload_params
-    params.require(:backup).require(:payload).permit(:file)
+    params.require(:backup).permit(:file)
   end
 end
