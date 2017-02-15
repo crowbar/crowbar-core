@@ -147,6 +147,9 @@ describe Api::UpgradeController, type: :request do
       allow_any_instance_of(CrowbarService).to receive(
         :revert_nodes_from_crowbar_upgrade
       ).and_return(true)
+      allow_any_instance_of(ProvisionerService).to receive(
+        :enable_all_repositories
+      ).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :initialize_state
       ).and_return(true)
@@ -159,6 +162,9 @@ describe Api::UpgradeController, type: :request do
     end
 
     it "fails to cancel the upgrade" do
+      allow_any_instance_of(ProvisionerService).to receive(
+        :enable_all_repositories
+      ).and_return(true)
       allow_any_instance_of(CrowbarService).to receive(
         :revert_nodes_from_crowbar_upgrade
       ).and_raise("an Error")
