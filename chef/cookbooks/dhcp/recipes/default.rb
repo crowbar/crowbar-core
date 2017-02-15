@@ -75,7 +75,9 @@ when "debian"
       mode 0644
       source "dhcpd.conf.erb"
       variables(options: d_opts)
-      notifies :restart, "service[dhcp3-server]"
+      if node[:provisioner][:enable_pxe]
+        notifies :restart, "service[dhcp3-server]"
+      end
     end
     template "/etc/default/isc-dhcp-server" do
       owner "root"
@@ -83,7 +85,9 @@ when "debian"
       mode 0644
       source "dhcp3-server.erb"
       variables(interfaces: intfs)
-      notifies :restart, "service[dhcp3-server]"
+      if node[:provisioner][:enable_pxe]
+        notifies :restart, "service[dhcp3-server]"
+      end
     end
   else
     template "/etc/dhcp3/dhcpd.conf" do
@@ -92,7 +96,9 @@ when "debian"
       mode 0644
       source "dhcpd.conf.erb"
       variables(options: d_opts)
-      notifies :restart, "service[dhcp3-server]"
+      if node[:provisioner][:enable_pxe]
+        notifies :restart, "service[dhcp3-server]"
+      end
     end
     template "/etc/default/dhcp3-server" do
       owner "root"
@@ -100,7 +106,9 @@ when "debian"
       mode 0644
       source "dhcp3-server.erb"
       variables(interfaces: intfs)
-      notifies :restart, "service[dhcp3-server]"
+      if node[:provisioner][:enable_pxe]
+        notifies :restart, "service[dhcp3-server]"
+      end
     end
   end
 when "rhel"
@@ -118,7 +126,9 @@ when "rhel"
     mode 0644
     source "dhcpd.conf.erb"
     variables(options: d_opts)
-    notifies :restart, "service[dhcp3-server]"
+    if node[:provisioner][:enable_pxe]
+      notifies :restart, "service[dhcp3-server]"
+    end
   end
 
   template "/etc/sysconfig/dhcpd" do
@@ -127,7 +137,9 @@ when "rhel"
     mode 0644
     source "redhat-sysconfig-dhcpd.erb"
     variables(interfaces: intfs)
-    notifies :restart, "service[dhcp3-server]"
+    if node[:provisioner][:enable_pxe]
+      notifies :restart, "service[dhcp3-server]"
+    end
   end
 
 when "suse"
@@ -137,7 +149,9 @@ when "suse"
     mode 0644
     source "dhcpd.conf.erb"
     variables(options: d_opts)
-    notifies :restart, "service[dhcp3-server]"
+    if node[:provisioner][:enable_pxe]
+      notifies :restart, "service[dhcp3-server]"
+    end
   end
 
   template "/etc/sysconfig/dhcpd" do
@@ -146,7 +160,9 @@ when "suse"
     mode 0644
     source "suse-sysconfig-dhcpd.erb"
     variables(interfaces: intfs)
-    notifies :restart, "service[dhcp3-server]"
+    if node[:provisioner][:enable_pxe]
+      notifies :restart, "service[dhcp3-server]"
+    end
   end
 end
 

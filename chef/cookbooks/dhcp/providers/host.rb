@@ -29,12 +29,16 @@ action :add do
     owner "root"
     group "root"
     mode 0644
-    notifies :restart, resources(service: "dhcp3-server"), :delayed
+    if node[:provisioner][:enable_pxe]
+      notifies :restart, resources(service: "dhcp3-server"), :delayed
+    end
   end
   utils_line "include \"#{filename}\";" do
     action :add
     file "/etc/dhcp3/hosts.d/host_list.conf"
-    notifies :restart, resources(service: "dhcp3-server"), :delayed
+    if node[:provisioner][:enable_pxe]
+      notifies :restart, resources(service: "dhcp3-server"), :delayed
+    end
   end
 end
 
@@ -44,14 +48,18 @@ action :remove do
     Chef::Log.info "Removing #{new_resource.name} host from /etc/dhcp3/hosts.d/"
     file filename do
       action :delete
-      notifies :restart, resources(service: "dhcp3-server"), :delayed
+      if node[:provisioner][:enable_pxe]
+        notifies :restart, resources(service: "dhcp3-server"), :delayed
+      end
     end
     new_resource.updated_by_last_action(true)
   end
   utils_line "include \"#{filename}\";" do
     action :remove
     file "/etc/dhcp3/hosts.d/host_list.conf"
-    notifies :restart, resources(service: "dhcp3-server"), :delayed
+    if node[:provisioner][:enable_pxe]
+      notifies :restart, resources(service: "dhcp3-server"), :delayed
+    end
   end
 end
 
