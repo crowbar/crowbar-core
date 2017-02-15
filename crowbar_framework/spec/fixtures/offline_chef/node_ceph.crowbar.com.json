@@ -27,7 +27,7 @@
   },
   "default": {
     "roles": [
-      "cinder-controller"
+      "ceph-osd"
     ]
   },
   "json_class": "Chef::Node",
