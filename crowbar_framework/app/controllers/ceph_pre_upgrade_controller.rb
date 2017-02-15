@@ -15,8 +15,9 @@
 #
 class CephPreUpgradeController < ApplicationController
   def index
-    # FIXME: Check if Ceph is actually deployed!
-    @prepared = nodes_prepared
+    ceph_nodes = get_ceph_nodes
+    @prepared = nodes_prepared(ceph_nodes)
+    @no_ceph_nodes = ceph_nodes.empty?
   end
 
   def prepare
@@ -50,9 +51,13 @@ class CephPreUpgradeController < ApplicationController
 
   private
 
-  def nodes_prepared
+  def get_ceph_nodes
+    NodeObject.find("roles:ceph-* AND ceph_config_environment:*")
+  end
+
+  def nodes_prepared(nodes)
     ret = true
-    NodeObject.find("roles:ceph-* AND ceph_config_environment:*").each do |node|
+    nodes.each do |node|
       ret &&= node.state == "crowbar_upgrade"
     end
     ret
