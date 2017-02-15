@@ -248,6 +248,9 @@ describe Api::Upgrade do
 
   context "canceling the upgrade" do
     it "successfully cancels the upgrade" do
+      allow_any_instance_of(ProvisionerService).to receive(
+        :enable_all_repositories
+      ).and_return(true)
       allow_any_instance_of(CrowbarService).to receive(
         :revert_nodes_from_crowbar_upgrade
       ).and_return(true)
@@ -271,6 +274,9 @@ describe Api::Upgrade do
     end
 
     it "is allowed to cancel the upgrade" do
+      allow_any_instance_of(ProvisionerService).to receive(
+        :enable_all_repositories
+      ).and_return(true)
       allow_any_instance_of(CrowbarService).to receive(
         :revert_nodes_from_crowbar_upgrade
       ).and_return(true)
