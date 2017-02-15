@@ -271,9 +271,12 @@ jQuery(document).ready(function($) {
   });
 
   $('body.backups input[name="backup[file]"]').fileinput({
-    uploadUrl: Routes.upload_api_crowbar_backups_path({
-      format: 'json'
-    }),
+    ajaxSettings: {
+      headers: {
+        'Accept': 'application/vnd.crowbar.v2.0+json'
+      }
+    },
+    uploadUrl: Routes.upload_api_crowbar_backups_path(),
     uploadAsync: true,
     allowedFileExtensions: ['tar.gz'],
     dropZoneEnabled: false
