@@ -571,6 +571,9 @@ en:
       nodes_prepared: 'Ceph nodes are already prepared for the upgrade.'
       nodes_not_prepared: 'Ceph nodes are currently not prepared for the upgrade.'
       blockui_message: 'Processing, please wait...'
+      no_ceph_nodes: 'No Ceph nodes were found. Upgrade preparation is not needed.'
+    success_prepare: 'Ceph nodes were successfully prepared for SES upgrade.'
+    success_revert: 'Ceph nodes were successfully reverted to normal state.'
 
   installer:
     title: 'Installer'
