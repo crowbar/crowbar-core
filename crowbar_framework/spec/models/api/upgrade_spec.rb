@@ -715,7 +715,7 @@ describe Api::Upgrade do
   end
 
   context "determining the best upgrade method" do
-    it "chooses non-disruptive upgrade" do
+    it "chooses non-disruptive upgrade when all prechecks succeed" do
       allow(subject.class).to receive(:checks).and_return(
         prechecks.deep_symbolize_keys
       )
@@ -723,7 +723,7 @@ describe Api::Upgrade do
       expect(subject.class.checks.deep_symbolize_keys[:best_method]).to eq("non-disruptive")
     end
 
-    it "chooses disruptive upgrade" do
+    it "chooses disruptive upgrade when a non-required prechecks fails" do
       upgrade_prechecks = prechecks
       upgrade_prechecks["checks"]["compute_status"]["passed"] = false
       upgrade_prechecks["best_method"] = "disruptive"
@@ -732,7 +732,7 @@ describe Api::Upgrade do
       expect(subject.class.checks.deep_symbolize_keys[:best_method]).to eq("disruptive")
     end
 
-    it "chooses none" do
+    it "chooses none when a required precheck fails" do
       allow(Api::Upgrade).to receive(
         :maintenance_updates_status
       ).and_return(errors: ["Some Error"])
