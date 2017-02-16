@@ -15,7 +15,9 @@
 #
 
 class RepositoriesController < ApplicationController
+  skip_before_filter :upgrade
   before_filter :reload_registry
+
   api :GET, "/utils/repositories", "List all node repositories"
   header "Accept", "application/json", required: true
   example '
