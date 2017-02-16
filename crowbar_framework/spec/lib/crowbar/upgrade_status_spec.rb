@@ -300,9 +300,9 @@ describe Crowbar::UpgradeStatus do
       expect(subject.progress[:remaining_nodes]).to be nil
       expect(subject.progress[:upgraded_nodes]).to be nil
 
-      expect(subject.save_substep(:controllers, "running")).to be true
+      expect(subject.save_substep(:controllers, :running)).to be true
       expect(subject.current_substep).to eql :controllers
-      expect(subject.current_substep_status).to eql "running"
+      expect(subject.current_substep_status).to eql :running
       expect(subject.progress).to_not be_empty
       expect(subject.save_current_node(current_node)).to be true
       expect(subject.progress[:current_node][:name]).to be current_node[:name]

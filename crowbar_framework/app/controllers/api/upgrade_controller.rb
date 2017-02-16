@@ -152,11 +152,11 @@ class Api::UpgradeController < ApiController
         # When controller nodes have been upgraded previously,
         # whole 'nodes' step was not actually finished, just a substep.
         # It makes sense at this time to upgrade the rest with 'all'.
-        unless substep == "controllers" && status == "finished"
+        unless substep == :controller_nodes && status == :finished
           ::Crowbar::UpgradeStatus.new.start_step(:nodes)
         end
       else
-        if substep != "computes" && status != "finished"
+        if substep != :compute_nodes && status != :finished
           raise ::Crowbar::Error::UpgradeError.new(
             "Controller nodes must be upgraded first!"
           )
@@ -169,7 +169,7 @@ class Api::UpgradeController < ApiController
           )
         end
 
-        if substep == "computes" && status == "running"
+        if substep == :compute_nodes && status == :running
           n = upgrade_status.progress[:current_node]
           raise ::Crowbar::Error::UpgradeError.new(
             "Upgrade of node '#{n[:name]}' is already running. " \
@@ -178,7 +178,7 @@ class Api::UpgradeController < ApiController
         end
         # If the 'nodes' step did not fail, it is still running and user can continue
         # with upgrading single compute node.
-        if substep == "computes" && status == "failed"
+        if substep == :compute_nodes && status == :failed
           Rails.logger.info("Restarting the 'nodes' step after previous failure")
           ::Crowbar::UpgradeStatus.new.start_step(:nodes)
         end
