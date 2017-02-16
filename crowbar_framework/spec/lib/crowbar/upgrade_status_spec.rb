@@ -324,6 +324,14 @@ describe Crowbar::UpgradeStatus do
       expect(subject.progress[:openstack_backup]).to be openstack_backup
     end
 
+    it "saves and checks upgrade mode" do
+      expect(subject.current_substep).to be_nil
+      expect(subject.upgrade_mode).to be nil
+
+      expect(subject.save_upgrade_mode(:disruptive)).to be true
+      expect(subject.upgrade_mode).to be :disruptive
+    end
+
     it "fails while saving the status initially" do
       allow_any_instance_of(Pathname).to(
         receive(:open).and_raise("Failed to write File")

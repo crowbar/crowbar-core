@@ -59,7 +59,9 @@ module Crowbar
         upgraded_nodes: nil,
         # locations of the backups taken during the upgrade
         crowbar_backup: nil,
-        openstack_backup: nil
+        openstack_backup: nil,
+        # disruptive vs. nondisruptive
+        upgrade_mode: nil
       }
       # in 'steps', we save the information about each step that was executed
       @progress[:steps] = upgrade_steps_6_7.map do |step|
@@ -73,6 +75,10 @@ module Crowbar
       ::Crowbar::Lock::LocalBlocking.with_lock(shared: true, logger: @logger, path: lock_path) do
         @progress = YAML.load(progress_file_path.read)
       end
+    end
+
+    def upgrade_mode
+      progress[:upgrade_mode]
     end
 
     def current_substep
@@ -186,6 +192,13 @@ module Crowbar
     def save_openstack_backup(backup_location)
       ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
         progress[:openstack_backup] = backup_location
+        save
+      end
+    end
+
+    def save_upgrade_mode(mode)
+      ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
+        progress[:upgrade_mode] = mode
         save
       end
     end
