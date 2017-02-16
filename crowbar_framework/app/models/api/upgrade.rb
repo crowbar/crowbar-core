@@ -552,55 +552,55 @@ module Api
         end
 
         if substep.nil? || substep.empty?
-          substep = "controllers"
+          substep = :controller_nodes
         end
 
-        if substep == "controllers" && substep_status == "finished"
-          substep = "computes"
+        if substep == :controller_nodes && substep_status == :finished
+          substep = :compute_nodes
         end
 
         # decide what needs to be upgraded
         case component
         # Upgrade everything
         when "all"
-          if substep == "controllers"
-            ::Crowbar::UpgradeStatus.new.save_substep(substep, "running")
+          if substep == :controller_nodes
+            ::Crowbar::UpgradeStatus.new.save_substep(substep, :running)
             upgrade_controller_clusters
             prepare_all_compute_nodes
-            ::Crowbar::UpgradeStatus.new.save_substep(substep, "finished")
-            substep = "computes"
+            ::Crowbar::UpgradeStatus.new.save_substep(substep, :finished)
+            substep = :compute_nodes
           end
-          if substep == "computes"
-            ::Crowbar::UpgradeStatus.new.save_substep(substep, "running")
+          if substep == :compute_nodes
+            ::Crowbar::UpgradeStatus.new.save_substep(substep, :running)
             upgrade_all_compute_nodes
             finalize_nodes_upgrade
-            ::Crowbar::UpgradeStatus.new.save_substep(substep, "finished")
+            ::Crowbar::UpgradeStatus.new.save_substep(substep, :finished)
             ::Crowbar::UpgradeStatus.new.end_step
           end
         # Upgrade controller clusters only
         when "controllers"
-          if substep == "controllers"
-            ::Crowbar::UpgradeStatus.new.save_substep(substep, "running")
+          if substep == :controller_nodes
+            ::Crowbar::UpgradeStatus.new.save_substep(substep, :running)
             upgrade_controller_clusters
             prepare_all_compute_nodes
-            ::Crowbar::UpgradeStatus.new.save_substep(substep, "finished")
+            ::Crowbar::UpgradeStatus.new.save_substep(substep, :finished)
           end
         # Upgrade given compute node
         else
-          ::Crowbar::UpgradeStatus.new.save_substep(substep, "running")
+          ::Crowbar::UpgradeStatus.new.save_substep(substep, :running)
           upgrade_one_compute_node(component)
-          ::Crowbar::UpgradeStatus.new.save_substep(substep, "node finished")
+          ::Crowbar::UpgradeStatus.new.save_substep(substep, :node_finished)
 
           # if we're done with the last one, finalize
           progress = ::Crowbar::UpgradeStatus.new.progress
           if progress[:remaining_nodes].zero?
-            ::Crowbar::UpgradeStatus.new.save_substep(substep, "finished")
+            ::Crowbar::UpgradeStatus.new.save_substep(substep, :finished)
             finalize_nodes_upgrade
             ::Crowbar::UpgradeStatus.new.end_step
           end
         end
       rescue ::Crowbar::Error::Upgrade::NodeError => e
-        ::Crowbar::UpgradeStatus.new.save_substep(substep, "failed")
+        ::Crowbar::UpgradeStatus.new.save_substep(substep, :failed)
         ::Crowbar::UpgradeStatus.new.end_step(
           false,
           nodes: {
@@ -610,7 +610,7 @@ module Api
         )
       rescue StandardError => e
         # end the step even for non-upgrade error, so we are not stuck with 'running'
-        ::Crowbar::UpgradeStatus.new.save_substep(substep, "failed")
+        ::Crowbar::UpgradeStatus.new.save_substep(substep, :failed)
         ::Crowbar::UpgradeStatus.new.end_step(
           false,
           nodes: {
