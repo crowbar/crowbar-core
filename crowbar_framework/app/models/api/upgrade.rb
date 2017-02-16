@@ -107,6 +107,8 @@ module Api
             "disruptive"
           end
 
+          ::Crowbar::UpgradeStatus.new.save_upgrade_mode(ret[:best_method])
+
           return ret unless upgrade_status.current_step == :prechecks
 
           # transform from this:
@@ -128,9 +130,9 @@ module Api
                    reduce({}, :merge)
 
           if errors.any?
-            upgrade_status.end_step(false, errors)
+            ::Crowbar::UpgradeStatus.new.end_step(false, errors)
           else
-            upgrade_status.end_step
+            ::Crowbar::UpgradeStatus.new.end_step
           end
         end
       rescue ::Crowbar::Error::StartStepRunningError,
