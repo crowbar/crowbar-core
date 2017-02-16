@@ -816,6 +816,9 @@ en:
           not_configured: 'No Pacemaker cluster is configured.'
           help:
             default: 'Without HA setup, non-disruptive upgrade is not possible.'
+        swift_replicas:
+          error: 'The number of replicas is bigger than the number of disks assigned for Swift.'
+          help: 'Such configuration is not supported in Swift delivered with SOC 7. Adapt your Swift configuration before proceeding with the upgrade.'
         ceph_not_healthy:
           error: 'Ceph cluster health check has failed with %{error}. Make sure cluster is healthy before proceeding with the upgrade.'
           help: 'Refer to the SUSE Enterprise Storage documentation for possible troubleshooting.'
