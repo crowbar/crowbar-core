@@ -71,12 +71,6 @@ module Crowbar
       save
     end
 
-    def load!
-      ::Crowbar::Lock::LocalBlocking.with_lock(shared: true, logger: @logger, path: lock_path) do
-        @progress = YAML.load(progress_file_path.read)
-      end
-    end
-
     def upgrade_mode
       progress[:upgrade_mode]
     end
@@ -112,6 +106,7 @@ module Crowbar
           @logger.warn("The start of step #{step_name} is requested in the wrong order")
           raise Crowbar::Error::StartStepOrderError.new(step_name, next_step_to_execute)
         end
+        load_while_locked
         progress[:current_step] = step_name
         progress[:steps][step_name][:status] = :running
         progress[:steps][step_name][:errors] = {}
@@ -128,6 +123,7 @@ module Crowbar
           @logger.warn("The step is not running, could not be finished")
           raise Crowbar::Error::EndStepRunningError.new(current_step)
         end
+        load_while_locked
         progress[:steps][current_step] = {
           status: success ? :passed : :failed,
           errors: errors
@@ -184,6 +180,7 @@ module Crowbar
 
     def save_crowbar_backup(backup_location)
       ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
+        load_while_locked
         progress[:crowbar_backup] = backup_location
         save
       end
@@ -191,6 +188,7 @@ module Crowbar
 
     def save_openstack_backup(backup_location)
       ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
+        load_while_locked
         progress[:openstack_backup] = backup_location
         save
       end
@@ -198,6 +196,7 @@ module Crowbar
 
     def save_upgrade_mode(mode)
       ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
+        load_while_locked
         progress[:upgrade_mode] = mode
         save
       end
@@ -205,6 +204,7 @@ module Crowbar
 
     def save_current_node(node_data = {})
       ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
+        load_while_locked
         progress[:current_node] = node_data
         save
       end
@@ -212,6 +212,7 @@ module Crowbar
 
     def save_nodes(upgraded = 0, remaining = 0)
       ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
+        load_while_locked
         progress[:upgraded_nodes] = upgraded
         progress[:remaining_nodes] = remaining
         save
@@ -220,6 +221,7 @@ module Crowbar
 
     def save_substep(substep, status)
       ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
+        load_while_locked
         progress[:current_substep] = substep
         progress[:current_substep_status] = status
         save
@@ -227,6 +229,16 @@ module Crowbar
     end
 
     protected
+
+    def load_while_locked
+      @progress = YAML.load(progress_file_path.read)
+    end
+
+    def load!
+      ::Crowbar::Lock::LocalBlocking.with_lock(shared: true, logger: @logger, path: lock_path) do
+        load_while_locked
+      end
+    end
 
     def save
       progress_file_path.open("w") do |f|

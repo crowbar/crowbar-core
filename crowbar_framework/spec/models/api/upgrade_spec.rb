@@ -573,6 +573,7 @@ describe Api::Upgrade do
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
       allow(Api::Upgrade).to receive(:upgrade_controller_clusters).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:save_substep).and_return(true)
       allow(Api::Upgrade).to receive(:prepare_all_compute_nodes).and_return(true)
       allow(Node).to(
         receive(:find).with("roles:nova-compute-kvm").
