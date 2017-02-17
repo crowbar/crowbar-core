@@ -547,13 +547,15 @@ module Api
 
         # initialize progress info about nodes upgrade
         if remaining.nil?
-          remaining = ::Node.find(
-            "state:crowbar_upgrade AND NOT roles:ceph-*"
-          ).size
+          remaining = ::Node.find("state:crowbar_upgrade").size
           ::Crowbar::UpgradeStatus.new.save_nodes(0, remaining)
         end
 
         if substep.nil? || substep.empty?
+          substep = :ceph_nodes
+        end
+
+        if substep == :ceph_nodes && substep_status == :finished
           substep = :controller_nodes
         end
 
@@ -561,19 +563,24 @@ module Api
           substep = :compute_nodes
         end
 
+        ::Crowbar::UpgradeStatus.new.save_substep(substep, :running)
+
         # decide what needs to be upgraded
         case component
         # Upgrade everything
         when "all"
+          if substep == :ceph_nodes
+            join_ceph_nodes
+            ::Crowbar::UpgradeStatus.new.save_substep(substep, :finished)
+            substep = :controller_nodes
+          end
           if substep == :controller_nodes
-            ::Crowbar::UpgradeStatus.new.save_substep(substep, :running)
             upgrade_controller_clusters
             prepare_all_compute_nodes
             ::Crowbar::UpgradeStatus.new.save_substep(substep, :finished)
             substep = :compute_nodes
           end
           if substep == :compute_nodes
-            ::Crowbar::UpgradeStatus.new.save_substep(substep, :running)
             upgrade_all_compute_nodes
             finalize_nodes_upgrade
             ::Crowbar::UpgradeStatus.new.save_substep(substep, :finished)
@@ -581,15 +588,18 @@ module Api
           end
         # Upgrade controller clusters only
         when "controllers"
+          if substep == :ceph_nodes
+            join_ceph_nodes
+            ::Crowbar::UpgradeStatus.new.save_substep(substep, :finished)
+            substep = :controller_nodes
+          end
           if substep == :controller_nodes
-            ::Crowbar::UpgradeStatus.new.save_substep(substep, :running)
             upgrade_controller_clusters
             prepare_all_compute_nodes
             ::Crowbar::UpgradeStatus.new.save_substep(substep, :finished)
           end
         # Upgrade given compute node
         else
-          ::Crowbar::UpgradeStatus.new.save_substep(substep, :running)
           upgrade_one_compute_node(component)
           ::Crowbar::UpgradeStatus.new.save_substep(substep, :node_finished)
 
@@ -675,6 +685,8 @@ module Api
       def finalize_node_upgrade(node)
         return unless node.crowbar.key? "crowbar_upgrade_step"
 
+        save_upgrade_state("Finalizing upgade of node #{node.name}")
+
         node.crowbar.delete "crowbar_upgrade_step"
         node.crowbar.delete "node_upgrade_state"
         node.save
@@ -694,11 +706,25 @@ module Api
         node.run_ssh_cmd("rm -f #{scripts_to_delete}")
       end
 
+      # Ceph nodes were upgraded independently, we only need to make them ready again
+      def join_ceph_nodes
+        ceph_nodes = ::Node.find("roles:ceph-*")
+        ceph_nodes.sort! { |n| n.upgrading? ? -1 : 1 }
+
+        ceph_nodes.each do |node|
+          return true if node.upgraded?
+          save_upgrade_state("Joining ceph node #{node.name}")
+          node_api = Api::Node.new node.name
+          node_api.save_node_state("ceph", "upgrading")
+          node_api.join_and_chef
+          node_api.save_node_state("ceph", "upgraded")
+        end
+      end
+
       def finalize_nodes_upgrade
         ::Node.find_all_nodes.each do |node|
           finalize_node_upgrade node
         end
-        # FIXME: ceph nodes need to start chef-client/crowbar-join at some point!
       end
 
       #
