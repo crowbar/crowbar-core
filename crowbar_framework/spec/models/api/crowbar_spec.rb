@@ -155,6 +155,9 @@ describe Api::Crowbar do
         receive(:find).with("roles:ceph-* AND ceph_config_environment:*").
         and_return([Node.find_by_name("ceph.crowbar.com")])
       )
+      allow(Node).to(receive(:find).with(
+        "run_list_map:ceph-mon AND ceph_config_environment:*"
+      ).and_return([Node.find_node_by_name("ceph")]))
       allow_any_instance_of(Node).to(
         receive(:run_ssh_cmd).with("LANG=C ceph health --connect-timeout 5 2>&1").
         and_return(exit_code: 0, stdout: "HEALTH_OK\n", stderr: "")
@@ -172,6 +175,9 @@ describe Api::Crowbar do
         receive(:find).with("roles:ceph-* AND ceph_config_environment:*").
         and_return([Node.find_by_name("testing"), Node.find_by_name("ceph")])
       )
+      allow(Node).to(receive(:find).with(
+        "run_list_map:ceph-mon AND ceph_config_environment:*"
+      ).and_return([Node.find_node_by_name("ceph")]))
       allow_any_instance_of(Node).to(
         receive(:run_ssh_cmd).with("LANG=C ceph health --connect-timeout 5 2>&1").
         and_return(exit_code: 0, stdout: "HEALTH_OK\n", stderr: "")
@@ -189,6 +195,9 @@ describe Api::Crowbar do
         receive(:find).with("roles:ceph-* AND ceph_config_environment:*").
         and_return([Node.find_by_name("ceph.crowbar.com")])
       )
+      allow(Node).to(receive(:find).with(
+        "run_list_map:ceph-mon AND ceph_config_environment:*"
+      ).and_return([Node.find_node_by_name("ceph")]))
       allow_any_instance_of(Node).to(
         receive(:run_ssh_cmd).with("LANG=C ceph health --connect-timeout 5 2>&1").
         and_return(exit_code: 0, stdout: "HEALTH_OK\n", stderr: "")
@@ -208,6 +217,9 @@ describe Api::Crowbar do
         receive(:find).with("roles:ceph-* AND ceph_config_environment:*").
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
+      allow(Node).to(receive(:find).with(
+        "run_list_map:ceph-mon AND ceph_config_environment:*"
+      ).and_return([Node.find_node_by_name("ceph")]))
       allow_any_instance_of(Node).to(
         receive(:run_ssh_cmd).with("LANG=C ceph health --connect-timeout 5 2>&1").
         and_return(exit_code: 1, stdout: "HEALTH_ERR\n", stderr: "")
@@ -220,6 +232,9 @@ describe Api::Crowbar do
         receive(:find).with("roles:ceph-* AND ceph_config_environment:*").
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
+      allow(Node).to(receive(:find).with(
+        "run_list_map:ceph-mon AND ceph_config_environment:*"
+      ).and_return([Node.find_node_by_name("ceph")]))
       allow_any_instance_of(Node).to(
         receive(:run_ssh_cmd).with("LANG=C ceph health --connect-timeout 5 2>&1").
         and_return(exit_code: 0, stdout: "HEALTH_WARN", stderr: "")
@@ -232,6 +247,9 @@ describe Api::Crowbar do
         receive(:find).with("roles:ceph-* AND ceph_config_environment:*").
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
+      allow(Node).to(receive(:find).with(
+        "run_list_map:ceph-mon AND ceph_config_environment:*"
+      ).and_return([Node.find_node_by_name("ceph")]))
       allow_any_instance_of(Node).to(
         receive(:run_ssh_cmd).with("LANG=C ceph health --connect-timeout 5 2>&1").
         and_return(
