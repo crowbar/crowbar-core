@@ -27,10 +27,7 @@ fi
 
 
 log "Removing old repositories..."
-<% @old_repos.each do |name, _| %>
-zypper --non-interactive removerepo <%= name %>
-<% end %>
-zypper --non-interactive removerepo <%= @old_base_repo %>
+rm -f /etc/zypp/repos.d/*.repo
 
 log "Adding new repositories..."
 <% @new_repos.each do |name, attrs| %>

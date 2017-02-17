@@ -25,10 +25,6 @@
 arch = node[:kernel][:machine]
 roles = node["run_list_map"].keys
 
-old_repos = Provisioner::Repositories.get_repos(
-  node[:platform], node[:platform_version], arch
-)
-
 target_platform, target_platform_version = node[:target_platform].split("-")
 new_repos = Provisioner::Repositories.get_repos(
   target_platform, target_platform_version, arch
@@ -59,9 +55,7 @@ template "/usr/sbin/crowbar-prepare-repositories.sh" do
   group "root"
   action :create
   variables(
-    old_repos: old_repos,
     new_repos: new_repos,
-    old_base_repo: old_install_url,
     new_base_repo: new_install_url,
     new_alias: new_alias
   )
