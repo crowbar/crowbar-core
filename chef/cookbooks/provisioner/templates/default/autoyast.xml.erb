@@ -273,7 +273,7 @@ fi
 
 post_state() {
 mkdir -p /var/log/crowbar
-local curlargs=(-o "/mnt/var/log/crowbar/$1-$2.json" --connect-timeout 60 -s \
+local curlargs=(-o /dev/null --connect-timeout 60 -s \
   -L -X POST --data-binary "{ \"name\": \"$1\", \"state\": \"$2\" }" \
   -H "Accept: application/json" -H "Content-Type: application/json" \
   --max-time 240)
@@ -320,7 +320,7 @@ sync
       <script>
         <source>
 <![CDATA[
-/usr/sbin/crowbar_join --setup --debug --verbose
+/usr/sbin/crowbar_join --setup --verbose
 ]]>
         </source>
       </script>
