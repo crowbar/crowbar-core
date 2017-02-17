@@ -373,6 +373,16 @@ module Api
             help: I18n.t("api.upgrade.prechecks.roles_not_ha.help")
           }
         end
+        if check[:role_conflicts]
+          nodes = check[:role_conflicts].map do |node, roles|
+            "#{node}: " + roles.join(", ")
+          end
+          ret[:role_conflicts] = {
+            data: I18n.t("api.upgrade.prechecks.role_conflicts.error",
+              nodes: nodes.join("\n")),
+            help: I18n.t("api.upgrade.prechecks.role_conflicts.help")
+          }
+        end
         ret
       end
 

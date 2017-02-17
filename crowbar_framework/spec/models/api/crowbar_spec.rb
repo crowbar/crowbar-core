@@ -331,7 +331,7 @@ describe Api::Crowbar do
   end
 
   context "with HA deployed" do
-    it "succeeds to confirm that HA is deployed" do
+    it "succeeds to confirm that HA is deployed and correctly configured" do
       allow(Api::Crowbar).to(
         receive(:addon_installed?).
         and_return(true)
@@ -340,7 +340,31 @@ describe Api::Crowbar do
         receive(:find).with("pacemaker_founder:true AND pacemaker_config_environment:*").
         and_return([node])
       )
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))
+      allow_any_instance_of(NodeObject).to(
+        receive(:roles).and_return(["nova-compute-kvm", "cinder-volume", "swift-storage"])
+      )
+
       expect(subject.class.ha_config_check).to eq({})
+    end
+
+    it "fails when controller role is deployed to compute node" do
+      allow(Api::Crowbar).to(receive(:addon_installed?).and_return(true))
+      allow(NodeObject).to(receive(:find).with(
+        "pacemaker_founder:true AND pacemaker_config_environment:*"
+      ).and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))
+      allow_any_instance_of(NodeObject).to(
+        receive(:roles).and_return(
+          ["cinder-controller", "nova-compute-kvm", "neutron-server"]
+        )
+      )
+
+      expect(subject.class.ha_config_check).to eq(
+        role_conflicts: { "testing.crowbar.com" => ["cinder-controller", "neutron-server"] }
+      )
     end
   end
 
