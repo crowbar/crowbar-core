@@ -819,6 +819,9 @@ en:
         roles_not_ha:
           error: 'These roles are not deployed in a cluster: %{roles}.'
           help: 'For non-disruptive upgrade, controller roles must be deployed in HA cluser.'
+        role_conflicts:
+          error: 'These compute nodes have some roles that belong to controllers: %{nodes}.'
+          help: 'For non-disruptive upgrade, compute nodes cannot hold controller roles.'
         ceph_not_healthy:
           error: |
             Ceph cluster health check has failed with:

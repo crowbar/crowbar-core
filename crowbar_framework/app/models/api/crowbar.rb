@@ -187,7 +187,34 @@ module Api
           end
         end
         return { roles_not_ha: roles_not_ha } if roles_not_ha.any?
-        {}
+
+        # Make sure nova compute role is not mixed with a controller roles
+        conflicting_roles = [
+          "cinder-controller",
+          "glance-server",
+          "keystone-server",
+          "neutron-server",
+          "neutron-network",
+          "nova-controller",
+          "swift-proxy",
+          "swift-ring-compute",
+          "ceilometer-server",
+          "heat-server",
+          "horizon-server",
+          "manila-server",
+          "trove-server"
+        ]
+        ret = {}
+        ["kvm", "xen"].each do |virt|
+          NodeObject.find("roles:nova-compute-#{virt}").each do |node|
+            conflict = node.roles & conflicting_roles
+            unless conflict.empty?
+              ret[:role_conflicts] ||= {}
+              ret[:role_conflicts][node.name] = conflict
+            end
+          end
+        end
+        ret
       end
 
       protected
