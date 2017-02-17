@@ -32,6 +32,11 @@ end
 dns_list << node[:dns][:nameservers]
 dns_list.flatten!
 
+# do a dup as we'll modify the content
+search_domains = (node[:dns][:additional_search_domains] || []).dup
+search_domains.unshift(node[:dns][:domain])
+search_domains.uniq!
+
 unless node[:platform_family] == "windows"
   unless CrowbarHelper.in_sledgehammer?(node)
     package "dnsmasq"
@@ -68,6 +73,9 @@ unless node[:platform_family] == "windows"
     owner "root"
     group "root"
     mode 0644
-    variables(nameservers: dns_list, search: node[:dns][:domain])
+    variables(
+      nameservers: dns_list,
+      search_domains: search_domains
+    )
   end
 end
