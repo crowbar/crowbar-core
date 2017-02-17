@@ -207,6 +207,37 @@ module Api
         ret
       end
 
+      def mixed_roles_check
+        conflicting_roles = [
+          "cinder-controller",
+          "glance-server",
+          "keystone-server",
+          "neutron-server",
+          "neutron-network",
+          "nova-controller",
+          "swift-proxy",
+          "swift-ring-compute",
+          "ceilometer-server",
+          "heat-server",
+          "horizon-server",
+          "manila-server",
+          "trove-server",
+          # FIXME: use this as better check to make sure compute node is not part of cluster?
+          "pacemaker-cluster-member"
+        ]
+        ret = {}
+        ["kvm", "xen"].each do |virt|
+          NodeObject.find("roles:nova-compute-#{virt}").each do |node|
+            conflict = node.roles & conflicting_roles
+            unless conflict.empty?
+              ret[:role_conflicts] ||= {}
+              ret[:role_conflicts][node.name] = conflict
+            end
+          end
+        end
+        ret
+      end
+
       def compute_status
         ret = {}
         ["kvm", "xen"].each do |virt|
