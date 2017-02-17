@@ -60,6 +60,9 @@ unless node[:platform_family] == "windows"
     owner "root"
     group "root"
     mode 0644
-    variables(nameservers: dns_list_with_local, search: node[:dns][:domain])
+    variables(
+      nameservers: dns_list_with_local,
+      search_domains: dns_config["search_domains"] || []
+    )
   end
 end

@@ -175,7 +175,14 @@ class DnsService < ServiceObject
       addresses.concat(role.default_attributes["dns"]["nameservers"] || [])
       addresses = addresses.flatten.compact
 
-      config = { servers: addresses }
+      search_domains = role.default_attributes["dns"]["additional_search_domains"] || []
+      search_domains.unshift(role.default_attributes["dns"]["domain"])
+      search_domains.uniq!
+
+      config = {
+        servers: addresses,
+        search_domains: search_domains
+      }
     end
 
     instance = Crowbar::DataBagConfig.instance_from_role(old_role, role)
