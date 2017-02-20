@@ -61,4 +61,8 @@ do
 done
 
 <% end %>
+
+systemctl stop cron
+systemctl disable cron
+
 log "$BASH_SOURCE is finished."

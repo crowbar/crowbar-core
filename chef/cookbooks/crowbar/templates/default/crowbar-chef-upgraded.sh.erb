@@ -28,5 +28,8 @@ fi
 # Move node to ready state and execute chef-client for the first time
 crowbar_join --start
 
+systemctl start cron
+systemctl enable cron
+
 touch $UPGRADEDIR/crowbar-chef-upgraded-ok
 log "$BASH_SOURCE is finished."
