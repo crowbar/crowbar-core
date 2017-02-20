@@ -575,12 +575,14 @@ module Api
             substep = :controller_nodes
           end
           if substep == :controller_nodes
+            ::Crowbar::UpgradeStatus.new.save_substep(substep, :running)
             upgrade_controller_clusters
             prepare_all_compute_nodes
             ::Crowbar::UpgradeStatus.new.save_substep(substep, :finished)
             substep = :compute_nodes
           end
           if substep == :compute_nodes
+            ::Crowbar::UpgradeStatus.new.save_substep(substep, :running)
             upgrade_all_compute_nodes
             finalize_nodes_upgrade
             ::Crowbar::UpgradeStatus.new.save_substep(substep, :finished)
@@ -594,6 +596,7 @@ module Api
             substep = :controller_nodes
           end
           if substep == :controller_nodes
+            ::Crowbar::UpgradeStatus.new.save_substep(substep, :running)
             upgrade_controller_clusters
             prepare_all_compute_nodes
             ::Crowbar::UpgradeStatus.new.save_substep(substep, :finished)
