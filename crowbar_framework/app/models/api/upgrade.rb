@@ -70,6 +70,13 @@ module Api
             errors: compute.empty? ? {} : compute_status_errors(compute)
           }
 
+          openstack = Api::Crowbar.openstack_check
+          ret[:checks][:openstack_check] = {
+            required: true,
+            passed: openstack.empty?,
+            errors: openstack.empty? ? {} : openstack_check_errors(openstack)
+          }
+
           if Api::Crowbar.addons.include?("ceph")
             ceph_status = Api::Crowbar.ceph_status
             ret[:checks][:ceph_healthy] = {
@@ -359,6 +366,18 @@ module Api
             nodes: failed_actions.keys.join(",")
           )
         } if failed_actions
+        ret
+      end
+
+      def openstack_check_errors(check)
+        ret = {}
+        if check[:too_many_replicas]
+          ret[:too_many_replicas] = {
+            data: I18n.t("api.upgrade.prechecks.swift_replicas.error",
+              replicas: check[:too_many_replicas]),
+            help: I18n.t("api.upgrade.prechecks.swift_replicas.help")
+          }
+        end
         ret
       end
 
