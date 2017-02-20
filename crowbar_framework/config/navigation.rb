@@ -38,9 +38,9 @@ SimpleNavigation::Configuration.run do |navigation|
       level2.item :queue, t("nav.utils.queue"), deployment_queue_path
       level2.item :repositories, t("nav.utils.repositories"), repositories_path
       level2.item :backup, t("nav.utils.backup"), backups_path
+      level2.item :ceph_pre_upgrade, t("nav.utils.ceph_pre_upgrade"), ceph_pre_upgrade_path
       level2.item :backup, t("nav.utils.upgrade"), "/upgrade"
       level2.item :logs, t("nav.utils.logs"), utils_path
-      level2.item :ceph_pre_upgrade, t("nav.utils.ceph_pre_upgrade"), ceph_pre_upgrade_path
     end
   end
 end
