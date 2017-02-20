@@ -18,6 +18,13 @@ class CephPreUpgradeController < ApplicationController
     ceph_nodes = get_ceph_nodes
     @prepared = nodes_prepared(ceph_nodes)
     @no_ceph_nodes = ceph_nodes.empty?
+
+    respond_to do |format|
+      format.json do
+        render json: { prepared: @prepared, no_ceph_nodes: @no_ceph_nodes }
+      end
+      format.html
+    end
   end
 
   def prepare
@@ -41,12 +48,19 @@ class CephPreUpgradeController < ApplicationController
       status = :unprocessable_entity
     end
 
-    if status == :ok
-      flash[:notice] = success_msg
-    else
-      flash[:alert] = error_msg
+    respond_to do |format|
+      format.json do
+        render json: status
+      end
+      format.html do
+        if status == :ok
+          flash[:notice] = success_msg
+        else
+          flash[:alert] = error_msg
+        end
+        redirect_to ceph_pre_upgrade_url
+      end
     end
-    redirect_to ceph_pre_upgrade_url
   end
 
   private
