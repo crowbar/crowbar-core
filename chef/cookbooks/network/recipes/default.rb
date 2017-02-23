@@ -119,9 +119,6 @@ def kill_nic(nic)
   # Ignore loopback interfaces for now.
   return if nic.loopback?
 
-  Chef::Log.info("Interface #{nic.name} is no longer being used, deconfiguring it.")
-  nic.destroy
-
   nicfiles = []
   case node[:platform_family]
   when "rhel"
@@ -133,8 +130,17 @@ def kill_nic(nic)
     nicfiles.push("/etc/sysconfig/network/ifcfg-#{nic.name}",
                   "/etc/sysconfig/network/ifroute-#{nic.name}")
   end
+
+  # Ignore unmanaged interfaces
   nicfiles.each do |file|
-    ::File.delete(file) if ::File.exists?(file)
+    next unless ::File.exist?(file)
+    return nil if system("fgrep", "-q", "#unmanaged", file)
+  end
+  Chef::Log.info("Interface #{nic.name} is no longer being used, deconfiguring it.")
+  nic.destroy
+
+  nicfiles.each do |file|
+    ::File.delete(file) if ::File.exist?(file)
   end
 end
 
