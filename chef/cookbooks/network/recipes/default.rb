@@ -122,21 +122,19 @@ def kill_nic(nic)
   Chef::Log.info("Interface #{nic.name} is no longer being used, deconfiguring it.")
   nic.destroy
 
+  nicfiles = []
   case node[:platform_family]
   when "rhel"
     # Redhat and Centos have lots of small files definining interfaces.
     # Delete the ones we no longer care about here.
-    if ::File.exists?("/etc/sysconfig/network-scripts/ifcfg-#{nic.name}")
-      ::File.delete("/etc/sysconfig/network-scripts/ifcfg-#{nic.name}")
-    end
+    nicfiles.push("/etc/sysconfig/network-scripts/ifcfg-#{nic.name}")
   when "suse"
     # SuSE also has lots of small files, but in slightly different locations.
-    if ::File.exists?("/etc/sysconfig/network/ifcfg-#{nic.name}")
-      ::File.delete("/etc/sysconfig/network/ifcfg-#{nic.name}")
-    end
-    if ::File.exists?("/etc/sysconfig/network/ifroute-#{nic.name}")
-      ::File.delete("/etc/sysconfig/network/ifroute-#{nic.name}")
-    end
+    nicfiles.push("/etc/sysconfig/network/ifcfg-#{nic.name}",
+                  "/etc/sysconfig/network/ifroute-#{nic.name}")
+  end
+  nicfiles.each do |file|
+    ::File.delete(file) if ::File.exists?(file)
   end
 end
 
