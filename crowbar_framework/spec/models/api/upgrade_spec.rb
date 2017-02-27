@@ -136,6 +136,9 @@ describe Api::Upgrade do
         :health_check
       ).and_return({})
       allow(Api::Crowbar).to receive(
+        :ha_config_check
+      ).and_return({})
+      allow(Api::Crowbar).to receive(
         :compute_status
       ).and_return({})
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
@@ -938,6 +941,9 @@ describe Api::Upgrade do
       allow(Api::Crowbar).to(
         receive(:health_check).and_return({})
       )
+      allow(Api::Crowbar).to receive(
+        :ha_config_check
+      ).and_return({})
       allow(Api::Crowbar).to(
         receive(:compute_status).and_return({})
       )
@@ -961,6 +967,9 @@ describe Api::Upgrade do
       allow(Api::Crowbar).to(
         receive(:health_check).and_return({})
       )
+      allow(Api::Crowbar).to receive(
+        :ha_config_check
+      ).and_return({})
       allow(Api::Crowbar).to(
         receive(:compute_status).and_return({})
       )
@@ -975,6 +984,9 @@ describe Api::Upgrade do
       allow(Crowbar::Checks::Maintenance).to receive(
         :updates_status
       ).and_return(errors: ["Some Error"])
+      allow(Api::Crowbar).to receive(
+        :ha_config_check
+      ).and_return({})
       allow(Api::Pacemaker).to receive(
         :health_report
       ).and_return(crm_failures: "error", failed_actions: "error")

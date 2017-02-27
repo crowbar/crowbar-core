@@ -111,11 +111,13 @@ module Api
             }
           end
 
-          ha_presence = Api::Pacemaker.ha_presence_check
+          ha_config = Api::Pacemaker.ha_presence_check.merge(
+            Api::Crowbar.ha_config_check
+          )
           ret[:checks][:ha_configured] = {
             required: false,
-            passed: ha_presence.empty?,
-            errors: ha_presence.empty? ? {} : ha_presence_errors(ha_presence)
+            passed: ha_config.empty?,
+            errors: ha_config.empty? ? {} : ha_config_errors(ha_config)
           }
           if Api::Crowbar.addons.include?("ha")
             clusters_health = Api::Pacemaker.health_report
@@ -1472,13 +1474,21 @@ module Api
         ret
       end
 
-      def ha_presence_errors(check)
-        {
-          ha_configured: {
+      def ha_config_errors(check)
+        ret = {}
+        if check[:errors]
+          ret[:ha_configured] = {
             data: check[:errors],
             help: I18n.t("api.upgrade.prechecks.ha_configured.help.default")
           }
-        }
+        end
+        if check[:cinder_wrong_backend]
+          ret[:cinder_wrong_backend] = {
+            data: I18n.t("api.upgrade.prechecks.cinder_wrong_backend.error"),
+            help: I18n.t("api.upgrade.prechecks.cinder_wrong_backend.help")
+          }
+        end
+        ret
       end
 
       def clusters_health_report_errors(check)

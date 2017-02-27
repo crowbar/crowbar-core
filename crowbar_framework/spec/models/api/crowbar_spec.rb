@@ -2,6 +2,11 @@ require "spec_helper"
 
 describe Api::Crowbar do
   let(:pid) { rand(20000..30000) }
+  let(:admin_node) { NodeObject.find_node_by_name("admin") }
+  let(:cinder_proposal) do
+    Proposal.where(barclamp: "cinder", name: "default").create(barclamp: "cinder", name: "default")
+  end
+
   let!(:crowbar_upgrade_status) do
     JSON.parse(
       File.read(
@@ -262,6 +267,26 @@ describe Api::Crowbar do
       expect(subject.class.ceph_status).to eq(
         health_errors: "Error connecting to cluster: InterruptedOrTimeoutError"
       )
+    end
+  end
+
+  context "with HA deployed" do
+    it "succeeds to confirm that HA is deployed with correct cinder backend" do
+      cinder_proposal.raw_data["attributes"] = {
+        "cinder" => { "volumes" => [{ "backend_driver" => "rbd" }] }
+      }
+      allow(Proposal).to(receive(:where).and_return([cinder_proposal]))
+
+      expect(subject.class.ha_config_check).to eq({})
+    end
+
+    it "fails when finding out cinder is using raw backend" do
+      cinder_proposal.raw_data["attributes"] = {
+        "cinder" => { "volumes" => [{ "backend_driver" => "raw" }] }
+      }
+      allow(Proposal).to(receive(:where).and_return([cinder_proposal]))
+
+      expect(subject.class.ha_config_check).to eq(cinder_wrong_backend: true)
     end
   end
 

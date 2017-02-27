@@ -144,6 +144,18 @@ module Api
         ret
       end
 
+      # Check for a state of HA setup, which is a requirement for non-disruptive upgrade
+      def ha_config_check
+        prop = Proposal.where(barclamp: "cinder").first
+
+        backends = prop["attributes"]["cinder"]["volumes"].select do |volume|
+          backend_driver = volume["backend_driver"]
+          ["local", "raw"].include? backend_driver
+        end
+        return { cinder_wrong_backend: true } unless backends.empty?
+        {}
+      end
+
       protected
 
       def lib_path
