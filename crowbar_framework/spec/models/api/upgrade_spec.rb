@@ -55,7 +55,7 @@ describe Api::Upgrade do
         )
       )
       allow(Api::Crowbar).to(
-        receive(:ha_presence_check).and_return({})
+        receive(:ha_config_check).and_return({})
       )
 
       expect(subject.class).to respond_to(:status)
@@ -90,7 +90,7 @@ describe Api::Upgrade do
         :addons
       ).and_return(["ceph", "ha"])
       allow(Api::Crowbar).to(
-        receive(:ha_presence_check).and_return({})
+        receive(:ha_config_check).and_return({})
       )
       allow(Api::Crowbar).to(
         receive(:clusters_health_report).and_return({})
@@ -355,7 +355,7 @@ describe Api::Upgrade do
         :addons
       ).and_return(["ceph", "ha"])
       allow(Api::Crowbar).to(
-        receive(:ha_presence_check).and_return({})
+        receive(:ha_config_check).and_return({})
       )
       allow(Api::Crowbar).to(
         receive(:clusters_health_report).and_return({})
@@ -384,7 +384,7 @@ describe Api::Upgrade do
         :updates_status
       ).and_return({})
       allow(Api::Crowbar).to receive(
-        :ha_presence_check
+        :ha_config_check
       ).and_return(error: "ERROR")
       allow(Api::Crowbar).to(
         receive(:clusters_health_report).and_return({})

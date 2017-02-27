@@ -99,11 +99,11 @@ module Api
             }
           end
 
-          ha_presence = Api::Crowbar.ha_presence_check
+          ha_config = Api::Crowbar.ha_config_check
           ret[:checks][:ha_configured] = {
             required: false,
-            passed: ha_presence.empty?,
-            errors: ha_presence.empty? ? {} : ha_presence_errors(ha_presence)
+            passed: ha_config.empty?,
+            errors: ha_config.empty? ? {} : ha_config_errors(ha_config)
           }
 
           if Api::Crowbar.addons.include?("ha")
@@ -352,13 +352,21 @@ module Api
         ret
       end
 
-      def ha_presence_errors(check)
-        {
-          ha_configured: {
-            data: check[:errors],
+      def ha_config_errors(check)
+        ret = {}
+        if check[:ha_not_installed]
+          ret[:ha_not_installed] = {
+            data: I18n.t("api.upgrade.prechecks.ha_configured.not_installed"),
             help: I18n.t("api.upgrade.prechecks.ha_configured.help.default")
           }
-        }
+        end
+        if check[:ha_not_configured]
+          ret[:ha_not_configured] = {
+            data: I18n.t("api.upgrade.prechecks.ha_configured.not_configured"),
+            help: I18n.t("api.upgrade.prechecks.ha_configured.help.default")
+          }
+        end
+        ret
       end
 
       def clusters_health_report_errors(check)

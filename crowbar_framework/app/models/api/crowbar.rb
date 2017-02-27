@@ -220,15 +220,12 @@ module Api
         ret
       end
 
-      # Check for presence of HA setup, which is a requirement for non-disruptive upgrade
-      def ha_presence_check
-        unless addon_installed? "ha"
-          return { errors: [I18n.t("api.upgrade.prechecks.ha_configured.not_installed")] }
-        end
+      # Check for presence and state of HA setup, which is a requirement for non-disruptive upgrade
+      def ha_config_check
+        return { ha_not_installed: true } unless addon_installed? "ha"
         founders = NodeObject.find("pacemaker_founder:true AND pacemaker_config_environment:*")
-        founders.empty? ?
-          { errors: [I18n.t("api.upgrade.prechecks.ha_configured.not_configured")] }
-          : {}
+        return { ha_not_configured: true } if founders.empty?
+        {}
       end
 
       def maintenance_updates_check

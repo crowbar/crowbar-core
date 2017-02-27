@@ -316,7 +316,7 @@ describe Api::Crowbar do
         receive(:find).with("pacemaker_founder:true AND pacemaker_config_environment:*").
         and_return([node])
       )
-      expect(subject.class.ha_presence_check).to eq({})
+      expect(subject.class.ha_config_check).to eq({})
     end
   end
 
@@ -330,7 +330,7 @@ describe Api::Crowbar do
         receive(:find).with("pacemaker_founder:true AND pacemaker_config_environment:*").
         and_return([])
       )
-      expect(subject.class.ha_presence_check).to have_key(:errors)
+      expect(subject.class.ha_config_check).to have_key(:ha_not_configured)
     end
   end
 
@@ -341,7 +341,7 @@ describe Api::Crowbar do
         receive(:addon_installed?).
         and_return(false)
       )
-      expect(subject.class.ha_presence_check).to have_key(:errors)
+      expect(subject.class.ha_config_check).to have_key(:ha_not_installed)
     end
   end
 
