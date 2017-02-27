@@ -188,6 +188,20 @@ module Api
         return ret if prop.nil?
         driver = prop["attributes"]["identity"]["driver"] || "sql"
         ret[:keystone_hybrid_backend] if driver == "hybrid"
+
+        # check for lbaas version
+        prop = Proposal.where(barclamp: "neutron").first
+        return ret if prop.nil?
+        if prop["attributes"]["neutron"]["use_lbaas"] &&
+            !prop["attributes"]["neutron"]["use_lbaasv2"]
+
+          # So lbaas v1 is configured, let's find out if it is actually used
+          neutron = NodeObject.find("roles:neutron-server").first
+          out = neutron.run_ssh_cmd(
+            "source /root/.openrc; neutron lb-pool-list -f value -c id"
+          )
+          ret[:lbaas_v1] = true unless out[:stdout].nil? || out[:stdout].empty?
+        end
         ret
       end
 
