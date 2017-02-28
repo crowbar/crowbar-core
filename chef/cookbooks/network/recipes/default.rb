@@ -274,7 +274,7 @@ sorted_networks.each do |network|
     net_ifs << our_iface.name
   end
   if network.add_ovs_bridge
-    bridge = network.bridge_name || "br-#{name}"
+    bridge = network.bridge_name || "br-#{network.name}"
 
     # This flag is used later to enable wicked-nanny (on SUSE platforms)
     ovs_bridge_created = true
