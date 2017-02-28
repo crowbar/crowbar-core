@@ -1302,9 +1302,12 @@ class ServiceObject
     pre_cached_nodes = {}
 
     # Each batch is a list of nodes that can be done in parallel.
-    batches.each do |nodes|
+    batches.each_with_index do |nodes, index|
+      @logger.debug(
+        "Applying batch #{index + 1}/#{batches.count}: " \
+        "#{nodes.join(", ")}"
+      )
       next if nodes.empty?
-      @logger.debug "Applying batch: #{nodes.inspect}"
 
       non_admin_nodes = []
       admin_list = []
