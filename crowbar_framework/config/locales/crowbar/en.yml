@@ -945,3 +945,4 @@ en:
     poweron: 'Power On'
     pending: 'Pending'
     building: 'Building'
+    unready: 'In Progress'
