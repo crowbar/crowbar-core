@@ -61,6 +61,9 @@ discovery_dir = "#{tftproot}/discovery"
 pxecfg_subdir = "bios/pxelinux.cfg"
 uefi_subdir = "efi"
 
+dns_config = Barclamp::Config.load("core", "dns")
+dns_list = dns_config["servers"] || []
+
 node_search_with_cache("*:*").each do |mnode|
   next if mnode[:state].nil?
 
@@ -366,7 +369,8 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
           default_fs: mnode[:crowbar_wall][:default_fs] || "ext4",
           needs_openvswitch: (mnode[:network] && mnode[:network][:needs_openvswitch]) || false,
           use_uefi: !mnode[:uefi].nil?,
-          domain_name: node.fetch(:dns, {})[:domain] || node[:domain]
+          domain_name: node.fetch(:dns, {})[:domain] || node[:domain],
+          nameservers: dns_list
         )
       end
 
