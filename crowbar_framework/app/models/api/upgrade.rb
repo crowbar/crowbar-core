@@ -378,6 +378,12 @@ module Api
             help: I18n.t("api.upgrade.prechecks.swift_replicas.help")
           }
         end
+        if check[:keystone_hybrid_backend]
+          ret[:keystone_hybrid_backend] = {
+            data: I18n.t("api.upgrade.prechecks.keystone_hybrid_backend.error"),
+            help: I18n.t("api.upgrade.prechecks.keystone_hybrid_backend.help")
+          }
+        end
         ret
       end
 

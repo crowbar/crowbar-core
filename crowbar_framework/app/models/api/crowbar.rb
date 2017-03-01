@@ -183,6 +183,12 @@ module Api
           disks += n["swift"]["devs"].size
         end
         ret[:too_many_replicas] = replicas if replicas > disks
+
+        # keystone hybrid backend check
+        prop = Proposal.where(barclamp: "keystone").first
+        return ret if prop.nil?
+        driver = prop["attributes"]["identity"]["driver"] || "sql"
+        ret[:keystone_hybrid_backend] if driver == "hybrid"
         ret
       end
 
