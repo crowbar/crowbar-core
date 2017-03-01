@@ -175,15 +175,14 @@ module Api
         ret = {}
         # swift replicas check vs. number of disks
         prop = Proposal.where(barclamp: "swift").first
-        return ret if prop.nil?
-        replicas = prop["attributes"]["swift"]["replicas"] || 0
-
-        disks = 0
-        NodeObject.find("roles:swift-storage").each do |n|
-          disks += n["swift"]["devs"].size
+        unless prop.nil?
+          replicas = prop["attributes"]["swift"]["replicas"] || 0
+          disks = 0
+          NodeObject.find("roles:swift-storage").each do |n|
+            disks += n["swift"]["devs"].size
+          end
+          ret[:too_many_replicas] = replicas if replicas > disks
         end
-        ret[:too_many_replicas] = replicas if replicas > disks
-
         # keystone hybrid backend check
         prop = Proposal.where(barclamp: "keystone").first
         return ret if prop.nil?
