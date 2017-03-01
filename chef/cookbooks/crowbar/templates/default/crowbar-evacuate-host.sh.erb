@@ -47,7 +47,7 @@ fi
 
 # FIXME: here we need checks for potential errors during the evacuation
 
-while nova list --host "$host" --fields host 2>/dev/null | grep "$host"; do
+while nova list --all-tenants --host "$host" --fields host,status 2>/dev/null | grep -e ACTIVE -e MIGRATING | grep -q "$host"; do
     log "There is still some VM running at $host..."
     sleep 10
 done
