@@ -391,6 +391,8 @@ module Api
           return
         end
 
+        # FIXME: report an error if there is running instances and mode is disruptive
+
         # Initiate the services shutdown for all nodes
         errors = []
         upgrade_nodes = ::Node.find("state:crowbar_upgrade AND NOT roles:ceph-*")
@@ -548,6 +550,84 @@ module Api
         upgrade_status.initialize_state
       end
 
+      # Take the list of elements as argument (that could be both nodes and clusters)
+      def upgrade_nodes_disruptive(elements_to_upgrade)
+        elements_to_upgrade.each do |element|
+          # If role has a cluster assigned ugprade that cluster (reuse the non-disruptive code here)
+          if ServiceObject.is_cluster?(element)
+            cluster = ServiceObject.cluster_name element
+            cluster_env = "pacemaker-config-#{cluster}"
+            founder = ::Node.find(
+              "pacemaker_founder:true AND " \
+              "pacemaker_config_environment:#{cluster_env}"
+            ).first
+            upgrade_cluster founder, cluster_env
+          else
+            # if role has single node(s) assigned upgrade those nodes (optionally all at once)
+            # FIXME: could we do it in paralel?
+            upgrade_one_node element
+          end
+        end
+
+        # and handle those as part of the compute node upgrade
+      end
+
+      # Go through active proposals and return elements with assigned roles in the right order
+      def upgradable_elements_of_proposals(proposals)
+        to_upgrade = []
+
+        # First find out the nodes with compute role, for later checks
+        compute_nodes = {}
+        nova_prop = proposals["nova"] || nil
+        unless nova_prop.nil?
+          nova_prop["deployment"]["nova"]["elements"].each do |role, nodes|
+            # FIXME: enahnce the check for compute-ha setups
+            next unless role.start_with?("nova-compute")
+            nodes.each { |node| compute_nodes[node] = 1 }
+          end
+        end
+
+        # For each active proposal go through the roles in element order
+        proposals.each do |name, proposal|
+          elements = proposal["deployment"][name]["elements"]
+          proposal["deployment"][name]["element_order"].flatten.each do |el|
+            # skip nova compute nodes, they will be upgraded separately
+            next if el.start_with?("nova-compute") || elements[el].nil?
+            # skip some roles if they are assigned to compute nodes
+            if ["cinder-volume", "ceilometer-agent", "swift-storage"].include? el
+              # expanding elements so we catch the case of cinder-volume in cluster
+              ServiceObject.expand_nodes_for_all(elements[el]).flatten.each do |node|
+                next if compute_nodes[node]
+                to_upgrade |= [node]
+              end
+            else
+              to_upgrade |= elements[el]
+            end
+          end
+        end
+        to_upgrade
+      end
+
+      def upgrade_controllers_disruptive
+        save_upgrade_state("Entering disruptive upgrade of controller nodes")
+
+        # Go through all OpenStack barclamps ordered by run_order
+        proposals = {}
+        BarclampCatalog.barclamps.map do |name, attrs|
+          next if BarclampCatalog.category(name) != "OpenStack"
+          next if ["pacemaker", "openstack"].include? name
+          prop = Proposal.where(barclamp: name).first
+          next if prop.nil? || !prop.active?
+          proposals[name] = prop
+        end
+        proposals = proposals.sort_by { |key, _v| BarclampCatalog.run_order(key) }.to_h
+
+        elements_to_upgrade = upgradable_elements_of_proposals proposals
+        upgrade_nodes_disruptive elements_to_upgrade
+
+        save_upgrade_state("Successfully finished disruptive upgrade of controller nodes")
+      end
+
       #
       # nodes upgrade
       #
@@ -618,7 +698,7 @@ module Api
           end
         # Upgrade given compute node
         else
-          upgrade_one_compute_node(component)
+          upgrade_one_compute_node component
           ::Crowbar::UpgradeStatus.new.save_substep(substep, :node_finished)
 
           # if we're done with the last one, finalize
@@ -676,6 +756,8 @@ module Api
       # controller nodes upgrade
       #
       def upgrade_controller_clusters
+        return upgrade_controllers_disruptive if upgrade_mode == :normal
+
         network_node = ::Node.find(
           "pacemaker_founder:true AND " \
           "run_list_map:neutron-network AND NOT " \
