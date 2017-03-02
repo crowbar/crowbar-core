@@ -814,8 +814,8 @@ class Node < ChefObject
   end
 
   # ssh to the node and wait until the command exits
-  def run_ssh_cmd(cmd)
-    args = ["sudo", "-i", "-u", "root", "--", "timeout", "-k", "5s", "15s",
+  def run_ssh_cmd(cmd, timeout = "15s", kill_after = "5s")
+    args = ["sudo", "-i", "-u", "root", "--", "timeout", "-k", kill_after, timeout,
             "ssh", "-o", "ConnectTimeout=10",
             "root@#{@node.name}",
             %("#{cmd.gsub('"', '\\"')}")

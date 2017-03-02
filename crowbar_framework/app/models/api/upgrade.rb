@@ -381,7 +381,7 @@ module Api
         end
         cmd = "openstack server list --all-projects --long " \
           "--status active -f value -c Host"
-        out = controller.run_ssh_cmd("source /root/.openrc; #{cmd}")
+        out = controller.run_ssh_cmd("source /root/.openrc; #{cmd}", "60s")
         unless out[:exit_code].zero?
           raise_services_error(
             "Error happened when trying to list running instances.\n" \
@@ -1239,7 +1239,8 @@ module Api
         out = controller.run_ssh_cmd(
           "source /root/.openrc; " \
           "nova service-list --host #{hostname} --binary nova-compute " \
-          "| grep -q enabled"
+          "| grep -q enabled",
+          "60s"
         )
         unless out[:exit_code].zero?
           raise_node_upgrade_error(
