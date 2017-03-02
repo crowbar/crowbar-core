@@ -52,5 +52,11 @@ module Crowbar
         super("Exception during saving the status file: #{msg}")
       end
     end
+
+    class SaveUpgradeModeError < StandardError
+      def initialize(msg)
+        super("Error setting the upgrade mode: #{msg}")
+      end
+    end
   end
 end
