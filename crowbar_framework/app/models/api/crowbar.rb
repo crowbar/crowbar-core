@@ -187,7 +187,7 @@ module Api
         # keystone hybrid backend check
         prop = Proposal.where(barclamp: "keystone").first
         return ret if prop.nil?
-        driver = prop["attributes"]["identity"]["driver"] || "sql"
+        driver = prop["attributes"]["keystone"]["identity"]["driver"] || "sql"
         ret[:keystone_hybrid_backend] if driver == "hybrid"
         ret
       end
