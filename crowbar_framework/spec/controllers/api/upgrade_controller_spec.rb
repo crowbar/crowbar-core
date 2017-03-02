@@ -75,6 +75,11 @@ describe Api::UpgradeController, type: :request do
       allow_any_instance_of(CrowbarService).to receive(
         :prepare_nodes_for_os_upgrade
       ).and_return(true)
+      allow_any_instance_of(Node).to receive(:ssh_cmd).and_return(
+        stdout: "",
+        tderr: "",
+        exit_code: 0
+      )
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:start_step).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
