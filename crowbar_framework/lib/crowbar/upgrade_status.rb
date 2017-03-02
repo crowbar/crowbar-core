@@ -59,7 +59,7 @@ module Crowbar
         # locations of the backups taken during the upgrade
         crowbar_backup: nil,
         openstack_backup: nil,
-        # disruptive vs. nondisruptive
+        # normal vs. nondisruptive
         suggested_upgrade_mode: nil
       }
       # in 'steps', we save the information about each step that was executed
