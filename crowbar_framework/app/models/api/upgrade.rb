@@ -119,7 +119,7 @@ module Api
           else
             # otherwise choose the disruptive upgrade path (i.e. the required
             # checks succeeded and some of the non-required ones failed)
-            "disruptive"
+            "normal"
           end
 
           ::Crowbar::UpgradeStatus.new.save_suggested_upgrade_mode(ret[:best_method])

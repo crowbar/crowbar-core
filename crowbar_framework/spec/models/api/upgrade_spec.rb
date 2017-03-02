@@ -735,13 +735,13 @@ describe Api::Upgrade do
       expect(subject.class.checks.deep_symbolize_keys[:best_method]).to eq("non-disruptive")
     end
 
-    it "chooses disruptive upgrade when a non-required prechecks fails" do
+    it "chooses 'normal' upgrade when a non-required prechecks fails" do
       upgrade_prechecks = prechecks
       upgrade_prechecks["checks"]["compute_status"]["passed"] = false
-      upgrade_prechecks["best_method"] = "disruptive"
+      upgrade_prechecks["best_method"] = "normal"
       allow(subject.class).to receive(:checks).and_return(upgrade_prechecks)
 
-      expect(subject.class.checks.deep_symbolize_keys[:best_method]).to eq("disruptive")
+      expect(subject.class.checks.deep_symbolize_keys[:best_method]).to eq("normal")
     end
 
     it "chooses none when a required precheck fails" do
