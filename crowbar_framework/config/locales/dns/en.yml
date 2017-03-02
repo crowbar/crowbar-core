@@ -29,6 +29,8 @@ en:
 
         client_configuration: 'Client Configuration'
         nameservers: 'Additional Name Servers (for use in /etc/resolv.conf)'
+        additional_search_domains: 'Additional Search Domains (for use in /etc/resolv.conf)'
+        domain_list_hint: 'A comma-separated list of domains'
 
         records: 'Manual Records'
         record_name: 'Name'
