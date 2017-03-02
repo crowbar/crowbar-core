@@ -6,7 +6,7 @@
   "upgraded_nodes": null,
   "crowbar_backup": null,
   "openstack_backup": null,
-  "upgrade_mode": null,
+  "suggested_upgrade_mode": null,
   "steps":{
     "prechecks":{
       "status":"pending"
