@@ -61,7 +61,7 @@ module Crowbar
         crowbar_backup: nil,
         openstack_backup: nil,
         # disruptive vs. nondisruptive
-        upgrade_mode: nil
+        suggested_upgrade_mode: nil
       }
       # in 'steps', we save the information about each step that was executed
       @progress[:steps] = upgrade_steps_6_7.map do |step|
@@ -71,8 +71,8 @@ module Crowbar
       save
     end
 
-    def upgrade_mode
-      progress[:upgrade_mode]
+    def suggested_upgrade_mode
+      progress[:suggested_upgrade_mode]
     end
 
     def current_substep
@@ -194,10 +194,10 @@ module Crowbar
       end
     end
 
-    def save_upgrade_mode(mode)
+    def save_suggested_upgrade_mode(mode)
       ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
         load_while_locked
-        progress[:upgrade_mode] = mode
+        progress[:suggested_upgrade_mode] = mode
         save
       end
     end

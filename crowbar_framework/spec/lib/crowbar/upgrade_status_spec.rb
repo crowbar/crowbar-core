@@ -326,10 +326,10 @@ describe Crowbar::UpgradeStatus do
 
     it "saves and checks upgrade mode" do
       expect(subject.current_substep).to be_nil
-      expect(subject.upgrade_mode).to be nil
+      expect(subject.suggested_upgrade_mode).to be nil
 
-      expect(subject.save_upgrade_mode(:disruptive)).to be true
-      expect(subject.upgrade_mode).to be :disruptive
+      expect(subject.save_suggested_upgrade_mode(:disruptive)).to be true
+      expect(subject.suggested_upgrade_mode).to be :disruptive
     end
 
     it "fails while saving the status initially" do

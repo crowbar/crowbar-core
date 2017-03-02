@@ -122,7 +122,7 @@ module Api
             "disruptive"
           end
 
-          ::Crowbar::UpgradeStatus.new.save_upgrade_mode(ret[:best_method])
+          ::Crowbar::UpgradeStatus.new.save_suggested_upgrade_mode(ret[:best_method])
 
           return ret unless upgrade_status.current_step == :prechecks
 
