@@ -60,7 +60,8 @@ module Crowbar
         crowbar_backup: nil,
         openstack_backup: nil,
         # :normal vs. :non_disruptive
-        suggested_upgrade_mode: nil
+        suggested_upgrade_mode: nil,
+        selected_upgrade_mode: nil
       }
       # in 'steps', we save the information about each step that was executed
       @progress[:steps] = upgrade_steps_6_7.map do |step|
@@ -72,6 +73,20 @@ module Crowbar
 
     def suggested_upgrade_mode
       progress[:suggested_upgrade_mode]
+    end
+
+    def selected_upgrade_mode
+      progress[:selected_upgrade_mode]
+    end
+
+    # Return the currently active upgrade mode, depending on the
+    # setting of suggested/selected_upgrade_mode
+    def upgrade_mode
+      if progress[:selected_upgrade_mode]
+        progress[:selected_upgrade_mode]
+      else
+        progress[:suggested_upgrade_mode]
+      end
     end
 
     def current_substep
@@ -187,6 +202,23 @@ module Crowbar
       ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
         load_while_locked
         progress[:suggested_upgrade_mode] = mode
+        # reset the selected_upgrade_mode if it the current selection is impossible
+        # i.e. non_disruptive is selected, but only :normal is possible
+        progress[:selected_upgrade_mode] = nil if [:normal, :none].include? mode
+        save
+      end
+    end
+
+    def save_selected_upgrade_mode(mode)
+      ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
+        load_while_locked
+        if suggested_upgrade_mode == :normal && mode != :normal
+          raise ::Crowbar::Error::SaveUpgradeModeError,
+            "Upgrade mode '#{mode}' is not possible. " \
+            "Suggested upgrade mode '#{suggested_upgrade_mode}'."
+        else
+          progress[:selected_upgrade_mode] = mode
+        end
         save
       end
     end
