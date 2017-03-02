@@ -370,6 +370,32 @@ module Api
         end
       end
 
+      # Check if they are any instances running.
+      # It's necessary for disruptive upgrade, when user has to shut them down manually before
+      # proceeding with the services shutdown.
+      def check_for_running_instances
+        controller = ::Node.find("run_list_map:nova-controller").first
+        if controller.nil?
+          save_upgrade_state("No nova-controller node found.")
+          return
+        end
+        cmd = "openstack server list --all-projects --long " \
+          "--status active -f value -c Host"
+        out = controller.run_ssh_cmd("source /root/.openrc; #{cmd}")
+        unless out[:exit_code].zero?
+          raise_services_error(
+            "Error happened when trying to list running instances.\n" \
+            "Command '#{cmd}' failed at node #{controller.name} " \
+            "with #{out[:exit_code]}."
+          )
+        end
+        return if out[:stdout].nil? || out[:stdout].empty?
+        hosts = out[:stdout].split.uniq.join("\n")
+        raise_services_error(
+          "Following compute nodes still have instances running:\n#{hosts}."
+        )
+      end
+
       #
       # service shutdown
       #
@@ -391,7 +417,7 @@ module Api
           return
         end
 
-        # FIXME: report an error if there is running instances and mode is disruptive
+        check_for_running_instances if upgrade_mode == :normal
 
         # Initiate the services shutdown for all nodes
         errors = []
@@ -435,6 +461,14 @@ module Api
         else
           ::Crowbar::UpgradeStatus.new.end_step
         end
+      rescue ::Crowbar::Error::Upgrade::ServicesError => e
+        ::Crowbar::UpgradeStatus.new.end_step(
+          false,
+          running_instances: {
+            data: e.message,
+            help: "Suspend or stop all instances before you continue with the upgrade."
+          }
+        )
       rescue StandardError => e
         ::Crowbar::UpgradeStatus.new.end_step(
           false,
@@ -735,6 +769,11 @@ module Api
       def raise_node_upgrade_error(message = "")
         Rails.logger.error(message)
         raise ::Crowbar::Error::Upgrade::NodeError.new(message)
+      end
+
+      def raise_services_error(message = "")
+        Rails.logger.error(message)
+        raise ::Crowbar::Error::Upgrade::ServicesError.new(message)
       end
 
       protected

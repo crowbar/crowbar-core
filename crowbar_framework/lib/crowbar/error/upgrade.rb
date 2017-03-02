@@ -58,6 +58,12 @@ module Crowbar
           super(message)
         end
       end
+
+      class ServicesError < UpgradeError
+        def initialize(message)
+          super(message)
+        end
+      end
     end
   end
 end
