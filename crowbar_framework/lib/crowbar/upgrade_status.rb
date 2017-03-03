@@ -223,6 +223,11 @@ module Crowbar
     def save_selected_upgrade_mode(mode)
       ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
         load_while_locked
+        # It's ok to change the upgrade mode until starting the services step
+        unless pending? :services
+          raise ::Crowbar::Error::SaveUpgradeModeError,
+            "Changing the upgrade mode after starting the 'services' step is not possible."
+        end
         if suggested_upgrade_mode == :normal && mode != :normal
           raise ::Crowbar::Error::SaveUpgradeModeError,
             "Upgrade mode '#{mode}' is not possible. " \
