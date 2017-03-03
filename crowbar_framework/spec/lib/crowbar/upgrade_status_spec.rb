@@ -354,6 +354,29 @@ describe Crowbar::UpgradeStatus do
       expect(subject.upgrade_mode).to be :normal
     end
 
+    it "fails to change upgrade mode after starting the services step" do
+      allow(FileUtils).to receive(:touch).and_return(true)
+      expect(subject.start_step(:prechecks)).to be true
+      expect(subject.end_step).to be true
+      expect(subject.start_step(:prepare)).to be true
+      expect(subject.end_step).to be true
+      expect(subject.start_step(:backup_crowbar)).to be true
+      expect(subject.end_step).to be true
+      expect(subject.start_step(:repocheck_crowbar)).to be true
+      expect(subject.end_step).to be true
+      expect(subject.start_step(:admin)).to be true
+      expect(subject.end_step).to be true
+      expect(subject.start_step(:database)).to be true
+      expect(subject.end_step).to be true
+      expect(subject.start_step(:repocheck_nodes)).to be true
+      expect(subject.end_step).to be true
+      expect(subject.start_step(:services)).to be true
+
+      expect { subject.save_selected_upgrade_mode(:normal) }.to raise_error(
+        Crowbar::Error::SaveUpgradeModeError
+      )
+    end
+
     it "fails while saving the status initially" do
       allow_any_instance_of(Pathname).to(
         receive(:open).and_raise("Failed to write File")
