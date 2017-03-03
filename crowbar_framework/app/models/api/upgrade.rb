@@ -1110,12 +1110,12 @@ module Api
 
       def prepare_all_compute_nodes
         ["kvm", "xen"].each do |virt|
-          prepare_compute_nodes virt
+          prepare_compute_nodes virt, upgrade_mode
         end
       end
 
       # Prepare the compute nodes for upgrade by upgrading necessary packages
-      def prepare_compute_nodes(virt)
+      def prepare_compute_nodes(virt, upgrade_mode = :non_disruptive)
         save_upgrade_state("Preparing #{virt} compute nodes for upgrade... ")
         compute_nodes = ::Node.find("roles:nova-compute-#{virt}")
         if compute_nodes.empty?
@@ -1140,12 +1140,14 @@ module Api
             120
           )
           save_upgrade_state("Repositories prepared successfully.")
-          execute_scripts_and_wait_for_finish(
-            compute_nodes,
-            "/usr/sbin/crowbar-pre-upgrade.sh",
-            300
-          )
-          save_upgrade_state("Services on compute nodes upgraded and prepared.")
+          if upgrade_mode == :non_disruptive
+            execute_scripts_and_wait_for_finish(
+              compute_nodes,
+              "/usr/sbin/crowbar-pre-upgrade.sh",
+              300
+            )
+            save_upgrade_state("Services on compute nodes upgraded and prepared.")
+          end
         rescue StandardError => e
           raise_node_upgrade_error(
             "Error while preparing services on compute nodes. " + e.message
@@ -1159,6 +1161,39 @@ module Api
       def upgrade_all_compute_nodes
         ["kvm", "xen"].each do |virt|
           upgrade_compute_nodes virt
+        end
+      end
+
+      def parallel_upgrade_compute_nodes(compute_nodes)
+        save_upgrade_state("Entering disruptive upgrade of compute nodes")
+        save_nodes_state(compute_nodes, "compute", "upgrading")
+        ::Crowbar::UpgradeStatus.new.save_current_node_action("upgrading the packages")
+        begin
+          execute_scripts_and_wait_for_finish(
+            compute_nodes,
+            "/usr/sbin/crowbar-upgrade-os.sh",
+            900
+          )
+          save_upgrade_state("Repositories prepared successfully.")
+        rescue StandardError => e
+          raise_node_upgrade_error(
+            "Error while upgrading compute nodes. " + e.message
+          )
+        end
+        # FIXME: should we paralelize this as well?
+        compute_nodes.each do |node|
+          next if node.upgraded?
+          if node.ready_after_upgrade?
+            save_upgrade_state(
+              "Node #{node.name} is ready after the initial chef-client run."
+            )
+          else
+            node_api = Api::Node.new node.name
+            node_api.save_node_state("compute", "upgrading")
+            node_api.reboot_and_wait
+            node_api.join_and_chef
+          end
+          node_api.save_node_state("compute", "upgraded")
         end
       end
 
@@ -1178,6 +1213,8 @@ module Api
           )
           return
         end
+
+        return parallel_upgrade_compute_nodes(compute_nodes) if upgrade_mode == :normal
 
         controller = fetch_nova_controller
 
@@ -1203,7 +1240,7 @@ module Api
         controller
       end
 
-      def upgrade_one_compute_node(name)
+      def upgrade_one_compute_node(name, upgrade_mode = :non_disruptive)
         controller = fetch_nova_controller
         node = ::Node.find_node_by_name_or_alias(name)
         if node.nil?
@@ -1211,11 +1248,11 @@ module Api
             "No node with '#{name}' name or alias was found. "
           )
         end
-        upgrade_compute_node(controller, node)
+        upgrade_compute_node(controller, node, upgrade_mode)
       end
 
       # Fully upgrade one compute node
-      def upgrade_compute_node(controller, node)
+      def upgrade_compute_node(controller, node, upgrade_mode = :non_disruptive)
         return if node.upgraded?
         node_api = Api::Node.new node.name
         node_api.save_node_state("compute", "upgrading")
@@ -1226,11 +1263,16 @@ module Api
             "Node #{node.name} is ready after the initial chef-client run."
           )
         else
-          live_evacuate_compute_node(controller, hostname)
+          live_evacuate_compute_node(controller, hostname) if upgrade_mode == :non_disruptive
           node_api.os_upgrade
           node_api.reboot_and_wait
           node_api.post_upgrade
           node_api.join_and_chef
+        end
+
+        if upgrade_mode == :normal
+          node_api.save_node_state("compute", "upgraded")
+          return
         end
 
         controller.run_ssh_cmd(
@@ -1294,6 +1336,7 @@ module Api
       # Wait until all scripts at all nodes correctly finish or until some error is detected
       def execute_scripts_and_wait_for_finish(nodes, script, seconds)
         nodes.each do |node|
+          save_upgrade_state("Executing script '#{script}' at #{node.name}")
           ssh_status = node.ssh_cmd(script).first
           if ssh_status != 200
             raise "Execution of script #{script} has failed on node #{node.name}."
