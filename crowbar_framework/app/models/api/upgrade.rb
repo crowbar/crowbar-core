@@ -384,6 +384,12 @@ module Api
             help: I18n.t("api.upgrade.prechecks.keystone_hybrid_backend.help")
           }
         end
+        if check[:lbaas_v1]
+          ret[:lbaas_v1] = {
+            data: I18n.t("api.upgrade.prechecks.lbaas_v1.error"),
+            help: I18n.t("api.upgrade.prechecks.lbaas_v1.help")
+          }
+        end
         ret
       end
 

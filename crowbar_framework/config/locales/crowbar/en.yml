@@ -838,6 +838,12 @@ en:
         keystone_hybrid_backend:
           error: 'Keystone is configured with hybrid backend.'
           help: 'It is not possible to upgrade keystone with hybrid backend. Adapt your Keystone configuration before proceeding with the upgrade.'
+        lbaas_v1:
+          error: 'Old version of LBaaS is configured and active.'
+          help: |
+            Such a configuration is not supported for the upgrade. Please switch to LBaaS v2 before you continue.
+            Currently, no migration path exists between v1 and v2 load balancers.
+            When you switch from v1 to v2, you must recreate all load balancers, pools, and health monitors.
         ceph_not_healthy:
           error: 'Ceph cluster health check has failed with %{error}. Make sure cluster is healthy before proceeding with the upgrade.'
           help: 'Refer to the SUSE Enterprise Storage documentation for possible troubleshooting.'

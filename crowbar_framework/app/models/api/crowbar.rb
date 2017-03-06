@@ -175,20 +175,33 @@ module Api
         ret = {}
         # swift replicas check vs. number of disks
         prop = Proposal.where(barclamp: "swift").first
-        return ret if prop.nil?
-        replicas = prop["attributes"]["swift"]["replicas"] || 0
-
-        disks = 0
-        NodeObject.find("roles:swift-storage").each do |n|
-          disks += n["swift"]["devs"].size
+        unless prop.nil?
+          replicas = prop["attributes"]["swift"]["replicas"] || 0
+          disks = 0
+          NodeObject.find("roles:swift-storage").each do |n|
+            disks += n["swift"]["devs"].size
+          end
+          ret[:too_many_replicas] = replicas if replicas > disks
         end
-        ret[:too_many_replicas] = replicas if replicas > disks
-
         # keystone hybrid backend check
         prop = Proposal.where(barclamp: "keystone").first
         return ret if prop.nil?
         driver = prop["attributes"]["keystone"]["identity"]["driver"] || "sql"
         ret[:keystone_hybrid_backend] if driver == "hybrid"
+
+        # check for lbaas version
+        prop = Proposal.where(barclamp: "neutron").first
+        return ret if prop.nil?
+        if prop["attributes"]["neutron"]["use_lbaas"] &&
+            !prop["attributes"]["neutron"]["use_lbaasv2"]
+
+          # So lbaas v1 is configured, let's find out if it is actually used
+          neutron = NodeObject.find("roles:neutron-server").first
+          out = neutron.run_ssh_cmd(
+            "source /root/.openrc; neutron lb-pool-list -f value -c id"
+          )
+          ret[:lbaas_v1] = true unless out[:stdout].nil? || out[:stdout].empty?
+        end
         ret
       end
 
