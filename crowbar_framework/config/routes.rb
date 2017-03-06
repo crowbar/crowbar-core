@@ -214,6 +214,8 @@ Rails.application.routes.draw do
       controller: :upgrade,
       only: [:show] do
       post :prepare
+      get :mode
+      post :mode
       post :services
       get :prechecks
       post :cancel
