@@ -20,6 +20,7 @@
       }
     },
     "hostname": "testing",
+    "run_list_map": {},
     "state": "discovered",
     "nova": {
       "use_migration": true

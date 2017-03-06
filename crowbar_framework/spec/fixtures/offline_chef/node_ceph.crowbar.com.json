@@ -18,6 +18,7 @@
       }
     },
     "hostname": "ceph",
+    "run_list_map": {},
     "state": "crowbar_upgrade"
   },
   "name": "ceph.crowbar.com",
