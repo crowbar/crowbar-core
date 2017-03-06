@@ -16,6 +16,9 @@
 
 return if node[:platform_family] == "windows"
 
+include_recipe 'barclamp::default'
+
+
 # Make sure packages we need will be present
 node[:network][:base_pkgs].each do |pkg|
   p = package pkg do

@@ -9,7 +9,7 @@ class ::Nic
   @nicdir = nil
   @addresses = ::Array.new
   @dependents = nil
-  BASEDIRS=["/sys/class/net","/sys/devices/virtual/net"]
+  BASEDIRS=["/sys/class/net","/sys/devices/virtual/net"] unless defined? BASEDIRS
 
   # Helper method for reading values from sysfs for a nic.
   def sysfs(file)
@@ -508,7 +508,7 @@ class ::Nic
   # Base class for a bond.
   # We handle all bond manipulation via sysfs for maximum flexibility.
   class ::Nic::Bond < ::Nic
-    MASTER="/sys/class/net/bonding_masters"
+    MASTER="/sys/class/net/bonding_masters" unless defined? MASTER
 
     private
     def self.kill_bond(nic)
