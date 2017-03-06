@@ -295,7 +295,7 @@ describe Crowbar::UpgradeStatus do
 
     it "saves and checks current node data" do
       expect(subject.current_substep).to be_nil
-      expect(subject.progress[:current_node]).to be nil
+      expect(subject.progress[:current_nodes]).to be nil
       expect(subject.progress[:remaining_nodes]).to be nil
       expect(subject.progress[:upgraded_nodes]).to be nil
 
@@ -303,9 +303,15 @@ describe Crowbar::UpgradeStatus do
       expect(subject.current_substep).to eql :controllers
       expect(subject.current_substep_status).to eql "running"
       expect(subject.progress).to_not be_empty
-      expect(subject.save_current_node(current_node)).to be true
-      expect(subject.progress[:current_node][:name]).to be current_node[:name]
-      expect(subject.progress[:current_node][:alias]).to be current_node[:alias]
+      expect(subject.save_current_nodes([current_node])).to be true
+
+      expect(subject.progress[:current_nodes].size).to be 1
+      expect(subject.progress[:current_nodes][0][:name]).to be current_node[:name]
+      expect(subject.progress[:current_nodes][0][:alias]).to be current_node[:alias]
+
+      expect(subject.save_current_nodes([current_node, current_node])).to be true
+      expect(subject.progress[:current_nodes].size).to be 2
+
       expect(subject.save_nodes(1, 2)).to be true
       expect(subject.progress[:remaining_nodes]).to be 2
       expect(subject.progress[:upgraded_nodes]).to be 1
