@@ -1088,6 +1088,23 @@ module Api
         Rails.logger.info(message)
       end
 
+      # Save the state of multiple nodes, being upgraded in paralel
+      def save_nodes_state(nodes, role, state)
+        status = ::Crowbar::UpgradeStatus.new
+        current_nodes = nodes.map do |node|
+          node.crowbar["node_upgrade_state"] = state
+          node.save
+          {
+            name: node.name,
+            alias: node.alias,
+            ip: node.public_ip,
+            state: state,
+            role: role
+          }
+        end
+        status.save_current_nodes current_nodes
+      end
+
       # Take a list of nodes and execute given script at each node in the background
       # Wait until all scripts at all nodes correctly finish or until some error is detected
       def execute_scripts_and_wait_for_finish(nodes, script, seconds)

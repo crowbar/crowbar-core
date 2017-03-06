@@ -25,7 +25,7 @@ class Api::UpgradeController < ApiController
   {
     "current_step": "admin",
     "current_substep": null,
-    "current_node": null,
+    "current_nodes": null,
     "remaining_nodes": null,
     "upgraded_nodes": null,
     "steps": {
@@ -170,7 +170,7 @@ class Api::UpgradeController < ApiController
         end
 
         if substep == :compute_nodes && status == :running
-          n = upgrade_status.progress[:current_node]
+          n = upgrade_status.progress[:current_nodes].first
           raise ::Crowbar::Error::UpgradeError.new(
             "Upgrade of node '#{n[:name]}' is already running. " \
             "Wait until it is finished before proceeding with next one."
