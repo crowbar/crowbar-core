@@ -227,6 +227,27 @@ class Api::UpgradeController < ApiController
     }, status: :unprocessable_entity
   end
 
+  def mode
+    if request.post?
+      Api::Upgrade.upgrade_mode = params[:mode]
+      render json: {}, status: :ok
+    else
+      render json: {
+        mode: Api::Upgrade.upgrade_mode
+      }
+    end
+  rescue ::Crowbar::Error::SaveUpgradeModeError,
+         ::Crowbar::Error::SaveUpgradeStatusError,
+         ::Crowbar::Error::UpgradeError => e
+    render json: {
+      errors: {
+        mode: {
+          data: e.message
+        }
+      }
+    }, status: :unprocessable_entity
+  end
+
   protected
 
   def backup_params

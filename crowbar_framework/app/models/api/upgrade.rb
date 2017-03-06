@@ -30,6 +30,19 @@ module Api
         }
       end
 
+      def upgrade_mode
+        ::Crowbar::UpgradeStatus.new.upgrade_mode
+      end
+
+      def upgrade_mode=(mode)
+        unless ["normal", "non_disruptive"].include? mode
+          raise ::Crowbar::Error::SaveUpgradeModeError, "Invalid upgrade mode #{mode}." \
+            "Valid upgrade modes are: 'normal' and 'non_disruptive'."
+        end
+        Rails.logger.debug("Setting upgrade mode #{mode}")
+        ::Crowbar::UpgradeStatus.new.save_selected_upgrade_mode(mode.to_sym)
+      end
+
       #
       # prechecks
       #
