@@ -59,8 +59,9 @@ module Crowbar
         # locations of the backups taken during the upgrade
         crowbar_backup: nil,
         openstack_backup: nil,
-        # disruptive vs. nondisruptive
-        upgrade_mode: nil
+        # :normal vs. :non_disruptive
+        suggested_upgrade_mode: nil,
+        selected_upgrade_mode: nil
       }
       # in 'steps', we save the information about each step that was executed
       @progress[:steps] = upgrade_steps_6_7.map do |step|
@@ -70,8 +71,22 @@ module Crowbar
       save
     end
 
+    def suggested_upgrade_mode
+      progress[:suggested_upgrade_mode]
+    end
+
+    def selected_upgrade_mode
+      progress[:selected_upgrade_mode]
+    end
+
+    # Return the currently active upgrade mode, depending on the
+    # setting of suggested/selected_upgrade_mode
     def upgrade_mode
-      progress[:upgrade_mode]
+      if progress[:selected_upgrade_mode]
+        progress[:selected_upgrade_mode]
+      else
+        progress[:suggested_upgrade_mode]
+      end
     end
 
     def current_substep
@@ -183,10 +198,32 @@ module Crowbar
       end
     end
 
-    def save_upgrade_mode(mode)
+    def save_suggested_upgrade_mode(mode)
       ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
         load_while_locked
-        progress[:upgrade_mode] = mode
+        progress[:suggested_upgrade_mode] = mode
+        # reset the selected_upgrade_mode if it the current selection is impossible
+        # i.e. non_disruptive is selected, but only :normal is possible
+        progress[:selected_upgrade_mode] = nil if [:normal, :none].include? mode
+        save
+      end
+    end
+
+    def save_selected_upgrade_mode(mode)
+      ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
+        load_while_locked
+        # It's ok to change the upgrade mode until starting the services step
+        unless pending? :services
+          raise ::Crowbar::Error::SaveUpgradeModeError,
+            "Changing the upgrade mode after starting the 'services' step is not possible."
+        end
+        if suggested_upgrade_mode == :normal && mode != :normal
+          raise ::Crowbar::Error::SaveUpgradeModeError,
+            "Upgrade mode '#{mode}' is not possible. " \
+            "Suggested upgrade mode '#{suggested_upgrade_mode}'."
+        else
+          progress[:selected_upgrade_mode] = mode
+        end
         save
       end
     end

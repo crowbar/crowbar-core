@@ -324,10 +324,57 @@ describe Crowbar::UpgradeStatus do
 
     it "saves and checks upgrade mode" do
       expect(subject.current_substep).to be_nil
-      expect(subject.upgrade_mode).to be nil
+      expect(subject.suggested_upgrade_mode).to be nil
 
-      expect(subject.save_upgrade_mode(:disruptive)).to be true
-      expect(subject.upgrade_mode).to be :disruptive
+      expect(subject.save_suggested_upgrade_mode(:non_disruptive)).to be true
+      expect(subject.suggested_upgrade_mode).to be :non_disruptive
+      expect(subject.save_selected_upgrade_mode(:normal)).to be true
+      expect(subject.selected_upgrade_mode).to be :normal
+      expect(subject.upgrade_mode).to be :normal
+    end
+
+    it "fails to set upgrade mode to 'non-disruptive' when only 'normal' is possible" do
+      expect(subject.current_substep).to be_nil
+      expect(subject.suggested_upgrade_mode).to be nil
+      expect(subject.save_suggested_upgrade_mode(:normal)).to be true
+      expect(subject.suggested_upgrade_mode).to be :normal
+      expect { subject.save_selected_upgrade_mode(:non_disruptive) }.to raise_error(
+        Crowbar::Error::SaveUpgradeModeError
+      )
+    end
+
+    it "reset selected_upgrade_mode if suggest_upgrade_mode is downgraded to 'normal' or 'none'" do
+      expect(subject.current_substep).to be_nil
+      expect(subject.suggested_upgrade_mode).to be nil
+      expect(subject.save_selected_upgrade_mode(:non_disruptive)).to be true
+      expect(subject.selected_upgrade_mode).to be :non_disruptive
+      expect(subject.save_suggested_upgrade_mode(:normal)).to be true
+      expect(subject.suggested_upgrade_mode).to be :normal
+      expect(subject.selected_upgrade_mode).to be nil
+      expect(subject.upgrade_mode).to be :normal
+    end
+
+    it "fails to change upgrade mode after starting the services step" do
+      allow(FileUtils).to receive(:touch).and_return(true)
+      expect(subject.start_step(:prechecks)).to be true
+      expect(subject.end_step).to be true
+      expect(subject.start_step(:prepare)).to be true
+      expect(subject.end_step).to be true
+      expect(subject.start_step(:backup_crowbar)).to be true
+      expect(subject.end_step).to be true
+      expect(subject.start_step(:repocheck_crowbar)).to be true
+      expect(subject.end_step).to be true
+      expect(subject.start_step(:admin)).to be true
+      expect(subject.end_step).to be true
+      expect(subject.start_step(:database)).to be true
+      expect(subject.end_step).to be true
+      expect(subject.start_step(:repocheck_nodes)).to be true
+      expect(subject.end_step).to be true
+      expect(subject.start_step(:services)).to be true
+
+      expect { subject.save_selected_upgrade_mode(:normal) }.to raise_error(
+        Crowbar::Error::SaveUpgradeModeError
+      )
     end
 
     it "fails while saving the status initially" do

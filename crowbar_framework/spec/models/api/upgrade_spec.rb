@@ -347,20 +347,58 @@ describe Api::Upgrade do
 
   context "determining the best upgrade method" do
     it "chooses non-disruptive upgrade when all prechecks succeed" do
-      allow(subject.class).to receive(:checks).and_return(
-        prechecks.deep_symbolize_keys
+      allow(Crowbar::Sanity).to receive(:check).and_return([])
+      allow(Api::Crowbar).to receive(
+        :maintenance_updates_check
+      ).and_return({})
+      allow(Api::Crowbar).to receive(
+        :addons
+      ).and_return(["ceph", "ha"])
+      allow(Api::Crowbar).to(
+        receive(:ha_presence_check).and_return({})
       )
+      allow(Api::Crowbar).to(
+        receive(:clusters_health_report).and_return({})
+      )
+      allow(Api::Crowbar).to(
+        receive(:health_check).and_return({})
+      )
+      allow(Api::Crowbar).to(
+        receive(:compute_status).and_return({})
+      )
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:start_step).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
-      expect(subject.class.checks.deep_symbolize_keys[:best_method]).to eq("non-disruptive")
+      expect(subject.class.checks.deep_symbolize_keys[:best_method]).to be :non_disruptive
     end
 
-    it "chooses disruptive upgrade when a non-required prechecks fails" do
-      upgrade_prechecks = prechecks
-      upgrade_prechecks["checks"]["compute_status"]["passed"] = false
-      upgrade_prechecks["best_method"] = "disruptive"
-      allow(subject.class).to receive(:checks).and_return(upgrade_prechecks)
+    it "chooses 'normal' upgrade when a non-required prechecks fails" do
+      allow(Crowbar::Sanity).to receive(:check).and_return([])
+      allow(Api::Crowbar).to receive(
+        :maintenance_updates_check
+      ).and_return({})
+      allow(Api::Crowbar).to receive(
+        :addons
+      ).and_return(["ceph", "ha"])
+      allow(Crowbar::Checks::Maintenance).to receive(
+        :updates_status
+      ).and_return({})
+      allow(Api::Crowbar).to receive(
+        :ha_presence_check
+      ).and_return(error: "ERROR")
+      allow(Api::Crowbar).to(
+        receive(:clusters_health_report).and_return({})
+      )
+      allow(Api::Crowbar).to(
+        receive(:health_check).and_return({})
+      )
+      allow(Api::Crowbar).to(
+        receive(:compute_status).and_return({})
+      )
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:start_step).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
-      expect(subject.class.checks.deep_symbolize_keys[:best_method]).to eq("disruptive")
+      expect(subject.class.checks.deep_symbolize_keys[:best_method]).to be :normal
     end
 
     it "chooses none when a required precheck fails" do
@@ -374,8 +412,10 @@ describe Api::Upgrade do
         :maintenance_updates_status
       ).and_return(errors: ["Some Error"])
       allow(Api::Crowbar).to receive(:compute_status).and_return({})
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:start_step).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
-      expect(subject.class.checks[:best_method]).to eq("none")
+      expect(subject.class.checks[:best_method]).to be :none
     end
   end
 

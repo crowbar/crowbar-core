@@ -104,17 +104,17 @@ module Api
 
           ret[:best_method] = if ret[:checks].any? { |_id, c| c[:required] && !c[:passed] }
             # no upgrade if any of the required prechecks failed
-            "none"
+            :none
           elsif !ret[:checks].any? { |_id, c| !c[:required] && !c[:passed] }
             # allow non-disruptive when all prechecks succeeded
-            "non-disruptive"
+            :non_disruptive
           else
             # otherwise choose the disruptive upgrade path (i.e. the required
             # checks succeeded and some of the non-required ones failed)
-            "disruptive"
+            :normal
           end
 
-          ::Crowbar::UpgradeStatus.new.save_upgrade_mode(ret[:best_method])
+          ::Crowbar::UpgradeStatus.new.save_suggested_upgrade_mode(ret[:best_method])
 
           return ret unless upgrade_status.current_step == :prechecks
 
