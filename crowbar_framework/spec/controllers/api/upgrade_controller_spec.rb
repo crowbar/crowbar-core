@@ -294,5 +294,26 @@ describe Api::UpgradeController, type: :request do
       post "/api/upgrade/openstackbackup", {}, headers
       expect(response).to have_http_status(:ok)
     end
+
+    it "successfully sets the upgrade mode" do
+      allow(Api::Upgrade).to receive(:upgrade_mode=).and_return(true)
+      allow(Api::Upgrade).to receive(:upgrade_mode).and_return("normal")
+
+      post "/api/upgrade/mode", { mode: "normal" }, headers
+      expect(response).to have_http_status(:ok)
+
+      get "/api/upgrade/mode", {}, headers
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to eq('{"mode":"normal"}')
+    end
+
+    it "returns a error when setting the upgrade mode fails" do
+      allow(Api::Upgrade).to receive(:upgrade_mode=).and_raise(
+        Crowbar::Error::SaveUpgradeModeError.new("error")
+      )
+
+      post "/api/upgrade/mode", { mode: "normal" }, headers
+      expect(response).to have_http_status(:unprocessable_entity)
+    end
   end
 end

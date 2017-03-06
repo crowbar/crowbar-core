@@ -797,6 +797,14 @@ describe Api::Upgrade do
     end
   end
 
+  context "setting the upgrade mode" do
+    it "returns an error when an invalid upgrade mode is set" do
+      expect { subject.class.upgrade_mode = "invalid" }.to raise_error(
+        Crowbar::Error::SaveUpgradeModeError
+      )
+    end
+  end
+
   context "with preparing the upgrade" do
     it "succeeds to spawn the prepare in the background" do
       allow_any_instance_of(CrowbarService).to receive(
