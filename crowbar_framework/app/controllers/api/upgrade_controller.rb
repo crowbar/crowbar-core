@@ -511,6 +511,32 @@ class Api::UpgradeController < ApiController
     }, status: :unprocessable_entity
   end
 
+  api :GET, "/api/crowbar/mode", "Current upgrade mode"
+  header "Accept", "application/vnd.crowbar.v2.0+json", required: true
+  api :POST, "/api/upgrade/mode", "Switch upgrade mode"
+  api_version "2.0"
+  error 422, "Failed to save upgrade mode"
+  def mode
+    if request.post?
+      Api::Upgrade.upgrade_mode = params[:mode]
+      render json: {}, status: :ok
+    else
+      render json: {
+        mode: Api::Upgrade.upgrade_mode
+      }
+    end
+  rescue ::Crowbar::Error::SaveUpgradeModeError,
+         ::Crowbar::Error::SaveUpgradeStatusError,
+         ::Crowbar::Error::UpgradeError => e
+    render json: {
+      errors: {
+        mode: {
+          data: e.message
+        }
+      }
+    }, status: :unprocessable_entity
+  end
+
   protected
 
   api :POST, "/api/upgrade/new",
