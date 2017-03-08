@@ -584,6 +584,14 @@ module Api
         upgrade_status.initialize_state
       end
 
+      def upgrade_pacemaker_cluster(cluster_env)
+        founder = ::Node.find(
+          "pacemaker_founder:true AND " \
+          "pacemaker_config_environment:#{cluster_env}"
+        ).first
+        upgrade_cluster founder, cluster_env
+      end
+
       # Take the list of elements as argument (that could be both nodes and clusters)
       def upgrade_nodes_disruptive(elements_to_upgrade)
         elements_to_upgrade.each do |element|
@@ -591,15 +599,16 @@ module Api
           if ServiceObject.is_cluster?(element)
             cluster = ServiceObject.cluster_name element
             cluster_env = "pacemaker-config-#{cluster}"
-            founder = ::Node.find(
-              "pacemaker_founder:true AND " \
-              "pacemaker_config_environment:#{cluster_env}"
-            ).first
-            upgrade_cluster founder, cluster_env
+            upgrade_pacemaker_cluster cluster_env
           else
-            # if role has single node(s) assigned upgrade those nodes (optionally all at once)
-            # FIXME: could we do it in paralel?
-            upgrade_one_node element
+            node = ::Node.find_by_name(element)
+            if node["run_list_map"].key? "pacemaker-cluster-member"
+              # if the node is part of some cluster, upgrade the whole cluster
+              upgrade_pacemaker_cluster node[:pacemaker][:config][:environment]
+            else
+              # if role has single node(s) assigned upgrade those nodes (optionally all at once)
+              upgrade_one_node element
+            end
           end
         end
 
