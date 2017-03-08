@@ -1,0 +1,145 @@
+{
+  "id": "template-nova",
+  "description": "installs and configures the Openstack Nova component. It relies upon the network and glance barclamps for normal operation.",
+  "attributes": {
+    "nova": {
+      "database_instance": "none",
+      "rabbitmq_instance": "none",
+      "keystone_instance": "none",
+      "service_user": "nova",
+      "glance_instance": "none",
+      "cinder_instance": "none",
+      "neutron_instance": "none",
+      "itxt_instance": "none",
+      "trusted_flavors": false,
+      "libvirt_type": "kvm",
+      "use_novnc": true,
+      "debug": false,
+      "verbose": true,
+      "max_header_line": 16384,
+      "setup_shared_instance_storage": false,
+      "use_shared_instance_storage": false,
+      "use_migration": false,
+      "cross_az_attach": true,
+      "use_syslog": false,
+      "neutron_url_timeout": 30,
+      "force_config_drive": false,
+      "vnc_keymap": "en-us",
+      "scheduler": {
+        "ram_allocation_ratio": 1.0,
+        "cpu_allocation_ratio": 16.0,
+        "disk_allocation_ratio": 1.0
+      },
+      "db": {
+        "password": "",
+        "user": "nova",
+        "database": "nova"
+      },
+      "rbd": {
+        "user": "",
+        "secret_uuid": ""
+      },
+      "kvm": {
+        "ksm_enabled": false
+      },
+      "vcenter": {
+        "host": "",
+        "port": 443,
+        "user": "",
+        "password": "",
+        "clusters": [],
+        "datastore": "",
+        "interface": "vmnic0",
+        "ca_file": "",
+        "insecure": false
+      },
+      "zvm": {
+        "zvm_xcat_server": "",
+        "zvm_xcat_username": "",
+        "zvm_xcat_password": "",
+        "zvm_xcat_network": "admin",
+        "zvm_diskpool": "",
+        "zvm_diskpool_type": "",
+        "zvm_host": "",
+        "zvm_scsi_pool": "",
+        "zvm_user_profile": "",
+        "zvm_xcat_master": "",
+        "zvm_image_default_password": "rootpass",
+        "zvm_config_drive_inject_password": true,
+        "zvm_reachable_timeout": 600,
+        "zvm_user_default_password": "dfltpass",
+        "zvm_user_default_privilege": "g",
+        "zvm_xcat_ssh_key": ""
+      },
+      "ssl": {
+        "enabled": false,
+        "certfile": "/etc/nova/ssl/certs/signing_cert.pem",
+        "keyfile": "/etc/nova/ssl/private/signing_key.pem",
+        "generate_certs": false,
+        "insecure": false,
+        "cert_required": false,
+        "ca_certs": "/etc/nova/ssl/certs/ca.pem"
+      },
+      "novnc": {
+        "ssl": {
+          "enabled": false,
+          "certfile": "",
+          "keyfile": ""
+        }
+      },
+      "block_device": {
+        "allocate_retries": 60,
+        "allocate_retries_interval": 3
+      }
+    }
+  },
+  "deployment": {
+    "nova": {
+      "crowbar-revision": 0,
+      "crowbar-applied": false,
+      "schema-revision": 46,
+      "element_states": {
+        "nova-controller": [ "readying", "ready", "applying" ],
+        "nova-compute-docker": [ "readying", "ready", "applying" ],
+        "nova-compute-hyperv": [ "readying", "ready", "applying" ],
+        "nova-compute-kvm": [ "readying", "ready", "applying" ],
+        "nova-compute-qemu": [ "readying", "ready", "applying" ],
+        "nova-compute-vmware": [ "readying", "ready", "applying" ],
+        "nova-compute-xen": [ "readying", "ready", "applying" ],
+        "nova-compute-zvm": [ "readying", "ready", "applying" ],
+        "nova-ha-compute": [ "readying", "ready", "applying" ]
+      },
+      "elements": {},
+      "element_order": [
+        [ "nova-controller" ],
+        [
+          "nova-compute-docker",
+          "nova-compute-hyperv",
+          "nova-compute-kvm",
+          "nova-compute-qemu",
+          "nova-compute-vmware",
+          "nova-compute-xen",
+          "nova-compute-zvm"
+        ]
+      ],
+      "element_run_list_order": {
+        "nova-controller": 95,
+        "nova-compute-docker": 97,
+        "nova-compute-hyperv": 97,
+        "nova-compute-kvm": 97,
+        "nova-compute-qemu": 97,
+        "nova-compute-vmware": 97,
+        "nova-compute-xen": 97,
+        "nova-compute-zvm": 97,
+        "nova-ha-compute": 97
+      },
+      "config": {
+        "environment": "nova-config-base",
+        "mode": "full",
+        "transitions": false,
+        "transition_list": []
+      }
+    }
+  }
+}
+
