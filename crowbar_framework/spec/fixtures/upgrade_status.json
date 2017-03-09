@@ -1,7 +1,8 @@
 {
   "current_step": "prechecks",
   "current_substep":null,
-  "current_node":null,
+  "current_substep_status":null,
+  "current_nodes":null,
   "remaining_nodes": null,
   "upgraded_nodes": null,
   "crowbar_backup": null,
