@@ -148,12 +148,14 @@ module Api
 
     def save_node_state(role, state)
       status = ::Crowbar::UpgradeStatus.new
-      status.save_current_node(
-        name: @node.name,
-        alias: @node.alias,
-        ip: @node.public_ip,
-        state: state,
-        role: role
+      status.save_current_nodes(
+        [
+          name: @node.name,
+          alias: @node.alias,
+          ip: @node.public_ip,
+          state: state,
+          role: role
+        ]
       )
       if state == "upgraded"
         progress = status.progress
