@@ -98,7 +98,7 @@
     <keep_install_network config:type="boolean">true</keep_install_network>
     <dns>
       <dhcp_hostname config:type="boolean">true</dhcp_hostname>
-      <domain><%= node[:domain] %></domain>
+      <domain><%= @domain_name %></domain>
       <hostname><%= @node_hostname %></hostname>
       <resolv_conf_policy>auto</resolv_conf_policy>
       <write_hostname config:type="boolean">false</write_hostname>
@@ -118,7 +118,7 @@
         <type config:type="symbol">CT_DISK</type>
         <disklabel>gpt</disklabel>
         <partitions config:type="list">
-          <% if node["uefi"] %>
+          <% if @use_uefi %>
           <partition>
             <create config:type="boolean">true</create>
             <format config:type="boolean">true</format>
@@ -156,7 +156,7 @@
           <type config:type="symbol">CT_DISK</type>
           <initialize config:type="boolean">true</initialize>
           <partitions config:type="list">
-            <% if node["uefi"] %>
+            <% if @use_uefi %>
             <partition>
               <create config:type="boolean">true</create>
               <format config:type="boolean">true</format>

@@ -370,7 +370,9 @@ if not nodes.nil? and not nodes.empty?
                       crowbar_join: "#{os_url}/crowbar_join.sh",
                       default_fs: mnode[:crowbar_wall][:default_fs] || "ext4",
                       needs_openvswitch:
-                        (mnode[:network] && mnode[:network][:needs_openvswitch]) || false
+                        (mnode[:network] && mnode[:network][:needs_openvswitch]) || false,
+                      use_uefi: !mnode[:uefi].nil?,
+                      domain_name: node.fetch(:dns, {})[:domain] || node[:domain]
             )
           end
 
