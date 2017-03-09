@@ -347,12 +347,10 @@ else
   end
 end
 
-bash "copy validation pem" do
-  code <<-EOH
-  cp /etc/chef/validation.pem #{tftproot}
-  chmod 0444 #{tftproot}/validation.pem
-EOH
-  not_if "test -f #{tftproot}/validation.pem"
+file "#{tftproot}/validation.pem" do
+  content IO.read("/etc/chef/validation.pem")
+  mode "0644"
+  action :create
 end
 
 # By default, install the same OS that the admin node is running
