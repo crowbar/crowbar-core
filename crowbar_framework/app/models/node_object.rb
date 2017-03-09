@@ -1573,18 +1573,30 @@ class NodeObject < ChefObject
       unless hardware =~ /VirtualBox/i
         disk_lookups.unshift "by-id"
       end
-      result = disk_lookups.map do |type|
-        if meta["disks"][type] and not meta["disks"][type].empty?
-          "#{type}/#{meta["disks"][type].first}"
+      candidates = disk_lookups.map do |type|
+        disks_for_type = meta["disks"][type]
+        next if disks_for_type.nil? || disks_for_type.empty?
+        disk_for_type = disks_for_type.find do |b|
+          b =~ /^wwn-/ ||
+          b =~ /^scsi-[a-zA-Z]/ ||
+          b =~ /^scsi-[^1]/ ||
+          b =~ /^scsi-/ ||
+          b =~ /^ata-/ ||
+          b =~ /^cciss-/
+        end
+        disk_for_type ||= disks_for_type.first
+        unless disk_for_type.nil?
+          "#{type}/#{disk_for_type}"
         end
       end
+      candidates.compact!
 
       # virtio disk might have neither by-path nor by-id links, use the /dev/vdX
       # name in that case
-      if result.empty?
+      if candidates.empty?
         "/dev/#{device}"
       else
-        "/dev/disk/#{result.compact.first}"
+        "/dev/disk/#{candidates.first}"
       end
     else
       nil
