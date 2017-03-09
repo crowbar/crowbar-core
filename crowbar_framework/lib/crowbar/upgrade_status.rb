@@ -144,8 +144,12 @@ module Crowbar
         }
         progress[:steps][current_step][:errors] = errors unless errors.empty?
         if current_step == upgrade_steps_6_7.last && success
-          # Mark the end of the upgrade process
+          # Mark the end of the upgrade process and cleanup the progress
           FileUtils.rm_f running_file
+          progress[:current_substep] = :end_of_upgrade
+          progress[:current_substep_status] = :finished
+          progress[:current_nodes] = {}
+          progress[:current_node_action] = "finished"
         end
         next_step
         save
