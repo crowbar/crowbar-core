@@ -59,6 +59,12 @@ module Crowbar
         end
       end
 
+      class LiveMigrationError < UpgradeError
+        def initialize(message)
+          super(message)
+        end
+      end
+
       class ServicesError < UpgradeError
         def initialize(message)
           super(message)

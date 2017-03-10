@@ -22,7 +22,7 @@ host=$1
 
 if [ "$host" = "" ]; then
     log "No argument was given! Exiting..."
-    touch $UPGRADEDIR/crowbar-evacuate-host-failed
+    echo 1 > $UPGRADEDIR/crowbar-evacuate-host-failed
     exit 1
 fi
 
@@ -39,19 +39,33 @@ blockmigrate="--block-migrate"
 <% else %>
 blockmigrate=""
 <% end %>
+
+ORIGINAL_INSTANCES=$UPGRADEDIR/original_instances
+
+# List active instances on host before the live-migration starts
+openstack server list --all-projects --status active --host $host -f value -c ID > $ORIGINAL_INSTANCES
+
 if ! nova host-evacuate-live "$host" $blockmigrate; then
     log "Live migration of instances from host $host has failed!"
-    touch $UPGRADEDIR/crowbar-evacuate-host-failed
+    echo 2 > $UPGRADEDIR/crowbar-evacuate-host-failed
     exit 2
 fi
-
-# FIXME: here we need checks for potential errors during the evacuation
 
 while nova list --all-tenants --host "$host" --fields host,status 2>/dev/null | grep -e ACTIVE -e MIGRATING | grep -q "$host"; do
     log "There is still some VM running at $host..."
     sleep 10
 done
 
+# check the potential error state of instances that were running before
+failing=$(openstack server list --all-projects --status error --host $host -f value -c ID)
+
+for i in $failing; do
+    if grep $i $ORIGINAL_INSTANCES ; then
+        log "Error detected during live-migration at $host..."
+        echo 3 > $UPGRADEDIR/crowbar-evacuate-host-failed
+        exit 3
+    fi
+done
 
 touch $UPGRADEDIR/crowbar-evacuate-host-ok
 log "$BASH_SOURCE is finished."
