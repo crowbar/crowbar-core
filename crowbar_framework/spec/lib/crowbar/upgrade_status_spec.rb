@@ -29,6 +29,7 @@ describe Crowbar::UpgradeStatus do
     }
   end
 
+  let(:current_action) { "os-upgrade" }
   let(:crowbar_backup) { "/var/lib/crowbar.tgz" }
   let(:openstack_backup) { "/var/lib/openstack.tgz" }
 
@@ -296,6 +297,7 @@ describe Crowbar::UpgradeStatus do
     it "saves and checks current node data" do
       expect(subject.current_substep).to be_nil
       expect(subject.progress[:current_nodes]).to be nil
+      expect(subject.progress[:current_node_action]).to be nil
       expect(subject.progress[:remaining_nodes]).to be nil
       expect(subject.progress[:upgraded_nodes]).to be nil
 
@@ -315,6 +317,9 @@ describe Crowbar::UpgradeStatus do
       expect(subject.save_nodes(1, 2)).to be true
       expect(subject.progress[:remaining_nodes]).to be 2
       expect(subject.progress[:upgraded_nodes]).to be 1
+
+      expect(subject.save_current_node_action(current_action)).to be true
+      expect(subject.progress[:current_node_action]).to be current_action
     end
 
     it "saves and checks backup info" do

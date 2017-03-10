@@ -54,6 +54,7 @@ module Crowbar
         current_substep_status: nil,
         # current nodes value is relevant only for the nodes step
         current_nodes: nil,
+        current_node_action: nil,
         # number of nodes still to be upgraded
         remaining_nodes: nil,
         upgraded_nodes: nil,
@@ -237,6 +238,14 @@ module Crowbar
       ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
         load_while_locked
         progress[:current_nodes] = nodes
+        save
+      end
+    end
+
+    def save_current_node_action(action)
+      ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
+        load_while_locked
+        progress[:current_node_action] = action
         save
       end
     end

@@ -3,6 +3,7 @@
   "current_substep":null,
   "current_substep_status":null,
   "current_nodes":null,
+  "current_node_action": null,
   "remaining_nodes": null,
   "upgraded_nodes": null,
   "crowbar_backup": null,
