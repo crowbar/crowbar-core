@@ -125,7 +125,7 @@ module Crowbar
         load_while_locked
         progress[:current_step] = step_name
         progress[:steps][step_name][:status] = :running
-        progress[:steps][step_name][:errors] = {}
+        progress[:steps][step_name].delete :errors
         if step_name == :prepare
           FileUtils.touch running_file
         end
@@ -141,9 +141,9 @@ module Crowbar
         end
         load_while_locked
         progress[:steps][current_step] = {
-          status: success ? :passed : :failed,
-          errors: errors
+          status: success ? :passed : :failed
         }
+        progress[:steps][current_step][:errors] = errors unless errors.empty?
         if current_step == upgrade_steps_6_7.last && success
           # Mark the end of the upgrade process
           FileUtils.rm_f running_file
