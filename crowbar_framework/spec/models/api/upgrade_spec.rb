@@ -47,6 +47,18 @@ describe Api::Upgrade do
   let(:pacemaker) do
     Class.new
   end
+  let(:barclamp_catalog) do
+    {
+      "nova" => {},
+      "database" => {},
+      "deployer" => {},
+      "pacemaker" => {},
+      "cinder" => {}
+    }
+  end
+  let(:database_proposal) { Proposal.create(barclamp: "database", name: "default") }
+  let(:cinder_proposal) { Proposal.create(barclamp: "cinder", name: "default") }
+  let(:nova_proposal) { Proposal.create(barclamp: "nova", name: "default") }
 
   before(:each) do
     allow(Api::Node).to(
@@ -367,7 +379,170 @@ describe Api::Upgrade do
     end
   end
 
-  context "upgrading the nodes" do
+  context "while sorting elements for upgrade" do
+    before(:example) do
+      database_proposal.elements["database-server"] = ["data"]
+      cinder_proposal.elements["cinder-controller"] = ["services"]
+      cinder_proposal.elements["cinder-volume"] = ["services"]
+      nova_proposal.elements["nova-controller"] = ["services"]
+      nova_proposal.elements["nova-compute-kvm"] = ["compute"]
+    end
+
+    it "leaves node with nova-compute role" do
+      proposals = {
+        "database" => database_proposal,
+        "cinder" => cinder_proposal,
+        "nova" => nova_proposal
+      }
+
+      expect(subject.class.upgradable_elements_of_proposals(proposals)).to(
+        eq(["data", "services"])
+      )
+    end
+
+    it "takes node with cinder-volume when alone" do
+      cinder_proposal.elements["cinder-volume"] = ["storage"]
+      proposals = {
+        "database" => database_proposal,
+        "cinder" => cinder_proposal,
+        "nova" => nova_proposal
+      }
+
+      expect(subject.class.upgradable_elements_of_proposals(proposals)).to(
+        eq(["data", "services", "storage"])
+      )
+    end
+
+    it "leaves node with cinder-volume when on nova-compute" do
+      cinder_proposal.elements["cinder-volume"] = ["compute"]
+      proposals = {
+        "database" => database_proposal,
+        "cinder" => cinder_proposal,
+        "nova" => nova_proposal
+      }
+
+      expect(subject.class.upgradable_elements_of_proposals(proposals)).to(
+        eq(["data", "services"])
+      )
+    end
+
+    it "takes node with cinder-volume when alone and in cluster" do
+      cinder_proposal.elements["cinder-volume"] = ["cluster:compute"]
+      proposals = {
+        "database" => database_proposal,
+        "cinder" => cinder_proposal,
+        "nova" => nova_proposal
+      }
+      allow(ServiceObject).to receive(:expand_nodes_for_all).and_return(
+        [["storage"]]
+      )
+
+      expect(subject.class.upgradable_elements_of_proposals(proposals)).to(
+        eq(["data", "services", "storage"])
+      )
+    end
+
+    it "leaves node with cinder-volume when in cluster with nova-compute" do
+      cinder_proposal.elements["cinder-volume"] = ["cluster:compute"]
+      proposals = {
+        "database" => database_proposal,
+        "cinder" => cinder_proposal,
+        "nova" => nova_proposal
+      }
+      allow(ServiceObject).to receive(:expand_nodes_for_all).and_return(
+        [["compute"]]
+      )
+
+      expect(subject.class.upgradable_elements_of_proposals(proposals)).to(
+        eq(["data", "services"])
+      )
+    end
+
+  end
+
+  context "upgrading the nodes in normal mode" do
+    it "successfully upgrades controller nodes" do
+      node1 = Node.find_by_name("testing.crowbar.com")
+      allow(Node).to(
+        receive(:find).with("state:crowbar_upgrade").and_return([node1])
+      )
+      allow(Api::Upgrade).to receive(:join_ceph_nodes).and_return(true)
+
+      allow(Api::Upgrade).to receive(:upgrade_mode).and_return(:normal)
+
+      allow(BarclampCatalog).to receive(:barclamps).and_return(barclamp_catalog)
+      allow(BarclampCatalog).to receive(:category).and_return("OpenStack")
+      allow(BarclampCatalog).to receive(:category).with("deployer").and_return("Crowbar")
+
+      cinder_proposal.elements["cinder-controller"] = ["drbd"]
+
+      nova_proposal.elements["nova-controller"] = ["ceph"]
+      nova_proposal.elements["nova-compute-kvm"] = ["testing"]
+
+      allow(Proposal).to receive(:where).with(barclamp: "database").and_return([database_proposal])
+      allow(Proposal).to receive(:where).with(barclamp: "cinder").and_return([cinder_proposal])
+      allow(Proposal).to receive(:where).with(barclamp: "nova").and_return([nova_proposal])
+      allow_any_instance_of(Proposal).to(receive(:active?).and_return(true))
+
+      allow(BarclampCatalog).to receive(:run_order).with("database").and_return(1)
+      allow(BarclampCatalog).to receive(:run_order).with("cinder").and_return(2)
+      allow(BarclampCatalog).to receive(:run_order).with("nova").and_return(3)
+
+      allow(Api::Upgrade).to receive(:upgrade_one_node).and_return(true)
+
+      # rest of the upgrade, after controller nodes
+      allow(Api::Upgrade).to receive(:prepare_all_compute_nodes).and_return(true)
+      allow(Api::Upgrade).to receive(:upgrade_all_compute_nodes).and_return(true)
+      allow(Api::Upgrade).to receive(:finalize_nodes_upgrade).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:nodes).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
+
+      expect(subject.class.nodes_without_delay).to be true
+    end
+
+    it "successfully upgrades compute nodes" do
+      node1 = Node.find_by_name("testing.crowbar.com")
+      node2 = Node.find_by_name("ceph.crowbar.com")
+
+      allow(Node).to(
+        receive(:find).with("state:crowbar_upgrade").and_return([node1])
+      )
+      allow(Api::Upgrade).to receive(:join_ceph_nodes).and_return(true)
+      allow(Api::Upgrade).to receive(:upgrade_mode).and_return(:normal)
+      allow(Api::Upgrade).to receive(:upgrade_controllers_disruptive).and_return(true)
+      allow(Api::Upgrade).to receive(:prepare_all_compute_nodes).and_return(true)
+
+      allow(Node).to(
+        receive(:find).with("roles:nova-compute-kvm").and_return([node1, node2])
+      )
+      allow(Node).to(
+        receive(:find).with("roles:nova-compute-xen").and_return([])
+      )
+
+      # parallel_upgrade_compute_nodes:
+      allow(Api::Upgrade).to receive(:execute_scripts_and_wait_for_finish).with(
+        [node1, node2], "/usr/sbin/crowbar-upgrade-os.sh", 900
+      ).and_return(true)
+      allow_any_instance_of(Node).to receive(:upgraded?).and_return(false)
+      allow_any_instance_of(Node).to receive(:ready_after_upgrade?).and_return(false)
+      allow_any_instance_of(Api::Node).to receive(:save_node_state).and_return(true)
+      allow_any_instance_of(Api::Node).to receive(:reboot_and_wait).and_return(true)
+      allow_any_instance_of(Api::Node).to receive(:join_and_chef).and_return(true)
+
+      allow(Api::Upgrade).to receive(:finalize_nodes_upgrade).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
+        :start_step
+      ).with(:nodes).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
+
+      expect(subject.class.nodes_without_delay).to be true
+    end
+
+  end
+
+  context "upgrading the nodes in non-disruptive mode" do
     it "successfully upgrades nodes with DRBD backend" do
       drbd_master = Node.find_by_name("drbd.crowbar.com")
       drbd_slave = Node.find_by_name("drbd.crowbar.com")

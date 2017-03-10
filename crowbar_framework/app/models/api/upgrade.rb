@@ -370,6 +370,32 @@ module Api
         end
       end
 
+      # Check if they are any instances running.
+      # It's necessary for disruptive upgrade, when user has to shut them down manually before
+      # proceeding with the services shutdown.
+      def check_for_running_instances
+        controller = ::Node.find("run_list_map:nova-controller").first
+        if controller.nil?
+          save_upgrade_state("No nova-controller node found.")
+          return
+        end
+        cmd = "openstack server list --all-projects --long " \
+          "--status active -f value -c Host"
+        out = controller.run_ssh_cmd("source /root/.openrc; #{cmd}", "60s")
+        unless out[:exit_code].zero?
+          raise_services_error(
+            "Error happened when trying to list running instances.\n" \
+            "Command '#{cmd}' failed at node #{controller.name} " \
+            "with #{out[:exit_code]}."
+          )
+        end
+        return if out[:stdout].nil? || out[:stdout].empty?
+        hosts = out[:stdout].split.uniq.join("\n")
+        raise_services_error(
+          "Following compute nodes still have instances running:\n#{hosts}."
+        )
+      end
+
       #
       # service shutdown
       #
@@ -390,6 +416,8 @@ module Api
           )
           return
         end
+
+        check_for_running_instances if upgrade_mode == :normal
 
         # Initiate the services shutdown for all nodes
         errors = []
@@ -433,6 +461,14 @@ module Api
         else
           ::Crowbar::UpgradeStatus.new.end_step
         end
+      rescue ::Crowbar::Error::Upgrade::ServicesError => e
+        ::Crowbar::UpgradeStatus.new.end_step(
+          false,
+          running_instances: {
+            data: e.message,
+            help: "Suspend or stop all instances before you continue with the upgrade."
+          }
+        )
       rescue StandardError => e
         ::Crowbar::UpgradeStatus.new.end_step(
           false,
@@ -548,6 +584,93 @@ module Api
         upgrade_status.initialize_state
       end
 
+      def upgrade_pacemaker_cluster(cluster_env)
+        founder = ::Node.find(
+          "pacemaker_founder:true AND " \
+          "pacemaker_config_environment:#{cluster_env}"
+        ).first
+        upgrade_cluster founder, cluster_env
+      end
+
+      # Take the list of elements as argument (that could be both nodes and clusters)
+      def upgrade_nodes_disruptive(elements_to_upgrade)
+        elements_to_upgrade.each do |element|
+          # If role has a cluster assigned ugprade that cluster (reuse the non-disruptive code here)
+          if ServiceObject.is_cluster?(element)
+            cluster = ServiceObject.cluster_name element
+            cluster_env = "pacemaker-config-#{cluster}"
+            upgrade_pacemaker_cluster cluster_env
+          else
+            node = ::Node.find_by_name(element)
+            if node["run_list_map"].key? "pacemaker-cluster-member"
+              # if the node is part of some cluster, upgrade the whole cluster
+              upgrade_pacemaker_cluster node[:pacemaker][:config][:environment]
+            else
+              # if role has single node(s) assigned upgrade those nodes (optionally all at once)
+              upgrade_one_node element
+            end
+          end
+        end
+
+        # and handle those as part of the compute node upgrade
+      end
+
+      # Go through active proposals and return elements with assigned roles in the right order
+      def upgradable_elements_of_proposals(proposals)
+        to_upgrade = []
+
+        # First find out the nodes with compute role, for later checks
+        compute_nodes = {}
+        nova_prop = proposals["nova"] || nil
+        unless nova_prop.nil?
+          nova_prop["deployment"]["nova"]["elements"].each do |role, nodes|
+            # FIXME: enahnce the check for compute-ha setups
+            next unless role.start_with?("nova-compute")
+            nodes.each { |node| compute_nodes[node] = 1 }
+          end
+        end
+
+        # For each active proposal go through the roles in element order
+        proposals.each do |name, proposal|
+          elements = proposal["deployment"][name]["elements"]
+          proposal["deployment"][name]["element_order"].flatten.each do |el|
+            # skip nova compute nodes, they will be upgraded separately
+            next if el.start_with?("nova-compute") || elements[el].nil?
+            # skip some roles if they are assigned to compute nodes
+            if ["cinder-volume", "ceilometer-agent", "swift-storage"].include? el
+              # expanding elements so we catch the case of cinder-volume in cluster
+              ServiceObject.expand_nodes_for_all(elements[el]).flatten.each do |node|
+                next if compute_nodes[node]
+                to_upgrade |= [node]
+              end
+            else
+              to_upgrade |= elements[el]
+            end
+          end
+        end
+        to_upgrade
+      end
+
+      def upgrade_controllers_disruptive
+        save_upgrade_state("Entering disruptive upgrade of controller nodes")
+
+        # Go through all OpenStack barclamps ordered by run_order
+        proposals = {}
+        BarclampCatalog.barclamps.map do |name, attrs|
+          next if BarclampCatalog.category(name) != "OpenStack"
+          next if ["pacemaker", "openstack"].include? name
+          prop = Proposal.where(barclamp: name).first
+          next if prop.nil? || !prop.active?
+          proposals[name] = prop
+        end
+        proposals = proposals.sort_by { |key, _v| BarclampCatalog.run_order(key) }.to_h
+
+        elements_to_upgrade = upgradable_elements_of_proposals proposals
+        upgrade_nodes_disruptive elements_to_upgrade
+
+        save_upgrade_state("Successfully finished disruptive upgrade of controller nodes")
+      end
+
       #
       # nodes upgrade
       #
@@ -618,7 +741,7 @@ module Api
           end
         # Upgrade given compute node
         else
-          upgrade_one_compute_node(component)
+          upgrade_one_compute_node component
           ::Crowbar::UpgradeStatus.new.save_substep(substep, :node_finished)
 
           # if we're done with the last one, finalize
@@ -657,6 +780,11 @@ module Api
         raise ::Crowbar::Error::Upgrade::NodeError.new(message)
       end
 
+      def raise_services_error(message = "")
+        Rails.logger.error(message)
+        raise ::Crowbar::Error::Upgrade::ServicesError.new(message)
+      end
+
       protected
 
       # If there's separate network cluster, we have touch it before we start upgrade of other
@@ -676,6 +804,8 @@ module Api
       # controller nodes upgrade
       #
       def upgrade_controller_clusters
+        return upgrade_controllers_disruptive if upgrade_mode == :normal
+
         network_node = ::Node.find(
           "pacemaker_founder:true AND " \
           "run_list_map:neutron-network AND NOT " \
@@ -989,12 +1119,12 @@ module Api
 
       def prepare_all_compute_nodes
         ["kvm", "xen"].each do |virt|
-          prepare_compute_nodes virt
+          prepare_compute_nodes virt, upgrade_mode
         end
       end
 
       # Prepare the compute nodes for upgrade by upgrading necessary packages
-      def prepare_compute_nodes(virt)
+      def prepare_compute_nodes(virt, upgrade_mode = :non_disruptive)
         save_upgrade_state("Preparing #{virt} compute nodes for upgrade... ")
         compute_nodes = ::Node.find("roles:nova-compute-#{virt}")
         if compute_nodes.empty?
@@ -1019,12 +1149,14 @@ module Api
             120
           )
           save_upgrade_state("Repositories prepared successfully.")
-          execute_scripts_and_wait_for_finish(
-            compute_nodes,
-            "/usr/sbin/crowbar-pre-upgrade.sh",
-            300
-          )
-          save_upgrade_state("Services on compute nodes upgraded and prepared.")
+          if upgrade_mode == :non_disruptive
+            execute_scripts_and_wait_for_finish(
+              compute_nodes,
+              "/usr/sbin/crowbar-pre-upgrade.sh",
+              300
+            )
+            save_upgrade_state("Services on compute nodes upgraded and prepared.")
+          end
         rescue StandardError => e
           raise_node_upgrade_error(
             "Error while preparing services on compute nodes. " + e.message
@@ -1038,6 +1170,39 @@ module Api
       def upgrade_all_compute_nodes
         ["kvm", "xen"].each do |virt|
           upgrade_compute_nodes virt
+        end
+      end
+
+      def parallel_upgrade_compute_nodes(compute_nodes)
+        save_upgrade_state("Entering disruptive upgrade of compute nodes")
+        save_nodes_state(compute_nodes, "compute", "upgrading")
+        ::Crowbar::UpgradeStatus.new.save_current_node_action("upgrading the packages")
+        begin
+          execute_scripts_and_wait_for_finish(
+            compute_nodes,
+            "/usr/sbin/crowbar-upgrade-os.sh",
+            900
+          )
+          save_upgrade_state("Repositories prepared successfully.")
+        rescue StandardError => e
+          raise_node_upgrade_error(
+            "Error while upgrading compute nodes. " + e.message
+          )
+        end
+        # FIXME: should we paralelize this as well?
+        compute_nodes.each do |node|
+          next if node.upgraded?
+          if node.ready_after_upgrade?
+            save_upgrade_state(
+              "Node #{node.name} is ready after the initial chef-client run."
+            )
+          else
+            node_api = Api::Node.new node.name
+            node_api.save_node_state("compute", "upgrading")
+            node_api.reboot_and_wait
+            node_api.join_and_chef
+          end
+          node_api.save_node_state("compute", "upgraded")
         end
       end
 
@@ -1057,6 +1222,8 @@ module Api
           )
           return
         end
+
+        return parallel_upgrade_compute_nodes(compute_nodes) if upgrade_mode == :normal
 
         controller = fetch_nova_controller
 
@@ -1082,7 +1249,7 @@ module Api
         controller
       end
 
-      def upgrade_one_compute_node(name)
+      def upgrade_one_compute_node(name, upgrade_mode = :non_disruptive)
         controller = fetch_nova_controller
         node = ::Node.find_node_by_name_or_alias(name)
         if node.nil?
@@ -1090,11 +1257,11 @@ module Api
             "No node with '#{name}' name or alias was found. "
           )
         end
-        upgrade_compute_node(controller, node)
+        upgrade_compute_node(controller, node, upgrade_mode)
       end
 
       # Fully upgrade one compute node
-      def upgrade_compute_node(controller, node)
+      def upgrade_compute_node(controller, node, upgrade_mode = :non_disruptive)
         return if node.upgraded?
         node_api = Api::Node.new node.name
         node_api.save_node_state("compute", "upgrading")
@@ -1105,11 +1272,16 @@ module Api
             "Node #{node.name} is ready after the initial chef-client run."
           )
         else
-          live_evacuate_compute_node(controller, hostname)
+          live_evacuate_compute_node(controller, hostname) if upgrade_mode == :non_disruptive
           node_api.os_upgrade
           node_api.reboot_and_wait
           node_api.post_upgrade
           node_api.join_and_chef
+        end
+
+        if upgrade_mode == :normal
+          node_api.save_node_state("compute", "upgraded")
+          return
         end
 
         controller.run_ssh_cmd(
@@ -1118,7 +1290,8 @@ module Api
         out = controller.run_ssh_cmd(
           "source /root/.openrc; " \
           "nova service-list --host #{hostname} --binary nova-compute " \
-          "| grep -q enabled"
+          "| grep -q enabled",
+          "60s"
         )
         unless out[:exit_code].zero?
           raise_node_upgrade_error(
@@ -1172,6 +1345,7 @@ module Api
       # Wait until all scripts at all nodes correctly finish or until some error is detected
       def execute_scripts_and_wait_for_finish(nodes, script, seconds)
         nodes.each do |node|
+          save_upgrade_state("Executing script '#{script}' at #{node.name}")
           ssh_status = node.ssh_cmd(script).first
           if ssh_status != 200
             raise "Execution of script #{script} has failed on node #{node.name}."

@@ -37,6 +37,9 @@ module Crowbar
 
       autoload :NodeError,
         File.expand_path("../error/upgrade", __FILE__)
+
+      autoload :ServicesError,
+        File.expand_path("../error/upgrade", __FILE__)
     end
   end
 end
