@@ -527,7 +527,7 @@ when "suse"
   end
 
   bash "wicked-ifreload-all" do
-    action :nothing
+    action :run
     code <<-EOF
       wicked ifcheck --changed --quiet all
       rc=$?
