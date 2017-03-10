@@ -894,6 +894,7 @@ module Api
 
       # Delete existing pacemaker resources, from other node in the cluster
       def delete_pacemaker_resources(node)
+        ::Crowbar::UpgradeStatus.new.save_current_node_action("deleting old pacemaker resources")
         node.wait_for_script_to_finish(
           "/usr/sbin/crowbar-delete-pacemaker-resources.sh", 300
         )
@@ -909,6 +910,7 @@ module Api
       # available network nodes. The evacuation procedure is started on the
       # specified controller node
       def evacuate_network_node(controller, network_node, delete_namespaces = false)
+        ::Crowbar::UpgradeStatus.new.save_current_node_action("evacuating routers")
         hostname = network_node["hostname"]
         migrated_file = "/var/lib/crowbar/upgrade/crowbar-router-migrated"
         if network_node.file_exist? migrated_file
@@ -1083,6 +1085,7 @@ module Api
       # Live migrate all instances of the specified
       # node to other available hosts.
       def live_evacuate_compute_node(controller, compute)
+        ::Crowbar::UpgradeStatus.new.save_current_node_action("live-evacuting nova instances")
         controller.wait_for_script_to_finish(
           "/usr/sbin/crowbar-evacuate-host.sh", 300, [compute]
         )

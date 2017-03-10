@@ -29,6 +29,7 @@ module Api
     end
 
     def pre_upgrade
+      save_node_action("preparing node for the upgrade")
       execute_and_wait_for_finish("/usr/sbin/crowbar-pre-upgrade.sh", 300)
       Rails.logger.info("Pre upgrade script run was successful.")
     rescue StandardError => e
@@ -38,6 +39,7 @@ module Api
     end
 
     def prepare_repositories
+      save_node_action("updating repository configuration")
       execute_and_wait_for_finish("/usr/sbin/crowbar-prepare-repositories.sh", 100)
       Rails.logger.info("Prepare of repositories was successful.")
     rescue StandardError => e
@@ -47,6 +49,7 @@ module Api
     end
 
     def os_upgrade
+      save_node_action("upgrading the packages")
       execute_and_wait_for_finish("/usr/sbin/crowbar-upgrade-os.sh", 900)
       Rails.logger.info("Package upgrade was successful.")
     rescue StandardError => e
@@ -57,6 +60,11 @@ module Api
 
     # Execute post upgrade actions: prepare drbd and start pacemaker
     def post_upgrade
+      if @node["drbd"] && @node["drbd"]["rsc"] && @node["drbd"]["rsc"].any?
+        save_node_action("synchronizing DRBD")
+      else
+        save_node_action("doing post-upgrade cleanup")
+      end
       execute_and_wait_for_finish("/usr/sbin/crowbar-post-upgrade.sh", 600)
       Rails.logger.info("Post upgrade script run was successful.")
     rescue StandardError => e
@@ -66,6 +74,7 @@ module Api
     end
 
     def join_and_chef
+      save_node_action("upgrading configuration and re-joining the crowbar environment")
       # Mark this upgrade step, so chef-client run can also start disabled services
       unless @node.crowbar["crowbar_upgrade_step"] == "done_os_upgrade"
         # Make sure we save with the latest node data
@@ -110,6 +119,7 @@ module Api
 
     # Reboot the node and wait until it comes back online
     def reboot_and_wait
+      save_node_action("rebooting")
       rebooted_file = "/var/lib/crowbar/upgrade/crowbar-node-rebooted-ok"
       if @node.file_exist? rebooted_file
         Rails.logger.info("Node was already rebooted after the package upgrade.")
@@ -122,6 +132,7 @@ module Api
       end
 
       wait_for_ssh_state(:down, "reboot")
+      save_node_action("waiting for node to be back after reboot")
       wait_for_ssh_state(:up, "come up")
       @node.run_ssh_cmd("touch #{rebooted_file}")
     end
@@ -146,6 +157,10 @@ module Api
       end
     end
 
+    def save_node_action(action)
+      ::Crowbar::UpgradeStatus.new.save_current_node_action(action)
+    end
+
     def save_node_state(role, state)
       status = ::Crowbar::UpgradeStatus.new
       status.save_current_nodes(
@@ -166,6 +181,7 @@ module Api
           upgraded = progress[:upgraded_nodes] + 1
           ::Crowbar::UpgradeStatus.new.save_nodes(upgraded, remaining)
         end
+        save_node_action("done")
       end
       @node = ::Node.find_by_name(@node.name)
       @node.crowbar["node_upgrade_state"] = state
