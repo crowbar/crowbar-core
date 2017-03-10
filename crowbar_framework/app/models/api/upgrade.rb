@@ -590,6 +590,7 @@ module Api
           if substep == :controller_nodes
             ::Crowbar::UpgradeStatus.new.save_substep(substep, :running)
             upgrade_controller_clusters
+            upgrade_non_compute_nodes
             prepare_all_compute_nodes
             ::Crowbar::UpgradeStatus.new.save_substep(substep, :finished)
             substep = :compute_nodes
@@ -611,6 +612,7 @@ module Api
           if substep == :controller_nodes
             ::Crowbar::UpgradeStatus.new.save_substep(substep, :running)
             upgrade_controller_clusters
+            upgrade_non_compute_nodes
             prepare_all_compute_nodes
             ::Crowbar::UpgradeStatus.new.save_substep(substep, :finished)
           end
@@ -938,6 +940,51 @@ module Api
           e.message +
           " Check /var/log/crowbar/node-upgrade.log at #{controller.name} for details."
         )
+      end
+
+      #
+      # upgrade given node, regardless its role
+      #
+      def upgrade_one_node(name)
+        node = ::Node.find_node_by_name_or_alias(name)
+        return if node.upgraded?
+        node_api = Api::Node.new name
+
+        roles = []
+        roles.push "cinder" if node["run_list_map"].key? "cinder-volume"
+        roles.push "swift" if node["run_list_map"].key? "swift-storage"
+
+        role = roles.join("+")
+        role = "controller" if role.empty?
+
+        node_api.save_node_state(role, "upgrading")
+
+        if node.ready_after_upgrade?
+          save_upgrade_state(
+            "Node #{node.name} is ready after the initial chef-client run."
+          )
+        else
+          node_api.upgrade
+          node_api.reboot_and_wait
+          node_api.post_upgrade
+          node_api.join_and_chef
+        end
+
+        node_api.save_node_state(role, "upgraded")
+      end
+
+      # Upgrade the nodes that are not controlles neither compute ones
+      # (e.g. standalone cinder-volume or swift-storage nodes)
+      # This has to be done before compute nodes upgrade, so the live migration
+      # can use fully upgraded cinder stack.
+      def upgrade_non_compute_nodes
+        # For :normal mode, there should be no node left in the phase
+        # All of such nodes should be upgraded during the first round when we were upgrading
+        # by the barclamps order.
+        return if upgrade_mode == :normal
+        ::Node.find("state:crowbar_upgrade AND NOT run_list_map:nova-compute-*").each do |node|
+          upgrade_one_node node.name
+        end
       end
 
       def prepare_all_compute_nodes

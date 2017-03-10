@@ -423,6 +423,7 @@ describe Api::Upgrade do
       allow_any_instance_of(Api::Node).to receive(:post_upgrade).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:join_and_chef).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:save_node_state).and_return(true)
+      allow(Api::Upgrade).to receive(:upgrade_non_compute_nodes).and_return(true)
       allow(Api::Upgrade).to receive(:prepare_all_compute_nodes).and_return(true)
       allow(Api::Upgrade).to receive(:upgrade_all_compute_nodes).and_return(true)
       allow(Api::Upgrade).to receive(:finalize_nodes_upgrade).and_return(true)
@@ -435,6 +436,38 @@ describe Api::Upgrade do
       expect(subject.class.nodes_without_delay).to be true
     end
 
+    it "successfully upgrades the storage nodes" do
+      ceph = Node.find_by_name("ceph.crowbar.com")
+      testing = Node.find_by_name("testing.crowbar.com")
+
+      allow(Node).to(receive(:find).with("state:crowbar_upgrade").and_return([testing]))
+      allow(Api::Upgrade).to receive(:join_ceph_nodes).and_return(true)
+      allow(Api::Upgrade).to receive(:upgrade_controller_clusters).and_return(true)
+
+      # upgrade_non_compute_nodes:
+      allow(Node).to(
+        receive(:find).with(
+          "state:crowbar_upgrade AND NOT run_list_map:nova-compute-*"
+        ).and_return([ceph, testing])
+      )
+      allow_any_instance_of(Api::Node).to receive(:save_node_state).with(
+        "controller", "upgrading"
+      ).and_return(true)
+      allow_any_instance_of(Api::Node).to receive(:upgrade).and_return(true)
+      allow_any_instance_of(Api::Node).to receive(:reboot_and_wait).and_return(true)
+      allow_any_instance_of(Api::Node).to receive(:post_upgrade).and_return(true)
+      allow_any_instance_of(Api::Node).to receive(:join_and_chef).and_return(true)
+      allow_any_instance_of(Api::Node).to receive(:save_node_state).with(
+        "controller", "upgraded"
+      ).and_return(true)
+      allow(Api::Upgrade).to receive(:prepare_all_compute_nodes).and_return(true)
+      allow(Api::Upgrade).to receive(:upgrade_all_compute_nodes).and_return(true)
+      allow(Api::Upgrade).to receive(:finalize_nodes_upgrade).and_return(true)
+      allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
+
+      expect(subject.class.nodes_without_delay).to be true
+    end
+
     it "successfully completes the upgrade when they are no compute nodes" do
       allow(Node).to(
         receive(:find).
@@ -443,6 +476,7 @@ describe Api::Upgrade do
       )
       allow(Node).to(receive(:find).with("roles:ceph-*").and_return([]))
       allow(Api::Upgrade).to receive(:upgrade_controller_clusters).and_return(true)
+      allow(Api::Upgrade).to receive(:upgrade_non_compute_nodes).and_return(true)
       allow(Api::Upgrade).to receive(:prepare_all_compute_nodes).and_return(true)
       allow(Node).to(
         receive(:find).with("roles:nova-compute-kvm").and_return([])
@@ -483,6 +517,7 @@ describe Api::Upgrade do
       )
       allow(Node).to(receive(:find).with("roles:ceph-*").and_return([]))
       allow(Api::Upgrade).to receive(:upgrade_controller_clusters).and_return(true)
+      allow(Api::Upgrade).to receive(:upgrade_non_compute_nodes).and_return(true)
       allow(Api::Upgrade).to receive(:prepare_all_compute_nodes).and_return(true)
       allow(Node).to(
         receive(:find).with("roles:nova-compute-kvm").
@@ -536,6 +571,7 @@ describe Api::Upgrade do
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
       allow_any_instance_of(Node).to receive(:upgraded?).and_return(true)
+      allow(Api::Upgrade).to receive(:upgrade_non_compute_nodes).and_return(true)
       allow(Api::Upgrade).to receive(:prepare_all_compute_nodes).and_return(true)
       allow(Api::Upgrade).to receive(:upgrade_all_compute_nodes).and_return(true)
       allow(Api::Upgrade).to receive(:finalize_nodes_upgrade).and_return(true)
@@ -554,6 +590,7 @@ describe Api::Upgrade do
       )
       allow(Node).to(receive(:find).with("roles:ceph-*").and_return([]))
       allow(Api::Upgrade).to receive(:upgrade_controller_clusters).and_return(true)
+      allow(Api::Upgrade).to receive(:upgrade_non_compute_nodes).and_return(true)
       allow(Node).to(
         receive(:find).with("roles:nova-compute-kvm").
         and_return([Node.find_by_name("testing.crowbar.com")])
@@ -578,6 +615,7 @@ describe Api::Upgrade do
       allow(Node).to(receive(:find).with("roles:ceph-*").and_return([]))
       allow(Api::Upgrade).to receive(:upgrade_controller_clusters).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:save_substep).and_return(true)
+      allow(Api::Upgrade).to receive(:upgrade_non_compute_nodes).and_return(true)
       allow(Api::Upgrade).to receive(:prepare_all_compute_nodes).and_return(true)
       allow(Node).to(
         receive(:find).with("roles:nova-compute-kvm").
@@ -598,6 +636,7 @@ describe Api::Upgrade do
       )
       allow(Node).to(receive(:find).with("roles:ceph-*").and_return([]))
       allow(Api::Upgrade).to receive(:upgrade_controller_clusters).and_return(true)
+      allow(Api::Upgrade).to receive(:upgrade_non_compute_nodes).and_return(true)
       allow(Api::Upgrade).to receive(:prepare_all_compute_nodes).and_return(true)
       allow(Node).to(
         receive(:find).with("roles:nova-compute-kvm").
