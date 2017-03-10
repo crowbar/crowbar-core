@@ -832,6 +832,9 @@ en:
           not_configured: 'No Pacemaker cluster is configured.'
           help:
             default: 'Without HA setup, non-disruptive upgrade is not possible.'
+        cinder_wrong_backend:
+          error: 'Unsupported cinder backend detected. The Raw Devices and Local File backend cannot be used with non-disruptive upgrade.'
+          help: 'For non-disruptive upgrade, cinder cannot use Raw Devices or Local File as a backend. Adapt your Cinder configuration before proceeding with the upgrade.'
         swift_replicas:
           error: 'The number of replicas is bigger than the number of disks assigned for Swift.'
           help: 'Such configuration is not supported in Swift delivered with SOC 7. Adapt your Swift configuration before proceeding with the upgrade.'

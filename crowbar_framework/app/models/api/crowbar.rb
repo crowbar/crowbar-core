@@ -220,15 +220,21 @@ module Api
         ret
       end
 
-      # Check for presence of HA setup, which is a requirement for non-disruptive upgrade
-      def ha_presence_check
-        unless addon_installed? "ha"
-          return { errors: [I18n.t("api.upgrade.prechecks.ha_configured.not_installed")] }
-        end
+      # Check for presence and state of HA setup, which is a requirement for non-disruptive upgrade
+      def ha_config_check
+        return { ha_not_installed: true } unless addon_installed? "ha"
         founders = NodeObject.find("pacemaker_founder:true AND pacemaker_config_environment:*")
-        founders.empty? ?
-          { errors: [I18n.t("api.upgrade.prechecks.ha_configured.not_configured")] }
-          : {}
+        return { ha_not_configured: true } if founders.empty?
+
+        # Check if cinder is using correct backend enabling live-migration
+        prop = Proposal.where(barclamp: "cinder").first
+
+        backends = prop["attributes"]["cinder"]["volumes"].select do |volume|
+          backend_driver = volume["backend_driver"]
+          ["local", "raw"].include? backend_driver
+        end
+        return { cinder_wrong_backend: true } unless backends.empty?
+        {}
       end
 
       def maintenance_updates_check
