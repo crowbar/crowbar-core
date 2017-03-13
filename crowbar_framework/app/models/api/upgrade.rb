@@ -1464,17 +1464,11 @@ module Api
         failed_actions = check["failed_actions"]
         ret[:clusters_health_crm_failures] = {
           data: crm_failures.values,
-          help: I18n.t(
-            "api.upgrade.prechecks.clusters_health.crm_failures",
-            nodes: crm_failures.keys.join(",")
-          )
+          help: I18n.t("api.upgrade.prechecks.clusters_health.crm_failures")
         } if crm_failures
         ret[:clusters_health_failed_actions] = {
           data: failed_actions.values,
-          help: I18n.t(
-            "api.upgrade.prechecks.clusters_health.failed_actions",
-            nodes: failed_actions.keys.join(",")
-          )
+          help: I18n.t("api.upgrade.prechecks.clusters_health.failed_actions")
         } if failed_actions
         ret
       end

@@ -797,8 +797,8 @@ en:
           help:
             default: 'Make sure Ceph is healthy'
         clusters_health:
-          crm_failures: '"crm status" failed at nodes %{nodes}.'
-          failed_actions: '"crm status" is showing some failed actions at nodes %{nodes}.'
+          crm_failures: 'Please check that all cluster resources are online or refer to the SUSE High Availability documentation for possible troubleshooting.'
+          failed_actions: 'Please clean the resource history and re−check the current state with "crm_resource -C" or refer to the SUSE High Availability documentation for possible troubleshooting.'
           help:
             default: 'Make sure clusters are healthy'
         no_resources:
