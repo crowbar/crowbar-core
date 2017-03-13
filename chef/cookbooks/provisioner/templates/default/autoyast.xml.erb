@@ -100,6 +100,13 @@
       <dhcp_hostname config:type="boolean">true</dhcp_hostname>
       <domain><%= @domain_name %></domain>
       <hostname><%= @node_hostname %></hostname>
+<% unless @nameservers.empty? -%>
+      <nameservers config:type="list">
+  <% @nameservers.each do |nameserver| -%>
+        <nameserver><%= nameserver %></nameserver>
+  <% end -%>
+      </nameservers>
+<% end -%>
       <resolv_conf_policy>auto</resolv_conf_policy>
       <write_hostname config:type="boolean">false</write_hostname>
     </dns>
