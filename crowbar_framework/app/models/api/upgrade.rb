@@ -376,7 +376,7 @@ module Api
       def check_for_running_instances
         controller = ::Node.find("run_list_map:nova-controller").first
         if controller.nil?
-          save_upgrade_state("No nova-controller node found.")
+          Rails.logger.info("No nova-controller node found.")
           return
         end
         cmd = "openstack server list --all-projects --long " \
@@ -438,7 +438,7 @@ module Api
             cinder_node.wait_for_script_to_finish(
               "/usr/sbin/crowbar-delete-cinder-services-before-upgrade.sh", 300
             )
-            save_upgrade_state("Deleting of cinder services was successful.")
+            Rails.logger.info("Deleting of cinder services was successful.")
           end
         rescue StandardError => e
           errors.push(
@@ -652,7 +652,7 @@ module Api
       end
 
       def upgrade_controllers_disruptive
-        save_upgrade_state("Entering disruptive upgrade of controller nodes")
+        Rails.logger.info("Entering disruptive upgrade of controller nodes")
 
         # Go through all OpenStack barclamps ordered by run_order
         proposals = {}
@@ -668,7 +668,7 @@ module Api
         elements_to_upgrade = upgradable_elements_of_proposals proposals
         upgrade_nodes_disruptive elements_to_upgrade
 
-        save_upgrade_state("Successfully finished disruptive upgrade of controller nodes")
+        Rails.logger.info("Successfully finished disruptive upgrade of controller nodes")
       end
 
       #
@@ -809,13 +809,8 @@ module Api
       # nodes, specificaly we need to evacuate the network routers from the first network node.
       def prepare_network_node(network_node)
         return if network_node.upgraded?
-
         evacuate_network_node(network_node, network_node)
-
         delete_pacemaker_resources network_node
-
-        # FIXME: do we need to ensure that this method is run only once?
-        # (remember upgrade restarts after failure)
       end
 
       #
@@ -851,7 +846,7 @@ module Api
       def finalize_node_upgrade(node)
         return unless node.crowbar.key? "crowbar_upgrade_step"
 
-        save_upgrade_state("Finalizing upgade of node #{node.name}")
+        Rails.logger.info("Finalizing upgade of node #{node.name}")
 
         node.crowbar.delete "crowbar_upgrade_step"
         node.crowbar.delete "node_upgrade_state"
@@ -879,7 +874,7 @@ module Api
 
         ceph_nodes.each do |node|
           return true if node.upgraded?
-          save_upgrade_state("Joining ceph node #{node.name}")
+          Rails.logger.info("Joining ceph node #{node.name}")
           node_api = Api::Node.new node.name
           node_api.save_node_state("ceph", "upgrading")
           node_api.join_and_chef
@@ -901,7 +896,7 @@ module Api
           return upgrade_drbd_cluster(cluster)
         end
 
-        save_upgrade_state("Upgrading controller nodes in cluster #{cluster}")
+        Rails.logger.info("Upgrading controller nodes in cluster #{cluster}")
 
         non_founder_nodes = ::Node.find(
           "pacemaker_founder:false AND " \
@@ -910,7 +905,7 @@ module Api
         non_founder_nodes.select! { |n| !n.upgraded? }
 
         if founder.upgraded? && non_founder_nodes.empty?
-          save_upgrade_state("All nodes in cluster #{cluster} have already been upgraded.")
+          Rails.logger.info("All nodes in cluster #{cluster} have already been upgraded.")
           return
         end
 
@@ -924,7 +919,7 @@ module Api
           upgrade_next_cluster_node node, founder
         end
 
-        save_upgrade_state("Nodes in cluster #{cluster} successfully upgraded")
+        Rails.logger.info("Nodes in cluster #{cluster} successfully upgraded")
       end
 
       # Method for upgrading first node of the cluster
@@ -934,7 +929,7 @@ module Api
         node_api = Api::Node.new node.name
         other_node_api = Api::Node.new other_node.name
         node_api.save_node_state("controller", "upgrading")
-        save_upgrade_state("Starting the upgrade of node #{node.name}")
+        Rails.logger.info("Starting the upgrade of node #{node.name}")
         evacuate_network_node(node, node)
 
         # upgrade the first node
@@ -963,7 +958,7 @@ module Api
 
         unless node.ready?
           evacuate_network_node(founder, node, true)
-          save_upgrade_state("Starting the upgrade of node #{node.name}")
+          Rails.logger.info("Starting the upgrade of node #{node.name}")
           node_api.upgrade
           node_api.post_upgrade
           node_api.join_and_chef
@@ -976,7 +971,7 @@ module Api
       end
 
       def upgrade_drbd_cluster(cluster)
-        save_upgrade_state("Upgrading controller nodes with DRBD-based storage " \
+        Rails.logger.info("Upgrading controller nodes with DRBD-based storage " \
                            "in cluster \"#{cluster}\"")
 
         drbd_nodes = ::Node.find(
@@ -984,7 +979,7 @@ module Api
           "(roles:database-server OR roles:rabbitmq-server)"
         )
         if drbd_nodes.empty?
-          save_upgrade_state("There's no DRBD-based node in cluster #{cluster}")
+          Rails.logger.info("There's no DRBD-based node in cluster #{cluster}")
           return
         end
 
@@ -1002,7 +997,7 @@ module Api
 
         nodes_processed = drbd_nodes.select(&:upgraded?)
         if nodes_processed.size == drbd_nodes.size
-          save_upgrade_state("All nodes in cluster #{cluster} have already been upgraded.")
+          Rails.logger.info("All nodes in cluster #{cluster} have already been upgraded.")
           return
         end
 
@@ -1039,16 +1034,16 @@ module Api
         upgrade_first_cluster_node first, second
         upgrade_next_cluster_node second, first
 
-        save_upgrade_state("Nodes in DRBD-based cluster successfully upgraded")
+        Rails.logger.info("Nodes in DRBD-based cluster successfully upgraded")
       end
 
       # Delete existing pacemaker resources, from other node in the cluster
       def delete_pacemaker_resources(node)
-        ::Crowbar::UpgradeStatus.new.save_current_node_action("deleting old pacemaker resources")
+        save_node_action("deleting old pacemaker resources")
         node.wait_for_script_to_finish(
           "/usr/sbin/crowbar-delete-pacemaker-resources.sh", 300
         )
-        save_upgrade_state("Deleting pacemaker resources was successful.")
+        Rails.logger.info("Deleting pacemaker resources was successful.")
       rescue StandardError => e
         raise_node_upgrade_error(
           e.message +
@@ -1060,7 +1055,7 @@ module Api
       # available network nodes. The evacuation procedure is started on the
       # specified controller node
       def evacuate_network_node(controller, network_node, delete_namespaces = false)
-        ::Crowbar::UpgradeStatus.new.save_current_node_action("evacuating routers")
+        save_node_action("evacuating routers")
         hostname = network_node["hostname"]
         migrated_file = "/var/lib/crowbar/upgrade/crowbar-router-migrated"
         if network_node.file_exist? migrated_file
@@ -1078,7 +1073,7 @@ module Api
         controller.wait_for_script_to_finish(
           "/usr/sbin/crowbar-router-migration.sh", 600, args
         )
-        save_upgrade_state("Migrating routers away from #{hostname} was successful.")
+        Rails.logger.info("Migrating routers away from #{hostname} was successful.")
         network_node.run_ssh_cmd("mkdir -p /var/lib/crowbar/upgrade; touch #{migrated_file}")
         # Cleanup up the ok/failed state files, as we likely need to
         # run the script again on this node (to evacuate other nodes)
@@ -1108,7 +1103,7 @@ module Api
         node_api.save_node_state(role, "upgrading")
 
         if node.ready_after_upgrade?
-          save_upgrade_state(
+          Rails.logger.info(
             "Node #{node.name} is ready after the initial chef-client run."
           )
         else
@@ -1143,17 +1138,17 @@ module Api
 
       # Prepare the compute nodes for upgrade by upgrading necessary packages
       def prepare_compute_nodes(virt)
-        save_upgrade_state("Preparing #{virt} compute nodes for upgrade... ")
+        Rails.logger.info("Preparing #{virt} compute nodes for upgrade... ")
         compute_nodes = ::Node.find("roles:nova-compute-#{virt}")
         if compute_nodes.empty?
-          save_upgrade_state("There are no compute nodes of #{virt} type.")
+          Rails.logger.info("There are no compute nodes of #{virt} type.")
           return
         end
 
         # remove upgraded compute nodes
         compute_nodes.select! { |n| !n.upgraded? }
         if compute_nodes.empty?
-          save_upgrade_state(
+          Rails.logger.info(
             "All compute nodes of #{virt} type are already upgraded."
           )
           return
@@ -1166,14 +1161,14 @@ module Api
             "/usr/sbin/crowbar-prepare-repositories.sh",
             120
           )
-          save_upgrade_state("Repositories prepared successfully.")
+          Rails.logger.info("Repositories prepared successfully.")
           if upgrade_mode == :non_disruptive
             execute_scripts_and_wait_for_finish(
               compute_nodes,
               "/usr/sbin/crowbar-pre-upgrade.sh",
               300
             )
-            save_upgrade_state("Services on compute nodes upgraded and prepared.")
+            Rails.logger.info("Services on compute nodes upgraded and prepared.")
           end
         rescue StandardError => e
           raise_node_upgrade_error(
@@ -1192,16 +1187,16 @@ module Api
       end
 
       def parallel_upgrade_compute_nodes(compute_nodes)
-        save_upgrade_state("Entering disruptive upgrade of compute nodes")
+        Rails.logger.info("Entering disruptive upgrade of compute nodes")
         save_nodes_state(compute_nodes, "compute", "upgrading")
-        ::Crowbar::UpgradeStatus.new.save_current_node_action("upgrading the packages")
+        save_node_action("upgrading the packages")
         begin
           execute_scripts_and_wait_for_finish(
             compute_nodes,
             "/usr/sbin/crowbar-upgrade-os.sh",
             900
           )
-          save_upgrade_state("Repositories prepared successfully.")
+          Rails.logger.info("Repositories prepared successfully.")
         rescue StandardError => e
           raise_node_upgrade_error(
             "Error while upgrading compute nodes. " + e.message
@@ -1211,7 +1206,7 @@ module Api
         compute_nodes.each do |node|
           next if node.upgraded?
           if node.ready_after_upgrade?
-            save_upgrade_state(
+            Rails.logger.info(
               "Node #{node.name} is ready after the initial chef-client run."
             )
           else
@@ -1225,17 +1220,17 @@ module Api
       end
 
       def upgrade_compute_nodes(virt)
-        save_upgrade_state("Upgrading #{virt} compute nodes... ")
+        Rails.logger.info("Upgrading #{virt} compute nodes... ")
         compute_nodes = ::Node.find("roles:nova-compute-#{virt}")
         if compute_nodes.empty?
-          save_upgrade_state("There are no compute nodes of #{virt} type.")
+          Rails.logger.info("There are no compute nodes of #{virt} type.")
           return
         end
 
         # remove upgraded compute nodes
         compute_nodes.select! { |n| !n.upgraded? }
         if compute_nodes.empty?
-          save_upgrade_state(
+          Rails.logger.info(
             "All compute nodes of #{virt} type are already upgraded."
           )
           return
@@ -1286,7 +1281,7 @@ module Api
         hostname = node[:hostname]
 
         if node.ready_after_upgrade?
-          save_upgrade_state(
+          Rails.logger.info(
             "Node #{node.name} is ready after the initial chef-client run."
           )
         else
@@ -1323,11 +1318,11 @@ module Api
       # Live migrate all instances of the specified
       # node to other available hosts.
       def live_evacuate_compute_node(controller, compute)
-        ::Crowbar::UpgradeStatus.new.save_current_node_action("live-evacuting nova instances")
+        save_node_action("live-evacuting nova instances")
         controller.wait_for_script_to_finish(
           "/usr/sbin/crowbar-evacuate-host.sh", 300, [compute]
         )
-        save_upgrade_state(
+        Rails.logger.info(
           "Migrating instances from node #{compute} was successful."
         )
         # Cleanup up the ok/failed state files, as we likely need to
@@ -1341,9 +1336,8 @@ module Api
         )
       end
 
-      def save_upgrade_state(message = "")
-        # FIXME: update the global status
-        Rails.logger.info(message)
+      def save_node_action(action)
+        ::Crowbar::UpgradeStatus.new.save_current_node_action(action)
       end
 
       # Save the state of multiple nodes, being upgraded in paralel
@@ -1367,7 +1361,7 @@ module Api
       # Wait until all scripts at all nodes correctly finish or until some error is detected
       def execute_scripts_and_wait_for_finish(nodes, script, seconds)
         nodes.each do |node|
-          save_upgrade_state("Executing script '#{script}' at #{node.name}")
+          Rails.logger.info("Executing script '#{script}' at #{node.name}")
           ssh_status = node.ssh_cmd(script).first
           if ssh_status != 200
             raise "Execution of script #{script} has failed on node #{node.name}."
