@@ -671,20 +671,35 @@ module Api
         Rails.logger.info("Successfully finished disruptive upgrade of controller nodes")
       end
 
+      def do_controllers_substep(substep)
+        if substep == :ceph_nodes
+          join_ceph_nodes
+          substep = :controller_nodes
+        end
+        if substep == :controller_nodes
+          upgrade_controller_clusters
+          upgrade_non_compute_nodes
+          prepare_all_compute_nodes
+        end
+        ::Crowbar::UpgradeStatus.new.save_substep(substep, :finished)
+      end
+
+      def remaining_nodes
+        ::Node.find("state:crowbar_upgrade").size
+      end
+
       #
       # nodes upgrade
       #
       def nodes(component = "all")
         status = ::Crowbar::UpgradeStatus.new
 
-        remaining = status.progress[:remaining_nodes]
         substep = status.current_substep
         substep_status = status.current_substep_status
 
         # initialize progress info about nodes upgrade
-        if remaining.nil?
-          remaining = ::Node.find("state:crowbar_upgrade").size
-          ::Crowbar::UpgradeStatus.new.save_nodes(0, remaining)
+        if status.progress[:remaining_nodes].nil?
+          status.save_nodes(0, remaining_nodes)
         end
 
         if substep.nil? || substep.empty?
@@ -699,58 +714,30 @@ module Api
           substep = :compute_nodes
         end
 
-        ::Crowbar::UpgradeStatus.new.save_substep(substep, :running)
+        status.save_substep(substep, :running)
 
         # decide what needs to be upgraded
         case component
-        # Upgrade everything
         when "all"
-          if substep == :ceph_nodes
-            join_ceph_nodes
-            ::Crowbar::UpgradeStatus.new.save_substep(substep, :finished)
-            substep = :controller_nodes
-          end
-          if substep == :controller_nodes
-            ::Crowbar::UpgradeStatus.new.save_substep(substep, :running)
-            upgrade_controller_clusters
-            upgrade_non_compute_nodes
-            prepare_all_compute_nodes
-            ::Crowbar::UpgradeStatus.new.save_substep(substep, :finished)
-            substep = :compute_nodes
-          end
-          if substep == :compute_nodes
-            ::Crowbar::UpgradeStatus.new.save_substep(substep, :running)
-            upgrade_all_compute_nodes
-            finalize_nodes_upgrade
-            ::Crowbar::UpgradeStatus.new.save_substep(substep, :finished)
-            ::Crowbar::UpgradeStatus.new.end_step
-          end
-        # Upgrade controller clusters only
+          # Upgrade everything
+          do_controllers_substep(substep)
+          substep = :compute_nodes
+          upgrade_all_compute_nodes
         when "controllers"
-          if substep == :ceph_nodes
-            join_ceph_nodes
-            ::Crowbar::UpgradeStatus.new.save_substep(substep, :finished)
-            substep = :controller_nodes
-          end
-          if substep == :controller_nodes
-            ::Crowbar::UpgradeStatus.new.save_substep(substep, :running)
-            upgrade_controller_clusters
-            upgrade_non_compute_nodes
-            prepare_all_compute_nodes
-            ::Crowbar::UpgradeStatus.new.save_substep(substep, :finished)
-          end
-        # Upgrade given compute node
+          # Upgrade controller clusters only
+          do_controllers_substep(substep)
         else
+          # Upgrade given compute node
           upgrade_one_compute_node component
           ::Crowbar::UpgradeStatus.new.save_substep(substep, :node_finished)
+        end
 
-          # if we're done with the last one, finalize
-          progress = ::Crowbar::UpgradeStatus.new.progress
-          if progress[:remaining_nodes].zero?
-            ::Crowbar::UpgradeStatus.new.save_substep(substep, :finished)
-            finalize_nodes_upgrade
-            ::Crowbar::UpgradeStatus.new.end_step
-          end
+        # if all nodes are upgraded, cleanup and end the whole step
+        status = ::Crowbar::UpgradeStatus.new
+        if status.progress[:remaining_nodes].zero?
+          status.save_substep(substep, :finished)
+          finalize_nodes_upgrade
+          status.end_step
         end
       rescue ::Crowbar::Error::Upgrade::NodeError => e
         ::Crowbar::UpgradeStatus.new.save_substep(substep, :failed)
@@ -817,6 +804,8 @@ module Api
       # controller nodes upgrade
       #
       def upgrade_controller_clusters
+        ::Crowbar::UpgradeStatus.new.save_substep(:controller_nodes, :running)
+
         return upgrade_controllers_disruptive if upgrade_mode == :normal
 
         network_node = ::Node.find(
@@ -880,6 +869,7 @@ module Api
           node_api.join_and_chef
           node_api.save_node_state("ceph", "upgraded")
         end
+        ::Crowbar::UpgradeStatus.new.save_substep(:ceph_nodes, :finished)
       end
 
       def finalize_nodes_upgrade
@@ -1181,6 +1171,7 @@ module Api
       # compute nodes upgrade
       #
       def upgrade_all_compute_nodes
+        ::Crowbar::UpgradeStatus.new.save_substep(:compute_nodes, :running)
         ["kvm", "xen"].each do |virt|
           upgrade_compute_nodes virt
         end
