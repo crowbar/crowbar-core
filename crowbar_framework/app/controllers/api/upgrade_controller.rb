@@ -90,18 +90,8 @@ class Api::UpgradeController < ApiController
   def prepare
     ::Crowbar::UpgradeStatus.new.start_step(:prepare)
 
-    if Api::Upgrade.prepare(background: true)
-      head :ok
-    else
-      render json: {
-        errors: {
-          prepare: {
-            data: msg,
-            help: I18n.t("api.upgrade.prepare.help.default")
-          }
-        }
-      }, status: :unprocessable_entity
-    end
+    Api::Upgrade.prepare(background: true)
+    head :ok
   rescue ::Crowbar::Error::StartStepRunningError,
          ::Crowbar::Error::StartStepOrderError,
          ::Crowbar::Error::SaveUpgradeStatusError => e
