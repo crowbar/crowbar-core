@@ -132,9 +132,6 @@ describe Api::Upgrade do
       allow(Api::Crowbar).to receive(
         :addons
       ).and_return(["ceph", "ha"])
-      allow(Api::Pacemaker).to receive(
-        :clusters_health_report
-      ).and_return({})
       allow(Api::Crowbar).to receive(
         :health_check
       ).and_return({})
@@ -936,9 +933,6 @@ describe Api::Upgrade do
         receive(:ha_presence_check).and_return({})
       )
       allow(Api::Crowbar).to(
-        receive(:clusters_health_report).and_return({})
-      )
-      allow(Api::Crowbar).to(
         receive(:health_check).and_return({})
       )
       allow(Api::Crowbar).to(
@@ -958,15 +952,9 @@ describe Api::Upgrade do
       allow(Api::Crowbar).to receive(
         :addons
       ).and_return(["ceph", "ha"])
-      allow(Crowbar::Checks::Maintenance).to receive(
-        :updates_status
-      ).and_return({})
       allow(Api::Pacemaker).to receive(
         :ha_presence_check
       ).and_return(error: "ERROR")
-      allow(Api::Crowbar).to(
-        receive(:clusters_health_report).and_return({})
-      )
       allow(Api::Crowbar).to(
         receive(:health_check).and_return({})
       )
@@ -980,11 +968,12 @@ describe Api::Upgrade do
     end
 
     it "chooses none when a required precheck fails" do
-      allow(Api::Crowbar).to receive(
-        :maintenance_updates_check
+      allow(Crowbar::Sanity).to receive(:check).and_return([])
+      allow(Crowbar::Checks::Maintenance).to receive(
+        :updates_status
       ).and_return(errors: ["Some Error"])
       allow(Api::Pacemaker).to receive(
-        :clusters_health_report
+        :health_report
       ).and_return(crm_failures: "error", failed_actions: "error")
       allow(Api::Crowbar).to receive(:compute_status).and_return({})
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:start_step).and_return(true)

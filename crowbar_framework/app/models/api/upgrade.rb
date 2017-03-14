@@ -113,7 +113,6 @@ module Api
             passed: ha_presence.empty?,
             errors: ha_presence.empty? ? {} : ha_presence_errors(ha_presence)
           }
-
           if Api::Crowbar.addons.include?("ha")
             clusters_health = Api::Pacemaker.health_report
             ret[:checks][:clusters_healthy] = {
