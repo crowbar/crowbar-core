@@ -76,3 +76,6 @@ IPADDR<%=(i == 0)?'':(i+1).to_s%>=<%=v4addrs[i].to_s%>
 <% if iface["mtu"] && iface["mtu"] != 1500 -%>
 MTU=<%=quote(iface["mtu"]) %>
 <% end -%>
+<% if @pre_up_script -%>
+PRE_UP_SCRIPT=<%= quote("wicked:#{@pre_up_script}") %>
+<% end -%>
