@@ -1330,6 +1330,9 @@ module Api
         save_upgrade_state(
           "Migrating instances from node #{compute} was successful."
         )
+        # Cleanup up the ok/failed state files, as we likely need to
+        # run the script again on this node (to live-evacuate other compute nodes)
+        controller.delete_script_exit_files("/usr/sbin/crowbar-evacuate-host.sh")
       rescue StandardError => e
         raise_live_migration_error(
           e.message +
