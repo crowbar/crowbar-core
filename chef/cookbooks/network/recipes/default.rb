@@ -56,7 +56,7 @@ end
 require "fileutils"
 
 if node[:platform] == "ubuntu"
-  if ::File.exists?("/etc/init/network-interface.conf")
+  if ::File.exist?("/etc/init/network-interface.conf")
     # Make upstart stop trying to dynamically manage interfaces.
     ::File.unlink("/etc/init/network-interface.conf")
     ::Kernel.system("killall -HUP init")
@@ -64,8 +64,8 @@ if node[:platform] == "ubuntu"
 
   # Stop udev from jacking up our vlans and bridges as we create them.
   ["40-bridge-network-interface.rules","40-vlan-network-interface.rules"].each do |rule|
-    next if ::File.exists?("/etc/udev/rules.d/#{rule}")
-    next unless ::File.exists?("/lib/udev/rules.d/#{rule}")
+    next if ::File.exist?("/etc/udev/rules.d/#{rule}")
+    next unless ::File.exist?("/lib/udev/rules.d/#{rule}")
     ::Kernel.system("echo 'ACTION==\"add\", SUBSYSTEM==\"net\", RUN+=\"/bin/true\"' >/etc/udev/rules.d/#{rule}")
   end
 end
@@ -126,15 +126,15 @@ def kill_nic(nic)
   when "rhel"
     # Redhat and Centos have lots of small files definining interfaces.
     # Delete the ones we no longer care about here.
-    if ::File.exists?("/etc/sysconfig/network-scripts/ifcfg-#{nic.name}")
+    if ::File.exist?("/etc/sysconfig/network-scripts/ifcfg-#{nic.name}")
       ::File.delete("/etc/sysconfig/network-scripts/ifcfg-#{nic.name}")
     end
   when "suse"
     # SuSE also has lots of small files, but in slightly different locations.
-    if ::File.exists?("/etc/sysconfig/network/ifcfg-#{nic.name}")
+    if ::File.exist?("/etc/sysconfig/network/ifcfg-#{nic.name}")
       ::File.delete("/etc/sysconfig/network/ifcfg-#{nic.name}")
     end
-    if ::File.exists?("/etc/sysconfig/network/ifroute-#{nic.name}")
+    if ::File.exist?("/etc/sysconfig/network/ifroute-#{nic.name}")
       ::File.delete("/etc/sysconfig/network/ifroute-#{nic.name}")
     end
     if ::File.exist?("/etc/wicked/scripts/#{nic.name}-pre-up")
