@@ -761,6 +761,19 @@ module Api
             help: "Check the log files at the node that has failed to find possible cause."
           }
         )
+      rescue ::Crowbar::Error::Upgrade::LiveMigrationError => e
+        ::Crowbar::UpgradeStatus.new.save_substep(substep, :failed)
+        ::Crowbar::UpgradeStatus.new.end_step(
+          false,
+          nodes: {
+            data: e.message,
+            help:
+              "Log files at controller node should indicate the reason why " \
+              "the live migration has failed. " \
+              "Try to migrate the instances from the compute node that is " \
+              "about to be upgraded and then restart the upgrade step."
+          }
+        )
       rescue StandardError => e
         # end the step even for non-upgrade error, so we are not stuck with 'running'
         ::Crowbar::UpgradeStatus.new.save_substep(substep, :failed)
@@ -778,6 +791,11 @@ module Api
       def raise_node_upgrade_error(message = "")
         Rails.logger.error(message)
         raise ::Crowbar::Error::Upgrade::NodeError.new(message)
+      end
+
+      def raise_live_migration_error(message = "")
+        Rails.logger.error(message)
+        raise ::Crowbar::Error::Upgrade::LiveMigrationError.new(message)
       end
 
       def raise_services_error(message = "")
@@ -1312,10 +1330,14 @@ module Api
         save_upgrade_state(
           "Migrating instances from node #{compute} was successful."
         )
+        # Cleanup up the ok/failed state files, as we likely need to
+        # run the script again on this node (to live-evacuate other compute nodes)
+        controller.delete_script_exit_files("/usr/sbin/crowbar-evacuate-host.sh")
       rescue StandardError => e
-        raise_node_upgrade_error(
+        raise_live_migration_error(
           e.message +
-          "Check /var/log/crowbar/node-upgrade.log at #{controller.name} for details."
+          "Check /var/log/crowbar/node-upgrade.log at #{controller.name} " \
+          "or nova-compute logs at #{compute} for details."
         )
       end
 
