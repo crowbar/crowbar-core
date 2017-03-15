@@ -110,7 +110,8 @@ module Api
           name = n.name
           ssh_retval = n.run_ssh_cmd("crm status 2>&1")
           if ssh_retval[:exit_code] != 0
-            crm_failures[name] = ssh_retval[:stdout]
+            crm_failures[name] = "#{name}: #{ssh_retval[:stdout]}"
+            crm_failures[name] << " #{ssh_retval[:stderr]}" unless ssh_retval[:stderr].blank?
             Rails.logger.warn(
               "crm status at node #{name} reports error:\n#{ssh_retval[:stdout]}"
             )
@@ -118,7 +119,8 @@ module Api
           end
           ssh_retval = n.run_ssh_cmd("LANG=C crm status | grep -A 2 '^Failed Actions:'")
           if ssh_retval[:exit_code] == 0
-            failed_actions[name] = ssh_retval[:stdout]
+            failed_actions[name] = "#{name}: #{ssh_retval[:stdout]}"
+            failed_actions[name] << " #{ssh_retval[:stderr]}" unless ssh_retval[:stderr].blank?
             Rails.logger.warn(
               "crm at node #{name} reports some failed actions:\n#{ssh_retval[:stdout]}"
             )
