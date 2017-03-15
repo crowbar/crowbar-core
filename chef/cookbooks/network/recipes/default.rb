@@ -137,6 +137,9 @@ def kill_nic(nic)
     if ::File.exists?("/etc/sysconfig/network/ifroute-#{nic.name}")
       ::File.delete("/etc/sysconfig/network/ifroute-#{nic.name}")
     end
+    if ::File.exist?("/etc/wicked/scripts/#{nic.name}-pre-up")
+      ::File.delete("/etc/wicked/scripts/#{nic.name}-pre-up")
+    end
   end
 end
 
@@ -533,12 +536,38 @@ when "suse"
 
   Nic.nics.each do |nic|
     next unless ifs[nic.name]
+
+    pre_up_script = nil
+    if nic.is_a?(Nic::OvsBridge)
+      directory "/etc/wicked/scripts/" do
+        owner "root"
+        group "root"
+        mode "0755"
+        action :create
+      end
+
+      pre_up_script = "/etc/wicked/scripts/#{nic.name}-pre-up"
+      datapath_id = get_datapath_id_for_ovsbridge nic.name
+
+      template pre_up_script do
+        owner "root"
+        group "root"
+        mode "0755"
+        source "ovs-pre-up.sh.erb"
+        variables(
+          bridgename: nic.name,
+          datapath_id: datapath_id
+        )
+      end
+    end
+
     template "/etc/sysconfig/network/ifcfg-#{nic.name}" do
       source "suse-cfg.erb"
       variables({
         ethtool_options: ethtool_options,
         interfaces: ifs,
-        nic: nic
+        nic: nic,
+        pre_up_script: pre_up_script
       })
       notifies :create, "ruby_block[wicked-ifreload-required]", :immediately
     end
