@@ -77,7 +77,8 @@ try_to() {
 __post_state() {
   local curlargs=(--connect-timeout 60 -s -L -X POST \
       --data-binary "{ \"name\": \"$1\", \"state\": \"$2\" }" \
-      -H "Accept: application/json" -H "Content-Type: application/json")
+      -H "Accept: application/json" -H "Content-Type: application/json" \
+      --insecure --location)
   [[ $CROWBAR_KEY ]] && curlargs+=(-u "$CROWBAR_KEY" --digest --anyauth)
   parse_node_data < <(curl "${curlargs[@]}" \
       "http://$ADMIN_IP/crowbar/crowbar/1.0/transition/default")
@@ -86,7 +87,7 @@ __post_state() {
 __get_state() {
     # $1 = hostname
     local curlargs=(--connect-timeout 60 -s -L -H "Accept: application/json" \
-        -H "Content-Type: application/json")
+        -H "Content-Type: application/json" --insecure --location)
   [[ $CROWBAR_KEY ]] && curlargs+=(-u "$CROWBAR_KEY" --digest)
   parse_node_data < <(curl "${curlargs[@]}" \
       "http://$ADMIN_IP/crowbar/machines/1.0/show?name=$1")

@@ -80,11 +80,15 @@ def debug(msg)
   puts msg if @debug
 end
 
-def authenticate(req, uri, data = nil)
+def authenticate(req, uri, data = nil, limit = 10)
   uri.user = @username
   uri.password = @password
 
   h = Net::HTTP.new uri.host, uri.port
+  if uri.instance_of? URI::HTTPS
+    h.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    h.use_ssl = true
+  end
   h.read_timeout = @timeout
 
   r = req.new uri.request_uri, @headers
@@ -99,6 +103,11 @@ def authenticate(req, uri, data = nil)
   debug "(r) return body: #{res.body}"
   res.each_header do |h, v|
     debug "(r) return #{h}: #{v}"
+  end
+
+  if res.header["location"]
+    uri = URI.parse(res.header["location"])
+    return authenticate(req, uri, data, limit)
   end
 
   if res["www-authenticate"]
@@ -239,4 +248,3 @@ def main()
 end
 
 main
-

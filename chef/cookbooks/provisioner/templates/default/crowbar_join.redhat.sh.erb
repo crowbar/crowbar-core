@@ -66,7 +66,7 @@ post_state() {
   local curlargs=(-o /dev/null --connect-timeout 60 -s \
       -L -X POST --data-binary "{ \"name\": \"$1\", \"state\": \"$2\" }" \
       -H "Accept: application/json" -H "Content-Type: application/json" \
-      --max-time 240)
+      --max-time 240 --insecure --location)
   [[ $CROWBAR_KEY ]] && curlargs+=(-u "$CROWBAR_KEY" --digest --anyauth)
   oldumask=`umask`
   umask 077

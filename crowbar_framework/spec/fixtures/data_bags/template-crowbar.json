@@ -29,6 +29,10 @@
       "chef": {
         "solr_heap": 256,
         "solr_tmpfs": false
+      },
+      "apache": {
+        "ssl": false,
+        "generate_certs": false
       }
     }
   },
