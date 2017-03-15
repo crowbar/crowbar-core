@@ -203,7 +203,7 @@ class ProvisionerService < ServiceObject
     all_db.keys.each do |db_name|
       next unless db_name =~ /^repos-.*/
       begin
-        chef_data_bag_destroy(db_name)
+        Crowbar::Repository.chef_data_bag_destroy(db_name)
       rescue Net::HTTPServerException
         @logger.debug("Cannot disable repos for #{db_name}!")
       end
