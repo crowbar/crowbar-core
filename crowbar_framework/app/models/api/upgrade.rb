@@ -19,6 +19,10 @@ require "open3"
 module Api
   class Upgrade < Tableless
     class << self
+      def initialize(attrs = nil)
+        super(attrs)
+        @timeouts = ::Crowbar::UpgradeTimeouts.new
+      end
       def status
         ::Crowbar::UpgradeStatus.new.progress
       end
@@ -435,7 +439,8 @@ module Api
         begin
           unless cinder_node.nil?
             cinder_node.wait_for_script_to_finish(
-              "/usr/sbin/crowbar-delete-cinder-services-before-upgrade.sh", 300
+              "/usr/sbin/crowbar-delete-cinder-services-before-upgrade.sh",
+              @timeouts.values[:delete_cinder_services]
             )
             Rails.logger.info("Deleting of cinder services was successful.")
           end
@@ -1030,7 +1035,8 @@ module Api
       def delete_pacemaker_resources(node)
         save_node_action("deleting old pacemaker resources")
         node.wait_for_script_to_finish(
-          "/usr/sbin/crowbar-delete-pacemaker-resources.sh", 300
+          "/usr/sbin/crowbar-delete-pacemaker-resources.sh",
+          @timeouts.values[:delete_pacemaker_resources]
         )
         Rails.logger.info("Deleting pacemaker resources was successful.")
       rescue StandardError => e
@@ -1060,7 +1066,9 @@ module Api
         args = [hostname]
         args << "delete-ns" if delete_namespaces
         controller.wait_for_script_to_finish(
-          "/usr/sbin/crowbar-router-migration.sh", 600, args
+          "/usr/sbin/crowbar-router-migration.sh",
+          @timeouts.values[:router_migration],
+          args
         )
         Rails.logger.info("Migrating routers away from #{hostname} was successful.")
         network_node.run_ssh_cmd("mkdir -p /var/lib/crowbar/upgrade; touch #{migrated_file}")
@@ -1148,14 +1156,14 @@ module Api
           execute_scripts_and_wait_for_finish(
             compute_nodes,
             "/usr/sbin/crowbar-prepare-repositories.sh",
-            120
+            @timeouts.values[:prepare_repositories]
           )
           Rails.logger.info("Repositories prepared successfully.")
           if upgrade_mode == :non_disruptive
             execute_scripts_and_wait_for_finish(
               compute_nodes,
               "/usr/sbin/crowbar-pre-upgrade.sh",
-              300
+              @timeouts.values[:pre_upgrade]
             )
             Rails.logger.info("Services on compute nodes upgraded and prepared.")
           end
@@ -1184,7 +1192,7 @@ module Api
           execute_scripts_and_wait_for_finish(
             compute_nodes,
             "/usr/sbin/crowbar-upgrade-os.sh",
-            900
+            @timeouts.values[:upgrade_os]
           )
           Rails.logger.info("Repositories prepared successfully.")
         rescue StandardError => e
@@ -1310,7 +1318,9 @@ module Api
       def live_evacuate_compute_node(controller, compute)
         save_node_action("live-evacuting nova instances")
         controller.wait_for_script_to_finish(
-          "/usr/sbin/crowbar-evacuate-host.sh", 300, [compute]
+          "/usr/sbin/crowbar-evacuate-host.sh",
+          @timeouts.values[:evacuate_host],
+          [compute]
         )
         Rails.logger.info(
           "Migrating instances from node #{compute} was successful."
