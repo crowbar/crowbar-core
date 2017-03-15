@@ -1119,12 +1119,12 @@ module Api
 
       def prepare_all_compute_nodes
         ["kvm", "xen"].each do |virt|
-          prepare_compute_nodes virt, upgrade_mode
+          prepare_compute_nodes virt
         end
       end
 
       # Prepare the compute nodes for upgrade by upgrading necessary packages
-      def prepare_compute_nodes(virt, upgrade_mode = :non_disruptive)
+      def prepare_compute_nodes(virt)
         save_upgrade_state("Preparing #{virt} compute nodes for upgrade... ")
         compute_nodes = ::Node.find("roles:nova-compute-#{virt}")
         if compute_nodes.empty?
@@ -1249,7 +1249,7 @@ module Api
         controller
       end
 
-      def upgrade_one_compute_node(name, upgrade_mode = :non_disruptive)
+      def upgrade_one_compute_node(name)
         controller = fetch_nova_controller
         node = ::Node.find_node_by_name_or_alias(name)
         if node.nil?
@@ -1257,11 +1257,11 @@ module Api
             "No node with '#{name}' name or alias was found. "
           )
         end
-        upgrade_compute_node(controller, node, upgrade_mode)
+        upgrade_compute_node(controller, node)
       end
 
       # Fully upgrade one compute node
-      def upgrade_compute_node(controller, node, upgrade_mode = :non_disruptive)
+      def upgrade_compute_node(controller, node)
         return if node.upgraded?
         node_api = Api::Node.new node.name
         node_api.save_node_state("compute", "upgrading")
