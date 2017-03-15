@@ -152,7 +152,12 @@ class Api::UpgradeController < ApiController
         # When controller nodes have been upgraded previously,
         # whole 'nodes' step was not actually finished, just a substep.
         # It makes sense at this time to upgrade the rest with 'all'.
-        unless substep == :controller_nodes && status == :finished
+        unless (substep == :controller_nodes && status == :finished) ||
+            # Other case when we don't want to start the step again is
+            # when some compute node was already upgraded. Such case also leaves
+            # the 'nodes' step as running, but user might want to upgrade all
+            # remaining compute nodes by using 'all' argument.
+            (substep == :compute_nodes && status == :node_finished)
           ::Crowbar::UpgradeStatus.new.start_step(:nodes)
         end
       else
