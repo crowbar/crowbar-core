@@ -56,7 +56,7 @@ end
 require "fileutils"
 
 if node[:platform] == "ubuntu"
-  if ::File.exists?("/etc/init/network-interface.conf")
+  if ::File.exist?("/etc/init/network-interface.conf")
     # Make upstart stop trying to dynamically manage interfaces.
     ::File.unlink("/etc/init/network-interface.conf")
     ::Kernel.system("killall -HUP init")
@@ -64,8 +64,8 @@ if node[:platform] == "ubuntu"
 
   # Stop udev from jacking up our vlans and bridges as we create them.
   ["40-bridge-network-interface.rules","40-vlan-network-interface.rules"].each do |rule|
-    next if ::File.exists?("/etc/udev/rules.d/#{rule}")
-    next unless ::File.exists?("/lib/udev/rules.d/#{rule}")
+    next if ::File.exist?("/etc/udev/rules.d/#{rule}")
+    next unless ::File.exist?("/lib/udev/rules.d/#{rule}")
     ::Kernel.system("echo 'ACTION==\"add\", SUBSYSTEM==\"net\", RUN+=\"/bin/true\"' >/etc/udev/rules.d/#{rule}")
   end
 end
@@ -126,16 +126,19 @@ def kill_nic(nic)
   when "rhel"
     # Redhat and Centos have lots of small files definining interfaces.
     # Delete the ones we no longer care about here.
-    if ::File.exists?("/etc/sysconfig/network-scripts/ifcfg-#{nic.name}")
+    if ::File.exist?("/etc/sysconfig/network-scripts/ifcfg-#{nic.name}")
       ::File.delete("/etc/sysconfig/network-scripts/ifcfg-#{nic.name}")
     end
   when "suse"
     # SuSE also has lots of small files, but in slightly different locations.
-    if ::File.exists?("/etc/sysconfig/network/ifcfg-#{nic.name}")
+    if ::File.exist?("/etc/sysconfig/network/ifcfg-#{nic.name}")
       ::File.delete("/etc/sysconfig/network/ifcfg-#{nic.name}")
     end
-    if ::File.exists?("/etc/sysconfig/network/ifroute-#{nic.name}")
+    if ::File.exist?("/etc/sysconfig/network/ifroute-#{nic.name}")
       ::File.delete("/etc/sysconfig/network/ifroute-#{nic.name}")
+    end
+    if ::File.exist?("/etc/wicked/scripts/#{nic.name}-pre-up")
+      ::File.delete("/etc/wicked/scripts/#{nic.name}-pre-up")
     end
   end
 end
@@ -533,12 +536,38 @@ when "suse"
 
   Nic.nics.each do |nic|
     next unless ifs[nic.name]
+
+    pre_up_script = nil
+    if nic.is_a?(Nic::OvsBridge)
+      directory "/etc/wicked/scripts/" do
+        owner "root"
+        group "root"
+        mode "0755"
+        action :create
+      end
+
+      pre_up_script = "/etc/wicked/scripts/#{nic.name}-pre-up"
+      datapath_id = get_datapath_id_for_ovsbridge nic.name
+
+      template pre_up_script do
+        owner "root"
+        group "root"
+        mode "0755"
+        source "ovs-pre-up.sh.erb"
+        variables(
+          bridgename: nic.name,
+          datapath_id: datapath_id
+        )
+      end
+    end
+
     template "/etc/sysconfig/network/ifcfg-#{nic.name}" do
       source "suse-cfg.erb"
       variables({
         ethtool_options: ethtool_options,
         interfaces: ifs,
-        nic: nic
+        nic: nic,
+        pre_up_script: pre_up_script
       })
       notifies :create, "ruby_block[wicked-ifreload-required]", :immediately
     end

@@ -1,0 +1,5 @@
+#! /bin/bash
+
+ovs-vsctl br-exists <%= @bridgename %> || exit 0
+ovs-vsctl set Bridge <%= @bridgename %> other-config:datapath-id=<%= @datapath_id %>
+ovs-vsctl del-fail-mode <%= @bridgename %>
