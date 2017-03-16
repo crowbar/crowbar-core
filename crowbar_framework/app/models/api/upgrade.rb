@@ -86,6 +86,13 @@ module Api
             errors: health_check.empty? ? {} : health_check_errors(health_check)
           }
 
+          deployment = Api::Crowbar.deployment_check
+          ret[:checks][:cloud_deployment] = {
+            required: true,
+            passed: deployment.empty?,
+            errors: deployment.empty? ? {} : deployment_errors(deployment)
+          }
+
           maintenance_updates = ::Crowbar::Checks::Maintenance.updates_status
           ret[:checks][:maintenance_updates_installed] = {
             required: true,
@@ -1423,6 +1430,17 @@ module Api
           network_checks: {
             data: check,
             help: I18n.t("api.upgrade.prechecks.network_checks.help.default")
+          }
+        }
+      end
+
+      def deployment_errors(check)
+        {
+          controller_roles: {
+            data: I18n.t("api.upgrade.prechecks.controller_roles.error",
+              node: check[:controller_roles][:node],
+              roles: check[:controller_roles][:roles]),
+            help: I18n.t("api.upgrade.prechecks.controller_roles.help")
           }
         }
       end

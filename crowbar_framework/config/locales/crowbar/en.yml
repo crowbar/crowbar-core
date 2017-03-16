@@ -822,6 +822,9 @@ en:
         role_conflicts:
           error: 'These compute nodes have some roles that belong to controllers: %{nodes}.'
           help: 'For non-disruptive upgrade, compute nodes cannot hold controller roles.'
+        controller_roles:
+          error: 'Found compute node %{node} with controller roles: %{roles}.'
+          help: 'It is not possible to upgrade with such setup. These roles cannot be placed on compute node.'
         ceph_not_healthy:
           error: |
             Ceph cluster health check has failed with:
