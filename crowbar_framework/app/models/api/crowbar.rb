@@ -291,6 +291,33 @@ module Api
         ret
       end
 
+      def deployment_check
+        ret = {}
+        # Make sure that node with nova-compute is not upgraded before nova-controller
+        nova_order = BarclampCatalog.run_order("nova")
+        ["kvm", "xen"].each do |virt|
+          NodeObject.find("roles:nova-compute-#{virt}").each do |node|
+            # nova-compute with nova-controller on one node is not non-disruptive,
+            # but at least it does not break the order
+            next if node.roles.include? "nova-controller"
+            next if ret.any?
+            wrong_roles = []
+            node.roles.each do |role|
+              # these storage roles are handled separately
+              next if ["cinder-volume", "swift-storage"].include? role
+              next if role.start_with?("nova-compute")
+              r = RoleObject.find_role_by_name(role)
+              next if r.proposal?
+              b = r.barclamp
+              next if BarclampCatalog.category(b) != "OpenStack"
+              wrong_roles.push role if BarclampCatalog.run_order(b) < nova_order
+            end
+            ret = { controller_roles: { node: node.name, roles: wrong_roles } } if wrong_roles.any?
+          end
+        end
+        ret
+      end
+
       def maintenance_updates_check
         initial_repocheck = check_repositories("6")
 

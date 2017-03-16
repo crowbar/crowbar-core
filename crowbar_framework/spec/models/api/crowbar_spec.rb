@@ -18,6 +18,8 @@ describe Api::Crowbar do
     )
   end
   let!(:node) { NodeObject.find_node_by_name("testing") }
+  let!(:crowbar_role) { RoleObject.find_role_by_name("crowbar") }
+  let!(:cinder_controller_role) { RoleObject.find_role_by_name("cinder-controller") }
 
   before(:each) do
     allow_any_instance_of(Kernel).to(
@@ -390,6 +392,60 @@ describe Api::Crowbar do
         and_return(false)
       )
       expect(subject.class.ha_config_check).to have_key(:ha_not_installed)
+    end
+  end
+
+  context "with correct barclamps deployment" do
+    it "passes with nice compute nodes" do
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))
+      allow_any_instance_of(NodeObject).to(
+        receive(:roles).and_return(
+          ["nova-compute-kvm", "cinder-volume", "swift-storage"]
+        )
+      )
+      allow_any_instance_of(RoleObject).to(receive(:proposal?).and_return(false))
+
+      expect(subject.class.deployment_check).to be_empty
+    end
+
+    it "passes with compute node together with nova-controller " do
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))
+      allow_any_instance_of(NodeObject).to(
+        receive(:roles).and_return(
+          ["nova-compute-kvm", "cinder-controller", "nova-controller"]
+        )
+      )
+      allow_any_instance_of(RoleObject).to(receive(:proposal?).and_return(false))
+
+      expect(subject.class.deployment_check).to be_empty
+    end
+  end
+
+  context "with broken barclamps deployment" do
+    it "fails when cinder-controller is on compute node" do
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))
+      allow_any_instance_of(NodeObject).to(
+        receive(:roles).and_return(
+          ["nova-compute-kvm", "cinder-controller"]
+        )
+      )
+      allow(RoleObject).to(receive(:find_role_by_name).with(
+        "cinder-controller"
+      ).and_return(cinder_controller_role))
+      allow(BarclampCatalog).to(receive(:category).with(
+        "cinder"
+      ).and_return("OpenStack"))
+      allow(BarclampCatalog).to(receive(:run_order).with("nova").and_return(10))
+      allow(BarclampCatalog).to(receive(:run_order).with("cinder").and_return(5))
+
+      allow_any_instance_of(RoleObject).to(receive(:proposal?).and_return(false))
+
+      expect(subject.class.deployment_check).to eq(
+        controller_roles: { node: "testing.crowbar.com", roles: ["cinder-controller"] }
+      )
     end
   end
 
