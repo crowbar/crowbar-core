@@ -366,6 +366,13 @@ module Api
             help: I18n.t("api.upgrade.prechecks.ha_configured.help.default")
           }
         end
+        if check[:roles_not_ha]
+          ret[:roles_not_ha] = {
+            data: I18n.t("api.upgrade.prechecks.roles_not_ha.error",
+              roles: check[:roles_not_ha].join(", ")),
+            help: I18n.t("api.upgrade.prechecks.roles_not_ha.help")
+          }
+        end
         ret
       end
 
