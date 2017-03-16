@@ -880,6 +880,9 @@ class Node < ChefObject
       "|| (test -e #{failed_file} && echo failed) " \
       "|| echo running"
     )
+    if out[:stdout].nil?
+      raise "Node #{@node.name} does not appear to be reachable by ssh."
+    end
     out[:stdout].chop
   end
 
