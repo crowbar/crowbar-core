@@ -1432,10 +1432,10 @@ module Api
 
       def ceph_health_check_errors(check)
         ret = {}
-        if check[:healh_errors]
-          ret[:ceph_not_healhy] = {
+        if check[:health_errors]
+          ret[:ceph_not_healthy] = {
             data: I18n.t("api.upgrade.prechecks.ceph_not_healthy.error",
-              error: check[:healh_errors]),
+              error: check[:health_errors]),
             help: I18n.t("api.upgrade.prechecks.ceph_not_healthy.help")
           }
         end
