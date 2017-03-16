@@ -816,6 +816,9 @@ en:
         cinder_wrong_backend:
           error: 'Unsupported cinder backend detected. The Raw Devices and Local File backend cannot be used with non-disruptive upgrade.'
           help: 'For non-disruptive upgrade, cinder cannot use Raw Devices or Local File as a backend. Adapt your Cinder configuration before proceeding with the upgrade.'
+        roles_not_ha:
+          error: 'These roles are not deployed in a cluster: %{roles}.'
+          help: 'For non-disruptive upgrade, controller roles must be deployed in HA cluser.'
         ceph_not_healthy:
           error: |
             Ceph cluster health check has failed with:

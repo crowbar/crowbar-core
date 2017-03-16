@@ -275,7 +275,8 @@ describe Api::Crowbar do
       cinder_proposal.raw_data["attributes"] = {
         "cinder" => { "volumes" => [{ "backend_driver" => "rbd" }] }
       }
-      allow(Proposal).to(receive(:where).and_return([cinder_proposal]))
+      allow(Proposal).to(receive(:where).and_return([]))
+      allow(Proposal).to(receive(:where).with(barclamp: "cinder").and_return([cinder_proposal]))
 
       expect(subject.class.ha_config_check).to eq({})
     end
@@ -284,7 +285,8 @@ describe Api::Crowbar do
       cinder_proposal.raw_data["attributes"] = {
         "cinder" => { "volumes" => [{ "backend_driver" => "raw" }] }
       }
-      allow(Proposal).to(receive(:where).and_return([cinder_proposal]))
+      allow(Proposal).to(receive(:where).and_return([]))
+      allow(Proposal).to(receive(:where).with(barclamp: "cinder").and_return([cinder_proposal]))
 
       expect(subject.class.ha_config_check).to eq(cinder_wrong_backend: true)
     end

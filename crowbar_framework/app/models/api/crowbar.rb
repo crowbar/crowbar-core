@@ -153,6 +153,40 @@ module Api
           ["local", "raw"].include? backend_driver
         end
         return { cinder_wrong_backend: true } unless backends.empty?
+
+        # Check if roles important for non-disruptive upgrade are deployed in the cluster
+        clustered_roles = [
+          "database-server",
+          "rabbitmq-server",
+          "keystone-server",
+          "glance-server",
+          "cinder-controller",
+          "neutron-server",
+          "neutron-network",
+          "nova-controller"
+        ]
+        barclamps = [
+          "database",
+          "rabbitmq",
+          "keystone",
+          "glance",
+          "cinder",
+          "neutron",
+          "nova"
+        ]
+        roles_not_ha = []
+        barclamps.each do |barclamp|
+          proposal = Proposal.where(barclamp: barclamp).first
+          next if proposal.nil?
+          proposal["deployment"][barclamp]["elements"].each do |role, elements|
+            next unless clustered_roles.include? role
+            elements.each do |element|
+              next if ServiceObject.is_cluster?(element)
+              roles_not_ha |= [role]
+            end
+          end
+        end
+        return { roles_not_ha: roles_not_ha } if roles_not_ha.any?
         {}
       end
 
