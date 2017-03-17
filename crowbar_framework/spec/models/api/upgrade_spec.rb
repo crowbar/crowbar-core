@@ -170,7 +170,8 @@ describe Api::Upgrade do
       ).and_return(true)
       allow_any_instance_of(Node).to(
         receive(:wait_for_script_to_finish).with(
-          "/usr/sbin/crowbar-delete-cinder-services-before-upgrade.sh", 300
+          "/usr/sbin/crowbar-delete-cinder-services-before-upgrade.sh",
+          ::Crowbar::UpgradeTimeouts.new.values[:delete_cinder_services]
         ).and_return(true)
       )
       allow(Api::Crowbar).to(
@@ -516,7 +517,9 @@ describe Api::Upgrade do
 
       # parallel_upgrade_compute_nodes:
       allow(Api::Upgrade).to receive(:execute_scripts_and_wait_for_finish).with(
-        [node1, node2], "/usr/sbin/crowbar-upgrade-os.sh", 900
+        [node1, node2],
+        "/usr/sbin/crowbar-upgrade-os.sh",
+        ::Crowbar::UpgradeTimeouts.new.values[:upgrade_os]
       ).and_return(true)
       allow_any_instance_of(Node).to receive(:upgraded?).and_return(false)
       allow_any_instance_of(Node).to receive(:ready_after_upgrade?).and_return(false)

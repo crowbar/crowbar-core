@@ -18,6 +18,7 @@ module Api
   class Node < Tableless
     def initialize(name = nil)
       @node = ::Node.find_by_name(name)
+      @timeouts = ::Crowbar::UpgradeTimeouts.new
     end
 
     # execute script in background and wait for it to finish
@@ -30,7 +31,10 @@ module Api
 
     def pre_upgrade
       save_node_action("preparing node for the upgrade")
-      execute_and_wait_for_finish("/usr/sbin/crowbar-pre-upgrade.sh", 300)
+      execute_and_wait_for_finish(
+        "/usr/sbin/crowbar-pre-upgrade.sh",
+        @timeouts.values[:pre_upgrade]
+      )
       Rails.logger.info("Pre upgrade script run was successful.")
     rescue StandardError => e
       Api::Upgrade.raise_node_upgrade_error(
@@ -40,7 +44,10 @@ module Api
 
     def prepare_repositories
       save_node_action("updating repository configuration")
-      execute_and_wait_for_finish("/usr/sbin/crowbar-prepare-repositories.sh", 100)
+      execute_and_wait_for_finish(
+        "/usr/sbin/crowbar-prepare-repositories.sh",
+        @timeouts.values[:prepare_repositories]
+      )
       Rails.logger.info("Prepare of repositories was successful.")
     rescue StandardError => e
       Api::Upgrade.raise_node_upgrade_error(
@@ -50,7 +57,10 @@ module Api
 
     def os_upgrade
       save_node_action("upgrading the packages")
-      execute_and_wait_for_finish("/usr/sbin/crowbar-upgrade-os.sh", 900)
+      execute_and_wait_for_finish(
+        "/usr/sbin/crowbar-upgrade-os.sh",
+        @timeouts.values[:upgrade_os]
+      )
       Rails.logger.info("Package upgrade was successful.")
     rescue StandardError => e
       Api::Upgrade.raise_node_upgrade_error(
@@ -65,7 +75,10 @@ module Api
       else
         save_node_action("doing post-upgrade cleanup")
       end
-      execute_and_wait_for_finish("/usr/sbin/crowbar-post-upgrade.sh", 600)
+      execute_and_wait_for_finish(
+        "/usr/sbin/crowbar-post-upgrade.sh",
+        @timeouts.values[:post_upgrade]
+      )
       Rails.logger.info("Post upgrade script run was successful.")
     rescue StandardError => e
       Api::Upgrade.raise_node_upgrade_error(
@@ -83,7 +96,10 @@ module Api
         @node.save
       end
       begin
-        execute_and_wait_for_finish("/usr/sbin/crowbar-chef-upgraded.sh", 900)
+        execute_and_wait_for_finish(
+          "/usr/sbin/crowbar-chef-upgraded.sh",
+          @timeouts.values[:chef_upgraded]
+        )
       rescue StandardError => e
         Api::Upgrade.raise_node_upgrade_error(
           "Error while running the initial chef-client. " + e.message
