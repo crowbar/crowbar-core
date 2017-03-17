@@ -832,6 +832,15 @@ en:
           not_configured: 'No Pacemaker cluster is configured.'
           help:
             default: 'Without HA setup, non-disruptive upgrade is not possible.'
+        roles_not_ha:
+          error: 'These roles are not deployed in a cluster: %{roles}.'
+          help: 'For non-disruptive upgrade, controller roles must be deployed in HA cluser.'
+        role_conflicts:
+          error: 'These compute nodes have some roles that belong to controllers: %{nodes}.'
+          help: 'For non-disruptive upgrade, compute nodes cannot hold controller roles.'
+        controller_roles:
+          error: 'Found compute node %{node} with controller roles: %{roles}.'
+          help: 'It is not possible to upgrade with such setup. These roles cannot be placed on compute node.'
         swift_replicas:
           error: 'The number of replicas is bigger than the number of disks assigned for Swift.'
           help: 'Such configuration is not supported in Swift delivered with SOC 7. Adapt your Swift configuration before proceeding with the upgrade.'

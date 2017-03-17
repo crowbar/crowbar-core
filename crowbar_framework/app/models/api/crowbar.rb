@@ -229,7 +229,95 @@ module Api
         return { ha_not_installed: true } unless addon_installed? "ha"
         founders = NodeObject.find("pacemaker_founder:true AND pacemaker_config_environment:*")
         return { ha_not_configured: true } if founders.empty?
-        {}
+
+        # Check if roles important for non-disruptive upgrade are deployed in the cluster
+        clustered_roles = [
+          "database-server",
+          "rabbitmq-server",
+          "keystone-server",
+          "glance-server",
+          "cinder-controller",
+          "neutron-server",
+          "neutron-network",
+          "nova-controller"
+        ]
+        barclamps = [
+          "database",
+          "rabbitmq",
+          "keystone",
+          "glance",
+          "cinder",
+          "neutron",
+          "nova"
+        ]
+        roles_not_ha = []
+        barclamps.each do |barclamp|
+          proposal = Proposal.where(barclamp: barclamp).first
+          next if proposal.nil?
+          proposal["deployment"][barclamp]["elements"].each do |role, elements|
+            next unless clustered_roles.include? role
+            elements.each do |element|
+              next if ServiceObject.is_cluster?(element)
+              roles_not_ha |= [role]
+            end
+          end
+        end
+        return { roles_not_ha: roles_not_ha } if roles_not_ha.any?
+
+        # Make sure nova compute role is not mixed with a controller roles
+        conflicting_roles = [
+          "cinder-controller",
+          "glance-server",
+          "keystone-server",
+          "neutron-server",
+          "neutron-network",
+          "nova-controller",
+          "swift-proxy",
+          "swift-ring-compute",
+          "ceilometer-server",
+          "heat-server",
+          "horizon-server",
+          "manila-server",
+          "trove-server"
+        ]
+        ret = {}
+        ["kvm", "xen"].each do |virt|
+          NodeObject.find("roles:nova-compute-#{virt}").each do |node|
+            conflict = node.roles & conflicting_roles
+            unless conflict.empty?
+              ret[:role_conflicts] ||= {}
+              ret[:role_conflicts][node.name] = conflict
+            end
+          end
+        end
+        ret
+      end
+
+      def deployment_check
+        ret = {}
+        # Make sure that node with nova-compute is not upgraded before nova-controller
+        nova_order = BarclampCatalog.run_order("nova")
+        ["kvm", "xen"].each do |virt|
+          NodeObject.find("roles:nova-compute-#{virt}").each do |node|
+            # nova-compute with nova-controller on one node is not non-disruptive,
+            # but at least it does not break the order
+            next if node.roles.include? "nova-controller"
+            next if ret.any?
+            wrong_roles = []
+            node.roles.each do |role|
+              # these storage roles are handled separately
+              next if ["cinder-volume", "swift-storage"].include? role
+              next if role.start_with?("nova-compute")
+              r = RoleObject.find_role_by_name(role)
+              next if r.proposal?
+              b = r.barclamp
+              next if BarclampCatalog.category(b) != "OpenStack"
+              wrong_roles.push role if BarclampCatalog.run_order(b) < nova_order
+            end
+            ret = { controller_roles: { node: node.name, roles: wrong_roles } } if wrong_roles.any?
+          end
+        end
+        ret
       end
 
       def maintenance_updates_check
