@@ -55,6 +55,15 @@ class Api::UpgradeController < ApiController
 
   def prechecks
     render json: Api::Upgrade.checks
+  rescue StandardError => e
+    render json: {
+      errors: {
+        prechecks: {
+          data: e.message,
+          help: I18n.t("api.upgrade.prechecks.help.default")
+        }
+      }
+    }, status: :unprocessable_entity
   end
 
   def cancel
