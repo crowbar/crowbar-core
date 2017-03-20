@@ -794,6 +794,8 @@ en:
           default: 'Refer to the error message in the response'
     upgrade:
       prechecks:
+        help:
+          default: 'Running prechecks have failed. Check /var/log/crowbar/production.log for details.'
         network_checks:
           help:
             default: 'Examine the error messages'
