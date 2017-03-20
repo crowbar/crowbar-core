@@ -307,7 +307,8 @@ module Api
             node.roles.each do |role|
               # these storage roles are handled separately
               next if ["cinder-volume", "swift-storage"].include? role
-              next if role.start_with?("nova-compute")
+              # compute node roles are fine
+              next if role.start_with?("nova-compute") || role == "pacemaker-remote"
               r = RoleObject.find_role_by_name(role)
               next if r.proposal?
               b = r.barclamp
