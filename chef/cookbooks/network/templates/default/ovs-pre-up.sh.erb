@@ -1,0 +1,4 @@
+#! /bin/bash
+
+ovs-vsctl br-exists <%= @bridgename %> || exit 0
+ovs-vsctl del-fail-mode <%= @bridgename %>
