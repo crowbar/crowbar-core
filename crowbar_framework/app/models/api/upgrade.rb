@@ -458,8 +458,8 @@ module Api
             services: {
               data: errors,
               help: "Check /var/log/crowbar/production.log at admin server. " \
-                "If the action failed at specific node, " \
-                "check /var/log/crowbar/node_upgrade.log at the node."
+                "If the action failed at a specific node, " \
+                "check /var/log/crowbar/node-upgrade.log at the node."
             }
           )
         else
