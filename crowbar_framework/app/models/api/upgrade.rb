@@ -382,6 +382,13 @@ module Api
           Rails.logger.info("No nova-controller node found.")
           return
         end
+
+        out = controller.run_ssh_cmd("systemctl status openstack-nova-api")
+        unless out[:exit_code].zero?
+          Rails.logger.info("nova-api is not running: check for running instances not possible")
+          return
+        end
+
         cmd = "openstack server list --all-projects --long " \
           "--status active -f value -c Host"
         out = controller.run_ssh_cmd("source /root/.openrc; #{cmd}", "60s")
