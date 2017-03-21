@@ -1158,6 +1158,15 @@ module Api
           return
         end
 
+        compute_nodes.each do |n|
+          # Do not allow creating of remote related resources before remote nodes
+          # are upgraded. The value will be update on node's chef-client run.
+          if n["pacemaker"].key? "remote_setup"
+            n["pacemaker"]["remote_setup"] = false
+            n.save
+          end
+        end
+
         # This batch of actions can be executed in parallel for all compute nodes
         begin
           execute_scripts_and_wait_for_finish(
