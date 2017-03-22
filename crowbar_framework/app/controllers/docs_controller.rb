@@ -16,6 +16,8 @@
 #
 
 class DocsController < ApplicationController
+  skip_before_filter :upgrade
+
   api :GET, "/docs", "List documentation resources"
   header "Accept", "application/json", required: true
   example '
