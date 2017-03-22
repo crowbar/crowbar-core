@@ -129,6 +129,7 @@ end
 
 compute_node = roles.include? "nova-compute-kvm"
 cinder_volume = roles.include? "cinder-volume"
+remote_node = roles.include? "pacemaker-remote"
 neutron = search(:node, "run_list_map:neutron-server").first
 
 if !neutron.nil? && neutron[:neutron][:networking_plugin] == "ml2"
@@ -158,6 +159,7 @@ template "/usr/sbin/crowbar-pre-upgrade.sh" do
   variables(
     use_ha: use_ha,
     compute_node: compute_node,
+    remote_node: remote_node,
     swift_storage: swift_storage,
     bridges_to_reset: bridges_to_reset,
     cinder_volume: cinder_volume,

@@ -92,20 +92,31 @@ zypper --non-interactive up <%= @neutron_agent %>
 crudini --set /etc/neutron/neutron-openvswitch-agent.conf.d/200-crowbar-upgrade.conf ovs ovsdb_interface vsctl
 crudini --set /etc/neutron/neutron-openvswitch-agent.conf.d/200-crowbar-upgrade.conf ovs of_interface ovs-ofctl
 <% end %>
+<% unless @remote_node %>
 systemctl restart <%= @neutron_agent %>
+<% end %>
 
 <% if @l3_agent %>
 zypper --non-interactive up <%= @l3_agent %>
+<% unless @remote_node %>
 systemctl restart <%= @l3_agent %>
+<% end %>
 <% end %>
 
 <% if @metadata_agent %>
 zypper --non-interactive up <%= @metadata_agent %>
+<% unless @remote_node %>
 systemctl restart <%= @metadata_agent %>
 <% end %>
+<% end %>
 
+<% if @remote_node %>
+log "Leving nova-compute service to be restarted by cluster resources"
+<% else %>
 log "Starting nova-compute service"
 systemctl restart openstack-nova-compute.service
+<% end %>
+
 
 <% if @cinder_volume %>
 log "Upgrading and setting cinder-volume configuration"
@@ -122,10 +133,6 @@ systemctl restart openstack-swift-account
 systemctl restart openstack-swift-object
 systemctl restart openstack-swift-container
 <% end %>
-
-# Remove temporary config options
-rm -f /etc/nova/nova.conf.d/200-crowbar-upgrade.conf
-rm -f /etc/neutron/neutron-openvswitch-agent.conf.d/200-crowbar-upgrade.conf
 
 <% end %>
 
