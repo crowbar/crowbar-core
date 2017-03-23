@@ -751,6 +751,7 @@ module Api
           status.end_step
         end
       rescue ::Crowbar::Error::Upgrade::NodeError => e
+        substep = ::Crowbar::UpgradeStatus.new.current_substep
         ::Crowbar::UpgradeStatus.new.save_substep(substep, :failed)
         ::Crowbar::UpgradeStatus.new.end_step(
           false,
@@ -760,6 +761,7 @@ module Api
           }
         )
       rescue ::Crowbar::Error::Upgrade::LiveMigrationError => e
+        substep = ::Crowbar::UpgradeStatus.new.current_substep
         ::Crowbar::UpgradeStatus.new.save_substep(substep, :failed)
         ::Crowbar::UpgradeStatus.new.end_step(
           false,
@@ -774,6 +776,7 @@ module Api
         )
       rescue StandardError => e
         # end the step even for non-upgrade error, so we are not stuck with 'running'
+        substep = ::Crowbar::UpgradeStatus.new.current_substep
         ::Crowbar::UpgradeStatus.new.save_substep(substep, :failed)
         ::Crowbar::UpgradeStatus.new.end_step(
           false,
