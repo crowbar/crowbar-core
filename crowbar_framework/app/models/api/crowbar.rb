@@ -229,6 +229,14 @@ module Api
         return { ha_not_installed: true } unless addon_installed? "ha"
         founders = NodeObject.find("pacemaker_founder:true AND pacemaker_config_environment:*")
         return { ha_not_configured: true } if founders.empty?
+        # Check if cinder is using correct backend enabling live-migration
+        prop = Proposal.where(barclamp: "cinder").first
+
+        backends = prop["attributes"]["cinder"]["volumes"].select do |volume|
+          backend_driver = volume["backend_driver"]
+          ["local", "raw"].include? backend_driver
+        end
+        return { cinder_wrong_backend: true } unless backends.empty?
 
         # Check if roles important for non-disruptive upgrade are deployed in the cluster
         clustered_roles = [
