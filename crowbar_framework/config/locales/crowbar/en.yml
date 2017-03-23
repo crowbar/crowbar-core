@@ -843,6 +843,9 @@ en:
         controller_roles:
           error: 'Found compute node %{node} with controller roles: %{roles}.'
           help: 'It is not possible to upgrade with such setup. These roles cannot be placed on compute node.'
+        cinder_wrong_backend:
+          error: 'Unsupported cinder backend detected. The Raw Devices and Local File backend cannot be used with non-disruptive upgrade.'
+          help: 'For non-disruptive upgrade, cinder cannot use Raw Devices or Local File as a backend. Adapt your Cinder configuration before proceeding with the upgrade.'
         swift_replicas:
           error: 'The number of replicas is bigger than the number of disks assigned for Swift.'
           help: 'Such configuration is not supported in Swift delivered with SOC 7. Adapt your Swift configuration before proceeding with the upgrade.'
