@@ -846,6 +846,9 @@ en:
         cinder_wrong_backend:
           error: 'Unsupported cinder backend detected. The Raw Devices and Local File backend cannot be used with non-disruptive upgrade.'
           help: 'For non-disruptive upgrade, cinder cannot use Raw Devices or Local File as a backend. Adapt your Cinder configuration before proceeding with the upgrade.'
+        unsupported_cluster_setup:
+          error: 'Your cluster/role configuration is not supported by the non-disruptive upgrade process.'
+          help: 'Please refer to the Deployment Guide for list of supported configurations.'
         swift_replicas:
           error: 'The number of replicas is bigger than the number of disks assigned for Swift.'
           help: 'Such configuration is not supported in Swift delivered with SOC 7. Adapt your Swift configuration before proceeding with the upgrade.'
