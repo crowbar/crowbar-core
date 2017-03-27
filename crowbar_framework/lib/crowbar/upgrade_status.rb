@@ -115,8 +115,8 @@ module Crowbar
           raise Crowbar::Error::StartStepExistenceError.new(step_name)
         end
         if running?
-          @logger.warn("Some step is already running.")
-          raise Crowbar::Error::StartStepRunningError.new
+          @logger.warn("Step #{current_step} is already running.")
+          raise Crowbar::Error::StartStepRunningError.new(current_step)
         end
         unless step_allowed? step_name
           @logger.warn("The start of step #{step_name} is requested in the wrong order")
