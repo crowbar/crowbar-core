@@ -3,6 +3,10 @@ require "spec_helper"
 describe Api::Crowbar do
   let(:pid) { rand(20000..30000) }
   let(:admin_node) { NodeObject.find_node_by_name("admin") }
+  let(:cinder_proposal) do
+    Proposal.where(barclamp: "cinder", name: "default").create(barclamp: "cinder", name: "default")
+  end
+
   let!(:crowbar_upgrade_status) do
     JSON.parse(
       File.read(
@@ -349,6 +353,46 @@ describe Api::Crowbar do
       )
 
       expect(subject.class.ha_config_check).to eq({})
+    end
+
+    it "succeeds to confirm that HA is deployed with correct cinder backend" do
+      allow(Api::Crowbar).to(receive(:addon_installed?).and_return(true))
+      allow(NodeObject).to(
+        receive(:find).with(
+          "pacemaker_founder:true AND pacemaker_config_environment:*"
+        ).and_return([node])
+      )
+      cinder_proposal.raw_data["attributes"] = {
+        "cinder" => { "volumes" => [{ "backend_driver" => "rbd" }] }
+      }
+      cinder_proposal.raw_data["deployment"] = {
+        "cinder" => { "elements" => [] }
+      }
+      allow(Proposal).to(receive(:where).and_return([]))
+      allow(Proposal).to(receive(:where).with(barclamp: "cinder").and_return([cinder_proposal]))
+
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))
+      allow_any_instance_of(NodeObject).to(
+        receive(:roles).and_return(["nova-compute-kvm", "cinder-volume", "swift-storage"])
+      )
+
+      expect(subject.class.ha_config_check).to eq({})
+    end
+
+    it "fails when finding out cinder is using raw backend" do
+      allow(Api::Crowbar).to(receive(:addon_installed?).and_return(true))
+      allow(NodeObject).to(
+        receive(:find).with(
+          "pacemaker_founder:true AND pacemaker_config_environment:*"
+        ).and_return([node])
+      )
+      cinder_proposal.raw_data["attributes"] = {
+        "cinder" => { "volumes" => [{ "backend_driver" => "raw" }] }
+      }
+      allow(Proposal).to(receive(:where).and_return([cinder_proposal]))
+
+      expect(subject.class.ha_config_check).to eq(cinder_wrong_backend: true)
     end
 
     it "fails when controller role is deployed to compute node" do

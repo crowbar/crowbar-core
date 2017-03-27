@@ -401,6 +401,12 @@ module Api
             help: I18n.t("api.upgrade.prechecks.role_conflicts.help")
           }
         end
+        if check[:cinder_wrong_backend]
+          ret[:cinder_wrong_backend] = {
+            data: I18n.t("api.upgrade.prechecks.cinder_wrong_backend.error"),
+            help: I18n.t("api.upgrade.prechecks.cinder_wrong_backend.help")
+          }
+        end
         ret
       end
 
