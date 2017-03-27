@@ -365,7 +365,8 @@ module NodesHelper
         "controller" => t("nodes.form.controller"),
         "compute" => t("nodes.form.compute"),
         "network" => t("nodes.form.network"),
-        "storage" => t("nodes.form.storage")
+        "storage" => t("nodes.form.storage"),
+        "monitoring" => t("nodes.form.monitoring")
       }
 
       intended_role = node.intended_role

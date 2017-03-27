@@ -35,7 +35,8 @@ module FormHelper
         [t(".controller"), "controller"],
         [t(".compute"), "compute"],
         [t(".network"), "network"],
-        [t(".storage"), "storage"]
+        [t(".storage"), "storage"],
+        [t(".monitoring"), "monitoring"]
       ],
       selected.to_s
     )
