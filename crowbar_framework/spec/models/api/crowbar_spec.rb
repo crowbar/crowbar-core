@@ -346,7 +346,6 @@ describe Api::Crowbar do
         receive(:find).with("pacemaker_founder:true AND pacemaker_config_environment:*").
         and_return([node])
       )
-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(["nova-compute-kvm", "cinder-volume", "swift-storage"])
@@ -371,7 +370,6 @@ describe Api::Crowbar do
       allow(Proposal).to(receive(:where).and_return([]))
       allow(Proposal).to(receive(:where).with(barclamp: "cinder").and_return([cinder_proposal]))
 
-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(["nova-compute-kvm", "cinder-volume", "swift-storage"])
@@ -400,7 +398,6 @@ describe Api::Crowbar do
       allow(NodeObject).to(receive(:find).with(
         "pacemaker_founder:true AND pacemaker_config_environment:*"
       ).and_return([node]))
-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(
@@ -616,8 +613,7 @@ describe Api::Crowbar do
 
   context "with correct barclamps deployment" do
     it "passes with nice compute nodes" do
-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(
           ["nova-compute-kvm", "cinder-volume", "swift-storage"]
@@ -629,8 +625,7 @@ describe Api::Crowbar do
     end
 
     it "passes with remote compute node" do
-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(
           ["nova-compute-kvm", "pacemaker-remote"]
@@ -642,8 +637,7 @@ describe Api::Crowbar do
     end
 
     it "passes with compute node together with nova-controller " do
-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(
           ["nova-compute-kvm", "cinder-controller", "nova-controller"]
@@ -657,8 +651,7 @@ describe Api::Crowbar do
 
   context "with broken barclamps deployment" do
     it "fails when cinder-controller is on compute node" do
-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(
           ["nova-compute-kvm", "cinder-controller"]
