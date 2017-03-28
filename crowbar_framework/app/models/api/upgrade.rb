@@ -1558,6 +1558,13 @@ module Api
             help: I18n.t("api.upgrade.prechecks.no_resources.help")
           }
         end
+        if check[:non_kvm_computes]
+          ret[:non_kvm_computes] = {
+            data: I18n.t("api.upgrade.prechecks.non_kvm_computes.error",
+              nodes: check[:non_kvm_computes].join(", ")),
+            help: I18n.t("api.upgrade.prechecks.non_kvm_computes.help")
+          }
+        end
         if check[:no_live_migration]
           ret[:no_live_migration] = {
             data: I18n.t("api.upgrade.prechecks.no_live_migration.error"),

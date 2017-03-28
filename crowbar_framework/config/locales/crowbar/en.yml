@@ -804,10 +804,13 @@ en:
           help:
             default: 'Make sure clusters are healthy'
         no_resources:
-          help: 'Make sure you have enough compute nodes so the live migration of instances is possible.'
+          help: 'Make sure you have enough KVM compute nodes so the live migration of instances is possible.'
         no_live_migration:
           error: 'Live migration is not configured in nova barclamp.'
           help: 'Adapt the nova barclamp configuration to support live migration before proceeding with the upgrade.'
+        non_kvm_computes:
+          error: 'Found compute nodes different than KVM: %{nodes}.'
+          help: 'Non-disruptive upgrade is only possible with KVM compute nodes.'
         resources:
           help: 'Make sure you have enough compute nodes so the live migration of instances is possible.'
         ha_configured:

@@ -131,14 +131,15 @@ module Api
 
       def compute_status
         ret = {}
-        ["kvm", "xen"].each do |virt|
-          compute_nodes = NodeObject.find("roles:nova-compute-#{virt}")
-          next unless compute_nodes.size == 1
-          ret[:no_resources] ||= []
-          ret[:no_resources].push(
-            "Found only one compute node of #{virt} type; non-disruptive upgrade is not possible"
-          )
+        compute_nodes = NodeObject.find("roles:nova-compute-kvm")
+        if compute_nodes.size == 1
+          ret[:no_resources] =
+            "Found only one KVM compute node; non-disruptive upgrade is not possible"
         end
+        non_kvm_nodes = NodeObject.find(
+          "roles:nova-compute-* AND NOT roles:nova-compute-kvm"
+        ).map(&:name)
+        ret[:non_kvm_computes] = non_kvm_nodes unless non_kvm_nodes.empty?
         nova = NodeObject.find("roles:nova-controller").first
         ret[:no_live_migration] = true if nova && !nova["nova"]["use_migration"]
         ret
