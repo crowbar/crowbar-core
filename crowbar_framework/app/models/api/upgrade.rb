@@ -753,6 +753,7 @@ module Api
           status.end_step
         end
       rescue ::Crowbar::Error::Upgrade::NodeError => e
+        substep = ::Crowbar::UpgradeStatus.new.current_substep
         ::Crowbar::UpgradeStatus.new.save_substep(substep, :failed)
         ::Crowbar::UpgradeStatus.new.end_step(
           false,
@@ -762,6 +763,7 @@ module Api
           }
         )
       rescue ::Crowbar::Error::Upgrade::LiveMigrationError => e
+        substep = ::Crowbar::UpgradeStatus.new.current_substep
         ::Crowbar::UpgradeStatus.new.save_substep(substep, :failed)
         ::Crowbar::UpgradeStatus.new.end_step(
           false,
@@ -776,6 +778,7 @@ module Api
         )
       rescue StandardError => e
         # end the step even for non-upgrade error, so we are not stuck with 'running'
+        substep = ::Crowbar::UpgradeStatus.new.current_substep
         ::Crowbar::UpgradeStatus.new.save_substep(substep, :failed)
         ::Crowbar::UpgradeStatus.new.end_step(
           false,
@@ -940,6 +943,7 @@ module Api
 
         # Explicitly mark the first node as cluster founder
         # and in case of DRBD setup, adapt DRBD config accordingly.
+        save_node_action("marking node as cluster founder")
         unless Api::Pacemaker.set_node_as_founder node.name
           raise_node_upgrade_error("Changing the cluster founder to #{node.name} has failed.")
           return false
@@ -1159,6 +1163,7 @@ module Api
           )
           return
         end
+        save_node_action("preparing compute nodes before the upgrade")
 
         # This batch of actions can be executed in parallel for all compute nodes
         begin
@@ -1181,6 +1186,7 @@ module Api
             "Error while preparing services on compute nodes. " + e.message
           )
         end
+        save_node_action("compute nodes prepared")
       end
 
       #

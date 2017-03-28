@@ -120,7 +120,9 @@ template "/usr/sbin/crowbar-evacuate-host.sh" do
   group "root"
   action :create
   variables(
-    needs_block_migrate: nova[:nova][:use_shared_instance_storage] ? false : true
+    lazy {
+      { needs_block_migrate: !nova[:nova][:use_shared_instance_storage] }
+    }
   )
   only_if { roles.include? "nova-controller" }
 end
@@ -129,7 +131,7 @@ compute_node = (roles & ["nova-compute-kvm", "nova-compute-xen"]).any?
 cinder_volume = roles.include? "cinder-volume"
 neutron = search(:node, "run_list_map:neutron-server").first
 
-if neutron[:neutron][:networking_plugin] == "ml2"
+if !neutron.nil? && neutron[:neutron][:networking_plugin] == "ml2"
   ml2_mech_drivers = neutron[:neutron][:ml2_mechanism_drivers]
   if ml2_mech_drivers.include?("openvswitch")
     neutron_agent = "openstack-neutron-openvswitch-agent"
@@ -138,7 +140,7 @@ if neutron[:neutron][:networking_plugin] == "ml2"
   end
 end
 
-if neutron[:neutron][:use_dvr]
+if !neutron.nil? && neutron[:neutron][:use_dvr]
   l3_agent = "openstack-neutron-l3-agent"
   metadata_agent = "openstack-neutron-metadata-agent"
 end

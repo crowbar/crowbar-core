@@ -164,6 +164,7 @@ module Api
     # Disable "pre-upgrade" attribute for given node
     # We must do it from a node where pacemaker is running
     def disable_pre_upgrade_attribute_for(name)
+      save_node_action("disabling pre-upgrade pacemaker attribute")
       hostname = name.split(".").first
       out = @node.run_ssh_cmd("crm node attribute #{hostname} set pre-upgrade false")
       unless out[:exit_code].zero?
