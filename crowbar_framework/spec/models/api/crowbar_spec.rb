@@ -682,15 +682,14 @@ describe Api::Crowbar do
   end
 
   context "with enough compute resources" do
-    it "succeeds to find enough compute nodes" do
+    it "succeeds to find enough KVM compute nodes" do
       allow(NodeObject).to(
         receive(:find).with("roles:nova-compute-kvm").
         and_return([node, node])
       )
-      allow(NodeObject).to(
-        receive(:find).with("roles:nova-compute-xen").
-        and_return([node, node])
-      )
+      allow(NodeObject).to(receive(:find).with(
+        "roles:nova-compute-* AND NOT roles:nova-compute-kvm"
+      ).and_return([]))
       allow(NodeObject).to(
         receive(:find).with("roles:nova-controller").
         and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
@@ -705,28 +704,34 @@ describe Api::Crowbar do
         receive(:find).with("roles:nova-compute-kvm").
         and_return([node])
       )
-      allow(NodeObject).to(
-        receive(:find).with("roles:nova-compute-xen").
-        and_return([node, node])
-      )
+      allow(NodeObject).to(receive(:find).with(
+        "roles:nova-compute-* AND NOT roles:nova-compute-kvm"
+      ).and_return([]))
       allow(NodeObject).to(
         receive(:find).with("roles:nova-controller").and_return([node])
       )
-      expect(subject.class.compute_status).to_not be_empty
+      expect(subject.class.compute_status).to eq(
+        no_resources:
+        "Found only one KVM compute node; non-disruptive upgrade is not possible"
+      )
     end
-    it "finds there is only one XEN compute node and fails" do
+  end
+
+  context "with various compute node types" do
+    it "finds there is non KVM compute node and fails" do
       allow(NodeObject).to(
         receive(:find).with("roles:nova-compute-kvm").
         and_return([node, node])
       )
-      allow(NodeObject).to(
-        receive(:find).with("roles:nova-compute-xen").
-        and_return([node])
-      )
+      allow(NodeObject).to(receive(:find).with(
+        "roles:nova-compute-* AND NOT roles:nova-compute-kvm"
+      ).and_return([node]))
       allow(NodeObject).to(
         receive(:find).with("roles:nova-controller").and_return([node])
       )
-      expect(subject.class.compute_status).to_not be_empty
+      expect(subject.class.compute_status).to eq(
+        non_kvm_computes: ["testing.crowbar.com"]
+      )
     end
   end
 
@@ -736,10 +741,9 @@ describe Api::Crowbar do
         receive(:find).with("roles:nova-compute-kvm").
         and_return([])
       )
-      allow(NodeObject).to(
-        receive(:find).with("roles:nova-compute-xen").
-        and_return([])
-      )
+      allow(NodeObject).to(receive(:find).with(
+        "roles:nova-compute-* AND NOT roles:nova-compute-kvm"
+      ).and_return([]))
       allow(NodeObject).to(
         receive(:find).with("roles:nova-controller").and_return([node])
       )
