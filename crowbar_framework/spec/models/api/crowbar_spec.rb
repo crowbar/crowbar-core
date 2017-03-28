@@ -280,6 +280,11 @@ describe Api::Crowbar do
       allow(Proposal).to(receive(:where).and_return([]))
       allow(Proposal).to(receive(:where).with(barclamp: "cinder").and_return([cinder_proposal]))
 
+      allow(Node).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))
+      allow_any_instance_of(Node).to(
+        receive(:roles).and_return(["nova-compute-kvm", "cinder-volume", "swift-storage"])
+      )
+
       expect(subject.class.ha_config_check).to eq({})
     end
 
@@ -293,8 +298,7 @@ describe Api::Crowbar do
       expect(subject.class.ha_config_check).to eq(cinder_wrong_backend: true)
     end
 
-    it "succeeds to confirm that HA is deployed and correctly configured" do
-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
+    it "fails when controller role is deployed to compute node" do
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(["nova-compute-kvm", "cinder-volume", "swift-storage"])
@@ -320,8 +324,7 @@ describe Api::Crowbar do
 
   context "with correct barclamps deployment" do
     it "passes with nice compute nodes" do
-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(
           ["nova-compute-kvm", "cinder-volume", "swift-storage"]
@@ -332,9 +335,20 @@ describe Api::Crowbar do
       expect(subject.class.deployment_check).to be_empty
     end
 
+    it "passes with remote compute node" do
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
+      allow_any_instance_of(NodeObject).to(
+        receive(:roles).and_return(
+          ["nova-compute-kvm", "pacemaker-remote"]
+        )
+      )
+      allow_any_instance_of(RoleObject).to(receive(:proposal?).and_return(false))
+
+      expect(subject.class.deployment_check).to be_empty
+    end
+
     it "passes with compute node together with nova-controller " do
-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(
           ["nova-compute-kvm", "cinder-controller", "nova-controller"]
@@ -348,8 +362,7 @@ describe Api::Crowbar do
 
   context "with broken barclamps deployment" do
     it "fails when cinder-controller is on compute node" do
-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(
           ["nova-compute-kvm", "cinder-controller"]
