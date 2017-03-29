@@ -1136,8 +1136,8 @@ module Api
         node_api.save_node_state(role, "upgraded")
       end
 
-      # Upgrade the nodes that are not controlles neither compute ones
-      # (e.g. standalone cinder-volume or swift-storage nodes)
+      # Upgrade the nodes that are not controlles neither compute-kvm ones
+      # (e.g. standalone cinder-volume or swift-storage nodes, or other compute nodes)
       # This has to be done before compute nodes upgrade, so the live migration
       # can use fully upgraded cinder stack.
       def upgrade_non_compute_nodes
@@ -1145,16 +1145,15 @@ module Api
         # All of such nodes should be upgraded during the first round when we were upgrading
         # by the barclamps order.
         return if upgrade_mode == :normal
-        ::Node.find("state:crowbar_upgrade AND NOT run_list_map:nova-compute-*").each do |node|
+        ::Node.find("state:crowbar_upgrade AND NOT run_list_map:nova-compute-kvm").each do |node|
           upgrade_one_node node.name
         end
         save_nodes_state([], "", "")
       end
 
       def prepare_all_compute_nodes
-        ["kvm", "xen"].each do |virt|
-          prepare_compute_nodes virt
-        end
+        # We do not support any non-kvm kind of compute, but in future we might...
+        prepare_compute_nodes "kvm"
       end
 
       # Prepare the compute nodes for upgrade by upgrading necessary packages
@@ -1205,9 +1204,7 @@ module Api
       #
       def upgrade_all_compute_nodes
         ::Crowbar::UpgradeStatus.new.save_substep(:compute_nodes, :running)
-        ["kvm", "xen"].each do |virt|
-          upgrade_compute_nodes virt
-        end
+        upgrade_compute_nodes "kvm"
       end
 
       def parallel_upgrade_compute_nodes(compute_nodes)
