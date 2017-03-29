@@ -22,6 +22,8 @@ describe Api::Crowbar do
     )
   end
   let!(:node) { Node.find_by_name("testing.crowbar.com") }
+  let!(:crowbar_role) { RoleObject.find_role_by_name("crowbar") }
+  let!(:cinder_controller_role) { RoleObject.find_role_by_name("cinder-controller") }
 
   before(:each) do
     allow_any_instance_of(Kernel).to(
@@ -275,7 +277,8 @@ describe Api::Crowbar do
       cinder_proposal.raw_data["attributes"] = {
         "cinder" => { "volumes" => [{ "backend_driver" => "rbd" }] }
       }
-      allow(Proposal).to(receive(:where).and_return([cinder_proposal]))
+      allow(Proposal).to(receive(:where).and_return([]))
+      allow(Proposal).to(receive(:where).with(barclamp: "cinder").and_return([cinder_proposal]))
 
       expect(subject.class.ha_config_check).to eq({})
     end
@@ -284,9 +287,88 @@ describe Api::Crowbar do
       cinder_proposal.raw_data["attributes"] = {
         "cinder" => { "volumes" => [{ "backend_driver" => "raw" }] }
       }
-      allow(Proposal).to(receive(:where).and_return([cinder_proposal]))
+      allow(Proposal).to(receive(:where).and_return([]))
+      allow(Proposal).to(receive(:where).with(barclamp: "cinder").and_return([cinder_proposal]))
 
       expect(subject.class.ha_config_check).to eq(cinder_wrong_backend: true)
+    end
+
+    it "succeeds to confirm that HA is deployed and correctly configured" do
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))
+      allow_any_instance_of(NodeObject).to(
+        receive(:roles).and_return(["nova-compute-kvm", "cinder-volume", "swift-storage"])
+      )
+
+      expect(subject.class.ha_config_check).to eq({})
+    end
+
+    it "fails when controller role is deployed to compute node" do
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))
+      allow_any_instance_of(NodeObject).to(
+        receive(:roles).and_return(
+          ["cinder-controller", "nova-compute-kvm", "neutron-server"]
+        )
+      )
+
+      expect(subject.class.ha_config_check).to eq(
+        role_conflicts: { "testing.crowbar.com" => ["cinder-controller", "neutron-server"] }
+      )
+    end
+  end
+
+  context "with correct barclamps deployment" do
+    it "passes with nice compute nodes" do
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))
+      allow_any_instance_of(NodeObject).to(
+        receive(:roles).and_return(
+          ["nova-compute-kvm", "cinder-volume", "swift-storage"]
+        )
+      )
+      allow_any_instance_of(RoleObject).to(receive(:proposal?).and_return(false))
+
+      expect(subject.class.deployment_check).to be_empty
+    end
+
+    it "passes with compute node together with nova-controller " do
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))
+      allow_any_instance_of(NodeObject).to(
+        receive(:roles).and_return(
+          ["nova-compute-kvm", "cinder-controller", "nova-controller"]
+        )
+      )
+      allow_any_instance_of(RoleObject).to(receive(:proposal?).and_return(false))
+
+      expect(subject.class.deployment_check).to be_empty
+    end
+  end
+
+  context "with broken barclamps deployment" do
+    it "fails when cinder-controller is on compute node" do
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))
+      allow_any_instance_of(NodeObject).to(
+        receive(:roles).and_return(
+          ["nova-compute-kvm", "cinder-controller"]
+        )
+      )
+      allow(RoleObject).to(receive(:find_role_by_name).with(
+        "cinder-controller"
+      ).and_return(cinder_controller_role))
+      allow(BarclampCatalog).to(receive(:category).with(
+        "cinder"
+      ).and_return("OpenStack"))
+      allow(BarclampCatalog).to(receive(:run_order).with("nova").and_return(10))
+      allow(BarclampCatalog).to(receive(:run_order).with("cinder").and_return(5))
+
+      allow_any_instance_of(RoleObject).to(receive(:proposal?).and_return(false))
+
+      expect(subject.class.deployment_check).to eq(
+        controller_roles: { node: "testing.crowbar.com", roles: ["cinder-controller"] }
+      )
     end
   end
 

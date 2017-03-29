@@ -86,6 +86,13 @@ module Api
             errors: health_check.empty? ? {} : health_check_errors(health_check)
           }
 
+          deployment = Api::Crowbar.deployment_check
+          ret[:checks][:cloud_deployment] = {
+            required: true,
+            passed: deployment.empty?,
+            errors: deployment.empty? ? {} : deployment_errors(deployment)
+          }
+
           maintenance_updates = ::Crowbar::Checks::Maintenance.updates_status
           ret[:checks][:maintenance_updates_installed] = {
             required: true,
@@ -1427,6 +1434,17 @@ module Api
         }
       end
 
+      def deployment_errors(check)
+        {
+          controller_roles: {
+            data: I18n.t("api.upgrade.prechecks.controller_roles.error",
+              node: check[:controller_roles][:node],
+              roles: check[:controller_roles][:roles]),
+            help: I18n.t("api.upgrade.prechecks.controller_roles.help")
+          }
+        }
+      end
+
       def health_check_errors(check)
         ret = {}
         if check[:nodes_not_ready]
@@ -1492,6 +1510,23 @@ module Api
           ret[:cinder_wrong_backend] = {
             data: I18n.t("api.upgrade.prechecks.cinder_wrong_backend.error"),
             help: I18n.t("api.upgrade.prechecks.cinder_wrong_backend.help")
+          }
+        end
+        if check[:roles_not_ha]
+          ret[:roles_not_ha] = {
+            data: I18n.t("api.upgrade.prechecks.roles_not_ha.error",
+              roles: check[:roles_not_ha].join(", ")),
+            help: I18n.t("api.upgrade.prechecks.roles_not_ha.help")
+          }
+        end
+        if check[:role_conflicts]
+          nodes = check[:role_conflicts].map do |node, roles|
+            "#{node}: " + roles.join(", ")
+          end
+          ret[:role_conflicts] = {
+            data: I18n.t("api.upgrade.prechecks.role_conflicts.error",
+              nodes: nodes.join("\n")),
+            help: I18n.t("api.upgrade.prechecks.role_conflicts.help")
           }
         end
         ret
