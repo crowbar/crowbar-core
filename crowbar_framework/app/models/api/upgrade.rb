@@ -688,6 +688,7 @@ module Api
         elements_to_upgrade = upgradable_elements_of_proposals proposals
         upgrade_nodes_disruptive elements_to_upgrade
 
+        save_nodes_state([], "", "")
         Rails.logger.info("Successfully finished disruptive upgrade of controller nodes")
       end
 
@@ -852,6 +853,7 @@ module Api
           cluster_env = founder[:pacemaker][:config][:environment]
           upgrade_cluster founder, cluster_env
         end
+        save_nodes_state([], "", "")
       end
 
       # crowbar_upgrade_step will not be needed after node is upgraded
@@ -893,6 +895,7 @@ module Api
           node_api.save_node_state("ceph", "upgraded")
         end
         ::Crowbar::UpgradeStatus.new.save_substep(:ceph_nodes, :finished)
+        save_nodes_state([], "", "")
       end
 
       def finalize_nodes_upgrade
@@ -1145,6 +1148,7 @@ module Api
         ::Node.find("state:crowbar_upgrade AND NOT run_list_map:nova-compute-*").each do |node|
           upgrade_one_node node.name
         end
+        save_nodes_state([], "", "")
       end
 
       def prepare_all_compute_nodes
@@ -1237,6 +1241,7 @@ module Api
           end
           node_api.save_node_state("compute", "upgraded")
         end
+        save_nodes_state([], "", "")
       end
 
       def upgrade_compute_nodes(virt)
@@ -1269,6 +1274,7 @@ module Api
         compute_nodes.each do |n|
           upgrade_compute_node(controller, n)
         end
+        save_nodes_state([], "", "")
       end
 
       def fetch_nova_controller
