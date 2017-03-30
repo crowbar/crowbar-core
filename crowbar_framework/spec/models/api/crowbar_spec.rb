@@ -369,6 +369,7 @@ describe Api::Crowbar do
       }
       allow(Proposal).to(receive(:where).and_return([]))
       allow(Proposal).to(receive(:where).with(barclamp: "cinder").and_return([cinder_proposal]))
+      allow_any_instance_of(Proposal).to(receive(:active?).and_return(true))
 
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))
       allow_any_instance_of(NodeObject).to(
@@ -389,6 +390,7 @@ describe Api::Crowbar do
         "cinder" => { "volumes" => [{ "backend_driver" => "raw" }] }
       }
       allow(Proposal).to(receive(:where).and_return([cinder_proposal]))
+      allow_any_instance_of(Proposal).to(receive(:active?).and_return(true))
 
       expect(subject.class.ha_config_check).to eq(cinder_wrong_backend: true)
     end
