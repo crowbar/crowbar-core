@@ -1,0 +1,51 @@
+#!/bin/bash
+#
+# This script migrates all neutron lbaasv2 loadbalancers from the node
+# that is passed in via the command line argument.
+
+LOGFILE=/var/log/crowbar/node-upgrade.log
+UPGRADEDIR=/var/lib/crowbar/upgrade
+mkdir -p "`dirname "$LOGFILE"`"
+exec >>"$LOGFILE" 2>&1
+
+hostname=$1
+if [[ "$2" = "delete-ns" ]]; then
+    delete_ns="--delete_namespaces --nosource_agent_restart"
+else
+    delete_ns=""
+fi
+
+log()
+{
+    set +x
+    echo "[$(date --iso-8601=ns)] [$$] $@"
+    set -x
+}
+
+log "Executing $BASH_SOURCE"
+
+set -x
+
+mkdir -p $UPGRADEDIR
+rm -f $UPGRADEDIR/crowbar-lbaas-evacuation-failed
+
+if systemctl --quiet is-active  openstack-neutron-lbaasv2-agent.service; then
+    log "Evacuating neutron-lbaasv2-agent on $hostname"
+    use_crm=<%= @use_ha ? "--use_crm" : "" %>
+    /usr/bin/neutron-evacuate-lbaasv2-agent $use_crm $delete_ns \
+        --host $hostname \
+        --config-file /etc/neutron/lbaas-connection.conf \
+        --config-file /etc/neutron/neutron.conf
+
+    ret=$?
+    if [ $ret != 0 ] ; then
+        log "Failed to evacuate lbaasv2 agent on host: $hostname"
+        log $ret > $UPGRADEDIR/crowbar-lbaas-evacuation-failed
+        exit $ret
+    fi
+else
+    log "Nothing to do, openstack-neutron-lbaasv2-agent is not running."
+fi
+
+touch $UPGRADEDIR/crowbar-lbaas-evacuation-ok
+log "$BASH_SOURCE is finished."

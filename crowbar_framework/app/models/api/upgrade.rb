@@ -875,9 +875,11 @@ module Api
           "pre-upgrade",
           "delete-pacemaker-resources",
           "router-migration",
+          "lbaas-evacuation",
           "post-upgrade",
           "chef-upgraded"
         ].map { |f| "/usr/sbin/crowbar-#{f}.sh" }.join(" ")
+        scripts_to_delete << "/etc/neutron/lbaas-connection.conf"
         node.run_ssh_cmd("rm -f #{scripts_to_delete}")
       end
 
@@ -1069,15 +1071,15 @@ module Api
         )
       end
 
-      # Evacuate all routers away from the specified network node to other
-      # available network nodes. The evacuation procedure is started on the
-      # specified controller node
+      # Evacuate all routers and loadbalancers away from the specified network
+      # node to other available network nodes. The evacuation procedure is
+      # started on the specified controller node
       def evacuate_network_node(controller, network_node, delete_namespaces = false)
         save_node_action("evacuating routers")
         hostname = network_node["hostname"]
-        migrated_file = "/var/lib/crowbar/upgrade/crowbar-router-migrated"
+        migrated_file = "/var/lib/crowbar/upgrade/crowbar-network-evacuated"
         if network_node.file_exist? migrated_file
-          Rails.logger.info("Routers were already evacuated from #{hostname}.")
+          Rails.logger.info("Network node #{hostname} was already evacuated.")
           return
         end
         unless network_node[:run_list_map].key? "neutron-network"
@@ -1094,10 +1096,20 @@ module Api
           args
         )
         Rails.logger.info("Migrating routers away from #{hostname} was successful.")
+
+        save_node_action("evacuating loadbalancers")
+        controller.wait_for_script_to_finish(
+          "/usr/sbin/crowbar-lbaas-evacuation.sh",
+          timeouts[:router_migration],
+          args
+        )
+        Rails.logger.info("Migrating loadbalancers away from #{hostname} was successful.")
+
         network_node.run_ssh_cmd("mkdir -p /var/lib/crowbar/upgrade; touch #{migrated_file}")
         # Cleanup up the ok/failed state files, as we likely need to
         # run the script again on this node (to evacuate other nodes)
         controller.delete_script_exit_files("/usr/sbin/crowbar-router-migration.sh")
+        controller.delete_script_exit_files("/usr/sbin/crowbar-lbaas-evacuation.sh")
       rescue StandardError => e
         raise_node_upgrade_error(
           e.message +

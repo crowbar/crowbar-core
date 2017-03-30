@@ -186,6 +186,32 @@ template "/usr/sbin/crowbar-router-migration.sh" do
   action :create
 end
 
+template "/etc/neutron/lbaas-connection.conf" do
+  source "lbaas-connection.conf"
+  mode "0640"
+  owner "root"
+  group "root"
+  action :create
+  variables(
+    lazy do
+      { sql_connection: node[:neutron][:db][:sql_connection] }
+    end
+  )
+  only_if { roles.include? "neutron-network" }
+end
+
+template "/usr/sbin/crowbar-lbaas-evacuation.sh" do
+  source "crowbar-lbaas-evacuation.sh.erb"
+  mode "0755"
+  owner "root"
+  group "root"
+  action :create
+  variables(
+    use_ha: use_ha
+  )
+  only_if { roles.include? "neutron-network" }
+end
+
 has_drbd = use_ha && node.fetch("drbd", {}).fetch("rsc", {}).any?
 
 template "/usr/sbin/crowbar-post-upgrade.sh" do
