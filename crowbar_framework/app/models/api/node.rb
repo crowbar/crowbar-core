@@ -110,6 +110,9 @@ module Api
       if @node.ready_after_upgrade?
         Rails.logger.info("Initial chef-client run was successful.")
       else
+        # Script -ok file indicates success, but node is in problematic state
+        # so let's remove the indication so the step could be run again
+        @node.delete_script_exit_files("/usr/sbin/crowbar-chef-upgraded.sh")
         Api::Upgrade.raise_node_upgrade_error(
           "Possible error during initial chef-client run at node #{@node.name}. " \
           "Node is currently in state #{@node.state}. " \
