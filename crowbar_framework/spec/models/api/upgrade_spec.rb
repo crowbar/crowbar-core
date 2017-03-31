@@ -514,9 +514,6 @@ describe Api::Upgrade do
       allow(Node).to(
         receive(:find).with("roles:nova-compute-kvm").and_return([node1, node2])
       )
-      allow(Node).to(
-        receive(:find).with("roles:nova-compute-xen").and_return([])
-      )
 
       # parallel_upgrade_compute_nodes:
       allow(Api::Upgrade).to receive(:execute_scripts_and_wait_for_finish).with(
@@ -624,7 +621,7 @@ describe Api::Upgrade do
       # upgrade_non_compute_nodes:
       allow(Node).to(
         receive(:find).with(
-          "state:crowbar_upgrade AND NOT run_list_map:nova-compute-*"
+          "state:crowbar_upgrade AND NOT run_list_map:nova-compute-kvm"
         ).and_return([ceph, testing])
       )
       allow_any_instance_of(Api::Node).to receive(:save_node_state).with(
@@ -653,9 +650,6 @@ describe Api::Upgrade do
       allow(Api::Upgrade).to receive(:do_controllers_substep).and_return(true)
       allow(Node).to(
         receive(:find).with("roles:nova-compute-kvm").and_return([])
-      )
-      allow(Node).to(
-        receive(:find).with("roles:nova-compute-xen").and_return([])
       )
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
@@ -760,7 +754,6 @@ describe Api::Upgrade do
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
       allow_any_instance_of(Node).to receive(:upgraded?).and_return(true)
-      allow(Node).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
       allow(Api::Upgrade).to receive(:upgrade_all_compute_nodes).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :progress
@@ -783,7 +776,6 @@ describe Api::Upgrade do
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
       allow_any_instance_of(Node).to receive(:upgraded?).and_return(true)
-      allow(Node).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :progress
       ).and_return(remaining_nodes: 0)
@@ -800,7 +792,6 @@ describe Api::Upgrade do
         receive(:find).with("roles:nova-compute-kvm").
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
-      allow(Node).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
       allow(Node).to(
         receive(:find).with("roles:nova-controller").
         and_return([Node.find_by_name("testing.crowbar.com")])
