@@ -179,7 +179,7 @@ module Api
         ret = {}
         # swift replicas check vs. number of disks
         prop = Proposal.where(barclamp: "swift").first
-        unless prop.nil?
+        if !prop.nil? && prop.active?
           replicas = prop["attributes"]["swift"]["replicas"] || 0
           disks = 0
           NodeObject.find("roles:swift-storage").each do |n|
@@ -189,14 +189,15 @@ module Api
         end
         # keystone hybrid backend check
         prop = Proposal.where(barclamp: "keystone").first
-        return ret if prop.nil?
-        driver = prop["attributes"]["keystone"]["identity"]["driver"] || "sql"
-        ret[:keystone_hybrid_backend] if driver == "hybrid"
+        if !prop.nil? && prop.active?
+          driver = prop["attributes"]["keystone"]["identity"]["driver"] || "sql"
+          ret[:keystone_hybrid_backend] if driver == "hybrid"
+        end
 
         # check for lbaas version
         prop = Proposal.where(barclamp: "neutron").first
-        return ret if prop.nil?
-        if prop["attributes"]["neutron"]["use_lbaas"] &&
+        if !prop.nil? && prop.active? &&
+            prop["attributes"]["neutron"]["use_lbaas"] &&
             !prop["attributes"]["neutron"]["use_lbaasv2"]
 
           # So lbaas v1 is configured, let's find out if it is actually used
