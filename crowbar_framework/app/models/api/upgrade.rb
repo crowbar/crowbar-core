@@ -398,7 +398,7 @@ module Api
           return
         end
 
-        cmd = "openstack server list --all-projects --long " \
+        cmd = "openstack server list --insecure --all-projects --long " \
           "--status active -f value -c Host"
         out = controller.run_ssh_cmd("source /root/.openrc; #{cmd}", "60s")
         unless out[:exit_code].zero?
@@ -1319,13 +1319,12 @@ module Api
           node_api.save_node_state("compute", "upgraded")
           return
         end
-
         controller.run_ssh_cmd(
-          "source /root/.openrc; nova service-enable #{hostname} nova-compute"
+          "source /root/.openrc; nova --insecure service-enable #{hostname} nova-compute"
         )
         out = controller.run_ssh_cmd(
           "source /root/.openrc; " \
-          "nova service-list --host #{hostname} --binary nova-compute " \
+          "nova --insecure service-list --host #{hostname} --binary nova-compute " \
           "| grep -q enabled",
           "60s"
         )
