@@ -916,7 +916,8 @@ module Api
 
         non_founder_nodes = ::Node.find(
           "pacemaker_founder:false AND " \
-          "pacemaker_config_environment:#{cluster}"
+          "pacemaker_config_environment:#{cluster} AND " \
+          "run_list_map:pacemaker-cluster-member"
         )
         non_founder_nodes.select! { |n| !n.upgraded? }
 
