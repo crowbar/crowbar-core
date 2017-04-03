@@ -1,0 +1,50 @@
+require "chefspec"
+
+ENV["RSPEC_RUNNING"] = "true"
+
+RSpec.configure do |config|
+  # config.mock_with :rspec do |mocks|
+  #   # This option should be set when all dependencies are being loaded
+  #   # before a spec run, as is the case in a typical spec helper. It will
+  #   # cause any verifying double instantiation for a class that does not
+  #   # exist to raise, protecting against incorrectly spelt names.
+  #   mocks.verify_doubled_constant_names = true
+  # end
+
+  # Specify the path for Chef Solo to find cookbooks (default: [inferred from
+  # the location of the calling spec file])
+  this_dir = File.dirname(__FILE__)
+  config.cookbook_path = [
+    File.expand_path("../..", this_dir),
+    File.expand_path("fixtures/cookbooks", this_dir),
+  ]
+
+  # Specify the path for Chef Solo to find roles (default: [ascending search])
+  # config.role_path = '/var/roles'
+
+  # Specify the Chef log_level (default: :warn)
+  config.log_level = ENV["CHEF_LOG_LEVEL"].to_sym if ENV["CHEF_LOG_LEVEL"]
+
+  # Specify the path to a local JSON file with Ohai data (default: nil)
+  # config.path = 'ohai.json'
+
+  # Specify the operating platform to mock Ohai data from (default: nil)
+  config.platform = "suse"
+
+  # Specify the operating version to mock Ohai data from (default: nil)
+  config.version = "12.2"
+
+  # Disable deprecated "should" syntax
+  # https://github.com/rspec/rspec-expectations/blob/master/Should.md
+  config.expect_with :rspec do |c|
+    c.syntax = :expect
+  end
+
+  config.run_all_when_everything_filtered = true
+  config.filter_run focus: true
+end
+
+if ENV["RUBYDEPS"]
+  require "rubydeps"
+  Rubydeps.start
+end
