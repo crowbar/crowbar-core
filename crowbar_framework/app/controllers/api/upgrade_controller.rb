@@ -56,6 +56,7 @@ class Api::UpgradeController < ApiController
   def prechecks
     render json: Api::Upgrade.checks
   rescue StandardError => e
+    log_exception(e)
     render json: {
       errors: {
         prechecks: {
@@ -89,6 +90,7 @@ class Api::UpgradeController < ApiController
       }
     }, status: :locked
   rescue StandardError => e
+    log_exception(e)
     render json: {
       errors: {
         cancel: {
@@ -114,8 +116,17 @@ class Api::UpgradeController < ApiController
     else
       render json: check
     end
-  rescue Crowbar::Error::UpgradeError,
-         StandardError => e
+  rescue Crowbar::Error::UpgradeError => e
+    render json: {
+      errors: {
+        repocheck_crowbar: {
+          data: e.message,
+          help: I18n.t("api.upgrade.adminrepocheck.help.default")
+        }
+      }
+    }, status: :unprocessable_entity
+  rescue StandardError => e
+    log_exception(e)
     render json: {
       errors: {
         repocheck_crowbar: {
