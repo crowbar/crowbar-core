@@ -202,10 +202,12 @@ module Api
 
           # So lbaas v1 is configured, let's find out if it is actually used
           neutron = NodeObject.find("roles:neutron-server").first
-          out = neutron.run_ssh_cmd(
-            "source /root/.openrc; neutron lb-pool-list -f value -c id"
-          )
-          ret[:lbaas_v1] = true unless out[:stdout].nil? || out[:stdout].empty?
+          unless neutron.nil?
+            out = neutron.run_ssh_cmd(
+              "source /root/.openrc; neutron lb-pool-list -f value -c id"
+            )
+            ret[:lbaas_v1] = true unless out[:stdout].nil? || out[:stdout].empty?
+          end
         end
         ret
       end
