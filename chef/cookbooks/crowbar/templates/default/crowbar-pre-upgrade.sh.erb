@@ -49,15 +49,24 @@ touch $RUNFILE
 trap cleanup INT EXIT
 
 <% if @use_ha %>
-# Shutdown pacemaker so the remaining OpenStack services are stopped
+# Shutdown corosync so the remaining OpenStack services are stopped
 # This is needed so that the zypper dup won't trigger any db migrations on package update
-service pacemaker stop
+service corosync stop
 
 ret=$?
 if [ $ret != 0 ] ; then
-    log "Error occured during shutting down pacemaker service"
+    log "Error occured during shutting down corosync service"
     echo $ret > $UPGRADEDIR/crowbar-pre-upgrade-failed
     exit $ret
+fi
+
+# Make sure sbd is shut down (if it was configured) before proceeding with next actions
+if systemctl --quiet is-enabled sbd 2>/dev/null ; then
+    SBD_PIDFILE=$(systemctl show sbd.service --property PIDFile | sed -n 's/^PIDFile=//p')
+    while [ -e $SBD_PIDFILE ] ; do
+        log "sbd is still active, waiting for shutdown"
+        sleep 1
+    done
 fi
 
 <% else %>
