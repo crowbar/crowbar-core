@@ -1100,7 +1100,7 @@ module Api
         save_node_action("evacuating loadbalancers")
         controller.wait_for_script_to_finish(
           "/usr/sbin/crowbar-lbaas-evacuation.sh",
-          timeouts[:router_migration],
+          timeouts[:lbaas_evacuation],
           args
         )
         Rails.logger.info("Migrating loadbalancers away from #{hostname} was successful.")

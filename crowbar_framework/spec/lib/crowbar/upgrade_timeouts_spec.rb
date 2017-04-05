@@ -22,7 +22,7 @@ describe Crowbar::UpgradeTimeouts do
     # Generic checker for all values that should always exists
     [
       :prepare_repositories, :pre_upgrade, :upgrade_os, :post_upgrade,
-      :evacuate_host, :chef_upgraded, :router_migration,
+      :evacuate_host, :chef_upgraded, :router_migration, :lbaas_evacuation,
       :delete_pacemaker_resources, :delete_cinder_services
     ].each do |k|
       expect(values[k]).not_to be_nil
@@ -52,6 +52,7 @@ describe Crowbar::UpgradeTimeouts do
             evacuate_host: 1,
             chef_upgraded: 1,
             router_migration: 1,
+            lbaas_evacuation: 1,
             delete_pacemaker_resources: 1,
             delete_cinder_services: 1
           }
