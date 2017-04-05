@@ -1,7 +1,7 @@
 [Unit]
 Description=Crowbar Background jobs
 After=network.target syslog.target remote-fs.target chef-server.service crowbar.service
-Requires=postgresql.service
+Wants=postgresql.service
 
 [Service]
 Type=forking
