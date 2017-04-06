@@ -6,8 +6,8 @@ module Crowbar
       @timeouts_config = begin
         YAML.load_file("/etc/crowbar/upgrade_timeouts.yml")
       rescue
-        Rails.logger.info(
-          "No user provided upgraed timeouts, proceeding with the default ones."
+        Rails.logger.debug(
+          "No user provided upgrade timeouts, proceeding with the default ones."
         )
         {}
       end
@@ -31,7 +31,8 @@ module Crowbar
         router_migration: @timeouts_config[:router_migration] || 600,
         lbaas_evacuation: @timeouts_config[:lbaas_evacuation] || 600,
         delete_pacemaker_resources: @timeouts_config[:delete_pacemaker_resources] || 300,
-        delete_cinder_services: @timeouts_config[:delete_cinder_services] || 300
+        delete_cinder_services: @timeouts_config[:delete_cinder_services] || 300,
+        wait_until_compute_started: @timeouts_config[:wait_until_compute_started] || 60
       }
     end
   end

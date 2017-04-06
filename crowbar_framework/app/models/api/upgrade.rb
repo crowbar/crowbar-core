@@ -1195,6 +1195,44 @@ module Api
         )
       end
 
+      # Move the upgraded node to ready state and wait until nova-compute resource
+      # is reported as running.
+      def start_remote_resources(controller, hostname)
+        save_node_action("starting services at remote node #{hostname}")
+        out = controller.run_ssh_cmd(
+          "crm --wait node ready remote-#{hostname}",
+          "60s"
+        )
+        unless out[:exit_code].zero?
+          raise_node_upgrade_error(
+            "Starting remote services at '#{hostname}' node has failed. " \
+            "Check /var/log/pacemaker.log at '#{controller.name}' and " \
+            "'#{hostname}' nodes for possible causes."
+          )
+        end
+        seconds = timeouts[:wait_until_compute_started]
+        begin
+          Timeout.timeout(seconds) do
+            loop do
+              out = controller.run_ssh_cmd(
+                "source /root/.openrc; " \
+                "openstack --insecure compute service list " \
+                "--host #{hostname} --service nova-compute -f value -c State"
+              )
+              break if !out[:stdout].nil? && out[:stdout].chomp == "up"
+              sleep 1
+            end
+          end
+        rescue Timeout::Error
+          raise_node_upgrade_error(
+            "Service 'nova-compute' at '#{hostname}' node did not start " \
+            "after #{seconds} seconds. " \
+            "Check /var/log/pacemaker.log at '#{controller.name}' and " \
+            "'#{hostname}' nodes for possible causes."
+          )
+        end
+      end
+
       def prepare_remote_nodes
         # iterate over remote clusters
         ServiceObject.available_remotes.each do |cluster, role|
@@ -1394,17 +1432,7 @@ module Api
         end
 
         if node[:pacemaker] && node[:pacemaker][:is_remote]
-          out = controller.run_ssh_cmd(
-            "crm --wait node ready remote-#{hostname}",
-            "60s"
-          )
-          unless out[:exit_code].zero?
-            raise_node_upgrade_error(
-              "Starting remote services at '#{hostname}' node has failed. " \
-              "Check /var/log/pacemaker.log at '#{controller.name}' and " \
-              "'#{hostname}' nodes for possible causes."
-            )
-          end
+          start_remote_resources(controller, hostname)
         end
 
         node_api.save_node_state("compute", "upgraded")
