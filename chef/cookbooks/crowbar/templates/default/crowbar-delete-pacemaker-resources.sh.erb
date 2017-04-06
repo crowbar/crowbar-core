@@ -35,7 +35,7 @@ log "Stopping pacemaker resources..."
 # Otherwise we could have services starting up in unwanted locations while deleting constraints.
 
 for type in clone group ms primitive; do
-    for resource in $(crm configure show | awk "\$1 == \"$type\" && ! (\$2 ~ /drbd|stonith|vip-/) {print \$2}"); do
+    for resource in $(crm configure show | awk "\$1 == \"$type\" && ! (\$2 ~ /drbd|stonith|remote-|vip-/) {print \$2}"); do
         log "Stopping resource $resource"
         crm --wait resource stop $resource
     done
@@ -53,7 +53,7 @@ log "Deleting pacemaker resources..."
 crm_cmd=""
 for type in location clone group ms primitive; do
     log "Looking at typ $type of resources..."
-    for resource in $(crm configure show | awk "\$1 == \"$type\" && ! (\$2 ~ /drbd|stonith|vip-/) {print \$2}"); do
+    for resource in $(crm configure show | awk "\$1 == \"$type\" && ! (\$2 ~ /drbd|stonith|remote-|vip-/) {print \$2}"); do
         printf -v crm_cmd "${crm_cmd}delete $resource\n"
     done
 done
