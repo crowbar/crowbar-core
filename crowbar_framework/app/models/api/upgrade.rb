@@ -918,7 +918,8 @@ module Api
 
         non_founder_nodes = ::Node.find(
           "pacemaker_founder:false AND " \
-          "pacemaker_config_environment:#{cluster}"
+          "pacemaker_config_environment:#{cluster} AND " \
+          "run_list_map:pacemaker-cluster-member"
         )
         non_founder_nodes.select! { |n| !n.upgraded? }
 
@@ -1168,6 +1169,50 @@ module Api
         prepare_compute_nodes "kvm"
       end
 
+      # Restart remote resources at target node from cluster node
+      # This is needed for services (like nova-compute) managed by pacemaker.
+      def restart_remote_resources(controller, node)
+        hostname = node[:hostname]
+        save_node_action("restarting services at remote node #{hostname}")
+        out = controller.run_ssh_cmd(
+          "crm --wait node standby remote-#{hostname}",
+          "60s"
+        )
+        unless out[:exit_code].zero?
+          raise_node_upgrade_error(
+            "Moving remote node '#{hostname}' to standby state has failed. " \
+            "Check /var/log/pacemaker.log at '#{controller.name}' for possible causes."
+          )
+        end
+        out = controller.run_ssh_cmd(
+          "crm --wait node online remote-#{hostname}",
+          "60s"
+        )
+        return if out[:exit_code].zero?
+        raise_node_upgrade_error(
+          "Bringing remote node '#{hostname}' from standby state has failed. " \
+          "Check /var/log/pacemaker.log at '#{controller.name}' for possible causes."
+        )
+      end
+
+      def prepare_remote_nodes
+        # iterate over remote clusters
+        ServiceObject.available_remotes.each do |cluster, role|
+          # find the controller in this cluster
+          cluster_name = ServiceObject.cluster_name(cluster)
+          cluster_env = "pacemaker-config-#{cluster_name}"
+          controller = ::Node.find(
+            "pacemaker_founder:true AND " \
+            "pacemaker_config_environment:#{cluster_env}"
+          ).first
+
+          # restart remote resources for each node
+          role.cluster_remote_nodes.each do |node|
+            restart_remote_resources(controller, node)
+          end
+        end
+      end
+
       # Prepare the compute nodes for upgrade by upgrading necessary packages
       def prepare_compute_nodes(virt)
         Rails.logger.info("Preparing #{virt} compute nodes for upgrade... ")
@@ -1208,6 +1253,7 @@ module Api
             "Error while preparing services on compute nodes. " + e.message
           )
         end
+        prepare_remote_nodes if upgrade_mode == :non_disruptive
         save_node_action("compute nodes prepared")
       end
 
@@ -1346,6 +1392,21 @@ module Api
             "Check nova log files at '#{controller.name}' and '#{hostname}'."
           )
         end
+
+        if node[:pacemaker] && node[:pacemaker][:is_remote]
+          out = controller.run_ssh_cmd(
+            "crm --wait node ready remote-#{hostname}",
+            "60s"
+          )
+          unless out[:exit_code].zero?
+            raise_node_upgrade_error(
+              "Starting remote services at '#{hostname}' node has failed. " \
+              "Check /var/log/pacemaker.log at '#{controller.name}' and " \
+              "'#{hostname}' nodes for possible causes."
+            )
+          end
+        end
+
         node_api.save_node_state("compute", "upgraded")
       end
 

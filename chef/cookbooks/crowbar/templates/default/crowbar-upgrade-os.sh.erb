@@ -125,6 +125,10 @@ initiate_node_upgrade()
         default_package_config $c
     done
 
+    # Remove possibly existing temporary config files from the compute nodes
+    rm -f /etc/nova/nova.conf.d/200-crowbar-upgrade.conf
+    rm -f /etc/neutron/neutron-openvswitch-agent.conf.d/200-crowbar-upgrade.conf
+
     # Signalize that the upgrade correctly ended
     echo "<%= @target_platform_version %>" >> $UPGRADEDIR/crowbar-upgrade-os-ok
 
