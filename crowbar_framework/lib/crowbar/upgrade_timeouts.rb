@@ -29,6 +29,7 @@ module Crowbar
         evacuate_host: @timeouts_config[:evacuate_host] || 300,
         chef_upgraded: @timeouts_config[:chef_upgraded] || 900,
         router_migration: @timeouts_config[:router_migration] || 600,
+        lbaas_evacuation: @timeouts_config[:lbaas_evacuation] || 600,
         delete_pacemaker_resources: @timeouts_config[:delete_pacemaker_resources] || 300,
         delete_cinder_services: @timeouts_config[:delete_cinder_services] || 300
       }
