@@ -1380,6 +1380,21 @@ module Api
             "Check nova log files at '#{controller.name}' and '#{hostname}'."
           )
         end
+
+        if node[:pacemaker] && node[:pacemaker][:is_remote]
+          out = controller.run_ssh_cmd(
+            "crm --wait node ready remote-#{hostname}",
+            "60s"
+          )
+          unless out[:exit_code].zero?
+            raise_node_upgrade_error(
+              "Starting remote services at '#{hostname}' node has failed. " \
+              "Check /var/log/pacemaker.log at '#{controller.name}' and " \
+              "'#{hostname}' nodes for possible causes."
+            )
+          end
+        end
+
         node_api.save_node_state("compute", "upgraded")
       end
 
