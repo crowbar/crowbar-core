@@ -320,6 +320,181 @@ describe Api::Crowbar do
         role_conflicts: { "testing.crowbar.com" => ["cinder-controller", "neutron-server"] }
       )
     end
+
+    def barclamp_config_helper(attributes, deployment)
+      deployment.each do |bc, bc_data|
+        allow(Proposal).to(
+          receive(:where).with(barclamp: bc).and_return(
+            [{
+              "attributes" => attributes[bc],
+              "deployment" => { bc => { "elements" => bc_data } }
+            }]
+          )
+        )
+      end
+    end
+
+    it "succeeds when there are two clusters and one is dedicated to neutron" do
+      allow(Api::Crowbar).to(receive(:addon_installed?).and_return(true))
+      allow(NodeObject).to(receive(:find).with(
+        "pacemaker_founder:true AND pacemaker_config_environment:*"
+      ).and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([]))
+
+      barclamps_clusters = {
+        "database" => { "database-server" => ["cluster1"] },
+        "rabbitmq" => { "rabbitmq-server" => ["cluster1"] },
+        "keystone" => { "keystone-server" => ["cluster1"] },
+        "glance" => { "glance-server" => ["cluster1"] },
+        "cinder" => { "cinder-controller" => ["cluster1"] },
+        "neutron" => { "neutron-server" => ["cluster2"], "neutron-network" => ["cluster2"] },
+        "nova" => { "nova-controller" => ["cluster1"] }
+      }
+      barclamps_attributes = {
+        "cinder" => { "cinder" => { "volumes" => [] } }
+      }
+      barclamp_config_helper(barclamps_attributes, barclamps_clusters)
+
+      allow(ServiceObject).to(receive(:is_cluster?).and_return(true))
+
+      expect(subject.class.ha_config_check).to eq({})
+    end
+
+    it "succeeds when there are two clusters and one is dedicated to db" do
+      allow(Api::Crowbar).to(receive(:addon_installed?).and_return(true))
+      allow(NodeObject).to(receive(:find).with(
+        "pacemaker_founder:true AND pacemaker_config_environment:*"
+      ).and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([]))
+
+      barclamps_clusters = {
+        "database" => { "database-server" => ["cluster2"] },
+        "rabbitmq" => { "rabbitmq-server" => ["cluster2"] },
+        "keystone" => { "keystone-server" => ["cluster1"] },
+        "glance" => { "glance-server" => ["cluster1"] },
+        "cinder" => { "cinder-controller" => ["cluster1"] },
+        "neutron" => { "neutron-server" => ["cluster1"], "neutron-network" => ["cluster1"] },
+        "nova" => { "nova-controller" => ["cluster1"] }
+      }
+      barclamps_attributes = {
+        "cinder" => { "cinder" => { "volumes" => [] } }
+      }
+      barclamp_config_helper(barclamps_attributes, barclamps_clusters)
+
+      allow(ServiceObject).to(receive(:is_cluster?).and_return(true))
+
+      expect(subject.class.ha_config_check).to eq({})
+    end
+
+    it "succeeds when there are three clusters and they are db+apis+network" do
+      allow(Api::Crowbar).to(receive(:addon_installed?).and_return(true))
+      allow(NodeObject).to(receive(:find).with(
+        "pacemaker_founder:true AND pacemaker_config_environment:*"
+      ).and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([]))
+
+      barclamps_clusters = {
+        "database" => { "database-server" => ["cluster1"] },
+        "rabbitmq" => { "rabbitmq-server" => ["cluster1"] },
+        "keystone" => { "keystone-server" => ["cluster2"] },
+        "glance" => { "glance-server" => ["cluster2"] },
+        "cinder" => { "cinder-controller" => ["cluster2"] },
+        "neutron" => { "neutron-server" => ["cluster2"], "neutron-network" => ["cluster3"] },
+        "nova" => { "nova-controller" => ["cluster2"] }
+      }
+      barclamps_attributes = {
+        "cinder" => { "cinder" => { "volumes" => [] } }
+      }
+      barclamp_config_helper(barclamps_attributes, barclamps_clusters)
+
+      allow(ServiceObject).to(receive(:is_cluster?).and_return(true))
+
+      expect(subject.class.ha_config_check).to eq({})
+    end
+
+    it "fails when there are four clusters" do
+      allow(Api::Crowbar).to(receive(:addon_installed?).and_return(true))
+      allow(NodeObject).to(receive(:find).with(
+        "pacemaker_founder:true AND pacemaker_config_environment:*"
+      ).and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([]))
+
+      barclamps_clusters = {
+        "database" => { "database-server" => ["cluster1"] },
+        "rabbitmq" => { "rabbitmq-server" => ["cluster1"] },
+        "keystone" => { "keystone-server" => ["cluster2"] },
+        "glance" => { "glance-server" => ["cluster2"] },
+        "cinder" => { "cinder-controller" => ["cluster2"] },
+        "neutron" => { "neutron-server" => ["cluster2"], "neutron-network" => ["cluster3"] },
+        "nova" => { "nova-controller" => ["cluster4"] }
+      }
+      barclamps_attributes = {
+        "cinder" => { "cinder" => { "volumes" => [] } }
+      }
+      barclamp_config_helper(barclamps_attributes, barclamps_clusters)
+
+      allow(ServiceObject).to(receive(:is_cluster?).and_return(true))
+
+      expect(subject.class.ha_config_check).to have_key(:unsupported_cluster_setup)
+    end
+
+    it "fails when there are three clusters and db/api/network roles are mixed" do
+      allow(Api::Crowbar).to(receive(:addon_installed?).and_return(true))
+      allow(NodeObject).to(receive(:find).with(
+        "pacemaker_founder:true AND pacemaker_config_environment:*"
+      ).and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([]))
+
+      barclamps_clusters = {
+        "database" => { "database-server" => ["cluster1"] },
+        "rabbitmq" => { "rabbitmq-server" => ["cluster2"] },
+        "keystone" => { "keystone-server" => ["cluster3"] },
+        "glance" => { "glance-server" => ["cluster1"] },
+        "cinder" => { "cinder-controller" => ["cluster2"] },
+        "neutron" => { "neutron-server" => ["cluster3"], "neutron-network" => ["cluster1"] },
+        "nova" => { "nova-controller" => ["cluster2"] }
+      }
+      barclamps_attributes = {
+        "cinder" => { "cinder" => { "volumes" => [] } }
+      }
+      barclamp_config_helper(barclamps_attributes, barclamps_clusters)
+
+      allow(ServiceObject).to(receive(:is_cluster?).and_return(true))
+
+      expect(subject.class.ha_config_check).to have_key(:unsupported_cluster_setup)
+    end
+
+    it "fails when there are two clusters and roles assignment does not match supported patterns" do
+      allow(Api::Crowbar).to(receive(:addon_installed?).and_return(true))
+      allow(NodeObject).to(receive(:find).with(
+        "pacemaker_founder:true AND pacemaker_config_environment:*"
+      ).and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([]))
+
+      barclamps_clusters = {
+        "database" => { "database-server" => ["cluster1"] },
+        "rabbitmq" => { "rabbitmq-server" => ["cluster2"] },
+        "keystone" => { "keystone-server" => ["cluster1"] },
+        "glance" => { "glance-server" => ["cluster2"] },
+        "cinder" => { "cinder-controller" => ["cluster1"] },
+        "neutron" => { "neutron-server" => ["cluster2"], "neutron-network" => ["cluster1"] },
+        "nova" => { "nova-controller" => ["cluster2"] }
+      }
+      barclamps_attributes = {
+        "cinder" => { "cinder" => { "volumes" => [] } }
+      }
+      barclamp_config_helper(barclamps_attributes, barclamps_clusters)
+
+      allow(ServiceObject).to(receive(:is_cluster?).and_return(true))
+
+      expect(subject.class.ha_config_check).to have_key(:unsupported_cluster_setup)
+    end
   end
 
   context "with correct barclamps deployment" do

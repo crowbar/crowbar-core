@@ -828,6 +828,9 @@ en:
         controller_roles:
           error: 'Found compute node %{node} with controller roles: %{roles}.'
           help: 'It is not possible to upgrade with such setup. These roles cannot be placed on compute node.'
+        unsupported_cluster_setup:
+          error: 'Your cluster/role configuration is not supported by the non-disruptive upgrade process.'
+          help: 'Please refer to the Deployment Guide for list of supported configurations.'
         ceph_not_healthy:
           error: |
             Ceph cluster health check has failed with:

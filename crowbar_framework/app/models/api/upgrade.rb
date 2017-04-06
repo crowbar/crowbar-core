@@ -1531,6 +1531,12 @@ module Api
             help: I18n.t("api.upgrade.prechecks.role_conflicts.help")
           }
         end
+        if check[:unsupported_cluster_setup]
+          ret[:unsupported_cluster_setup] = {
+            data: I18n.t("api.upgrade.prechecks.unsupported_cluster_setup.error"),
+            help: I18n.t("api.upgrade.prechecks.unsupported_cluster_setup.help")
+          }
+        end
         ret
       end
 

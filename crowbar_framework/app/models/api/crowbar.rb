@@ -178,14 +178,22 @@ module Api
           "nova"
         ]
         roles_not_ha = []
+        roles_clusters = {}
+        clusters_roles = {}
+        clusters_roles.default = []
         barclamps.each do |barclamp|
           proposal = Proposal.where(barclamp: barclamp).first
           next if proposal.nil?
           proposal["deployment"][barclamp]["elements"].each do |role, elements|
             next unless clustered_roles.include? role
             elements.each do |element|
-              next if ServiceObject.is_cluster?(element)
-              roles_not_ha |= [role]
+              if ServiceObject.is_cluster?(element)
+                # currently roles can't be assigned to more than one cluster
+                roles_clusters[role] = element
+                clusters_roles[element] |= [role]
+              else
+                roles_not_ha |= [role]
+              end
             end
           end
         end
@@ -215,6 +223,48 @@ module Api
             ret[:role_conflicts][node.name] = conflict
           end
         end
+
+        # example inputs:
+        # roles_clusters = {
+        #   "neutron-server": "cluster:cluster1",
+        #   "neutron-network": "cluster:cluster1",
+        #   "database-server": "cluster:cluster2",
+        #   "rabbitmq-server": "cluster:cluster3"
+        # }
+        # clusters_roles = {
+        #   "cluster:cluster1": ["neutron-server", "neutron-network"],
+        #   "cluster:cluster2": ["database-server"],
+        #   "cluster:cluster3": ["rabbitmq-server"]
+        # }
+        deployment_supported =
+          case clusters_roles.length
+          when 0
+            # no clusters, no point complaining as this will be detected by other prechecks
+            true
+
+          when 1
+            # everything on one cluster = no problem
+            true
+
+          when 2
+            # neutron-network in separate cluster
+            true if clusters_roles[roles_clusters["neutron-network"]].length == 1 ||
+                # neutron-network + neutron-server in separate cluster
+                (clusters_roles[roles_clusters["neutron-network"]].length == 2 &&
+                roles_clusters["neutron-network"] == roles_clusters["neutron-server"]) ||
+                # database-server + rabbitmq-server in separate cluster
+                (clusters_roles[roles_clusters["database-server"]].length == 2 &&
+                roles_clusters["database-server"] == roles_clusters["rabbitmq-server"])
+
+          when 3
+            # neutron-network and database-server + rabbitmq-server in separate clusters
+            # rest of *-server roles is implicitly on the third cluster
+            true if clusters_roles[roles_clusters["neutron-network"]].length == 1 &&
+                clusters_roles[roles_clusters["database-server"]].length == 2 &&
+                roles_clusters["database-server"] == roles_clusters["rabbitmq-server"]
+          end
+        ret[:unsupported_cluster_setup] = true unless deployment_supported
+
         ret
       end
 
