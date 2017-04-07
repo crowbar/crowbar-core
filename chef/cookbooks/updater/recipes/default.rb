@@ -40,6 +40,11 @@ if !node[:updater].key?(:one_shot_run) || !node[:updater][:one_shot_run]
       zypper_command += " --auto-agree-with-licenses"
     end
 
+    execute "refresh PTF repository" do
+      command "zypper --non-interactive --gpg-auto-import-keys refresh -fr PTF"
+      ignore_failure true
+    end
+
     # Butt-ugly, enhance Chef::Provider::Package::Zypper later on...
     ruby_block "running \"#{zypper_command}\"" do
       block do
