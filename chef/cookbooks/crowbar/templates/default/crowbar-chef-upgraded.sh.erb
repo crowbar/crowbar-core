@@ -19,6 +19,7 @@ log "Executing $BASH_SOURCE"
 set -x
 
 mkdir -p $UPGRADEDIR
+rm -f $UPGRADEDIR/crowbar-chef-upgraded-failed
 
 if [[ -f $UPGRADEDIR/crowbar-chef-upgraded-ok ]] ; then
     log "crowbar_join and chef-client actions were already successfully executed"
@@ -27,6 +28,13 @@ fi
 
 # Move node to ready state and execute chef-client for the first time
 crowbar_join --start
+
+ret=$?
+if [ $ret != 0 ] ; then
+    log "crowbar_join execution has failed. Check /var/log/crowbar/crowbar_join/ log files."
+    echo $ret > $UPGRADEDIR/crowbar-chef-upgraded-failed
+    exit $ret
+fi
 
 systemctl start cron
 systemctl enable cron
