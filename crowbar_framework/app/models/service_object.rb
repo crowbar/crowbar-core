@@ -929,6 +929,7 @@ class ServiceObject
   # we simply do not run chef.
   def apply_role(role, inst, in_queue, bootstrap = false)
     @logger.debug "apply_role(#{role.name}, #{inst}, #{in_queue}, #{bootstrap})"
+    @logger.progress("Start applying role #{role.name}")
 
     # Variables used in the global ensure
     apply_locks = []
@@ -989,6 +990,7 @@ class ServiceObject
       unless failures.nil? || failures.empty?
         @logger.fatal("apply_role: Failed to expand items #{failures.inspect} for role \"#{role_name}\"")
         message = "Failed to apply the proposal: cannot expand list of nodes for role \"#{role_name}\", following items do not exist: #{failures.join(", ")}"
+        @logger.progress("Failed to apply role #{role.name}")
         update_proposal_status(inst, "failed", message)
         return [405, message]
       end
@@ -1063,7 +1065,9 @@ class ServiceObject
     element_order.each do |roles|
       # roles is an Array of names of Chef roles which can all be
       # applied in parallel.
-      @logger.debug "Preparing batch with following roles: #{roles.inspect}"
+      @logger.progress(
+        "Preparing batch with following roles: #{roles.join(", ")}"
+      )
 
       # A list of nodes changed when applying roles from this batch
       nodes_in_batch = []
@@ -1206,6 +1210,7 @@ class ServiceObject
           apply_locks.push(apply_lock)
         end
       rescue Crowbar::Error::LockingFailure => e
+        @logger.progress("Failed to apply role #{role.name}")
         message = "Failed to apply the proposal: #{e.message}"
         update_proposal_status(inst, "failed", message)
         return [409, message] # 409 is 'Conflict'
@@ -1222,7 +1227,7 @@ class ServiceObject
 
     # Part III: Update run lists of nodes to reflect new deployment. I.e. write
     # through the deployment schedule in pending node actions into run lists.
-    @logger.debug "Update the run_lists for #{pending_node_actions.inspect}"
+    @logger.progress("Update the run_lists for #{pending_node_actions.inspect}")
 
     pending_node_actions.each do |node_name, lists|
       # pre_cached_nodes contains only new_nodes, we need to look up the
@@ -1270,6 +1275,7 @@ class ServiceObject
       apply_role_pre_chef_call(old_role, role, all_nodes)
     rescue StandardError => e
       @logger.fatal("apply_role: Exception #{e.message} #{e.backtrace.join("\n")}")
+      @logger.progress("Failed to apply role #{role.name} before calling chef")
       message = "Failed to apply the proposal: exception before calling chef (#{e.message})"
       update_proposal_status(inst, "failed", message)
       return [405, message]
@@ -1289,7 +1295,7 @@ class ServiceObject
     # Each batch is a list of nodes that can be done in parallel.
     batches.each_with_index do |batch, index|
       roles, node_names = batch
-      @logger.debug(
+      @logger.progress(
         "Applying batch #{index + 1}/#{batches.count}: " \
         "#{node_names.join(", ")} for #{roles.join(", ")}"
       )
@@ -1310,8 +1316,9 @@ class ServiceObject
 
       # wait for all running threads and collect the ones with a non-zero return value
       bad_nodes = []
-      logger.debug "Waiting for #{threads.keys.length} threads to finish..."
+      @logger.progress("Waiting for #{threads.keys.length} threads to finish...")
       ThreadsWait.all_waits(threads.keys) do |t|
+        @logger.progress("Thread #{t} for node #{threads[t]} finished")
         logger.debug "thread #{t} for node #{threads[t]} finished (return value '#{t.value}')"
         unless t.value == 0
           bad_nodes << threads[t]
@@ -1321,10 +1328,13 @@ class ServiceObject
       next if bad_nodes.empty?
 
       message = "Failed to apply the proposal to:\n"
+      nodes_alias = []
       bad_nodes.each do |node|
         message += "#{node_attr_cache[node]["alias"]} (#{node}):\n"
+        nodes_alias.push(node_attr_cache[node]["alias"])
         message += get_log_lines(node)
       end
+      @logger.progress("Failed to apply the role to #{nodes_alias.join(", ")}")
       update_proposal_status(inst, "failed", message)
       return [405, message]
     end
@@ -1374,6 +1384,7 @@ class ServiceObject
     update_proposal_status(inst, "success", "")
     [200, {}]
   rescue StandardError => e
+    @logger.progress("Failed to apply proposal")
     @logger.fatal("apply_role: Uncaught exception #{e.message} #{e.backtrace.join("\n")}")
     message = "Failed to apply the proposal: uncaught exception (#{e.message})"
     update_proposal_status(inst, "failed", message)
