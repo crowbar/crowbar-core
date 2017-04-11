@@ -1166,7 +1166,8 @@ module Api
 
       def prepare_all_compute_nodes
         # We do not support any non-kvm kind of compute, but in future we might...
-        prepare_compute_nodes "kvm"
+        type = upgrade_mode == :normal ? "*" : "kvm"
+        prepare_compute_nodes type
       end
 
       # Restart remote resources at target node from cluster node
@@ -1300,7 +1301,8 @@ module Api
       #
       def upgrade_all_compute_nodes
         ::Crowbar::UpgradeStatus.new.save_substep(:compute_nodes, :running)
-        upgrade_compute_nodes "kvm"
+        type = upgrade_mode == :normal ? "*" : "kvm"
+        upgrade_compute_nodes type
       end
 
       def parallel_upgrade_compute_nodes(compute_nodes)
@@ -1313,7 +1315,7 @@ module Api
             "/usr/sbin/crowbar-upgrade-os.sh",
             timeouts[:upgrade_os]
           )
-          Rails.logger.info("Repositories prepared successfully.")
+          Rails.logger.info("Packages upgraded successfully.")
         rescue StandardError => e
           raise_node_upgrade_error(
             "Error while upgrading compute nodes. " + e.message
@@ -1322,12 +1324,12 @@ module Api
         # FIXME: should we paralelize this as well?
         compute_nodes.each do |node|
           next if node.upgraded?
+          node_api = Api::Node.new node.name
           if node.ready_after_upgrade?
             Rails.logger.info(
               "Node #{node.name} is ready after the initial chef-client run."
             )
           else
-            node_api = Api::Node.new node.name
             node_api.save_node_state("compute", "upgrading")
             node_api.reboot_and_wait
             node_api.join_and_chef
