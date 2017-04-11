@@ -78,6 +78,7 @@ end
 
 # Find out now if we have HA setup and pass that info to the script
 use_ha = roles.include? "pacemaker-cluster-member"
+remote_node = roles.include? "pacemaker-remote"
 cluster_founder = use_ha && node["pacemaker"]["founder"]
 
 template "/usr/sbin/crowbar-shutdown-services-before-upgrade.sh" do
@@ -87,7 +88,7 @@ template "/usr/sbin/crowbar-shutdown-services-before-upgrade.sh" do
   group "root"
   action :create
   variables(
-    use_ha: use_ha,
+    use_ha: use_ha || remote_node,
     cluster_founder: cluster_founder
   )
 end
@@ -129,7 +130,6 @@ end
 
 compute_node = roles.include? "nova-compute-kvm"
 cinder_volume = roles.include? "cinder-volume"
-remote_node = roles.include? "pacemaker-remote"
 neutron = search(:node, "run_list_map:neutron-server").first
 
 if !neutron.nil? && neutron[:neutron][:networking_plugin] == "ml2"
