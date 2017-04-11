@@ -233,5 +233,7 @@ template "/usr/sbin/crowbar-chef-upgraded.sh" do
   mode "0775"
   owner "root"
   group "root"
-  action :create
+  variables(
+    crowbar_join: "#{web_path}/crowbar_join.sh"
+  )
 end
