@@ -188,6 +188,7 @@ template "/usr/sbin/crowbar-router-migration.sh" do
   action :create
 end
 
+neutron_server = search(:node, "run_list_map:neutron-server").first
 template "/etc/neutron/lbaas-connection.conf" do
   source "lbaas-connection.conf"
   mode "0640"
@@ -196,7 +197,7 @@ template "/etc/neutron/lbaas-connection.conf" do
   action :create
   variables(
     lazy do
-      { sql_connection: node[:neutron][:db][:sql_connection] }
+      { sql_connection: neutron_server[:neutron][:db][:sql_connection] }
     end
   )
   only_if { roles.include? "neutron-network" }
