@@ -26,8 +26,12 @@ if [[ -f $UPGRADEDIR/crowbar-chef-upgraded-ok ]] ; then
     exit 0
 fi
 
+# Download the latest crowbar-join from the server
+curl -s -o /usr/sbin/crowbar_join_tmp <%= @crowbar_join %>
+
 # Move node to ready state and execute chef-client for the first time
-crowbar_join --start
+chmod +x /usr/sbin/crowbar_join_tmp
+/usr/sbin/crowbar_join_tmp --start
 
 ret=$?
 if [ $ret != 0 ] ; then
@@ -35,6 +39,8 @@ if [ $ret != 0 ] ; then
     echo $ret > $UPGRADEDIR/crowbar-chef-upgraded-failed
     exit $ret
 fi
+
+rm -f /usr/sbin/crowbar_join_tmp
 
 systemctl start cron
 systemctl enable cron
