@@ -512,7 +512,7 @@ describe Api::Upgrade do
       allow(Api::Upgrade).to receive(:do_controllers_substep).and_return(true)
 
       allow(Node).to(
-        receive(:find).with("roles:nova-compute-kvm").and_return([node1, node2])
+        receive(:find).with("roles:nova-compute-*").and_return([node1, node2])
       )
 
       # parallel_upgrade_compute_nodes:
