@@ -139,7 +139,7 @@ class NodesController < ApplicationController
               dirty = true
             end
 
-            unless is_allocated
+            unless is_allocated || node.admin?
               unless node.target_platform == node_attributes["target_platform"]
                 node.target_platform = node_attributes["target_platform"]
                 dirty = true
@@ -156,9 +156,11 @@ class NodesController < ApplicationController
               dirty = true
             end
 
-            unless node.public_name == node_attributes["public_name"]
-              node.force_public_name = node_attributes["public_name"]
-              dirty = true
+            unless node.public_name.blank? && node_attributes["public_name"].blank?
+              unless node.public_name == node_attributes["public_name"]
+                node.force_public_name = node_attributes["public_name"]
+                dirty = true
+              end
             end
 
             unless node.intended_role == node_attributes["intended_role"]
