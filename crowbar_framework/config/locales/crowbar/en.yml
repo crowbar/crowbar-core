@@ -708,7 +708,7 @@ en:
         post_sanity_checks: 'Performing post-installation sanity checks'
         documentation: 'Documentation'
         release_notes: 'Release Notes'
-        deployment_guide: 'Deployment Guide'
+        documentation_resources: 'Documentation resources'
         system_not_supported: 'System currently not supported for installation'
       start:
         installation_ongoing: 'Installation is already ongoing, please wait.'
