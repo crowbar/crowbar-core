@@ -22,5 +22,6 @@ long_description ""
 version "0.0.1"
 
 depends "utils"
+depends "crowbar-pacemaker"
 
 recipe "updater", "System Package Updater"
