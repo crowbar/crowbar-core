@@ -17,6 +17,9 @@
 # limitations under the License.
 #
 
+::Chef::Recipe.include CrowbarPacemaker::MaintenanceModeHelpers
+::Chef::Resource.include CrowbarPacemaker::MaintenanceModeHelpers
+
 if !node[:updater].key?(:one_shot_run) || !node[:updater][:one_shot_run]
 
   node[:updater][:one_shot_run] = true
@@ -43,6 +46,65 @@ if !node[:updater].key?(:one_shot_run) || !node[:updater][:one_shot_run]
     execute "refresh PTF repository" do
       command "zypper --non-interactive --gpg-auto-import-keys refresh -fr PTF"
       ignore_failure true
+    end
+
+    ruby_block "check for updates" do
+      block do
+        case node[:updater][:zypper][:method]
+        when "patch"
+          command = "list-patches"
+        when "update"
+          command = "list-updates"
+        when "dist-upgrade"
+          command = "list-updates"
+        end
+
+        node.run_state["needs_update"] = `zypper -q #{command}|wc -l`.chomp.to_i > 0
+
+        command += '|egrep -q "corosync|pacemaker"'
+        system("zypper #{command}")
+        # exit 0: found, 1 not found
+        node.run_state["found_ha_packages"] = $?.exitstatus ? true : false
+      end
+    end
+
+    ["corosync", "pacemaker"].each do |s|
+      service s do
+        action :stop
+        only_if { node.run_state["found_ha_packages"] }
+        not_if { node[:pacemaker] && node[:pacemaker][:is_remote] }
+      end
+    end
+
+    # set cluster to maintenance if
+    # HA packages are NOT gonna be updated
+    # And Node is part of a cluster
+    # And there is packages to update
+    execute "crm --wait node maintenance" do
+      action :nothing
+      notifies :create, "ruby_block[set maintenance mode via this chef run]", :immediately
+    end
+
+    ruby_block "set maintenance mode via this chef run" do
+      action :nothing
+      block do
+        set_maintenance_mode_via_this_chef_run
+      end
+    end
+
+    ruby_block "set cluster maintenance" do
+      block do
+        Chef::Log.info("Triggering maintenance mode for this node")
+        true
+      end
+      only_if do
+        is_cluster = node.role? "pacemaker-cluster-member"
+        !node.run_state["found_ha_packages"] && is_cluster && node.run_state["needs_update"]
+      end
+      not_if do
+        maintenance_mode_set_via_this_chef_run? && maintenance_mode?
+      end
+      notifies :run, "execute[crm --wait node maintenance]", :immediately
     end
 
     # Butt-ugly, enhance Chef::Provider::Package::Zypper later on...
@@ -94,7 +156,13 @@ if !node[:updater].key?(:one_shot_run) || !node[:updater][:one_shot_run]
           end # case
         end # while
       end # block
+      only_if { node.run_state["needs_update"] }
     end # ruby_block
+
+    service "pacemaker" do
+      action :start
+      not_if { node[:pacemaker] && node[:pacemaker][:is_remote] }
+    end
 
   end # platform_family suse block
 
