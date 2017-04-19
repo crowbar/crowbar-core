@@ -54,6 +54,7 @@ en:
       public: 'Public'
       private: 'Private'
       storage: 'Storage'
+      ironic: 'Ironic'
     controller:
       virtual: 'Virtual'
 
