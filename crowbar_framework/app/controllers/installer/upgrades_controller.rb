@@ -91,6 +91,29 @@ module Installer
       end
     end
 
+    # This will initiate the upgrade of admin server.
+    # Once this function is called, server packages will be upgraded to latest versions.
+    # Right after all packages are upgraded, server will be rebooted.
+    # FIXME: We're assuming the preliminary checks have been run already, esp. the checks
+    # for presence of new product repositories.
+    def upgrade_admin_server
+      if request.post?
+        upgrade_script = "/opt/dell/bin/upgrade_admin_server.sh"
+        if File.exist? upgrade_script
+          # spawn the script asynchronously in the background
+          pid = spawn("sudo #{upgrade_script}")
+          Process.detach(pid)
+          Rails.logger.info("Upgrade script has been executed: #{pid}")
+        else
+          Rails.logger.error("Upgrade script #{upgrade_script} not found!")
+        end
+      end
+
+      respond_to do |format|
+        format.html
+      end
+    end
+
     def restore
       @current_step = 5
       @steps = Crowbar::Backup::Restore.steps
