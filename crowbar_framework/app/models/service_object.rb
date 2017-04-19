@@ -289,7 +289,7 @@ class ServiceObject
 # API Functions
 #
   def versions
-    [200, { versions: ["1.0"] }]
+    [200, { versions: ["3.0"] }]
   end
 
   def transition
