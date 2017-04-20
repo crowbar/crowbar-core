@@ -322,6 +322,14 @@ class CrowbarService < ServiceObject
     ::Openstack::Upgrade.unset_db_synced
 
     commit_and_check_proposal
+
+    # FIXME: upgrade of the nodes needs to be correctly orchestrated, to upgrade nodes one by one
+    # Now we're adding this only to imitate original autoyast-based upgrade and to
+    # have current upgrade CI job working
+    upgrade_nodes.each do |node|
+      Rails.logger.info("initiating upgrade of node #{node.name}")
+      node.ssh_cmd("/usr/sbin/crowbar-upgrade-os.sh")
+    end
   end
 
   # Prepare the upgrade AutoYaST profile for nodes and let them use it for the upgrade
