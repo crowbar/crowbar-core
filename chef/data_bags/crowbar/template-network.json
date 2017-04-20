@@ -161,6 +161,19 @@
             "host": { "start": "192.168.125.10", "end": "192.168.125.239" }
           }
         },
+        "ceph_client": {
+          "conduit": "intf1",
+          "vlan": 250,
+          "use_vlan": true,
+          "add_bridge": false,
+          "mtu": 1500,
+          "subnet": "192.168.127.0",
+          "netmask": "255.255.255.0",
+          "broadcast": "192.168.127.255",
+          "ranges": {
+            "host": { "start": "192.168.127.10", "end": "192.168.127.239" }
+          }
+        },
         "public": {
           "conduit": "intf1",
           "vlan": 300,
@@ -267,7 +280,7 @@
     "network": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 100,
+      "schema-revision": 101,
       "element_states": {
         "network": [ "readying", "ready", "applying" ]
       },
