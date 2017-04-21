@@ -11,7 +11,7 @@
 
     IncludeOptional /etc/apache2/conf.d/crowbar-ui.conf.partia[l]
 
-    ProxyPass / http://127.0.0.1:<%= @port %>/ timeout=1500 Keepalive=On
+    ProxyPass / http://127.0.0.1:<%= @port %>/ timeout=3600 Keepalive=On
     ProxyPassReverse / http://127.0.0.1:<%= @port %>/
     SetEnv proxy-initial-not-pooled 1
 
