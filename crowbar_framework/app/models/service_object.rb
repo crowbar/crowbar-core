@@ -1527,14 +1527,22 @@ class ServiceObject
   private
 
   def wait_for_chef_clients(node_name, options = {})
-    options = if options.fetch(:logger)
+    use_logger = options.fetch(:logger, nil)
+    options = if use_logger
       {logger: @logger}
     else
       {}
     end
-    @logger.debug("wait_for_chef_clients: Waiting for already running chef-clients on #{node_name}.")
+    if use_logger
+      @logger.debug("wait_for_chef_clients: Waiting for already running chef-clients on #{node_name}.")
+    end
     unless RemoteNode.chef_ready?(node_name, 1200, 10, options)
-      @logger.error("Waiting for already running chef-clients on #{node_name} failed.")
+      msg = "Waiting for already running chef-clients on #{node_name} failed."
+      if use_logger
+        @logger.error(msg)
+      else
+        puts(msg)
+      end
       exit(1)
     end
   end
