@@ -1,0 +1,18 @@
+<VirtualHost <%= @bind_host %>:<%= @bind_port %>>
+    WSGIDaemonProcess <%= @daemon_process %> user=<%= @user %> group=<%= @group %> processes=<%= @processes %> threads=<%= @threads %> display-name=%{GROUP}
+    WSGIProcessGroup <%= @process_group %>
+    WSGIScriptAlias / <%= @script_alias %>
+    WSGIApplicationGroup %{GLOBAL}
+    ErrorLogFormat "%{cu}t %M"
+    ErrorLog <%= @apache_log_dir %>/<%= @error_log %>
+    CustomLog <%= @apache_log_dir %>/<%= @access_log %> combined
+    <Directory /srv/www/<%= @directory %>>
+        <IfVersion >= 2.4>
+            Require all granted
+        </IfVersion>
+        <IfVersion < 2.4>
+            Order allow,deny
+            Allow from all
+        </IfVersion>
+    </Directory>
+</VirtualHost>
