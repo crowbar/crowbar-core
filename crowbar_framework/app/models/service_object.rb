@@ -1099,9 +1099,7 @@ class ServiceObject
 
             # An old node that is not in the new deployment, drop it
             unless new_nodes.include?(node_name)
-              @logger.debug "remove node #{node_name}"
-              pending_node_actions[node_name] = { remove: [], add: [] } if pending_node_actions[node_name].nil?
-
+              pending_node_actions[node_name] ||= { remove: [], add: [] }
               pending_node_actions[node_name][:remove] << role_name
 
               # Remove roles are  a way to "de-configure" things on the node
@@ -1240,40 +1238,22 @@ class ServiceObject
 
       # Remove the roles being lost
       rlist.each do |item|
-        next unless node.role? item
-        @logger.debug("AR: Removing role #{item} to #{node.name}")
-        node.delete_from_run_list item
-        save_it = true
+        save_it = node.delete_from_run_list(item) || save_it
       end
 
       # Add the roles being gained
       alist.each do |item|
-        next if node.role? item
         priority = runlist_priority_map[item] || local_chef_order
-        @logger.debug("AR: Adding role #{item} to #{node.name} with priority #{priority}")
-        node.add_to_run_list(item, priority, role_map[item])
-        save_it = true
+        save_it = node.add_to_run_list(item, priority) || save_it
       end
 
       # Make sure the config role is on the nodes in this barclamp, otherwise
       # remove it
-      # FIXME: All nodes is basically all new nodes, which should have an
-      # add/remove list, why do we need to add specifically the passed role?
       if all_nodes.include?(node.name)
-        # Add the config role
-        unless node.role?(role.name)
-          priority = runlist_priority_map[role.name] || local_chef_order
-          @logger.debug("AR: Adding role #{role.name} to #{node.name} with priority #{priority}")
-          node.add_to_run_list(role.name, priority, role_map[role.name])
-          save_it = true
-        end
+        priority = runlist_priority_map[role.name] || local_chef_order
+        save_it = node.add_to_run_list(role.name, priority) || save_it
       else
-        # Remove the config role
-        if node.role?(role.name)
-          @logger.debug("AR: Removing role #{role.name} to #{node.name}")
-          node.delete_from_run_list role.name
-          save_it = true
-        end
+        save_it = node.delete_from_run_list(role.name) || save_it
       end
 
       node.save if save_it
@@ -1437,8 +1417,7 @@ class ServiceObject
         # apply_role_pre_chef_call
         pre_cached_nodes[node_name] ||= NodeObject.find_node_by_name(node_name)
         node = pre_cached_nodes[node_name]
-        node.delete_from_run_list(role_to_remove)
-        node.save
+        node.save if node.delete_from_run_list(role_to_remove)
       end
     end
 
@@ -1513,15 +1492,8 @@ class ServiceObject
     end
 
     save_it = false
-    unless node.role?(newrole)
-      node.add_to_run_list(newrole, local_chef_order, role_map[newrole])
-      save_it = true
-    end
-
-    unless node.role?("#{barclamp}-config-#{instance}")
-      node.add_to_run_list("#{barclamp}-config-#{instance}", local_chef_order)
-      save_it = true
-    end
+    save_it = node.add_to_run_list(newrole, local_chef_order) || save_it
+    save_it = node.add_to_run_list("#{barclamp}-config-#{instance}", local_chef_order) || save_it
 
     if save_it
       @logger.debug("saving node")

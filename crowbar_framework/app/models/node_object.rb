@@ -709,21 +709,25 @@ class NodeObject < ChefObject
   end
 
   def add_to_run_list(rolename, priority, states = nil)
-    states = ["all"] unless states
-    crowbar["run_list_map"] = {} if crowbar["run_list_map"].nil?
-    val = { "states" => states, "priority" => priority }
-    crowbar["run_list_map"][rolename] = val
-    Rails.logger.debug("crowbar[run_list_map][#{rolename}] = #{val.inspect}")
-    Rails.logger.debug("current state is #{self.crowbar['state']}")
+    Rails.logger.debug("Ensuring #{name} has role #{rolename} with priority #{priority}")
+    save_it = false
 
-    # only rebuild the run_list if it effects the current state.
-    self.rebuild_run_list if states.include?("all") or states.include?(self.crowbar["state"])
+    crowbar["run_list_map"] ||= {}
+    if crowbar["run_list_map"][rolename] != { "priority" => priority }
+      crowbar["run_list_map"][rolename] = { "priority" => priority }
+      save_it = true
+    end
+    rebuild_run_list || save_it
   end
 
   def delete_from_run_list(rolename)
-    crowbar["run_list_map"] = {} if crowbar["run_list_map"].nil?
-    crowbar["run_list_map"][rolename] = { "states" => ["all"], "priority" => -1001 } unless crowbar["run_list_map"].nil?
-    crowbar_run_list.run_list_items.delete "role[#{rolename}]"
+    Rails.logger.debug("Ensuring #{name} doesn't have role #{rolename}")
+    crowbar["run_list_map"] ||= {}
+    if crowbar["run_list_map"].key?(rolename)
+      crowbar["run_list_map"].delete(rolename)
+      save_it = true
+    end
+    rebuild_run_list || save_it
   end
 
   def rebuild_run_list
@@ -743,12 +747,16 @@ class NodeObject < ChefObject
     end
     Rails.logger.debug("rebuilt run_list will be #{vals.inspect}")
 
+    old_run_list = crowbar_run_list.run_list_items.dup
+
     # Rebuild list
     crowbar_run_list.run_list_items.clear
     vals.each do |item|
       next if item[1]["priority"] == -1001 # Skip deleted items
       crowbar_run_list.run_list_items << "role[#{item[0]}]"
     end
+
+    old_run_list != crowbar_run_list.run_list_items
   end
 
   def run_list_to_roles
