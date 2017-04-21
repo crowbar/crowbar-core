@@ -1,0 +1,14 @@
+{
+  "steps":[],
+  "failed":false,
+  "success":false,
+  "installing":false,
+  "network":{
+    "mtime":"2016-03-01T15:05:02.510+00:00",
+    "valid":true,
+    "msg":""
+  },
+  "errorMsg":"",
+  "successMsg":null,
+  "noticeMsg":"If you want to reinstall to get a fresh setup, please remove the following file: /var/lib/crowbar/install/crowbar-installed-ok"
+}

@@ -90,7 +90,8 @@ execute "enable netfilter for bridges" do
   subscribes :run, resources(cookbook_file: "modprobe-bridge.conf"), :delayed
 end
 
-provisioner = search(:node, "roles:provisioner-server")[0]
+provisioner_instance = CrowbarHelper.get_proposal_instance(node, "provisioner", "default")
+provisioner = node_search_with_cache("roles:provisioner-server", provisioner_instance).first
 conduit_map = Barclamp::Inventory.build_node_map(node)
 Chef::Log.debug("Conduit mapping for this node:  #{conduit_map.inspect}")
 route_pref = 10000
@@ -137,6 +138,9 @@ def kill_nic(nic)
     end
     if ::File.exists?("/etc/sysconfig/network/ifroute-#{nic.name}")
       ::File.delete("/etc/sysconfig/network/ifroute-#{nic.name}")
+    end
+    if ::File.exist?("/etc/wicked/scripts/#{nic.name}-pre-up")
+      ::File.delete("/etc/wicked/scripts/#{nic.name}-pre-up")
     end
   end
 end
@@ -301,7 +305,7 @@ node["crowbar"]["network"].keys.sort{|a,b|
     net_ifs << our_iface.name
   end
   if network["mtu"]
-    if name == "admin" or name == "storage"
+    if ["admin", "storage", "os_sdn"].include? name
       Chef::Log.info("Setting mtu #{network['mtu']} for #{name} network on #{our_iface.name}")
       ifs[our_iface.name]["mtu"] = network["mtu"]
     else
@@ -483,12 +487,36 @@ when "suse"
 
   Nic.nics.each do |nic|
     next unless ifs[nic.name]
+
+    pre_up_script = nil
+    if nic.is_a?(Nic::OvsBridge)
+      directory "/etc/wicked/scripts/" do
+        owner "root"
+        group "root"
+        mode "0755"
+        action :create
+      end
+
+      pre_up_script = "/etc/wicked/scripts/#{nic.name}-pre-up"
+
+      template pre_up_script do
+        owner "root"
+        group "root"
+        mode "0755"
+        source "ovs-pre-up.sh.erb"
+        variables(
+          bridgename: nic.name
+        )
+      end
+    end
+
     template "/etc/sysconfig/network/ifcfg-#{nic.name}" do
       source "suse-cfg.erb"
       variables({
         ethtool_options: ethtool_options,
         interfaces: ifs,
-        nic: nic
+        nic: nic,
+        pre_up_script: pre_up_script
       })
     end
     if ifs[nic.name]["gateway"]

@@ -8,7 +8,6 @@
           = link_to t(".unallocated"), unallocated_list_path, :class => "btn btn-default"
         - else
           = link_to t(".all"), nodes_list_path, :class => "btn btn-default"
-
 = form_for :node, :url => bulk_nodes_path, :html => { :role => "form" } do |f|
   = hidden_field_tag "return", @allocated
 
@@ -30,77 +29,44 @@
             %th
               = t(".name")
             %th
-              = t(".hw_description")
-            %th
               = t(".alias")
             %th
               = t(".public_name")
             %th
-              = t(".group")
-            %th
               = t(".intended_role")
-            - if crowbar_options[:show].include? :bios
-              %th
-                = t(".bios")
-            - if crowbar_options[:show].include? :raid
-              %th
-                = t(".raid")
             %th
               = t(".target_platform")
             %th
               = t(".license_key")
-            %th.nowrap
-              %label
-                %input{ :type => "checkbox", :value => "all", "data-checkall" => "input.allocate" }
-                = t(".allocate_all")
+            %th
+              = t(".allocate_all")
 
         %tbody
           - @nodes.sort_by{ |handle, n| n.name }.each do |handle, node|
             %tr
               %td.alias
-                = link_to node.handle, node_path(node.handle), :title => node.ip
-
+                = node_title(node)
               - if node.admin?
-                %td.nowrap
-                  = "#{node.hardware}, #{format_memory(node.memory)}, #{node.nics} Nics"
                 %td
                   = text_field_tag "node[#{node.handle}][alias]", node.alias(true) || t(".admin"), :class => "form-control"
                 %td
                   = text_field_tag "node[#{node.handle}][public_name]", node.public_name, :class => "form-control"
-                %td
-                  = text_field_tag "node[#{node.handle}][group]", node.group, :class => "form-control"
-                %td
-                  = t("na")
-                - if crowbar_options[:show].include? :bios
-                  %td
-                    = t("na")
-                - if crowbar_options[:show].include? :raid
-                  %td
-                    = t("na")
+                %td.text-center
+                  = "-"
                 %td
                   = node.pretty_target_platform
-                %td
-                  = t "na"
-                %td
-                  = t "na"
+                %td.text-center
+                  = "-"
+                %td.text-center
+                  = "-"
 
               - else
-                %td.nowrap
-                  = "#{node.hardware}, #{format_memory(node.memory)}, #{node.nics} Nics"
                 %td
                   = text_field_tag "node[#{node.handle}][alias]", node.alias(true), :class => "form-control"
                 %td
                   = text_field_tag "node[#{node.handle}][public_name]", node.public_name, :class => "form-control"
                 %td
-                  = text_field_tag "node[#{node.handle}][group]", node.group(true), :class => "form-control"
-                %td
                   = select_tag "node[#{node.handle}][intended_role]", roles_for_select(node.intended_role), :class => "form-control"
-                - if crowbar_options[:show].include? :bios
-                  %td
-                    = select_tag "node[#{node.handle}][bios]", options_for_select(crowbar_options[:bios], node.bios_set), :class => "form-control"
-                - if crowbar_options[:show].include? :raid
-                  %td
-                    = select_tag "node[#{node.handle}][raid]", options_for_select(crowbar_options[:raid], node.raid_set), :class => "form-control"
                 - if node.allocated?
                   %td
                     = node.pretty_target_platform
@@ -108,19 +74,26 @@
                     %td
                       = node.license_key
                   - else
-                    %td
-                      = t("na")
+                    %td.text-center
+                      = "-"
                 - else
                   %td
                     = select_tag "node[#{node.handle}][target_platform]", platforms_for_select(node.target_platform, node.architecture), :class => "form-control", "data-showit" => crowbar_service.require_license_platforms.join(","), "data-showit-target" => "input[name=\"node[#{node.name}][license_key]\"]", "data-showit-direct" => "true"
                   %td
                     = password_field_tag "node[#{node.handle}][license_key]", node.license_key, :class => "form-control"
-                %td
+                %td.text-center
                   - if node.allocated?
-                    = t "complete"
+                    %label
+                      = check_box_tag("node[#{node.handle}][allocate]", value = "1", checked = true, options = { disabled: "disabled" })
                   - else
                     %label
                       %input.allocate{ :type => "checkbox", :value => "1", :name => "node[#{node.handle}][allocate]" }
+          %tr
+            %td{ colspan: 6 }
+            %td.text-center
+              %label
+                %input{ type: "checkbox", value: "all", data: { checkall: "input.allocate" } }
+
     - else
       .panel-body
         .alert.alert-info.last

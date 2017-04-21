@@ -108,6 +108,20 @@
         </source>
       </script>
 <% end -%>
+      <script>
+        <chrooted config:type="boolean">true</chrooted>
+        <debug config:type="boolean">true</debug>
+        <filename>fix_alternatives</filename>
+        <source>
+          <![CDATA[
+          # python-related alternatives are not updated, even though the binary
+          # names changed (2.6 to 2.7); find all broken links and fix/update them
+          for i in $(find /etc/alternatives -type l ! -readable -printf "%f\n") ; do
+              update-alternatives --auto "$i"
+          done
+          ]]>
+        </source>
+      </script>
     </chroot-scripts>
     <init-scripts config:type="list">
       <!-- /bugfix bnc#886238: https://bugzilla.novell.com/show_bug.cgi?id=886238 -->

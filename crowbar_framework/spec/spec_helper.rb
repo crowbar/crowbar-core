@@ -105,6 +105,27 @@ RSpec.configure do |config|
     allow(ChefObject).to receive(:cloud_domain).and_return("crowbar.com")
     allow_any_instance_of(Proposal).to receive(:properties_template_dir).
       and_return(Rails.root.join("spec/fixtures/data_bags"))
+    allow(::Crowbar::Checks::Maintenance).to(
+      receive(:updates_status).
+      and_return(passed: true, errors: [])
+    )
+    allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:lock_path).and_return(
+      Tempfile.open("upgrade_status_spec.lock").path
+    )
+  end
+
+  config.before(:each) do
+    @upgrade_state_file = File.join(
+      Dir::Tmpname.tmpdir,
+      Dir::Tmpname.make_tmpname("upgrade_status_spec.state.yaml", nil)
+    )
+    allow(Crowbar::UpgradeStatus).to receive(:new).and_return(
+      Crowbar::UpgradeStatus.new(Rails.logger, @upgrade_state_file)
+    )
+  end
+
+  config.after(:each) do
+    File.unlink @upgrade_state_file
   end
 
   config.append_before(:each) do

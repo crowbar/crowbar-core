@@ -1,6 +1,5 @@
 #
-# Copyright 2011-2013, Dell
-# Copyright 2013-2014, SUSE LINUX Products GmbH
+# Copyright 2016, SUSE Linux GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,15 +14,21 @@
 # limitations under the License.
 #
 
-if ENV["ENABLE_PROFILER"] == "true"
-  require "rack-mini-profiler"
-  Rack::MiniProfilerRails.initialize! Rails.application
+class ApiConstraint
+  attr_reader :versions
 
-  begin
-    ::Rack::MiniProfiler.profile_method Chef::Search::Query, :search do |model, query|
-      "Chef search: #{model} #{query || "all"}"
+  def initialize(*versions)
+    @versions = versions.map { |v| v.to_s.split(".").map(&:to_i) }
+  end
+
+  def matches?(request)
+    versions.any? do |major, minor|
+      version_mime = %r(^application/vnd\.crowbar\.v(?<major>\d+).(?<minor>\d+)\+json$)
+
+      versions_requested = version_mime.match(request.accept)
+      !versions_requested.nil? &&
+        versions_requested[:major].to_i == major &&
+        versions_requested[:minor].to_i <= minor
     end
-  rescue
-    Rails.logger.warn "Failed to initialize profiler for chef calls"
   end
 end

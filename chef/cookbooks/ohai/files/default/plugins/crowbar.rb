@@ -51,28 +51,38 @@ class EthtoolCmd < CStruct
   uint32 :reserved_a1
 end
 
-# From: "/usr/include/linux/ethtool.h"
-#define SUPPORTED_10baseT_Half      (1 << 0)
-#define SUPPORTED_10baseT_Full      (1 << 1)
-#define SUPPORTED_100baseT_Half     (1 << 2)
-#define SUPPORTED_100baseT_Full     (1 << 3)
-#define SUPPORTED_1000baseT_Half    (1 << 4)
-#define SUPPORTED_1000baseT_Full    (1 << 5)
-#define SUPPORTED_Autoneg           (1 << 6)
-#define SUPPORTED_TP                (1 << 7)
-#define SUPPORTED_AUI               (1 << 8)
-#define SUPPORTED_MII               (1 << 9)
-#define SUPPORTED_FIBRE             (1 << 10)
-#define SUPPORTED_BNC               (1 << 11)
-#define SUPPORTED_10000baseT_Full   (1 << 12)
-#define SUPPORTED_Pause             (1 << 13)
-#define SUPPORTED_Asym_Pause        (1 << 14)
-#define SUPPORTED_2500baseX_Full    (1 << 15)
-#define SUPPORTED_Backplane         (1 << 16)
-#define SUPPORTED_1000baseKX_Full   (1 << 17)
-#define SUPPORTED_10000baseKX4_Full (1 << 18)
-#define SUPPORTED_10000baseKR_Full  (1 << 19)
-#define SUPPORTED_10000baseR_FEC    (1 << 20)
+# From: "/usr/include/linux/ethtool.h":
+# #define SUPPORTED_10baseT_Half      (1 << 0)
+# #define SUPPORTED_10baseT_Full      (1 << 1)
+# #define SUPPORTED_100baseT_Half     (1 << 2)
+# #define SUPPORTED_100baseT_Full     (1 << 3)
+# #define SUPPORTED_1000baseT_Half    (1 << 4)
+# #define SUPPORTED_1000baseT_Full    (1 << 5)
+# #define SUPPORTED_Autoneg           (1 << 6)
+# #define SUPPORTED_TP                (1 << 7)
+# #define SUPPORTED_AUI               (1 << 8)
+# #define SUPPORTED_MII               (1 << 9)
+# #define SUPPORTED_FIBRE             (1 << 10)
+# #define SUPPORTED_BNC               (1 << 11)
+# #define SUPPORTED_10000baseT_Full   (1 << 12)
+# #define SUPPORTED_Pause             (1 << 13)
+# #define SUPPORTED_Asym_Pause        (1 << 14)
+# #define SUPPORTED_2500baseX_Full    (1 << 15)
+# #define SUPPORTED_Backplane         (1 << 16)
+# #define SUPPORTED_1000baseKX_Full   (1 << 17)
+# #define SUPPORTED_10000baseKX4_Full (1 << 18)
+# #define SUPPORTED_10000baseKR_Full  (1 << 19)
+# #define SUPPORTED_10000baseR_FEC    (1 << 20)
+# #define SUPPORTED_20000baseMLD2_Full (1 << 21)
+# #define SUPPORTED_20000baseKR2_Full  (1 << 22)
+# #define SUPPORTED_40000baseKR4_Full  (1 << 23)
+# #define SUPPORTED_40000baseCR4_Full  (1 << 24)
+# #define SUPPORTED_40000baseSR4_Full  (1 << 25)
+# #define SUPPORTED_40000baseLR4_Full  (1 << 26)
+# #define SUPPORTED_56000baseKR4_Full  (1 << 27)
+# #define SUPPORTED_56000baseCR4_Full  (1 << 28)
+# #define SUPPORTED_56000baseSR4_Full  (1 << 29)
+# #define SUPPORTED_56000baseLR4_Full  (1 << 30)
 
 class EthtoolValue < CStruct
   uint32 :cmd
@@ -92,10 +102,13 @@ def get_supported_speeds(interface)
     rv.data = ifreq.unpack("a16p")[1]
 
     speeds = []
-    speeds << "10m" if (rv.supported & ((1<<0)|(1<<1))) != 0
-    speeds << "100m" if (rv.supported & ((1<<2)|(1<<3))) != 0
-    speeds << "1g" if (rv.supported & ((1<<4)|(1<<5)|(1<<17))) != 0
-    speeds << "10g" if (rv.supported & ((0xf<<18)|(1<<12))) != 0
+    speeds << "10m"  if (rv.supported & ((1 <<  0) | (1 <<  1))) != 0
+    speeds << "100m" if (rv.supported & ((1 <<  2) | (1 <<  3))) != 0
+    speeds << "1g"   if (rv.supported & ((1 <<  4) | (1 <<  5) | (1 << 17))) != 0
+    speeds << "10g"  if (rv.supported & ((1 << 12) | (1 << 18) | (1 << 19) | (1 << 20))) != 0
+    speeds << "20g"  if (rv.supported & ((1 << 21) | (1 << 22))) != 0
+    speeds << "40g"  if (rv.supported & ((1 << 23) | (1 << 24) | (1 << 25) | (1 << 26))) != 0
+    speeds << "56g"  if (rv.supported & ((1 << 27) | (1 << 28) | (1 << 29) | (1 << 30))) != 0
     speeds
   rescue Exception => e
     puts "Failed to get ioctl for speed: #{e.message}"

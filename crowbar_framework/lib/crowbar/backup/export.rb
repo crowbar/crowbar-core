@@ -117,13 +117,19 @@ module Crowbar
           if source =~ /resolv.conf/ && File.exist?(source)
             data_dir.join(destination).open("w") do |file|
               forwarders.each do |forwarder|
-                file.write("nameserver #{forwarder}")
+                file.write("nameserver #{forwarder}\n")
               end
             end
           else
             # copy files with higher permissions
             dest = data_dir.join(destination).to_s
-            system("sudo", "cp", "-a", source, dest)
+            if source == "/var/lib/crowbar"
+              # avoid doing an export of the existing backups, to avoid growing
+              # size of backups
+              system("sudo", "rsync", "-a", "#{source}/", "--exclude", "backup", dest)
+            else
+              system("sudo", "cp", "-a", source, dest)
+            end
           end
         end
       end
@@ -133,10 +139,13 @@ module Crowbar
         meta["version"] = ENV["CROWBAR_VERSION"]
         meta["created_at"] = Time.zone.now.to_s
         meta["platform"] = NodeObject.admin_node.target_platform
+        meta["migration_level"] = ActiveRecord::Migrator.current_version
 
         workdir.join("meta.yml").open("w") do |file|
           file.write(meta.to_yaml)
         end
+
+        meta
       end
 
       protected

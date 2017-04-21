@@ -104,9 +104,13 @@ module Crowbar
 
       def steps_done
         steps_path = lib_path.join("installation_steps")
-        steps_path.readlines.map do |step|
-          step.split.first.to_sym
-        end if steps_path.exist?
+        if steps_path.exist?
+          steps_path.readlines.map do |step|
+            step.split.first.to_sym
+          end
+        else
+          []
+        end
       end
 
       protected

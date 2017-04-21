@@ -12,8 +12,7 @@
           "type": "map",
           "required": true,
           "mapping": {
-            "activation_key": { "type": "str", "required": true },
-            "manager_server": { "type": "str", "required": true }
+            "bootstrap_script_url": { "type": "str", "required": true }
           }
         }
       }
@@ -27,6 +26,7 @@
           "required": true,
           "mapping": {
             "crowbar-revision": { "type": "int", "required": true },
+            "schema-revision": { "type": "int", "required": true },
             "crowbar-committing": { "type": "bool" },
             "crowbar-applied": { "type": "bool" },
             "crowbar-status": { "type": "str" },

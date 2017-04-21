@@ -1,5 +1,5 @@
-<% unless @search.nil? -%>
-search <%= @search %>
+<% unless @search_domains.empty? -%>
+search <%= @search_domains.take(6).join(" ") %>
 <% end -%>
 <% @nameservers.each do |nameserver| -%>
 nameserver <%= nameserver %>

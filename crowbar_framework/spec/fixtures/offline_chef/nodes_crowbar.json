@@ -1,0 +1,4 @@
+{
+  "admin.crowbar.com":"http://localhost:4000/nodes/admin.crowbar.com",
+  "testing.crowbar.com":"http://localhost:4000/nodes/testing.crowbar.com"
+}

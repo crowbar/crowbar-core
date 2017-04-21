@@ -45,7 +45,12 @@ class CrowbarService < ServiceObject
   # Unfortunatelly we need to explicitely look at crowbar-status of the proposal
   # because apply_role from this model ignores errors from superclass's apply_role.
   def commit_and_check_proposal
-    answer = proposal_commit("default", false, false)
+    answer = proposal_commit(
+      "default",
+      in_queue: false,
+      validate: false,
+      validate_after_save: false
+    )
     # check if error message is saved in one of the nodes
     if answer.first != 200
       found_errors = []
@@ -312,6 +317,53 @@ class CrowbarService < ServiceObject
     base
   end
 
+  def prepare_nodes_for_crowbar_upgrade(ceph_only = false)
+    proposal = Proposal.find_by(barclamp: "crowbar", name: "default")
+
+    # To all nodes, add a new role which prepares them for the upgrade
+    nodes_to_upgrade = []
+    not_ready_for_upgrade = []
+    admin_with_dns_server_role = false
+    nodes = if ceph_only
+      NodeObject.find("roles:ceph-* AND ceph_config_environment:*")
+    else
+      NodeObject.all
+    end
+    nodes.each do |n|
+      not_ready_for_upgrade.push n.name if !n.admin? && !%w(ready crowbar_upgrade).include?(n.state)
+      admin_with_dns_server_role = true if n.admin? && n.role?("dns-server")
+    end
+
+    unless admin_with_dns_server_role || ceph_only
+      raise I18n.t("installer.upgrades.prepare.admin_missing_dns_server")
+    end
+
+    unless not_ready_for_upgrade.empty?
+      raise I18n.t(
+        "installer.upgrades.prepare.nodes_not_ready", nodes: not_ready_for_upgrade.join(", ")
+      )
+    end
+
+    nodes.each do |node|
+      next if node.admin?
+
+      if node[:platform] == "windows"
+        # for Hyper-V nodes, only change the state, but do not run chef-client
+        node.set_state("crowbar_upgrade")
+      else
+        node.crowbar["crowbar_upgrade_step"] = "crowbar_upgrade"
+        node.save
+        nodes_to_upgrade.push node.name
+      end
+    end
+
+    # adapt current proposal, so the nodes get crowbar-upgrade role
+    proposal.raw_data["deployment"]["crowbar"]["elements"]["crowbar-upgrade"] = nodes_to_upgrade
+    proposal.save
+    # commit the proposal so chef recipe get executed
+    proposal_commit("default", in_queue: false, validate_after_save: false)
+  end
+
   def disable_non_core_proposals
     upgrade_nodes = NodeObject.all.reject(&:admin?)
     check_if_nodes_are_available upgrade_nodes
@@ -347,7 +399,9 @@ class CrowbarService < ServiceObject
   end
 
   def prepare_nodes_for_os_upgrade
-    upgrade_nodes = NodeObject.all.reject { |node| node.admin? || node[:platform] == "windows" }
+    upgrade_nodes = NodeObject.all.reject do |node|
+      node.admin? || node[:platform] == "windows" || node.state != "crowbar_upgrade"
+    end
     check_if_nodes_are_available upgrade_nodes
     admin_node = NodeObject.admin_node
     upgrade_nodes_failed = []
@@ -396,13 +450,39 @@ class CrowbarService < ServiceObject
     upgrade_nodes_failed
   end
 
+  def revert_nodes_from_crowbar_upgrade(ceph_only = false)
+    proposal = Proposal.find_by(barclamp: "crowbar", name: "default")
+
+    nodes = if ceph_only
+      NodeObject.find("roles:ceph-* AND ceph_config_environment:*")
+    else
+      NodeObject.find("NOT roles:ceph-*")
+    end
+
+    nodes.each do |node|
+      next unless node.state == "crowbar_upgrade"
+      # revert nodes to previous state; mark the wall so apply does not change state again
+      node.crowbar["crowbar_upgrade_step"] = "revert_to_ready"
+      node.save
+      node.set_state("ready")
+    end
+
+    # commit current proposal (with the crowbar-upgrade role still assigned to nodes),
+    # so the recipe is executed when nodes have 'ready' state
+    proposal_commit("default", in_queue: false, validate: false, validate_after_save: false)
+    # now remove the nodes from upgrade role
+    proposal["deployment"]["crowbar"]["elements"]["crowbar-upgrade"] = []
+    proposal.save
+  end
+
   def apply_role_pre_chef_call(old_role, role, all_nodes)
     @logger.debug("crowbar apply_role_pre_chef_call: entering #{all_nodes.inspect}")
     all_nodes.each do |n|
       node = NodeObject.find_node_by_name n
-      # value of crowbar_wall["crowbar_upgrade"] indicates that the role should be executed
+      # value of node.crowbar["crowbar_upgrade"] indicates that the role should be executed
       # but node state should not be changed: this is needed when reverting node state to ready
-      if node.role?("crowbar-upgrade") && node.crowbar_wall["crowbar_upgrade_step"]
+      if node.role?("crowbar-upgrade") &&
+          node.crowbar["crowbar_upgrade_step"] != "revert_to_ready"
         node.set_state("crowbar_upgrade")
       end
     end
@@ -466,7 +546,7 @@ class CrowbarService < ServiceObject
             else
               unless answer[1].include?(id)
                 @logger.debug("Crowbar apply_role: #{k}.#{id} wasn't active: Activating")
-                answer = service.proposal_commit(id, false, false)
+                answer = service.proposal_commit(id, in_queue: false, validate_after_save: false)
                 if answer[0] != 200
                   answer[1] = "Failed to commit proposal '#{id}' for '#{k}' " +
                               "(The error message was: #{answer[1].strip})"

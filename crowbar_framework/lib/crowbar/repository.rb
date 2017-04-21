@@ -130,11 +130,19 @@ module Crowbar
       end
 
       def provided_and_enabled?(feature, platform = nil, arch = nil)
-        provided_with_enabled?(feature, platform, arch, true)
+        provided_with_enabled(feature, platform, arch, true).first
+      end
+
+      def provided_and_enabled_with_repolist(feature, platform = nil, arch = nil)
+        provided_with_enabled(feature, platform, arch, true)
       end
 
       def provided?(feature, platform = nil, arch = nil)
-        provided_with_enabled?(feature, platform, arch, false)
+        provided_with_enabled(feature, platform, arch, false).first
+      end
+
+      def provided_with_repolist(feature, platform = nil, arch = nil)
+        provided_with_enabled(feature, platform, arch, false)
       end
 
       def platform_available?(platform, arch)
@@ -170,19 +178,23 @@ module Crowbar
 
       private
 
-      def provided_with_enabled?(feature, platform = nil, arch = nil, check_enabled = true)
+      def provided_with_enabled(feature, platform = nil, arch = nil, check_enabled = true)
+        repos = {
+          missing_repos: [],
+          inactive_repos: []
+        }
         answer = false
 
         if platform.nil?
           all_platforms.each do |p|
-            if provided_with_enabled?(feature, p, arch, check_enabled)
+            if provided_with_enabled(feature, p, arch, check_enabled).first
               answer = true
               break
             end
           end
         elsif arch.nil?
           arches(platform).each do |a|
-            if provided_with_enabled?(feature, platform, a, check_enabled)
+            if provided_with_enabled(feature, platform, a, check_enabled).first
               answer = true
               break
             end
@@ -199,17 +211,18 @@ module Crowbar
 
             r = new(platform, arch, repo)
             answer &&= r.available?
+            repos[:missing_repos].push(r.name) unless answer
 
             break unless check_enabled
             answer &&= r.active?
+            repos[:inactive_repos].push(r.name) unless answer
           end
 
           answer = false unless found
         end
 
-        answer
+        [answer, repos]
       end
-
     end
 
     def initialize(platform, arch, repo)
@@ -380,18 +393,23 @@ module Crowbar
     end
 
     def check_key_file
-      expected = @config.fetch("repomd", {})["key_md5"]
+      expected = @config.fetch("repomd", {})["fingerprint"]
       return true if expected.blank?
 
       key_path = repodata_path.join("repomd.xml.key")
       key_path = repodata_media_path.join("repomd.xml.key") unless key_path.file?
 
       if key_path.file?
-        md5 = Digest::MD5.hexdigest(key_path.read)
+        fingerprint = `LC_ALL=C gpg --with-fingerprint #{key_path}`.split(/\r?\n/)
+        fingerprint.keep_if { |d| d =~ /fingerprint/ }
+        return false if fingerprint.empty?
+        fingerprint = fingerprint[0].split("=")
+        return false if fingerprint.length != 2
+        fingerprint = fingerprint[1].split.join(" ")
         if expected.is_a?(Array)
-          expected.include? md5
+          expected.include? fingerprint
         else
-          md5 == expected
+          fingerprint == expected
         end
       else
         false

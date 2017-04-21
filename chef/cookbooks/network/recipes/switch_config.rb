@@ -50,7 +50,7 @@ admin_ip = node.address.addr
 
 switch_config={}
 
-search(:node, "*:*").each do |a_node|
+node_search_with_cache("*:*").each do |a_node|
   node_map = Chef::Recipe::Barclamp::Inventory.build_node_map(a_node)
   node_map.each do |conduit, conduit_info|
     if_list = conduit_info["if_list"]

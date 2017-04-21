@@ -11,9 +11,11 @@
               }
             },
             "web_port": { "type": "int", "required": true },
+            "workers": { "type": "int", "required": true },
+            "threads": { "type": "int", "required": true },
             "realm": { "type": "str", "required": false },
             "users": { "type": "map", "required": true, "mapping": {
-                = : { "type": "map", "required": true, "mapping": { 
+                = : { "type": "map", "required": true, "mapping": {
                     "password": { "type": "str" },
                     "digest": { "type": "str" },
                     "disabled": { "type": "bool" }
@@ -25,7 +27,15 @@
               "type": "map",
               "required": true,
               "mapping": {
-                "db_dump_location" : { "type": "str" }
+                "db_dump_location": { "type": "str" }
+              }
+            },
+            "chef": {
+              "type": "map",
+              "required": true,
+              "mapping": {
+                "solr_heap": { "type": "int" },
+                "solr_tmpfs": { "type": "bool" }
               }
             },
             "simple_proposal_ui": { "type": "bool", "required": false },

@@ -55,6 +55,15 @@
          <surname/>
       </user>
       <user>
+        <username>glance</username>
+        <user_password>!</user_password>
+        <encrypted config:type="boolean">true</encrypted>
+        <uid>483</uid>
+        <gid>483</gid>
+        <home>/var/lib/glance</home>
+        <shell>/sbin/nologin</shell>
+      </user>
+      <user>
         <username>qemu</username>
         <user_password>!</user_password>
         <encrypted config:type="boolean">true</encrypted>
@@ -65,6 +74,13 @@
       </user>
   </users>
   <groups config:type="list">
+    <!-- for making HA on shared NFS backend storage work -->
+    <group>
+      <gid>483</gid>
+      <groupname>glance</groupname>
+      <group_password>x</group_password>
+      <userlist>glance</userlist>
+    </group>
     <group>
       <gid>484</gid>
       <groupname>qemu</groupname>
@@ -82,7 +98,7 @@
     <keep_install_network config:type="boolean">true</keep_install_network>
     <dns>
       <dhcp_hostname config:type="boolean">true</dhcp_hostname>
-      <domain><%= node[:domain] %></domain>
+      <domain><%= @domain_name %></domain>
       <hostname><%= @node_hostname %></hostname>
       <resolv_conf_policy>auto</resolv_conf_policy>
       <write_hostname config:type="boolean">false</write_hostname>
@@ -102,6 +118,16 @@
         <type config:type="symbol">CT_DISK</type>
         <disklabel>gpt</disklabel>
         <partitions config:type="list">
+          <% if @use_uefi %>
+          <partition>
+            <create config:type="boolean">true</create>
+            <format config:type="boolean">true</format>
+            <filesystem config:type="symbol">vfat</filesystem>
+            <partition_id config:type="integer">259</partition_id>
+            <mount>/boot/efi</mount>
+            <size>128M</size>
+          </partition>
+          <% end %>
           <partition>
             <create config:type="boolean">true</create>
             <partition_id config:type="integer">263</partition_id>
@@ -130,6 +156,16 @@
           <type config:type="symbol">CT_DISK</type>
           <initialize config:type="boolean">true</initialize>
           <partitions config:type="list">
+            <% if @use_uefi %>
+            <partition>
+              <create config:type="boolean">true</create>
+              <format config:type="boolean">true</format>
+              <filesystem config:type="symbol">vfat</filesystem>
+              <partition_id config:type="integer">259</partition_id>
+              <mount>/boot/efi</mount>
+              <size>128M</size>
+            </partition>
+            <% end %>
             <partition>
               <create config:type="boolean">true</create>
               <partition_id config:type="integer">263</partition_id>

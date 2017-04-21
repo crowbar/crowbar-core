@@ -19,6 +19,9 @@ module Crowbar
   autoload :Backup,
     File.expand_path("../crowbar/backup", __FILE__)
 
+  autoload :Error,
+    File.expand_path("../crowbar/error", __FILE__)
+
   autoload :Installer,
     File.expand_path("../installer.rb", __FILE__)
 

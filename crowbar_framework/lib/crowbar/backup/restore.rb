@@ -23,6 +23,7 @@ module Crowbar
         @backup = backup
         @data = @backup.data
         @version = @backup.version
+        @migration_level = @backup.migration_level
         @status = {}
         @thread = nil
       end
@@ -32,32 +33,33 @@ module Crowbar
           Rails.logger.debug("Starting restore in background thread")
           restore
         end
+
+        @thread.alive? ? true : false
       end
 
       def restore
         cleanup if self.class.restore_steps_path.exist?
 
+        # restrict dns-server to not answer requests from other nodes to
+        # avoid wrong results to clients.
+        self.class.disable_dns_path.open("w") do |f|
+          f.write "#{Time.zone.now.iso8601}\n #{@backup.path}"
+        end
+
         self.class.steps.each do |component|
           set_step(component)
           send(component)
           if any_errors?
-            cleanup
-            @backup.errors.add(:restore, error_messages.join(" - "))
-            Rails.logger.error("Restore failed: #{@backup.errors.full_messages.first}")
-            if @thread
-              Rails.logger.debug("Exiting restore thread due to failure")
-              Thread.exit
-            end
+            cleanup_after_error(error_messages.join(" - "))
             return false
-          end
-          # set_failed is called directly after the fail
-          if component == :restore_database && !self.class.failed_path.exist?
-            set_success
           end
         end
 
+        set_success
         cleanup
         true
+      rescue StandardError => e
+        cleanup_after_error(e)
       end
 
       class << self
@@ -82,6 +84,10 @@ module Crowbar
 
         def restore_steps_path
           install_dir_path.join("restore_steps")
+        end
+
+        def disable_dns_path
+          install_dir_path.join("disable_dns")
         end
 
         def install_dir_path
@@ -134,6 +140,16 @@ module Crowbar
         @backup.path.delete if @backup.path.exist?
       end
 
+      def cleanup_after_error(error)
+        cleanup
+        @backup.errors.add(:restore, error)
+        Rails.logger.error("Restore failed: #{@backup.errors.full_messages.first}")
+        if @thread
+          Rails.logger.debug("Exiting restore thread due to failure")
+          Thread.exit
+        end
+      end
+
       def any_errors?
         !errors.empty?
       end
@@ -153,12 +169,14 @@ module Crowbar
       end
 
       def set_failed
+        return if self.class.success_path.exist?
         ::FileUtils.touch(
           self.class.failed_path.to_s
         )
       end
 
       def set_success
+        return if self.class.failed_path.exist?
         ::FileUtils.touch(
           self.class.success_path.to_s
         )
@@ -166,6 +184,7 @@ module Crowbar
 
       def restore_chef
         Rails.logger.debug "Restoring chef backup files"
+
         begin
           [:nodes, :roles, :clients, :databags].each do |type|
             Dir.glob(@data.join("knife", type.to_s, "**", "*")).each do |file|
@@ -196,12 +215,12 @@ module Crowbar
                   set_failed
                   msg = I18n.t(
                     ".installer.upgrades.restore.schema_migration_failed",
-                    bc_name: bc_name
+                    migration_error: e.message
                   )
-                  Rails.logger.error("#{msg} -- #{e.message}")
+                  Rails.logger.error(msg.to_s)
                   @status[:restore_chef] = {
                     status: :conflict,
-                    msg: msg
+                    msg: e.message
                   }
                 end
               else
@@ -216,6 +235,9 @@ module Crowbar
         rescue Net::HTTPServerException
           raise "Restore failed"
         end
+
+        # now that restore is done, dns server can answer requests from other nodes.
+        self.class.disable_dns_path.delete if self.class.disable_dns_path.exist?
 
         Rails.logger.info("Re-running chef-client locally to apply changes from imported proposals")
         system(
@@ -274,7 +296,7 @@ module Crowbar
         sleep(1) until Crowbar::Installer.successful? || Crowbar::Installer.failed?
 
         if Crowbar::Installer.failed?
-          Rails.logger.debug "Crowbar Installation Failed"
+          Rails.logger.error "Crowbar Installation Failed"
           set_failed
           @status[:run_installer] = {
             status: :not_acceptable,
@@ -287,19 +309,30 @@ module Crowbar
 
       def restore_database
         Rails.logger.debug "Restoring Crowbar database"
-        migrate_database(:before)
+        if ActiveRecord::Migrator.get_all_versions.include? @migration_level
+          migrate_database(:before, @migration_level)
+        else
+          Rails.logger.error "Cannot migrate to #{@migration_level}. Migration unknown"
+          set_failed
+          @status[:restore_database] = {
+            status: :not_acceptable,
+            msg: I18n.t("backups.index.restore_database_failed")
+          }
+          return
+        end
 
         begin
           SerializationHelper::Base.new(YamlDb::Helper).load(
             @data.join("crowbar", "database.yml")
           )
         rescue StandardError => e
-          Rails.logger.debug "Failed to load database.yml: #{e}"
+          Rails.logger.error "Failed to load database.yml: #{e}"
           set_failed
           @status[:restore_database] = {
             status: :not_acceptable,
             msg: I18n.t("backups.index.restore_database_failed")
           }
+          return
         end
 
         migrate_database(:after)
@@ -315,10 +348,14 @@ module Crowbar
         raw_data.key?("attributes") && raw_data.key?("deployment")
       end
 
-      def migrate_database(time)
-        Crowbar::Migrate.migrate!
+      def migrate_database(time, migration_level = nil)
+        if migration_level
+          Crowbar::Migrate.migrate_to(migration_level)
+        else
+          Crowbar::Migrate.migrate!
+        end
       rescue SQLite3::SQLException => e
-        Rails.logger.debug "Failed to migrate database #{time} loading: #{e}"
+        Rails.logger.error "Failed to migrate database #{time} loading: #{e}"
         set_failed
         @status[:restore_database] = {
           status: :not_acceptable,

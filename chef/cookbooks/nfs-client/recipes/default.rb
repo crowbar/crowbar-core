@@ -23,6 +23,8 @@ need_remount = []
 
 comment_option = 'comment="managed-by-crowbar-barclamp-nfs-client"'
 
+package "nfs-client"
+
 ### Prepare data about NFS mounts we'll handle
 
 node[:nfs_client][:exports].each do |name, data|

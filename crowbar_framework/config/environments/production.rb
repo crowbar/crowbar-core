@@ -37,7 +37,7 @@ Rails.application.configure do
   config.active_support.deprecation = :notify
 
   config.active_record.migration_error = :page_load
-  config.active_record.dump_schema_after_migration = false
+  config.active_record.dump_schema_after_migration = true
 
   config.assets.debug = false
   config.assets.raise_runtime_errors = true

@@ -1,0 +1,14 @@
+.row
+  .col-lg-12
+  - if @errors.any?
+    .alert.alert-danger
+      %h3
+        = I18n.t("sanities.show.header")
+      %p
+        = I18n.t("sanities.show.notice")
+      %ul
+      - @errors.each do |error|
+        %li
+          = error
+    .btn-group
+      = button_to "Refresh", check_sanity_path, class: "btn btn-success", method: :post

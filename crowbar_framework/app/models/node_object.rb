@@ -17,6 +17,7 @@
 
 require "chef/mixin/deep_merge"
 require "timeout"
+require "open3"
 
 class NodeObject < ChefObject
   self.chef_type = "node"
@@ -255,7 +256,7 @@ class NodeObject < ChefObject
       end
     end
     # deep clone of @role.default_attributes, used when saving node
-    @attrs_last_saved = deep_clone(@role.default_attributes)
+    @attrs_last_saved = @role.default_attributes.deep_dup
     @node = node
   end
 
@@ -523,7 +524,9 @@ class NodeObject < ChefObject
     return "unknown" if (@node.nil? or @role.nil?)
     if self.crowbar["state"] === "ready" and @node["ohai_time"]
       since_last = Time.now.to_i-@node["ohai_time"].to_i
-      return "noupdate" if since_last > 1200 # or 20 mins
+      max_last = @node.default_attrs["provisioner"]["chef_client_runs"] || 900
+      max_last += 300 # time + 5 min buffer time
+      return "noupdate" if since_last > max_last
     end
     return self.crowbar["state"] || "unknown"
   end
@@ -831,7 +834,7 @@ class NodeObject < ChefObject
     @node.save
 
     # update deep clone of @role.default_attributes
-    @attrs_last_saved = deep_clone(@role.default_attributes)
+    @attrs_last_saved = @role.default_attributes.deep_dup
 
     Rails.logger.debug("Done saving node: #{@node.name} - #{crowbar_revision}")
   end
@@ -1004,9 +1007,9 @@ class NodeObject < ChefObject
   # resolve references form conduit list. The supported reference format is <sign><speed><#> where
   #  - sign is optional, and determines behavior if exact match is not found. + allows speed upgrade, - allows downgrade
   #    ? allows either. If no sign is specified, an exact match must be found.
-  #  - speed designates the interface speed. 10m, 100m, 1g and 10g are supported
+  #  - speed designates the interface speed. 10m, 100m, 1g, 10g, 20g, 40g and 56g are supported
   def map_if_ref(if_map, ref)
-    speeds= %w{10m 100m 1g 10g}
+    speeds = ["10m", "100m", "1g", "10g", "20g", "40g", "56g"]
     m= /^([-+?]?)(\d{1,3}[mg])(\d+)$/.match(ref) # [1]=sign, [2]=speed, [3]=count
     if_cnt = m[3]
     desired = speeds.index(m[2])
@@ -1205,6 +1208,22 @@ class NodeObject < ChefObject
     @node["ipmi"]["bmc_password"] rescue nil
   end
 
+  # ssh to the node and wait until the command exits
+  def run_ssh_cmd(cmd)
+    args = ["sudo", "-i", "-u", "root", "--", "timeout", "-k", "5s", "15s",
+            "ssh", "-o", "ConnectTimeout=10",
+            "root@#{@node.name}",
+            %("#{cmd.gsub('"', '\\"')}")
+    ].join(" ")
+    Open3.popen3(args) do |stdin, stdout, stderr, wait_thr|
+      {
+        stdout: stdout.gets(nil),
+        stderr: stderr.gets(nil),
+        exit_code: wait_thr.value.exitstatus
+      }
+    end
+  end
+
   def ssh_cmd(cmd)
     if @node[:platform_family] == "windows"
       Rails.logger.warn("ssh command \"#{cmd}\" for #{@node.name} ignored - node is running Windows")
@@ -1335,6 +1354,22 @@ class NodeObject < ChefObject
       end
     end
     result
+  end
+
+  def actions
+    [
+      "allocate",
+      "delete",
+      "identify",
+      "poweron",
+      "powercycle",
+      "poweroff",
+      "reinstall",
+      "reboot",
+      "reset",
+      "shutdown",
+      "update"
+    ]
   end
 
   def update
@@ -1546,18 +1581,30 @@ class NodeObject < ChefObject
       unless hardware =~ /VirtualBox/i
         disk_lookups.unshift "by-id"
       end
-      result = disk_lookups.map do |type|
-        if meta["disks"][type] and not meta["disks"][type].empty?
-          "#{type}/#{meta["disks"][type].first}"
+      candidates = disk_lookups.map do |type|
+        disks_for_type = meta["disks"][type]
+        next if disks_for_type.nil? || disks_for_type.empty?
+        disk_for_type = disks_for_type.find do |b|
+          b =~ /^wwn-/ ||
+          b =~ /^scsi-[a-zA-Z]/ ||
+          b =~ /^scsi-[^1]/ ||
+          b =~ /^scsi-/ ||
+          b =~ /^ata-/ ||
+          b =~ /^cciss-/
+        end
+        disk_for_type ||= disks_for_type.first
+        unless disk_for_type.nil?
+          "#{type}/#{disk_for_type}"
         end
       end
+      candidates.compact!
 
       # virtio disk might have neither by-path nor by-id links, use the /dev/vdX
       # name in that case
-      if result.empty?
+      if candidates.empty?
         "/dev/#{device}"
       else
-        "/dev/disk/#{result.compact.first}"
+        "/dev/disk/#{candidates.first}"
       end
     else
       nil
@@ -1565,27 +1612,6 @@ class NodeObject < ChefObject
   end
 
   private
-
-  # Used for cloning role's default attributes.
-  def deep_clone object, options = {}
-    case object
-    when Numeric,TrueClass,FalseClass,NilClass,Symbol #immutable
-      object
-    when ::String
-      options[:full] ? object.clone : object
-    when ::Hash
-      object.reduce({}) do |acc,kv|
-        acc[deep_clone(kv[0])] = deep_clone(kv[1])
-        acc
-      end
-    when ::Array
-       object.reduce([]) do |acc,v|
-        acc << deep_clone(v)
-      end
-    else
-      object.clone #deep copy
-    end
-  end
 
   # this is used by the alias/description code split
   def chef_description

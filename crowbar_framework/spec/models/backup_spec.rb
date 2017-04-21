@@ -19,9 +19,17 @@ describe Backup do
     allow_any_instance_of(Backup).to receive(:path).and_return(fixture)
     allow_any_instance_of(Backup).to receive(:delete_archive).and_return(true)
   end
+  let!(:backup_attrs) do
+    {
+      name: "testbackup",
+      migration_level: 20151222144602,
+      version: "3.0",
+      size: 30
+    }
+  end
 
   describe "Backup creation" do
-    let(:backup) { Backup.new(name: "testbackup", created_at: created_at) }
+    let(:backup) { Backup.new(backup_attrs) }
 
     context "new backup" do
       it "checks the type" do
@@ -40,11 +48,11 @@ describe Backup do
     context "backup object validation" do
       context "validation" do
         it "is valid" do
-          bu = Backup.new(name: "testing", version: "3.0", size: 30)
+          bu = Backup.new(backup_attrs)
           stub_methods
           # this is necessary because we have the fixtures already on the Filesystem
           # usually the backup gets written to disk after save
-          allow_any_instance_of(Backup).to receive(:save_or_create_archive).and_return(true)
+          allow_any_instance_of(Backup).to receive(:create_archive).and_return(true)
           stub_validations
           expect(bu.save).to be true
         end
@@ -53,14 +61,15 @@ describe Backup do
       context "not valid" do
         it "already exists" do
           stub_validations
-          Backup.new(name: "testbackup", created_at: created_at).save
-          bu = Backup.new(name: "testbackup", created_at: created_at)
+          Backup.new(backup_attrs).save
+          bu = Backup.new(backup_attrs)
           expect(bu.save).to be false
         end
 
         it "has an invalid filename" do
           [" white space", "$%§&$%"].each do |filename|
-            bu = Backup.new(name: filename, created_at: created_at)
+            bu = Backup.new(backup_attrs)
+            bu.name = filename
             stub_methods
             stub_validations
             expect(bu.save).to be false

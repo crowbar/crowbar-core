@@ -224,9 +224,12 @@ fi
 # Setup groups and users
 # ---------------
 
+# for making HA on shared NFS backend storage work
 add_group qemu 484
 add_group kvm 485
 add_user qemu 484 kvm
+add_group glance 483
+add_user glance 483 glance
 
 
 # Check that we're really on the admin network
@@ -310,6 +313,9 @@ PATTERNS_INSTALL="$PATTERNS_INSTALL Minimal base"
 PATTERNS_INSTALL="$PATTERNS_INSTALL base enhanced_base sw_management"
 <% end -%>
 PACKAGES_INSTALL="$PACKAGES_INSTALL netcat ruby2.1-rubygem-chef"
+
+# We also need ntp for this script
+PACKAGES_INSTALL="$PACKAGES_INSTALL ntp"
 
 case $ARCH in
     x86_64) PACKAGES_INSTALL+=" biosdevname";;

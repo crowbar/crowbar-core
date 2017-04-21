@@ -229,7 +229,7 @@ describe NodesController do
     it "sets the machine state" do
       ["reinstall", "reset", "update", "delete"].each do |action|
         post :hit, req: action, id: "testing"
-        expect(response.body).to include(action)
+        expect(response).to redirect_to(node_url("testing"))
       end
 
       ["reboot", "shutdown", "poweron", "powercycle", "poweroff", "identify", "allocate"].each do |action|

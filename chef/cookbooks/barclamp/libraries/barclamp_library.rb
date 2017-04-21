@@ -16,6 +16,16 @@
 module BarclampLibrary
   class Barclamp
     class Inventory
+      # returns a full network definition, including ranges; this doesn't
+      # depend on the node being enabled for this network
+      def self.get_network_definition(node, type)
+        if node[:network][:networks].nil? || !node[:network][:networks].key?(type)
+          nil
+        else
+          node[:network][:networks][type].to_hash
+        end
+      end
+
       def self.list_networks(node)
         answer = []
         intf_to_if_map = Barclamp::Inventory.build_node_map(node)
@@ -140,7 +150,8 @@ module BarclampLibrary
         count_map = {}
         sorted_ifs.each do |intf|
           speeds = if_list[intf]["speeds"]
-          speeds = ["1g"] unless speeds   #legacy object support
+          # Assume "1g" if ohai didn't return anything
+          speeds = ["1g"] unless speeds && !speeds.empty?
           speeds.each do |speed|
             count = count_map[speed] || 1
             if_remap["#{speed}#{count}"] = intf
@@ -171,9 +182,9 @@ module BarclampLibrary
       # resolve references form conduit list. The supported reference format is <sign><speed><#> where
       #  - sign is optional, and determines behavior if exact match is not found. + allows speed upgrade, - allows downgrade
       #    ? allows either. If no sign is specified, an exact match must be found.
-      #  - speed designates the interface speed. 10m, 100m, 1g and 10g are supported
+      #  - speed designates the interface speed. 10m, 100m, 1g, 10g, 20g, 40g and 56g are supported
       def self.map_if_ref(if_map, ref)
-        speeds= %w{10m 100m 1g 10g}
+        speeds = ["10m", "100m", "1g", "10g", "20g", "40g", "56g"]
         m= /^([-+?]?)(\d{1,3}[mg])(\d+)$/.match(ref) # [1]=sign, [2]=speed, [3]=count
         if_cnt = m[3]
         desired = speeds.index(m[2])
@@ -223,10 +234,13 @@ module BarclampLibrary
       end
 
       class Network
-        attr_reader :name, :address, :broadcast, :mac, :netmask, :subnet, :router, :usage, :vlan, :use_vlan, :interface, :interface_list, :add_bridge, :conduit
+        attr_reader :name, :address, :mtu, :broadcast, :mac, :netmask,
+          :subnet, :router, :usage, :vlan, :use_vlan, :interface,
+          :interface_list, :add_bridge, :conduit
         def initialize(net, data, rintf, interface_list)
           @name = net
           @address = data["address"]
+          @mtu = (data["mtu"] || 1500).to_i
           @broadcast = data["broadcast"]
           @mac = data["mac"]
           @netmask = data["netmask"]
@@ -405,11 +419,12 @@ module BarclampLibrary
             # now select the best candidate
             # Should be matching the code in provisioner/recipes/bootdisk.rb
             unless candidates.empty?
-              match = candidates.find{ |b|b =~ /^scsi-[a-zA-Z]/ } ||
-                candidates.find{ |b|b =~ /^scsi-[^1]/ } ||
-                candidates.find{ |b|b =~ /^scsi-/ } ||
-                candidates.find{ |b|b =~ /^ata-/ } ||
-                candidates.find{ |b|b =~ /^cciss-/ } ||
+              match = candidates.find { |b| b =~ /^wwn-/ } ||
+                candidates.find { |b| b =~ /^scsi-[a-zA-Z]/ } ||
+                candidates.find { |b| b =~ /^scsi-[^1]/ } ||
+                candidates.find { |b| b =~ /^scsi-/ } ||
+                candidates.find { |b| b =~ /^ata-/ } ||
+                candidates.find { |b| b =~ /^cciss-/ } ||
                 candidates.first
 
               unless match.empty?

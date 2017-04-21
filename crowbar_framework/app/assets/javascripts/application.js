@@ -1,22 +1,5 @@
 //= require_self
 
-function setBlockUI(events, selector) {
-  selector.live(events, function(event) {
-    $.blockUI({
-      css: {
-        border: 'none',
-        padding: '15px',
-        backgroundColor: '#000',
-        '-webkit-border-radius': '10px',
-        '-moz-border-radius': '10px',
-        opacity: .5,
-        color: '#fff'
-      },
-      message: $(event.target).data('blockui')
-    });
-  });
-}
-
 jQuery(document).ready(function($) {
   $('textarea.editor').each(function() {
     var cm = CodeMirror.fromTextArea(this, {
@@ -95,9 +78,35 @@ jQuery(document).ready(function($) {
     ]
   });
 
-  setBlockUI('submit', $('[data-blockui]'));
-  setBlockUI('click', $('body.backups').find('[data-blockui]'));
-  setBlockUI('click', $('body.installer-upgrades').find('[data-blockui]'));
+  $('[data-blockui]').live('submit', function(event) {
+    $.blockUI({
+      css: {
+        border: 'none',
+        padding: '15px',
+        backgroundColor: '#000',
+        '-webkit-border-radius': '10px',
+        '-moz-border-radius': '10px',
+        opacity: '.5',
+        color: '#fff'
+      },
+      message: $(event.target).data('blockui')
+    });
+  });
+
+  $('[data-blockui-click]').live('click', function(event) {
+    $.blockUI({
+      css: {
+        border: 'none',
+        padding: '15px',
+        backgroundColor: '#000',
+        '-webkit-border-radius': '10px',
+        '-moz-border-radius': '10px',
+        opacity: '.5',
+        color: '#fff'
+      },
+      message: $(event.target).data('blockui-click')
+    });
+  });
 
   $('[data-checkall]').live('change', function(event) {
     var checker = $(event.target).data('checkall');

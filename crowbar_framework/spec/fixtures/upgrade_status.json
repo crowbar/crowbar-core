@@ -1,0 +1,45 @@
+{
+  "current_step": "prechecks",
+  "current_substep":null,
+  "current_substep_status":null,
+  "current_nodes":null,
+  "current_node_action": null,
+  "remaining_nodes": null,
+  "upgraded_nodes": null,
+  "crowbar_backup": null,
+  "openstack_backup": null,
+  "suggested_upgrade_mode": null,
+  "selected_upgrade_mode": null,
+  "steps":{
+    "prechecks":{
+      "status":"pending"
+    },
+    "prepare":{
+      "status":"pending"
+    },
+    "backup_crowbar":{
+      "status":"pending"
+    },
+    "repocheck_crowbar":{
+      "status":"pending"
+    },
+    "admin":{
+      "status":"pending"
+    },
+    "database":{
+      "status":"pending"
+    },
+    "repocheck_nodes":{
+      "status":"pending"
+    },
+    "services":{
+      "status":"pending"
+    },
+    "backup_openstack":{
+      "status":"pending"
+    },
+    "nodes":{
+      "status":"pending"
+    }
+  }
+}

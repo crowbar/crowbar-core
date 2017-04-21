@@ -88,3 +88,26 @@ end
 o = Ohai::System.new
 o.all_plugins
 node.automatic_attrs.merge! o.data
+
+# drop virtual interfaces, to not overload chef
+virtual_intfs = ["tap", "qbr", "qvo", "qvb", "brq"]
+node.automatic_attrs["network"]["interfaces"].each_key do |intf|
+  if virtual_intfs.include?(intf.slice(0..2))
+    node.automatic_attrs["network"]["interfaces"].delete(intf)
+  end
+end
+
+# the virtual interfaces are also in there, but generally speaking, we don't
+# need counters
+node.automatic_attrs.delete("counters")
+
+# drop relatively big attributes that we know we won't use
+node.automatic_attrs["kernel"].delete("modules")
+
+# duplicates the cpu data
+node.automatic_attrs["dmi"].delete("processor")
+# when looking at cpu data, we're happy looking at the first one only; removing
+# the others avoids having tons of useless information when having many cores
+(1..(node.automatic_attrs["cpu"]["total"] - 1)).each do |n|
+  node.automatic_attrs["cpu"].delete(n.to_s)
+end

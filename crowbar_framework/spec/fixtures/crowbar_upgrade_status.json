@@ -1,0 +1,9 @@
+{
+  "version": "3.0",
+  "addons": [],
+  "upgrade": {
+    "upgrading": false,
+    "success": false,
+    "failed": false
+  }
+}

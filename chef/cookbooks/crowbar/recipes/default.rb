@@ -65,7 +65,7 @@ when "suse"
     ruby2.1-rubygem-hashie
     ruby2.1-rubygem-js-routes
     ruby2.1-rubygem-kwalify
-    ruby2.1-rubygem-mime-types-1
+    ruby2.1-rubygem-mime-types
     ruby2.1-rubygem-mixlib-shellout
     ruby2.1-rubygem-ohai-6
     ruby2.1-rubygem-rails-4_2
@@ -235,6 +235,14 @@ end
 unless node["crowbar"].nil? or node["crowbar"]["users"].nil? or node["crowbar"]["realm"].nil?
   web_port = node["crowbar"]["web_port"] || 3000
   realm = node["crowbar"]["realm"]
+  workers = node["crowbar"]["workers"] || 2
+  threads = node["crowbar"]["threads"] || 16
+  chef_solr_heap = node["crowbar"]["chef"]["solr_heap"] || 256
+  chef_solr_data = if node["crowbar"]["chef"]["solr_tmpfs"]
+    "/dev/shm/solr_data"
+  else
+    "/var/cache/chef/solr/data"
+  end
 
   users = {}
   node["crowbar"]["users"].each do |k,h|
@@ -254,6 +262,10 @@ unless node["crowbar"].nil? or node["crowbar"]["users"].nil? or node["crowbar"][
 else
   web_port = 3000
   realm = nil
+  workers = 2
+  threads = 16
+  chef_solr_heap = 256
+  chef_solr_data = "/var/cache/chef/solr/data"
 end
 
 # Remove rainbows configuration, dating from before the switch to puma
@@ -269,7 +281,26 @@ template "/etc/sysconfig/crowbar" do
   variables(
     web_host: "127.0.0.1",
     web_port: web_port,
+    workers: workers,
+    threads: threads
   )
+end
+
+service "chef-solr" do
+  supports status: true, restart: true
+  action :nothing
+end
+
+template "/etc/chef/solr.rb" do
+  source "chef-solr.rb.erb"
+  owner "root"
+  group "chef"
+  mode "0640"
+  variables(
+    chef_solr_heap: chef_solr_heap,
+    chef_solr_data: chef_solr_data
+  )
+  notifies :restart, "service[chef-solr]", :delayed
 end
 
 if node[:platform_family] == "suse"

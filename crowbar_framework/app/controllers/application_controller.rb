@@ -25,8 +25,21 @@ class ApplicationController < ActionController::Base
   rescue_from Crowbar::Error::NotFound, with: :render_not_found
   rescue_from Crowbar::Error::ChefOffline, with: :chef_is_offline
 
-  before_filter :enable_profiler, if: proc { ENV["ENABLE_PROFILER"] == "true" }
-  before_filter :enforce_installer, unless: proc { Crowbar::Installer.successful? || ENV["RAILS_ENV"] == "test" }
+  before_action do |c|
+    Crowbar::Sanity.cache! unless Rails.cache.exist?(:sanity_check_errors)
+  end
+
+  before_filter :enforce_installer, unless: proc {
+    Crowbar::Installer.successful? || \
+    Rails.env.test?
+  }
+  before_filter :upgrade, if: proc {
+    File.exist?("/var/lib/crowbar/upgrade/6-to-7-upgrade-running")
+  }
+  before_filter :sanity_checks, unless: proc {
+    Rails.env.test? || \
+    Rails.cache.fetch(:sanity_check_errors).empty?
+  }
 
   # Basis for the reflection/help system.
 
@@ -164,11 +177,42 @@ class ApplicationController < ActionController::Base
     end
   end
 
-  def enable_profiler
-    Rack::MiniProfiler.authorize_request
+  def enforce_installer
+    respond_to do |format|
+      format.html do
+        redirect_to installer_root_path
+      end
+      format.json do
+        render json: { error: I18n.t("error.before_install") }, status: :unprocessable_entity
+      end
+    end
   end
 
-  def enforce_installer
-    redirect_to installer_root_path
+  def sanity_checks
+    respond_to do |format|
+      format.html do
+        redirect_to sanity_path
+      end
+      format.json do
+        render json: {
+          error: Rails.cache.fetch(:sanity_check_errors)
+        }, status: :unprocessable_entity
+      end
+    end
+  end
+
+  def upgrade
+    respond_to do |format|
+      format.json do
+        if request.post?
+          render json: { error: I18n.t("error.during_upgrade") }, status: :service_unavailable
+        else
+          return
+        end
+      end
+      format.html do
+        render "errors/during_upgrade", status: :service_unavailable
+      end
+    end
   end
 end

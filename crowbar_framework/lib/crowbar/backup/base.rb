@@ -23,9 +23,7 @@ module Crowbar
       attr_accessor :logger
 
       def logger
-        @logger ||= ::Logger.new(STDOUT).tap do |logger|
-          logger.level = ::Logger::DEBUG
-        end
+        @logger ||= Rails.logger
       end
 
       class << self

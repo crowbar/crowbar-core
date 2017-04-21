@@ -14,12 +14,32 @@
 #
 
 def find_node_boot_mac_addresses(node, admin_data_net)
-  # If we don't have an admin IP allocated yet using node.macaddress is
-  # our best guess for the boot macaddress
-  return [node[:macaddress]] if admin_data_net.nil? || admin_data_net.interface_list.nil?
+  # If we don't have an admin IP allocated yet, using node.macaddress is
+  # our best guess for the boot macaddress.
+  if admin_data_net.nil? || \
+      admin_data_net.interface_list.nil?
+    return [node[:macaddress]]
+  end
+
+  # Also, if the interface list is not empty, but filled with nil, this
+  # means something is either very wrong with the network proposal for this
+  # node, or the node is simply missing the ohai data to resolve the conduits.
+  # In both cases, we should not crash here as this is a DoS on the admin
+  # server.
+  if admin_data_net.interface_list.compact.empty?
+    Chef::Log.warn("#{node[:fqdn]}: no interface found for admin network; " \
+                   "DHCP might not work as intended!")
+    return [node[:macaddress]]
+  end
+
   result = []
   admin_interfaces = admin_data_net.interface_list
   admin_interfaces.each do |interface|
+    if interface.nil?
+      Chef::Log.warn("#{node[:fqdn]}: incomplete interface mapping for admin network; " \
+                     "DHCP might not work as intended!")
+      next
+    end
     node["network"]["interfaces"][interface]["addresses"].each do |addr, addr_data|
       next if addr_data["family"] != "lladdr"
       result << addr unless result.include? addr
@@ -43,9 +63,9 @@ uefi_subdir = "efi"
 
 use_elilo = node[:platform_family] != "suse" || (node[:platform] == "suse" && node["platform_version"].to_f < 12.0)
 
-nodes = search(:node, "*:*")
+nodes = node_search_with_cache("*:*")
 if not nodes.nil? and not nodes.empty?
-  nodes.map{ |n|Node.load(n.name) }.each do |mnode|
+  nodes.each do |mnode|
     next if mnode[:state].nil?
 
     new_group = states[mnode[:state]]
@@ -197,7 +217,11 @@ if not nodes.nil? and not nodes.empty?
           hostname mnode.name
           macaddress mac_list[i]
           if admin_mac_addresses.include?(mac_list[i])
-            ipaddress admin_data_net.address unless admin_data_net.nil?
+            if admin_data_net.nil?
+              ipaddress mnode[:ipaddress]
+            else
+              ipaddress admin_data_net.address
+            end
             options [
               'if exists dhcp-parameter-request-list {
     # Always send the PXELINUX options (specified in hexadecimal)
@@ -346,7 +370,9 @@ if not nodes.nil? and not nodes.empty?
                       crowbar_join: "#{os_url}/crowbar_join.sh",
                       default_fs: mnode[:crowbar_wall][:default_fs] || "ext4",
                       needs_openvswitch:
-                        (mnode[:network] && mnode[:network][:needs_openvswitch]) || false
+                        (mnode[:network] && mnode[:network][:needs_openvswitch]) || false,
+                      use_uefi: !mnode[:uefi].nil?,
+                      domain_name: node.fetch(:dns, {})[:domain] || node[:domain]
             )
           end
 

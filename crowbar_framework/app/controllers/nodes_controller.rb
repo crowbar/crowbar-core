@@ -16,6 +16,9 @@
 #
 
 class NodesController < ApplicationController
+  # allow node polling during the upgrade
+  skip_before_filter :upgrade, only: [:index]
+
   def index
     @sum = 0
     @groups = {}
@@ -136,26 +139,6 @@ class NodesController < ApplicationController
 
             unless node.intended_role == node_attributes["intended_role"]
               node.intended_role = node_attributes["intended_role"]
-              dirty = true
-            end
-
-            if view_context.crowbar_options[:show].include?(:bios) and not [node.bios_set, "not_set"].include? node_attributes["bios"]
-              node.bios_set = node_attributes["bios"]
-              dirty = true
-            end
-
-            if view_context.crowbar_options[:show].include?(:raid) and not [node.raid_set, "not_set"].include? node_attributes["raid"]
-              node.raid_set = node_attributes["raid"]
-              dirty = true
-            end
-
-            unless node.group == node_attributes["group"]
-              unless node_attributes["group"].blank? or node_attributes["group"] =~ /^[a-zA-Z][a-zA-Z0-9._:-]+$/
-                report[:group_error] = true
-                raise I18n.t("nodes.list.group_error", failed: node.name)
-              end
-
-              node.group = node_attributes["group"]
               dirty = true
             end
 
@@ -304,22 +287,38 @@ class NodesController < ApplicationController
   end
 
   def hit
-    action = params[:req]
     name = params[:name] || params[:id]
     machine = NodeObject.find_node_by_name name
-    if machine.nil?
-      render text: "Could not find node '#{name}'", status: 404 and return
-    else
-      case action
-      when "reinstall", "reset", "update", "delete"
-        machine.set_state(action)
-      when "reboot", "shutdown", "poweron", "powercycle", "poweroff", "identify", "allocate"
-        machine.send(action)
-      else
-        render text: "Invalid hit request '#{action}'", status: 500 and return
+
+    respond_to do |format|
+      format.json do
+        if machine.nil?
+          render json: {
+            error: I18n.t("nodes.hit.not_found", name: name)
+          }, status: :not_found
+        elsif machine.actions.include? params[:req].to_s
+          machine.send params[:req].to_sym
+          head :ok
+        else
+          render json: {
+            error: I18n.t("nodes.hit.invalid_req", req: params[:req])
+          }, status: :internal_server_error
+        end
+      end
+
+      format.html do
+        if machine.nil?
+          flash[:alert] = I18n.t("nodes.hit.not_found", name: name)
+          redirect_to dashboard_url, status: :not_found
+        elsif machine.actions.include? params[:req].to_s
+          machine.send params[:req].to_sym
+          redirect_to node_url(machine.handle)
+        else
+          flash[:alert] = I18n.t("nodes.hit.invalid_req", req: params[:req])
+          redirect_to dashboard_url, status: :internal_server_error
+        end
       end
     end
-    render text: "Attempting '#{action}' for node '#{machine.name}'", status: 200
   end
 
   # GET /nodes/1

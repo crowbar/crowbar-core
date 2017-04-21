@@ -31,6 +31,14 @@ module Crowbar
           )
         end
       end
+
+      def migrate_to(level)
+        puts "Migrating database schema to #{level}..."
+        ActiveRecord::Migrator.migrate(
+          ActiveRecord::Migrator.migrations_paths,
+          level.to_i
+        )
+      end
     end
   end
 end

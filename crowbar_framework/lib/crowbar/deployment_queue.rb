@@ -162,7 +162,10 @@ module Crowbar
             dequeue_proposal_no_lock(iii[:barclamp], iii[:inst])
           end
 
-          dequeue_proposal_no_lock(proposal_to_commit[:barclamp], proposal_to_commit[:inst])
+          dequeue_proposal_no_lock(
+            proposal_to_commit[:barclamp],
+            proposal_to_commit[:inst]
+          ) if proposal_to_commit
         rescue StandardError => e
           logger.error("Error processing queue: #{e.message} #{e.backtrace.join("\n")}")
           logger.debug("process queue: exit: error")
@@ -199,8 +202,12 @@ module Crowbar
       service = eval("#{bc.camelize}Service.new logger")
 
       # This will call apply_role and chef-client.
-      # Params: (inst, in_queue, validate_after_save)
-      status, message = service.proposal_commit(inst, true, false)
+      status, message = service.proposal_commit(
+        inst,
+        in_queue: true,
+        validate: false,
+        validate_after_save: false
+      )
 
       logger.debug("process queue: committed item #{bc}:#{inst}: results = #{message.inspect}")
 

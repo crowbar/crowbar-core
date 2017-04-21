@@ -33,6 +33,9 @@ class Backup < ActiveRecord::Base
       message: "allows only letters and numbers"
     }
 
+  validates :migration_level,
+    presence: true
+
   validate :validate_chef_file_extension,
     :validate_version,
     :validate_hostname,
@@ -72,9 +75,11 @@ class Backup < ActiveRecord::Base
     from_upgrade = options.fetch(:from_upgrade, false)
 
     if Crowbar::Backup::Restore.restore_steps_path.exist?
+      logger.debug "Restore process is already running"
       errors.add(:base, I18n.t("backups.index.multiple_restore"))
       return false
     elsif !from_upgrade && backup_version != system_version
+      logger.debug "Restoring from different Crowbar version is not allowed"
       errors.add(:base, I18n.t("backups.index.version_conflict"))
       return false
     end
@@ -104,6 +109,23 @@ class Backup < ActiveRecord::Base
                                system_version: ENV["CROWBAR_VERSION"]))
       return false
     end
+  rescue StandardError => e
+    logger.error "Upgrade failed: #{e}"
+    errors.add(:base, e)
+    cleanup
+    return false
+  end
+
+  def cleanup
+    return unless @data || @data.to_s =~ /\A#{Dir.tmpdir}/
+
+    system(
+      "sudo",
+      "rm",
+      "-rf",
+      @data.to_s
+    )
+    @data = nil
   end
 
   class << self
@@ -150,10 +172,13 @@ class Backup < ActiveRecord::Base
       )
     end
 
+    @data = Pathname.new(dir)
     self.version = ENV["CROWBAR_VERSION"]
     self.size = path.size
-  ensure
-    FileUtils.rm_rf(dir) if dir
+    self.migration_level = ActiveRecord::Migrator.current_version
+  rescue StandardError => e
+    errors.add(:base, I18n.t("backups.index.create_backup_failed", msg: e.message))
+    false
   end
 
   def save_archive
@@ -174,10 +199,26 @@ class Backup < ActiveRecord::Base
       f.write(file.read)
     end
 
-    meta = YAML.load_file(data.join("meta.yml"))
+    meta_file = data.join("meta.yml")
+    unless meta_file.exist?
+      errors.add(:file_content, I18n.t("backups.index.meta_missing"))
+      path.delete
+      return false
+    end
+
+    begin
+      meta = YAML.load_file(meta_file)
+    rescue Psych::SyntaxError
+      errors.add(:file_content, I18n.t("backups.index.invalid_file_content"))
+      path.delete
+      return false
+    end
+
     self.version = meta["version"].to_s
     self.size = path.size
     self.created_at = Time.zone.parse(meta["created_at"])
+    # 20151222144602_create_backups.rb
+    self.migration_level = meta["migration_level"] || 20151222144602
   end
 
   def delete_archive

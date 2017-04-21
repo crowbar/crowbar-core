@@ -84,6 +84,8 @@ en:
       logs: 'Exported Items'
       repositories: 'Repositories'
       backup: 'Backup & Restore'
+      ceph_pre_upgrade: 'Prepare Ceph Upgrade'
+      upgrade: 'Upgrade'
     help: 'Help'
 
   layouts:
@@ -248,7 +250,7 @@ en:
       unknown_remotes: 'Unable to find any cluster with remote nodes named'
       unsaved_changes: 'You might have unsaved changes; do you really want to switch to another page?'
       proposal_reset: 'Failed to save proposal reset state'
-      nodes_reset: 'Failed to reset all related nodes'
+      nodes_reset: 'Failed to reset nodes: %{nodes}'
 
   docs:
     index:
@@ -363,19 +365,15 @@ en:
       duplicate_public: 'Failed to save the nodes %{failed} because there are duplicate public names. Nothing got changed!'
       group_error: 'Failed to save %{failed}: The group should start with a letter and only contain letters, digits, -, _, ., or :.'
       name: 'Name'
-      group: 'Group'
       alias: 'Alias'
       public_name: 'Public Name'
-      hw_description: 'Hardware'
       description: 'Description'
-      bios: 'BIOS'
       intended_role: 'Intended Role'
       controller: 'Controller'
       compute: 'Compute'
       storage: 'Storage'
       network: 'Network'
       no_role: 'Undecided'
-      raid: 'RAID'
       admin: 'Crowbar Server'
       title: 'Bulk edit'
       title_all: 'All available nodes'
@@ -384,10 +382,10 @@ en:
       all: 'Show all'
       nochange: 'No Changes'
       license_key: 'License'
-      target_platform: 'Platform'
+      target_platform: 'Target OS'
       target_platform_not_set: 'Not set'
       hint: 'Note: <i>group italics</i> indicates group is set automatically by system'
-      allocate_all: 'Allocate?'
+      allocate_all: 'Allocate'
       save: 'Save'
     families:
       title: 'Node Hardware Families'
@@ -443,8 +441,19 @@ en:
       powercycle: 'Power Cycle'
       poweroff: 'Power Off'
       identify: 'Identify'
+      blockui_reboot: 'Triggering Reboot...'
+      blockui_shutdown: 'Triggering Shutdown...'
+      blockui_poweron: 'Triggering Power On...'
+      blockui_powercycle: 'Triggering Power Cycle...'
+      blockui_poweroff: 'Triggering Power Off...'
+      blockui_identify: 'Triggering Identify...'
+    hit:
+      not_found: 'Could not find node %{name}'
+      invalid_req: 'Invalid hit request %{req}'
     form:
       allocate: 'Allocate'
+      confirm_allocate: 'Allocating the node will format all the disks attached to this node, including shared disks. Do you want to proceed and allocate this node?'
+      allocate_tooltip: 'Allocate this node according to the parameters in this form'
       repo_hint: 'To find out why a platform is disabled, check the <a href="%{url}">status of repositories</a>.'
       save: 'Save'
       raid: 'RAID'
@@ -547,9 +556,24 @@ en:
       check_remote: 'Remote repository'
       check_ok: 'OK'
       check_failed_tag: 'Wrong repository'
-      check_failed_md5: 'Unexpected signature'
+      check_failed_fingerprint: 'Unexpected fingerprint'
       active: 'Active'
       active_repo_tooltip: 'Managed nodes will be automatically configured to use repositories only if they are marked as active'
+
+  ceph_pre_upgrade:
+    index:
+      title: 'Preparation of Ceph Nodes'
+      hint_html: |
+        The upgrade from SUSE Enterprise Storage 2.1 to 4 must be performed as outlined in the <a href="https://www.suse.com/documentation/ses-4/book_storage_admin/data/ceph_upgrade_to4.html">SUSE Enterprise Storage 4 documentation</a>.<br>
+        For this to work, the Ceph nodes must first be put into a prepared state, so that Crowbar will stop configuring them for the duration of the upgrade of both SUSE Enterprise Storage and SUSE OpenStack Cloud products.
+      prepare: 'Prepare for the Upgrade'
+      revert: 'Revert to normal state'
+      nodes_prepared: 'Ceph nodes are already prepared for the upgrade.'
+      nodes_not_prepared: 'Ceph nodes are currently not prepared for the upgrade.'
+      blockui_message: 'Processing, please wait...'
+      no_ceph_nodes: 'No Ceph nodes were found. Upgrade preparation is not needed.'
+    success_prepare: 'Ceph nodes were successfully prepared for SES upgrade.'
+    success_revert: 'Ceph nodes were successfully reverted to normal state.'
 
   installer:
     title: 'Installer'
@@ -561,6 +585,7 @@ en:
     upgrades:
       title: 'Upgrade'
       header: '%{product}: Upgrade from SUSE OpenStack Cloud 5'
+      repeat_after_error: 'Repeat this step after resolving the error(s).'
       nav:
         prepare: 'Prepare Client Nodes'
         download: 'Download Upgrade Data'
@@ -572,11 +597,20 @@ en:
         backup: 'Data Backup'
         nodes: 'Upgrading Nodes OS'
         finishing: 'Finishing Upgrade'
+      prepare:
+        nodes_not_ready: |
+          Some nodes are not ready: %{nodes}.
+          Fix the state of nodes before proceeding with the upgrade.
+        admin_missing_dns_server: |
+          The Administration Server does not have the dns-server role while this is mandatory for
+          the upgrade process. Reapply the DNS proposal with this change before proceeding with
+          the upgrade.
       start:
         cancel: 'Abort Upgrade'
         continue: 'Upload and Restore'
         blockui: 'Uploading...'
         header: 'Continue Upgrade'
+        success: 'Successfully uploaded backup and triggered restore'
         description: |
           Select the upgrade data archive that you downloaded from the SUSE OpenStack Cloud 5
           Administration server when you started the upgrade wizard. Upload it by clicking
@@ -590,7 +624,7 @@ en:
           Restoration failed. Please check the logs at /var/log/crowbar/production.log and
           /var/log/crowbar/install.log. Please repeat the 'Upload and Restore' process after
           the conflict is resolved.
-        schema_migration_failed: 'Schema migration for %{bc_name} failed'
+        schema_migration_failed: 'Schema migration failed: %{migration_error}'
         restore_button: 'Restore'
         multiple_restore: 'Restore process is already running'
         restore_crowbar: 'Restoring Crowbar'
@@ -720,18 +754,146 @@ en:
       enter_name: 'Please enter a name for the image'
       invalid_filename_format: 'Wrong file format, please dont use whitespace or special characters'
       invalid_filename_exists: 'Invalid filename, backup already exists.'
+      invalid_file_content: 'Invalid file content, please make sure the tarball contains valid backup data'
+      meta_missing: 'meta.yml metadata file is missing in the backup'
       invalid_backup: 'Cannot restore from invalid backup'
       missing_backup: 'Backup does not exist'
-      upgrade_not_supported: 'Upgrade from %{backup_version} to %{system_version} not supported'
+      upgrade_not_supported: 'Upgrade from %{backup_version} to %{system_version} is not supported'
       multiple_restore: 'Restore process is already running'
-      version_conflict: 'Cannot restore from different Crowbar version'
+      version_conflict: 'Restoring from different Crowbar version is not allowed'
       restore_successful: 'Successfully restored Crowbar'
+      create_backup_failed: 'Creating backup failed: %{msg}'
     validation:
       hostnames_not_identical: 'Hostnames not identical'
       version_too_low: 'Backup version too low'
       version_too_high: 'Backup version higher than current version'
       non_json_file: 'Unprocessable chef file found'
       invalid_file_extension: 'Filename needs to be a valid tarball with a .tar.gz file extension'
+
+  sanities:
+    show:
+      header: 'Sanity Check Failures'
+      notice: |
+        There are errors that must be resolved. Please click the Refresh button after solving the errors.
+      fqdn_detected: 'Could not detect fully-qualified hostname.'
+      ip_resolved: 'Could not resolve %{fqdn} to an IPv4 or IPv6 address.'
+      loopback_unresolved: '%{fqdn} resolves to a loopback address.'
+      ip_configured: 'No local interface is configured with a correct IP address.'
+      ping_succeeds: 'Failed to ping %{fqdn}; please check your network configuration.'
+    check:
+      cache_error: 'Failed to cache sanity checks'
+
+  api:
+    crowbar:
+      upgrade_ongoing: 'Upgrade is already ongoing. Please wait.'
+      zypper_locked: '%{zypper_locked_message}'
+      zypper_prompt: '%{zypper_prompt_text}'
+      upgrade_script_path: 'Could not find %{path}'
+      upgrade:
+        help:
+          default: 'Refer to the error message in the response'
+    upgrade:
+      prechecks:
+        help:
+          default: 'Running prechecks have failed. Check /var/log/crowbar/production.log for details.'
+        network_checks:
+          help:
+            default: 'Examine the error messages'
+        not_ready:
+          error: 'Some nodes are not in the state "ready": %{nodes}.'
+          help: 'Check the chef logs for identifying the problem. Make sure all the nodes are in state "ready" before proceeding with the upgrade.'
+        failed_proposals:
+          error: 'These proposals report deployment failures: %{proposals}.'
+          help: 'Check the state of the specific barclamps and redeploy them correctly or disable failing proposals.'
+        maintenance_updates_check:
+          help:
+            default: 'Make sure maintenance updates are installed.'
+        repos_missing:
+          error: 'These repositories are missing: %{missing}.'
+          help: 'Fix your SOC6 repository setup so the latest maintenance updates can be installed.'
+        repos_too_soon:
+          error: 'These repositories are enabled when they should not: %{too_soon}.'
+          help: 'SOC7 repositories cannot be enabled at this stage. First the maintenance updates for SOC6 must be installed.'
+        ceph_health_check:
+          help:
+            default: 'Make sure Ceph is healthy'
+        clusters_health:
+          crm_failures: 'Please check that all cluster resources are online or refer to the SUSE High Availability documentation for possible troubleshooting.'
+          failed_actions: 'Please clean the resource history and re−check the current state with "crm_resource -C" or refer to the SUSE High Availability documentation for possible troubleshooting.'
+          help:
+            default: 'Make sure clusters are healthy'
+        no_resources:
+          help: 'Make sure you have enough KVM compute nodes so the live migration of instances is possible.'
+        no_live_migration:
+          error: 'Live migration is not configured in nova barclamp.'
+          help: 'Adapt the nova barclamp configuration to support live migration before proceeding with the upgrade.'
+        non_kvm_computes:
+          error: 'Found compute nodes different than KVM: %{nodes}.'
+          help: 'Non-disruptive upgrade is only possible with KVM compute nodes.'
+        resources:
+          help: 'Make sure you have enough compute nodes so the live migration of instances is possible.'
+        ha_configured:
+          not_installed: 'HA add-on is not installed.'
+          not_configured: 'No Pacemaker cluster is configured.'
+          help:
+            default: 'Without HA setup, non-disruptive upgrade is not possible.'
+        roles_not_ha:
+          error: 'These roles are not deployed in a cluster: %{roles}.'
+          help: 'For non-disruptive upgrade, controller roles must be deployed in HA cluser.'
+        role_conflicts:
+          error: 'These compute nodes have some roles that belong to controllers: %{nodes}.'
+          help: 'For non-disruptive upgrade, compute nodes cannot hold controller roles.'
+        controller_roles:
+          error: 'Found compute node %{node} with controller roles: %{roles}.'
+          help: 'It is not possible to upgrade with such setup. These roles cannot be placed on compute node.'
+        cinder_wrong_backend:
+          error: 'Unsupported cinder backend detected. The Raw Devices and Local File backend cannot be used with non-disruptive upgrade.'
+          help: 'For non-disruptive upgrade, cinder cannot use Raw Devices or Local File as a backend. Adapt your Cinder configuration before proceeding with the upgrade.'
+        unsupported_cluster_setup:
+          error: 'Your cluster/role configuration is not supported by the non-disruptive upgrade process.'
+          help: 'Please refer to the Deployment Guide for list of supported configurations.'
+        swift_replicas:
+          error: 'The number of replicas is bigger than the number of disks assigned for Swift.'
+          help: 'Such configuration is not supported in Swift delivered with SOC 7. Adapt your Swift configuration before proceeding with the upgrade.'
+        keystone_hybrid_backend:
+          error: 'Keystone is configured with hybrid backend.'
+          help: 'It is not possible to upgrade keystone with hybrid backend. Adapt your Keystone configuration before proceeding with the upgrade.'
+        lbaas_v1:
+          error: 'Old version of LBaaS is configured and active.'
+          help: |
+            Such a configuration is not supported for the upgrade. Please switch to LBaaS v2 before you continue.
+            Currently, no migration path exists between v1 and v2 load balancers.
+            When you switch from v1 to v2, you must recreate all load balancers, pools, and health monitors.
+        ceph_not_healthy:
+          error: |
+            Ceph cluster health check has failed with:
+            
+            %{error}
+                       
+            Make sure cluster is healthy before proceeding with the upgrade.
+          help: 'Refer to the SUSE Enterprise Storage documentation for possible troubleshooting.'
+        ceph_old_version:
+          error: 'It appears you have an old version of SUSE Enterprise Storage installed. Upgrade to the latest version of SES before proceeding with the Cloud upgrade.'
+          help: 'Refer to the SUSE Enterprise Storage documentation for the information about upgrading.'
+        ceph_not_prepared:
+          error: 'Some ceph nodes are not prepared for the upgrade: %{nodes}.'
+          help: |
+            Unlike normal nodes, ceph nodes must already be upgraded and kept waiting in the upgrade state until the upgrade of whole Cloud is finished.
+            Refer to the SUSE Enterprise Storage documentation for the information about upgrading ceph nodes.
+      prepare:
+        help:
+          default: 'Refer to the error message in the response'
+      adminbackup:
+        help:
+          default: 'Refer to the error message in the response'
+      adminrepocheck:
+        help:
+          default: 'Refer to the error message in the response'
+      cancel:
+        failed: 'Failed to cancel the upgrade; please look at the server logs'
+        help:
+          default: 'Refer to the error message in the response'
+          not_allowed: 'Not possible to cancel the upgrade process at this stage'
 
   # Global
   overview: 'Overview'
@@ -811,6 +973,8 @@ en:
     not_found: 'Not found'
     chef_server_down: 'Chef server is not available'
     param_missing: 'A required parameter is missing'
+    before_install: 'This API is not available before installation'
+    during_upgrade: 'This API is not available during upgrade'
 
   state:
     unknown: 'Unknown'

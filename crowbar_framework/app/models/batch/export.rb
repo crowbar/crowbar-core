@@ -46,7 +46,7 @@ module Batch
 
     def persist!
       path.open("w") do |file|
-        file.write content.stringify_keys(true).to_yaml
+        file.write content.stringify_keys.to_yaml
       end
 
       true

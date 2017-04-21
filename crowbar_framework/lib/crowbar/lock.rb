@@ -21,21 +21,22 @@ module Crowbar
     attr_reader :path, :name, :file
 
     def initialize(options = {})
-      @logger = options.fetch :logger, Rails.logger
+      @logger = options[:logger] || Rails.logger
       @name = options.fetch :name, "default.lock"
-      @path = options.fetch :path, Rails.root.join("tmp", @name) # full path to lockfile
+      @path = options[:path] || Rails.root.join("tmp", @name) # full path to lockfile
       @locked = false
       @file = nil
     end
 
     def self.with_lock(options = {})
-      new(options).with_lock do
+      shared = options.delete(:shared) || false
+      new(options).with_lock(shared: shared) do
         yield
       end
     end
 
-    def with_lock
-      acquire
+    def with_lock(options = {})
+      acquire(options)
       yield if block_given?
     ensure
       release

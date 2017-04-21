@@ -585,6 +585,25 @@ module NodesHelper
     end
   end
 
+  def node_title(node)
+    tooltip = [
+      node.ip,
+      node.hardware,
+      format_memory(node.memory),
+      "#{node.nics} NICs"
+    ]
+
+    link_to(
+      icon_tag("info-circle", node.handle),
+      node_path(node.handle),
+      title: tooltip.join("<br/>"),
+      data: {
+        toggle: "tooltip",
+        placement: "top"
+      }
+    )
+  end
+
   protected
 
   def role_to_proposal_name(role)

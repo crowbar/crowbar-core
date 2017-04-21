@@ -23,6 +23,11 @@
               "required": false,
               "sequence": [ { "type": "str", "name": "IpAddress" } ]
             },
+            "additional_search_domains": {
+              "type": "seq",
+              "required": false,
+              "sequence": [ { "type": "str" } ]
+            },
             "allow_transfer": {
               "type": "seq",
               "required": false,
@@ -36,10 +41,11 @@
                   "type" : "map",
                   "required" : false,
                   "mapping" : {
-                    "ips": {
+                    "type": { "type": "str", "required": true },
+                    "values": {
                       "type" : "seq",
                       "required" : true,
-                      "sequence": [ { "type": "str", "name": "IpAddress" } ]
+                      "sequence": [ { "type": "str" } ]
                     }
                   }
                 }

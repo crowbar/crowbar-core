@@ -24,9 +24,48 @@
 
 return unless node[:platform_family] == "suse"
 
-upgrade_step = node["crowbar_wall"]["crowbar_upgrade_step"] || "none"
+upgrade_step = node["crowbar_upgrade_step"] ||
+  node["crowbar_wall"]["crowbar_upgrade_step"] || "none"
 
 case upgrade_step
+
+when "revert_to_ready"
+
+  service "crowbar_join" do
+    action :enable
+  end
+
+  service "chef-client" do
+    action [:enable, :start]
+  end
+
+when "crowbar_upgrade"
+
+  # Disable openstack services
+  # We don't know which openstack services are enabled on the node and
+  # collecting that information via the attributes provided by chef is
+  # rather complicated. So instead we fall back to a simple bash hack
+
+  bash "disable_openstack_services" do
+    code <<-EOF
+      for i in $(systemctl list-units openstack* drbd.service pacemaker.service --no-legend | cut -d" " -f1);
+      do
+        systemctl disable $i
+      done
+    EOF
+  end
+
+  # Disable crowbar-join
+  service "crowbar_join" do
+    # do not stop it, it would change node's state
+    action :disable
+  end
+
+  # Disable chef-client
+  service "chef-client" do
+    action [:disable, :stop]
+  end
+
 when "openstack_shutdown"
 
   include_recipe "crowbar::stop-services-before-upgrade"

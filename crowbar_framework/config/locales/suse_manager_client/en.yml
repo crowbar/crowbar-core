@@ -18,10 +18,12 @@ en:
   barclamp:
     suse_manager_client:
       edit_attributes:
-        manager_server: 'SUSE Manager server hostname'
-        manager_server_hint: 'For example susemgr.example.com. You can set a record within the %{link}.'
-        activation_key: 'Activation Key'
-        activation_key_hint: 'For example 1-00112233445566778899aabbccddeeff'
+        bootstrap_script_url: 'URL of the bootstrap script'
+        bootstrap_script_url_hint: |
+          This is the script the administrator of the SUSE Manager server has
+          prepared to be used for activation of the clients. It is likely located under
+          /pub/bootstrap directory on the server.
+          For example https://susemgr.example.com/pub/bootstrap/bootstrap-sles12sp1.sh.
 
         manual_steps: |
           Manual steps are required in order to use this barclamp. After

@@ -70,7 +70,8 @@ end
 
 # Find provisioner servers and include them.
 provisioner_server_node = nil
-search(:node, "roles:provisioner-server AND provisioner_config_environment:#{node[:provisioner][:config][:environment]}") do |n|
+provisioners = node_search_with_cache("roles:provisioner-server")
+provisioners.each do |n|
   provisioner_server_node = n if provisioner_server_node.nil?
 
   pkey = n["crowbar"]["ssh"]["root_pub_key"] rescue nil
@@ -194,15 +195,24 @@ else
   end
 end
 
-config_file = "/etc/default/chef-client"
-config_file = "/etc/sysconfig/chef-client" if node[:platform_family] == "rhel"
+service "chef-client" do
+  supports status: true, restart: true
+  action :nothing
+end
 
-cookbook_file config_file do
+config_file = "/etc/sysconfig/chef-client"
+
+chef_client_runs = node[:provisioner][:chef_client_runs] || 900
+
+template config_file do
   owner "root"
   group "root"
   mode "0644"
-  action :create
-  source "chef-client"
+  source "chef_client.erb"
+  variables(
+    chef_client_runs: chef_client_runs
+  )
+  notifies :restart, "service[chef-client]", :delayed
 end
 
 # On SUSE: install crowbar_join properly, with init script
@@ -210,7 +220,8 @@ if node[:platform_family] == "suse" && !node.roles.include?("provisioner-server"
   admin_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(provisioner_server_node, "admin").address
   web_port = provisioner_server_node[:provisioner][:web_port]
 
-  ntp_servers = search(:node, "roles:ntp-server")
+  ntp_instance = CrowbarHelper.get_proposal_instance(node, "ntp", "default")
+  ntp_servers = node_search_with_cache("roles:ntp-server", ntp_instance)
   ntp_servers_ips = ntp_servers.map { |n| Chef::Recipe::Barclamp::Inventory.get_network_by_type(n, "admin").address }
 
   template "/usr/sbin/crowbar_join" do

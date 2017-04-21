@@ -7,6 +7,7 @@
       "forwarders": [ ],
       "allow_transfer": [ ],
       "nameservers": [ ],
+      "additional_search_domains": [ ],
       "records": { },
       "auto_assign_server": true
     }
@@ -15,7 +16,7 @@
     "dns": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 4,
+      "schema-revision": 11,
       "element_states": {
         "dns-server": [ "readying", "ready", "applying" ],
         "dns-client": [ "all" ]

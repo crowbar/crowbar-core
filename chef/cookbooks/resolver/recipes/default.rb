@@ -18,8 +18,8 @@
 # limitations under the License.
 #
 
-env_filter = " AND dns_config_environment:#{node[:dns][:config][:environment]}"
-nodes = search(:node, "roles:dns-server#{env_filter}")
+dns_instance = CrowbarHelper.get_proposal_instance(node, "dns")
+nodes = node_search_with_cache("roles:dns-server", dns_instance)
 
 dns_list = []
 if !nodes.nil? and !nodes.empty?
@@ -31,6 +31,11 @@ end
 
 dns_list << node[:dns][:nameservers]
 dns_list.flatten!
+
+# do a dup as we'll modify the content
+search_domains = (node[:dns][:additional_search_domains] || []).dup
+search_domains.unshift(node[:dns][:domain])
+search_domains.uniq!
 
 unless node[:platform_family] == "windows"
   unless CrowbarHelper.in_sledgehammer?(node)
@@ -57,6 +62,7 @@ unless node[:platform_family] == "windows"
         # invalidate dnsmasq cache if local zone changes
         subscribes :reload, "template[/etc/bind/db.#{node[:dns][:domain]}]"
       end
+      not_if { node["crowbar"]["admin_node"] && ::File.exist?("/var/lib/crowbar/install/disable_dns") }
     end
 
     dns_list = dns_list.insert(0, "127.0.0.1").take(3)
@@ -67,6 +73,9 @@ unless node[:platform_family] == "windows"
     owner "root"
     group "root"
     mode 0644
-    variables(nameservers: dns_list, search: node[:dns][:domain])
+    variables(
+      nameservers: dns_list,
+      search_domains: search_domains
+    )
   end
 end

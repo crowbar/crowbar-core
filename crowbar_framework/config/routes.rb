@@ -76,6 +76,13 @@ Rails.application.routes.draw do
   post "utils/repositories/activate_all(.:format)", controller: "repositories", action: "activate_all", as: "activate_all_repositories"
   post "utils/repositories/deactivate_all(.:format)", controller: "repositories", action: "deactivate_all", as: "deactivate_all_repositories"
 
+  get "utils/ceph_pre_upgrade(.:format)",
+    controller: "ceph_pre_upgrade", action: "index", as: "ceph_pre_upgrade"
+  post "utils/ceph_pre_upgrade/prepare(.:format)",
+    controller: "ceph_pre_upgrade",
+    action: "prepare",
+    as: "prepare_ceph_pre_upgrade"
+
   scope :utils do
     resources :backups, only: [:index, :create, :destroy] do
       collection do
@@ -164,6 +171,7 @@ Rails.application.routes.draw do
       only: [:show],
       controller: "installer/upgrades" do
       member do
+        post :prepare
         get :start
         post :start
         get :restore
@@ -181,6 +189,43 @@ Rails.application.routes.draw do
         get :restore_status
         get :nodes_status
       end
+    end
+  end
+
+  resource :sanity,
+    only: [:show],
+    controller: "sanities" do
+    member do
+      post :check
+    end
+  end
+
+  namespace :api,
+    constraints: ApiConstraint.new(2.0) do
+    resource :crowbar,
+      controller: :crowbar,
+      only: [:show] do
+      get :upgrade
+      post :upgrade
+      get :maintenance
+    end
+
+    resource :upgrade,
+      controller: :upgrade,
+      only: [:show] do
+      post :prepare
+      get :mode
+      post :mode
+      post :services
+      get :prechecks
+      post :cancel
+      get :adminrepocheck
+      post :adminbackup
+      post :database_new, path: "new"
+      post :database_connect, path: "connect"
+      post :nodes
+      get :noderepocheck
+      post :openstackbackup
     end
   end
 

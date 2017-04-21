@@ -17,8 +17,10 @@
 # limitations under the License.
 #
 
-manager_server = node[:suse_manager_client][:manager_server]
-activation_key = node[:suse_manager_client][:activation_key]
+return if node[:crowbar_wall][:suse_manager_client_registered] || false
+
+bootstrap_script_url = node[:suse_manager_client][:bootstrap_script_url]
+
 
 temp_pkg = Mixlib::ShellOut.new("mktemp /tmp/ssl-cert-XXXX.rpm").run_command.stdout.strip
 
@@ -28,19 +30,13 @@ end
 
 package(temp_pkg)
 
-org_cert = "/usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT"
-bash "install SSL certificate" do
-  code <<-EOH
-  cp #{org_cert} \
-     /etc/ssl/certs/`openssl x509 -noout -hash -in #{org_cert}`.0
-  EOH
+execute "update-ca-certificates" do
+  command "update-ca-certificates"
 end
 
-# XXX requires chef-client with CHEF-4090 fixed otherwise the package
-# provider can't handle the URL
-package "https://#{manager_server}/pub/bootstrap/sm-client-tools.rpm"
-
-execute "sm-client" do
-  command "sm-client --hostname #{manager_server} --activation-keys #{activation_key}"
+execute "bootstrap SUMA client" do
+  command "curl #{bootstrap_script_url} | sh"
 end
 
+node.set[:crowbar_wall][:suse_manager_client_registered] = true
+node.save

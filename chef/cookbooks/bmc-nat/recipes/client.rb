@@ -23,11 +23,12 @@ bmc_subnet    = nets[:bmc][:subnet]
 bmc_netmask   = nets[:bmc][:netmask]
 admin_subnet  = nets[:admin][:subnet]
 admin_netmask = nets[:admin][:netmask]
+
+return if admin_subnet == bmc_subnet && admin_netmask == bmc_netmask
+
 nat_node = search(:node, "roles:bmc-nat-router").first rescue return
 return if nat_node.nil?
 nat_address = nat_node[:crowbar][:network][:admin][:address]
-
-return if admin_subnet == bmc_subnet && admin_netmask == bmc_netmask
 
 bmc_cidr = IP::IP4.netmask_to_subnet(bmc_netmask)
 
