@@ -41,9 +41,8 @@ module Crowbar
             break
           end
         end
-
-        result || []
       end
+      @bus_order || []
     end
 
     # Returns an array of interfaces like ["em1", "em2", "em3", "em4"],
