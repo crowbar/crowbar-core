@@ -92,7 +92,7 @@ class RepositoriesController < ApplicationController
   # /utils/repositories/sync   POST
   def sync
     unless params["repo"].nil?
-      ProvisionerService.new(logger).synchronize_repositories(params["repo"])
+      ProvisionerService.new.synchronize_repositories(params["repo"])
     end
 
     redirect_to repositories_path
@@ -107,7 +107,11 @@ class RepositoriesController < ApplicationController
   error 422, "Failed to activate repository, details in response"
   def activate
     return render_not_found if params[:platform].nil? || params[:arch].nil? || params[:repo].nil?
-    ret, _message = ProvisionerService.new(logger).enable_repository(params[:platform], params[:arch], params[:repo])
+    ret, _message = ProvisionerService.new.enable_repository(
+      params[:platform],
+      params[:arch],
+      params[:repo]
+    )
     respond_to do |format|
       case ret
       when 200
@@ -138,7 +142,11 @@ class RepositoriesController < ApplicationController
   error 422, "Failed to deactivate repository, details in response"
   def deactivate
     return render_not_found if params[:platform].nil? || params[:arch].nil? || params[:repo].nil?
-    ret, _message = ProvisionerService.new(logger).disable_repository(params[:platform], params[:arch], params[:repo])
+    ret, _message = ProvisionerService.new.disable_repository(
+      params[:platform],
+      params[:arch],
+      params[:repo]
+    )
     respond_to do |format|
       case ret
       when 200
@@ -162,7 +170,7 @@ class RepositoriesController < ApplicationController
   api :POST, "/utils/repositories/activate_all", "Activate all repositories. Creates DataBagItems"
   header "Accept", "application/json", required: true
   def activate_all
-    ProvisionerService.new(logger).enable_all_repositories
+    ProvisionerService.new.enable_all_repositories
     respond_to do |format|
       format.json { head :ok }
       format.html { redirect_to repositories_url }
@@ -173,7 +181,7 @@ class RepositoriesController < ApplicationController
     "Dectivate all repositories. Destroys DataBagItems"
   header "Accept", "application/json", required: true
   def deactivate_all
-    ProvisionerService.new(logger).disable_all_repositories
+    ProvisionerService.new.disable_all_repositories
     respond_to do |format|
       format.json { head :ok }
       format.html { redirect_to repositories_url }

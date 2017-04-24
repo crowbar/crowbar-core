@@ -19,7 +19,7 @@ class DeployerController < BarclampController
   protected
 
   def initialize_service
-    @service_object = DeployerService.new logger
+    @service_object = DeployerService.new
   end
 end
 

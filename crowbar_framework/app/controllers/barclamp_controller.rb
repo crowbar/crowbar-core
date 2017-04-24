@@ -1196,6 +1196,6 @@ class BarclampController < ApplicationController
   end
 
   def initialize_service
-    @service_object = ServiceObject.new logger
+    @service_object = ServiceObject.new
   end
 end

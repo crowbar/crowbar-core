@@ -16,8 +16,8 @@
 #
 
 class ProvisionerService < ServiceObject
-  def initialize(thelogger)
-    super(thelogger)
+  def initialize(thelogger = nil)
+    super
     @bc_name = "provisioner"
   end
 
@@ -61,7 +61,7 @@ class ProvisionerService < ServiceObject
   end
 
   def transition(inst, name, state)
-    @logger.debug("Provisioner transition: entering:  #{name} for #{state}")
+    Rails.logger.debug("Provisioner transition: entering:  #{name} for #{state}")
 
     # hardware-installing for the bootdisk finder
     if ["hardware-installing", "installed", "readying"].include? state
@@ -70,7 +70,7 @@ class ProvisionerService < ServiceObject
 
       unless add_role_to_instance_and_node(@bc_name, inst, name, db, role, "provisioner-base")
         msg = "Failed to add provisioner-base role to #{name}!"
-        @logger.error(msg)
+        Rails.logger.error(msg)
         return [400, msg]
       end
     end
@@ -92,7 +92,9 @@ class ProvisionerService < ServiceObject
     if state == "reset"
       # clean up state capturing attributes on the node that are not likely to be the same
       # after a reset.
-      @logger.debug("Provisioner transition: clearing node data (claimed disks, boot device, etc.)")
+      Rails.logger.debug(
+        "Provisioner transition: clearing node data (claimed disks, boot device, etc.)"
+      )
 
       node = Node.find_by_name(name)
       save_it = false
@@ -122,20 +124,20 @@ class ProvisionerService < ServiceObject
     unless node.admin? ||
         role.default_attributes["provisioner"]["dhcp"]["state_machine"][state].nil?
       # All non-admin nodes call single_chef_client if the state machine says to.
-      @logger.info("Provisioner transition: Run the chef-client locally")
+      Rails.logger.info("Provisioner transition: Run the chef-client locally")
       system("sudo -i /opt/dell/bin/single_chef_client.sh")
     end
 
-    @logger.debug("Provisioner transition: exiting: #{name} for #{state}")
+    Rails.logger.debug("Provisioner transition: exiting: #{name} for #{state}")
     [200, { name: name }]
   end
 
   def apply_role_pre_chef_call(old_role, role, all_nodes)
-    @logger.debug("Provisioner apply_role_pre_chef_call: entering #{all_nodes.inspect}")
+    Rails.logger.debug("Provisioner apply_role_pre_chef_call: entering #{all_nodes.inspect}")
 
     save_config_to_databag(old_role, role)
 
-    @logger.debug("Provisioner apply_role_pre_chef_call: leaving")
+    Rails.logger.debug("Provisioner apply_role_pre_chef_call: leaving")
   end
 
   def save_config_to_databag(old_role, role)
@@ -186,14 +188,14 @@ class ProvisionerService < ServiceObject
   end
 
   def enable_all_repositories
-    @logger.debug("Enabling all repositories.")
+    Rails.logger.debug("Enabling all repositories.")
     Crowbar::Repository.check_all_repos.each do |repo|
       enable_repository(repo.platform, repo.arch, repo.id)
     end
   end
 
   def disable_all_repositories
-    @logger.debug("Disabling all repositories.")
+    Rails.logger.debug("Disabling all repositories.")
     all_db = begin
       Chef::DataBag.list
     rescue Net::HTTPServerException
@@ -205,7 +207,7 @@ class ProvisionerService < ServiceObject
       begin
         Crowbar::Repository.chef_data_bag_destroy(db_name)
       rescue Net::HTTPServerException
-        @logger.debug("Cannot disable repos for #{db_name}!")
+        Rails.logger.debug("Cannot disable repos for #{db_name}!")
       end
     end
   end
@@ -214,7 +216,7 @@ class ProvisionerService < ServiceObject
     repo_object = Crowbar::Repository.where(platform: platform, arch: arch, repo: repo).first
     if repo_object.nil?
       message = "#{repo} repository for #{platform} / #{arch} does not exist."
-      @logger.debug(message)
+      Rails.logger.debug(message)
       return [404, message]
     end
 
@@ -222,23 +224,23 @@ class ProvisionerService < ServiceObject
     message = ""
 
     repo_id = repo_object.id
-    @logger.debug("ID for #{repo} is #{repo_id}") if repo_id != repo
+    Rails.logger.debug("ID for #{repo} is #{repo_id}") if repo_id != repo
 
     if repo_object.available?
       repo_in_db = repo_object.data_bag_item
       repo_current = repo_object.to_databag
       if repo_in_db.nil? || Crowbar::Repository.data_bag_item_to_hash(repo_in_db) != repo_current.to_hash
-        @logger.debug("Setting #{repo_id} repository for #{platform} / #{arch} as active.")
+        Rails.logger.debug("Setting #{repo_id} repository for #{platform} / #{arch} as active.")
         repo_object.data_bag(true)
         repo_current.save
       else
-        @logger.debug("#{repo_id} repository for #{platform} / #{arch} is already active.")
+        Rails.logger.debug("#{repo_id} repository for #{platform} / #{arch} is already active.")
       end
     else
       message = "Cannot set #{repo_id} repository for #{platform} / #{arch} as active."
-      @logger.debug(message)
+      Rails.logger.debug(message)
       unless repo_object.data_bag_item.nil?
-        @logger.debug("Forcefully disabling #{repo_id} repository for #{platform} / #{arch}.")
+        Rails.logger.debug("Forcefully disabling #{repo_id} repository for #{platform} / #{arch}.")
         disable_repository(platform, arch, repo_id)
       end
 
@@ -252,23 +254,23 @@ class ProvisionerService < ServiceObject
     repo_object = Crowbar::Repository.where(platform: platform, arch: arch, repo: repo).first
     if repo_object.nil?
       message = "#{repo} repository for #{platform} / #{arch} does not exist."
-      @logger.debug(message)
+      Rails.logger.debug(message)
       return [404, message]
     end
 
     repo_id = repo_object.id
-    @logger.debug("ID for #{repo} is #{repo_id}") if repo_id != repo
+    Rails.logger.debug("ID for #{repo} is #{repo_id}") if repo_id != repo
 
     repo_in_db = repo_object.data_bag_item
     if !repo_in_db.nil?
-      @logger.debug("Setting #{repo_id} repository for #{platform} / #{arch} as inactive.")
+      Rails.logger.debug("Setting #{repo_id} repository for #{platform} / #{arch} as inactive.")
       repo_in_db.destroy(repo_object.data_bag_name, repo_object.data_bag_item_name)
       db = repo_object.data_bag
       if !db.nil? && db.empty?
         Crowbar::Repository.chef_data_bag_destroy(repo_object.data_bag_name)
       end
     else
-      @logger.debug("#{repo_id} repository for #{platform} / #{arch} is already inactive.")
+      Rails.logger.debug("#{repo_id} repository for #{platform} / #{arch} is already inactive.")
     end
 
     [200, ""]

@@ -16,8 +16,8 @@
 #
 
 class DnsService < ServiceObject
-  def initialize(thelogger)
-    super(thelogger)
+  def initialize(thelogger = nil)
+    super
     @bc_name = "dns"
   end
 
@@ -77,7 +77,7 @@ class DnsService < ServiceObject
   end
 
   def transition(inst, name, state)
-    @logger.debug("DNS transition: entering: #{name} for #{state}")
+    Rails.logger.debug("DNS transition: entering: #{name} for #{state}")
 
     node = Node.find_by_name(name)
     if node.allocated?
@@ -86,17 +86,17 @@ class DnsService < ServiceObject
 
       unless add_role_to_instance_and_node(@bc_name, inst, name, db, role, "dns-client")
         msg = "Failed to add dns-client role to #{name}!"
-        @logger.error(msg)
+        Rails.logger.error(msg)
         return [400, msg]
       end
     end
 
-    @logger.debug("DNS transition: leaving: #{name} for #{state}")
+    Rails.logger.debug("DNS transition: leaving: #{name} for #{state}")
     [200, { name: name }]
   end
 
   def apply_role_pre_chef_call(old_role, role, all_nodes)
-    @logger.debug("DNS apply_role_pre_chef_call: entering #{all_nodes.inspect}")
+    Rails.logger.debug("DNS apply_role_pre_chef_call: entering #{all_nodes.inspect}")
     return if all_nodes.empty?
 
     tnodes = role.override_attributes["dns"]["elements"]["dns-server"]
@@ -151,7 +151,7 @@ class DnsService < ServiceObject
 
     save_config_to_databag(old_role, role, nodes)
 
-    @logger.debug("DNS apply_role_pre_chef_call: leaving")
+    Rails.logger.debug("DNS apply_role_pre_chef_call: leaving")
   end
 
   def save_config_to_databag(old_role, role, server_nodes = nil)

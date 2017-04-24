@@ -15,8 +15,8 @@
 #
 
 class SuseManagerClientService < ServiceObject
-  def initialize(thelogger)
-    super(thelogger)
+  def initialize
+    super
     @bc_name = "suse_manager_client"
   end
 
@@ -41,4 +41,3 @@ class SuseManagerClientService < ServiceObject
     false
   end
 end
-

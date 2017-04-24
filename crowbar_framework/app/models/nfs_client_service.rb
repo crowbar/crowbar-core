@@ -15,8 +15,8 @@
 #
 
 class NfsClientService < ServiceObject
-  def initialize(thelogger)
-    super(thelogger)
+  def initialize(thelogger = nil)
+    super
     @bc_name = "nfs_client"
   end
 

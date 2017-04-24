@@ -83,7 +83,7 @@ namespace :crowbar do
 
       next unless cls.method_defined?(:save_config_to_databag)
 
-      service = cls.new(Rails.logger)
+      service = cls.new
 
       proposals = Proposal.where(barclamp: barclamp)
       proposals.each do |proposal|

@@ -19,6 +19,6 @@ class IpmiController < BarclampController
   protected
 
   def initialize_service
-    @service_object = IpmiService.new logger
+    @service_object = IpmiService.new
   end
 end

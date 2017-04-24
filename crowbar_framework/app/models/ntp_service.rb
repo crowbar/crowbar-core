@@ -16,8 +16,8 @@
 #
 
 class NtpService < ServiceObject
-  def initialize(thelogger)
-    super(thelogger)
+  def initialize(thelogger = nil)
+    super
     @bc_name = "ntp"
   end
 
@@ -53,7 +53,7 @@ class NtpService < ServiceObject
   end
 
   def transition(inst, name, state)
-    @logger.debug("NTP transition: entering: #{name} for #{state}")
+    Rails.logger.debug("NTP transition: entering: #{name} for #{state}")
 
     node = Node.find_by_name(name)
     if node.allocated? && !node.role?("ntp-server")
@@ -62,21 +62,21 @@ class NtpService < ServiceObject
 
       unless add_role_to_instance_and_node(@bc_name, inst, name, db, role, "ntp-client")
         msg = "Failed to add ntp-client role to #{name}!"
-        @logger.error(msg)
+        Rails.logger.error(msg)
         return [400, msg]
       end
     end
 
-    @logger.debug("NTP transition: leaving: #{name} for #{state}")
+    Rails.logger.debug("NTP transition: leaving: #{name} for #{state}")
     [200, { name: name }]
   end
 
   def apply_role_pre_chef_call(old_role, role, all_nodes)
-    @logger.debug("NTP apply_role_pre_chef_call: entering #{all_nodes.inspect}")
+    Rails.logger.debug("NTP apply_role_pre_chef_call: entering #{all_nodes.inspect}")
 
     save_config_to_databag(old_role, role)
 
-    @logger.debug("NTP apply_role_pre_chef_call: leaving")
+    Rails.logger.debug("NTP apply_role_pre_chef_call: leaving")
   end
 
   def save_config_to_databag(old_role, role)

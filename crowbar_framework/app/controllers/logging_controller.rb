@@ -29,6 +29,6 @@ class LoggingController < BarclampController
   protected
 
   def initialize_service
-    @service_object = LoggingService.new logger
+    @service_object = LoggingService.new
   end
 end

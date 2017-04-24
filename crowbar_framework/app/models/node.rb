@@ -998,7 +998,7 @@ class Node < ChefObject
 
   def set_state(state)
     # use the real transition function for this
-    cb = CrowbarService.new Rails.logger
+    cb = CrowbarService.new
     result = cb.transition "default", @node.name, state
 
     if ["reset", "reinstall", "confupdate"].include? state

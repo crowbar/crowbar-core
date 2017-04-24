@@ -23,7 +23,11 @@ describe CrowbarService do
     allow_any_instance_of(CrowbarService).to receive(:run_remote_chef_client).and_return(0)
   end
 
-  let(:crowbar) { c = CrowbarService.new(Logger.new("/dev/null")); c.bc_name = "crowbar"; c }
+  let(:crowbar) do
+    c = CrowbarService.new
+    c.bc_name = "crowbar"
+    c
+  end
 
   describe "transition" do
     it "returns 404 without state" do

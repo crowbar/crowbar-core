@@ -154,8 +154,10 @@ class RoleObject < ChefObject
     active_roles = RoleObject.find_roles_by_name("*-config-*")
     dependencies = {}
     active_roles.map do |role|
-       service = ServiceObject.get_service(role.barclamp).new(Rails.logger)
-       dependencies[role.name] = service.proposal_dependencies(role).map { |dep| "#{dep['barclamp']}-config-#{dep['inst']}" }
+      service = ServiceObject.get_service(role.barclamp).new
+      dependencies[role.name] = service.proposal_dependencies(role).map do |dep|
+        "#{dep["barclamp"]}-config-#{dep["inst"]}"
+      end
     end
     dependencies
   end

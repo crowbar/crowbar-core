@@ -313,6 +313,6 @@ class NetworkController < BarclampController
   protected
 
   def initialize_service
-    @service_object = NetworkService.new logger
+    @service_object = NetworkService.new
   end
 end

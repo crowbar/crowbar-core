@@ -16,8 +16,8 @@
 #
 
 class IpmiService < ServiceObject
-  def initialize(thelogger)
-    super(thelogger)
+  def initialize(thelogger = nil)
+    super
     @bc_name = "ipmi"
   end
 
@@ -39,7 +39,7 @@ class IpmiService < ServiceObject
   end
 
   def transition(inst, name, state)
-    @logger.debug("IPMI transition: entering: #{name} for #{state}")
+    Rails.logger.debug("IPMI transition: entering: #{name} for #{state}")
 
     # discovering because mandatory for discovery image
     if ["discovering", "readying"].include? state
@@ -48,7 +48,7 @@ class IpmiService < ServiceObject
 
       unless add_role_to_instance_and_node(@bc_name, inst, name, db, role, "ipmi")
         msg = "Failed to add ipmi role to #{name}!"
-        @logger.error(msg)
+        Rails.logger.error(msg)
         return [400, msg]
       end
     end
@@ -62,7 +62,7 @@ class IpmiService < ServiceObject
 
         unless add_role_to_instance_and_node(@bc_name, inst, name, db, role, "bmc-nat-client")
           msg = "Failed to add ipmi role to #{name}!"
-          @logger.error(msg)
+          Rails.logger.error(msg)
           return [400, msg]
         end
       end
@@ -71,11 +71,11 @@ class IpmiService < ServiceObject
     # do not allocate an IP address before we reach the state where we
     # configure the BMC
     if state == "hardware-installing"
-      ns = NetworkService.new @logger
+      ns = NetworkService.new
       role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
 
       if role && !role.default_attributes["ipmi"]["use_dhcp"]
-        @logger.debug("IPMI transition: Allocate bmc address for #{name}")
+        Rails.logger.debug("IPMI transition: Allocate bmc address for #{name}")
         node = Node.find_by_name(name)
         suggestion = if role.default_attributes["ipmi"]["ignore_address_suggestions"]
           nil
@@ -86,24 +86,24 @@ class IpmiService < ServiceObject
         result = ns.allocate_ip("default", "bmc", "host", name, suggestion)
         if result[0] != 200
           msg = "Failed to allocate bmc address for: #{name}: #{result[0]}"
-          @logger.error(msg)
+          Rails.logger.error(msg)
           return [400, msg]
         end
       else
         # This enables other system to function because the bmc data is on the node,
         # but no address is assigned.
-        @logger.debug("IPMI transition: Enable bmc interface for #{name}")
+        Rails.logger.debug("IPMI transition: Enable bmc interface for #{name}")
 
         result = ns.enable_interface("default", "bmc", name)
         if result[0] != 200
           msg = "Failed to enable bmc interface for: #{name}: #{result[0]}"
-          @logger.error(msg)
+          Rails.logger.error(msg)
           return [400, msg]
         end
       end
     end
 
-    @logger.debug("IPMI transition: leaving: #{name} for #{state}")
+    Rails.logger.debug("IPMI transition: leaving: #{name} for #{state}")
     [200, { name: name }]
   end
 end
