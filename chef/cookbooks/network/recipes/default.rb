@@ -257,7 +257,7 @@ sorted_networks.each do |network|
     bridge = if our_iface.kind_of?(Nic::Vlan)
       "br#{our_iface.vlan}"
     else
-      "br-#{name}"
+      "br-#{network.name}"
     end
     br = if Nic.exists?(bridge) && Nic.bridge?(bridge)
       Chef::Log.info("Using bridge #{bridge} for network #{network.name}")
