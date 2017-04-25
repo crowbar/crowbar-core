@@ -621,7 +621,7 @@ describe Api::Upgrade do
       # upgrade_non_compute_nodes:
       allow(Node).to(
         receive(:find).with(
-          "state:crowbar_upgrade AND NOT run_list_map:nova-compute-kvm"
+          "state:crowbar_upgrade AND NOT run_list_map:nova-compute-*"
         ).and_return([ceph, testing])
       )
       allow_any_instance_of(Api::Node).to receive(:save_node_state).with(

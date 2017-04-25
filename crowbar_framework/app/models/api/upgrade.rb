@@ -1154,11 +1154,7 @@ module Api
       # This has to be done before compute nodes upgrade, so the live migration
       # can use fully upgraded cinder stack.
       def upgrade_non_compute_nodes
-        # For :normal mode, there should be no node left in the phase
-        # All of such nodes should be upgraded during the first round when we were upgrading
-        # by the barclamps order.
-        return if upgrade_mode == :normal
-        ::Node.find("state:crowbar_upgrade AND NOT run_list_map:nova-compute-kvm").each do |node|
+        ::Node.find("state:crowbar_upgrade AND NOT run_list_map:nova-compute-*").each do |node|
           upgrade_one_node node.name
         end
         save_nodes_state([], "", "")
