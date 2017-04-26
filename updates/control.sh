@@ -205,7 +205,7 @@ nuke_everything() {
         # write new unique MBR signature
         # This initializes a random 32bit Disk signature used to
         # distinguish disks, which helps installing boot loader properly
-        echo w | fdisk /dev/$name
+        parted --script /dev/$name mktable msdos
     done < <(tac /proc/partitions)
 }
 
