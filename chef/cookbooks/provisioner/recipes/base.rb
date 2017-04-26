@@ -308,6 +308,13 @@ if node[:platform_family] == "suse" && !node.roles.include?("provisioner-server"
   end
 
   if node[:platform_family] == "suse"
+    template "/etc/zypp.conf" do
+      source "zypp.conf.erb"
+      owner "root"
+      group "root"
+      mode "0644"
+    end
+
     # make sure the repos are properly setup
     repos = Provisioner::Repositories.get_repos(node[:platform], node[:platform_version], node[:kernel][:machine])
     for name, attrs in repos
