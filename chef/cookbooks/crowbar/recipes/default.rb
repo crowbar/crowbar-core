@@ -223,6 +223,13 @@ directory logdir do
   action :create
 end
 
+file "#{logdir}/production.log" do
+  owner "crowbar"
+  group "crowbar"
+  mode "0644"
+  action :create
+end
+
 directory "#{logdir}/chef-client" do
   owner "crowbar"
   group "crowbar"
