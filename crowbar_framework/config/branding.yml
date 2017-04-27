@@ -1,5 +1,5 @@
 # Copyright 2011-2013, Dell
-# Copyright 2013-2015, SUSE LINUX GmbH
+# Copyright 2013-2017, SUSE LINUX GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,3 +34,6 @@ provider: '<a href="https://crowbar.github.io/" target="_blank">Crowbar</a>'
 
 # The favicon that gets displayed on all pages.
 favicon: ''
+
+# The EOL date
+eol_date: ''
