@@ -182,6 +182,12 @@ node["crowbar"]["network"].keys.sort{|a,b|
     # We want a bond.  Figure out what mode it should be.  Default to 5
     team_mode = conduit_map[conduit]["team_mode"] ||
       (node["network"]["teaming"] && node["network"]["teaming"]["mode"]) || 5
+    miimon = conduit_map[network.conduit]["team_miimon"] ||
+      (node["network"]["teaming"] &&
+       node["network"]["teaming"]["miimon"]) || 100
+    xmit_hash_policy = conduit_map[network.conduit]["team_xmit_hash_policy"] ||
+      (node["network"]["teaming"] &&
+       node["network"]["teaming"]["xmit_hash_policy"]) || "layer2"
     # See if a bond that matches our specifications has already been created,
     # or if there is an empty bond lying around.
     bond = Nic::Bond.find(base_ifs)
@@ -193,7 +199,7 @@ node["crowbar"]["network"].keys.sort{|a,b|
       bond_names = (0..existing_bond_names.length).to_a.map{ |i| "bond#{i}" }
       new_bond_name = (bond_names - existing_bond_names).first
 
-      bond = Nic::Bond.create(new_bond_name, team_mode)
+      bond = Nic::Bond.create(new_bond_name, team_mode, miimon, xmit_hash_policy)
       Chef::Log.info("Creating bond #{bond.name} for network #{name}")
     end
     ifs[bond.name] ||= Hash.new
@@ -207,6 +213,13 @@ node["crowbar"]["network"].keys.sort{|a,b|
     end
     ifs[bond.name]["mode"] = team_mode
     ifs[bond.name]["type"] = "bond"
+    ifs[bond.name]["miimon"] = miimon
+    ifs[bond.name]["xmit_hash_policy"] = xmit_hash_policy
+    # Also save miimon and xmit_hash_policy to the NIC object, since that is
+    # safe to change on the fly, and will be used to write the configuration
+    # files.
+    bond.miimon = miimon
+    bond.xmit_hash_policy = xmit_hash_policy
     our_iface = bond
     node.set["crowbar"]["bond_list"] = {} if node["crowbar"]["bond_list"].nil?
     node.set["crowbar"]["bond_list"][bond.name] = ifs[bond.name]["slaves"]
