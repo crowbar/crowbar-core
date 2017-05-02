@@ -3,7 +3,14 @@
     = header show_raw_deployment?, true
 
   .panel-body
-    = string_field :domain
+
+    %fieldset
+    - if @proposal.active?
+      = string_field :domain, :disabled => "disabled"
+      .alert.alert-info
+        = t('.domain_hint')
+    - else
+      = string_field :domain
 
     %fieldset
       %legend

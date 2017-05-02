@@ -20,6 +20,7 @@ en:
     dns:
       edit_attributes:
         domain: 'Domain'
+        domain_hint: 'Changing the domain after initial deployment is not supported.'
         ip_list_hint: 'A comma-separated list of IP Addresses'
         server_hint: 'At least one nameserver or one node with the dns-server role must be specified.'
 
