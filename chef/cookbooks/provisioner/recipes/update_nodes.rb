@@ -107,13 +107,13 @@ node_search_with_cache("*:*").each do |mnode|
     end
   end
 
-  arch = mnode.fetch(:kernel, {})[:machine] || "x86_64"
   pxefile = nil
   grubcfgfile = nil
   grubfile = nil
   windows_tftp_file = nil
+  arch = mnode.fetch("kernel", {})[:machine] || "x86_64"
 
-  if node[:provisioner][:discovery_arches].include?(arch)
+  if mnode[:provisioner][:discovery_arches].include?(arch)
     # no boot_ip means that no admin network address has been assigned to node,
     # and it will boot into the default discovery image. But it won't help if
     # we're trying to delete the node.
