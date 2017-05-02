@@ -59,7 +59,7 @@ ETHERDEVICE=<%=quote(iface["parent"])%>
    # Settings specific to bond devices (ifcfg-bonding(5))
    when @nic.kind_of?(Nic::Bond) -%>
 BONDING_MASTER=yes
-BONDING_MODULE_OPTS=<%=quote("mode=#{@nic.mode} miimon=#{@nic.miimon}")%>
+BONDING_MODULE_OPTS=<%=quote("mode=#{@nic.mode} miimon=#{@nic.miimon} xmit_hash_policy=#{@nic.xmit_hash_policy}")%>
 <% iface["slaves"].each_with_index do |slave,i| -%>
 BONDING_SLAVE_<%=i%>=<%=quote(slave)%>
 <%   end -%>

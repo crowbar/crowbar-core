@@ -605,6 +605,15 @@ class ::Nic
       self
     end
 
+    def xmit_hash_policy
+      sysfs("bonding/xmit_hash_policy").split[0]
+    end
+
+    def xmit_hash_policy=(xmit_hash_policy)
+      sysfs_put("bonding/xmit_hash_policy", xmit_hash_policy)
+      self
+    end
+
     def down
       slaves.each{ |s|s.down }
       super
@@ -625,7 +634,7 @@ class ::Nic
       nil
     end
 
-    def self.create(nic,mode=6,miimon=100)
+    def self.create(nic, mode=6, miimon=100, xmit_hash_policy="layer2")
       Chef::Log.info("Creating new bond #{nic}")
       if self.exists?(nic)
         raise ::ArgumentError.new("#{nic} already exists.")
@@ -642,6 +651,7 @@ class ::Nic
       iface = ::Nic.new(nic)
       iface.mode = mode
       iface.miimon = miimon
+      iface.xmit_hash_policy = xmit_hash_policy
       iface.up
       iface
     end

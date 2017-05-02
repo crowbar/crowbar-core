@@ -8,7 +8,9 @@
       "enable_tx_offloading": true,
       "mode": "single",
       "teaming": {
-        "mode": 1
+        "mode": 1,
+        "miimon": 100,
+        "xmit_hash_policy": "layer2"
       },
       "interface_map": [
         {
@@ -267,7 +269,7 @@
     "network": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 100,
+      "schema-revision": 101,
       "element_states": {
         "network": [ "readying", "ready", "applying" ]
       },
