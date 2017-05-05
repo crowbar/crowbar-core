@@ -12,14 +12,6 @@ def upgrade(ta, td, a, d)
 end
 
 def downgrade(ta, td, a, d)
-  unless ta["chef"].key?("solr_heap")
-    a.delete["chef"]["solr_heap"]
-  end
-  unless ta["chef"].key?("solr_tmpfs")
-    a.delete["chef"]["solr_tmpfs"]
-  end
-  unless ta["chef"]
-    a.delete["chef"]
-  end
+  a.delete("chef") unless ta.key?("chef")
   return a, d
 end
