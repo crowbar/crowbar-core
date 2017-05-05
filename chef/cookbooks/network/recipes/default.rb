@@ -318,12 +318,8 @@ sorted_networks.each do |network|
     net_ifs << our_iface.name
   end
   if network.mtu
-    if ["admin", "storage", "os_sdn"].include? network.name
-      Chef::Log.info("Setting mtu #{network.mtu} for #{network.name} network on #{our_iface.name}")
-      ifs[our_iface.name]["mtu"] = network.mtu
-    else
-      Chef::Log.warn("Setting mtu for #{our_iface.name} network is not supported yet, skipping")
-    end
+    Chef::Log.info("Using mtu #{network.mtu} for #{network.name} network on #{our_iface.name}")
+    ifs[our_iface.name]["mtu"] = network.mtu
   end
   # Make sure our addresses are correct
   if_mapping[network.name] = net_ifs
