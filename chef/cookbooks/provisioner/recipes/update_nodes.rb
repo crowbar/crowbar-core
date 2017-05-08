@@ -113,7 +113,7 @@ node_search_with_cache("*:*").each do |mnode|
   windows_tftp_file = nil
   arch = mnode.fetch("kernel", {})[:machine] || "x86_64"
 
-  if mnode[:provisioner][:discovery_arches].include?(arch)
+  if arch != "s390x"
     # no boot_ip means that no admin network address has been assigned to node,
     # and it will boot into the default discovery image. But it won't help if
     # we're trying to delete the node.
@@ -121,7 +121,7 @@ node_search_with_cache("*:*").each do |mnode|
       pxefile = "#{discovery_dir}/#{arch}/#{pxecfg_subdir}/#{boot_ip_hex}"
       uefi_dir = "#{discovery_dir}/#{arch}/#{uefi_subdir}"
       grubdir = "#{uefi_dir}/#{boot_ip_hex}"
-      grubcfgfile = "#{grubdir}/boot/grub/grub.cfg"
+      grubcfgfile = "#{grubdir}/grub.cfg"
       grubfile = "#{uefi_dir}/#{boot_ip_hex}.efi"
       windows_tftp_file = "#{tftproot}/windows-common/tftp/#{boot_ip_hex}"
     else
@@ -215,13 +215,13 @@ node_search_with_cache("*:*").each do |mnode|
 option dhcp-parameter-request-list = concat(option dhcp-parameter-request-list,d0,d1,d2,d3);
 }",
           "if option arch = 00:06 {
-filename = \"discovery/ia32/efi/#{boot_ip_hex}.efi\";
+filename = \"discovery/ia32/efi/#{boot_ip_hex}/boot/bootx64.efi\";
 } else if option arch = 00:07 {
-filename = \"discovery/x86_64/efi/#{boot_ip_hex}.efi\";
+filename = \"discovery/x86_64/efi/#{boot_ip_hex}/boot/bootx64.efi\";
 } else if option arch = 00:09 {
-filename = \"discovery/x86_64/efi/#{boot_ip_hex}.efi\";
+filename = \"discovery/x86_64/efi/#{boot_ip_hex}/boot/bootx64.efi\";
 } else if option arch = 00:0b {
-filename = \"discovery/aarch64/efi/#{boot_ip_hex}.efi\";
+filename = \"discovery/aarch64/efi/#{boot_ip_hex}/boot/bootaa64.efi\";
 } else if option arch = 00:0e {
 option path-prefix \"discovery/ppc64le/bios/\";
 filename = \"\";
@@ -461,8 +461,7 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
   end
 
   unless grubfile.nil?
-    # grub.cfg has to be in boot/grub/ subdirectory
-    directory "#{grubdir}/boot/grub" do
+    directory "#{grubdir}/boot" do
       recursive true
       mode 0o755
       owner "root"
@@ -478,18 +477,23 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
       variables(append_line: append_line,
                 install_name: install_label,
                 admin_ip: admin_ip,
+                efi_suffix: arch == "x86_64",
                 initrd: "#{relative_to_tftpboot}#{initrd}",
                 kernel: "#{relative_to_tftpboot}#{kernel}")
     end
 
     grub2arch = arch
+    short_arch = "x64"
+    shim_code = "cp /usr/lib64/efi/shim.efi boot/boot#{short_arch}.efi; cp /usr/lib64/efi/grub.efi boot/grub.efi"
     if arch == "aarch64"
       grub2arch = "arm64"
+      short_arch = "aa64"
+      shim_code = "cp /usr/lib64/efi/grub.efi boot/boot#{short_arch}.efi"
     end
 
-    bash "Build UEFI netboot loader with grub2 for #{mnode[:fqdn]} (#{new_group})" do
+    bash "Copy UEFI shim loader with grub2 for #{mnode[:fqdn]} (#{new_group})" do
       cwd grubdir
-      code "grub2-mkstandalone -d /usr/lib/grub2/#{grub2arch}-efi/ -O #{grub2arch}-efi --fonts=\"unicode\" -o #{grubfile} boot/grub/grub.cfg"
+      code shim_code
       action :nothing
       subscribes :run, resources("template[#{grubcfgfile}]"), :immediately
     end

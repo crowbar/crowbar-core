@@ -121,14 +121,17 @@ discovery_arches.each do |arch|
     grub2arch = "arm64"
   end
 
-  grubdir = "/usr/lib/grub2/#{grub2arch}-efi/"
-  grubout = "#{uefi_dir}/boot#{short_arch}.efi"
-  gruboptions = "-d #{grubdir} -O #{grub2arch}-efi --fonts=\"unicode\" -o #{grubout} "
-
   package "grub2-#{grub2arch}-efi"
 
-  # grub.cfg has to be in boot/grub/ subdirectory
-  directory "#{uefi_dir}/default/boot/grub" do
+  # Secure Boot Shim
+  if arch == "x86_64"
+    package "shim"
+    shim_code = "cp /usr/lib64/efi/shim.efi boot#{short_arch}.efi; cp /usr/lib64/efi/grub.efi grub.efi"
+  else
+    shim_code = "cp /usr/lib64/efi/grub.efi boot#{short_arch}.efi"
+  end
+
+  directory "#{uefi_dir}/default/boot" do
     recursive true
     mode 0o755
     owner "root"
@@ -136,7 +139,7 @@ discovery_arches.each do |arch|
     action :create
   end
 
-  template "#{uefi_dir}/default/boot/grub/grub.cfg" do
+  template "#{uefi_dir}/default/grub.cfg" do
     mode 0o644
     owner "root"
     group "root"
@@ -144,15 +147,16 @@ discovery_arches.each do |arch|
     variables(append_line: "#{append_line} crowbar.state=discovery",
               install_name: "Crowbar Discovery Image",
               admin_ip: admin_ip,
+              efi_suffix: arch == "x86_64",
               initrd: "discovery/#{arch}/initrd0.img",
               kernel: "discovery/#{arch}/vmlinuz0")
   end
 
-  bash "Build UEFI netboot loader with grub2" do
-    cwd "#{uefi_dir}/default"
-    code "grub2-mkstandalone #{gruboptions} boot/grub/grub.cfg"
+  bash "Copy UEFI shim loader with grub2" do
+    cwd "#{uefi_dir}/default/boot"
+    code shim_code
     action :nothing
-    subscribes :run, resources("template[#{uefi_dir}/default/boot/grub/grub.cfg]"), :immediately
+    subscribes :run, resources("template[#{uefi_dir}/default/grub.cfg]"), :immediately
   end
 end
 

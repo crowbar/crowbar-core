@@ -20,11 +20,11 @@ pool_opts = {
              'if option arch = 00:06 {
        filename = "discovery/ia32/efi/bootia32.efi";
      } else if option arch = 00:07 {
-       filename = "discovery/x86_64/efi/bootx64.efi";
+       filename = "discovery/x86_64/efi/default/boot/bootx64.efi";
      } else if option arch = 00:09 {
-       filename = "discovery/x86_64/efi/bootx64.efi";
+       filename = "discovery/x86_64/efi/default/boot/bootx64.efi";
      } else if option arch = 00:0b {
-       filename = "discovery/aarch64/efi/bootaa64.efi";
+       filename = "discovery/aarch64/efi/default/boot/bootaa64.efi";
      } else if option arch = 00:0e {
        option path-prefix "discovery/ppc64le/bios/";
        filename = "";
