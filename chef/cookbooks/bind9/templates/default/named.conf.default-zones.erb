@@ -9,6 +9,7 @@ zone "0.in-addr.arpa" {
 <% else -%>
         type slave;
         masters { <%= @master_ip -%>; };
+        transfer-source <%= @admin_addr -%>;
         file "/etc/bind/slave/db.0";
 <% end %>
 };
@@ -20,6 +21,7 @@ zone "255.in-addr.arpa" {
 <% else -%>
         type slave;
         masters { <%= @master_ip -%>; };
+        transfer-source <%= @admin_addr -%>;
         file "/etc/bind/slave/db.255";
 <% end %>
 };
