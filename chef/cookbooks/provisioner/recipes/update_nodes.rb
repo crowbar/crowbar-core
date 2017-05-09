@@ -249,7 +249,12 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
   initrd = "initrd0.img"
   kernel = "vmlinuz0"
 
-  if new_group == "os_install"
+  if new_group == "os_install" && admin_data_net.nil?
+    Chef::Log.warn("#{mnode[:fqdn]}: no admin IP address allocated; " \
+                    "not proceeding with install process!")
+  end
+
+  if new_group == "os_install" && !admin_data_net.nil?
     # This eventually needs to be configurable on a per-node basis
     # We select the os based on the target platform specified.
     os = mnode[:target_platform]
