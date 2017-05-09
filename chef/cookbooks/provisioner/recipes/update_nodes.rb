@@ -257,7 +257,6 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
       os = node[:provisioner][:default_os]
     end
 
-    node_ip = Barclamp::Inventory.get_network_by_type(mnode, "admin").address
     boot_device = mnode.fetch(:crowbar_wall, {})[:boot_device]
 
     append << node[:provisioner][:available_oses][os][arch][:append_line]
@@ -372,7 +371,7 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
           boot_device: boot_device,
           raid_type: (mnode[:crowbar_wall][:raid_type] || "single"),
           raid_disks: (mnode[:crowbar_wall][:raid_disks] || []),
-          node_ip: node_ip,
+          node_ip: admin_ip_address,
           node_fqdn: mnode[:fqdn],
           node_hostname: mnode[:hostname],
           platform: target_platform_distro,
