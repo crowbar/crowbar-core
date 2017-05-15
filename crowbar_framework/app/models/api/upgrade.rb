@@ -602,6 +602,7 @@ module Api
         crowbar_service = CrowbarService.new
         crowbar_service.revert_nodes_from_crowbar_upgrade
         upgrade_status.initialize_state
+        FileUtils.rm_f("/var/lib/crowbar/upgrade/6-to-7-upgrade-running")
       end
 
       def upgrade_pacemaker_cluster(cluster_env)
