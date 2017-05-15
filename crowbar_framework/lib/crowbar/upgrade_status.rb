@@ -297,6 +297,20 @@ module Crowbar
       true
     rescue StandardError => e
       @logger.error("Exception during saving the status file: #{e.message}")
+      # clear old errors to make sure there is only one type of that error present
+      # this is necessary to query for such an error through the :async_save_fail before_filter
+      # in the UpgradeController
+      error = Api::Error.find_by(
+        error: "Crowbar::Error::SaveUpgradeStatusError",
+        caller: current_step
+      )
+      error.delete if error
+      # mark the error to be able to determine this specific failure during the upgrade
+      Api::Error.create(
+        error: "Crowbar::Error::SaveUpgradeStatusError",
+        message: e.message,
+        caller: current_step
+      )
       raise ::Crowbar::Error::SaveUpgradeStatusError.new(e.message)
     end
 

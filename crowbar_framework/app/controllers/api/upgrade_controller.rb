@@ -16,6 +16,7 @@
 
 class Api::UpgradeController < ApiController
   skip_before_filter :upgrade
+  before_filter :async_save_fail
 
   api :GET, "/api/upgrade", "Show the Upgrade progress"
   header "Accept", "application/vnd.crowbar.v2.0+json", required: true
@@ -664,5 +665,18 @@ class Api::UpgradeController < ApiController
 
   def backup_params
     params.require(:backup).permit(:name)
+  end
+
+  def async_save_fail
+    error = Api::Error.find_by(error: "Crowbar::Error::SaveUpgradeStatusError")
+    return unless error
+    render json: {
+      errors: {
+        error.caller => {
+          data: error.message,
+          help: I18n.t("api.upgrade.#{error.caller}.help.default")
+        }
+      }
+    }, status: :unprocessable_entity
   end
 end
