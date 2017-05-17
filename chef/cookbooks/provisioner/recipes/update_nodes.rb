@@ -235,7 +235,26 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
     end
   end
 
-  if new_group == "os_install"
+  # Provide sane defaults (ie, discovery mode) for generating boot files.
+  # This makes it possible for nodes marked for installation to go back to
+  # discovery and follow (nearly) the whole process again, in case the install
+  # files cannot be generated due to some error that happened during discovery.
+  # Downside is that this may look like a discovery/reboot loop, but that's
+  # better than crashing chef on the admin server.
+  append_line = "#{node[:provisioner][:sledgehammer_append_line]} crowbar.hostname=#{mnode[:fqdn]} crowbar.state=#{new_group}"
+  install_name = new_group
+  install_label = "Crowbar Discovery Image (#{new_group})"
+  relative_to_pxelinux = "../"
+  relative_to_tftpboot = "discovery/#{arch}/"
+  initrd = "initrd0.img"
+  kernel = "vmlinuz0"
+
+  if new_group == "os_install" && admin_data_net.nil?
+    Chef::Log.warn("#{mnode[:fqdn]}: no admin IP address allocated; " \
+                    "not proceeding with install process!")
+  end
+
+  if new_group == "os_install" && !admin_data_net.nil?
     # This eventually needs to be configurable on a per-node basis
     # We select the os based on the target platform specified.
     os = mnode[:target_platform]
@@ -243,7 +262,6 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
       os = node[:provisioner][:default_os]
     end
 
-    node_ip = Barclamp::Inventory.get_network_by_type(mnode, "admin").address
     boot_device = mnode.fetch(:crowbar_wall, {})[:boot_device]
 
     append << node[:provisioner][:available_oses][os][arch][:append_line]
@@ -358,7 +376,7 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
           boot_device: boot_device,
           raid_type: (mnode[:crowbar_wall][:raid_type] || "single"),
           raid_disks: (mnode[:crowbar_wall][:raid_disks] || []),
-          node_ip: node_ip,
+          node_ip: admin_ip_address,
           node_fqdn: mnode[:fqdn],
           node_hostname: mnode[:hostname],
           platform: target_platform_distro,
@@ -434,16 +452,6 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
     relative_to_tftpboot = ""
     initrd = node[:provisioner][:available_oses][os][arch][:initrd]
     kernel = node[:provisioner][:available_oses][os][arch][:kernel]
-
-  else
-
-    append_line = "#{node[:provisioner][:sledgehammer_append_line]} crowbar.hostname=#{mnode[:fqdn]} crowbar.state=#{new_group}"
-    install_name = new_group
-    install_label = "Crowbar Discovery Image (#{new_group})"
-    relative_to_pxelinux = "../"
-    relative_to_tftpboot = "discovery/#{arch}/"
-    initrd = "initrd0.img"
-    kernel = "vmlinuz0"
 
   end
 
