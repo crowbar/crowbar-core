@@ -19,9 +19,17 @@ menuentry '<%= @install_name %>' --class os {
      net_ls_addr
      net_ls_routes
 
+<% if @efi_suffix %>
+     echo 'Loading Linux ...'
+     linuxefi (tftp)/<%= @kernel %> <%= @append_line %>
+
+     echo 'Loading initial ramdisk ...'
+     initrdefi (tftp)/<%= @initrd %>
+<% else %>
      echo 'Loading Linux ...'
      linux (tftp)/<%= @kernel %> <%= @append_line %>
 
      echo 'Loading initial ramdisk ...'
      initrd (tftp)/<%= @initrd %>
+<% end %>
 }
