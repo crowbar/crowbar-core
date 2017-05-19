@@ -328,14 +328,14 @@ module Crowbar
 
     ## Return the DMI system attributes from the node
     def cr_dmi_system
-      return {} if @node[:dmi].nil? || @node[:dmi][:system].nil?
+      return {} if @node.automatic_attrs["dmi"].nil? || @node.automatic_attrs["dmi"]["system"].nil?
 
-      @node[:dmi][:system]
+      @node.automatic_attrs["dmi"]["system"]
     end
 
     ## Return the list of bonds from the node
     def cr_node_bond_list
-      @node["crowbar"]["bond_list"] || {}
+      @node.normal_attrs["crowbar"]["bond_list"] || {}
     end
 
     ## Output an error message

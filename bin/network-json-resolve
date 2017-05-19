@@ -16,17 +16,18 @@
 #
 
 require 'rubygems'
-require 'chef'
 require 'getoptlong'
 require 'json'
 
 @options = [
     [ [ '--help', '-h', GetoptLong::NO_ARGUMENT ], "--help or -h - help" ],
     [ [ '--network-json', GetoptLong::REQUIRED_ARGUMENT ], "--network-json <JSON> - Path to a network.json file (by default, deployed network.json is used)" ],
+    [ [ '--node-json', GetoptLong::REQUIRED_ARGUMENT ], "--node-json <JSON> - Path to a json file representing a Chef node object (by default, the node is looked through Chef)" ],
     [ [ '--role', GetoptLong::REQUIRED_ARGUMENT ], "--role <ROLE> - Additional role the node will have (can influence the conduit map choice)" ]
 ]
 
 @network_json_path = nil
+@node_json_path = nil
 @node_name = nil
 @roles = []
 
@@ -63,6 +64,12 @@ def opt_parse()
         else
           usage -1
         end
+      when '--node-json'
+        if @node_json_path.nil?
+          @node_json_path = arg
+        else
+          usage -1
+        end
       when '--role'
         @roles << arg
       else
@@ -96,14 +103,34 @@ end
 
 def get_node
   node = nil
-  begin
-    node = Chef::Node.load(@node_name)
-  rescue Net::HTTPServerException => e
-    raise e unless e.response.code == "404"
-  end
 
-  node ||= search_node("hostname:#{@node_name}")
-  node ||= search_node("crowbar_display_alias:#{@node_name}")
+  if @node_json_path.nil?
+    begin
+      node = Chef::Node.load(@node_name)
+    rescue Net::HTTPServerException => e
+      raise e unless e.response.code == "404"
+    end
+
+    node ||= search_node("hostname:#{@node_name}")
+    node ||= search_node("crowbar_display_alias:#{@node_name}")
+  else
+    filename = File.expand_path(@node_json_path)
+    unless File.exists?(filename)
+      raise "File #{filename} does not exist."
+    end
+
+    begin
+      node = JSON.load(File.open(filename).read())
+    rescue Exception => e
+      raise "File #{filename} is not a valid JSON file: #{e.to_s}"
+    end
+
+    if node['name'] != @node_name
+      raise "#{filename} is not a JSON export of Chef node object for #{@node_name}"
+    end
+
+    node = FakeChefNode.new(node)
+  end
 
   raise "Cannot find node \"#{@node_name}\"." if node.nil?
 
@@ -156,6 +183,24 @@ end
 ### Classes
 
 load '/opt/dell/crowbar_framework/lib/crowbar/conduit_resolver.rb'
+
+class FakeChefNode
+  def initialize(json)
+    @json = json
+  end
+
+  def normal_attrs
+    @json["normal"]
+  end
+
+  def automatic_attrs
+    @json["automatic"]
+  end
+
+  def roles
+    @json["automatic"]["roles"]
+  end
+end
 
 class NodeConduitResolver
   def initialize(node, network_json, roles)
@@ -343,7 +388,11 @@ command = ARGV[0]
 begin
   usage -1 unless ["aliases", "bus_order", "conduit_map", "conduits", "networks", "resolve"].include?(command)
 
-  chef_init
+  if @network_json_path.nil? || @node_json_path.nil?
+    require 'chef'
+    chef_init
+  end
+
   resolver = NodeConduitResolver.new(get_node, get_network, @roles)
 
   case command
