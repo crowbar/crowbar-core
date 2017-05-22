@@ -566,7 +566,6 @@ class ::Nic
       usurp(slave)
       slave.down
       sysfs_put("bonding/slaves","+#{slave}")
-      slave.up
       slave
     end
 
