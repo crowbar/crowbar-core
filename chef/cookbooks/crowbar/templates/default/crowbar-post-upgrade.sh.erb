@@ -62,15 +62,35 @@ fi
 
 if [[ -f /sbin/drbdadm ]] ; then
     # Wait until DRBD is started
+    # Initially, 'drbdadm status' returns just empty string so let's get pass this stage.
     while [[ $(drbdadm status | wc -c) -eq 0 ]]; do
         log "Waiting for DRBD to bring the devices up..."
         sleep 1
     done
+    log "DRBD is up: `drbdadm status`"
+
+    # Wait for replication to start
+    # 'drbdadm status' could look like:
+    # postgresql role:Secondary
+    #  disk:Inconsistent
+    #    d52-54-77-77-01-01 connection:Connecting
+    while ! drbdadm status | grep -qi replication; do
+        log "Replication did not start yet: `drbdadm status`"
+        sleep 1
+    done
+    log "Replication started: `drbdadm status`"
+
     # Now wait after DRBD data are synced with the other node
-    while drbdadm status | grep -q Inconsistent; do
+    # While replicating, 'drbdadm status' looks like
+    # postgresql role:Secondary
+    #  disk:Inconsistent
+    #    d52-54-77-77-01-01 role:Primary
+    #      replication:SyncTarget peer-disk:UpToDate done:0.08
+    while drbdadm status | grep -qi -e inconsistent -e replication; do
         log "Replication status: `drbdadm status`"
         sleep 10
     done
+    log "Replication done: `drbdadm status`"
 fi
 
 <% end %>
