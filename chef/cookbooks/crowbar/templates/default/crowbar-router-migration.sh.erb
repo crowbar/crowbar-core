@@ -35,6 +35,11 @@ set +x
 source /root/.openrc
 set -x
 
+if ssh $hostname "test -e $UPGRADEDIR/crowbar-router-migrated" ; then
+    log "l3 agent was already evacuated from host $hostname"
+    touch $UPGRADEDIR/crowbar-router-migration-ok
+    exit 0
+fi
 
 zypper --non-interactive install openstack-neutron-ha-tool
 
@@ -44,11 +49,12 @@ zypper --non-interactive install openstack-neutron-ha-tool
                          --insecure
 ret=$?
 if [ $ret != 0 ] ; then
-    echo "Failed to evacuate l3 agent on host: $hostname"
+    log "Failed to evacuate l3 agent on host: $hostname"
     echo $ret > $UPGRADEDIR/crowbar-router-migration-failed
     exit $ret
 fi
 
+ssh $hostname "mkdir -p $UPGRADEDIR && touch $UPGRADEDIR/crowbar-router-migrated"
 
 touch $UPGRADEDIR/crowbar-router-migration-ok
 log "$BASH_SOURCE is finished."
