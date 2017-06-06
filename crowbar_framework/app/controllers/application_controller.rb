@@ -41,6 +41,14 @@ class ApplicationController < ActionController::Base
     Rails.cache.fetch(:sanity_check_errors).empty?
   }
 
+  # workaround for incorrect handling of chunking for empty responses in puma
+  # the bug is fixed in upstream puma since v2.12.3
+  # https://github.com/puma/puma/commit/1ba0999685693bcb8ff2f186acbd9ed03a5695ee
+  def head(status, options = {})
+    # call original implementation with explicit Content-Length: 0 to disable chunking in puma
+    super(status, options.merge(content_length: 0))
+  end
+
   # Basis for the reflection/help system.
 
   # First, a place to stash the help contents.
