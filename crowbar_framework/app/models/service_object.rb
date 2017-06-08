@@ -1371,7 +1371,7 @@ class ServiceObject
         )
         admin_list.each do |node|
           filename = "#{ENV['CROWBAR_LOG_DIR']}/chef-client/#{node}.log"
-          pid = run_remote_chef_client(node, Rails.root.join("..", "bin", "single_chef_client.sh").expand_path.to_s, filename)
+          pid = run_remote_chef_client(node, "chef-client", filename)
           pids[node] = pid
         end
         status = Process.waitall
@@ -1383,7 +1383,7 @@ class ServiceObject
               node = pids[baddie[0]]
               @logger.warn("Re-running chef-client (admin) again for a failure: #{node} #{@bc_name} #{inst}")
               filename = "#{ENV['CROWBAR_LOG_DIR']}/chef-client/#{node}.log"
-              pid = run_remote_chef_client(node, Rails.root.join("..", "bin", "single_chef_client.sh").expand_path.to_s, filename)
+              pid = run_remote_chef_client(node, "chef-client", filename)
               pids[pid] = node
             end
             status = Process.waitall
