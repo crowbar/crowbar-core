@@ -16,15 +16,24 @@
 
 module Crowbar
   class Settings
+    # rubocop:disable Style/ClassVars
     @@domain = nil
+    @@dns_proposal_revision = -1
+    # robocop:enable Style/ClassVars
 
     class << self
       def domain
-        # FIXME: We are using a global here to avoid lookups. We need to
-        # consider some better cache/expiration strategy.
-        if @@domain.nil?
+        # The dns barclamp's last revision is written to the cache in the
+        # Proposal model upon update
+        latest_dns_proposal_revision = Rails.cache.read("deployment_dns_crowbar_revision") || 0
+        if latest_dns_proposal_revision > @@dns_proposal_revision
+          # rubocop:disable Style/ClassVars
+          @@dns_proposal_revision = latest_dns_proposal_revision
+          # robocop:enable Style/ClassVars
           dns_proposal = Proposal.where(barclamp: "dns", name: "default").first
+          # rubocop:disable Style/ClassVars
           @@domain = dns_proposal[:attributes][:dns][:domain] unless dns_proposal.nil?
+          # robocop:enable Style/ClassVars
         end
 
         if @@domain.nil?

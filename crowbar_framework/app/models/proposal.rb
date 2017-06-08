@@ -68,6 +68,13 @@ class Proposal < ActiveRecord::Base
     else
       item["deployment"][self.barclamp]["crowbar-revision"] += 1
     end
+    # The domain attribute of the dns barclamp is needed when looking up a Node.
+    # We don't want to go to the database every time we need it since that will
+    # be many times per second, but nor can we statically record it since it may
+    # change. Instead we use Rails' caching mechanism to store the new revision,
+    # and when we look it up elsewhere we first check the revision to see if the
+    # barclamp has been updated and we require a trip to the database.
+    cache_crowbar_revision if barclamp == 'dns'
   end
 
   def raw_attributes
@@ -257,5 +264,10 @@ class Proposal < ActiveRecord::Base
 
   def update_proposal_id
     properties["id"] = "#{barclamp}-#{name}"
+  end
+
+  def cache_crowbar_revision
+    cache_key = "deployment_#{barclamp}_crowbar_revision"
+    Rails.cache.write(cache_key, item["deployment"][barclamp]["crowbar-revision"])
   end
 end
