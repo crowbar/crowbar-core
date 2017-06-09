@@ -1372,7 +1372,7 @@ class ServiceObject
         admin_list.each do |node|
           filename = "#{ENV['CROWBAR_LOG_DIR']}/chef-client/#{node}.log"
           pid = run_remote_chef_client(node, "chef-client", filename)
-          pids[node] = pid
+          pids[pid] = node
         end
         status = Process.waitall
         badones = status.select { |x| x[1].exitstatus != 0 }
