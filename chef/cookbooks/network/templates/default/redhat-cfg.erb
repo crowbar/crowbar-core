@@ -12,7 +12,7 @@ DELAY=<%=@nic.forward_delay%>
 STP=no
 <% end -%>
 <% when @nic.kind_of?(Nic::Bond) -%>
-BONDING_OPTS="miimon=<%=@nic.miimon%> mode=<%=@nic.mode%>"
+BONDING_OPTS="miimon=<%=@nic.miimon%> mode=<%=@nic.mode%> xmit_hash_policy=<%=@nic.xmit_hash_policy%>"
 <% when @nic.kind_of?(Nic::Vlan) -%>
 VLAN=yes
 <% when @nic.kind_of?(Nic) -%>
