@@ -15,5 +15,9 @@ def downgrade(ta, td, a, d)
   unless ta["teaming"].key? "xmit_hash_policy"
     a["teaming"].delete "xmit_hash_policy"
   end
+  a["conduit_map"].each do |conduit|
+    a["conduit_map"][conduit].delete "team_miimon"
+    a["conduit_map"][conduit].delete "team_xmit_hash_policy"
+  end
   return a, d
 end
