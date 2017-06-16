@@ -61,7 +61,9 @@
                   "type": "map",
                   "required": false,
                   "mapping": {
-                    "ssh_password": { "type": "str", "required": false }
+                    "ssh_password": { "type": "str", "required": false },
+                    "do_self_update": { "type": "bool", "required": true },
+                    "self_update_url": { "type": "str", "required": true }
                   }
                 }
               }

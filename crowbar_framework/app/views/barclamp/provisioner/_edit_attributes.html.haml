@@ -7,6 +7,11 @@
     %span.help-block
       = t(".access_keys_hint")
 
+    = boolean_field %w(suse autoyast do_self_update)
+    = string_field %w(suse autoyast self_update_url)
+    %span.help-block
+      = t(".suse.autoyast.self_update_url_hint")
+
     = string_field :shell_prompt
     %span.help-block
       = t(".shell_prompt_hint")
