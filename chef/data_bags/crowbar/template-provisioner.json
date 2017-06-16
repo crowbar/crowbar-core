@@ -118,6 +118,28 @@
             "append": " "
           }
         },
+        "suse-12.3": {
+          "aarch64": {
+            "initrd": "boot/aarch64/initrd",
+            "kernel": "boot/aarch64/linux",
+            "append": " "
+          },
+          "x86_64": {
+            "initrd": "boot/x86_64/loader/initrd",
+            "kernel": "boot/x86_64/loader/linux",
+            "append": " "
+          },
+          "ppc64le": {
+            "initrd": "boot/ppc64le/initrd",
+            "kernel": "boot/ppc64le/linux",
+            "append": " "
+          },
+          "s390x": {
+            "initrd": "boot/s390x/initrd",
+            "kernel": "boot/s390x/linux",
+            "append": " "
+          }
+        },
         "opensuse-42.1": {
           "x86_64": {
             "initrd": "boot/x86_64/loader/initrd",
@@ -200,7 +222,7 @@
     "provisioner": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 102,
+      "schema-revision": 200,
       "element_states": {
         "provisioner-server": [ "readying", "ready", "applying" ],
         "provisioner-base": [ "hardware-installing", "readying", "ready", "applying" ]
