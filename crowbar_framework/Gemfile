@@ -1,6 +1,6 @@
 #
 # Copyright 2011-2013, Dell
-# Copyright 2013-2014, SUSE LINUX Products GmbH
+# Copyright 2013-2017, SUSE Linux GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -40,6 +40,7 @@ gem "apipie-rails", "~> 0.3.6"
 gem "pg", "~> 0.17.1"
 gem "delayed_job_active_record", "~> 4.1.1"
 gem "daemons", "~> 1.2.3"
+gem "rails-observers", "<= 0.1.2"
 
 gem "ohai", "~> 6.24.2"
 gem "chef", "~> 10.32.2"
