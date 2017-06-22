@@ -1,6 +1,6 @@
 #
 # Copyright 2011-2013, Dell
-# Copyright 2013-2016, SUSE LINUX GmbH
+# Copyright 2013-2017, SUSE Linux GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ gem "sqlite3", "~> 1.3.9"
 gem "syslogger", "~> 1.6.0"
 gem "yaml_db", "~> 0.3.0"
 gem "easy_diff", "~> 0.0.5"
+gem "rails-observers", "<= 0.1.2"
 
 gem "ohai", "~> 6.24.2"
 gem "chef", "~> 10.32.2"
