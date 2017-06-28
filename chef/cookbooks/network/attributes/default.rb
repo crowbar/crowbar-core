@@ -20,9 +20,9 @@ when "suse"
     "vlan"
   ]
   default[:network][:ovs_pkgs] = [
-    "openvswitch",
-    "openvswitch-switch"
+    "openvswitch"
   ]
+  default[:network][:ovs_service] = "openvswitch"
   # non-x86_64 use the upstream kernel modules
   if node[:kernel][:machine] == "x86_64"
     # openSUSE and SLES12SP2 use the module shipped with upstream kernel
@@ -30,11 +30,12 @@ when "suse"
       default[:network][:ovs_pkgs].push("openvswitch-kmp-default")
     end
   end
-  # SLES11 uses a different service name for openvswitch
-  if node[:platform] == "suse" && node[:platform_version].to_f < 12.0
-    default[:network][:ovs_service] = "openvswitch-switch"
-  else
-    default[:network][:ovs_service] = "openvswitch"
+  if node[:platform] == "suse" && node[:platform_version].to_f < 12.3
+    default[:network][:ovs_pkgs].push "openvswitch-switch"
+    # SLES11 uses a different service name for openvswitch
+    if node[:platform_version].to_f < 12.0
+      default[:network][:ovs_service] = "openvswitch-switch"
+    end
   end
 when "rhel"
   default[:network][:base_pkgs] = [
