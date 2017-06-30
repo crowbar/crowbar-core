@@ -182,10 +182,10 @@ node["crowbar"]["network"].keys.sort{|a,b|
     # We want a bond.  Figure out what mode it should be.  Default to 5
     team_mode = conduit_map[conduit]["team_mode"] ||
       (node["network"]["teaming"] && node["network"]["teaming"]["mode"]) || 5
-    miimon = conduit_map[network.conduit]["team_miimon"] ||
+    miimon = conduit_map[conduit]["team_miimon"] ||
       (node["network"]["teaming"] &&
        node["network"]["teaming"]["miimon"]) || 100
-    xmit_hash_policy = conduit_map[network.conduit]["team_xmit_hash_policy"] ||
+    xmit_hash_policy = conduit_map[conduit]["team_xmit_hash_policy"] ||
       (node["network"]["teaming"] &&
        node["network"]["teaming"]["xmit_hash_policy"]) || "layer2"
     # See if a bond that matches our specifications has already been created,
