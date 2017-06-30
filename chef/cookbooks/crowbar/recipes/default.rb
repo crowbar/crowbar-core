@@ -53,7 +53,7 @@ when "suse"
   pkglist = %w(
     curl
     sudo
-    postgresql94-server
+    postgresql-server
 
     ruby2.1-rubygem-activerecord-session_store
     ruby2.1-rubygem-activeresource
