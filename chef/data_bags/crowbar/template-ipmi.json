@@ -3,19 +3,20 @@
   "description": "The default proposal for the ipmi barclamp",
   "attributes": {
     "ipmi": {
-	  "bmc_enable" : false,
-	  "bmc_user": "root",
-	  "bmc_password": "cr0wBar!",
+      "bmc_enable" : false,
+      "bmc_user": "root",
+      "bmc_password": "cr0wBar!",
+      "bmc_interface": "lanplus",
       "ignore_address_suggestions": false,
       "use_dhcp": false,
-	  "debug": false
-	 }
+      "debug": false
+    }
   },
   "deployment": {
     "ipmi": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 100,
+      "schema-revision": 101,
       "element_states": {
         "ipmi": [ "discovering", "hardware-installing", "readying" ],
         "bmc-nat-router": [ "readying", "ready", "applying" ],
@@ -38,7 +39,7 @@
           "hardware-installing",
           "installed",
           "readying"
-	]
+        ]
       } 
     }
   }
