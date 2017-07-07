@@ -813,6 +813,10 @@ class Node < ChefObject
     @node["ipmi"]["bmc_password"] rescue nil
   end
 
+  def get_bmc_interface
+    @node["ipmi"]["bmc_interface"] rescue "lanplus"
+  end
+
   # ssh to the node and wait until the command exits
   def run_ssh_cmd(cmd, timeout = "15s", kill_after = "5s")
     args = ["sudo", "-i", "-u", "root", "--", "timeout", "-k", kill_after, timeout,
@@ -979,7 +983,7 @@ class Node < ChefObject
 
   def bmc_cmd(cmd)
     if bmc_address.nil? || get_bmc_user.nil? || get_bmc_password.nil? ||
-        !system("ipmitool", "-I", "lanplus", "-H", bmc_address, "-U", get_bmc_user, "-P", get_bmc_password, cmd)
+        !system("ipmitool", "-I", get_bmc_interface, "-H", bmc_address, "-U", get_bmc_user, "-P", get_bmc_password, cmd)
       case cmd
       when "power cycle"
         ssh_command = "/sbin/reboot -f"

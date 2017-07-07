@@ -22,6 +22,7 @@ en:
         bmc_enable: 'Enable BMC'
         bmc_user: 'BMC User'
         bmc_password: 'BMC Password'
+        bmc_interface: 'BMC Interface'
         use_dhcp: 'BMC Should Use DHCP (Not explicitly assigned)'
         ignore_address_suggestions: 'Ignore Already Configured Address'
         debug: 'Enable Barclamp Debug'
