@@ -326,8 +326,8 @@ class Api::UpgradeController < ApiController
     "ha": {
       "available": true,
       "repos": [
-        "SLE12-SP2-HA-Pool",
-        "SLE12-SP2-HA-Updates"
+        "SLE12-SP3-HA-Pool",
+        "SLE12-SP3-HA-Updates"
       ],
       "errors": {
       }
@@ -335,18 +335,18 @@ class Api::UpgradeController < ApiController
     "os": {
       "available": false,
       "repos": [
-        "SLES12-SP2-Pool",
-        "SLES12-SP2-Updates"
+        "SLES12-SP3-Pool",
+        "SLES12-SP3-Updates"
       ],
       "errors": {
         "missing": {
           "x86_64": [
-            "SLES12-SP2-Pool"
+            "SLES12-SP3-Pool"
           ]
         },
         "inactive": {
           "x86_64": [
-            "SLES12-SP2-Pool"
+            "SLES12-SP3-Pool"
           ]
         }
       }
@@ -354,8 +354,8 @@ class Api::UpgradeController < ApiController
     "openstack": {
       "available": true,
       "repos": [
-        "SUSE-OpenStack-Cloud-7-Pool",
-        "SUSE-OpenStack-Cloud-7-Updates"
+        "SUSE-OpenStack-Cloud-8-Pool",
+        "SUSE-OpenStack-Cloud-8-Updates"
       ],
       "errors": {
       }

@@ -183,9 +183,9 @@ module Crowbar
 
       # returns a map of features to repository names
       # {
-      #   "os" => ["SLES12-SP2-Pool", "SLES12-SP2-Updates"],
-      #   "openstack" => ["SUSE-OpenStack-Cloud-7-Pool", "SUSE-OpenStack-Cloud-7-Updates"],
-      #   "ha" => ["SLE12-SP2-HA-Pool", "SLE12-SP2-HA-Updates"],
+      #   "os" => ["SLES12-SP3-Pool", "SLES12-SP3-Updates"],
+      #   "openstack" => ["SUSE-OpenStack-Cloud-8-Pool", "SUSE-OpenStack-Cloud-8-Updates"],
+      #   "ha" => ["SLE12-SP3-HA-Pool", "SLE12-SP3-HA-Updates"],
       #   "ceph" => ["SUSE-Enterprise-Storage-4-Pool", "SUSE-Enterprise-Storage-4-Updates"]
       # }
       def feature_repository_map(platform)
