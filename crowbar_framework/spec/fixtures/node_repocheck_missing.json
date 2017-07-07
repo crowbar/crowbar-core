@@ -2,20 +2,20 @@
   "os": {
     "available": false,
     "repos": [
-      "SLES12-SP2-Pool",
-      "SLES12-SP2-Updates"
+      "SLES12-SP3-Pool",
+      "SLES12-SP3-Updates"
     ],
     "errors": {
       "missing": {
         "x86_64": [
-          "SLES12-SP2-Pool",
-          "SLES12-SP2-Updates"
+          "SLES12-SP3-Pool",
+          "SLES12-SP3-Updates"
         ]
       },
       "inactive": {
         "x86_64": [
-          "SLES12-SP2-Pool",
-          "SLES12-SP2-Updates"
+          "SLES12-SP3-Pool",
+          "SLES12-SP3-Updates"
         ]
       }
     }
@@ -23,22 +23,22 @@
   "openstack": {
     "available": false,
     "repos": [
-      "SUSE-OpenStack-Cloud-7-Pool",
-      "SUSE-OpenStack-Cloud-7-Updates"
+      "SUSE-OpenStack-Cloud-8-Pool",
+      "SUSE-OpenStack-Cloud-8-Updates"
     ],
     "errors": {
       "missing": {
         "x86_64": [
           "Cloud",
-          "SUSE-OpenStack-Cloud-7-Pool",
-          "SUSE-OpenStack-Cloud-7-Updates"
+          "SUSE-OpenStack-Cloud-8-Pool",
+          "SUSE-OpenStack-Cloud-8-Updates"
         ]
       },
       "inactive": {
         "x86_64": [
           "Cloud",
-          "SUSE-OpenStack-Cloud-7-Pool",
-          "SUSE-OpenStack-Cloud-7-Updates"
+          "SUSE-OpenStack-Cloud-8-Pool",
+          "SUSE-OpenStack-Cloud-8-Updates"
         ]
       }
     }

@@ -193,7 +193,7 @@ describe Api::UpgradeController, type: :request do
         receive(:all).and_return([Node.find_by_name("testing.crowbar.com")])
       )
       allow(Api::Upgrade).to(
-        receive(:target_platform).and_return("suse-12.2")
+        receive(:target_platform).and_return("suse-12.3")
       )
       allow(Api::Node).to(
         receive(:node_architectures).and_return(
@@ -209,7 +209,7 @@ describe Api::UpgradeController, type: :request do
       ["os", "ceph", "ha", "openstack"].each do |feature|
         allow(::Crowbar::Repository).to(
           receive(:provided_and_enabled_with_repolist).with(
-            feature, "suse-12.2", "x86_64"
+            feature, "suse-12.3", "x86_64"
           ).and_return([true, {}])
         )
       end
@@ -223,8 +223,8 @@ describe Api::UpgradeController, type: :request do
         "os" => {
           "available" => true,
           "repos" => [
-            "SLES12-SP2-Pool",
-            "SLES12-SP2-Updates"
+            "SLES12-SP3-Pool",
+            "SLES12-SP3-Updates"
           ],
           "errors" => {
           }
@@ -232,8 +232,8 @@ describe Api::UpgradeController, type: :request do
         "openstack" => {
           "available" => true,
           "repos" => [
-            "SUSE-OpenStack-Cloud-7-Pool",
-            "SUSE-OpenStack-Cloud-7-Updates"
+            "SUSE-OpenStack-Cloud-8-Pool",
+            "SUSE-OpenStack-Cloud-8-Updates"
           ],
           "errors" => {
           }
