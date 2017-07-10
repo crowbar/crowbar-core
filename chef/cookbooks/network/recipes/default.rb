@@ -404,7 +404,7 @@ Nic.nics.each do |nic|
       if ifs[nic.name].key?("mtu") &&
           ifs.key?(parent_nic.name) &&
           ifs[parent_nic.name].key?("mtu") &&
-          ifs[parent_nic.name]["mtu"] < ifs[nic.name]["mtu"]
+          ifs[parent_nic.name]["mtu"].to_i < ifs[nic.name]["mtu"].to_i
         # parent has custom mtu lower than the nic custom mtu
         msg = "Interface #{parent_nic.name} has a custom mtu of #{ifs[parent_nic.name]["mtu"]} "\
                "but children vlan #{nic.name} wants a mtu of #{ifs[nic.name]["mtu"]}."\
@@ -417,7 +417,7 @@ Nic.nics.each do |nic|
 
       unless all_children.empty?
         max_mtu_nic = all_children.max_by { |k, v| v["mtu"] }[0]
-        ifs[nic.parent]["mtu"] = ifs[max_mtu_nic]["mtu"]
+        ifs[nic.parent]["mtu"] = ifs[max_mtu_nic]["mtu"].to_i
         parent_nic.mtu = ifs[max_mtu_nic]["mtu"]
       end
     end
