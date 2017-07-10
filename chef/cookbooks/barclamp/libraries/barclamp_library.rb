@@ -274,7 +274,11 @@ module BarclampLibrary
               %x{lsblk #{d.name.gsub(/!/, "/")} --noheadings --output MOUNTPOINT | grep -q -v ^$}
               next if $?.exitstatus == 0
             end
-            d.fixed and not d.claimed?
+            # skip claimed disks and multipath devices held by holders
+            # but include both fixed disks and multipath devices
+            device_type_claimable = d.fixed || d.multipath?
+            in_use = d.claimed? || d.held_by_multipath?
+            device_type_claimable && !in_use
           end
         end
 
@@ -282,6 +286,12 @@ module BarclampLibrary
           all(node).select do |d|
             d.claimed? and d.owner == owner
           end
+        end
+
+        def self.multipath?(device)
+          uuid_path = "/sys/block/#{device}/dm/uuid"
+          return false unless File.exist?(uuid_path)
+          File.open(uuid_path) { |f| f.read(7).start_with?("mpath-") }
         end
 
         # can be /dev/hda, /dev/sda or /dev/cciss/c0d0
@@ -325,6 +335,35 @@ module BarclampLibrary
         def usage
           Chef::Log.error("Usage method for disks is deprecated!  Please update your code to use owner")
           self.owner
+        end
+
+        def multipath?
+          self.class.multipath?(@device)
+        end
+
+        def held_by_multipath?
+          # We need to check if the holders of a device (if it has any)
+          # are multipath-capable, for example:
+          #
+          # root@d52-54-77-77-01-01:~ # multipath -ll
+          # 0QEMU_QEMU_HARDDISK_00002 dm-1 QEMU,QEMU HARDDISK
+          # size=10G features='0' hwhandler='0' wp=rw
+          # -+- policy='service-time 0' prio=1 status=active
+          # - 0:0:0:2 sdc 8:32   active ready running
+          # -+- policy='service-time 0' prio=1 status=enabled
+          # - 0:0:0:3 sdb 8:16   active ready running
+          #
+          # sdb and sdc are paths of dm-1:
+          # root@d52-54-77-77-01-01:~ # ls /sys/block/sdb/holders/
+          # dm-1
+          # root@d52-54-77-77-01-01:~ # ls /sys/block/sdc/holders/
+          # dm-1
+          #
+          # in this case this method should return false for sdb and sdc as we dont want
+          # those disks to appear available, instead we want dm-1 to be made available
+          ::Dir.entries("/sys/block/#{@device}/holders").any? do |holder|
+            self.class.multipath?(holder)
+          end
         end
 
         def fixed
