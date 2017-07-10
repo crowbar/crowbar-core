@@ -434,9 +434,12 @@ Nic.nics.each do |nic|
       end
       # set the highest mtu of all children in the same interface
       all_children = ifs.select { |k, v| v["parent"] == nic.parent && v.key?("mtu") }
-      max_mtu_nic = all_children.max_by { |k, v| v["mtu"] }[0]
-      ifs[nic.parent]["mtu"] = ifs[max_mtu_nic]["mtu"].to_i
-      parent_nic.mtu = ifs[max_mtu_nic]["mtu"].to_i
+
+      unless all_children.empty?
+        max_mtu_nic = all_children.max_by { |k, v| v["mtu"] }[0]
+        ifs[nic.parent]["mtu"] = ifs[max_mtu_nic]["mtu"].to_i
+        parent_nic.mtu = ifs[max_mtu_nic]["mtu"].to_i
+      end
     end
   end
 
