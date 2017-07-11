@@ -206,6 +206,12 @@ node["crowbar"]["network"].keys.sort{|a,b|
     ifs[bond.name]["addresses"] ||= Array.new
     ifs[bond.name]["slaves"] = Array.new
     base_ifs.each do |i|
+      # If the slave isn't already a member of this bond, it may be configured
+      # with an IP or DHCP, and we don't want wicked to re-apply it when the
+      # interface is brought back up.
+      unless bond.slaves.include? i
+        ::Kernel.system("wicked ifdown #{i.name}")
+      end
       bond.add_slave i
       ifs[bond.name]["slaves"] << i.name
       ifs[i.name]["slave"] = true
@@ -558,7 +564,9 @@ when "suse"
         nic: nic,
         pre_up_script: pre_up_script
       })
+      notifies :create, "ruby_block[wicked-ifup-required]", :immediately
     end
+
     if ifs[nic.name]["gateway"]
       template "/etc/sysconfig/network/ifroute-#{nic.name}" do
         source "suse-route.erb"
@@ -572,6 +580,30 @@ when "suse"
         action :delete
       end
     end
+  end
+
+  run_wicked_ifup = false
+
+  # This, when notified by the above "ifcfg" templates, sets run_wicked_ifup
+  # to true (which was initialized to false in the compile phase).
+  # run_wicked_ifup is later used as an "only_if" guard for the
+  # "wicked ifup all" call that is needs to happen when any of the config
+  # files got updated. The purpose of doing it this way (instead of notifying
+  # the "wicked-ifup-all" resource directly), is to make sure that the
+  # ifup is only run once after all ifcfg file have been updated and
+  # independent of how many of them were changed.
+  ruby_block "wicked-ifup-required" do
+    block do
+      run_wicked_ifup = true
+    end
+    action :nothing
+  end
+
+  # Mark all configured interfaces as up, so wicked will keep them that way.
+  bash "wicked-ifup-all" do
+    action :run
+    code "wicked ifup all"
+    only_if { run_wicked_ifup }
   end
 
   # Avoid running the wicked related thing on SLE11 nodes
