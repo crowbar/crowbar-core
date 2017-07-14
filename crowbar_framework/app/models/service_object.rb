@@ -1205,7 +1205,11 @@ class ServiceObject
 
       owner = "apply_role-#{role.name}-#{inst}-#{Process.pid}"
       reason = "apply_role(#{role.name}, #{inst}, #{in_queue}) pid #{Process.pid}"
-      apply_locks, errors = lock_and_wait_for_chef_clients(nodes_to_lock, owner, reason)
+      apply_locks, errors = lock_nodes(nodes_to_lock, owner, reason)
+
+      # Now that we've ensured no new intervallic runs can be started,
+      # wait for any which started before we paused the daemons.
+      wait_for_chef_daemons(nodes_to_lock)
 
       unless errors.empty?
         message = "Failed to apply the proposal:\n#{errors.values.join("\n")}"
@@ -1550,7 +1554,7 @@ class ServiceObject
     workers.map(&:join)
   end
 
-  def lock_and_wait_for_chef_clients(nodes, lock_owner, lock_reason)
+  def lock_nodes(nodes, lock_owner, lock_reason)
     locks = []
     errors = {}
 
@@ -1584,15 +1588,13 @@ class ServiceObject
           end
 
           locks_mutex.synchronize { locks.push(lock) }
-          # Now that we've ensured no new intervallic runs can be started,
-          # wait for any which started before we paused the daemons.
-          wait_for_chef_clients(node, logger: true)
         end
       end
     end
 
     logger.debug "Waiting for #{THREAD_POOL_SIZE} lock threads to finish..."
     workers.map(&:join)
+    logger.debug "Finished waiting for #{THREAD_POOL_SIZE} lock threads"
 
     [locks, errors]
   end
