@@ -452,7 +452,7 @@ node[:provisioner][:supported_oses].each do |os, arches|
     if File.exist?("#{os_dir}/crowbar-extra") && File.directory?("#{os_dir}/crowbar-extra")
       Dir.foreach("#{os_dir}/crowbar-extra") do |f|
         next unless File.symlink? "#{os_dir}/crowbar-extra/#{f}"
-        repositories[os][arch][f] = Hash.new
+        repositories[os][arch][f] = {}
         case
         when os =~ /(ubuntu|debian)/
           bin = "deb #{web_path}/crowbar-extra/#{f} /"
