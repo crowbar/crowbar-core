@@ -1207,15 +1207,15 @@ class ServiceObject
       reason = "apply_role(#{role.name}, #{inst}, #{in_queue}) pid #{Process.pid}"
       apply_locks, errors = lock_nodes(nodes_to_lock, owner, reason)
 
-      # Now that we've ensured no new intervallic runs can be started,
-      # wait for any which started before we paused the daemons.
-      wait_for_chef_daemons(nodes_to_lock)
-
       unless errors.empty?
         message = "Failed to apply the proposal:\n#{errors.values.join("\n")}"
         update_proposal_status(inst, "failed", message)
         return [409, message] # 409 is 'Conflict', which makes sense for locks
       end
+
+      # Now that we've ensured no new intervallic runs can be started,
+      # wait for any which started before we paused the daemons.
+      wait_for_chef_daemons(nodes_to_lock)
     end
 
     # By this point, no intervallic runs should be running, and no
