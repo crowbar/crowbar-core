@@ -1203,31 +1203,19 @@ class ServiceObject
         node_attr_cache[node_name]["windows"] || node_attr_cache[node_name]["admin"]
       end
 
-      begin
-        apply_locks = []
-        # do not use a map to set apply_locks: if there's a failure, we need the
-        # variable to contain the locks that were acquired; with a map, the
-        # variable would be empty.
-        nodes_to_lock.each do |node|
-          apply_lock = Crowbar::Lock::SharedNonBlocking.new(
-            logger: Rails.logger,
-            path: "/var/chef/cache/pause-file.lock",
-            node: node,
-            owner: "apply_role-#{role.name}-#{inst}-#{Process.pid}",
-            reason: "apply_role(#{role.name}, #{inst}, #{in_queue}) pid #{Process.pid}"
-          ).acquire
-          apply_locks.push(apply_lock)
-        end
-      rescue Crowbar::Error::LockingFailure => e
-        Rails.logger.progress("Failed to apply role #{role.name}")
-        message = "Failed to apply the proposal: #{e.message}"
+      owner = "apply_role-#{role.name}-#{inst}-#{Process.pid}"
+      reason = "apply_role(#{role.name}, #{inst}, #{in_queue}) pid #{Process.pid}"
+      apply_locks, errors = lock_nodes(nodes_to_lock, owner, reason)
+
+      unless errors.empty?
+        message = "Failed to apply the proposal:\n#{errors.values.join("\n")}"
         update_proposal_status(inst, "failed", message)
-        return [409, message] # 409 is 'Conflict'
+        return [409, message] # 409 is 'Conflict', which makes sense for locks
       end
 
       # Now that we've ensured no new intervallic runs can be started,
       # wait for any which started before we paused the daemons.
-      wait_for_chef_daemons(applying_nodes)
+      wait_for_chef_daemons(nodes_to_lock)
     end
 
     # By this point, no intervallic runs should be running, and no
@@ -1399,7 +1387,7 @@ class ServiceObject
     update_proposal_status(inst, "failed", message)
     [405, message]
   ensure
-    apply_locks.each(&:release) if apply_locks.any?
+    release_chef_locks(apply_locks)
     restore_to_ready(applying_nodes) if applying_nodes.any?
     process_queue unless in_queue
   end
@@ -1527,18 +1515,109 @@ class ServiceObject
     end
   end
 
+  private
+
+  THREAD_POOL_SIZE = 20
+
   def wait_for_chef_daemons(node_list)
+    return if node_list.empty?
+
+    queue = Queue.new
+
     node_list.each do |node_name|
       node = Node.find_by_name(node_name)
-
-      # we can't connect to windows nodes
-      next if node[:platform_family] == "windows"
-
-      wait_for_chef_clients(node_name, logger: true)
+      queue.push node_name unless node[:platform_family] == "windows"
     end
+
+    workers = (1...THREAD_POOL_SIZE).map do
+      Thread.new do
+        loop do
+          begin
+            node_name = queue.pop(true)
+          rescue ThreadError
+            break
+          end
+
+          wait_for_chef_clients(node_name, logger: true)
+        end
+      end
+    end
+
+    logger.debug "wait_for_chef_daemons: Waiting " \
+      "for #{THREAD_POOL_SIZE} unlock threads to finish..."
+    workers.map(&:join)
+    logger.debug "wait_for_chef_daemons: Finished waiting for #{THREAD_POOL_SIZE} lock threads"
   end
 
-  private
+  def release_chef_locks(locks)
+    return if locks.empty?
+
+    queue = Queue.new
+    locks.each { |l| queue.push l }
+
+    workers = (1...THREAD_POOL_SIZE).map do
+      Thread.new do
+        loop do
+          begin
+            lock = queue.pop(true)
+          rescue ThreadError
+            break
+          end
+
+          lock.release
+        end
+      end
+    end
+
+    logger.debug "release_chef_locks: Waiting for #{THREAD_POOL_SIZE} unlock threads to finish..."
+    workers.map(&:join)
+    logger.debug "release_chef_locks: Finished waiting for #{THREAD_POOL_SIZE} lock threads"
+  end
+
+  def lock_nodes(nodes, lock_owner, lock_reason)
+    locks = []
+    errors = {}
+
+    return [locks, errors] if nodes.empty?
+
+    locks_mutex = Mutex.new
+    errors_mutex = Mutex.new
+
+    queue = Queue.new
+    nodes.each { |n| queue.push n }
+
+    workers = (1...THREAD_POOL_SIZE).map do
+      Thread.new do
+        loop do
+          begin
+            node = queue.pop(true)
+          rescue ThreadError
+            break
+          end
+
+          begin
+            lock = Crowbar::Lock::SharedNonBlocking.new(
+              logger: @logger,
+              path: "/var/chef/cache/pause-file.lock",
+              node: node,
+              owner: lock_owner,
+              reason: lock_reason
+            ).acquire
+          rescue Crowbar::Error::LockingFailure => e
+            errors_mutex.synchronize { errors[node] = e.message }
+          end
+
+          locks_mutex.synchronize { locks.push(lock) }
+        end
+      end
+    end
+
+    logger.debug "lock_nodes: Waiting for #{THREAD_POOL_SIZE} lock threads to finish..."
+    workers.map(&:join)
+    logger.debug "lock_nodes: Finished waiting for #{THREAD_POOL_SIZE} lock threads"
+
+    [locks, errors]
+  end
 
   def wait_for_chef_clients(node_name, options = {})
     options = options.include?(:logger) ? { logger: Rails.logger } : {}
