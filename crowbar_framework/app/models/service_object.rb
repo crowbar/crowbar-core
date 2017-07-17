@@ -1515,20 +1515,39 @@ class ServiceObject
     end
   end
 
-  def wait_for_chef_daemons(node_list)
-    node_list.each do |node_name|
-      node = Node.find_by_name(node_name)
-
-      # we can't connect to windows nodes
-      next if node[:platform_family] == "windows"
-
-      wait_for_chef_clients(node_name, logger: true)
-    end
-  end
-
   private
 
   THREAD_POOL_SIZE = 20
+
+  def wait_for_chef_daemons(node_list)
+    return if node_list.empty?
+
+    queue = Queue.new
+
+    node_list.each do |node_name|
+      node = Node.find_by_name(node_name)
+      queue.push node_name unless node[:platform_family] == "windows"
+    end
+
+    workers = (1...THREAD_POOL_SIZE).map do
+      Thread.new do
+        loop do
+          begin
+            node_name = queue.pop(true)
+          rescue ThreadError
+            break
+          end
+
+          wait_for_chef_clients(node_name, logger: true)
+        end
+      end
+    end
+
+    logger.debug "wait_for_chef_daemons: Waiting " \
+      "for #{THREAD_POOL_SIZE} unlock threads to finish..."
+    workers.map(&:join)
+    logger.debug "wait_for_chef_daemons: Finished waiting for #{THREAD_POOL_SIZE} lock threads"
+  end
 
   def release_chef_locks(locks)
     return if locks.empty?
@@ -1550,8 +1569,9 @@ class ServiceObject
       end
     end
 
-    logger.debug "Waiting for #{THREAD_POOL_SIZE} unlock threads to finish..."
+    logger.debug "release_chef_locks: Waiting for #{THREAD_POOL_SIZE} unlock threads to finish..."
     workers.map(&:join)
+    logger.debug "release_chef_locks: Finished waiting for #{THREAD_POOL_SIZE} lock threads"
   end
 
   def lock_nodes(nodes, lock_owner, lock_reason)
@@ -1592,9 +1612,9 @@ class ServiceObject
       end
     end
 
-    logger.debug "Waiting for #{THREAD_POOL_SIZE} lock threads to finish..."
+    logger.debug "lock_nodes: Waiting for #{THREAD_POOL_SIZE} lock threads to finish..."
     workers.map(&:join)
-    logger.debug "Finished waiting for #{THREAD_POOL_SIZE} lock threads"
+    logger.debug "lock_nodes: Finished waiting for #{THREAD_POOL_SIZE} lock threads"
 
     [locks, errors]
   end
