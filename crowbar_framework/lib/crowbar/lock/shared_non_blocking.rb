@@ -15,6 +15,8 @@
 # limitations under the License.
 #
 
+require "remote_node"
+
 module Crowbar
   class Lock::SharedNonBlocking < Lock
     # This class implements a shared (i.e. non-exclusive) lock, by
