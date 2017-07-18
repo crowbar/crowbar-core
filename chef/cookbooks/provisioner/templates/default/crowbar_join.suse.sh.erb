@@ -124,6 +124,18 @@ wait_for_admin_server() {
     return 0
 }
 
+wait_for_chef_run_finish() {
+
+    local tries_left=300
+    while [[ $tries_left > 0 ]] ; do
+        if [ ! -r /var/log/chef/client.log ] || grep -q "Chef Run complete" /var/log/chef/client.log; then
+            break
+        fi
+        tries_left=$(($tries_left-1))
+        sleep 1
+    done
+}
+
 sync_time() {
     if [ -z "$VALID_NTP_SERVERS" ]; then
         echo_verbose "Skipping time synchronization..."
@@ -507,6 +519,11 @@ elif [ "$MODE" == "stop" ]; then
     RUNLEVEL=$(runlevel | awk '{print $2}')
     final_state="shutdown"
     [ "$RUNLEVEL" == "6" ] && final_state="reboot"
+
+    # Be graceful to a running chef-client run
+    wait_for_chef_run_finish
+
+    systemctl stop chef-client.service
 
     echo_debug "Stopping with state=$final_state (runlevel $RUNLEVEL)"
 
