@@ -72,9 +72,7 @@ provisioners.each do |n|
   provisioner_server_node = n if provisioner_server_node.nil?
 
   pkey = n["crowbar"]["ssh"]["root_pub_key"] rescue nil
-  if !pkey.nil? and pkey != node["crowbar"]["ssh"]["access_keys"][n.name]
-    access_keys[n.name] = pkey
-  end
+  access_keys[n.name] = pkey unless pkey.nil? && pkey != access_keys[n.name]
 end
 
 dirty = false
