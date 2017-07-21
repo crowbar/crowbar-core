@@ -134,10 +134,15 @@ class DnsService < ServiceObject
 
       master_ip = master.get_network_by_type("admin")["address"]
 
+      Rails.logger.debug("DNS apply_role_pre_chef_call: master node is #{master.name}")
+      Rails.logger.debug("DNS apply_role_pre_chef_call: master IP is #{master_ip}")
+
       slave_ips = nodes.map { |n| n.get_network_by_type("admin")["address"] }
       slave_ips.delete(master_ip)
       slave_nodes = tnodes.dup
       slave_nodes.delete(master.name)
+
+      Rails.logger.debug("DNS apply_role_pre_chef_call: slave_ips list is #{slave_ips.join(', ')}")
 
       nodes.each do |node|
         node.set[:dns] = {} if node[:dns].nil?
