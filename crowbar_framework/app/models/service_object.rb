@@ -1215,7 +1215,7 @@ class ServiceObject
 
       # Now that we've ensured no new intervallic runs can be started,
       # wait for any which started before we paused the daemons.
-      wait_for_chef_daemons(nodes_to_lock)
+      wait_for_chef_daemons(applying_nodes)
     end
 
     # By this point, no intervallic runs should be running, and no
