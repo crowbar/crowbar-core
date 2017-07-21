@@ -200,8 +200,8 @@ nodes.each do |n|
       alias_name = alias_name_no_net
     else
       net_name = network.name.gsub("_","-")
-      base_name = "#{net_name}.#{base_name_no_net}"
-      alias_name = "#{net_name}.#{alias_name_no_net}" if alias_name_no_net
+      base_name = "#{net_name}-#{base_name_no_net}"
+      alias_name = "#{net_name}-#{alias_name_no_net}" if alias_name_no_net
     end
     cluster_zone[:hosts][base_name] = Mash.new
     cluster_zone[:hosts][base_name][:ip4addr] = network.address
@@ -251,7 +251,7 @@ search(:crowbar, "id:*_network").each do |network|
     end
     base_name=host.chomp(".#{node[:dns][:domain]}")
     unless net_name == "admin"
-      base_name="#{net_name}.#{base_name}"
+      base_name="#{net_name}-#{base_name}"
     end
     cluster_zone[:hosts][base_name] = Mash.new
     cluster_zone[:hosts][base_name][:ip4addr] = network[:allocated_by_name][host][:address]
