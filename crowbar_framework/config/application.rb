@@ -19,9 +19,6 @@ require File.expand_path("../boot", __FILE__)
 
 module Crowbar
   class Application < Rails::Application
-    # Explicitely eager load /lib/crowbar/lock so we can use SharedNonBlocking
-    # with threading without hitting circular dependencies
-    config.eager_load_paths += Dir["#{config.root}/lib/crowbar/lock"]
 
     config.autoload_paths += %W(
       #{config.root}/lib
