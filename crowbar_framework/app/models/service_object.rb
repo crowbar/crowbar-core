@@ -22,6 +22,7 @@ require "hash_only_merge"
 require "securerandom"
 require "timeout"
 require "thwait"
+require "crowbar"
 
 class ServiceObject
   include CrowbarPacemakerProxy
