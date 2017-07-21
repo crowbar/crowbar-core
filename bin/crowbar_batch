@@ -112,6 +112,7 @@ def import_or_build(do_commit)
 
   data = YAML.load(input_data)
   abort "input is empty" unless data
+  abort "yaml input is not a Hash" unless data.is_a? Hash
 
   global_options = data["global_options"] || {}
 
