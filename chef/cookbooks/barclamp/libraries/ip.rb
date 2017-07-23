@@ -162,12 +162,12 @@ class IP
   end
 
   class IP4 < IP
-    BITS=32
-    PARTS=4
-    RANGE=(0...(1 << BITS))
-    BITS_PER_PART=8
-    PART_MASK=(1 << BITS_PER_PART) - 1
-    MATCH_RE=/^(\d{1,3}\.){3}\d{1,3}$/
+    BITS=32 unless defined? BITS
+    PARTS=4 unless defined? PARTS
+    RANGE=(0...(1 << BITS)) unless defined? RANGE
+    BITS_PER_PART=8 unless defined? BITS_PER_PART
+    PART_MASK=(1 << BITS_PER_PART) - 1 unless defined? PART_MASK
+    MATCH_RE=/^(\d{1,3}\.){3}\d{1,3}$/ unless defined? MATCH_RE
 
     private
     @address = nil
@@ -251,11 +251,11 @@ class IP
   end
 
   class IP6 < IP
-    BITS=128
-    PARTS=8
-    RANGE=(0...(1 << BITS))
-    BITS_PER_PART=16
-    PART_MASK=(1 << BITS_PER_PART) - 1
+    BITS=128 unless defined? BITS
+    PARTS=8 unless defined? PARTS
+    RANGE=(0...(1 << BITS)) unless defined? RANGE
+    BITS_PER_PART=16 unless defined? BITS_PER_PART
+    PART_MASK=(1 << BITS_PER_PART) - 1 unless defined? PART_MASK
     private
     @address = nil
     @subnet = nil
