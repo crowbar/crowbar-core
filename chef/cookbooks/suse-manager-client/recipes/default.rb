@@ -38,5 +38,7 @@ execute "bootstrap SUMA client" do
   command "curl #{bootstrap_script_url} | sh"
 end
 
-node.set[:crowbar_wall][:suse_manager_client_registered] = true
-node.save
+unless node[:crowbar_wall][:suse_manager_client_registered]
+  node.set[:crowbar_wall][:suse_manager_client_registered] = true
+  node.save
+end
