@@ -119,3 +119,6 @@ node.automatic_attrs["dmi"].delete("processor")
 (1..(node.automatic_attrs["cpu"]["total"] - 1)).each do |n|
   node.automatic_attrs["cpu"].delete(n.to_s)
 end
+
+# ohai_time will have changed and we depend on that, so we need to save
+node.save
