@@ -1349,6 +1349,16 @@ class ServiceObject
       return [405, message]
     end
 
+    # Post deploy callback to save the config to a databag
+    begin
+      save_config_to_databag(old_role, role)
+    rescue StandardError => e
+      Rails.logger.fatal("apply_role: Exception #{e.message} #{e.backtrace.join("\n")}")
+      message = "Failed to apply the proposal: exception after calling chef (#{e.message})"
+      update_proposal_status(inst, "failed", message)
+      return [405, message]
+    end
+
     # Invalidate cache as apply_role_post_chef_call can save nodes
     pre_cached_nodes = {}
 
@@ -1398,6 +1408,21 @@ class ServiceObject
 
   def apply_role_post_chef_call(old_role, role, all_nodes)
     # noop by default.
+  end
+
+  def save_config_to_databag(old_role, role)
+    Rails.logger.debug("save_config_to_databag #{bc_name}: entering")
+    if role.nil?
+      config = nil
+    else
+      insecure = Openstack::DataBagConfig.insecure(@bc_name, role)
+      config = {
+        insecure: insecure
+      }
+    end
+    instance = Crowbar::DataBagConfig.instance_from_role(old_role, role)
+    Crowbar::DataBagConfig.save("openstack", instance, @bc_name, config)
+    Rails.logger.debug("save_config_to_databag #{bc_name}: leaving")
   end
 
   #
