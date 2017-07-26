@@ -135,6 +135,8 @@ def make_zone(zone)
     master_ip = node[:dns][:master_ip]
   end
 
+  admin_addr = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
+
   Chef::Log.debug "Creating zone file for zones: #{zonefile_entries.inspect}"
   template "/etc/bind/zone.#{zone[:domain]}" do
     source "zone.erb"
@@ -143,7 +145,8 @@ def make_zone(zone)
     group "root"
     notifies :reload, "service[bind9]"
     variables(zonefile_entries: zonefile_entries,
-              master_ip: master_ip)
+              master_ip: master_ip,
+              admin_addr: admin_addr)
   end
   node.set[:dns][:zone_files] << "/etc/bind/zone.#{zone[:domain]}"
 
@@ -290,6 +293,9 @@ when "suse"
   end
 end
 
+# We would like to bind service only to ip address from admin network
+admin_addr = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
+
 # Load up our default zones.  These never change.
 if node[:dns][:master]
   files=%w{db.0 db.255 named.conf.default-zones}
@@ -304,7 +310,8 @@ files.each do |file|
     mode 0644
     owner "root"
     group bindgroup
-    variables(master_ip: master_ip)
+    variables(master_ip: master_ip,
+              admin_addr: admin_addr)
     notifies :reload, "service[bind9]"
   end
 end
@@ -352,9 +359,6 @@ if node[:dns][:master]
 else
   allow_transfer = []
 end
-
-# We would like to bind service only to ip address from admin network
-admin_addr = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
 
 # When we're restoring the admin node from backup or upgrade data,
 # reject incoming DNS traffic to avoid sending wrong results to running
