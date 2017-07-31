@@ -13,6 +13,7 @@ zone "<%= zonefile_entry -%>" {
     type slave;
     notify no;
     masters { <%= @master_ip -%>; };
+    transfer-source <%= @admin_addr -%>;
     file "/etc/bind/slave/db.<%= zonefile_entry -%>";
 };
 <%   end %>
