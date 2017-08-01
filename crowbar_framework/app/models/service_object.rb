@@ -367,7 +367,7 @@ class ServiceObject
     # from the nodes list in the case the new proposal would not be valid, so
     # nodes that can't be added at all would not be returned.
     nodes.reject! do |node|
-      node_is_valid_for_role(node, role.to_s)
+      node_is_invalid_for_role(node, role.to_s)
     end
 
     [200, nodes]
@@ -439,7 +439,7 @@ class ServiceObject
     proposals[0] || ""
   end
 
-  def node_is_valid_for_role(node, role)
+  def node_is_invalid_for_role(node, role)
     elements = { role => [node] }
     violates_admin_constraint?(elements, role) ||
       violates_platform_constraint?(elements, role) ||
@@ -456,7 +456,7 @@ class ServiceObject
     valid_nodes.delete_if { |n| n.nil? }
 
     valid_nodes.reject! do |node|
-      node_is_valid_for_role(node.name, role)
+      node_is_invalid_for_role(node.name, role)
     end
 
     unless preferred_intended_role.nil?
