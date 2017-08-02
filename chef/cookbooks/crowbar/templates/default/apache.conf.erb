@@ -29,3 +29,53 @@
         <%- end %>
     </Location>
 </VirtualHost>
+
+<% if @use_ssl %>
+<IfDefine SSL>
+<IfDefine !NOSSL>
+
+<VirtualHost *:443>
+    SSLEngine On
+    SSLCipherSuite DEFAULT_SUSE
+    SSLCompression off
+    SSLProtocol all -SSLv2 -SSLv3
+    SSLCertificateFile <%= @ssl_crt_file %>
+    SSLCertificateKeyFile <%= @ssl_key_file %>
+    <% unless @ssl_crt_chain_file.nil? or @ssl_crt_chain_file.empty? %>
+    SSLCertificateChainFile <%= @ssl_crt_chain_file %>
+    <% end %>
+
+    DocumentRoot /opt/dell/crowbar_framework/public
+
+    ErrorLog /var/log/apache2/crowbar-error.log
+    CustomLog /var/log/apache2/crowbar-access.log combined
+
+    ErrorDocument 403 /403.html
+    ErrorDocument 404 /404.html
+    ErrorDocument 422 /422.html
+    ErrorDocument 500 /500.html
+
+    IncludeOptional /etc/apache2/conf.d/crowbar-ui.conf.partia[l]
+    Include /etc/apache2/conf.d/crowbar.conf.partial
+
+    <Location />
+        <%- unless @realm.nil? %>
+        AuthType Digest
+        AuthName "<%= @realm %>"
+        AuthDigestProvider file
+        AuthUserFile /opt/dell/crowbar_framework/htdigest
+        Require valid-user
+        <%- else %>
+        <%- if node[:apache][:version].to_f < 2.4 %>
+        Order allow,deny
+        Allow from all
+        <%- else %>
+        Require all granted
+        <%- end %>
+        <%- end %>
+    </Location>
+</VirtualHost>
+
+</IfDefine>
+</IfDefine>
+<% end %>

@@ -362,13 +362,38 @@ include_recipe "apache2::mod_rewrite"
 include_recipe "apache2::mod_slotmem_shm"
 include_recipe "apache2::mod_socache_shmcb"
 include_recipe "apache2::mod_auth_digest"
+include_recipe "apache2::mod_ssl"
+
+# Verify that we have the certificate available before configuring things to use it
+if node[:crowbar][:apache][:ssl] && !node[:crowbar][:apache][:generate_certs]
+  unless ::File.size? node[:crowbar][:apache][:ssl_crt_file]
+    message = "The file \"#{node[:crowbar][:apache][:ssl_crt_file]}\" does not exist or is empty."
+    Chef::Log.fatal(message)
+    raise message
+  end
+end
+
+if node[:crowbar][:apache][:ssl] && node[:crowbar][:apache][:generate_certs]
+  package "apache2-utils"
+
+  bash "Generate Apache certificate" do
+    code <<-EOH
+      (umask 377 ; /usr/bin/gensslcert -C crowbar )
+EOH
+    not_if { File.size?(node[:crowbar][:apache][:ssl_crt_file]) }
+  end
+end
 
 template "#{node[:apache][:dir]}/vhosts.d/crowbar.conf" do
   source "apache.conf.erb"
   mode 0644
 
   variables(
-    realm: realm
+    realm: realm,
+    use_ssl: node[:crowbar][:apache][:ssl],
+    ssl_crt_file: node[:crowbar][:apache][:ssl_crt_file],
+    ssl_key_file: node[:crowbar][:apache][:ssl_key_file],
+    ssl_crt_chain_file: node[:crowbar][:apache][:ssl_crt_chain_file]
   )
 
   notifies :reload, resources(service: "apache2")

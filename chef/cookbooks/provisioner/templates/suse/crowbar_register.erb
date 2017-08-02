@@ -95,7 +95,7 @@ fi
 # ----------------
 
 get_common_curl_args() {
-  local curlargs=(--connect-timeout 60 -s -L --max-time 240)
+  local curlargs=(--connect-timeout 60 -s -L --max-time 240 --insecure --location)
 
   [[ $CROWBAR_KEY ]] && curlargs+=(-u "$CROWBAR_KEY" --digest --anyauth)
 
