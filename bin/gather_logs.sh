@@ -47,7 +47,8 @@ sort_by_last() {
 	-o 'UserKnownHostsFile /dev/null')
     logs=(/var/log /etc)
     logs+=(/var/chef/cache /var/cache/chef /opt/dell/crowbar_framework/db)
-    curlargs=(-o /dev/null -D - --connect-timeout 30 --max-time 120)
+    curlargs=(-o /dev/null -D - --connect-timeout 30 --max-time 120 --insecure \
+    --location)
     [[ $CROWBAR_KEY ]] && curlargs+=(--digest -u "$CROWBAR_KEY")
     for to_get in nodes proposals roles; do
 	curl "${curlargs[@]}" "http://localhost/$to_get" || :

@@ -28,7 +28,8 @@ HOST="127.0.0.1"
 post_state() {
   local curlargs=(-o "/var/log/crowbar/$1-$2.json" --connect-timeout 60 -s \
       -L -X POST --data-binary "{ \"name\": \"$1\", \"state\": \"$2\" }" \
-      -H "Accept: application/json" -H "Content-Type: application/json")
+      -H "Accept: application/json" -H "Content-Type: application/json" \
+      --insecure --location)
   [[ $CROWBAR_KEY ]] && curlargs+=(-u "$CROWBAR_KEY" --digest --anyauth)
   curl "${curlargs[@]}" "http://${HOST}/crowbar/crowbar/1.0/transition/default"
 }
