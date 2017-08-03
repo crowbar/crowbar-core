@@ -576,10 +576,10 @@ class ServiceObject
                        validate_after_save: options[:validate_after_save])
         response = active_update(prop.raw_data, inst, options[:in_queue], options[:bootstrap])
       rescue Chef::Exceptions::ValidationFailed => e
-        Rails.logger.error([e.message] + e.backtrace).join("\n")
+        Rails.logger.error(([e.message] + e.backtrace).join("\n"))
         response = [400, "Failed to validate proposal: #{e.message}"]
       rescue StandardError => e
-        Rails.logger.error([e.message] + e.backtrace).join("\n")
+        Rails.logger.error(([e.message] + e.backtrace).join("\n"))
         response = [500, e.message]
       ensure
         # Make sure we unmark the wall
@@ -883,10 +883,10 @@ class ServiceObject
       Rails.logger.info "saved proposal"
       [200, {}]
     rescue Net::HTTPServerException => e
-      Rails.logger.error ([e.message] + e.backtrace).join("\n")
+      Rails.logger.error(([e.message] + e.backtrace).join("\n"))
       [e.response.code, I18n.t("model.service.unknown_error")]
     rescue Chef::Exceptions::ValidationFailed => e2
-      Rails.logger.error ([e2.message] + e2.backtrace).join("\n")
+      Rails.logger.error(([e2.message] + e2.backtrace).join("\n"))
       [400, "Failed to validate proposal: #{e2.message}"]
     end
   end
@@ -1705,10 +1705,10 @@ class ServiceObject
       role = ServiceObject.proposal_to_role(proposal, @bc_name)
       apply_role(role, inst, in_queue, bootstrap)
     rescue Net::HTTPServerException => e
-      Rails.logger.error ([e.message] + e.backtrace).join("\n")
+      Rails.logger.error(([e.message] + e.backtrace).join("\n"))
       [e.response.code, {}]
     rescue Chef::Exceptions::ValidationFailed => e2
-      Rails.logger.error ([e2.message] + e2.backtrace).join("\n")
+      Rails.logger.error(([e2.message] + e2.backtrace).join("\n"))
       [400, e2.message]
     end
   end
