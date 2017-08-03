@@ -4,7 +4,7 @@ module Crowbar
       def validate_network
         `#{Rails.root.join("..", "bin/network-json-validator").to_s} \
           --admin-ip \
-          #{Socket.ip_address_list.detect(&:ipv4_private?).ip_address} \
+          #{IPSocket.getaddress(Socket.gethostname)} \
           #{network_json.to_s}`
       end
 
