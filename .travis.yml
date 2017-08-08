@@ -21,6 +21,10 @@ matrix:
     - gemfile: chef/cookbooks/barclamp/Gemfile
       script:
        - cd chef/cookbooks/barclamp && bundle exec rake
+    - gemfile: crowbar_framework/Gemfile
+      script:
+       - crowbar_framework/bin/bundle exec knife cookbook test -c .knife-test.rb -a
+
 
 addons:
   apt:
