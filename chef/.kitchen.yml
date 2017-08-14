@@ -21,6 +21,9 @@ platforms:
       image: opensuse:42.2
       privileged: true
       pid_one_command: /usr/lib/systemd/systemd
+      intermediate_instructions:
+        - RUN zypper refresh
+        - RUN zypper in -y net-tools # so we can check for ports and network stuff
     attributes:
       domain: testdomain.com
 
