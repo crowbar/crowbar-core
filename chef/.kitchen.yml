@@ -1,0 +1,29 @@
+---
+driver:
+  name: dokken
+  chef_image: itxaka/oldchef
+  chef_version: 10
+
+transport:
+  name: dokken
+
+provisioner:
+  name: dokken
+  chef_binary: /opt/chef/bin/chef-solo
+  chef_options: ""
+
+verifier:
+  name: inspec
+
+platforms:
+  - name: opensuse-42.2
+    driver:
+      image: opensuse:42.2
+      privileged: true
+      pid_one_command: /usr/lib/systemd/systemd
+    attributes:
+      domain: testdomain.com
+
+suites:
+  - name: apache2
+    run_list: recipe[apache2]
