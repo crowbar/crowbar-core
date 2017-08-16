@@ -35,10 +35,10 @@ unsupported = [
   "Unknown (Not Detected)"
 ]
 
-node.set["crowbar_wall"] = {} unless node["crowbar_wall"]
-node.set["crowbar_wall"]["ipmi"] = {} unless node["crowbar_wall"]["ipmi"]
-node.set["crowbar_wall"]["status"] = {} unless node["crowbar_wall"]["status"]
-node.set["crowbar_wall"]["status"]["ipmi"] = {} unless node["crowbar_wall"]["status"]["ipmi"]
+node.set["crowbar_wall"] ||= Mash.new
+node.set["crowbar_wall"]["ipmi"] ||= Mash.new
+node.set["crowbar_wall"]["status"] ||= Mash.new
+node.set["crowbar_wall"]["status"]["ipmi"] ||= Mash.new
 node.save
 
 if node[:platform_family] == "windows"
