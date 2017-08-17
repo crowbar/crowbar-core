@@ -70,7 +70,7 @@ module CrowbarHelper
 
   def self.in_sledgehammer?(node)
     states = ["ready", "readying", "recovering", "applying"]
-    !node.fetch(:crowbar_wall, {})[:registering] && !states.include?(node[:state])
+    !node.fetch("crowbar_wall", {})[:registering] && !states.include?(node[:state])
   end
 
   def self.get_proposal_instance(node, barclamp, fallback = nil)

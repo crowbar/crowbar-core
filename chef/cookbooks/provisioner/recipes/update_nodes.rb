@@ -262,7 +262,7 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
       os = node[:provisioner][:default_os]
     end
 
-    boot_device = mnode.fetch(:crowbar_wall, {})[:boot_device]
+    boot_device = mnode.fetch("crowbar_wall", {})[:boot_device]
 
     append << node[:provisioner][:available_oses][os][arch][:append_line]
 
