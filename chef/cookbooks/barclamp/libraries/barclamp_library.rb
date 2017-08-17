@@ -339,7 +339,6 @@ module BarclampLibrary
                 candidates.find { |b| b =~ /^scsi-[^1]/ } ||
                 candidates.find { |b| b =~ /^scsi-/ } ||
                 candidates.find { |b| b =~ /^ata-/ } ||
-                candidates.find { |b| b =~ /^cciss-/ } ||
                 candidates.first
 
               unless match.empty?
