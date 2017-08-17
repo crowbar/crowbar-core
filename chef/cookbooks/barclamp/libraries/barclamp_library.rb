@@ -35,7 +35,8 @@ module BarclampLibrary
       # returns a full network definition, including ranges; this doesn't
       # depend on the node being enabled for this network
       def self.get_network_definition(node, type)
-        if node[:network][:networks].nil? || !node[:network][:networks].key?(type)
+        if node[:network].nil? || node[:network][:networks].nil? ||
+            !node[:network][:networks].key?(type)
           nil
         else
           node[:network][:networks][type].to_hash
@@ -45,7 +46,7 @@ module BarclampLibrary
       def self.list_networks(node)
         answer = []
         unless node[:crowbar].nil? || node[:crowbar][:network].nil? ||
-            node[:network][:networks].nil?
+            node[:network].nil? || node[:network][:networks].nil?
           node[:crowbar][:network].each do |net, data|
             # network is not valid if we don't have the full definition
             next unless node[:network][:networks].key?(net)
@@ -57,8 +58,8 @@ module BarclampLibrary
       end
 
       def self.get_network_by_type(node, type)
-        unless node[:crowbar].nil? ||
-            node[:crowbar][:network].nil? || node[:network][:networks].nil?
+        unless node[:crowbar].nil? || node[:crowbar][:network].nil? ||
+            node[:network].nil? || node[:network][:networks].nil?
           [type, "admin"].uniq.each do |usage|
             found = node[:crowbar][:network].find do |net, data|
               # network is not valid if we don't have the full definition
