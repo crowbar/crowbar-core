@@ -88,11 +88,11 @@ ruby_block "Find the fallback boot device" do
         # reusable than the normal links.
         # Note: this find construct should match the code in
         # barclamp/libraries/barclamp_library.rb (from deployer)
-        bootdisk = bootdisks.find{ |b|b =~ /^scsi-[a-zA-Z]/ } ||
-          bootdisks.find{ |b|b =~ /^scsi-[^1]/ } ||
-          bootdisks.find{ |b|b =~ /^scsi-/ } ||
-          bootdisks.find{ |b|b =~ /^ata-/ } ||
-          bootdisks.find{ |b|b =~ /^cciss-/ } ||
+        bootdisk = bootdisks.find { |b| b =~ /^wwn-/ } ||
+          bootdisks.find { |b| b =~ /^scsi-[a-zA-Z]/ } ||
+          bootdisks.find { |b| b =~ /^scsi-[^1]/ } ||
+          bootdisks.find { |b| b =~ /^scsi-/ } ||
+          bootdisks.find { |b| b =~ /^ata-/ } ||
           bootdisks.first
         dev = "disk/by-id/#{bootdisk}"
       end
