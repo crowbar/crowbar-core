@@ -266,6 +266,9 @@ do_chef_client_after_setup() {
     # Make sure our interfaces are as up as we can get them
     echo_verbose "Ensuring that our network interfaces are up."
     log_to ifup /sbin/service network restart
+    # Wait again for the admin server. Otherwise chef-client runs fail with EHOSTUNREACH (bsc#1054191)
+    echo_verbose "Checking connectivity with administration server after network restart..."
+    wait_for_admin_server
 }
 
 do_chef_client() {
