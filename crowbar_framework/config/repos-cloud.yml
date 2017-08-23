@@ -303,6 +303,7 @@ suse-12.3:
       repomd:
         tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP3:Update:Products:Cloud8/suse-openstack-cloud/8/cd/aarch64",
               "obsproduct://build.suse.de/Devel:Cloud:8:Ocata/suse-openstack-cloud/8/cd/aarch64",
+              "obsproduct://build.suse.de/Devel:Cloud:8:Pike/suse-openstack-cloud/8/cd/aarch64",
               "obsproduct://build.suse.de/Devel:Cloud:8:Staging/suse-openstack-cloud/8/cd/aarch64",
               "obsproduct://build.suse.de/Devel:Cloud:8/suse-openstack-cloud/8/cd/aarch64"]
         fingerprint: []
@@ -401,6 +402,7 @@ suse-12.3:
       repomd:
         tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP3:Update:Products:Cloud8/suse-openstack-cloud/8/cd/x86_64",
               "obsproduct://build.suse.de/Devel:Cloud:8:Ocata/suse-openstack-cloud/8/cd/x86_64",
+              "obsproduct://build.suse.de/Devel:Cloud:8:Pike/suse-openstack-cloud/8/cd/x86_64",
               "obsproduct://build.suse.de/Devel:Cloud:8:Staging/suse-openstack-cloud/8/cd/x86_64",
               "obsproduct://build.suse.de/Devel:Cloud:8/suse-openstack-cloud/8/cd/x86_64"]
         fingerprint: []
@@ -498,6 +500,7 @@ suse-12.3:
       repomd:
         tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP3:Update:Products:Cloud8/suse-openstack-cloud/8/cd/s390x",
               "obsproduct://build.suse.de/Devel:Cloud:8:Ocata/suse-openstack-cloud/8/cd/s390x",
+              "obsproduct://build.suse.de/Devel:Cloud:8:Pike/suse-openstack-cloud/8/cd/s390x",
               "obsproduct://build.suse.de/Devel:Cloud:8:Staging/suse-openstack-cloud/8/cd/s390x",
               "obsproduct://build.suse.de/Devel:Cloud:8/suse-openstack-cloud/8/cd/s390x"]
         fingerprint: []
