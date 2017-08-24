@@ -638,6 +638,14 @@ when "suse"
     code "wicked ifup all"
     only_if { run_wicked_ifup }
   end
+  # Sometimes wicked deletes the default route upon bringing up a new interface,
+  # make sure it gets put back
+  unless ::Kernel.system("ip route |grep -q default")
+    nic = default_route[:nic]
+    gw = default_route[:gateway]
+    Chef::Log.info("Adding default route via #{gw} to #{nic}")
+    ::Kernel.system("ip route add default via #{gw} dev #{nic}")
+  end
 
   # Avoid running the wicked related thing on SLE11 nodes
   unless node[:platform] == "suse" && node[:platform_version].to_f < 12.0
