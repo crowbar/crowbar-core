@@ -1607,7 +1607,8 @@ class ServiceObject
             errors_mutex.synchronize { errors[node] = e.message }
           end
 
-          locks_mutex.synchronize { locks.push(lock) }
+          locks.push(lock) if lock
+          locks_mutex.synchronize { locks }
         end
       end
     end
