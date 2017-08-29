@@ -1379,6 +1379,13 @@ class ServiceObject
     proposal.save unless roles_to_remove.empty?
 
     update_proposal_status(inst, "success", "")
+
+    details = {
+      barclamp: @bc_name,
+      instance: inst
+    }
+    Crowbar::EventDispatcher.trigger_hooks(:proposal_applied, details)
+
     [200, {}]
   rescue StandardError => e
     Rails.logger.progress("Failed to apply proposal")
