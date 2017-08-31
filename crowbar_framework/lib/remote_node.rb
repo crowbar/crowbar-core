@@ -28,6 +28,8 @@ module RemoteNode
   def ready?(host, timeout = 60, sleep_time = 10, options = {})
     timeout_at = Time.now + timeout
     ip = resolve_host(host)
+    return false if ip.empty?
+
     msg = "Waiting for host #{host} (#{ip}); next attempt in #{sleep_time} seconds until #{timeout_at}"
 
     nobj = Node.find_by_name(host)
@@ -42,6 +44,7 @@ module RemoteNode
   def chef_ready?(host, timeout = 60, sleep_time = 10, options = {})
     timeout_at = Time.now + timeout
     ip = resolve_host(host)
+    return false if ip.empty?
     msg = "Waiting for already running chef-client on #{host} (#{ip}); next attempt in #{sleep_time} seconds until #{timeout_at}"
     wait_until(msg, timeout_at.to_i, sleep_time, options) do
       port_open?(ip, 22) && !chef_clients_running?(ip)
@@ -111,7 +114,15 @@ module RemoteNode
   # Workaround for similar issue
   # http://projects.puppetlabs.com/issues/2776
   def resolve_host(host)
-    `dig +short #{host} | head -n1`.rstrip
+    sleep_time = 5
+    timeout_at = Time.now + 60
+    msg = "Waiting to resolve hostname '#{host}'; next attempt in #{sleep_time} seconds until #{timeout_at}"
+    resolved_host = ""
+    wait_until(msg, timeout_at.to_i, sleep_time, {}) do
+      resolved_host = `dig +short #{host} | head -n1`.rstrip
+      !resolved_host.empty?
+    end
+    resolved_host
   end
 
   def runlevel_check_cmd(host)
