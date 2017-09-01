@@ -982,8 +982,9 @@ class Node < ChefObject
   end
 
   def bmc_cmd(cmd)
+    cmd_list = cmd.split
     if bmc_address.nil? || get_bmc_user.nil? || get_bmc_password.nil? ||
-        !system("ipmitool", "-I", get_bmc_interface, "-H", bmc_address, "-U", get_bmc_user, "-P", get_bmc_password, cmd)
+        !system("ipmitool", "-I", get_bmc_interface, "-H", bmc_address, "-U", get_bmc_user, "-P", get_bmc_password, *cmd_list)
       case cmd
       when "power cycle"
         ssh_command = "/sbin/reboot -f"
