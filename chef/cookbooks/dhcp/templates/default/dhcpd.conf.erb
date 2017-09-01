@@ -18,6 +18,9 @@ option path-prefix code 210 = text;
 # have to hack syslog.conf to complete the redirection).
 log-facility local7;
 
+# Fix for https://bugzilla.opensuse.org/show_bug.cgi?id=961536
+always-reply-rfc1048 true;
+
 include "/etc/dhcp3/groups.d/group_list.conf";
 include "/etc/dhcp3/subnets.d/subnet_list.conf";
 include "/etc/dhcp3/hosts.d/host_list.conf";
