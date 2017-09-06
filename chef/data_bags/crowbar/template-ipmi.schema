@@ -8,6 +8,7 @@
             "bmc_user": { "type": "str", "required": true },
             "bmc_password": { "type": "str", "required": true },
             "bmc_interface": { "type": "str", "required": true },
+            "bmc_reconfigure":  { "type": "bool", "required": true},
             "use_dhcp":  { "type": "bool", "required": true},
             "ignore_address_suggestions": { "type": "bool", "required": true },
             "bmc_nat_enable":  { "type": "bool", "required": true},

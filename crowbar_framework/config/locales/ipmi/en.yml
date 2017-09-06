@@ -23,6 +23,8 @@ en:
         bmc_user: 'BMC User'
         bmc_password: 'BMC Password'
         bmc_interface: 'BMC Interface'
+        bmc_reconfigure: 'Modify BMC Settings'
+        bmc_reconfigure_hint: 'When this option is disabled, Crowar will not reconfigure BMC. All BMC network settings need to be properly pre-configured on all nodes and users/passwords need to match the ones specified above.'
         use_dhcp: 'BMC Should Use DHCP (Not explicitly assigned)'
         ignore_address_suggestions: 'Ignore Already Configured Address'
         bmc_nat_enable: 'NAT BMC Through Admin Server'
