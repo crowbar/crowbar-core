@@ -7,6 +7,7 @@
       "bmc_user": "root",
       "bmc_password": "cr0wBar!",
       "bmc_interface": "lanplus",
+      "bmc_reconfigure": true,
       "ignore_address_suggestions": false,
       "use_dhcp": false,
       "bmc_nat_enable": true,

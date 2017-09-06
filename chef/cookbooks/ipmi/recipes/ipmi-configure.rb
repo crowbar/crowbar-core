@@ -30,6 +30,7 @@ end
 bmc_user     = node[:ipmi][:bmc_user]
 bmc_password = node[:ipmi][:bmc_password]
 use_dhcp     = node[:ipmi][:use_dhcp]
+readonly     = !node[:ipmi][:bmc_reconfigure]
 
 bmc_network = Barclamp::Inventory.get_network_by_type(node, "bmc")
 if bmc_network.nil?
@@ -72,7 +73,7 @@ if node[:ipmi][:bmc_enable]
     end
   end
 
-  unless node[:platform_family] == "windows" || node["crowbar_wall"]["status"]["ipmi"]["address_set"]
+  unless readonly || node[:platform_family] == "windows" || node["crowbar_wall"]["status"]["ipmi"]["address_set"]
     if use_dhcp
       ### lan parameters to check and set. The loop that follows iterates over this array.
       # [0] = name in "print" output, [1] command to issue, [2] desired value.
@@ -114,7 +115,7 @@ if node[:ipmi][:bmc_enable]
     end
   end
 
-  unless node[:platform_family] == "windows" || node["crowbar_wall"]["status"]["ipmi"]["user_set"]
+  unless readonly || node[:platform_family] == "windows" || node["crowbar_wall"]["status"]["ipmi"]["user_set"]
     ipmi_user_set "#{bmc_user}" do
       password bmc_password
       action :run
