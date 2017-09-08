@@ -92,6 +92,13 @@ execute "enable netfilter for bridges" do
   subscribes :run, resources(cookbook_file: "modprobe-bridge.conf"), :delayed
 end
 
+# Increase inotify max user instances
+# https://bugs.launchpad.net/charms/+bug/1593041
+execute "increasing inotify max user instances" do
+  command "echo 1024 > /proc/sys/fs/inotify/max_user_instances"
+  action :nothing
+end
+
 conduit_map = Barclamp::Inventory.build_node_map(node)
 Chef::Log.debug("Conduit mapping for this node:  #{conduit_map.inspect}")
 route_pref = 10000
