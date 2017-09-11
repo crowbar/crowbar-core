@@ -1,0 +1,14 @@
+[Service]
+Restart=<%= @restart %>
+<% unless @restart_sec.nil? || @restart_sec.empty? -%>
+RestartSec=<%= @restart_sec %>
+<% end -%>
+<% unless @success_exit_status.nil? || @success_exit_status.empty? -%>
+SuccessExitStatus=<%= @success_exit_status.map { |x| x.to_s }.join(" ") %>
+<% end -%>
+<% unless @restart_prevent_exit_status.nil? || @restart_prevent_exit_status.empty? -%>
+RestartPreventExitStatus=<%= @restart_prevent_exit_status.map { |x| x.to_s }.join(" ") %>
+<% end -%>
+<% unless @restart_force_exit_status.nil? || @restart_force_exit_status.empty? -%>
+RestartForceExitStatus=<%= @restart_force_exit_status.map { |x| x.to_s }.join(" ") %>
+<% end -%>
