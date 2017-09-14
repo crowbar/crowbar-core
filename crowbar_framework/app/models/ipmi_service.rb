@@ -34,6 +34,8 @@ class IpmiService < ServiceObject
   end
 
   def proposal_create_bootstrap(params)
+    # bmc-nat-router is enabled even if bmc_nat_enable=false as it doesn't hurt if nodes
+    # don't route through admin node
     params["deployment"][@bc_name]["elements"]["bmc-nat-router"] = [Node.admin_node.name]
     super(params)
   end
@@ -60,10 +62,12 @@ class IpmiService < ServiceObject
         db = Proposal.where(barclamp: @bc_name, name: inst).first
         role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
 
-        unless add_role_to_instance_and_node(@bc_name, inst, name, db, role, "bmc-nat-client")
-          msg = "Failed to add ipmi role to #{name}!"
-          Rails.logger.error(msg)
-          return [400, msg]
+        if role && role.default_attributes[@bc_name]["bmc_nat_enable"]
+          unless add_role_to_instance_and_node(@bc_name, inst, name, db, role, "bmc-nat-client")
+            msg = "Failed to add ipmi role to #{name}!"
+            Rails.logger.error(msg)
+            return [400, msg]
+          end
         end
       end
     end

@@ -25,4 +25,5 @@ en:
         bmc_interface: 'BMC Interface'
         use_dhcp: 'BMC Should Use DHCP (Not explicitly assigned)'
         ignore_address_suggestions: 'Ignore Already Configured Address'
+        bmc_nat_enable: 'NAT BMC Through Admin Server'
         debug: 'Enable Barclamp Debug'
