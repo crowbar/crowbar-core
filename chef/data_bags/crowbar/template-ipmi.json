@@ -9,6 +9,7 @@
       "bmc_interface": "lanplus",
       "ignore_address_suggestions": false,
       "use_dhcp": false,
+      "bmc_nat_enable": true,
       "debug": false
     }
   },
