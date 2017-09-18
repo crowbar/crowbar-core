@@ -222,3 +222,5 @@ service "apache2" do
   action [:enable, :start]
   ignore_failure true
 end
+
+utils_systemd_service_restart "apache2"
