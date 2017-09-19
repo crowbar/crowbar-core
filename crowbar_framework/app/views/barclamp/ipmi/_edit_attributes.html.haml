@@ -7,7 +7,14 @@
     = string_field :bmc_user
     = password_field :bmc_password
     = string_field :bmc_interface
-    = boolean_field :use_dhcp
-    = boolean_field :ignore_address_suggestions
+    = boolean_field :bmc_reconfigure,
+     "data-showit" => "true",
+     "data-showit-target" => "#reconfigure_container",
+     "data-showit-direct" => "true"
+    %span.help-block
+      = t(".bmc_reconfigure_hint")
+    #reconfigure_container
+      = boolean_field :use_dhcp
+      = boolean_field :ignore_address_suggestions
     = boolean_field :bmc_nat_enable
     = boolean_field :debug

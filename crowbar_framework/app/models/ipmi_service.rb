@@ -78,7 +78,8 @@ class IpmiService < ServiceObject
       ns = NetworkService.new
       role = RoleObject.find_role_by_name "#{@bc_name}-config-#{inst}"
 
-      if role && !role.default_attributes["ipmi"]["use_dhcp"]
+      if role && role.default_attributes["ipmi"]["bmc_reconfigure"] &&
+          !role.default_attributes["ipmi"]["use_dhcp"]
         Rails.logger.debug("IPMI transition: Allocate bmc address for #{name}")
         node = Node.find_by_name(name)
         suggestion = if role.default_attributes["ipmi"]["ignore_address_suggestions"]

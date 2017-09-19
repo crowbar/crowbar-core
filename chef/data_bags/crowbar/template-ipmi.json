@@ -7,6 +7,7 @@
       "bmc_user": "root",
       "bmc_password": "cr0wBar!",
       "bmc_interface": "lanplus",
+      "bmc_reconfigure": true,
       "ignore_address_suggestions": false,
       "use_dhcp": false,
       "bmc_nat_enable": true,
@@ -17,7 +18,7 @@
     "ipmi": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 102,
+      "schema-revision": 103,
       "element_states": {
         "ipmi": [ "discovering", "hardware-installing", "readying" ],
         "bmc-nat-router": [ "readying", "ready", "applying" ],
