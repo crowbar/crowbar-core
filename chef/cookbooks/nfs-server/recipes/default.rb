@@ -55,6 +55,7 @@ package rpc_service
 service rpc_service do
   action [:enable, :start]
 end
+utils_systemd_service_restart rpc_service
 
 ["/var/log/crowbar/sledgehammer", "/updates"].each do |nfs_dir|
   directory nfs_dir do
@@ -70,6 +71,7 @@ service "nfs-kernel-server" do
   supports restart: true, status: true, reload: true
   action [:enable, :start]
 end
+utils_systemd_service_restart "nfs-kernel-server"
 
 execute "nfs-export" do
   command "exportfs -a"

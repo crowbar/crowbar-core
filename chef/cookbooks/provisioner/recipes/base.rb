@@ -207,6 +207,8 @@ service "chef-client" do
   supports status: true, restart: true
   action :nothing
 end
+# Make systemd restart chef services (and their deps) on failure
+utils_systemd_service_restart "chef-client"
 
 config_file = "/etc/sysconfig/chef-client"
 
