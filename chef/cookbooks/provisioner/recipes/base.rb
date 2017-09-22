@@ -211,6 +211,7 @@ end
 config_file = "/etc/sysconfig/chef-client"
 
 chef_client_runs = node[:provisioner][:chef_client_runs] || 900
+chef_splay = node[:provisioner][:chef_splay] || 20
 
 template config_file do
   owner "root"
@@ -218,6 +219,7 @@ template config_file do
   mode "0644"
   source "chef_client.erb"
   variables(
+    chef_splay: chef_splay,
     chef_client_runs: chef_client_runs
   )
   notifies :restart, "service[chef-client]", :delayed

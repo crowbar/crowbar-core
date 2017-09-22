@@ -104,6 +104,7 @@
                 }
               }
             },
+            "chef_splay": { "type": "int", "required": true },
             "chef_client_runs": { "type": "int", "required": true }
           }
         }
