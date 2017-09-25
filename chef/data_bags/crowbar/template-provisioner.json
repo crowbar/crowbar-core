@@ -215,6 +215,7 @@
           "debug": "debug"
         }
       },
+      "chef_splay": 20,
       "chef_client_runs": 900
     }
   },
@@ -222,7 +223,7 @@
     "provisioner": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 200,
+      "schema-revision": 201,
       "element_states": {
         "provisioner-server": [ "readying", "ready", "applying" ],
         "provisioner-base": [ "hardware-installing", "readying", "ready", "applying" ]
