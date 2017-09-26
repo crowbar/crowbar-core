@@ -1,0 +1,12 @@
+default: &default
+  disallow_restart:
+    enabled: false
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+production:
+  <<: *default
