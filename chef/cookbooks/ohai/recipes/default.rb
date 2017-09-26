@@ -112,6 +112,15 @@ node.automatic_attrs.delete("counters")
 # drop relatively big attributes that we know we won't use
 node.automatic_attrs["kernel"].delete("modules")
 
+# drop the collected Etc.passwd entries, these can be huge
+if node.automatic_attrs.key?("etc") && node.automatic_attrs["etc"].key?("passwd")
+  node.automatic_attrs["etc"].delete("passwd")
+end
+
+# Temporary workaround for nova cookbook dependency, remove after 2017/12
+node.automatic_attrs["etc"] ||= Mash.new
+node.automatic_attrs["etc"]["passwd"] ||= Mash.new
+
 # duplicates the cpu data
 node.automatic_attrs["dmi"].delete("processor")
 # when looking at cpu data, we're happy looking at the first one only; removing

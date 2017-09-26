@@ -253,6 +253,9 @@ EOF
     line='Encoding.default_external = Encoding::UTF_8 if RUBY_VERSION > "1.9"'
     grep -q -e "^$line$" /etc/chef/client.rb || echo "$line" >> /etc/chef/client.rb
 
+    # work around: avoid excessively large node attributes due to large number of accounts
+    line='Ohai::Config[:disabled_plugins] << "passwd"'
+    grep -q -e "^$line$" /etc/chef/client.rb || echo "$line" >> /etc/chef/client.rb
 }
 
 do_chef_client_after_setup() {
