@@ -57,5 +57,8 @@ module Crowbar
         Rails.logger.warn "Failed to load chef"
       end
     end
+
+    # experimental options
+    config.experimental = config_for(:experimental)
   end
 end

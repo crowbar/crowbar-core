@@ -1,0 +1,30 @@
+default: &default
+  skip_unready_nodes:
+    enabled: false
+    roles:
+     - bmc-nat-client
+     - ceilometer-agent
+     - deployer-client
+     - dns-client
+     - ipmi
+     - logging-client
+     - nova-compute-ironic
+     - nova-compute-kvm
+     - nova-compute-qemu
+     - nova-compute-vmware
+     - nova-compute-xen
+     - nova-compute-zvm
+     - ntp-client
+     - provisioner-base
+     - suse-manager-client
+     - swift-storage
+     - updater
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+production:
+  <<: *default
