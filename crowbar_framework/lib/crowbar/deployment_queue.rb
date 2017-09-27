@@ -26,10 +26,9 @@ module Crowbar
     # Receives proposal info (name, barclamp), list of nodes (elements), on which the proposal
     # should be applied, and list of dependencies - a list of {barclamp, name/inst} hashes.
     # It adds them to the queue, if possible.
-    def queue_proposal(bc, inst, elements, element_order, deps)
+    def queue_proposal(bc, inst, elements, element_order, deps, pre_cached_nodes)
       logger.debug("queue proposal: enter for #{bc}:#{inst}")
       delay = []
-      pre_cached_nodes = {}
       begin
         lock = acquire_lock("queue")
 
@@ -41,7 +40,9 @@ module Crowbar
 
         # Delay is a list of nodes that are not in ready state. pre_cached_nodes
         # is an uninteresting optimization.
-        delay, pre_cached_nodes = add_pending_elements(bc, inst, element_order, elements, queue_me)
+        delay, pre_cached_nodes = add_pending_elements(
+          bc, inst, element_order, elements, queue_me, pre_cached_nodes
+        )
 
         # We have all nodes ready.
         if delay.empty?
@@ -333,7 +334,6 @@ module Crowbar
 
       # Delay is the list of nodes that are not ready and are needed for this deploy to run
       delay = []
-      pre_cached_nodes = {}
       begin
         # Check for delays and build up cache
         # FIXME: why?
@@ -374,10 +374,9 @@ module Crowbar
       # Check to see if we should delay our commit until nodes are ready.
       delay = []
       nodes.each do |n|
-        node = NodeObject.find_node_by_name(n)
+        pre_cached_nodes[n] ||= NodeObject.find_node_by_name(n)
+        node = pre_cached_nodes[n]
         next if node.nil?
-
-        pre_cached_nodes[n] = node
         # allow commiting proposal for nodes in the crowbar_upgrade state
         state = node.crowbar["state"]
         delay << n if (state != "ready" && state != "crowbar_upgrade") && !delay.include?(n)
