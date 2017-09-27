@@ -1,0 +1,14 @@
+default: &default
+  skip_unready_nodes:
+    enabled: false
+    roles:
+     - dns-client
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+production:
+  <<: *default

@@ -150,7 +150,7 @@ module Crowbar
               prop["deployment"][item.barclamp]["elements"],
               prop["deployment"][item.barclamp]["element_order"]
             )
-            delay, pre_cached_nodes = elements_not_ready(nodes_map.keys)
+            delay, = elements_not_ready(nodes_map)
             proposal_to_commit = { barclamp: item.barclamp, inst: item.name } if delay.empty?
           end
 
@@ -340,7 +340,7 @@ module Crowbar
         if queue_me
           delay = nodes_map.keys
         else
-          delay, pre_cached_nodes = elements_not_ready(nodes_map.keys, pre_cached_nodes)
+          delay, pre_cached_nodes = elements_not_ready(nodes_map, pre_cached_nodes)
         end
 
         unless delay.empty?
@@ -373,16 +373,37 @@ module Crowbar
     def elements_not_ready(nodes, pre_cached_nodes = {})
       # Check to see if we should delay our commit until nodes are ready.
       delay = []
-      nodes.each do |n|
+      nodes.each do |n, roles|
         node = Node.find_by_name(n)
         next if node.nil?
-
+        next if skip_unready_node?(node, roles)
         pre_cached_nodes[n] = node
         # allow commiting proposal for nodes in the crowbar_upgrade state
         state = node.crowbar["state"]
         delay << n if (state != "ready" && state != "crowbar_upgrade") && !delay.include?(n)
       end
       [delay, pre_cached_nodes]
+    end
+
+    def skip_unready_node?(node, roles)
+      # check for options to not wait for unready nodes
+      skip_unready_nodes = Rails.application.config.experimental["skip_unready_nodes"]
+      state = node.crowbar["state"]
+      # check if the roles to be applied to this node are in the list of roles
+      # that we want to skip the check
+      roles_found = roles.any? { |r| skip_unready_nodes["roles"].include? r }
+
+      return false unless skip_unready_nodes["enabled"]
+      # check if the status of the node is in a good state, in which case, we dont need to skip
+      return false if ["ready", "crowbar_upgrade"].include?(state)
+      # nothing to do if the roles to apply for this batch are not found in the roles to skip
+      return false unless roles_found
+
+      Rails.logger.warn(
+        "Skipping delay check for #{node.name} due to experimental option skip_unready_nodes."
+      )
+      Rails.logger.warn("Skipped node #{node.name} has state: #{state}")
+      true
     end
   end
 end
