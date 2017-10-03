@@ -51,6 +51,9 @@ unless node[:platform_family] == "windows"
     end
     not_if { node["crowbar"]["admin_node"] && File.exist?("/var/lib/crowbar/install/disable_dns") }
   end
+  utils_systemd_service_restart "dnsmasq" do
+    not_if { node["crowbar"]["admin_node"] && File.exist?("/var/lib/crowbar/install/disable_dns") }
+  end
 
   # do a dup because we modify the content
   dns_list_with_local = dns_list.dup.insert(0, "127.0.0.1").take(3)

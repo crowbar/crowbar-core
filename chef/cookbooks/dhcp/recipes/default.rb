@@ -180,4 +180,4 @@ service "dhcp3-server" do
   supports restart: true, status: true, reload: true
   action node[:provisioner][:enable_pxe] ? "enable" : ["disable", "stop"]
 end
-
+utils_systemd_service_restart "dhcp3-server"

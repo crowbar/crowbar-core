@@ -301,6 +301,13 @@ template "/etc/chef/solr.rb" do
   notifies :restart, "service[chef-solr]", :delayed
 end
 
+# Make systemd restart chef services (and their deps) on failure
+utils_systemd_service_restart "rabbitmq-server"
+utils_systemd_service_restart "couchdb"
+utils_systemd_service_restart "chef-solr"
+utils_systemd_service_restart "chef-expander"
+utils_systemd_service_restart "chef-server"
+
 if node[:platform_family] == "suse"
   cookbook_file "/etc/tmpfiles.d/crowbar.conf" do
     owner "root"
@@ -319,6 +326,7 @@ if node[:platform_family] == "suse"
   service "crowbar" do
     action :enable
   end
+  # No need for utils_systemd_service_restart: Restart= is already in the .service file
 else
   %w(chef-server-api chef-server-webui chef-solr rabbitmq-server).each do |f|
     file "/etc/logrotate.d/#{f}" do

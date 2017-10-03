@@ -43,6 +43,7 @@ if node[:network][:needs_openvswitch]
   end
   s.run_action :enable
   s.run_action :start
+  utils_systemd_service_restart node[:network][:ovs_service]
 
   # Cleanup on SLE12. Disable (NOT stop) old sysvinit service for ovs to avoid
   # issues (https://bugzilla.suse.com/show_bug.cgi?id=935912). We use the
