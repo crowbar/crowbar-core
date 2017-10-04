@@ -313,6 +313,7 @@ class Node < ChefObject
     if self.crowbar["state"] === "ready" and @node["ohai_time"]
       since_last = Time.now.to_i-@node["ohai_time"].to_i
       max_last = @node.default_attrs["provisioner"]["chef_client_runs"] || 900
+      max_last += @node.default_attrs["provisioner"]["chef_splay"] || 20
       max_last += 300 # time + 5 min buffer time
       return "noupdate" if since_last > max_last
     end
