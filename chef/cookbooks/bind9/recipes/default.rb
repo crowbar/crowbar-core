@@ -391,6 +391,7 @@ service "bind9" do
   supports restart: true, status: true, reload: true
   action [:enable, :start]
 end
+utils_systemd_service_restart "bind9"
 
 execute "reload nscd after dns config change" do
   command "nscd -i hosts"

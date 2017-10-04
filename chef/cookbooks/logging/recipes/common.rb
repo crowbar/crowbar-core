@@ -40,3 +40,4 @@ service "rsyslog" do
   supports restart: true, status: true, reload: true
   action [:enable, :start]
 end
+utils_systemd_service_restart "rsyslog"
