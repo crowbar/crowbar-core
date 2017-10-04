@@ -22,6 +22,8 @@ describe "API versioning", type: :request do
 
     it "checks the content type response for an api version" do
       routes.each do |route|
+        # there is no generic page for restart_management, only subpages
+        next if route == "api/restart_management"
         # for some reason backups doesn't contain /crowbar/ namespace
         route.gsub!("api", "api/crowbar") if route == "api/backups"
 
