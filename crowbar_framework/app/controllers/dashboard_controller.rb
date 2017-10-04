@@ -3,6 +3,10 @@ class DashboardController < ApplicationController
 
   def clusters
     @clusters = ServiceObject.available_clusters
+    respond_to do |format|
+      format.html
+      format.json { render json: @clusters }
+    end
   end
 
   def active_roles
