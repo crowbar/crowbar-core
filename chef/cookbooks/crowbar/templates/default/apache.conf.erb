@@ -45,6 +45,9 @@
     SSLCertificateChainFile <%= @ssl_crt_chain_file %>
     <% end %>
 
+    RequestHeader set X-Forwarded-Proto 'https'
+    RequestHeader set Forwarded 'proto=https'
+
     DocumentRoot /opt/dell/crowbar_framework/public
 
     ErrorLog /var/log/apache2/crowbar-error.log
