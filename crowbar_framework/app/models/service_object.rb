@@ -1431,6 +1431,15 @@ class ServiceObject
     # noop by default.
   end
 
+  # This callback provides a hook into the schema migration procedure.
+  # It is called from lib/schema_migration.rb after the schema migrations
+  # for a proposal (and its role, if present) have been executed. Parameters
+  # are the migrated proposal an role objects. The default implementation is
+  # a noop. (To be overwritten in sub classes)
+  def post_schema_migration_callback(proposal, role)
+    # noop by default
+  end
+
   #
   # Inputs: role = RoleObject of proposal being applied/queued.
   # Returns: List of hashs { "barclamp" => bcname, "inst" => instname }
