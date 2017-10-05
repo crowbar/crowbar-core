@@ -511,6 +511,12 @@ module Api
         end
 
         psql = postgres_params
+        if psql.nil?
+          # This can happen if only the crowbar node was deployed and will be upgraded
+          Rails.logger.warn("Can not get database parameters for OpenStack backup. Skipping...")
+          ::Crowbar::UpgradeStatus.new.end_step
+          return
+        end
         query = "SELECT SUM(pg_database_size(pg_database.datname)) FROM pg_database;"
         cmd = "PGPASSWORD=#{psql[:pass]} psql -t -h #{psql[:host]} -U #{psql[:user]} -c '#{query}'"
 
@@ -1731,6 +1737,10 @@ module Api
       #
       def postgres_params
         db_node = ::Node.find("roles:database-config-default").first
+        if db_node.nil?
+          Rails.logger.warn("No node with role 'database-config-default' found")
+          return nil
+        end
         {
           user: "postgres",
           pass: db_node[:postgresql][:password][:postgres],
