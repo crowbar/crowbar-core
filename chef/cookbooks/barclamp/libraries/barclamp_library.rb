@@ -246,7 +246,7 @@ module BarclampLibrary
         def fixed
           # This needs to be kept in sync with the number_of_drives method in
           # node_object.rb in the Crowbar framework.
-          @device =~ /^([hsv]d|cciss|xvd|nvme)/ && !removable && !cinder_volume
+          @device =~ /^([hsv]d|dasd|cciss|xvd|nvme)/ && !removable && !cinder_volume
         end
 
         def <=>(other)
