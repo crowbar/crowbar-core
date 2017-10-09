@@ -1014,9 +1014,6 @@ class ServiceObject
       new_deployment.delete("elements_expanded")
     end
 
-    # make sure the role is saved
-    role.save
-
     # Build a list of old elements.
     # elements_expanded on the old role is guaranteed to exists, as we already
     # ran through apply_role with the old_role.  Cache is used for the case
@@ -1221,6 +1218,21 @@ class ServiceObject
     # By this point, no intervallic runs should be running, and no
     # more will be able to start running until we release the locks
     # after the proposal has finished applying.
+
+    # We save the role ("applied proposal") now, because we will reference it
+    # from the run lists of the nodes, and therefore it now really needs to
+    # exist.
+    # We explicitly don't want to save it earlier because apply_role could fail
+    # in code before here, and while the role contains the data from the
+    # proposal, it doesn't contain yet the data that could be changed in
+    # apply_role_pre_chef_client -- which is critical data, like "do we do HA?".
+    # Saving earlier would mean that a crash in apply_role could lead to the
+    # role containing invalid information ("no HA") that would be used in
+    # periodic chef-client runs.
+    # Ideally we would therefore only save the role just before/after
+    # apply_role_pre_chef_client, but as said above, we need to save it before
+    # we change the run lists.
+    role.save
 
     # Part III: Update run lists of nodes to reflect new deployment. I.e. write
     # through the deployment schedule in pending node actions into run lists.
