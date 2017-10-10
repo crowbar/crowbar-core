@@ -268,5 +268,20 @@ Rails.application.routes.draw do
         get :upgrade
       end
     end
+
+    # service restart management
+    resource :restart_management,
+      constraints: lambda { |request|
+        Rails.application.config.experimental.fetch("disallow_restart", {}).fetch("enabled", false)
+      },
+      controller: :restart_management,
+      only: [] do
+      member do
+        post :configuration
+        get :configuration
+        post :restarts
+        get :restarts
+      end
+    end
   end
 end
