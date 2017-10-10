@@ -1,0 +1,5 @@
+{
+  "id": "disallow_restart",
+  "cinder": false,
+  "nova": true
+}

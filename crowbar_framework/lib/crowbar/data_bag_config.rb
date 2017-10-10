@@ -45,6 +45,37 @@ module Crowbar
         data_bag_item.fetch(instance, {}).fetch(barclamp, {})
       end
 
+      def get_or_create_databag(name)
+        begin
+          databag = ::Chef::DataBag.load(name)
+        rescue Net::HTTPServerException => e
+          # 404 -> databag does not exist
+          raise e unless e.response.code == "404"
+
+          databag = ::Chef::DataBag.new
+          databag.name name
+          databag.save
+        end
+        databag
+      end
+
+      def get_or_create_databag_item(databag, item)
+        # make sure databag is created or create it
+        get_or_create_databag(databag)
+        begin
+          databag_item = ::Chef::DataBagItem.load(databag, item)
+        rescue Net::HTTPServerException => e
+          # 404 -> item does not exist
+          raise e unless e.response.code == "404"
+
+          databag_item = ::Chef::DataBagItem.new
+          databag_item.data_bag databag
+          databag_item["id"] = item
+          databag_item.save
+        end
+        databag_item
+      end
+
       private
 
       def databag_config(group)
