@@ -27,7 +27,7 @@ module ServiceRestart
 
     def disallow_restart?
       # if the databag or item does not exits it returns a 404
-      data_bag = data_bag_item("crowbar-config", "disallow_restart") rescue {}
+      data_bag = Chef::DataBagItem.load("crowbar-config", "disallow_restart") rescue {}
 
       data_bag[cookbook] || false
     end
