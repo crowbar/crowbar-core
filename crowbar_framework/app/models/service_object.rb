@@ -919,6 +919,36 @@ class ServiceObject
     RoleObject.new role
   end
 
+  #  we can speed-up the application of (n+1)th role if both(n,n+1)
+  #  roles are being applied on the same node
+  #
+  #  eg. In our 2node deployment ceilometer{server,central} are always
+  #  applied on the same node, given that they have different priorities,
+  #  they are to be applied, one after the other, these priorities come
+  #  from element_run_list_order
+  #
+  #  In other words: it's actually reducing the number of times chef-client
+  #  is run rather than speeding up execution of any single run, by
+  #  merging batches together
+  #
+  #  a batch is [roles, nodes]
+  def merge_batches(batches)
+    merged_batches = []
+    unless batches.empty?
+      current_batch = batches[0]
+      batches[1..-1].each do |next_batch|
+        if next_batch[1] == current_batch[1] && !current_batch[0].nil?
+          current_batch[0] << next_batch[0]
+          next
+        end
+        merged_batches << current_batch
+        current_batch = next_batch
+      end
+      merged_batches << current_batch
+    end
+    merged_batches
+  end
+
   #
   # After validation, this is where the role is applied to the system The old
   # instance (if one exists) is compared with the new instance.  roles are
@@ -1171,6 +1201,8 @@ class ServiceObject
 
       batches << [roles, nodes_in_batch] unless nodes_in_batch.empty?
     end
+
+    batches = merge_batches(batches)
     Rails.logger.debug "batches: #{batches.inspect}"
 
     # Cache attributes that are useful later on
