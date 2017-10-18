@@ -49,13 +49,9 @@ module ServiceRestart
     end
 
     def clear_restart_requests
-      @node.fetch(
-        :crowbar_wall, {}
-      ).fetch(
-        :requires_restart, {}
-      ).fetch(
-        cookbook, {}
-      ).delete(@service_name)
+      # we need to delete from the node attribute directly, fetch wont work here as it
+      # seems to return the value but we want the full attribute to be able to delete it
+      @node[:crowbar_wall][:requires_restart][cookbook].delete(@service_name) rescue nil
     end
   end
 end
