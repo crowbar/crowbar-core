@@ -129,5 +129,6 @@ RSpec.configure do |config|
 
   config.append_before(:each) do
     stub_request(:any, /localhost:4000/).to_rack(OfflineChef)
+    stub_request(:any, /localhost:5984/).to_rack(OfflineCouchDB)
   end
 end
