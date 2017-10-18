@@ -576,6 +576,7 @@ when "suse"
 
       pre_up_script = "/etc/wicked/scripts/#{nic.name}-pre-up"
       datapath_id = get_datapath_id_for_ovsbridge nic.name
+      is_admin_nwk = if_mapping.key?("admin") && if_mapping["admin"].include?(nic.name)
 
       template pre_up_script do
         owner "root"
@@ -584,7 +585,8 @@ when "suse"
         source "ovs-pre-up.sh.erb"
         variables(
           bridgename: nic.name,
-          datapath_id: datapath_id
+          datapath_id: datapath_id,
+          is_admin_nwk: is_admin_nwk
         )
       end
     end
