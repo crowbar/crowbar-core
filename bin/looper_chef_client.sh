@@ -41,19 +41,18 @@ fi
 
 if [ -n "$obtained_lock" ]; then
     trap 'rm -f "$lockfile"; exit $?' INT TERM EXIT
-    
+
     while true; do
-	rm -f "$needrunfile"
-	
-	/opt/dell/bin/blocking_chef_client.sh
-	
-	while [[ ! -f "$needrunfile" ]]
-	do
-	    sleep 1
-	done
+        rm -f "$needrunfile"
+
+        /opt/dell/bin/blocking_chef_client.sh
+
+        while [[ ! -f "$needrunfile" ]]; do
+            sleep 1
+        done
     done
 
-  # Ideally these won't be hit.
+    # Ideally these won't be hit.
     rm -f "$lockfile"
     trap - INT TERM EXIT
     exit 0
