@@ -1486,7 +1486,7 @@ class Node < ChefObject
     def find(search)
       answer = []
       nodes = if search.nil?
-        ChefObject.query_chef.search "node"
+        ChefObject.fetch_nodes_from_cdb
       else
         ChefObject.query_chef.search "node", "#{chef_escape(search)}"
       end
