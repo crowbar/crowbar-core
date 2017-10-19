@@ -30,6 +30,16 @@ class ChefObject
     end
   end
 
+  def self.fetch_nodes_from_cdb
+    # get all nodes directly from CouchDB, skip Chef API and Solr search
+    nodes = Chef::Node.cdb_list(true)
+    return [nodes, 0, nodes.count]
+  rescue Errno::ECONNREFUSED => e
+    raise Crowbar::Error::ChefOffline
+  rescue StandardError
+    return [[], 0, 0]
+  end
+
   def self.chef_escape(str)
     str.gsub("-:") { |c| '\\' + c }
   end
