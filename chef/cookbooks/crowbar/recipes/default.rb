@@ -371,6 +371,7 @@ include_recipe "apache2::mod_slotmem_shm"
 include_recipe "apache2::mod_socache_shmcb"
 include_recipe "apache2::mod_auth_digest"
 include_recipe "apache2::mod_ssl"
+include_recipe "apache2::mod_headers"
 
 # Verify that we have the certificate available before configuring things to use it
 if node[:crowbar][:apache][:ssl] && !node[:crowbar][:apache][:generate_certs]
