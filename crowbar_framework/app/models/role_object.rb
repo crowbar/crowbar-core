@@ -193,7 +193,7 @@ class RoleObject < ChefObject
   def self.find_roles_by_search(search)
     roles = []
     arr = if search.nil?
-      ChefObject.query_chef.search "role"
+      ChefObject.fetch_roles_from_cdb
     else
       ChefObject.query_chef.search "role", search
     end

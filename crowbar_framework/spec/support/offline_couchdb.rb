@@ -21,14 +21,14 @@ class OfflineCouchDB < Sinatra::Base
     content_type :json
   end
 
-  get "/chef/_design/nodes/_view/all" do
-    json_fixture("nodes", "all")
-  end
-
   get "/chef/_design/id_map/_view/name_to_id" do
     docs = params["include_docs"]
     (type, name) = JSON.parse(params["key"])
     json_fixture("name_to_id_#{docs}_#{type}", name)
+  end
+
+  get "/chef/_design/:type/_view/:name" do |type, name|
+    json_fixture(type, name)
   end
 
   private

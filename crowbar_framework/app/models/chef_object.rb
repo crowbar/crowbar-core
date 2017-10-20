@@ -40,6 +40,16 @@ class ChefObject
     return [[], 0, 0]
   end
 
+  def self.fetch_roles_from_cdb
+    # get all roles directly from CouchDB, skip Chef API and Solr search
+    roles = Chef::Role.cdb_list(true)
+    return [roles, 0, roles.count]
+  rescue Errno::ECONNREFUSED
+    raise Crowbar::Error::ChefOffline
+  rescue StandardError
+    return [[], 0, 0]
+  end
+
   def self.chef_escape(str)
     str.gsub("-:") { |c| '\\' + c }
   end
