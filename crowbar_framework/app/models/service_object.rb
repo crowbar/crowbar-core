@@ -1336,6 +1336,13 @@ class ServiceObject
         node_attr_cache[node_name]["windows"]
       end
 
+      # refill pre_cached_nodes in one call instead of allowing
+      # #remote_chef_client_threads to load node by node, thus speeding it up?
+      nodes_to_run.each_slice(50) do |partial_nodes|
+        search = (partial_nodes.map { |n| "name:#{n}" }).join(" OR ")
+        NodeObject.find(search).map { |n| pre_cached_nodes[n.name] = n }
+      end
+
       threads = remote_chef_client_threads(nodes_to_run, pre_cached_nodes,
                                            roles)
 
