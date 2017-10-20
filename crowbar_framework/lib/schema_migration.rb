@@ -59,6 +59,9 @@ module SchemaMigration
       unless role.nil?
         migrate_role(bc_name, template, all_scripts, role)
       end
+
+      service = ServiceObject.get_service(bc_name).new
+      service.post_schema_migration_callback(prop, role)
     end
   end
 
