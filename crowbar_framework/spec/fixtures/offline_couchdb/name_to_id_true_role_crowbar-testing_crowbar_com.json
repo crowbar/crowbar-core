@@ -1,0 +1,49 @@
+{"total_rows":1,"offset":0,"rows":[
+{"id":"3fa03ccf-aa50-4e0c-8ab3-b3b6278f4a65","key":["role","crowbar-testing_crowbar_com"],"value":"3fa03ccf-aa50-4e0c-8ab3-b3b6278f4a65",
+"doc":
+{
+    "_id": "3fa03ccf-aa50-4e0c-8ab3-b3b6278f4a65",
+    "_rev": "1-bba466a6a01c34415f02b5762ebbb6ea",
+    "chef_type": "role",
+    "default_attributes": {
+        "crowbar": {
+            "network": {},
+            "state_debug": {
+                "discovered": 1,
+                "discovering": 1
+            }
+        },
+        "crowbar-revision": 3,
+        "state": "discovered",
+        "run_list_map": {
+            "deployer-client": {
+                "priority": 10
+            },
+            "deployer-config-default": {
+                "priority": 10
+            }
+        }
+    },
+    "description": "",
+    "env_run_lists": {},
+    "json_class": "Chef::Role",
+    "name": "crowbar-testing_crowbar_com",
+    "override_attributes": {
+        "crowbar": {
+            "crowbar-revision": 4
+        }
+    },
+    "run_list": [
+        {
+            "name": "deployer-client",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "deployer-config-default",
+            "type": "role",
+            "version": null
+        }
+    ]
+}
+}]}

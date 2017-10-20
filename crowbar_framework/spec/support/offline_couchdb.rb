@@ -22,13 +22,23 @@ class OfflineCouchDB < Sinatra::Base
   end
 
   get "/chef/_design/nodes/_view/all" do
-    json_fixture("nodes")
+    json_fixture("nodes", "all")
+  end
+
+  get "/chef/_design/id_map/_view/name_to_id" do
+    docs = params["include_docs"]
+    (type, name) = JSON.parse(params["key"])
+    json_fixture("name_to_id_#{docs}_#{type}", name)
   end
 
   private
 
-  def json_fixture(name)
-    fixture = Rails.root.join("spec", "fixtures", "offline_couchdb", "#{name}.json")
+  def empty_json
+    "{}"
+  end
+
+  def json_fixture(type, name)
+    fixture = Rails.root.join("spec", "fixtures", "offline_couchdb", "#{type}_#{name}.json")
     File.read(fixture)
   rescue Errno::ENOENT
     warn "#{request.request_method} #{request.url} is missing a #{fixture}"
