@@ -1,0 +1,23 @@
+{"total_rows":1,"offset":0,"rows":[
+{"id":"ef91df94-cbd3-4497-8e27-8dd7f15ba31a","key":["role","cinder-controller"],"value":"ef91df94-cbd3-4497-8e27-8dd7f15ba31a",
+"doc":
+{
+  "_id": "ef91df94-cbd3-4497-8e27-8dd7f15ba31a",
+  "name": "cinder-controller",
+  "description": "Cinder API and Scheduler Role",
+  "json_class": "Chef::Role",
+  "default_attributes": {
+  },
+  "override_attributes": {
+  },
+  "chef_type": "role",
+  "run_list": [
+    "recipe[cinder::api]",
+    "recipe[cinder::scheduler]",
+    "recipe[cinder::controller_ha]",
+    "recipe[cinder::monitor]"
+  ],
+  "env_run_lists": {
+  }
+}
+}]}

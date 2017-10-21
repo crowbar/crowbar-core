@@ -1,0 +1,5 @@
+{"total_rows":1,"offset":0,"rows":[
+{"id":"44a06d23-cd8f-4e81-8656-bac5d2c04576","key":["role","dns-config-default"],"value":"44a06d23-cd8f-4e81-8656-bac5d2c04576",
+"doc":
+{"_id":"44a06d23-cd8f-4e81-8656-bac5d2c04576","name":"dns-config-default","default_attributes":{"dns":{"forwarders":[],"domain":"crowbar.com","contact":"support@crowbar.com","static":{}}},"_rev":"1-84472a77aaadc24779ae4c9f65de1f0a","json_class":"Chef::Role","env_run_lists":{},"run_list":[],"description":"manages the DNS subsystem for the cluster","chef_type":"role","override_attributes":{"dns":{"element_order":[["dns-server"],["dns-client"]],"config":{"transitions":true,"mode":"full","transition_list":["discovered"],"environment":"dns-config-default"},"crowbar-committing":true,"crowbar-revision":3,"elements":{}}}}
+}]}

@@ -1,0 +1,233 @@
+{"total_rows":1,"offset":0,"rows":[
+{"id":"ee94b7da-8f18-4464-8b1f-f9691db3bff1","key":["role","crowbar-admin_crowbar_com"],"value":"ee94b7da-8f18-4464-8b1f-f9691db3bff1",
+"doc":
+{
+    "_id": "ee94b7da-8f18-4464-8b1f-f9691db3bff1",
+    "_rev": "36-8cbda018fd2805fef7b8330f52bf4600",
+    "chef_type": "role",
+    "default_attributes": {
+        "bios": {
+            "bios_setup_enable": false,
+            "bios_update_enable": false
+        },
+        "crowbar": {
+            "allocated": true,
+            "disks": {
+                "sda": {
+                    "model": "VMware Virtual S",
+                    "removable": "0",
+                    "rev": "1.0",
+                    "size": "41943040",
+                    "state": "running",
+                    "timeout": "30",
+                    "usage": "OS",
+                    "vendor": "VMware,"
+                }
+            },
+            "hardware": {
+                "bios_set": "Virtualization",
+                "os": "ubuntu_install",
+                "raid_set": "SingleRaid10"
+            },
+            "links": {
+                "Chef": "http://192.168.124.10:4040/nodes/admin.crowbar.com",
+                "Ganglia": "http://192.168.124.10/ganglia/?c=Crowbar PoC&h=admin.crowbar.com&m=load_one&r=hour&s=descending&hc=4&mc=2",
+                "Nagios": "http://192.168.124.10/nagios3/cgi-bin/extinfo.cgi?type=1&host=admin"
+            },
+            "network": {
+                "admin": {
+                    "add_bridge": false,
+                    "address": "192.168.124.10",
+                    "broadcast": "192.168.124.255",
+                    "conduit": "intf0",
+                    "netmask": "255.255.255.0",
+                    "node": "admin.crowbar.com",
+                    "router": "192.168.124.1",
+                    "subnet": "192.168.124.0",
+                    "use_vlan": false,
+                    "vlan": 100
+                },
+                "bmc": {
+                    "add_bridge": false,
+                    "address": "192.168.124.162",
+                    "broadcast": "192.168.124.255",
+                    "conduit": "bmc",
+                    "netmask": "255.255.255.0",
+                    "node": "admin.crowbar.com",
+                    "router": null,
+                    "subnet": "192.168.124.0",
+                    "use_vlan": false,
+                    "vlan": 100
+                }
+            },
+            "save_run_list": [],
+            "state_debug": {
+                "discovered": 1,
+                "discovering": 1,
+                "hardware-installed": 1,
+                "hardware-installing": 1,
+                "installed": 1,
+                "installing": 1,
+                "ready": 1,
+                "readying": 1
+            },
+            "usage": [
+                "nova"
+            ],
+            "usedhcp": true
+        },
+        "crowbar-revision": 34,
+        "raid": {
+            "enable": false
+        },
+        "state": "ready",
+        "run_list_map": {
+            "crowbar": {
+                "priority": 0
+            },
+            "crowbar-config-default": {
+                "priority": 10
+            },
+            "deployer-client": {
+                "priority": 10
+            },
+            "deployer-config-default": {
+                "priority": 10
+            },
+            "ipmi": {
+                "priority": 15
+            },
+            "ipmi-config-default": {
+                "priority": 15
+            },
+            "bmc-nat-client": {
+                "priority": 15
+            },
+            "provisioner-base": {
+                "priority": 1060
+            },
+            "provisioner-config-default": {
+                "priority": 1060
+            },
+            "network": {
+                "priority": 20
+            },
+            "network-config-default": {
+                "priority": 20
+            },
+            "dns-server": {
+                "priority": 31
+            },
+            "dns-client": {
+                "priority": 31
+            },
+            "dns-config-default": {
+                "priority": 31
+            },
+            "logging-server": {
+                "priority": 40
+            },
+            "logging-config-default": {
+                "priority": 40
+            },
+            "ntp-server": {
+                "priority": 50
+            },
+            "ntp-config-default": {
+                "priority": 50
+            }
+        }
+    },
+    "description": "",
+    "env_run_lists": {},
+    "json_class": "Chef::Role",
+    "name": "crowbar-admin_crowbar_com",
+    "override_attributes": {
+        "crowbar": {
+            "crowbar-revision": 35
+        }
+    },
+    "run_list": [
+        {
+            "name": "crowbar-config-default",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "deployer-config-default",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "ipmi",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "ipmi-config-default",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "network",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "network-config-default",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "dns-server",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "dns-config-default",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "dns-client",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "logging-server",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "logging-config-default",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "ntp-server",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "ntp-config-default",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "provisioner-server",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "provisioner-config-default",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "provisioner-base",
+            "type": "role",
+            "version": null
+        }
+    ]
+}
+}]}
