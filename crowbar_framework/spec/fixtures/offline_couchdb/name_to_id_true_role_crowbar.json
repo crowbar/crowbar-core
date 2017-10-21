@@ -1,0 +1,5 @@
+{"total_rows":1,"offset":0,"rows":[
+{"id":"a0562fee-b3d8-48de-9630-ffa340ef9d0a","key":["role","crowbar"],"value":"a0562fee-b3d8-48de-9630-ffa340ef9d0a",
+"doc":
+{"_id":"a0562fee-b3d8-48de-9630-ffa340ef9d0a","name":"crowbar","default_attributes":{"authorization":{"sudo":{"groups":["admin"],"passwordless":true,"users":["crowbar"]}},"crowbar":{"admin_node":true}},"_rev":"2-92da7730727889c25c94d46d945a7d82","json_class":"Chef::Role","env_run_lists":{},"run_list":[{"name":"utils","version":null,"type":"recipe"},{"name":"sudo","version":null,"type":"recipe"},{"name":"crowbar","version":null,"type":"recipe"}],"description":"Crowbar role - Setup the rails app","chef_type":"role","override_attributes":{}}
+}]}
