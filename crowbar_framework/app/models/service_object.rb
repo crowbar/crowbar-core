@@ -950,6 +950,10 @@ class ServiceObject
       "skip_unready_nodes", {}
     ).fetch("enabled", false)
 
+    skip_unchanged_nodes_enabled = Rails.application.config.experimental.fetch(
+      "skip_unchanged_nodes", {}
+    ).fetch("enabled", false)
+
     # Part I: Looking up data & checks
     #
     # we look up the role in the database (if there is one), the new one is
@@ -989,24 +993,31 @@ class ServiceObject
       end
     end
 
+    pre_cached_nodes = {}
+    cleaned_elements = nil
+
     # When bootstrapping, we don't run chef, so there's no need for queuing
     if bootstrap
-      pre_cached_nodes = {}
       # do not try to process the queue in any case
       in_queue = true
     else
       # Attempt to queue the proposal.  If delay is empty, then run it.
       deps = proposal_dependencies(role)
-      if skip_unready_nodes_enabled
-        elements_without_unready, pre_cached_nodes = skip_unready_nodes(
-          @bc_name, inst, new_elements, old_elements
-        )
-        delay, pre_cached_nodes = queue_proposal(
-          inst, element_order, elements_without_unready, deps, @bc_name, pre_cached_nodes
-        )
-      else
-        delay, pre_cached_nodes = queue_proposal(inst, element_order, new_elements, deps)
+      cleaned_elements = new_elements.deep_dup
+
+      if skip_unchanged_nodes_enabled
+        cleaned_elements = skip_unchanged_nodes(cleaned_elements, old_role, role)
       end
+
+      if skip_unready_nodes_enabled
+        cleaned_elements, pre_cached_nodes = skip_unready_nodes(
+          @bc_name, inst, cleaned_elements, old_elements
+        )
+      end
+
+      delay, pre_cached_nodes = queue_proposal(
+        inst, element_order, cleaned_elements, deps, @bc_name, pre_cached_nodes
+      )
 
       unless delay.empty?
         # force not processing the queue further
@@ -1034,10 +1045,10 @@ class ServiceObject
       new_deployment.delete("elements_expanded")
     end
 
-    if skip_unready_nodes_enabled
+    unless cleaned_elements.nil?
       # if we have removed nodes from the list, make sure to expand them and overwrite the
       # new_elements var so we dont try to run chef-client on those not-ready nodes
-      new_elements, failures, msg = expand_items_in_elements(elements_without_unready)
+      new_elements, failures, msg = expand_items_in_elements(cleaned_elements)
       unless failures.nil?
         Rails.logger.progress("apply_role: Failed to apply role #{role.name}")
         update_proposal_status(inst, "failed", msg)
@@ -1449,6 +1460,11 @@ class ServiceObject
     []
   end
 
+  def skip_unchanged_node?(node_name, old_role, role)
+    # By default dont skip anything
+    false
+  end
+
   def expand_items_in_elements(elements)
     # expand items in elements that are not nodes
     expanded_new_elements = {}
@@ -1768,6 +1784,17 @@ class ServiceObject
       Rails.logger.error(([e2.message] + e2.backtrace).join("\n"))
       [400, e2.message]
     end
+  end
+
+  def skip_unchanged_nodes(elements, old_role, role)
+    cleaned_elements = {}
+    elements.each do |r|
+      cleaned_elements[r] ||= {}
+      elements[r].each do |node_name|
+        cleaned_elements[r] << node_name unless skip_unchanged_node?(node_name, old_role, role)
+      end
+    end
+    cleaned_elements
   end
 
   def skip_unready_nodes(bc, inst, new_elements, old_elements)
