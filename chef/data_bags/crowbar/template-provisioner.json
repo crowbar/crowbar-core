@@ -193,7 +193,7 @@
           "debug": "debug"
         }
       },
-      "chef_splay": 20,
+      "chef_splay": 900,
       "chef_client_runs": 900
     }
   },
