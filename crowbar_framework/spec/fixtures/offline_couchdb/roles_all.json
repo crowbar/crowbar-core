@@ -1,0 +1,404 @@
+{"total_rows":8,"offset":0,"rows":[
+{"id":"ef91df94-cbd3-4497-8e27-8dd7f15ba31a","key":"cinder-controller","value":
+{
+  "_id": "ef91df94-cbd3-4497-8e27-8dd7f15ba31a",
+  "name": "cinder-controller",
+  "description": "Cinder API and Scheduler Role",
+  "json_class": "Chef::Role",
+  "default_attributes": {
+  },
+  "override_attributes": {
+  },
+  "chef_type": "role",
+  "run_list": [
+    "recipe[cinder::api]",
+    "recipe[cinder::scheduler]",
+    "recipe[cinder::controller_ha]",
+    "recipe[cinder::monitor]"
+  ],
+  "env_run_lists": {
+  }
+}
+},
+{"id":"ee94b7da-8f18-4464-8b1f-f9691db3bff1","key":"crowbar-admin_crowbar_com","value":
+{
+    "_id": "ee94b7da-8f18-4464-8b1f-f9691db3bff1",
+    "_rev": "36-8cbda018fd2805fef7b8330f52bf4600",
+    "chef_type": "role",
+    "default_attributes": {
+        "bios": {
+            "bios_setup_enable": false,
+            "bios_update_enable": false
+        },
+        "crowbar": {
+            "allocated": true,
+            "disks": {
+                "sda": {
+                    "model": "VMware Virtual S",
+                    "removable": "0",
+                    "rev": "1.0",
+                    "size": "41943040",
+                    "state": "running",
+                    "timeout": "30",
+                    "usage": "OS",
+                    "vendor": "VMware,"
+                }
+            },
+            "hardware": {
+                "bios_set": "Virtualization",
+                "os": "ubuntu_install",
+                "raid_set": "SingleRaid10"
+            },
+            "links": {
+                "Chef": "http://192.168.124.10:4040/nodes/admin.crowbar.com",
+                "Ganglia": "http://192.168.124.10/ganglia/?c=Crowbar PoC&h=admin.crowbar.com&m=load_one&r=hour&s=descending&hc=4&mc=2",
+                "Nagios": "http://192.168.124.10/nagios3/cgi-bin/extinfo.cgi?type=1&host=admin"
+            },
+            "network": {
+                "admin": {
+                    "add_bridge": false,
+                    "address": "192.168.124.10",
+                    "broadcast": "192.168.124.255",
+                    "conduit": "intf0",
+                    "netmask": "255.255.255.0",
+                    "node": "admin.crowbar.com",
+                    "router": "192.168.124.1",
+                    "subnet": "192.168.124.0",
+                    "use_vlan": false,
+                    "vlan": 100
+                },
+                "bmc": {
+                    "add_bridge": false,
+                    "address": "192.168.124.162",
+                    "broadcast": "192.168.124.255",
+                    "conduit": "bmc",
+                    "netmask": "255.255.255.0",
+                    "node": "admin.crowbar.com",
+                    "router": null,
+                    "subnet": "192.168.124.0",
+                    "use_vlan": false,
+                    "vlan": 100
+                }
+            },
+            "save_run_list": [],
+            "state_debug": {
+                "discovered": 1,
+                "discovering": 1,
+                "hardware-installed": 1,
+                "hardware-installing": 1,
+                "installed": 1,
+                "installing": 1,
+                "ready": 1,
+                "readying": 1
+            },
+            "usage": [
+                "nova"
+            ],
+            "usedhcp": true
+        },
+        "crowbar-revision": 34,
+        "raid": {
+            "enable": false
+        },
+        "state": "ready",
+        "run_list_map": {
+            "crowbar": {
+                "priority": 0
+            },
+            "crowbar-config-default": {
+                "priority": 10
+            },
+            "deployer-client": {
+                "priority": 10
+            },
+            "deployer-config-default": {
+                "priority": 10
+            },
+            "ipmi": {
+                "priority": 15
+            },
+            "ipmi-config-default": {
+                "priority": 15
+            },
+            "bmc-nat-client": {
+                "priority": 15
+            },
+            "provisioner-base": {
+                "priority": 1060
+            },
+            "provisioner-config-default": {
+                "priority": 1060
+            },
+            "network": {
+                "priority": 20
+            },
+            "network-config-default": {
+                "priority": 20
+            },
+            "dns-server": {
+                "priority": 31
+            },
+            "dns-client": {
+                "priority": 31
+            },
+            "dns-config-default": {
+                "priority": 31
+            },
+            "logging-server": {
+                "priority": 40
+            },
+            "logging-config-default": {
+                "priority": 40
+            },
+            "ntp-server": {
+                "priority": 50
+            },
+            "ntp-config-default": {
+                "priority": 50
+            }
+        }
+    },
+    "description": "",
+    "env_run_lists": {},
+    "json_class": "Chef::Role",
+    "name": "crowbar-admin_crowbar_com",
+    "override_attributes": {
+        "crowbar": {
+            "crowbar-revision": 35
+        }
+    },
+    "run_list": [
+        {
+            "name": "crowbar-config-default",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "deployer-config-default",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "ipmi",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "ipmi-config-default",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "network",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "network-config-default",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "dns-server",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "dns-config-default",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "dns-client",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "logging-server",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "logging-config-default",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "ntp-server",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "ntp-config-default",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "provisioner-server",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "provisioner-config-default",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "provisioner-base",
+            "type": "role",
+            "version": null
+        }
+    ]
+}
+},
+{"id":"5aac27fb-c2a6-4407-9268-9184588e0cc7","key":"crowbar-ceph_crowbar_com","value":
+{
+    "_id": "5aac27fb-c2a6-4407-9268-9184588e0cc7",
+    "_rev": "1-bba466a6a01c34415f02b5762ebbb6ea",
+    "chef_type": "role",
+    "default_attributes": {
+        "crowbar": {
+            "network": {},
+            "state_debug": {
+                "discovered": 1,
+                "discovering": 1
+            }
+        },
+        "crowbar-revision": 3,
+        "state": "crowbar_upgrade",
+        "run_list_map": {
+            "deployer-client": {
+                "priority": 10
+            },
+            "deployer-config-default": {
+                "priority": 10
+            }
+        }
+    },
+    "description": "",
+    "env_run_lists": {},
+    "json_class": "Chef::Role",
+    "name": "crowbar-ceph_crowbar_com",
+    "override_attributes": {
+        "crowbar": {
+            "crowbar-revision": 4
+        }
+    },
+    "run_list": [
+        {
+            "name": "deployer-client",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "deployer-config-default",
+            "type": "role",
+            "version": null
+        }
+    ]
+}
+},
+{"id":"7c9c2677-6484-4209-abd5-ef64bf49d479","key":"crowbar-config-default","value":
+{"_id":"7c9c2677-6484-4209-abd5-ef64bf49d479","name":"crowbar-config-default","default_attributes":{"crowbar":{"barclamps":["crowbar","deployer","ipmi","network","provisioner","redhat_install","ubuntu_install","ntp","dns","nagios","ganglia","logging"],"instances":{"deployer":["default"],"nagios":["default"],"ubuntu_install":["default"],"provisioner":["default"],"network":["default"],"ipmi":["default"],"ganglia":["default"],"logging":["default"],"dns":["default"],"ntp":["default"],"redhat_install":["default"]},"web_port":3000,"run_order":{"deployer":10,"nagios":60,"ubuntu_install":14,"provisioner":1060,"network":20,"ipmi":17,"ganglia":70,"logging":40,"dns":30,"ntp":50,"redhat_install":14},"users":{"machine-install":{"password":"58de2643926c6b975f711e16177c23164eda08b6bf1e51047345e9ec905d680662ea1b63876ed8d6234d66a196580400a1907e13f9a3b6924524f382440c2910"},"crowbar":{"password":"crowbar"}},"realm":"Crowbar - By selecting OK are agreeing to the License Agreement"}},"_rev":"2-42996d1f64b64fd47cb29a103a0f63a4","json_class":"Chef::Role","env_run_lists":{},"run_list":[],"description":"Self-referential barclamp enabling other barclamps","chef_type":"role","override_attributes":{"crowbar":{"element_order":[["crowbar"]],"crowbar-committing":true,"config":{"transitions":false,"transition_list":[],"mode":"full","environment":"crowbar-config-default"},"crowbar-revision":4,"elements":{"crowbar":["admin.crowbar.com"]}}}}
+},
+{"id":"08377802-710a-4dd1-a9eb-c857e96208c8","key":"crowbar-drbd_crowbar_com","value":
+{
+    "_id": "08377802-710a-4dd1-a9eb-c857e96208c8",
+    "_rev": "1-bba466a6a01c34415f02b5762ebbb6ea",
+    "chef_type": "role",
+    "default_attributes": {
+        "crowbar": {
+            "network": {},
+            "state_debug": {
+                "discovered": 1,
+                "discovering": 1
+            }
+        },
+        "crowbar-revision": 3,
+        "state": "discovered",
+        "run_list_map": {
+            "deployer-client": {
+                "priority": 10
+            },
+            "deployer-config-default": {
+                "priority": 10
+            }
+        }
+    },
+    "description": "",
+    "env_run_lists": {},
+    "json_class": "Chef::Role",
+    "name": "crowbar-drbd_crowbar_com",
+    "override_attributes": {
+        "crowbar": {
+            "crowbar-revision": 4
+        }
+    },
+    "run_list": [
+        {
+            "name": "deployer-client",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "deployer-config-default",
+            "type": "role",
+            "version": null
+        }
+    ]
+}
+},
+{"id":"3fa03ccf-aa50-4e0c-8ab3-b3b6278f4a65","key":"crowbar-testing_crowbar_com","value":
+{
+    "_id": "3fa03ccf-aa50-4e0c-8ab3-b3b6278f4a65",
+    "_rev": "1-bba466a6a01c34415f02b5762ebbb6ea",
+    "chef_type": "role",
+    "default_attributes": {
+        "crowbar": {
+            "network": {},
+            "state_debug": {
+                "discovered": 1,
+                "discovering": 1
+            }
+        },
+        "crowbar-revision": 3,
+        "state": "discovered",
+        "run_list_map": {
+            "deployer-client": {
+                "priority": 10
+            },
+            "deployer-config-default": {
+                "priority": 10
+            }
+        }
+    },
+    "description": "",
+    "env_run_lists": {},
+    "json_class": "Chef::Role",
+    "name": "crowbar-testing_crowbar_com",
+    "override_attributes": {
+        "crowbar": {
+            "crowbar-revision": 4
+        }
+    },
+    "run_list": [
+        {
+            "name": "deployer-client",
+            "type": "role",
+            "version": null
+        },
+        {
+            "name": "deployer-config-default",
+            "type": "role",
+            "version": null
+        }
+    ]
+}
+},
+{"id":"a0562fee-b3d8-48de-9630-ffa340ef9d0a","key":"crowbar","value":
+{"_id":"a0562fee-b3d8-48de-9630-ffa340ef9d0a","name":"crowbar","default_attributes":{"authorization":{"sudo":{"groups":["admin"],"passwordless":true,"users":["crowbar"]}},"crowbar":{"admin_node":true}},"_rev":"2-92da7730727889c25c94d46d945a7d82","json_class":"Chef::Role","env_run_lists":{},"run_list":[{"name":"utils","version":null,"type":"recipe"},{"name":"sudo","version":null,"type":"recipe"},{"name":"crowbar","version":null,"type":"recipe"}],"description":"Crowbar role - Setup the rails app","chef_type":"role","override_attributes":{}}
+},
+{"id":"44a06d23-cd8f-4e81-8656-bac5d2c04576","key":"dns-config-default","value":
+{"_id":"44a06d23-cd8f-4e81-8656-bac5d2c04576","name":"dns-config-default","default_attributes":{"dns":{"forwarders":[],"domain":"crowbar.com","contact":"support@crowbar.com","static":{}}},"_rev":"1-84472a77aaadc24779ae4c9f65de1f0a","json_class":"Chef::Role","env_run_lists":{},"run_list":[],"description":"manages the DNS subsystem for the cluster","chef_type":"role","override_attributes":{"dns":{"element_order":[["dns-server"],["dns-client"]],"config":{"transitions":true,"mode":"full","transition_list":["discovered"],"environment":"dns-config-default"},"crowbar-committing":true,"crowbar-revision":3,"elements":{}}}}
+}
+]}
