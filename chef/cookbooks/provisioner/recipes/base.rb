@@ -213,7 +213,7 @@ utils_systemd_service_restart "chef-client"
 config_file = "/etc/sysconfig/chef-client"
 
 chef_client_runs = node[:provisioner][:chef_client_runs] || 900
-chef_splay = node[:provisioner][:chef_splay] || 20
+chef_splay = node[:provisioner][:chef_splay] || 900
 
 template config_file do
   owner "root"
