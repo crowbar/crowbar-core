@@ -24,8 +24,12 @@ class Node < ChefObject
 
   self.chef_type = "node"
 
-  def initialize(node)
-    @role = RoleObject.find_role_by_name Node.make_role_name(node.name)
+  def initialize(node, role = nil)
+    @role = if role.nil?
+      RoleObject.find_role_by_name Node.make_role_name(node.name)
+    else
+      role
+    end
     if @role.nil?
       # An admin node can exist without a role - so create one
       if !node["crowbar"].nil? and node["crowbar"]["admin_node"]
@@ -1492,10 +1496,15 @@ class Node < ChefObject
       end
 
       if nodes.is_a?(Array) and nodes[2] != 0 and !nodes[0].nil?
+        roles = if search.nil?
+          Hash[RoleObject.all.map.collect { |role| [role.name, role] }]
+        else
+          {}
+        end
         nodes[0].delete_if { |x| x.nil? }
         answer = nodes[0].map do |x|
           begin
-            Node.new x
+            Node.new x, roles[Node.make_role_name(x.name)]
           rescue Crowbar::Error::NotFound
             nil
           end
