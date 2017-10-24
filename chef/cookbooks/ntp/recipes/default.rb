@@ -15,7 +15,8 @@
 # limitations under the License.
 #
 
-local_admin_address = Barclamp::Inventory.get_network_by_type(node, "admin").address
+admin_net = Barclamp::Inventory.get_network_by_type(node, "admin")
+local_admin_address = admin_net.address
 
 unless Chef::Config[:solo]
   ntp_config = Barclamp::Config.load("core", "ntp")
@@ -29,6 +30,10 @@ ntp_servers.reject! { |n| n == local_admin_address }
 if node["roles"].include?("ntp-server")
   ntp_servers += node[:ntp][:external_servers]
   is_server = true
+  listen_network_addresses = (node[:ntp][:server_listen_on_networks] || []).map do |network|
+    Barclamp::Inventory.get_network_by_type(node, network).address
+  end
+  listen_network_addresses.reject! { |n| n == local_admin_address }
 end
 
 if node[:platform_family] == "windows"
@@ -73,7 +78,10 @@ else
     source "ntp.conf.erb"
     variables(ntp_servers: ntp_servers,
               admin_interface: local_admin_address,
+              admin_subnet: admin_net.subnet,
+              admin_netmask: admin_net.netmask,
               is_server: is_server,
+              listen_interfaces: listen_network_addresses || [],
               fudgevalue: 10,
               driftfile: driftfile)
     notifies :restart, "service[ntp]"

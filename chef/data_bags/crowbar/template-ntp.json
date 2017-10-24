@@ -3,14 +3,15 @@
   "description": "Common NTP service for the cluster. An NTP server or servers can be specified and all other nodes will be clients of them.",
   "attributes": {
     "ntp": {
-      "external_servers": [ ]
+      "external_servers": [ ],
+      "server_listen_on_networks": [ ]
     }
   },
   "deployment": {
     "ntp": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 1,
+      "schema-revision": 100,
       "element_states": {
         "ntp-server": [ "readying", "ready", "applying" ],
         "ntp-client": [ "readying", "ready", "applying" ]
