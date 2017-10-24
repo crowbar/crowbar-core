@@ -74,6 +74,16 @@ class NtpService < ServiceObject
   def apply_role_pre_chef_call(old_role, role, all_nodes)
     Rails.logger.debug("NTP apply_role_pre_chef_call: entering #{all_nodes.inspect}")
 
+    net_svc = NetworkService.new @logger
+    listen_networks = role.default_attributes["ntp"]["server_listen_on_networks"] || []
+    server_nodes_names = role.override_attributes["ntp"]["elements"]["ntp-server"]
+    server_nodes = server_nodes_names.map { |n| Node.find_by_name(n) }
+    server_nodes.each do |node|
+      listen_networks.each do |network|
+        net_svc.allocate_ip "default", network, "host", node.name
+      end
+    end
+
     save_config_to_databag(old_role, role)
 
     Rails.logger.debug("NTP apply_role_pre_chef_call: leaving")

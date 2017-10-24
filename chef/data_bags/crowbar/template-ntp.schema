@@ -16,6 +16,11 @@
               "type": "seq",
               "required": true,
               "sequence": [ { "type": "str" } ]
+            },
+            "server_listen_on_networks": {
+              "type": "seq",
+              "required": false,
+              "sequence": [ { "type": "str" } ]
             }
           }
         }
