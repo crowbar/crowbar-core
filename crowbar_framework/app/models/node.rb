@@ -483,7 +483,8 @@ class Node < ChefObject
 
     if @node[:block_device]
       @node[:block_device].find_all do |disk, data|
-        disk =~ /^([hsv]d|cciss|xvd)/ && data[:removable] == "0" && !(data[:vendor] == "cinder" && data[:model] =~ /^volume-/)
+        disk =~ /^([hsv]d|cciss|xvd|nvme)/ && data[:removable] == "0"\
+          && !(data[:vendor] == "cinder" && data[:model] =~ /^volume-/)
       end
     else
       []
