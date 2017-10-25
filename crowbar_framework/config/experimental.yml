@@ -21,6 +21,8 @@ default: &default
      - suse-manager-client
      - swift-storage
      - updater
+  skip_unchanged_nodes:
+    enabled: false
 
 development:
   <<: *default
