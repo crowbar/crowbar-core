@@ -41,7 +41,7 @@ if File.exists? "/sys/firmware/efi"
 
     boot_entry = result[:entries][result[:boot][:current]]
 
-    if boot_entry[:device] =~ /[\/)]MAC\(/i
+    if !boot_entry.nil? && boot_entry[:device] =~ /[\/)]MAC\(/i
       mac = boot_entry[:device].match(/[\/)]MAC\(([0-9a-f]+)/i)[1]
 
       result[:boot][:last_mac] = [].tap do |tmp|
