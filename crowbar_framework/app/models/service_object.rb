@@ -1788,8 +1788,8 @@ class ServiceObject
 
   def skip_unchanged_nodes(elements, old_role, role)
     cleaned_elements = {}
-    elements.each do |r|
-      cleaned_elements[r] ||= {}
+    elements.each_key do |r|
+      cleaned_elements[r] ||= []
       elements[r].each do |node_name|
         cleaned_elements[r] << node_name unless skip_unchanged_node?(node_name, old_role, role)
       end
