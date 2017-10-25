@@ -541,7 +541,7 @@ module NodesHelper
 
   def node_link_list(node)
     link_list = [].tap do |result|
-      if node.bmc_set?
+      if node.bmc_configured?
         path = node["crowbar_wall"]["ipmi"]["address"] rescue "none"
 
         result.push content_tag(

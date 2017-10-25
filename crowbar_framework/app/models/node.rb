@@ -1148,11 +1148,9 @@ class Node < ChefObject
     bmc_cmd("chassis identify")
   end
 
-  def bmc_set?
-    return false if @node.nil? or @node["crowbar_wall"].nil? or @node["crowbar_wall"]["status"].nil?
-    return false if @node["crowbar_wall"]["status"]["ipmi"].nil?
-    return false if @node["crowbar_wall"]["status"]["ipmi"]["address_set"].nil?
-    @node["crowbar_wall"]["status"]["ipmi"]["address_set"]
+  def bmc_configured?
+    return false if @node.nil? || @node["crowbar_wall"].nil? || @node["crowbar_wall"]["ipmi"].nil?
+    !@node["crowbar_wall"]["ipmi"]["address"].nil?
   end
 
   def disk_owner(device)
