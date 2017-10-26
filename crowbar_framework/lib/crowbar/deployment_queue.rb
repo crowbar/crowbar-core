@@ -285,7 +285,7 @@ module Crowbar
         nodes_map.each do |node_name, data|
           node = NodeObject.find_node_by_name(node_name)
           # TODO(itxaka): Maybe we can optimize this to use the node cache safely?
-          node = Node.find_by_name(node_name)
+          node = NodeObject.find_by_name(node_name)
           next if node.nil?
           unless node.crowbar["crowbar"]["pending"].nil? or node.crowbar["crowbar"]["pending"]["#{bc}-#{inst}"].nil?
             node.crowbar["crowbar"]["pending"]["#{bc}-#{inst}"] = {}
@@ -313,7 +313,7 @@ module Crowbar
 
         # Add the role to node's list
         nodes.each do |node_name|
-          pre_cached_nodes[node_name] ||= Node.find_by_name(node_name)
+          pre_cached_nodes[node_name] ||= NodeObject.find_node_by_name(node_name)
           if pre_cached_nodes[node_name].nil?
             logger.debug "elements_to_nodes_to_roles_map: skipping deleted node #{node_name}"
             next
@@ -379,7 +379,7 @@ module Crowbar
       # Check to see if we should delay our commit until nodes are ready.
       delay = []
       nodes.each do |n|
-        pre_cached_nodes[n] ||= Node.find_by_name(n)
+        pre_cached_nodes[n] ||= NodeObject.find_by_name(n)
         node = pre_cached_nodes[n]
         next if node.nil?
         # allow commiting proposal for nodes in the crowbar_upgrade state
