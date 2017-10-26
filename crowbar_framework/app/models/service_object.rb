@@ -981,35 +981,28 @@ class ServiceObject
       end
     end
 
-    # When bootstrapping, we don't run chef, so there's no need for queuing
-    if bootstrap
-      pre_cached_nodes = {}
-      # do not try to process the queue in any case
-      in_queue = true
+    # Attempt to queue the proposal.  If delay is empty, then run it.
+    deps = proposal_dependencies(role)
+    if skip_unready_nodes_enabled
+      elements_without_unready, pre_cached_nodes = skip_unready_nodes(
+        @bc_name, inst, new_elements, old_elements
+      )
+      delay, pre_cached_nodes = queue_proposal(
+        inst, element_order, elements_without_unready, deps, @bc_name, pre_cached_nodes
+      )
     else
-      # Attempt to queue the proposal.  If delay is empty, then run it.
-      deps = proposal_dependencies(role)
-      if skip_unready_nodes_enabled
-        elements_without_unready, pre_cached_nodes = skip_unready_nodes(
-          @bc_name, inst, new_elements, old_elements
-        )
-        delay, pre_cached_nodes = queue_proposal(
-          inst, element_order, elements_without_unready, deps, @bc_name, pre_cached_nodes
-        )
-      else
-        delay, pre_cached_nodes = queue_proposal(inst, element_order, new_elements, deps)
-      end
-
-      unless delay.empty?
-        # force not processing the queue further
-        in_queue = true
-        # FIXME: this breaks the convention that we return a string; but really,
-        # we should return a hash everywhere, to avoid this...
-        return [202, delay]
-      end
-
-      Rails.logger.debug "delay empty - running proposal"
+      delay, pre_cached_nodes = queue_proposal(inst, element_order, new_elements, deps)
     end
+
+    unless delay.empty?
+      # force not processing the queue further
+      in_queue = true
+      # FIXME: this breaks the convention that we return a string; but really,
+      # we should return a hash everywhere, to avoid this...
+      return [202, delay]
+    end
+
+    Rails.logger.debug "delay empty - running proposal"
 
     new_elements, failures, msg = expand_items_in_elements(new_deployment["elements"])
     unless failures.nil?
@@ -1725,7 +1718,7 @@ class ServiceObject
       # periodic chef run
       shared_elements = new_elements[role] & old_elements[role]
       shared_elements.each do |n|
-        pre_cached_nodes[n] ||= Node.find_by_name(n)
+        pre_cached_nodes[n] ||= NodeObject.find_node_by_name(n)
         node = pre_cached_nodes[n]
         next if node.nil?
         # skip if nodes are on ready or crowbar_upgrade state, we dont need to do anything
