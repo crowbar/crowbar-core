@@ -9,6 +9,9 @@ env: SKIP_CHECKS=yes
 
 matrix:
   include:
+    - gemfile: Gemfile
+      script:
+      - bundle exec danger
     - gemfile: crowbar_framework/Gemfile
       script:
        - cd crowbar_framework
