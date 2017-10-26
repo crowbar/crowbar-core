@@ -1,11 +1,11 @@
-- if @node.bmc_set?
+- if @node.bmc_configured?
   = link_to t(".identify"),
     hit_nodes_path(@node.handle, "identify"),
     class: "btn btn-default",
     data: { blockui_click: t(".blockui_identify") }
 
 - unless @node.admin?
-  - if @node[:platform_family] != 'windows' || @node.bmc_set?
+  - if @node[:platform_family] != 'windows' || @node.bmc_configured?
     %button.btn.btn-default.dropdown-toggle{ type: "button", data: { toggle: "dropdown" } }
       = t(".actions")
       %span.caret
@@ -23,13 +23,13 @@
             role: "menuitem",
             data: { blockui_click: t(".blockui_shutdown"), confirm: t("are_you_sure") }
         %li.divider{ role: "presentation" }
-      - if @node.bmc_set?
+      - if @node.bmc_configured?
         %li{ role: "presentation" }
           = link_to t(".poweron"),
             hit_nodes_path(@node.handle, "poweron"),
             role: "menuitem",
             data: { blockui_click: t(".blockui_poweron"), confirm: t("are_you_sure") }
-      - if @node[:platform_family] != 'windows' || @node.bmc_set?
+      - if @node[:platform_family] != 'windows' || @node.bmc_configured?
         %li{ role: "presentation" }
           = link_to t(".powercycle"),
             hit_nodes_path(@node.handle, "powercycle"),
