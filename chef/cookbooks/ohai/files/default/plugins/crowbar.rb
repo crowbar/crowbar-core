@@ -120,7 +120,7 @@ def get_supported_speeds(interface)
   speeds
 rescue StandardError => e
   puts "Failed to get ioctl for speed: #{e.message}"
-  speeds = ["1g", "0g"]
+  ["1g", "0g"]
 end
 
 def get_permanent_address(interface)
