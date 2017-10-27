@@ -22,12 +22,15 @@ require "ohai/log"
 
 provides "crowbar_ohai"
 
+MAX_ADDR_LEN = 32
+
 # From: "/usr/include/linux/sockios.h"
 SIOCETHTOOL = 0x8946
 
 # From: "/usr/include/linux/ethtool.h"
 ETHTOOL_GSET = 1
 ETHTOOL_GLINK = 10
+ETHTOOL_GPERMADDR = 0x20
 
 # From: "/usr/include/linux/ethtool.h"
 class EthtoolCmd < CStruct
@@ -84,6 +87,12 @@ end
 # #define SUPPORTED_56000baseSR4_Full  (1 << 29)
 # #define SUPPORTED_56000baseLR4_Full  (1 << 30)
 
+class EthtoolPermAddr < CStruct
+  uint32 :cmd
+  uint32 :size
+  uint64 :value
+end
+
 class EthtoolValue < CStruct
   uint32 :cmd
   uint32 :value
@@ -114,6 +123,27 @@ def get_supported_speeds(interface)
     puts "Failed to get ioctl for speed: #{e.message}"
     speeds = ["1g", "0g"]
   end
+end
+
+def get_permanent_address(interface)
+  ecmd = EthtoolPermAddr.new
+  ecmd.cmd = ETHTOOL_GPERMADDR
+  ecmd.size = MAX_ADDR_LEN
+
+  ifreq = [interface, ecmd.data].pack("a16p")
+  sock = Socket.new(Socket::AF_INET, Socket::SOCK_DGRAM, 0)
+  sock.ioctl(SIOCETHTOOL, ifreq)
+
+  rv = ecmd.class.new
+  rv.data = ifreq.unpack("a16p")[1]
+
+  # unpack the uint64 we get to bytes, and then only take the size as
+  # specified in the reply, to build the MAC address
+  mac_bytes = [rv.value].pack("Q").each_byte.map { |b| b.to_s(16) }
+  mac_bytes.slice(0, rv.size).join(":")
+rescue StandardError => e
+  puts "Failed to get ioctl for permanent address: #{e.message}"
+  nil
 end
 
 #
@@ -185,7 +215,8 @@ Dir.foreach("/sys/class/net") do |entry|
   crowbar_ohai[:detected] = Mash.new unless crowbar_ohai[:detected]
   crowbar_ohai[:detected][:network] = Mash.new unless crowbar_ohai[:detected][:network]
   speeds = get_supported_speeds(entry)
-  crowbar_ohai[:detected][:network][entry] = { path: spath, speeds: speeds }
+  permanent_addr = get_permanent_address(entry)
+  crowbar_ohai[:detected][:network][entry] = { path: spath, speeds: speeds, addr: permanent_addr }
 
   logical_name = entry
   networks << logical_name
