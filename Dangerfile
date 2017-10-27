@@ -1,5 +1,5 @@
 # Check basic commit message formatting
-commit_lint.check warn: :all
+commit_lint.check warn: :all, disable: [:subject_cap]
 
 # Ensure a clean commit history
 if git.commits.any? { |c| c.message =~ /^Merge branch/ }
