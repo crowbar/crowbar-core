@@ -28,8 +28,8 @@ MAX_ADDR_LEN = 32
 SIOCETHTOOL = 0x8946
 
 # From: "/usr/include/linux/ethtool.h"
-ETHTOOL_GSET = 1
-ETHTOOL_GLINK = 10
+ETHTOOL_GSET = 0x01
+ETHTOOL_GLINK = 0x0a
 ETHTOOL_GPERMADDR = 0x20
 
 # From: "/usr/include/linux/ethtool.h"
