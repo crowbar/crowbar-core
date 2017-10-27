@@ -44,6 +44,9 @@ def find_node_boot_mac_addresses(node, admin_data_net)
       next if addr_data["family"] != "lladdr"
       result << addr unless result.include? addr
     end
+    # add permanent hardware addresses, that may be hidden for slave interfaces of a bond
+    permanent_addr = node["crowbar_ohai"]["detected"]["network"][interface]["addr"] rescue nil
+    result << permanent_addr unless permanent_addr.nil? || result.include?(permanent_addr)
   end
   result
 end
@@ -88,8 +91,15 @@ node_search_with_cache("*:*").each do |mnode|
         end
       end
     end
-    mac_list.sort!
   end
+  # add permanent hardware addresses, that may be hidden for slave interfaces of a bond
+  unless mnode.fetch("crowbar_ohai", {}).fetch("detected", {}).fetch("network", nil).nil?
+    mnode["crowbar_ohai"]["detected"]["network"].each_value do |net_data|
+      permanent_addr = net_data["addr"]
+      mac_list << permanent_addr unless permanent_addr.nil? || mac_list.include?(permanent_addr)
+    end
+  end
+  mac_list.sort!
   if mac_list.empty?
     Chef::Log.warn("#{mnode[:fqdn]}: no MAC address found; DHCP will not work for that node!")
   end
