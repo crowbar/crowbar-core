@@ -99,30 +99,28 @@ class EthtoolValue < CStruct
 end
 
 def get_supported_speeds(interface)
-  begin
-    ecmd = EthtoolCmd.new
-    ecmd.cmd = ETHTOOL_GSET
+  ecmd = EthtoolCmd.new
+  ecmd.cmd = ETHTOOL_GSET
 
-    ifreq = [interface, ecmd.data].pack("a16p")
-    sock = Socket.new(Socket::AF_INET, Socket::SOCK_DGRAM, 0)
-    sock.ioctl(SIOCETHTOOL, ifreq)
+  ifreq = [interface, ecmd.data].pack("a16p")
+  sock = Socket.new(Socket::AF_INET, Socket::SOCK_DGRAM, 0)
+  sock.ioctl(SIOCETHTOOL, ifreq)
 
-    rv = ecmd.class.new
-    rv.data = ifreq.unpack("a16p")[1]
+  rv = ecmd.class.new
+  rv.data = ifreq.unpack("a16p")[1]
 
-    speeds = []
-    speeds << "10m"  if (rv.supported & ((1 <<  0) | (1 <<  1))) != 0
-    speeds << "100m" if (rv.supported & ((1 <<  2) | (1 <<  3))) != 0
-    speeds << "1g"   if (rv.supported & ((1 <<  4) | (1 <<  5) | (1 << 17))) != 0
-    speeds << "10g"  if (rv.supported & ((1 << 12) | (1 << 18) | (1 << 19) | (1 << 20))) != 0
-    speeds << "20g"  if (rv.supported & ((1 << 21) | (1 << 22))) != 0
-    speeds << "40g"  if (rv.supported & ((1 << 23) | (1 << 24) | (1 << 25) | (1 << 26))) != 0
-    speeds << "56g"  if (rv.supported & ((1 << 27) | (1 << 28) | (1 << 29) | (1 << 30))) != 0
-    speeds
-  rescue Exception => e
-    puts "Failed to get ioctl for speed: #{e.message}"
-    speeds = ["1g", "0g"]
-  end
+  speeds = []
+  speeds << "10m"  if (rv.supported & ((1 <<  0) | (1 <<  1))) != 0
+  speeds << "100m" if (rv.supported & ((1 <<  2) | (1 <<  3))) != 0
+  speeds << "1g"   if (rv.supported & ((1 <<  4) | (1 <<  5) | (1 << 17))) != 0
+  speeds << "10g"  if (rv.supported & ((1 << 12) | (1 << 18) | (1 << 19) | (1 << 20))) != 0
+  speeds << "20g"  if (rv.supported & ((1 << 21) | (1 << 22))) != 0
+  speeds << "40g"  if (rv.supported & ((1 << 23) | (1 << 24) | (1 << 25) | (1 << 26))) != 0
+  speeds << "56g"  if (rv.supported & ((1 << 27) | (1 << 28) | (1 << 29) | (1 << 30))) != 0
+  speeds
+rescue StandardError => e
+  puts "Failed to get ioctl for speed: #{e.message}"
+  speeds = ["1g", "0g"]
 end
 
 def get_permanent_address(interface)
@@ -151,22 +149,20 @@ end
 # false for down
 #
 def get_link_status(interface)
-  begin
-    ecmd = EthtoolValue.new
-    ecmd.cmd = ETHTOOL_GLINK
+  ecmd = EthtoolValue.new
+  ecmd.cmd = ETHTOOL_GLINK
 
-    ifreq = [interface, ecmd.data].pack("a16p")
-    sock = Socket.new(Socket::AF_INET, Socket::SOCK_DGRAM, 0)
-    sock.ioctl(SIOCETHTOOL, ifreq)
+  ifreq = [interface, ecmd.data].pack("a16p")
+  sock = Socket.new(Socket::AF_INET, Socket::SOCK_DGRAM, 0)
+  sock.ioctl(SIOCETHTOOL, ifreq)
 
-    rv = ecmd.class.new
-    rv.data = ifreq.unpack("a16p")[1]
+  rv = ecmd.class.new
+  rv.data = ifreq.unpack("a16p")[1]
 
-    rv.value != 0
-  rescue Exception => e
-    puts "Failed to get ioctl for link status: #{e.message}"
-    false
-  end
+  rv.value != 0
+rescue StandardError => e
+  puts "Failed to get ioctl for link status: #{e.message}"
+  false
 end
 
 crowbar_ohai Mash.new
