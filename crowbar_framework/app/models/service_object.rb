@@ -1096,6 +1096,10 @@ class ServiceObject
     proposal = Proposal.where(barclamp: @bc_name, name: inst).first
     save_proposal = false
 
+    # recreate new_elements with all elements, in case some of the nodes
+    # were hit by the filtering of unready/unchanged nodes,
+    # as we need the full old/new deployment list to compare the role changes
+    new_elements_unfiltered, = expand_items_in_elements(new_deployment["elements"])
     # element_order is an Array where each item represents a batch of roles and
     # the batches must be applied sequentially in this order.
     element_order.each do |roles|
@@ -1114,7 +1118,7 @@ class ServiceObject
         next if role_name =~ /_remove$/
 
         old_nodes = old_elements[role_name] || []
-        new_nodes = new_elements[role_name] || []
+        new_nodes = new_elements_unfiltered[role_name] || []
 
         Rails.logger.debug "Preparing role #{role_name} for batch:"
         Rails.logger.debug "  Nodes in old applied proposal for role: #{old_nodes.inspect}"
@@ -1170,6 +1174,16 @@ class ServiceObject
         # If new_nodes is empty, we are just removing the proposal.
         unless new_nodes.empty?
           new_nodes.each do |node_name|
+            # skip adding nodes to the batch unless they are really in the list to be deployed
+            # do it before the Node load to avoid doing the call if the node is not there,
+            # as we dont want to spend cycles doing extra calls not needed
+            # This also means we can't ensure that the node has all required roles
+            # through the use of pending_node_actions
+            # It's a reasonable trade-off in the context of this specific optimization,
+            # as the nodes should already have all roles, unless the customer removes roles
+            # manually or the roles disappear from the node magically (bugs)
+            next unless new_elements[role_name].include?(node_name)
+
             pre_cached_nodes[node_name] ||= Node.find_by_name(node_name)
 
             # Don't add deleted nodes to the run order
