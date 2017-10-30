@@ -26,10 +26,9 @@ module Crowbar
     # Receives proposal info (name, barclamp), list of nodes (elements), on which the proposal
     # should be applied, and list of dependencies - a list of {barclamp, name/inst} hashes.
     # It adds them to the queue, if possible.
-    def queue_proposal(bc, inst, elements, element_order, deps)
+    def queue_proposal(bc, inst, elements, element_order, deps, pre_cached_nodes)
       logger.debug("queue proposal: enter for #{bc}:#{inst}")
       delay = []
-      pre_cached_nodes = {}
       begin
         lock = acquire_lock("queue")
 
@@ -41,7 +40,9 @@ module Crowbar
 
         # Delay is a list of nodes that are not in ready state. pre_cached_nodes
         # is an uninteresting optimization.
-        delay, pre_cached_nodes = add_pending_elements(bc, inst, element_order, elements, queue_me)
+        delay, pre_cached_nodes = add_pending_elements(
+          bc, inst, element_order, elements, queue_me, pre_cached_nodes
+        )
 
         # We have all nodes ready.
         if delay.empty?
@@ -146,11 +147,11 @@ module Crowbar
 
             next unless dependencies_satisfied?(item.properties["deps"])
 
-            nodes_map = elements_to_nodes_to_roles_map(
+            nodes_map, pre_cached_nodes = elements_to_nodes_to_roles_map(
               prop["deployment"][item.barclamp]["elements"],
               prop["deployment"][item.barclamp]["element_order"]
             )
-            delay, pre_cached_nodes = elements_not_ready(nodes_map.keys)
+            delay, = elements_not_ready(nodes_map.keys, pre_cached_nodes)
             proposal_to_commit = { barclamp: item.barclamp, inst: item.name } if delay.empty?
           end
 
@@ -277,11 +278,12 @@ module Crowbar
     # should be emptied.  FIXME: looks like bc-inst: value should be a list, not
     # a hash?
     def remove_pending_elements(bc, inst, elements)
-      nodes_map = elements_to_nodes_to_roles_map(elements)
+      nodes_map, = elements_to_nodes_to_roles_map(elements)
 
       # Remove the entries from the nodes.
       new_lock("BA-LOCK").with_lock do
         nodes_map.each do |node_name, data|
+          # TODO(itxaka): Maybe we can optimize this to use the node cache safely?
           node = NodeObject.find_node_by_name(node_name)
           next if node.nil?
           unless node.crowbar["crowbar"]["pending"].nil? or node.crowbar["crowbar"]["pending"]["#{bc}-#{inst}"].nil?
@@ -295,7 +297,7 @@ module Crowbar
     # Create map with nodes and their element list
     # Transform ( {role => [nodes], role1 => [nodes]} hash to { node => [roles], node1 => [roles]},
     # accounting for clusters
-    def elements_to_nodes_to_roles_map(elements, element_order = [])
+    def elements_to_nodes_to_roles_map(elements, element_order = [], pre_cached_nodes = {})
       nodes_map = {}
       active_elements = element_order.flatten
 
@@ -310,7 +312,8 @@ module Crowbar
 
         # Add the role to node's list
         nodes.each do |node_name|
-          if NodeObject.find_node_by_name(node_name).nil?
+          pre_cached_nodes[node_name] ||= NodeObject.find_node_by_name(node_name)
+          if pre_cached_nodes[node_name].nil?
             logger.debug "elements_to_nodes_to_roles_map: skipping deleted node #{node_name}"
             next
           end
@@ -319,12 +322,14 @@ module Crowbar
         end
       end
 
-      nodes_map
+      [nodes_map, pre_cached_nodes]
     end
 
     # Get a hash of {node => [roles], node1 => [roles]}
     def add_pending_elements(bc, inst, element_order, elements, queue_me, pre_cached_nodes = {})
-      nodes_map = elements_to_nodes_to_roles_map(elements, element_order)
+      nodes_map, pre_cached_nodes = elements_to_nodes_to_roles_map(
+        elements, element_order, pre_cached_nodes
+      )
 
       # We need to be sure that we're the only ones modifying the node records at this point.
       # This will work for preventing changes from rails app, but not necessarily chef.
@@ -333,7 +338,6 @@ module Crowbar
 
       # Delay is the list of nodes that are not ready and are needed for this deploy to run
       delay = []
-      pre_cached_nodes = {}
       begin
         # Check for delays and build up cache
         # FIXME: why?
@@ -374,10 +378,9 @@ module Crowbar
       # Check to see if we should delay our commit until nodes are ready.
       delay = []
       nodes.each do |n|
-        node = NodeObject.find_node_by_name(n)
+        pre_cached_nodes[n] ||= NodeObject.find_node_by_name(n)
+        node = pre_cached_nodes[n]
         next if node.nil?
-
-        pre_cached_nodes[n] = node
         # allow commiting proposal for nodes in the crowbar_upgrade state
         state = node.crowbar["state"]
         delay << n if (state != "ready" && state != "crowbar_upgrade") && !delay.include?(n)

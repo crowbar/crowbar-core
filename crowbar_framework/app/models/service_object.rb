@@ -254,8 +254,10 @@ class ServiceObject
 #   process_queue - see what we can execute
 #
 
-  def queue_proposal(inst, element_order, elements, deps, bc = @bc_name)
-    Crowbar::DeploymentQueue.new(logger: @logger).queue_proposal(bc, inst, elements, element_order, deps)
+  def queue_proposal(inst, element_order, elements, deps, bc = @bc_name, pre_cached_nodes = {})
+    Crowbar::DeploymentQueue.new(logger: Rails.logger).queue_proposal(
+      bc, inst, elements, element_order, deps, pre_cached_nodes
+    )
   end
 
   def dequeue_proposal(inst, bc = @bc_name)
@@ -935,6 +937,11 @@ class ServiceObject
     # Cache some node attributes to avoid useless node reloads
     node_attr_cache = {}
 
+    # experimental option
+    skip_unready_nodes_enabled = Rails.application.config.experimental.fetch(
+      "skip_unready_nodes", {}
+    ).fetch("enabled", false)
+
     # Part I: Looking up data & checks
     #
     # we look up the role in the database (if there is one), the new one is
@@ -960,45 +967,6 @@ class ServiceObject
     new_elements = new_deployment["elements"]
     element_order = new_deployment["element_order"]
 
-    #
-    # Attempt to queue the proposal.  If delay is empty, then run it.
-    #
-    deps = proposal_dependencies(role)
-    delay, pre_cached_nodes = queue_proposal(inst, element_order, new_elements, deps)
-    unless delay.empty?
-      # force not processing the queue further
-      in_queue = true
-      # FIXME: this breaks the convention that we return a string; but really,
-      # we should return a hash everywhere, to avoid this...
-      return [202, delay]
-    end
-
-    @logger.debug "delay empty - running proposal"
-
-    # expand items in elements that are not nodes
-    expanded_new_elements = {}
-    new_deployment["elements"].each do |role_name, nodes|
-      expanded_new_elements[role_name], failures = expand_nodes_for_all(nodes)
-      unless failures.nil? || failures.empty?
-        @logger.fatal("apply_role: Failed to expand items #{failures.inspect} for role \"#{role_name}\"")
-        message = "Failed to apply the proposal: cannot expand list of nodes for role \"#{role_name}\", following items do not exist: #{failures.join(", ")}"
-        update_proposal_status(inst, "failed", message)
-        return [405, message]
-      end
-    end
-    new_elements = expanded_new_elements
-
-    # save list of expanded elements, as this is needed when we look at the old
-    # role. See below the comments for old_elements.
-    if new_elements != new_deployment["elements"]
-      new_deployment["elements_expanded"] = new_elements
-    else
-      new_deployment.delete("elements_expanded")
-    end
-
-    # make sure the role is saved
-    role.save
-
     # Build a list of old elements.
     # elements_expanded on the old role is guaranteed to exists, as we already
     # ran through apply_role with the old_role.  Cache is used for the case
@@ -1012,6 +980,60 @@ class ServiceObject
         old_elements = old_deployment["elements"]
       end
     end
+
+    # Attempt to queue the proposal.  If delay is empty, then run it.
+    deps = proposal_dependencies(role)
+    if skip_unready_nodes_enabled
+      elements_without_unready, pre_cached_nodes = skip_unready_nodes(
+        @bc_name, inst, new_elements, old_elements
+      )
+      delay, pre_cached_nodes = queue_proposal(
+        inst, element_order, elements_without_unready, deps, @bc_name, pre_cached_nodes
+      )
+    else
+      delay, pre_cached_nodes = queue_proposal(inst, element_order, new_elements, deps)
+    end
+
+    unless delay.empty?
+      # force not processing the queue further
+      in_queue = true
+      # FIXME: this breaks the convention that we return a string; but really,
+      # we should return a hash everywhere, to avoid this...
+      return [202, delay]
+    end
+
+    Rails.logger.debug "delay empty - running proposal"
+
+    new_elements, failures, msg = expand_items_in_elements(new_deployment["elements"])
+    unless failures.nil?
+      Rails.logger.progress("apply_role: Failed to apply role #{role.name}")
+      update_proposal_status(inst, "failed", msg)
+      return [405, msg]
+    end
+
+    # save list of expanded elements, as this is needed when we look at the old
+    # role. See below the comments for old_elements.
+    if new_elements != new_deployment["elements"]
+      new_deployment["elements_expanded"] = new_elements
+    else
+      new_deployment.delete("elements_expanded")
+    end
+
+    # make sure the role is saved
+    role.save
+
+    if skip_unready_nodes_enabled
+      # if we have removed nodes from the list, make sure to expand them and overwrite the
+      # new_elements var so we dont try to run chef-client on those not-ready nodes
+      new_elements, failures, msg = expand_items_in_elements(elements_without_unready)
+      unless failures.nil?
+        Rails.logger.progress("apply_role: Failed to apply role #{role.name}")
+        update_proposal_status(inst, "failed", msg)
+        return [405, msg]
+      end
+    end
+
+    # use the same order as in the old deployment if the element order is not filled yet
     element_order = old_deployment["element_order"] if (!old_deployment.nil? and element_order.nil?)
 
     @logger.debug "old_deployment #{old_deployment.pretty_inspect}"
@@ -1456,6 +1478,22 @@ class ServiceObject
     []
   end
 
+  def expand_items_in_elements(elements)
+    # expand items in elements that are not nodes
+    expanded_new_elements = {}
+    elements.each do |role_name, nodes|
+      expanded_new_elements[role_name], failures = expand_nodes_for_all(nodes)
+      next if failures.nil? || failures.empty?
+      Rails.logger.fatal(
+        "apply_role: Failed to expand items #{failures.inspect} for role \"#{role_name}\""
+      )
+      msg = "Failed to apply the proposal: cannot expand list of nodes " \
+        "for role \"#{role_name}\", following items do not exist: #{failures.join(", ")}"
+      return [nil, failures, msg]
+    end
+    [expanded_new_elements, nil, nil]
+  end
+
   def add_role_to_instance_and_node(barclamp, instance, name, prop, role, newrole)
     node = NodeObject.find_node_by_name name
     if node.nil?
@@ -1665,5 +1703,35 @@ class ServiceObject
 
   def only_unless_admin(node)
     yield unless node.admin?
+  end
+
+  def skip_unready_nodes(bc, inst, new_elements, old_elements)
+    logger.debug("skip_unready_nodes: enter for #{bc}:#{inst}")
+    skip_unready_nodes_roles = Rails.application.config.experimental.fetch(
+      "skip_unready_nodes", {}
+    ).fetch("roles", [])
+    pre_cached_nodes = {}
+    cleaned_elements = new_elements.deep_dup
+    skip_unready_nodes_roles.each do |role|
+      # only do something if we have the same role on both old and new
+      next unless new_elements.key?(role) && old_elements.key?(role)
+      # we only can skip nodes that are on both old and new, as we know that those old nodes had
+      # the roles applied and will eventually become consistent with the deployment due to the
+      # periodic chef run
+      shared_elements = new_elements[role] & old_elements[role]
+      shared_elements.each do |n|
+        pre_cached_nodes[n] ||= NodeObject.find_node_by_name(n)
+        node = pre_cached_nodes[n]
+        next if node.nil?
+        # skip if nodes are on ready or crowbar_upgrade state, we dont need to do anything
+        next if ["ready", "crowbar_upgrade"].include?(node.crowbar["state"])
+        logger.warn(
+          "Node #{n} is skipped until next chef run for #{bc}:#{inst} with role #{role}"
+        )
+        cleaned_elements[role].delete(n)
+      end
+    end
+    logger.debug("skip_unready_nodes: exit for #{bc}:#{inst}")
+    [cleaned_elements, pre_cached_nodes]
   end
 end
