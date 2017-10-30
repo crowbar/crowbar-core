@@ -1,0 +1,4020 @@
+[33mcommit 0508664ffe28d443935c3f5ff0c487dcec183cc2[m[33m ([m[1;36mHEAD -> [m[1;32mskip_unready_nodes_deployment_backport_3[m[33m, [m[1;31morigin/skip_unready_nodes_deployment_backport_3[m[33m)[m
+Author: Ivan Lausuch <ilausuch@suse.com>
+Date:   Thu Oct 26 23:31:28 2017 +0200
+
+    crowbar: backport of deployment queue
+    
+    Fix deployment queue to use NodeObject instead Node and find_node_by_name instead of find_by_name
+
+[1mdiff --git a/crowbar_framework/lib/crowbar/deployment_queue.rb b/crowbar_framework/lib/crowbar/deployment_queue.rb[m
+[1mindex 864316ea..13fa3c96 100644[m
+[1m--- a/crowbar_framework/lib/crowbar/deployment_queue.rb[m
+[1m+++ b/crowbar_framework/lib/crowbar/deployment_queue.rb[m
+[36m@@ -283,9 +283,8 @@[m [mmodule Crowbar[m
+       # Remove the entries from the nodes.[m
+       new_lock("BA-LOCK").with_lock do[m
+         nodes_map.each do |node_name, data|[m
+[31m-          node = NodeObject.find_node_by_name(node_name)[m
+           # TODO(itxaka): Maybe we can optimize this to use the node cache safely?[m
+[31m-          node = NodeObject.find_by_name(node_name)[m
+[32m+[m[32m          node = NodeObject.find_node_by_name(node_name)[m
+           next if node.nil?[m
+           unless node.crowbar["crowbar"]["pending"].nil? or node.crowbar["crowbar"]["pending"]["#{bc}-#{inst}"].nil?[m
+             node.crowbar["crowbar"]["pending"]["#{bc}-#{inst}"] = {}[m
+[36m@@ -379,7 +378,7 @@[m [mmodule Crowbar[m
+       # Check to see if we should delay our commit until nodes are ready.[m
+       delay = [][m
+       nodes.each do |n|[m
+[31m-        pre_cached_nodes[n] ||= NodeObject.find_by_name(n)[m
+[32m+[m[32m        pre_cached_nodes[n] ||= NodeObject.find_node_by_name(n)[m
+         node = pre_cached_nodes[n][m
+         next if node.nil?[m
+         # allow commiting proposal for nodes in the crowbar_upgrade state[m
+
+[33mcommit e442f5ca250cc2d7f75705cea4c41d1a52e2ab89[m
+Author: Ivan Lausuch <ilausuch@suse.com>
+Date:   Thu Oct 26 15:40:31 2017 +0200
+
+    crowbar: backport of ServiceObject
+    
+    Fix ServiceObject to set NodeObject instead Node and
+    remove bootstrap check that no proceeds
+
+[1mdiff --git a/crowbar_framework/app/models/service_object.rb b/crowbar_framework/app/models/service_object.rb[m
+[1mindex 464dadd6..dd64dca3 100644[m
+[1m--- a/crowbar_framework/app/models/service_object.rb[m
+[1m+++ b/crowbar_framework/app/models/service_object.rb[m
+[36m@@ -981,36 +981,29 @@[m [mclass ServiceObject[m
+       end[m
+     end[m
+ [m
+[31m-    # When bootstrapping, we don't run chef, so there's no need for queuing[m
+[31m-    if bootstrap[m
+[31m-      pre_cached_nodes = {}[m
+[31m-      # do not try to process the queue in any case[m
+[31m-      in_queue = true[m
+[32m+[m[32m    # Attempt to queue the proposal.  If delay is empty, then run it.[m
+[32m+[m[32m    deps = proposal_dependencies(role)[m
+[32m+[m[32m    if skip_unready_nodes_enabled[m
+[32m+[m[32m      elements_without_unready, pre_cached_nodes = skip_unready_nodes([m
+[32m+[m[32m        @bc_name, inst, new_elements, old_elements[m
+[32m+[m[32m      )[m
+[32m+[m[32m      delay, pre_cached_nodes = queue_proposal([m
+[32m+[m[32m        inst, element_order, elements_without_unready, deps, @bc_name, pre_cached_nodes[m
+[32m+[m[32m      )[m
+     else[m
+[31m-      # Attempt to queue the proposal.  If delay is empty, then run it.[m
+[31m-      deps = proposal_dependencies(role)[m
+[31m-      if skip_unready_nodes_enabled[m
+[31m-        elements_without_unready, pre_cached_nodes = skip_unready_nodes([m
+[31m-          @bc_name, inst, new_elements, old_elements[m
+[31m-        )[m
+[31m-        delay, pre_cached_nodes = queue_proposal([m
+[31m-          inst, element_order, elements_without_unready, deps, @bc_name, pre_cached_nodes[m
+[31m-        )[m
+[31m-      else[m
+[31m-        delay, pre_cached_nodes = queue_proposal(inst, element_order, new_elements, deps)[m
+[31m-      end[m
+[31m-[m
+[31m-      unless delay.empty?[m
+[31m-        # force not processing the queue further[m
+[31m-        in_queue = true[m
+[31m-        # FIXME: this breaks the convention that we return a string; but really,[m
+[31m-        # we should return a hash everywhere, to avoid this...[m
+[31m-        return [202, delay][m
+[31m-      end[m
+[32m+[m[32m      delay, pre_cached_nodes = queue_proposal(inst, element_order, new_elements, deps)[m
+[32m+[m[32m    end[m
+ [m
+[31m-      Rails.logger.debug "delay empty - running proposal"[m
+[32m+[m[32m    unless delay.empty?[m
+[32m+[m[32m      # force not processing the queue further[m
+[32m+[m[32m      in_queue = true[m
+[32m+[m[32m      # FIXME: this breaks the convention that we return a string; but really,[m
+[32m+[m[32m      # we should return a hash everywhere, to avoid this...[m
+[32m+[m[32m      return [202, delay][m
+     end[m
+ [m
+[32m+[m[32m    Rails.logger.debug "delay empty - running proposal"[m
+[32m+[m
+     new_elements, failures, msg = expand_items_in_elements(new_deployment["elements"])[m
+     unless failures.nil?[m
+       Rails.logger.progress("apply_role: Failed to apply role #{role.name}")[m
+[36m@@ -1717,7 +1710,7 @@[m [mclass ServiceObject[m
+       # periodic chef run[m
+       shared_elements = new_elements[role] & old_elements[role][m
+       shared_elements.each do |n|[m
+[31m-        pre_cached_nodes[n] ||= Node.find_by_name(n)[m
+[32m+[m[32m        pre_cached_nodes[n] ||= NodeObject.find_node_by_name(n)[m
+         node = pre_cached_nodes[n][m
+         next if node.nil?[m
+         # skip if nodes are on ready or crowbar_upgrade state, we dont need to do anything[m
+
+[33mcommit 0757ffe24665f3205af48073baa262adb1eb6f0c[m
+Author: Ivan Lausuch <ilausuch@suse.com>
+Date:   Thu Oct 26 15:39:17 2017 +0200
+
+    crowbar: backport of deployment queue
+    
+    Fix deployment queue to use NodeObject instead Node
+
+[1mdiff --git a/crowbar_framework/lib/crowbar/deployment_queue.rb b/crowbar_framework/lib/crowbar/deployment_queue.rb[m
+[1mindex 08593d63..864316ea 100644[m
+[1m--- a/crowbar_framework/lib/crowbar/deployment_queue.rb[m
+[1m+++ b/crowbar_framework/lib/crowbar/deployment_queue.rb[m
+[36m@@ -285,7 +285,7 @@[m [mmodule Crowbar[m
+         nodes_map.each do |node_name, data|[m
+           node = NodeObject.find_node_by_name(node_name)[m
+           # TODO(itxaka): Maybe we can optimize this to use the node cache safely?[m
+[31m-          node = Node.find_by_name(node_name)[m
+[32m+[m[32m          node = NodeObject.find_by_name(node_name)[m
+           next if node.nil?[m
+           unless node.crowbar["crowbar"]["pending"].nil? or node.crowbar["crowbar"]["pending"]["#{bc}-#{inst}"].nil?[m
+             node.crowbar["crowbar"]["pending"]["#{bc}-#{inst}"] = {}[m
+[36m@@ -313,7 +313,7 @@[m [mmodule Crowbar[m
+ [m
+         # Add the role to node's list[m
+         nodes.each do |node_name|[m
+[31m-          pre_cached_nodes[node_name] ||= Node.find_by_name(node_name)[m
+[32m+[m[32m          pre_cached_nodes[node_name] ||= NodeObject.find_node_by_name(node_name)[m
+           if pre_cached_nodes[node_name].nil?[m
+             logger.debug "elements_to_nodes_to_roles_map: skipping deleted node #{node_name}"[m
+             next[m
+[36m@@ -379,7 +379,7 @@[m [mmodule Crowbar[m
+       # Check to see if we should delay our commit until nodes are ready.[m
+       delay = [][m
+       nodes.each do |n|[m
+[31m-        pre_cached_nodes[n] ||= Node.find_by_name(n)[m
+[32m+[m[32m        pre_cached_nodes[n] ||= NodeObject.find_by_name(n)[m
+         node = pre_cached_nodes[n][m
+         next if node.nil?[m
+         # allow commiting proposal for nodes in the crowbar_upgrade state[m
+
+[33mcommit e7c6638a5ad0a0b9cba0b024ed49ac3737bab5d3[m
+Author: Itxaka <igarcia@suse.com>
+Date:   Mon Oct 9 16:25:44 2017 +0200
+
+    crowbar: use pre_cached_nodes on the deployment queue
+    
+    We were not fully using the power of pre_cached_nodes on
+    deployment_queue.rb.
+    
+    This commit make sure that we are reusing pre_cached_nodes and passing
+    it around to avoid doing so many chef calls for no reason.
+    
+    (cherry picked from commit 08aba14df7f72c629210461d5ac2e6ba52edc1ba)
+
+[1mdiff --git a/crowbar_framework/lib/crowbar/deployment_queue.rb b/crowbar_framework/lib/crowbar/deployment_queue.rb[m
+[1mindex 66ade739..08593d63 100644[m
+[1m--- a/crowbar_framework/lib/crowbar/deployment_queue.rb[m
+[1m+++ b/crowbar_framework/lib/crowbar/deployment_queue.rb[m
+[36m@@ -147,11 +147,11 @@[m [mmodule Crowbar[m
+ [m
+             next unless dependencies_satisfied?(item.properties["deps"])[m
+ [m
+[31m-            nodes_map = elements_to_nodes_to_roles_map([m
+[32m+[m[32m            nodes_map, pre_cached_nodes = elements_to_nodes_to_roles_map([m
+               prop["deployment"][item.barclamp]["elements"],[m
+               prop["deployment"][item.barclamp]["element_order"][m
+             )[m
+[31m-            delay, pre_cached_nodes = elements_not_ready(nodes_map.keys)[m
+[32m+[m[32m            delay, = elements_not_ready(nodes_map.keys, pre_cached_nodes)[m
+             proposal_to_commit = { barclamp: item.barclamp, inst: item.name } if delay.empty?[m
+           end[m
+ [m
+[36m@@ -278,12 +278,14 @@[m [mmodule Crowbar[m
+     # should be emptied.  FIXME: looks like bc-inst: value should be a list, not[m
+     # a hash?[m
+     def remove_pending_elements(bc, inst, elements)[m
+[31m-      nodes_map = elements_to_nodes_to_roles_map(elements)[m
+[32m+[m[32m      nodes_map, = elements_to_nodes_to_roles_map(elements)[m
+ [m
+       # Remove the entries from the nodes.[m
+       new_lock("BA-LOCK").with_lock do[m
+         nodes_map.each do |node_name, data|[m
+           node = NodeObject.find_node_by_name(node_name)[m
+[32m+[m[32m          # TODO(itxaka): Maybe we can optimize this to use the node cache safely?[m
+[32m+[m[32m          node = Node.find_by_name(node_name)[m
+           next if node.nil?[m
+           unless node.crowbar["crowbar"]["pending"].nil? or node.crowbar["crowbar"]["pending"]["#{bc}-#{inst}"].nil?[m
+             node.crowbar["crowbar"]["pending"]["#{bc}-#{inst}"] = {}[m
+[36m@@ -296,7 +298,7 @@[m [mmodule Crowbar[m
+     # Create map with nodes and their element list[m
+     # Transform ( {role => [nodes], role1 => [nodes]} hash to { node => [roles], node1 => [roles]},[m
+     # accounting for clusters[m
+[31m-    def elements_to_nodes_to_roles_map(elements, element_order = [])[m
+[32m+[m[32m    def elements_to_nodes_to_roles_map(elements, element_order = [], pre_cached_nodes = {})[m
+       nodes_map = {}[m
+       active_elements = element_order.flatten[m
+ [m
+[36m@@ -311,7 +313,8 @@[m [mmodule Crowbar[m
+ [m
+         # Add the role to node's list[m
+         nodes.each do |node_name|[m
+[31m-          if NodeObject.find_node_by_name(node_name).nil?[m
+[32m+[m[32m          pre_cached_nodes[node_name] ||= Node.find_by_name(node_name)[m
+[32m+[m[32m          if pre_cached_nodes[node_name].nil?[m
+             logger.debug "elements_to_nodes_to_roles_map: skipping deleted node #{node_name}"[m
+             next[m
+           end[m
+[36m@@ -320,12 +323,14 @@[m [mmodule Crowbar[m
+         end[m
+       end[m
+ [m
+[31m-      nodes_map[m
+[32m+[m[32m      [nodes_map, pre_cached_nodes][m
+     end[m
+ [m
+     # Get a hash of {node => [roles], node1 => [roles]}[m
+     def add_pending_elements(bc, inst, element_order, elements, queue_me, pre_cached_nodes = {})[m
+[31m-      nodes_map = elements_to_nodes_to_roles_map(elements, element_order)[m
+[32m+[m[32m      nodes_map, pre_cached_nodes = elements_to_nodes_to_roles_map([m
+[32m+[m[32m        elements, element_order, pre_cached_nodes[m
+[32m+[m[32m      )[m
+ [m
+       # We need to be sure that we're the only ones modifying the node records at this point.[m
+       # This will work for preventing changes from rails app, but not necessarily chef.[m
+
+[33mcommit d1dea1d893ed7034ec12d88c8d3f87ed8b25ad1c[m
+Author: Itxaka <igarcia@suse.com>
+Date:   Wed Sep 27 16:30:57 2017 +0200
+
+    crowbar: remove unready nodes from deployment
+    
+    If we set the experimental skip_unready_nodes config to true and provide
+    a list of roles, we try to skip nodes that are not ready from the
+    deployment of the barclamp so we dont need all nodes to be ready to
+    deploy a barclamp.
+    
+    This is useful when dealing with a high number of nodes (i.e.
+    nova-compute) and we dont need all those other nodes to be ready to add
+    a new node to a role
+    
+    (cherry picked from commit e8a59469e7e1ccc252c376d2dce9a3c1d948ddfa)
+
+[1mdiff --git a/crowbar_framework/app/models/service_object.rb b/crowbar_framework/app/models/service_object.rb[m
+[1mindex ae357c94..464dadd6 100644[m
+[1m--- a/crowbar_framework/app/models/service_object.rb[m
+[1m+++ b/crowbar_framework/app/models/service_object.rb[m
+[36m@@ -254,8 +254,10 @@[m [mclass ServiceObject[m
+ #   process_queue - see what we can execute[m
+ #[m
+ [m
+[31m-  def queue_proposal(inst, element_order, elements, deps, bc = @bc_name)[m
+[31m-    Crowbar::DeploymentQueue.new(logger: @logger).queue_proposal(bc, inst, elements, element_order, deps)[m
+[32m+[m[32m  def queue_proposal(inst, element_order, elements, deps, bc = @bc_name, pre_cached_nodes = {})[m
+[32m+[m[32m    Crowbar::DeploymentQueue.new(logger: Rails.logger).queue_proposal([m
+[32m+[m[32m      bc, inst, elements, element_order, deps, pre_cached_nodes[m
+[32m+[m[32m    )[m
+   end[m
+ [m
+   def dequeue_proposal(inst, bc = @bc_name)[m
+[36m@@ -935,6 +937,11 @@[m [mclass ServiceObject[m
+     # Cache some node attributes to avoid useless node reloads[m
+     node_attr_cache = {}[m
+ [m
+[32m+[m[32m    # experimental option[m
+[32m+[m[32m    skip_unready_nodes_enabled = Rails.application.config.experimental.fetch([m
+[32m+[m[32m      "skip_unready_nodes", {}[m
+[32m+[m[32m    ).fetch("enabled", false)[m
+[32m+[m
+     # Part I: Looking up data & checks[m
+     #[m
+     # we look up the role in the database (if there is one), the new one is[m
+[36m@@ -960,33 +967,56 @@[m [mclass ServiceObject[m
+     new_elements = new_deployment["elements"][m
+     element_order = new_deployment["element_order"][m
+ [m
+[31m-    #[m
+[31m-    # Attempt to queue the proposal.  If delay is empty, then run it.[m
+[31m-    #[m
+[31m-    deps = proposal_dependencies(role)[m
+[31m-    delay, pre_cached_nodes = queue_proposal(inst, element_order, new_elements, deps)[m
+[31m-    unless delay.empty?[m
+[31m-      # force not processing the queue further[m
+[31m-      in_queue = true[m
+[31m-      # FIXME: this breaks the convention that we return a string; but really,[m
+[31m-      # we should return a hash everywhere, to avoid this...[m
+[31m-      return [202, delay][m
+[32m+[m[32m    # Build a list of old elements.[m
+[32m+[m[32m    # elements_expanded on the old role is guaranteed to exists, as we already[m
+[32m+[m[32m    # ran through apply_role with the old_role.  Cache is used for the case[m
+[32m+[m[32m    # when pacemaker barclamp is deactivated.  elements_expanded gets updated[m
+[32m+[m[32m    # by pacemaker barclamp.[m
+[32m+[m[32m    old_elements = {}[m
+[32m+[m[32m    old_deployment = old_role.override_attributes[@bc_name] unless old_role.nil?[m
+[32m+[m[32m    unless old_deployment.nil?[m
+[32m+[m[32m      old_elements = old_deployment["elements_expanded"][m
+[32m+[m[32m      if old_elements.nil?[m
+[32m+[m[32m        old_elements = old_deployment["elements"][m
+[32m+[m[32m      end[m
+     end[m
+ [m
+[31m-    @logger.debug "delay empty - running proposal"[m
+[32m+[m[32m    # When bootstrapping, we don't run chef, so there's no need for queuing[m
+[32m+[m[32m    if bootstrap[m
+[32m+[m[32m      pre_cached_nodes = {}[m
+[32m+[m[32m      # do not try to process the queue in any case[m
+[32m+[m[32m      in_queue = true[m
+[32m+[m[32m    else[m
+[32m+[m[32m      # Attempt to queue the proposal.  If delay is empty, then run it.[m
+[32m+[m[32m      deps = proposal_dependencies(role)[m
+[32m+[m[32m      if skip_unready_nodes_enabled[m
+[32m+[m[32m        elements_without_unready, pre_cached_nodes = skip_unready_nodes([m
+[32m+[m[32m          @bc_name, inst, new_elements, old_elements[m
+[32m+[m[32m        )[m
+[32m+[m[32m        delay, pre_cached_nodes = queue_proposal([m
+[32m+[m[32m          inst, element_order, elements_without_unready, deps, @bc_name, pre_cached_nodes[m
+[32m+[m[32m        )[m
+[32m+[m[32m      else[m
+[32m+[m[32m        delay, pre_cached_nodes = queue_proposal(inst, element_order, new_elements, deps)[m
+[32m+[m[32m      end[m
+ [m
+[31m-    # expand items in elements that are not nodes[m
+[31m-    expanded_new_elements = {}[m
+[31m-    new_deployment["elements"].each do |role_name, nodes|[m
+[31m-      expanded_new_elements[role_name], failures = expand_nodes_for_all(nodes)[m
+[31m-      unless failures.nil? || failures.empty?[m
+[31m-        @logger.fatal("apply_role: Failed to expand items #{failures.inspect} for role \"#{role_name}\"")[m
+[31m-        message = "Failed to apply the proposal: cannot expand list of nodes for role \"#{role_name}\", following items do not exist: #{failures.join(", ")}"[m
+[31m-        update_proposal_status(inst, "failed", message)[m
+[31m-        return [405, message][m
+[32m+[m[32m      unless delay.empty?[m
+[32m+[m[32m        # force not processing the queue further[m
+[32m+[m[32m        in_queue = true[m
+[32m+[m[32m        # FIXME: this breaks the convention that we return a string; but really,[m
+[32m+[m[32m        # we should return a hash everywhere, to avoid this...[m
+[32m+[m[32m        return [202, delay][m
+       end[m
+[32m+[m
+[32m+[m[32m      Rails.logger.debug "delay empty - running proposal"[m
+[32m+[m[32m    end[m
+[32m+[m
+[32m+[m[32m    new_elements, failures, msg = expand_items_in_elements(new_deployment["elements"])[m
+[32m+[m[32m    unless failures.nil?[m
+[32m+[m[32m      Rails.logger.progress("apply_role: Failed to apply role #{role.name}")[m
+[32m+[m[32m      update_proposal_status(inst, "failed", msg)[m
+[32m+[m[32m      return [405, msg][m
+     end[m
+[31m-    new_elements = expanded_new_elements[m
+ [m
+     # save list of expanded elements, as this is needed when we look at the old[m
+     # role. See below the comments for old_elements.[m
+[36m@@ -996,22 +1026,19 @@[m [mclass ServiceObject[m
+       new_deployment.delete("elements_expanded")[m
+     end[m
+ [m
+[31m-    # make sure the role is saved[m
+[31m-    role.save[m
+ [m
+[31m-    # Build a list of old elements.[m
+[31m-    # elements_expanded on the old role is guaranteed to exists, as we already[m
+[31m-    # ran through apply_role with the old_role.  Cache is used for the case[m
+[31m-    # when pacemaker barclamp is deactivated.  elements_expanded gets updated[m
+[31m-    # by pacemaker barclamp.[m
+[31m-    old_elements = {}[m
+[31m-    old_deployment = old_role.override_attributes[@bc_name] unless old_role.nil?[m
+[31m-    unless old_deployment.nil?[m
+[31m-      old_elements = old_deployment["elements_expanded"][m
+[31m-      if old_elements.nil?[m
+[31m-        old_elements = old_deployment["elements"][m
+[32m+[m[32m    if skip_unready_nodes_enabled[m
+[32m+[m[32m      # if we have removed nodes from the list, make sure to expand them and overwrite the[m
+[32m+[m[32m      # new_elements var so we dont try to run chef-client on those not-ready nodes[m
+[32m+[m[32m      new_elements, failures, msg = expand_items_in_elements(elements_without_unready)[m
+[32m+[m[32m      unless failures.nil?[m
+[32m+[m[32m        Rails.logger.progress("apply_role: Failed to apply role #{role.name}")[m
+[32m+[m[32m        update_proposal_status(inst, "failed", msg)[m
+[32m+[m[32m        return [405, msg][m
+       end[m
+     end[m
+[32m+[m
+[32m+[m[32m    # use the same order as in the old deployment if the element order is not filled yet[m
+     element_order = old_deployment["element_order"] if (!old_deployment.nil? and element_order.nil?)[m
+ [m
+     @logger.debug "old_deployment #{old_deployment.pretty_inspect}"[m
+[36m@@ -1456,6 +1483,22 @@[m [mclass ServiceObject[m
+     [][m
+   end[m
+ [m
+[32m+[m[32m  def expand_items_in_elements(elements)[m
+[32m+[m[32m    # expand items in elements that are not nodes[m
+[32m+[m[32m    expanded_new_elements = {}[m
+[32m+[m[32m    elements.each do |role_name, nodes|[m
+[32m+[m[32m      expanded_new_elements[role_name], failures = expand_nodes_for_all(nodes)[m
+[32m+[m[32m      next if failures.nil? || failures.empty?[m
+[32m+[m[32m      Rails.logger.fatal([m
+[32m+[m[32m        "apply_role: Failed to expand items #{failures.inspect} for role \"#{role_name}\""[m
+[32m+[m[32m      )[m
+[32m+[m[32m      msg = "Failed to apply the proposal: cannot expand list of nodes " \[m
+[32m+[m[32m        "for role \"#{role_name}\", following items do not exist: #{failures.join(", ")}"[m
+[32m+[m[32m      return [nil, failures, msg][m
+[32m+[m[32m    end[m
+[32m+[m[32m    [expanded_new_elements, nil, nil][m
+[32m+[m[32m  end[m
+[32m+[m
+   def add_role_to_instance_and_node(barclamp, instance, name, prop, role, newrole)[m
+     node = NodeObject.find_node_by_name name[m
+     if node.nil?[m
+[36m@@ -1659,11 +1702,33 @@[m [mclass ServiceObject[m
+     end[m
+   end[m
+ [m
+[31m-  def only_if_admin(node)[m
+[31m-    yield if node.admin?[m
+[31m-  end[m
+[31m-[m
+[31m-  def only_unless_admin(node)[m
+[31m-    yield unless node.admin?[m
+[32m+[m[32m  def skip_unready_nodes(bc, inst, new_elements, old_elements)[m
+[32m+[m[32m    logger.debug("skip_unready_nodes: enter for #{bc}:#{inst}")[m
+[32m+[m[32m    skip_unready_nodes_roles = Rails.application.config.experimental.fetch([m
+[32m+[m[32m      "skip_unready_nodes", {}[m
+[32m+[m[32m    ).fetch("roles", [])[m
+[32m+[m[32m    pre_cached_nodes = {}[m
+[32m+[m[32m    cleaned_elements = new_elements.deep_dup[m
+[32m+[m[32m    skip_unready_nodes_roles.each do |role|[m
+[32m+[m[32m      # only do something if we have the same role on both old and new[m
+[32m+[m[32m      next unless new_elements.key?(role) && old_elements.key?(role)[m
+[32m+[m[32m      # we only can skip nodes that are on both old and new, as we know that those old nodes had[m
+[32m+[m[32m      # the roles applied and will eventually become consistent with the deployment due to the[m
+[32m+[m[32m      # periodic chef run[m
+[32m+[m[32m      shared_elements = new_elements[role] & old_elements[role][m
+[32m+[m[32m      shared_elements.each do |n|[m
+[32m+[m[32m        pre_cached_nodes[n] ||= Node.find_by_name(n)[m
+[32m+[m[32m        node = pre_cached_nodes[n][m
+[32m+[m[32m        next if node.nil?[m
+[32m+[m[32m        # skip if nodes are on ready or crowbar_upgrade state, we dont need to do anything[m
+[32m+[m[32m        next if ["ready", "crowbar_upgrade"].include?(node.crowbar["state"])[m
+[32m+[m[32m        logger.warn([m
+[32m+[m[32m          "Node #{n} is skipped until next chef run for #{bc}:#{inst} with role #{role}"[m
+[32m+[m[32m        )[m
+[32m+[m[32m        cleaned_elements[role].delete(n)[m
+[32m+[m[32m      end[m
+[32m+[m[32m    end[m
+[32m+[m[32m    logger.debug("skip_unready_nodes: exit for #{bc}:#{inst}")[m
+[32m+[m[32m    [cleaned_elements, pre_cached_nodes][m
+   end[m
+ end[m
+[1mdiff --git a/crowbar_framework/lib/crowbar/deployment_queue.rb b/crowbar_framework/lib/crowbar/deployment_queue.rb[m
+[1mindex 029438c6..66ade739 100644[m
+[1m--- a/crowbar_framework/lib/crowbar/deployment_queue.rb[m
+[1m+++ b/crowbar_framework/lib/crowbar/deployment_queue.rb[m
+[36m@@ -26,10 +26,9 @@[m [mmodule Crowbar[m
+     # Receives proposal info (name, barclamp), list of nodes (elements), on which the proposal[m
+     # should be applied, and list of dependencies - a list of {barclamp, name/inst} hashes.[m
+     # It adds them to the queue, if possible.[m
+[31m-    def queue_proposal(bc, inst, elements, element_order, deps)[m
+[32m+[m[32m    def queue_proposal(bc, inst, elements, element_order, deps, pre_cached_nodes)[m
+       logger.debug("queue proposal: enter for #{bc}:#{inst}")[m
+       delay = [][m
+[31m-      pre_cached_nodes = {}[m
+       begin[m
+         lock = acquire_lock("queue")[m
+ [m
+[36m@@ -41,7 +40,9 @@[m [mmodule Crowbar[m
+ [m
+         # Delay is a list of nodes that are not in ready state. pre_cached_nodes[m
+         # is an uninteresting optimization.[m
+[31m-        delay, pre_cached_nodes = add_pending_elements(bc, inst, element_order, elements, queue_me)[m
+[32m+[m[32m        delay, pre_cached_nodes = add_pending_elements([m
+[32m+[m[32m          bc, inst, element_order, elements, queue_me, pre_cached_nodes[m
+[32m+[m[32m        )[m
+ [m
+         # We have all nodes ready.[m
+         if delay.empty?[m
+[36m@@ -333,7 +334,6 @@[m [mmodule Crowbar[m
+ [m
+       # Delay is the list of nodes that are not ready and are needed for this deploy to run[m
+       delay = [][m
+[31m-      pre_cached_nodes = {}[m
+       begin[m
+         # Check for delays and build up cache[m
+         # FIXME: why?[m
+[36m@@ -374,10 +374,9 @@[m [mmodule Crowbar[m
+       # Check to see if we should delay our commit until nodes are ready.[m
+       delay = [][m
+       nodes.each do |n|[m
+[31m-        node = NodeObject.find_node_by_name(n)[m
+[32m+[m[32m        pre_cached_nodes[n] ||= Node.find_by_name(n)[m
+[32m+[m[32m        node = pre_cached_nodes[n][m
+         next if node.nil?[m
+[31m-[m
+[31m-        pre_cached_nodes[n] = node[m
+         # allow commiting proposal for nodes in the crowbar_upgrade state[m
+         state = node.crowbar["state"][m
+         delay << n if (state != "ready" && state != "crowbar_upgrade") && !delay.include?(n)[m
+
+[33mcommit 0e10045198279fd49b0def9014e72084d4ac875d[m
+Author: Itxaka <igarcia@suse.com>
+Date:   Tue Sep 26 15:12:24 2017 +0200
+
+    crowbar: Add skip_unready_nodes experimental option
+    
+    Adds to the experimental options the skip_unready_nodes
+    configs that would allow to set a list of roles for which we would not
+    have to wait for all nodes to be in status ready to apply the barclamps.
+    
+    (cherry picked from commit dd4e0ef3a764a19d5d0f1db4c8459907cc21f4de)
+
+[1mdiff --git a/crowbar_framework/config/experimental.yml b/crowbar_framework/config/experimental.yml[m
+[1mindex 8e0fbf5e..c29b9dd1 100644[m
+[1m--- a/crowbar_framework/config/experimental.yml[m
+[1m+++ b/crowbar_framework/config/experimental.yml[m
+[36m@@ -1,6 +1,26 @@[m
+ default: &default[m
+   disallow_restart:[m
+     enabled: false[m
+[32m+[m[32m  skip_unready_nodes:[m
+[32m+[m[32m    enabled: false[m
+[32m+[m[32m    roles:[m
+[32m+[m[32m     - bmc-nat-client[m
+[32m+[m[32m     - ceilometer-agent[m
+[32m+[m[32m     - deployer-client[m
+[32m+[m[32m     - dns-client[m
+[32m+[m[32m     - ipmi[m
+[32m+[m[32m     - logging-client[m
+[32m+[m[32m     - nova-compute-ironic[m
+[32m+[m[32m     - nova-compute-kvm[m
+[32m+[m[32m     - nova-compute-qemu[m
+[32m+[m[32m     - nova-compute-vmware[m
+[32m+[m[32m     - nova-compute-xen[m
+[32m+[m[32m     - nova-compute-zvm[m
+[32m+[m[32m     - ntp-client[m
+[32m+[m[32m     - provisioner-base[m
+[32m+[m[32m     - suse-manager-client[m
+[32m+[m[32m     - swift-storage[m
+[32m+[m[32m     - updater[m
+ [m
+ development:[m
+   <<: *default[m
+
+[33mcommit c44a810c0682aecc0ac7bfde7a688aec1951074c[m
+Author: Itxaka <igarcia@suse.com>
+Date:   Tue Sep 26 15:12:24 2017 +0200
+
+    crowbar: Introduce a config for experimental options
+    
+    Introduces a new experimental.yml file that gets loaded on crowbar start
+    for setting expoerimental options, or features that have to be toggled
+    by the user directly
+    
+    For starters, it adds the experimental option to allow setting the
+    disallow_restart flag, to disable automatic chef restarts
+    
+    (cherry picked from commit 6c6b2ce42d529be3e708ed5155008b6f8b45fd06)
+
+[1mdiff --git a/crowbar_framework/config/application.rb b/crowbar_framework/config/application.rb[m
+[1mindex 187461d3..15da088a 100644[m
+[1m--- a/crowbar_framework/config/application.rb[m
+[1m+++ b/crowbar_framework/config/application.rb[m
+[36m@@ -57,5 +57,7 @@[m [mmodule Crowbar[m
+         Rails.logger.warn "Failed to load chef"[m
+       end[m
+     end[m
+[32m+[m[32m    # experimental options[m
+[32m+[m[32m    config.experimental = config_for(:experimental)[m
+   end[m
+ end[m
+[1mdiff --git a/crowbar_framework/config/experimental.yml b/crowbar_framework/config/experimental.yml[m
+[1mnew file mode 100644[m
+[1mindex 00000000..8e0fbf5e[m
+[1m--- /dev/null[m
+[1m+++ b/crowbar_framework/config/experimental.yml[m
+[36m@@ -0,0 +1,12 @@[m
+[32m+[m[32mdefault: &default[m
+[32m+[m[32m  disallow_restart:[m
+[32m+[m[32m    enabled: false[m
+[32m+[m
+[32m+[m[32mdevelopment:[m
+[32m+[m[32m  <<: *default[m
+[32m+[m
+[32m+[m[32mtest:[m
+[32m+[m[32m  <<: *default[m
+[32m+[m
+[32m+[m[32mproduction:[m
+[32m+[m[32m  <<: *default[m
+
+[33mcommit eb3d244763786ecddf09e3056a60797c5e1d4a62[m[33m ([m[1;31mupstream/stable/3.0[m[33m)[m
+Merge: 56761477 47d3c06b
+Author: Rick Salevsky <rsalevsky@suse.com>
+Date:   Mon Oct 23 14:04:08 2017 +0200
+
+    Merge pull request #1379 from cmurphy/limits-override-3.0
+    
+    [3.0] utils: Add systemd override LWRP
+
+[33mcommit 47d3c06b97cf1c2052bafd6248eea33cd8430ada[m
+Author: Itxaka <igarcia@suse.com>
+Date:   Fri Oct 13 16:44:26 2017 +0200
+
+    utils: Add systemd override LWRP
+    
+    Some services require modifications to the system resource limits, such
+    as the maximum number of open files, that we cannot necessarily predict
+    a reasonable default for. Without this patch, there is no way to control
+    those limits from crowbar and they must be changed manually. This patch
+    adds a LWRP to allow setting resource limits.
+    
+    Currently only the LimitNOFILE (systemd's name for the maximum
+    number of open files) limit is supported.
+    
+    Traditionally this was managed by editing limits for service users
+    installed by packages in /etc/security/limits.conf. This is no longer
+    effective under systemd, though the documentation of this reality is
+    poor and the best reference I can find for this is a comment in a bug
+    report[1].
+    
+    Since limits.conf is no longer effective, this patch manages limits by
+    creating a systemd unit file under /etc/systemd/system for the service
+    in question. Systemd appends these override unit files to the unit file
+    installed by the package plus the unit file created by pacemaker if
+    applicable. Open file limits aren't directly configurable in pacemaker,
+    as the contents of the unit file are hardcoded[2].
+    
+    [1] https://bugzilla.redhat.com/show_bug.cgi?id=754285#c1
+    [2] https://github.com/ClusterLabs/pacemaker/blob/Pacemaker-1.1.17-rc1/lib/services/systemd.c#L603-L625
+    
+    Co-authored-by: Colleen Murphy <colleen.murphy@suse.com>
+    (cherry picked from commit 86e2b6c7cca6a8a92906e43ff9ec8e37eed0c541)
+
+[1mdiff --git a/chef/cookbooks/utils/providers/systemd_override_limits.rb b/chef/cookbooks/utils/providers/systemd_override_limits.rb[m
+[1mnew file mode 100644[m
+[1mindex 00000000..b4e9f565[m
+[1m--- /dev/null[m
+[1m+++ b/chef/cookbooks/utils/providers/systemd_override_limits.rb[m
+[36m@@ -0,0 +1,99 @@[m
+[32m+[m[32m#[m
+[32m+[m[32m# Copyright 2017 SUSE Linux GmbH[m
+[32m+[m[32m#[m
+[32m+[m[32m# Licensed under the Apache License, Version 2.0 (the "License");[m
+[32m+[m[32m# you may not use this file except in compliance with the License.[m
+[32m+[m[32m# You may obtain a copy of the License at[m
+[32m+[m[32m#[m
+[32m+[m[32m#     http://www.apache.org/licenses/LICENSE-2.0[m
+[32m+[m[32m#[m
+[32m+[m[32m# Unless required by applicable law or agreed to in writing, software[m
+[32m+[m[32m# distributed under the License is distributed on an "AS IS" BASIS,[m
+[32m+[m[32m# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.[m
+[32m+[m[32m# See the License for the specific language governing permissions and[m
+[32m+[m[32m# limitations under the License.[m
+[32m+[m
+[32m+[m[32m# Support whyrun[m
+[32m+[m[32mdef whyrun_supported?[m
+[32m+[m[32m  true[m
+[32m+[m[32mend[m
+[32m+[m
+[32m+[m[32maction :create do[m
+[32m+[m[32m  current_resource = @current_resource[m
+[32m+[m[32m  converge_by("Create #{@new_resource}") do[m
+[32m+[m[32m    execute "systemctl daemon-reload" do[m
+[32m+[m[32m      action :nothing[m
+[32m+[m[32m    end[m
+[32m+[m
+[32m+[m[32m    directory _get_override_directory do[m
+[32m+[m[32m      owner "root"[m
+[32m+[m[32m      group "root"[m
+[32m+[m[32m      mode "0755"[m
+[32m+[m[32m    end[m
+[32m+[m
+[32m+[m[32m    service_resource_name = _get_service_resource_name[m
+[32m+[m[32m    template _get_override_file_path do[m
+[32m+[m[32m      source "systemd_override_limits.conf.erb"[m
+[32m+[m[32m      owner "root"[m
+[32m+[m[32m      group "root"[m
+[32m+[m[32m      mode "0644"[m
+[32m+[m[32m      cookbook "utils"[m
+[32m+[m[32m      variables([m
+[32m+[m[32m        limits: current_resource.limits[m
+[32m+[m[32m      )[m
+[32m+[m[32m      notifies :run, resources(execute: "systemctl daemon-reload"), :delayed[m
+[32m+[m[32m      notifies :restart, resources(service: service_resource_name), :delayed[m
+[32m+[m[32m    end[m
+[32m+[m[32m    Chef::Log.info "#{@new_resource} created / updated"[m
+[32m+[m[32m  end[m
+[32m+[m[32mend[m
+[32m+[m
+[32m+[m[32maction :delete do[m
+[32m+[m[32m  if @current_resource.exists[m
+[32m+[m[32m    converge_by("Delete #{@new_resource}") do[m
+[32m+[m[32m      execute "systemctl daemon-reload" do[m
+[32m+[m[32m        action :nothing[m
+[32m+[m[32m      end[m
+[32m+[m
+[32m+[m[32m      override_file_path = _get_override_file_path[m
+[32m+[m[32m      service_resource_name = _get_service_resource_name[m
+[32m+[m[32m      file override_file_path do[m
+[32m+[m[32m        action :delete[m
+[32m+[m[32m        only_if { ::File.exist?(override_file_path) }[m
+[32m+[m[32m        notifies :run, resources(execute: "systemctl daemon-reload"), :delayed[m
+[32m+[m[32m        notifies :restart, resources(service: service_resource_name), :delayed[m
+[32m+[m[32m      end[m
+[32m+[m[32m      Chef::Log.info "#{@new_resource} deleted"[m
+[32m+[m[32m    end[m
+[32m+[m[32m  else[m
+[32m+[m[32m    Chef::Log.info "#{@current_resource} doesn't exist - can't delete."[m
+[32m+[m[32m  end[m
+[32m+[m[32mend[m
+[32m+[m
+[32m+[m[32mdef load_current_resource[m
+[32m+[m[32m  @current_resource = Chef::Resource::UtilsSystemdOverrideLimits.new(@new_resource.name)[m
+[32m+[m[32m  @current_resource.service_name(@new_resource.service_name)[m
+[32m+[m[32m  @current_resource.limits(@new_resource.limits)[m
+[32m+[m[32m  @current_resource.exists = true if ::File.exist?(_get_override_file_path)[m
+[32m+[m[32m  @current_resource[m
+[32m+[m[32mend[m
+[32m+[m
+[32m+[m[32mprivate[m
+[32m+[m
+[32m+[m[32m# For openstack services the service name is prefixed with openstack-[m
+[32m+[m[32m# but the name of the chef resource is not[m
+[32m+[m[32mdef _get_service_resource_name[m
+[32m+[m[32m  current_resource.service_name.sub(/^openstack-/, "")[m
+[32m+[m[32mend[m
+[32m+[m
+[32m+[m[32mdef _get_unit_name[m
+[32m+[m[32m  "#{@new_resource.service_name}.service"[m
+[32m+[m[32mend[m
+[32m+[m
+[32m+[m[32mdef _get_override_directory[m
+[32m+[m[32m  "/etc/systemd/system/#{_get_unit_name}.d"[m
+[32m+[m[32mend[m
+[32m+[m
+[32m+[m[32mdef _get_override_file_path[m
+[32m+[m[32m  "#{_get_override_directory}/60-limits.conf"[m
+[32m+[m[32mend[m
+[1mdiff --git a/chef/cookbooks/utils/resources/systemd_override_limits.rb b/chef/cookbooks/utils/resources/systemd_override_limits.rb[m
+[1mnew file mode 100644[m
+[1mindex 00000000..8468d8ff[m
+[1m--- /dev/null[m
+[1m+++ b/chef/cookbooks/utils/resources/systemd_override_limits.rb[m
+[36m@@ -0,0 +1,7 @@[m
+[32m+[m[32mactions :create, :delete[m
+[32m+[m[32mdefault_action :create[m
+[32m+[m
+[32m+[m[32mattribute :service_name[m
+[32m+[m[32mattribute :limits[m
+[32m+[m
+[32m+[m[32mattr_accessor :exists[m
+[1mdiff --git a/chef/cookbooks/utils/templates/default/systemd_override_limits.conf.erb b/chef/cookbooks/utils/templates/default/systemd_override_limits.conf.erb[m
+[1mnew file mode 100644[m
+[1mindex 00000000..48c98097[m
+[1m--- /dev/null[m
+[1m+++ b/chef/cookbooks/utils/templates/default/systemd_override_limits.conf.erb[m
+[36m@@ -0,0 +1,4 @@[m
+[32m+[m[32m[Service][m
+[32m+[m[32m<% @limits.each do |name, value| -%>[m
+[32m+[m[32m<%= name %>=<%= value %>[m
+[32m+[m[32m<% end -%>[m
+
+[33mcommit 567614779d57927e7a65321d3cef66a0a6c32278[m[33m ([m[1;31morigin/stable/3.0[m[33m)[m
+Merge: 73e4fdcf 9ef2d2e9
+Author: Dirk Mueller <dmueller@suse.com>
+Date:   Fri Oct 6 14:40:27 2017 +0200
+
+    Merge pull request #1344 from SUSE-Cloud/bsc1036601
+    
+    bind: set transfer-source to avoid xfer failures (bsc#1036601)
+
+[33mcommit 73e4fdcfc8a4954e7d78694e9d38dbcebfbe7d16[m
+Merge: b03f7efb c0175558
+Author: Jacek Tomasiak <jacek.tomasiak@gmail.com>
+Date:   Tue Oct 3 16:48:23 2017 +0200
+
+    Merge pull request #1347 from skazi0/json-clusters-soc6
+    
+    [3.0] Add json version of /clusters endpoint
+
+[33mcommit c017555866986451eb88208c79849bba31487213[m
+Author: Jacek Tomasiak <jacek.tomasiak@gmail.com>
+Date:   Tue Sep 26 14:26:59 2017 +0200
+
+    Add json version of /clusters endpoint
+    
+    /clusters rendered the HTML view of clusters but didn't provide
+    json version for use in crowbar-client.
+    
+    (cherry picked from commit 27a2b7e2dcf2c40b9b73401116e1b9cf7819cac9)
+
+[1mdiff --git a/crowbar_framework/app/controllers/dashboard_controller.rb b/crowbar_framework/app/controllers/dashboard_controller.rb[m
+[1mindex 6fd2c604..f9e423c4 100644[m
+[1m--- a/crowbar_framework/app/controllers/dashboard_controller.rb[m
+[1m+++ b/crowbar_framework/app/controllers/dashboard_controller.rb[m
+[36m@@ -3,6 +3,10 @@[m [mclass DashboardController < ApplicationController[m
+ [m
+   def clusters[m
+     @clusters = ServiceObject.available_clusters[m
+[32m+[m[32m    respond_to do |format|[m
+[32m+[m[32m      format.html[m
+[32m+[m[32m      format.json { render json: @clusters }[m
+[32m+[m[32m    end[m
+   end[m
+ [m
+   def active_roles[m
+
+[33mcommit 9ef2d2e94c166907a1c73bf21cfb10197bd88494[m
+Author: Dirk Mueller <dmueller@suse.com>
+Date:   Tue May 9 17:47:02 2017 +0200
+
+    bind: set transfer-source to avoid xfer failures (bsc#1036601)
+    
+    Currently bind isn't explicitely told which IP address to
+    request zone transfers from, while the server is configured to
+    specifically only accept zone transfer requests from the specific
+    list of whitelisted 2ndary slave ip addresses. Without that
+    change it happened that bind happened to choose another IP address
+    from the admin network (like an unrelated VIP allocated from admin)
+    for transfer, failing to sync up with master.
+    
+    Cherry-picked from commit 6f450c3375b5437d443ec666560539
+
+[1mdiff --git a/chef/cookbooks/bind9/recipes/default.rb b/chef/cookbooks/bind9/recipes/default.rb[m
+[1mindex 9e7de4f8..c0fa6c43 100644[m
+[1m--- a/chef/cookbooks/bind9/recipes/default.rb[m
+[1m+++ b/chef/cookbooks/bind9/recipes/default.rb[m
+[36m@@ -130,6 +130,8 @@[m [mdef make_zone(zone)[m
+     master_ip = node[:dns][:master_ip][m
+   end[m
+ [m
+[32m+[m[32m  admin_addr = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address[m
+[32m+[m
+   Chef::Log.debug "Creating zone file for zones: #{zonefile_entries.inspect}"[m
+   template "/etc/bind/zone.#{zone[:domain]}" do[m
+     source "zone.erb"[m
+[36m@@ -138,7 +140,8 @@[m [mdef make_zone(zone)[m
+     group "root"[m
+     notifies :reload, "service[bind9]"[m
+     variables(zonefile_entries: zonefile_entries,[m
+[31m-              master_ip: master_ip)[m
+[32m+[m[32m              master_ip: master_ip,[m
+[32m+[m[32m              admin_addr: admin_addr)[m
+   end[m
+   node.set[:dns][:zone_files] << "/etc/bind/zone.#{zone[:domain]}"[m
+ [m
+[36m@@ -285,6 +288,9 @@[m [mwhen "suse"[m
+   end[m
+ end[m
+ [m
+[32m+[m[32m# We would like to bind service only to ip address from admin network[m
+[32m+[m[32madmin_addr = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address[m
+[32m+[m
+ # Load up our default zones.  These never change.[m
+ if node[:dns][:master][m
+   files=%w{db.0 db.255 named.conf.default-zones}[m
+[36m@@ -299,7 +305,8 @@[m [mfiles.each do |file|[m
+     mode 0644[m
+     owner "root"[m
+     group bindgroup[m
+[31m-    variables(master_ip: master_ip)[m
+[32m+[m[32m    variables(master_ip: master_ip,[m
+[32m+[m[32m              admin_addr: admin_addr)[m
+     notifies :reload, "service[bind9]"[m
+   end[m
+ end[m
+[36m@@ -348,9 +355,6 @@[m [melse[m
+   allow_transfer = [][m
+ end[m
+ [m
+[31m-# We would like to bind service only to ip address from admin network[m
+[31m-admin_addr = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address[m
+[31m-[m
+ # When we're restoring the admin node from backup or upgrade data,[m
+ # reject incoming DNS traffic to avoid sending wrong results to running[m
+ # clients.[m
+[1mdiff --git a/chef/cookbooks/bind9/templates/default/named.conf.default-zones.erb b/chef/cookbooks/bind9/templates/default/named.conf.default-zones.erb[m
+[1mindex 4efc5d37..ba81258c 100644[m
+[1m--- a/chef/cookbooks/bind9/templates/default/named.conf.default-zones.erb[m
+[1m+++ b/chef/cookbooks/bind9/templates/default/named.conf.default-zones.erb[m
+[36m@@ -9,6 +9,7 @@[m [mzone "0.in-addr.arpa" {[m
+ <% else -%>[m
+         type slave;[m
+         masters { <%= @master_ip -%>; };[m
+[32m+[m[32m        transfer-source <%= @admin_addr -%>;[m
+         file "/etc/bind/slave/db.0";[m
+ <% end %>[m
+ };[m
+[36m@@ -20,6 +21,7 @@[m [mzone "255.in-addr.arpa" {[m
+ <% else -%>[m
+         type slave;[m
+         masters { <%= @master_ip -%>; };[m
+[32m+[m[32m        transfer-source <%= @admin_addr -%>;[m
+         file "/etc/bind/slave/db.255";[m
+ <% end %>[m
+ };[m
+[1mdiff --git a/chef/cookbooks/bind9/templates/default/zone.erb b/chef/cookbooks/bind9/templates/default/zone.erb[m
+[1mindex bb57cb8f..af2316f2 100644[m
+[1m--- a/chef/cookbooks/bind9/templates/default/zone.erb[m
+[1m+++ b/chef/cookbooks/bind9/templates/default/zone.erb[m
+[36m@@ -13,6 +13,7 @@[m [mzone "<%= zonefile_entry -%>" {[m
+     type slave;[m
+     notify no;[m
+     masters { <%= @master_ip -%>; };[m
+[32m+[m[32m    transfer-source <%= @admin_addr -%>;[m
+     file "/etc/bind/slave/db.<%= zonefile_entry -%>";[m
+ };[m
+ <%   end %>[m
+
+[33mcommit b03f7efbd8fb7ada10a42fce6f59bc7b4df82955[m
+Merge: 9b698a14 17ace4fc
+Author: Itxaka <itxakaserrano@gmail.com>
+Date:   Wed Aug 2 12:41:34 2017 +0200
+
+    Merge pull request #1289 from Itxaka/backport_4a60c80c636b7b364d929f955e5c082a16201837_to_3_0
+    
+    [3.0] apache2: fix apache2.conf template
+
+[33mcommit 17ace4fc59b116ef13121e86d128f4c69fd18bb3[m
+Author: Itxaka <igarcia@suse.com>
+Date:   Tue Aug 1 12:22:16 2017 +0200
+
+    apache2: fix apache2.conf template
+    
+    There was a missing " in the template, leading to errors while uploading
+    the recipe manually to the chef server
+    
+    (cherry picked from commit 4a60c80c636b7b364d929f955e5c082a16201837)
+
+[1mdiff --git a/chef/cookbooks/apache2/templates/default/apache2.conf.erb b/chef/cookbooks/apache2/templates/default/apache2.conf.erb[m
+[1mindex 50d4704b..5f437e2d 100644[m
+[1m--- a/chef/cookbooks/apache2/templates/default/apache2.conf.erb[m
+[1m+++ b/chef/cookbooks/apache2/templates/default/apache2.conf.erb[m
+[36m@@ -24,7 +24,7 @@[m [mLockFile logs/accept.lock[m
+ PidFile /var/run/apache2.pid[m
+ <% elsif (node[:platform] == "redhat" && node[:platform_version].to_f < 6) || node[:platform_family] == "fedora" -%>[m
+ PidFile /var/run/httpd.pid[m
+[31m-<% elsif node[:platform_family] == "arch" || node[:platform_family] == "rhel -%>[m
+[32m+[m[32m<% elsif node[:platform_family] == "arch" || node[:platform_family] == "rhel" -%>[m
+ PidFile /var/run/httpd/httpd.pid[m
+ <% else -%>[m
+ PidFile logs/httpd.pid[m
+
+[33mcommit 9b698a1432abef5ccbd98d95385275a5cba28c6d[m
+Merge: 834a7c4a 776cc3d4
+Author: Steve Kowalik <steven@wedontsleep.org>
+Date:   Tue Jul 11 16:33:17 2017 +1000
+
+    Merge pull request #1257 from s-t-e-v-e-n-k/clear-ip-address-bond-3.0
+    
+    [stable/3.0] network: Use wicked to control bond slaves (bsc#1035127)
+
+[33mcommit 834a7c4aad4db7582c1b2e3346421e49cfd9c07b[m
+Merge: 9819028b df371150
+Author: Itxaka <itxakaserrano@gmail.com>
+Date:   Mon Jul 10 06:47:56 2017 -0400
+
+    Merge pull request #1264 from Itxaka/backport_3.0_dd2cde1b8a232e73c13035c994b6bdca7389034a
+    
+    [3.0] Unclaimed disks: improve handling of multipath devices (bsc#1031065)
+
+[33mcommit 9819028ba7fed8bec796a1532de9363dd9a2f181[m
+Merge: d095606c 681f758b
+Author: Itxaka <itxakaserrano@gmail.com>
+Date:   Mon Jul 10 04:21:50 2017 -0400
+
+    Merge pull request #1241 from Itxaka/backport_fc4152dd2aa903959e9f978b1fb48f51f7146420
+    
+    [3.0] network: Set MTU for VLAN parent interface (bsc#1024279)
+
+[33mcommit df3711509d62e1a0444049784816f4fe374efc81[m
+Author: Bogdano Arendartchuk <barendartchuk@suse.com>
+Date:   Mon Apr 3 16:59:26 2017 +0200
+
+    Unclaimed disks: improve handling of multipath devices (bsc#1031065)
+    
+    dm_multipath devices were being skipped while its paths were being included
+    in the array of unclaimed devices, allowing the DRBD recipe to claim them
+    and later fail while running pvcreate.
+    
+    Introduce two new methods in Disk for checking whether the device (or its
+    holder) is named as "mpath-*".
+    
+    This will make sure that when having a multipath device with several holders
+    we add to the unclaimed list only the multipath device and we ignore
+    the holders.
+    
+    (cherry picked from commit dd2cde1b8a232e73c13035c994b6bdca7389034a)
+
+[1mdiff --git a/.travis.yml b/.travis.yml[m
+[1mindex 1e7611e7..0db18093 100644[m
+[1m--- a/.travis.yml[m
+[1m+++ b/.travis.yml[m
+[36m@@ -1,27 +1,26 @@[m
+ language: ruby[m
+ sudo: false[m
+ [m
+[31m-rvm:[m
+[31m-  - 2.1.0[m
+[32m+[m[32mrvm: 2.1.0[m
+ [m
+[31m-env:[m
+[31m-  - SKIP_CHECKS=yes[m
+[32m+[m[32menv: SKIP_CHECKS=yes[m
+[32m+[m
+[32m+[m[32mmatrix:[m
+[32m+[m[32m  include:[m
+[32m+[m[32m    - gemfile: crowbar_framework/Gemfile[m
+[32m+[m[32m      script:[m
+[32m+[m[32m       - cd crowbar_framework[m
+[32m+[m[32m       - bin/bundle install[m
+[32m+[m[32m       - bin/rake db:create db:migrate[m
+[32m+[m[32m       - bundle exec rake spec brakeman:run[m
+[32m+[m[32m       # ignore rest-client issues, chef 10 requires that[m
+[32m+[m[32m       - bin/bundle exec bundle-audit update[m
+[32m+[m[32m       - bin/bundle exec bundle-audit check --ignore CVE-2015-1820 OSVDB-117461[m
+[32m+[m[32m    - gemfile: chef/cookbooks/barclamp/Gemfile[m
+[32m+[m[32m      script:[m
+[32m+[m[32m       - cd chef/cookbooks/barclamp && bundle exec rake[m
+ [m
+ addons:[m
+   apt:[m
+     packages:[m
+       - libarchive-dev[m
+[31m-[m
+[31m-gemfile: crowbar_framework/Gemfile[m
+[31m-[m
+[31m-install:[m
+[31m-  - cd crowbar_framework[m
+[31m-  - bin/bundle install[m
+[31m-  - bin/rake db:create db:migrate[m
+[31m-[m
+[31m-script:[m
+[31m-  - bin/rake spec brakeman:run[m
+[31m-[m
+[31m-  # ignore rest-client issues, chef 10 requires that[m
+[31m-  - bin/bundle exec bundle-audit update[m
+[31m-  - bin/bundle exec bundle-audit check --ignore CVE-2015-1820 OSVDB-117461[m
+[1mdiff --git a/chef/cookbooks/barclamp/.rspec b/chef/cookbooks/barclamp/.rspec[m
+[1mnew file mode 100644[m
+[1mindex 00000000..7438fbe5[m
+[1m--- /dev/null[m
+[1m+++ b/chef/cookbooks/barclamp/.rspec[m
+[36m@@ -0,0 +1,2 @@[m
+[32m+[m[32m--colour[m
+[32m+[m[32m--format documentation[m
+[1mdiff --git a/chef/cookbooks/barclamp/Gemfile b/chef/cookbooks/barclamp/Gemfile[m
+[1mnew file mode 100644[m
+[1mindex 00000000..129589ff[m
+[1m--- /dev/null[m
+[1m+++ b/chef/cookbooks/barclamp/Gemfile[m
+[36m@@ -0,0 +1,9 @@[m
+[32m+[m[32msource "https://rubygems.org"[m
+[32m+[m
+[32m+[m[32mgem "rack", "< 2.0.0"[m
+[32m+[m[32mgem "rake"[m
+[32m+[m
+[32m+[m[32mgroup :test, :development do[m
+[32m+[m[32m  gem "chefspec", "~> 3.0"[m
+[32m+[m[32m  gem "rspec-expectations", "~> 2.14.0"[m
+[32m+[m[32mend[m
+[1mdiff --git a/chef/cookbooks/barclamp/Rakefile b/chef/cookbooks/barclamp/Rakefile[m
+[1mnew file mode 100644[m
+[1mindex 00000000..b12232ae[m
+[1m--- /dev/null[m
+[1m+++ b/chef/cookbooks/barclamp/Rakefile[m
+[36m@@ -0,0 +1,6 @@[m
+[32m+[m[32mtask default: "spec"[m
+[32m+[m
+[32m+[m[32mtask :spec do[m
+[32m+[m[32m  sh "rspec"[m
+[32m+[m[32mend[m
+[32m+[m
+[1mdiff --git a/chef/cookbooks/barclamp/libraries/barclamp_library.rb b/chef/cookbooks/barclamp/libraries/barclamp_library.rb[m
+[1mindex adb32efe..c1be97f1 100644[m
+[1m--- a/chef/cookbooks/barclamp/libraries/barclamp_library.rb[m
+[1m+++ b/chef/cookbooks/barclamp/libraries/barclamp_library.rb[m
+[36m@@ -274,7 +274,11 @@[m [mmodule BarclampLibrary[m
+               %x{lsblk #{d.name.gsub(/!/, "/")} --noheadings --output MOUNTPOINT | grep -q -v ^$}[m
+               next if $?.exitstatus == 0[m
+             end[m
+[31m-            d.fixed and not d.claimed?[m
+[32m+[m[32m            # skip claimed disks and multipath devices held by holders[m
+[32m+[m[32m            # but include both fixed disks and multipath devices[m
+[32m+[m[32m            device_type_claimable = d.fixed || d.multipath?[m
+[32m+[m[32m            in_use = d.claimed? || d.held_by_multipath?[m
+[32m+[m[32m            device_type_claimable && !in_use[m
+           end[m
+         end[m
+ [m
+[36m@@ -284,6 +288,12 @@[m [mmodule BarclampLibrary[m
+           end[m
+         end[m
+ [m
+[32m+[m[32m        def self.multipath?(device)[m
+[32m+[m[32m          uuid_path = "/sys/block/#{device}/dm/uuid"[m
+[32m+[m[32m          return false unless File.exist?(uuid_path)[m
+[32m+[m[32m          File.open(uuid_path) { |f| f.read(7).start_with?("mpath-") }[m
+[32m+[m[32m        end[m
+[32m+[m
+         # can be /dev/hda, /dev/sda or /dev/cciss/c0d0[m
+         def name[m
+           File.join("/dev/",@device.gsub(/!/, "/"))[m
+[36m@@ -327,6 +337,35 @@[m [mmodule BarclampLibrary[m
+           self.owner[m
+         end[m
+ [m
+[32m+[m[32m        def multipath?[m
+[32m+[m[32m          self.class.multipath?(@device)[m
+[32m+[m[32m        end[m
+[32m+[m
+[32m+[m[32m        def held_by_multipath?[m
+[32m+[m[32m          # We need to check if the holders of a device (if it has any)[m
+[32m+[m[32m          # are multipath-capable, for example:[m
+[32m+[m[32m          #[m
+[32m+[m[32m          # root@d52-54-77-77-01-01:~ # multipath -ll[m
+[32m+[m[32m          # 0QEMU_QEMU_HARDDISK_00002 dm-1 QEMU,QEMU HARDDISK[m
+[32m+[m[32m          # size=10G features='0' hwhandler='0' wp=rw[m
+[32m+[m[32m          # -+- policy='service-time 0' prio=1 status=active[m
+[32m+[m[32m          # - 0:0:0:2 sdc 8:32   active ready running[m
+[32m+[m[32m          # -+- policy='service-time 0' prio=1 status=enabled[m
+[32m+[m[32m          # - 0:0:0:3 sdb 8:16   active ready running[m
+[32m+[m[32m          #[m
+[32m+[m[32m          # sdb and sdc are paths of dm-1:[m
+[32m+[m[32m          # root@d52-54-77-77-01-01:~ # ls /sys/block/sdb/holders/[m
+[32m+[m[32m          # dm-1[m
+[32m+[m[32m          # root@d52-54-77-77-01-01:~ # ls /sys/block/sdc/holders/[m
+[32m+[m[32m          # dm-1[m
+[32m+[m[32m          #[m
+[32m+[m[32m          # in this case this method should return false for sdb and sdc as we dont want[m
+[32m+[m[32m          # those disks to appear available, instead we want dm-1 to be made available[m
+[32m+[m[32m          ::Dir.entries("/sys/block/#{@device}/holders").any? do |holder|[m
+[32m+[m[32m            self.class.multipath?(holder)[m
+[32m+[m[32m          end[m
+[32m+[m[32m        end[m
+[32m+[m
+         def fixed[m
+           # This needs to be kept in sync with the number_of_drives method in[m
+           # node_object.rb in the Crowbar framework.[m
+[1mdiff --git a/chef/cookbooks/barclamp/spec/libraries/barclamp_library_spec.rb b/chef/cookbooks/barclamp/spec/libraries/barclamp_library_spec.rb[m
+[1mnew file mode 100644[m
+[1mindex 00000000..b079383a[m
+[1m--- /dev/null[m
+[1m+++ b/chef/cookbooks/barclamp/spec/libraries/barclamp_library_spec.rb[m
+[36m@@ -0,0 +1,64 @@[m
+[32m+[m[32mrequire "spec_helper"[m
+[32m+[m
+[32m+[m[32mrequire_relative "../../libraries/barclamp_library"[m
+[32m+[m
+[32m+[m[32mdescribe BarclampLibrary::Barclamp::Inventory::Disk do[m
+[32m+[m
+[32m+[m[32m  before(:each) do[m
+[32m+[m[32m    @chef_run = ::ChefSpec::Runner.new[m
+[32m+[m[32m    @node = @chef_run.node[m
+[32m+[m[32m    @node.default[:block_device] = {[m
+[32m+[m[32m      dm0: { removable: "0" },[m
+[32m+[m[32m      xvd1: { removable: "0" },[m
+[32m+[m[32m      xvd2: { removable: "1" }[m
+[32m+[m[32m    }[m
+[32m+[m[32m  end[m
+[32m+[m
+[32m+[m[32m  specify "#unclaimed returns the proper number of unclaimed devices" do[m
+[32m+[m[32m    a = BarclampLibrary::Barclamp::Inventory::Disk[m
+[32m+[m[32m    expect(a).to receive(:`).exactly(5).times.and_return(`exit 1`)[m
+[32m+[m[32m    expect(::File).to receive(:exist?).with("/sys/block/dm0/dm/uuid").and_return(true)[m
+[32m+[m[32m    expect(::File).to receive(:exist?).with("/sys/block/xvd2/dm/uuid").and_return(false)[m
+[32m+[m[32m    expect(::File).to receive(:exist?).with("/sys/block/sr0/dm/uuid").and_return(false)[m
+[32m+[m[32m    expect(::File).to receive(:open).exactly(1).times.with([m
+[32m+[m[32m      "/sys/block/dm0/dm/uuid"[m
+[32m+[m[32m    ).and_yield(StringIO.new("mpath-test"))[m
+[32m+[m[32m    # return holders[m
+[32m+[m[32m    expect(::Dir).to receive(:entries).exactly(5).times.and_return([])[m
+[32m+[m[32m    expect(a.unclaimed(@node).length).to eq(3)[m
+[32m+[m[32m  end[m
+[32m+[m
+[32m+[m[32m  describe "multipath features" do[m
+[32m+[m[32m    specify "#multipath? fails with no device given" do[m
+[32m+[m[32m      expect { BarclampLibrary::Barclamp::Inventory::Disk.multipath? }.to raise_error(ArgumentError)[m
+[32m+[m[32m    end[m
+[32m+[m
+[32m+[m[32m    specify "#multipath returns true if it find the mpath device uuid" do[m
+[32m+[m[32m      expect(::File).to receive(:exist?).exactly(1).times.and_return(true)[m
+[32m+[m[32m      expect(::File).to receive(:open).exactly(1).times.and_yield(StringIO.new("mpath-"))[m
+[32m+[m[32m      expect([m
+[32m+[m[32m        BarclampLibrary::Barclamp::Inventory::Disk.multipath?("test")[m
+[32m+[m[32m      ).to be(true)[m
+[32m+[m[32m    end[m
+[32m+[m
+[32m+[m[32m    specify "#multipath returns false if it doesnt find the mpath device uuid" do[m
+[32m+[m[32m      expect(::File).to receive(:exist?).exactly(1).times.and_return(true)[m
+[32m+[m[32m      expect(::File).to receive(:open).exactly(1).times.and_yield(StringIO.new("uuid"))[m
+[32m+[m[32m      expect([m
+[32m+[m[32m        BarclampLibrary::Barclamp::Inventory::Disk.multipath?("test")[m
+[32m+[m[32m      ).to be(false)[m
+[32m+[m[32m    end[m
+[32m+[m
+[32m+[m[32m    specify "#held_by_multipath? calls multipath? on each holder" do[m
+[32m+[m[32m      expect(::Dir).to receive(:entries).exactly(1).times.and_return(["subtest1", "subtest2"])[m
+[32m+[m[32m      expect([m
+[32m+[m[32m        BarclampLibrary::Barclamp::Inventory::Disk[m
+[32m+[m[32m      ).to receive(:multipath?).exactly(1).times.with("subtest1")[m
+[32m+[m[32m      expect([m
+[32m+[m[32m        BarclampLibrary::Barclamp::Inventory::Disk[m
+[32m+[m[32m      ).to receive(:multipath?).exactly(1).times.with("subtest2")[m
+[32m+[m[32m      a = BarclampLibrary::Barclamp::Inventory::Disk.new(@node, "test")[m
+[32m+[m[32m      expect(a.held_by_multipath?).to be(false)[m
+[32m+[m[32m    end[m
+[32m+[m[32m  end[m
+[32m+[m[32mend[m
+[1mdiff --git a/chef/cookbooks/barclamp/spec/spec_helper.rb b/chef/cookbooks/barclamp/spec/spec_helper.rb[m
+[1mnew file mode 100644[m
+[1mindex 00000000..8ca2ad95[m
+[1m--- /dev/null[m
+[1m+++ b/chef/cookbooks/barclamp/spec/spec_helper.rb[m
+[36m@@ -0,0 +1,50 @@[m
+[32m+[m[32mrequire "chefspec"[m
+[32m+[m
+[32m+[m[32mENV["RSPEC_RUNNING"] = "true"[m
+[32m+[m
+[32m+[m[32mRSpec.configure do |config|[m
+[32m+[m[32m  # config.mock_with :rspec do |mocks|[m
+[32m+[m[32m  #   # This option should be set when all dependencies are being loaded[m
+[32m+[m[32m  #   # before a spec run, as is the case in a typical spec helper. It will[m
+[32m+[m[32m  #   # cause any verifying double instantiation for a class that does not[m
+[32m+[m[32m  #   # exist to raise, protecting against incorrectly spelt names.[m
+[32m+[m[32m  #   mocks.verify_doubled_constant_names = true[m
+[32m+[m[32m  # end[m
+[32m+[m
+[32m+[m[32m  # Specify the path for Chef Solo to find cookbooks (default: [inferred from[m
+[32m+[m[32m  # the location of the calling spec file])[m
+[32m+[m[32m  this_dir = File.dirname(__FILE__)[m
+[32m+[m[32m  config.cookbook_path = [[m
+[32m+[m[32m    File.expand_path("../..", this_dir),[m
+[32m+[m[32m    File.expand_path("fixtures/cookbooks", this_dir),[m
+[32m+[m[32m  ][m
+[32m+[m
+[32m+[m[32m  # Specify the path for Chef Solo to find roles (default: [ascending search])[m
+[32m+[m[32m  # config.role_path = '/var/roles'[m
+[32m+[m
+[32m+[m[32m  # Specify the Chef log_level (default: :warn)[m
+[32m+[m[32m  config.log_level = ENV["CHEF_LOG_LEVEL"].to_sym if ENV["CHEF_LOG_LEVEL"][m
+[32m+[m
+[32m+[m[32m  # Specify the path to a local JSON file with Ohai data (default: nil)[m
+[32m+[m[32m  # config.path = 'ohai.json'[m
+[32m+[m
+[32m+[m[32m  # Specify the operating platform to mock Ohai data from (default: nil)[m
+[32m+[m[32m  config.platform = "suse"[m
+[32m+[m
+[32m+[m[32m  # Specify the operating version to mock Ohai data from (default: nil)[m
+[32m+[m[32m  config.version = "12.2"[m
+[32m+[m
+[32m+[m[32m  # Disable deprecated "should" syntax[m
+[32m+[m[32m  # https://github.com/rspec/rspec-expectations/blob/master/Should.md[m
+[32m+[m[32m  config.expect_with :rspec do |c|[m
+[32m+[m[32m    c.syntax = :expect[m
+[32m+[m[32m  end[m
+[32m+[m
+[32m+[m[32m  config.run_all_when_everything_filtered = true[m
+[32m+[m[32m  config.filter_run focus: true[m
+[32m+[m[32mend[m
+[32m+[m
+[32m+[m[32mif ENV["RUBYDEPS"][m
+[32m+[m[32m  require "rubydeps"[m
+[32m+[m[32m  Rubydeps.start[m
+[32m+[m[32mend[m
+
+[33mcommit d095606c6fcfd8d6dfa4ed96a365685e85bd0898[m
+Merge: 2e57a902 3585ea2f
+Author: Steve Kowalik <steven@wedontsleep.org>
+Date:   Mon Jul 3 14:54:38 2017 +1000
+
+    Merge pull request #1253 from s-t-e-v-e-n-k/xmit-hash-policy-optional-downgrade-3.0
+    
+    [stable/3.0] network: Also remove optional keys during downgrade
+
+[33mcommit 2e57a90211d4c6c987e5587c1ef3677027801743[m
+Merge: c483dac8 cada2273
+Author: Steve Kowalik <steven@wedontsleep.org>
+Date:   Fri Jun 30 15:35:24 2017 +1000
+
+    Merge pull request #1256 from s-t-e-v-e-n-k/fix-broken-cherry-pick-xmit-hash-policy-3.0
+    
+    [stable/3.0] network: Correct checking for per-bond settings
+
+[33mcommit 776cc3d4da928ff98f8067aa2a6adb55d5ced6dc[m
+Author: Steve Kowalik <steven@wedontsleep.org>
+Date:   Mon May 22 18:13:30 2017 +1000
+
+    network: Use wicked to control bond slaves (bsc#1035127)
+    
+    Currently, when adding slaves to a bond, the interface will be brought
+    down and then back up. If wicked is not told about this state of
+    affairs, wicked will add the configured IP address back onto the
+    interface when it is bought back up.
+    
+    To counteract this, we run wicked ifdown for any slave interface, as
+    well as no longer bringing the slave back up immediately and then run
+    wicked ifup all if the template files have changed, so it isn't run every
+    time chef fires.
+    
+    Note, this partially brings back what we reverted with
+    41e310cf21642cf0dc2f2fa0b7294c1db7821b59, but calling "ifup" instead of
+    "ifreload" has the advantage that will not take the interfaces down
+    temporary. It will also keep all IP addresses that are not managed by
+    wicked (i.e. the pacemaker managed cluster VIPs). So we should avoid the
+    issues that the "ifreload" patch created.
+    
+    Co-Authored-By: Ralf Haferkamp <rhafer@suse.de>
+    (cherry picked from commit ea43f716fd29cc6fd2866ccc7d15e6533d3cb95a)
+
+[1mdiff --git a/chef/cookbooks/barclamp/libraries/nic.rb b/chef/cookbooks/barclamp/libraries/nic.rb[m
+[1mindex 3cd5ea5b..2cb5b753 100644[m
+[1m--- a/chef/cookbooks/barclamp/libraries/nic.rb[m
+[1m+++ b/chef/cookbooks/barclamp/libraries/nic.rb[m
+[36m@@ -566,7 +566,6 @@[m [mclass ::Nic[m
+       usurp(slave)[m
+       slave.down[m
+       sysfs_put("bonding/slaves","+#{slave}")[m
+[31m-      slave.up[m
+       slave[m
+     end[m
+ [m
+[1mdiff --git a/chef/cookbooks/network/recipes/default.rb b/chef/cookbooks/network/recipes/default.rb[m
+[1mindex a3547c6e..1c62e36f 100644[m
+[1m--- a/chef/cookbooks/network/recipes/default.rb[m
+[1m+++ b/chef/cookbooks/network/recipes/default.rb[m
+[36m@@ -206,6 +206,12 @@[m [mnode["crowbar"]["network"].keys.sort{|a,b|[m
+     ifs[bond.name]["addresses"] ||= Array.new[m
+     ifs[bond.name]["slaves"] = Array.new[m
+     base_ifs.each do |i|[m
+[32m+[m[32m      # If the slave isn't already a member of this bond, it may be configured[m
+[32m+[m[32m      # with an IP or DHCP, and we don't want wicked to re-apply it when the[m
+[32m+[m[32m      # interface is brought back up.[m
+[32m+[m[32m      unless bond.slaves.include? i[m
+[32m+[m[32m        ::Kernel.system("wicked ifdown #{i.name}")[m
+[32m+[m[32m      end[m
+       bond.add_slave i[m
+       ifs[bond.name]["slaves"] << i.name[m
+       ifs[i.name]["slave"] = true[m
+[36m@@ -527,7 +533,9 @@[m [mwhen "suse"[m
+         nic: nic,[m
+         pre_up_script: pre_up_script[m
+       })[m
+[32m+[m[32m      notifies :create, "ruby_block[wicked-ifup-required]", :immediately[m
+     end[m
+[32m+[m
+     if ifs[nic.name]["gateway"][m
+       template "/etc/sysconfig/network/ifroute-#{nic.name}" do[m
+         source "suse-route.erb"[m
+[36m@@ -543,6 +551,30 @@[m [mwhen "suse"[m
+     end[m
+   end[m
+ [m
+[32m+[m[32m  run_wicked_ifup = false[m
+[32m+[m
+[32m+[m[32m  # This, when notified by the above "ifcfg" templates, sets run_wicked_ifup[m
+[32m+[m[32m  # to true (which was initialized to false in the compile phase).[m
+[32m+[m[32m  # run_wicked_ifup is later used as an "only_if" guard for the[m
+[32m+[m[32m  # "wicked ifup all" call that is needs to happen when any of the config[m
+[32m+[m[32m  # files got updated. The purpose of doing it this way (instead of notifying[m
+[32m+[m[32m  # the "wicked-ifup-all" resource directly), is to make sure that the[m
+[32m+[m[32m  # ifup is only run once after all ifcfg file have been updated and[m
+[32m+[m[32m  # independent of how many of them were changed.[m
+[32m+[m[32m  ruby_block "wicked-ifup-required" do[m
+[32m+[m[32m    block do[m
+[32m+[m[32m      run_wicked_ifup = true[m
+[32m+[m[32m    end[m
+[32m+[m[32m    action :nothing[m
+[32m+[m[32m  end[m
+[32m+[m
+[32m+[m[32m  # Mark all configured interfaces as up, so wicked will keep them that way.[m
+[32m+[m[32m  bash "wicked-ifup-all" do[m
+[32m+[m[32m    action :run[m
+[32m+[m[32m    code "wicked ifup all"[m
+[32m+[m[32m    only_if { run_wicked_ifup }[m
+[32m+[m[32m  end[m
+[32m+[m
+   # Avoid running the wicked related thing on SLE11 nodes[m
+   unless node[:platform] == "suse" && node[:platform_version].to_f < 12.0[m
+     if ovs_bridge_created[m
+
+[33mcommit cada227398498c5e46a9809a5715ec3a1c3d2fcb[m
+Author: Steve Kowalik <steven@wedontsleep.org>
+Date:   Tue Jun 27 16:42:15 2017 +1000
+
+    network: Correct checking for per-bond settings
+    
+    When 08559ef4d6d0c32fd1244b2cdaccf0cb41947553 was cherry-picked from
+    stable/4.0, it missed one change -- network.conduit is not defined in
+    stable/3.0, and is instead named conduit.
+
+[1mdiff --git a/chef/cookbooks/network/recipes/default.rb b/chef/cookbooks/network/recipes/default.rb[m
+[1mindex a3547c6e..b6c4549e 100644[m
+[1m--- a/chef/cookbooks/network/recipes/default.rb[m
+[1m+++ b/chef/cookbooks/network/recipes/default.rb[m
+[36m@@ -182,10 +182,10 @@[m [mnode["crowbar"]["network"].keys.sort{|a,b|[m
+     # We want a bond.  Figure out what mode it should be.  Default to 5[m
+     team_mode = conduit_map[conduit]["team_mode"] ||[m
+       (node["network"]["teaming"] && node["network"]["teaming"]["mode"]) || 5[m
+[31m-    miimon = conduit_map[network.conduit]["team_miimon"] ||[m
+[32m+[m[32m    miimon = conduit_map[conduit]["team_miimon"] ||[m
+       (node["network"]["teaming"] &&[m
+        node["network"]["teaming"]["miimon"]) || 100[m
+[31m-    xmit_hash_policy = conduit_map[network.conduit]["team_xmit_hash_policy"] ||[m
+[32m+[m[32m    xmit_hash_policy = conduit_map[conduit]["team_xmit_hash_policy"] ||[m
+       (node["network"]["teaming"] &&[m
+        node["network"]["teaming"]["xmit_hash_policy"]) || "layer2"[m
+     # See if a bond that matches our specifications has already been created,[m
+
+[33mcommit 3585ea2ffd711a29f5dc36cd5bf19239bc8211a3[m
+Author: Steve Kowalik <steven@wedontsleep.org>
+Date:   Thu Jun 15 18:40:45 2017 +1000
+
+    network: Also remove optional keys during downgrade
+    
+    When downgrading the schema after applying xmit_hash_policy, we should
+    iterate over the conduits defined and remove team_miimon and
+    team_xmit_hash_policy.
+    
+    (cherry picked from commit 02ec0507069c2e23fc2aabe540d5e545f71966b5)
+
+[1mdiff --git a/chef/data_bags/crowbar/migrate/network/022_add_bonding_miimon_xmit_hash_policy.rb b/chef/data_bags/crowbar/migrate/network/022_add_bonding_miimon_xmit_hash_policy.rb[m
+[1mindex 05801139..4c62c9bc 100644[m
+[1m--- a/chef/data_bags/crowbar/migrate/network/022_add_bonding_miimon_xmit_hash_policy.rb[m
+[1m+++ b/chef/data_bags/crowbar/migrate/network/022_add_bonding_miimon_xmit_hash_policy.rb[m
+[36m@@ -15,5 +15,9 @@[m [mdef downgrade(ta, td, a, d)[m
+   unless ta["teaming"].key? "xmit_hash_policy"[m
+     a["teaming"].delete "xmit_hash_policy"[m
+   end[m
+[32m+[m[32m  a["conduit_map"].each do |conduit|[m
+[32m+[m[32m    a["conduit_map"][conduit].delete "team_miimon"[m
+[32m+[m[32m    a["conduit_map"][conduit].delete "team_xmit_hash_policy"[m
+[32m+[m[32m  end[m
+   return a, d[m
+ end[m
+
+[33mcommit c483dac8eadf15879c8a250a7f6ff32c3445ea86[m
+Merge: 5ed88a4d d89b2610
+Author: Itxaka <itxakaserrano@gmail.com>
+Date:   Mon Jun 26 08:28:51 2017 -0400
+
+    Merge pull request #1255 from Itxaka/rails-observers-backport-3.0
+    
+    [stable/3.0] Gemfile: Lock rails-observers to <= 0.1.2
+
+[33mcommit d89b2610bf6f9ad180b41761e615aeb7ea668989[m
+Author: Rick Salevsky <rsalevsky@suse.de>
+Date:   Thu Jun 22 10:48:31 2017 +0200
+
+    Gemfile: Lock rails-observers to <= 0.1.2
+    
+    Newer versions of rails-observers need ruby 2.2.2 which is not shipped
+    on SLES.
+    
+    (cherry picked from commit 9f6d3a7dc76659a128b38476aa238d2d9e937067)
+
+[1mdiff --git a/crowbar_framework/Gemfile b/crowbar_framework/Gemfile[m
+[1mindex db7a7add..e6e85890 100644[m
+[1m--- a/crowbar_framework/Gemfile[m
+[1m+++ b/crowbar_framework/Gemfile[m
+[36m@@ -1,6 +1,6 @@[m
+ #[m
+ # Copyright 2011-2013, Dell[m
+[31m-# Copyright 2013-2016, SUSE LINUX GmbH[m
+[32m+[m[32m# Copyright 2013-2017, SUSE Linux GmbH[m
+ #[m
+ # Licensed under the Apache License, Version 2.0 (the "License");[m
+ # you may not use this file except in compliance with the License.[m
+[36m@@ -36,6 +36,7 @@[m [mgem "sqlite3", "~> 1.3.9"[m
+ gem "syslogger", "~> 1.6.0"[m
+ gem "yaml_db", "~> 0.3.0"[m
+ gem "easy_diff", "~> 0.0.5"[m
+[32m+[m[32mgem "rails-observers", "<= 0.1.2"[m
+ [m
+ gem "ohai", "~> 6.24.2"[m
+ gem "chef", "~> 10.32.2"[m
+
+[33mcommit 5ed88a4d6a9a6fd1283efddc67048d6fdd7575d0[m
+Merge: be8c58a0 d58f6ddb
+Author: Ralf Haferkamp <rhafer@suse.de>
+Date:   Tue Jun 20 08:45:48 2017 +0200
+
+    Merge pull request #1231 from Itxaka/bp_xmit_hash_policy
+    
+    [3.0] network: Add support for xmit_hash_policy (bsc#1033917)
+
+[33mcommit d58f6ddbaf1b323da46d6bdae191cb668d6e96c6[m
+Author: Steve Kowalik <steven@wedontsleep.org>
+Date:   Tue May 2 16:11:30 2017 +1000
+
+    network: Add support for xmit_hash_policy (bsc#1033917)
+    
+    Add support for the xmit_hash_policy property of NIC bonding to be queried
+    and set, as well as adding the existing miimon property and new
+    xmit_hash_policy property to the network schema.
+    
+    Add support for miimon to be set (or overloaded) on a per-network basis,
+    like xmit_hash_policy.
+    
+    Drive-by correctly setting miimon rather than hardcoding 100 for the
+    interfaces(5) template.
+    
+    (cherry picked from commit 08559ef4d6d0c32fd1244b2cdaccf0cb41947553)
+
+[1mdiff --git a/chef/cookbooks/barclamp/libraries/nic.rb b/chef/cookbooks/barclamp/libraries/nic.rb[m
+[1mindex 94a4dc8a..3cd5ea5b 100644[m
+[1m--- a/chef/cookbooks/barclamp/libraries/nic.rb[m
+[1m+++ b/chef/cookbooks/barclamp/libraries/nic.rb[m
+[36m@@ -605,6 +605,15 @@[m [mclass ::Nic[m
+       self[m
+     end[m
+ [m
+[32m+[m[32m    def xmit_hash_policy[m
+[32m+[m[32m      sysfs("bonding/xmit_hash_policy").split[0][m
+[32m+[m[32m    end[m
+[32m+[m
+[32m+[m[32m    def xmit_hash_policy=(xmit_hash_policy)[m
+[32m+[m[32m      sysfs_put("bonding/xmit_hash_policy", xmit_hash_policy)[m
+[32m+[m[32m      self[m
+[32m+[m[32m    end[m
+[32m+[m
+     def down[m
+       slaves.each{ |s|s.down }[m
+       super[m
+[36m@@ -625,7 +634,7 @@[m [mclass ::Nic[m
+       nil[m
+     end[m
+ [m
+[31m-    def self.create(nic,mode=6,miimon=100)[m
+[32m+[m[32m    def self.create(nic, mode=6, miimon=100, xmit_hash_policy="layer2")[m
+       Chef::Log.info("Creating new bond #{nic}")[m
+       if self.exists?(nic)[m
+         raise ::ArgumentError.new("#{nic} already exists.")[m
+[36m@@ -642,6 +651,7 @@[m [mclass ::Nic[m
+       iface = ::Nic.new(nic)[m
+       iface.mode = mode[m
+       iface.miimon = miimon[m
+[32m+[m[32m      iface.xmit_hash_policy = xmit_hash_policy[m
+       iface.up[m
+       iface[m
+     end[m
+[1mdiff --git a/chef/cookbooks/network/recipes/default.rb b/chef/cookbooks/network/recipes/default.rb[m
+[1mindex d1fe885c..a3547c6e 100644[m
+[1m--- a/chef/cookbooks/network/recipes/default.rb[m
+[1m+++ b/chef/cookbooks/network/recipes/default.rb[m
+[36m@@ -182,6 +182,12 @@[m [mnode["crowbar"]["network"].keys.sort{|a,b|[m
+     # We want a bond.  Figure out what mode it should be.  Default to 5[m
+     team_mode = conduit_map[conduit]["team_mode"] ||[m
+       (node["network"]["teaming"] && node["network"]["teaming"]["mode"]) || 5[m
+[32m+[m[32m    miimon = conduit_map[network.conduit]["team_miimon"] ||[m
+[32m+[m[32m      (node["network"]["teaming"] &&[m
+[32m+[m[32m       node["network"]["teaming"]["miimon"]) || 100[m
+[32m+[m[32m    xmit_hash_policy = conduit_map[network.conduit]["team_xmit_hash_policy"] ||[m
+[32m+[m[32m      (node["network"]["teaming"] &&[m
+[32m+[m[32m       node["network"]["teaming"]["xmit_hash_policy"]) || "layer2"[m
+     # See if a bond that matches our specifications has already been created,[m
+     # or if there is an empty bond lying around.[m
+     bond = Nic::Bond.find(base_ifs)[m
+[36m@@ -193,7 +199,7 @@[m [mnode["crowbar"]["network"].keys.sort{|a,b|[m
+       bond_names = (0..existing_bond_names.length).to_a.map{ |i| "bond#{i}" }[m
+       new_bond_name = (bond_names - existing_bond_names).first[m
+ [m
+[31m-      bond = Nic::Bond.create(new_bond_name, team_mode)[m
+[32m+[m[32m      bond = Nic::Bond.create(new_bond_name, team_mode, miimon, xmit_hash_policy)[m
+       Chef::Log.info("Creating bond #{bond.name} for network #{name}")[m
+     end[m
+     ifs[bond.name] ||= Hash.new[m
+[36m@@ -207,6 +213,13 @@[m [mnode["crowbar"]["network"].keys.sort{|a,b|[m
+     end[m
+     ifs[bond.name]["mode"] = team_mode[m
+     ifs[bond.name]["type"] = "bond"[m
+[32m+[m[32m    ifs[bond.name]["miimon"] = miimon[m
+[32m+[m[32m    ifs[bond.name]["xmit_hash_policy"] = xmit_hash_policy[m
+[32m+[m[32m    # Also save miimon and xmit_hash_policy to the NIC object, since that is[m
+[32m+[m[32m    # safe to change on the fly, and will be used to write the configuration[m
+[32m+[m[32m    # files.[m
+[32m+[m[32m    bond.miimon = miimon[m
+[32m+[m[32m    bond.xmit_hash_policy = xmit_hash_policy[m
+     our_iface = bond[m
+     node.set["crowbar"]["bond_list"] = {} if node["crowbar"]["bond_list"].nil?[m
+     node.set["crowbar"]["bond_list"][bond.name] = ifs[bond.name]["slaves"][m
+[1mdiff --git a/chef/cookbooks/network/templates/default/interfaces.erb b/chef/cookbooks/network/templates/default/interfaces.erb[m
+[1mindex 2b041fa2..d2668ef8 100644[m
+[1m--- a/chef/cookbooks/network/templates/default/interfaces.erb[m
+[1m+++ b/chef/cookbooks/network/templates/default/interfaces.erb[m
+[36m@@ -43,7 +43,8 @@[m [miface <%= name %> inet manual[m
+     pre-up test -f /sys/class/net/bonding_masters || modprobe bonding[m
+     pre-up grep -qw <%=name%> /sys/class/net/bonding_masters || echo +<%=name%> >/sys/class/net/bonding_masters || true[m
+     pre-up echo <%=i["mode"] %> >/sys/class/net/<%=name%>/bonding/mode || true[m
+[31m-    pre-up echo 100 >/sys/class/net/<%=name%>/bonding/miimon || true[m
+[32m+[m[32m    pre-up echo <%=i["miimon"] %> >/sys/class/net/<%=name%>/bonding/miimon || true[m
+[32m+[m[32m    pre-up echo <%=i["xmit_hash_policy"] %> >/sys/class/net/<%=name%>/bonding/xmit_hash_policy || true[m
+        <% i["slaves"].each do |slave| -%>[m
+     up ip link set <%=slave%> down[m
+     up echo +<%=slave%> > /sys/class/net/<%=name%>/bonding/slaves || true[m
+[1mdiff --git a/chef/cookbooks/network/templates/default/redhat-cfg.erb b/chef/cookbooks/network/templates/default/redhat-cfg.erb[m
+[1mindex f182011e..b329fa80 100644[m
+[1m--- a/chef/cookbooks/network/templates/default/redhat-cfg.erb[m
+[1m+++ b/chef/cookbooks/network/templates/default/redhat-cfg.erb[m
+[36m@@ -12,7 +12,7 @@[m [mDELAY=<%=@nic.forward_delay%>[m
+ STP=no[m
+ <% end -%>[m
+ <% when @nic.kind_of?(Nic::Bond) -%>[m
+[31m-BONDING_OPTS="miimon=<%=@nic.miimon%> mode=<%=@nic.mode%>"[m
+[32m+[m[32mBONDING_OPTS="miimon=<%=@nic.miimon%> mode=<%=@nic.mode%> xmit_hash_policy=<%=@nic.xmit_hash_policy%>"[m
+ <% when @nic.kind_of?(Nic::Vlan) -%>[m
+ VLAN=yes[m
+ <% when @nic.kind_of?(Nic) -%>[m
+[36m@@ -35,4 +35,4 @@[m [mPREFIX<%=(i == 0)?'':(i+1).to_s%>=<%=v4addrs[i].subnet%>[m
+ <% end -%>[m
+ <% if iface["gateway"] -%>[m
+ GATEWAY=<%=iface["gateway"]%>[m
+[31m-<% end -%>[m
+\ No newline at end of file[m
+[32m+[m[32m<% end -%>[m
+[1mdiff --git a/chef/cookbooks/network/templates/default/suse-cfg.erb b/chef/cookbooks/network/templates/default/suse-cfg.erb[m
+[1mindex 7668a865..4b25ce0b 100644[m
+[1m--- a/chef/cookbooks/network/templates/default/suse-cfg.erb[m
+[1m+++ b/chef/cookbooks/network/templates/default/suse-cfg.erb[m
+[36m@@ -59,7 +59,7 @@[m [mETHERDEVICE=<%=quote(iface["parent"])%>[m
+    # Settings specific to bond devices (ifcfg-bonding(5))[m
+    when @nic.kind_of?(Nic::Bond) -%>[m
+ BONDING_MASTER=yes[m
+[31m-BONDING_MODULE_OPTS=<%=quote("mode=#{@nic.mode} miimon=#{@nic.miimon}")%>[m
+[32m+[m[32mBONDING_MODULE_OPTS=<%=quote("mode=#{@nic.mode} miimon=#{@nic.miimon} xmit_hash_policy=#{@nic.xmit_hash_policy}")%>[m
+ <% iface["slaves"].each_with_index do |slave,i| -%>[m
+ BONDING_SLAVE_<%=i%>=<%=quote(slave)%>[m
+ <%   end -%>[m
+[1mdiff --git a/chef/data_bags/crowbar/migrate/network/022_add_bonding_miimon_xmit_hash_policy.rb b/chef/data_bags/crowbar/migrate/network/022_add_bonding_miimon_xmit_hash_policy.rb[m
+[1mnew file mode 100644[m
+[1mindex 00000000..05801139[m
+[1m--- /dev/null[m
+[1m+++ b/chef/data_bags/crowbar/migrate/network/022_add_bonding_miimon_xmit_hash_policy.rb[m
+[36m@@ -0,0 +1,19 @@[m
+[32m+[m[32mdef upgrade(ta, td, a, d)[m
+[32m+[m[32m  unless a["teaming"].key? "miimon"[m
+[32m+[m[32m    a["teaming"]["miimon"] = ta["teaming"]["miimon"][m
+[32m+[m[32m  end[m
+[32m+[m[32m  unless a["teaming"].key? "xmit_hash_policy"[m
+[32m+[m[32m    a["teaming"]["xmit_hash_policy"] = ta["teaming"]["xmit_hash_policy"][m
+[32m+[m[32m  end[m
+[32m+[m[32m  return a, d[m
+[32m+[m[32mend[m
+[32m+[m
+[32m+[m[32mdef downgrade(ta, td, a, d)[m
+[32m+[m[32m  unless ta["teaming"].key? "miimon"[m
+[32m+[m[32m    a["teaming"].delete "miimon"[m
+[32m+[m[32m  end[m
+[32m+[m[32m  unless ta["teaming"].key? "xmit_hash_policy"[m
+[32m+[m[32m    a["teaming"].delete "xmit_hash_policy"[m
+[32m+[m[32m  end[m
+[32m+[m[32m  return a, d[m
+[32m+[m[32mend[m
+[1mdiff --git a/chef/data_bags/crowbar/template-network.json b/chef/data_bags/crowbar/template-network.json[m
+[1mindex be91aaaa..c28dc2eb 100644[m
+[1m--- a/chef/data_bags/crowbar/template-network.json[m
+[1m+++ b/chef/data_bags/crowbar/template-network.json[m
+[36m@@ -8,7 +8,9 @@[m
+       "enable_tx_offloading": false,[m
+       "mode": "single",[m
+       "teaming": {[m
+[31m-        "mode": 1[m
+[32m+[m[32m        "mode": 1,[m
+[32m+[m[32m        "miimon": 100,[m
+[32m+[m[32m        "xmit_hash_policy": "layer2"[m
+       },[m
+       "interface_map": [[m
+         {[m
+[36m@@ -258,7 +260,7 @@[m
+     "network": {[m
+       "crowbar-revision": 0,[m
+       "crowbar-applied": false,[m
+[31m-      "schema-revision": 21,[m
+[32m+[m[32m      "schema-revision": 22,[m
+       "element_states": {[m
+         "network": [ "readying", "ready", "applying" ][m
+       },[m
+[1mdiff --git a/chef/data_bags/crowbar/template-network.schema b/chef/data_bags/crowbar/template-network.schema[m
+[1mindex 1ded1815..94bbbf5d 100644[m
+[1m--- a/chef/data_bags/crowbar/template-network.schema[m
+[1m+++ b/chef/data_bags/crowbar/template-network.schema[m
+[36m@@ -20,7 +20,9 @@[m
+               "type": "map",[m
+               "required": true,[m
+               "mapping": {[m
+[31m-                "mode": { "type": "int", "required": true }[m
+[32m+[m[32m                "mode": { "type": "int", "required": true },[m
+[32m+[m[32m                "miimon": { "type": "int", "required": true },[m
+[32m+[m[32m                "xmit_hash_policy": { "type": "str", "required": true, "pattern": "/^layer2$|^layer2\+3$|^layer3\+4$|^encap2\+3$|^encap3\+4$/" }[m
+               }[m
+             },[m
+             "interface_map": {[m
+[36m@@ -57,6 +59,8 @@[m
+                         "required": true,[m
+                         "mapping": {[m
+                           "team_mode": { "type": "int" },[m
+[32m+[m[32m                          "team_miimon": { "type": "int" },[m
+[32m+[m[32m                          "team_xmit_hash_policy": { "type": "str", "pattern": "/^layer2$|^layer2\+3$|^layer3\+4$|^encap2\+3$|^encap3\+4$/" },[m
+                           "if_list": {[m
+                             "type": "seq",[m
+                             "required": true,[m
+
+[33mcommit be8c58a0b497e949973617e275d24abfe4dbe7fe[m
+Merge: 39224dff 7666b863
+Author: Sayali Lunkad <sayali.92720@gmail.com>
+Date:   Tue Jun 13 12:50:47 2017 +0200
+
+    Merge pull request #1222 from sayalilunkad/backport
+    
+    [3.0] crowbar: Ensure run_list is how we want it to be
+
+[33mcommit 39224dff1396adaaf7ede216ee0037bd78c6171b[m
+Merge: 891231c2 b8a98e02
+Author: Sayali Lunkad <sayali.92720@gmail.com>
+Date:   Fri Jun 9 10:08:23 2017 +0200
+
+    Merge pull request #1242 from vuntz/no-.log
+    
+    crowbar: Fix re-running chef after failure in apply_role for admin nodes
+
+[33mcommit b8a98e023498209794733585b753659e58fd7f98[m
+Author: Vincent Untz <vuntz@suse.com>
+Date:   Wed Jun 7 14:25:29 2017 +0200
+
+    crowbar: Fix re-running chef after failure in apply_role for admin nodes
+    
+    When a chef call fails in apply_role, we try a second time to run chef.
+    However, for admin nodes, we were not remembering the pid/host pair
+    correctly, resulting in the second chef call to be invalid (for no
+    host).
+    
+    This resulted in the creation of /var/log/crowbar/chef-client/.log,
+    which is a long-standing bug.
+
+[1mdiff --git a/crowbar_framework/app/models/service_object.rb b/crowbar_framework/app/models/service_object.rb[m
+[1mindex 01c77ee2..5c5f52cb 100644[m
+[1m--- a/crowbar_framework/app/models/service_object.rb[m
+[1m+++ b/crowbar_framework/app/models/service_object.rb[m
+[36m@@ -1372,7 +1372,7 @@[m [mclass ServiceObject[m
+         admin_list.each do |node|[m
+           filename = "#{ENV['CROWBAR_LOG_DIR']}/chef-client/#{node}.log"[m
+           pid = run_remote_chef_client(node, "chef-client", filename)[m
+[31m-          pids[node] = pid[m
+[32m+[m[32m          pids[pid] = node[m
+         end[m
+         status = Process.waitall[m
+         badones = status.select { |x| x[1].exitstatus != 0 }[m
+
+[33mcommit 891231c22985eae0c13e7465e086fe6bceb18447[m
+Merge: 3721fd59 611c859f
+Author: Vincent Untz <vuntz@gnome.org>
+Date:   Thu Jun 8 10:02:40 2017 +0200
+
+    Merge pull request #1243 from vuntz/no-single-chef-on-apply
+    
+    crowbar: Call chef-client instead of single_chef_client.sh on apply
+
+[33mcommit 611c859fc6a8f136f733e8cbf52c018a09419b7c[m
+Author: Vincent Untz <vuntz@suse.com>
+Date:   Wed Jun 7 15:11:03 2017 +0200
+
+    crowbar: Call chef-client instead of single_chef_client.sh on apply
+    
+    For admin nodes, we were calling single_chef_client.sh. The problem is
+    that this calls looper_chef_client.sh and can enter a never-ending loop
+    if looper_chef_client.sh was not run before, or if
+    /var/run/crowbar/looper-chef-client.lock is not existing. The latter
+    condition is true whenever the crowbar service is restarted.
+    
+    This basically means that if applying a proposal that involves the admin
+    server after the crowbar service has been restarted, we can have this
+    block for quite some time.
+    
+    It turns out that we don't need to call single_chef_client.sh anymore
+    and can use chef-client directly instead: single_chef_client.sh was
+    created in the days where chef had no locking to avoid concurrent runs,
+    since the admin server had some other chef runs started by crowbar (on
+    transitions, for instance). This has been fixed since a long time now,
+    so there's no reason to continue this.
+    
+    This was fixed in master with afe7d80e0ed6b6af7fae7f95893ae40712bb8b79
+    already, but cherry-picking this results in lots of conflicts due to
+    other changes that we can't backport at the moment. Instead of an
+    unclean cherry-pick, we go for the easy patch in case we decide to
+    backport other changes later on too.
+
+[1mdiff --git a/crowbar_framework/app/models/service_object.rb b/crowbar_framework/app/models/service_object.rb[m
+[1mindex 61623676..01c77ee2 100644[m
+[1m--- a/crowbar_framework/app/models/service_object.rb[m
+[1m+++ b/crowbar_framework/app/models/service_object.rb[m
+[36m@@ -1371,7 +1371,7 @@[m [mclass ServiceObject[m
+         )[m
+         admin_list.each do |node|[m
+           filename = "#{ENV['CROWBAR_LOG_DIR']}/chef-client/#{node}.log"[m
+[31m-          pid = run_remote_chef_client(node, Rails.root.join("..", "bin", "single_chef_client.sh").expand_path.to_s, filename)[m
+[32m+[m[32m          pid = run_remote_chef_client(node, "chef-client", filename)[m
+           pids[node] = pid[m
+         end[m
+         status = Process.waitall[m
+[36m@@ -1383,7 +1383,7 @@[m [mclass ServiceObject[m
+               node = pids[baddie[0]][m
+               @logger.warn("Re-running chef-client (admin) again for a failure: #{node} #{@bc_name} #{inst}")[m
+               filename = "#{ENV['CROWBAR_LOG_DIR']}/chef-client/#{node}.log"[m
+[31m-              pid = run_remote_chef_client(node, Rails.root.join("..", "bin", "single_chef_client.sh").expand_path.to_s, filename)[m
+[32m+[m[32m              pid = run_remote_chef_client(node, "chef-client", filename)[m
+               pids[pid] = node[m
+             end[m
+             status = Process.waitall[m
+
+[33mcommit 681f758b10d890e55e1ff62e607186f73a6a05ab[m
+Author: Thomas Bechtold <tbechtold@suse.com>
+Date:   Thu Feb 9 08:27:06 2017 +0100
+
+    network: Set MTU for VLAN parent interface (bsc#1024279)
+    
+    If a physical interface has VLAN(s) configured with a custom MTU set but
+    the underlying physical network is not used directly and has no MTU in
+    its config, use the MTU from the VLAN interface for the parent device.
+    If there are multiple VLANs, use the highest MTU for the parent.
+    
+    Also, if the physical parent from a VLAN interface is configured but the
+    MTU is lower than one of its VLAN interfaces, abort the chef-client run
+    and raise a useful error message.
+    
+    (cherry picked from commit fc4152dd2aa903959e9f978b1fb48f51f7146420)
+
+[1mdiff --git a/chef/cookbooks/network/recipes/default.rb b/chef/cookbooks/network/recipes/default.rb[m
+[1mindex d1fe885c..5ab2caff 100644[m
+[1m--- a/chef/cookbooks/network/recipes/default.rb[m
+[1m+++ b/chef/cookbooks/network/recipes/default.rb[m
+[36m@@ -379,6 +379,37 @@[m [mNic.nics.each do |nic|[m
+     nic.tx_offloading = node["network"]["enable_tx_offloading"] || false[m
+   end[m
+ [m
+[32m+[m[32m  # Do some MTU checks/configuration for the parent of the vlan nic[m
+[32m+[m[32m  if nic.is_a?(Nic::Vlan)[m
+[32m+[m[32m    # 1) validate that the parent of vlan nic is not used by a network directly[m
+[32m+[m[32m    # and the requested mtu for the parent is lower than the vlan nic mtu.[m
+[32m+[m[32m    # That would not work and setting the mtu on the vlan would fail.[m
+[32m+[m[32m    networks_using_parent = if_mapping.select { |net, ifaces| ifaces.include? nic.parent }.keys[m
+[32m+[m[32m    networks_using_parent.each do |net_name|[m
+[32m+[m[32m      net = Barclamp::Inventory.get_network_by_type(node, net_name)[m
+[32m+[m[32m      unless net.use_vlan[m
+[32m+[m[32m        nic_parent = Nic.new nic.parent[m
+[32m+[m[32m        if nic_parent.mtu.to_i < ifs[nic.name]["mtu"].to_i[m
+[32m+[m[32m          msg = "#{nic.name} wants mtu #{ifs[nic.name]["mtu"]} but network #{net_name} " \[m
+[32m+[m[32m                "using the parent nic #{nic.parent} wants a lower mtu #{net.mtu}. " \[m
+[32m+[m[32m                "This network mtu configuration is invalid."[m
+[32m+[m[32m          Chef::Log.fatal(msg)[m
+[32m+[m[32m          raise msg[m
+[32m+[m[32m        end[m
+[32m+[m[32m      end[m
+[32m+[m[32m    end[m
+[32m+[m[32m    # 2) set the mtu for the parent if needed[m
+[32m+[m[32m    if !ifs[nic.parent].key? "mtu" || (ifs[nic.parent]["mtu"].to_i < ifs[nic.name]["mtu"].to_i)[m
+[32m+[m[32m      # we want the highest mtu to end up in the ifcfg-$parent config[m
+[32m+[m[32m      ifs[nic.parent]["mtu"] = ifs[nic.name]["mtu"][m
+[32m+[m[32m      parent_nic = Nic.new(nic.parent)[m
+[32m+[m[32m      Chef::Log.info("vlan #{nic.name} wants mtu #{ifs[nic.name]["mtu"]} but " \[m
+[32m+[m[32m                     "parent #{parent_nic.name} wants no/lower mtu. Set mtu "\[m
+[32m+[m[32m                     "for #{parent_nic.name} to #{ifs[nic.parent]['mtu']}")[m
+[32m+[m[32m      parent_nic.mtu = ifs[nic.parent]["mtu"][m
+[32m+[m[32m    end[m
+[32m+[m[32m  end[m
+[32m+[m
+   if ifs[nic.name]["mtu"][m
+     nic.mtu = ifs[nic.name]["mtu"][m
+   end[m
+
+[33mcommit 7666b863c98ccb4961e393e4dd6b718917bc26d8[m
+Author: Vincent Untz <vuntz@suse.com>
+Date:   Sat Jul 9 07:14:07 2016 +0200
+
+    [3.0] crowbar: Ensure run_list is how we want it to be
+    
+    When we add a role to a node, we need the role in the run_list_map and
+    in the run_list, but if it was in one or the other, we were not doing
+    anything. This resulted in semi-broken setups (which could happen due to
+    crashes, or manual editing) not getting fixed when re-applying a
+    barclamp.
+    
+    Now, when we change the run_list, we really ensure that it's how we want
+    it to be.
+    
+    (cherry picked from commit b341f0b9b7ec70e6b2131f94ef3f39e6da60a89b)
+
+[1mdiff --git a/crowbar_framework/app/models/node_object.rb b/crowbar_framework/app/models/node_object.rb[m
+[1mindex f9c5a80d..21598ba6 100644[m
+[1m--- a/crowbar_framework/app/models/node_object.rb[m
+[1m+++ b/crowbar_framework/app/models/node_object.rb[m
+[36m@@ -709,21 +709,26 @@[m [mclass NodeObject < ChefObject[m
+   end[m
+ [m
+   def add_to_run_list(rolename, priority, states = nil)[m
+[32m+[m[32m    Rails.logger.debug("Ensuring #{name} has role #{rolename} with priority #{priority}")[m
+[32m+[m[32m    save_it = false[m
+     states = ["all"] unless states[m
+[31m-    crowbar["run_list_map"] = {} if crowbar["run_list_map"].nil?[m
+[32m+[m[32m    crowbar["run_list_map"] ||= {}[m
+     val = { "states" => states, "priority" => priority }[m
+[31m-    crowbar["run_list_map"][rolename] = val[m
+[31m-    Rails.logger.debug("crowbar[run_list_map][#{rolename}] = #{val.inspect}")[m
+[31m-    Rails.logger.debug("current state is #{self.crowbar['state']}")[m
+[31m-[m
+[31m-    # only rebuild the run_list if it effects the current state.[m
+[31m-    self.rebuild_run_list if states.include?("all") or states.include?(self.crowbar["state"])[m
+[32m+[m[32m    if crowbar["run_list_map"][rolename] != val[m
+[32m+[m[32m      crowbar["run_list_map"][rolename] = val[m
+[32m+[m[32m      save_it = true[m
+[32m+[m[32m    end[m
+[32m+[m[32m    rebuild_run_list || save_it[m
+   end[m
+ [m
+   def delete_from_run_list(rolename)[m
+[31m-    crowbar["run_list_map"] = {} if crowbar["run_list_map"].nil?[m
+[31m-    crowbar["run_list_map"][rolename] = { "states" => ["all"], "priority" => -1001 } unless crowbar["run_list_map"].nil?[m
+[31m-    crowbar_run_list.run_list_items.delete "role[#{rolename}]"[m
+[32m+[m[32m    Rails.logger.debug("Ensuring #{name} doesn't have role #{rolename}")[m
+[32m+[m[32m    crowbar["run_list_map"] ||= {}[m
+[32m+[m[32m    if crowbar["run_list_map"].key?(rolename)[m
+[32m+[m[32m      crowbar["run_list_map"].delete(rolename)[m
+[32m+[m[32m      save_it = true[m
+[32m+[m[32m    end[m
+[32m+[m[32m    rebuild_run_list || save_it[m
+   end[m
+ [m
+   def rebuild_run_list[m
+[36m@@ -743,12 +748,16 @@[m [mclass NodeObject < ChefObject[m
+     end[m
+     Rails.logger.debug("rebuilt run_list will be #{vals.inspect}")[m
+ [m
+[32m+[m[32m    old_run_list = crowbar_run_list.run_list_items.dup[m
+[32m+[m
+     # Rebuild list[m
+     crowbar_run_list.run_list_items.clear[m
+     vals.each do |item|[m
+       next if item[1]["priority"] == -1001 # Skip deleted items[m
+       crowbar_run_list.run_list_items << "role[#{item[0]}]"[m
+     end[m
+[32m+[m
+[32m+[m[32m    old_run_list != crowbar_run_list.run_list_items[m
+   end[m
+ [m
+   def run_list_to_roles[m
+[1mdiff --git a/crowbar_framework/app/models/service_object.rb b/crowbar_framework/app/models/service_object.rb[m
+[1mindex 61623676..02300085 100644[m
+[1m--- a/crowbar_framework/app/models/service_object.rb[m
+[1m+++ b/crowbar_framework/app/models/service_object.rb[m
+[36m@@ -1099,9 +1099,7 @@[m [mclass ServiceObject[m
+ [m
+             # An old node that is not in the new deployment, drop it[m
+             unless new_nodes.include?(node_name)[m
+[31m-              @logger.debug "remove node #{node_name}"[m
+[31m-              pending_node_actions[node_name] = { remove: [], add: [] } if pending_node_actions[node_name].nil?[m
+[31m-[m
+[32m+[m[32m              pending_node_actions[node_name] ||= { remove: [], add: [] }[m
+               pending_node_actions[node_name][:remove] << role_name[m
+ [m
+               # Remove roles are  a way to "de-configure" things on the node[m
+[36m@@ -1145,12 +1143,9 @@[m [mclass ServiceObject[m
+               next[m
+             end[m
+ [m
+[31m-            # A new node that we did not know before[m
+[31m-            unless old_nodes.include?(node_name)[m
+[31m-              @logger.debug "add node #{node_name}"[m
+[31m-              pending_node_actions[node_name] = { remove: [], add: [] } if pending_node_actions[node_name].nil?[m
+[31m-              pending_node_actions[node_name][:add] << role_name[m
+[31m-            end[m
+[32m+[m[32m            pending_node_actions[node_name] ||= { remove: [], add: [] }[m
+[32m+[m[32m            pending_node_actions[node_name][:add] << role_name[m
+[32m+[m
+             nodes_in_batch << node_name unless nodes_in_batch.include?(node_name)[m
+           end[m
+         end[m
+[36m@@ -1240,40 +1235,22 @@[m [mclass ServiceObject[m
+ [m
+       # Remove the roles being lost[m
+       rlist.each do |item|[m
+[31m-        next unless node.role? item[m
+[31m-        @logger.debug("AR: Removing role #{item} to #{node.name}")[m
+[31m-        node.delete_from_run_list item[m
+[31m-        save_it = true[m
+[32m+[m[32m        save_it = node.delete_from_run_list(item) || save_it[m
+       end[m
+ [m
+       # Add the roles being gained[m
+       alist.each do |item|[m
+[31m-        next if node.role? item[m
+         priority = runlist_priority_map[item] || local_chef_order[m
+[31m-        @logger.debug("AR: Adding role #{item} to #{node.name} with priority #{priority}")[m
+[31m-        node.add_to_run_list(item, priority, role_map[item])[m
+[31m-        save_it = true[m
+[32m+[m[32m        save_it = node.add_to_run_list(item, priority, role_map[item]) || save_it[m
+       end[m
+ [m
+       # Make sure the config role is on the nodes in this barclamp, otherwise[m
+       # remove it[m
+[31m-      # FIXME: All nodes is basically all new nodes, which should have an[m
+[31m-      # add/remove list, why do we need to add specifically the passed role?[m
+       if all_nodes.include?(node.name)[m
+[31m-        # Add the config role[m
+[31m-        unless node.role?(role.name)[m
+[31m-          priority = runlist_priority_map[role.name] || local_chef_order[m
+[31m-          @logger.debug("AR: Adding role #{role.name} to #{node.name} with priority #{priority}")[m
+[31m-          node.add_to_run_list(role.name, priority, role_map[role.name])[m
+[31m-          save_it = true[m
+[31m-        end[m
+[32m+[m[32m        priority = runlist_priority_map[role.name] || local_chef_order[m
+[32m+[m[32m        save_it = node.add_to_run_list(role.name, priority, role_map[role.name]) || save_it[m
+       else[m
+[31m-        # Remove the config role[m
+[31m-        if node.role?(role.name)[m
+[31m-          @logger.debug("AR: Removing role #{role.name} to #{node.name}")[m
+[31m-          node.delete_from_run_list role.name[m
+[31m-          save_it = true[m
+[31m-        end[m
+[32m+[m[32m        save_it = node.delete_from_run_list(role.name) || save_it[m
+       end[m
+ [m
+       node.save if save_it[m
+[36m@@ -1437,8 +1414,7 @@[m [mclass ServiceObject[m
+         # apply_role_pre_chef_call[m
+         pre_cached_nodes[node_name] ||= NodeObject.find_node_by_name(node_name)[m
+         node = pre_cached_nodes[node_name][m
+[31m-        node.delete_from_run_list(role_to_remove)[m
+[31m-        node.save[m
+[32m+[m[32m        node.save if node.delete_from_run_list(role_to_remove)[m
+       end[m
+     end[m
+ [m
+[36m@@ -1513,15 +1489,8 @@[m [mclass ServiceObject[m
+     end[m
+ [m
+     save_it = false[m
+[31m-    unless node.role?(newrole)[m
+[31m-      node.add_to_run_list(newrole, local_chef_order, role_map[newrole])[m
+[31m-      save_it = true[m
+[31m-    end[m
+[31m-[m
+[31m-    unless node.role?("#{barclamp}-config-#{instance}")[m
+[31m-      node.add_to_run_list("#{barclamp}-config-#{instance}", local_chef_order)[m
+[31m-      save_it = true[m
+[31m-    end[m
+[32m+[m[32m    save_it = node.add_to_run_list(newrole, local_chef_order, role_map[newrole]) || save_it[m
+[32m+[m[32m    save_it = node.add_to_run_list("#{barclamp}-config-#{instance}", local_chef_order) || save_it[m
+ [m
+     if save_it[m
+       @logger.debug("saving node")[m
+
+[33mcommit 3721fd59057ddc1e7e9d4936d0fa206bbb2bdfac[m
+Merge: c8b1f52b 2dcd36ec
+Author: Itxaka <itxakaserrano@gmail.com>
+Date:   Tue May 16 07:08:10 2017 -0400
+
+    Merge pull request #1232 from Itxaka/backport_9d242e6bab5d79dfaa04a04f803b8efc0fa2e022
+    
+    [3.0] network: Allow custom MTU for all networks (bsc#1024277)
+
+[33mcommit 2dcd36ec50bece726b2b7efac17e44b1168974f3[m
+Author: Thomas Bechtold <tbechtold@suse.com>
+Date:   Thu Feb 9 15:49:36 2017 +0100
+
+    network: Allow custom MTU for all networks (bsc#1024277)
+    
+    Previously we allowed custom MTU values only for the "admin", "storage"
+    and "os_sdn" networks. This prevents users to create custom networks
+    with MTU!=1500 so allow custom MTUs for all networks.
+    
+    For example, a network.json containing a network like:
+    
+    "storageclient": {
+      "add_bridge": false,
+      "broadcast": "10.1.5.255",
+      "conduit": "intf4",
+      "mtu": 9000,
+      "netmask": "255.255.255.0",
+      "ranges": {
+      "host": {
+        "end": "10.1.5.239",
+        "start": "10.1.5.10"
+      }
+    }
+    
+    works now.
+    
+    (cherry picked from commit 9d242e6bab5d79dfaa04a04f803b8efc0fa2e022)
+
+[1mdiff --git a/chef/cookbooks/network/recipes/default.rb b/chef/cookbooks/network/recipes/default.rb[m
+[1mindex 2a42eed0..d1fe885c 100644[m
+[1m--- a/chef/cookbooks/network/recipes/default.rb[m
+[1m+++ b/chef/cookbooks/network/recipes/default.rb[m
+[36m@@ -305,12 +305,8 @@[m [mnode["crowbar"]["network"].keys.sort{|a,b|[m
+     net_ifs << our_iface.name[m
+   end[m
+   if network["mtu"][m
+[31m-    if ["admin", "storage", "os_sdn"].include? name[m
+[31m-      Chef::Log.info("Setting mtu #{network['mtu']} for #{name} network on #{our_iface.name}")[m
+[31m-      ifs[our_iface.name]["mtu"] = network["mtu"][m
+[31m-    else[m
+[31m-      Chef::Log.warn("Setting mtu for #{our_iface.name} network is not supported yet, skipping")[m
+[31m-    end[m
+[32m+[m[32m    Chef::Log.info("Using mtu #{network["mtu"]} for #{network["name"]} network on #{our_iface.name}")[m
+[32m+[m[32m    ifs[our_iface.name]["mtu"] = network["mtu"][m
+   end[m
+   # Make sure our addresses are correct[m
+   if_mapping[name] = net_ifs[m
+
+[33mcommit c8b1f52b97d0cb5773d217f7d39cd09b5b4762d2[m
+Merge: f1eae1ae 6de160ed
+Author: Dirk Mueller <dmueller@suse.com>
+Date:   Sat Apr 22 08:05:11 2017 +0200
+
+    Merge pull request #1224 from rsalevsky/3.0_timeout
+    
+    [3.0] apache: Set timeout to 3600 to sync with the common crowbar timeout
+
+[33mcommit 6de160edeced29832ce0ce4d2b08f624f1b5b7c2[m
+Author: Rick Salevsky <rsalevsky@suse.de>
+Date:   Fri Apr 21 17:35:03 2017 +0200
+
+    apache: Set timeout to 3600 to sync with the common crowbar timeout
+    
+    (cherry picked from commit ba7bcc20b1f86f3ca4f0c91c06d1be52eabc6e72)
+
+[1mdiff --git a/chef/cookbooks/crowbar/templates/default/apache.conf.erb b/chef/cookbooks/crowbar/templates/default/apache.conf.erb[m
+[1mindex 35a33882..d5ccd4ab 100644[m
+[1m--- a/chef/cookbooks/crowbar/templates/default/apache.conf.erb[m
+[1m+++ b/chef/cookbooks/crowbar/templates/default/apache.conf.erb[m
+[36m@@ -11,7 +11,7 @@[m
+ [m
+     IncludeOptional /etc/apache2/conf.d/crowbar-ui.conf.partia[l][m
+ [m
+[31m-    ProxyPass / http://127.0.0.1:<%= @port %>/ timeout=1500 Keepalive=On[m
+[32m+[m[32m    ProxyPass / http://127.0.0.1:<%= @port %>/ timeout=3600 Keepalive=On[m
+     ProxyPassReverse / http://127.0.0.1:<%= @port %>/[m
+     SetEnv proxy-initial-not-pooled 1[m
+ [m
+[1mdiff --git a/configs/crowbar.conf b/configs/crowbar.conf[m
+[1mindex 48744eed..0792f468 100644[m
+[1m--- a/configs/crowbar.conf[m
+[1m+++ b/configs/crowbar.conf[m
+[36m@@ -9,7 +9,7 @@[m
+     ErrorDocument 422 /422.html[m
+     ErrorDocument 500 /500.html[m
+ [m
+[31m-    ProxyPass / http://127.0.0.1:3000/ timeout=1500 Keepalive=On[m
+[32m+[m[32m    ProxyPass / http://127.0.0.1:3000/ timeout=3600 Keepalive=On[m
+     ProxyPassReverse / http://127.0.0.1:3000/[m
+     SetEnv proxy-initial-not-pooled 1[m
+ </VirtualHost>[m
+
+[33mcommit f1eae1aee12c1bfac01b9f5eba2d00b2e63edbda[m
+Merge: d0a3ff28 2cbcbc50
+Author: Rick Salevsky <rsalevsky@suse.com>
+Date:   Tue Apr 11 15:26:08 2017 +0200
+
+    Merge pull request #1212 from rsalevsky/3.0_remove_hound
+    
+    [3.0] hound: Switch to global hound configs
+
+[33mcommit 2cbcbc50d7101129bbc0fbd0684388a5c8b84aa4[m
+Author: Rick Salevsky <rsalevsky@suse.de>
+Date:   Mon Mar 13 13:43:48 2017 +0100
+
+    hound: Switch to global hound configs
+    
+    In the last team meeting we decided to move to global hound configs
+    which are stored in crowbar/crowbar.
+    
+    (cherry picked from commit 76745a0cfeee16a0b7c9f5c73f4cfa111aec5b8f)
+
+[1mdiff --git a/.hound.haml.yml b/.hound.haml.yml[m
+[1mdeleted file mode 100644[m
+[1mindex 638f32a5..00000000[m
+[1m--- a/.hound.haml.yml[m
+[1m+++ /dev/null[m
+[36m@@ -1,6 +0,0 @@[m
+[31m-linters:[m
+[31m-  LineLength:[m
+[31m-    max: 150[m
+[31m-[m
+[31m-  RuboCop:[m
+[31m-    enabled: false[m
+[1mdiff --git a/.hound.js.json b/.hound.js.json[m
+[1mdeleted file mode 100644[m
+[1mindex bd409080..00000000[m
+[1m--- a/.hound.js.json[m
+[1m+++ /dev/null[m
+[36m@@ -1,3 +0,0 @@[m
+[31m-{[m
+[31m-  "maxlen": 150[m
+[31m-}[m
+[1mdiff --git a/.hound.js.yml b/.hound.js.yml[m
+[1mdeleted file mode 100644[m
+[1mindex bd409080..00000000[m
+[1m--- a/.hound.js.yml[m
+[1m+++ /dev/null[m
+[36m@@ -1,3 +0,0 @@[m
+[31m-{[m
+[31m-  "maxlen": 150[m
+[31m-}[m
+[1mdiff --git a/.hound.ruby.yml b/.hound.ruby.yml[m
+[1mdeleted file mode 100644[m
+[1mindex 5b8c346a..00000000[m
+[1m--- a/.hound.ruby.yml[m
+[1m+++ /dev/null[m
+[36m@@ -1,38 +0,0 @@[m
+[31m-inherit_from: .hound.suse.yml[m
+[31m-[m
+[31m-AllCops:[m
+[31m-  TargetRubyVersion: 2.1[m
+[31m-  Rails:[m
+[31m-    Enabled: true[m
+[31m-  DisplayStyleGuide: true[m
+[31m-  DisplayCopNames: true[m
+[31m-[m
+[31m-Style/RedundantReturn:[m
+[31m-  Exclude:[m
+[31m-    - "chef/data_bags/crowbar/migrate/**/*"[m
+[31m-[m
+[31m-Style/FileName:[m
+[31m-  Exclude:[m
+[31m-    - "lib/crowbar-*"[m
+[31m-[m
+[31m-Style/AlignHash:[m
+[31m-  EnforcedHashRocketStyle: key[m
+[31m-  EnforcedColonStyle: key[m
+[31m-[m
+[31m-Style/Documentation:[m
+[31m-  Enabled: false[m
+[31m-[m
+[31m-Lint/UnusedMethodArgument:[m
+[31m-  Enabled: false[m
+[31m-[m
+[31m-Lint/UnusedBlockArgument:[m
+[31m-  Enabled: false[m
+[31m-[m
+[31m-Metrics/MethodLength:[m
+[31m-  Max: 50[m
+[31m-[m
+[31m-Metrics/ClassLength:[m
+[31m-  Max: 500[m
+[31m-[m
+[31m-Metrics/ModuleLength:[m
+[31m-  Max: 500[m
+[1mdiff --git a/.hound.scss.yml b/.hound.scss.yml[m
+[1mdeleted file mode 100644[m
+[1mindex f9831c88..00000000[m
+[1m--- a/.hound.scss.yml[m
+[1m+++ /dev/null[m
+[36m@@ -1,6 +0,0 @@[m
+[31m-linters:[m
+[31m-  NestingDepth:[m
+[31m-    max_depth: 6[m
+[31m-[m
+[31m-exclude:[m
+[31m-  - "crowbar_framework/vendor/**/*"[m
+[1mdiff --git a/.hound.suse.yml b/.hound.suse.yml[m
+[1mdeleted file mode 100644[m
+[1mindex abf527d0..00000000[m
+[1m--- a/.hound.suse.yml[m
+[1m+++ /dev/null[m
+[36m@@ -1,78 +0,0 @@[m
+[31m-# This is the shared Rubocop configuration for SUSE projects. It is maintained[m
+[31m-# at https://github.com/SUSE/style-guides/blob/master/rubocop-suse.yml[m
+[31m-#[m
+[31m-# The configuration is tested and used with the Rubocop version used by Hound[m
+[31m-# (https://houndci.com).[m
+[31m-#[m
+[31m-# We use the default Hound config as a baseline:[m
+[31m-#[m
+[31m-#   https://raw.githubusercontent.com/thoughtbot/hound/master/config/style_guides/ruby.yml[m
+[31m-#[m
+[31m-# This file contains the rules with derive from this.[m
+[31m-[m
+[31m-Lint/EndAlignment:[m
+[31m-  StyleGuide: https://github.com/SUSE/style-guides/blob/master/Ruby.md#lintendalignment[m
+[31m-  AlignWith: variable[m
+[31m-[m
+[31m-Metrics/AbcSize:[m
+[31m-  StyleGuide: https://github.com/SUSE/style-guides/blob/master/Ruby.md#metricsabcsize[m
+[31m-  Max: 30[m
+[31m-[m
+[31m-Metrics/LineLength:[m
+[31m-  StyleGuide: https://github.com/SUSE/style-guides/blob/master/Ruby.md#metricslinelength[m
+[31m-  Max: 100[m
+[31m-  # To make it possible to copy or click on URIs in the code, we allow lines[m
+[31m-  # contaning a URI to be longer than Max.[m
+[31m-  AllowURI: true[m
+[31m-  URISchemes:[m
+[31m-    - http[m
+[31m-    - https[m
+[31m-[m
+[31m-Style/AlignHash:[m
+[31m-  StyleGuide: https://github.com/SUSE/style-guides/blob/master/Ruby.md#stylealignhash[m
+[31m-  EnforcedHashRocketStyle: table[m
+[31m-  EnforcedColonStyle: table[m
+[31m-[m
+[31m-Style/AlignParameters:[m
+[31m-  StyleGuide: https://github.com/SUSE/style-guides/blob/master/Ruby.md#stylealignparameters[m
+[31m-  Enabled: false[m
+[31m-[m
+[31m-Style/CollectionMethods:[m
+[31m-  StyleGuide: https://github.com/SUSE/style-guides/blob/master/Ruby.md#stylecollectionmethods[m
+[31m-  Enabled: false[m
+[31m-[m
+[31m-Style/EmptyLinesAroundBlockBody:[m
+[31m-  StyleGuide: https://github.com/SUSE/style-guides/blob/master/Ruby.md#styleemptylinesaroundblockbody[m
+[31m-  Enabled: false[m
+[31m-[m
+[31m-Style/MultilineOperationIndentation:[m
+[31m-  StyleGuide: https://github.com/SUSE/style-guides/blob/master/Ruby.md#stylemultilineoperationindentation[m
+[31m-  EnforcedStyle: indented[m
+[31m-[m
+[31m-Style/StringLiterals:[m
+[31m-  StyleGuide: https://github.com/SUSE/style-guides/blob/master/Ruby.md#stylestringliterals[m
+[31m-  EnforcedStyle: double_quotes[m
+[31m-[m
+[31m-Style/StringLiteralsInInterpolation:[m
+[31m-  StyleGuide: https://github.com/SUSE/style-guides/blob/master/Ruby.md#stylestringliteralsininterpolation[m
+[31m-  EnforcedStyle: double_quotes[m
+[31m-[m
+[31m-Style/SymbolArray:[m
+[31m-  StyleGuide: https://github.com/SUSE/style-guides/blob/master/Ruby.md#stylesymbolarray[m
+[31m-  EnforcedStyle: brackets[m
+[31m-[m
+[31m-Style/WordArray:[m
+[31m-  StyleGuide: https://github.com/SUSE/style-guides/blob/master/Ruby.md#stylewordarray[m
+[31m-  EnforcedStyle: brackets[m
+[31m-[m
+[31m-Style/RegexpLiteral:[m
+[31m-  StyleGuide: https://github.com/SUSE/style-guides/blob/master/Ruby.md#styleregexpliteral[m
+[31m-  EnforcedStyle: slashes[m
+[31m-[m
+[31m-Style/SignalException:[m
+[31m-  StyleGuide: https://github.com/bbatsov/ruby-style-guide#fail-method[m
+[31m-  EnforcedStyle: only_raise[m
+[31m-[m
+[31m-Style/NumericLiterals:[m
+[31m-  StyleGuide: https://github.com/SUSE/style-guides/blob/master/Ruby.md#stylenumericliterals[m
+[31m-  Enabled: false[m
+[1mdiff --git a/.hound.yml b/.hound.yml[m
+[1mdeleted file mode 100644[m
+[1mindex ddddfe50..00000000[m
+[1m--- a/.hound.yml[m
+[1m+++ /dev/null[m
+[36m@@ -1,13 +0,0 @@[m
+[31m-ruby:[m
+[31m-  config_file: .hound.ruby.yml[m
+[31m-[m
+[31m-haml:[m
+[31m-  config_file: .hound.haml.yml[m
+[31m-[m
+[31m-javascript:[m
+[31m-  config_file: .hound.js.json[m
+[31m-[m
+[31m-scss:[m
+[31m-  config_file: .hound.scss.yml[m
+[31m-[m
+[31m-fail_on_violations: true[m
+[1mdiff --git a/.rubocop.yml b/.rubocop.yml[m
+[1mdeleted file mode 100644[m
+[1mindex 42d61816..00000000[m
+[1m--- a/.rubocop.yml[m
+[1m+++ /dev/null[m
+[36m@@ -1 +0,0 @@[m
+[31m-inherit_from: .hound.ruby.yml[m
+
+[33mcommit d0a3ff280cdfc26524fb7c32c73b4378dd2af797[m
+Merge: 490715e0 27cd5da4
+Author: Jiří Suchomel <jiri.suchomel@suse.com>
+Date:   Fri Apr 7 14:48:51 2017 +0200
+
+    Merge pull request #1205 from skazi0/api-log-exceptions
+    
+    upgrade: Log api exceptions to production.log
+
+[33mcommit 490715e054101bbc55a5bbdd51896f313eee8392[m
+Merge: cb5c4ca8 8511126c
+Author: Jiří Suchomel <jiri.suchomel@suse.com>
+Date:   Fri Apr 7 12:48:41 2017 +0200
+
+    Merge pull request #1204 from skazi0/precheck-after-prepare
+    
+    upgrade: Fix prechecks after prepare
+
+[33mcommit cb5c4ca8bd07470354f2da4fd6f2081f6ed47b6c[m
+Merge: 6e458a04 e63f9ade
+Author: Dirk Mueller <dmueller@suse.com>
+Date:   Fri Apr 7 11:41:09 2017 +0200
+
+    Merge pull request #1208 from rhafer/wicked-3.0
+    
+    Revert wicked ifreload related changes (bsc#1032751)
+
+[33mcommit 8511126cdddc2f6166ca23e0affe7160ca416469[m
+Author: Jacek Tomasiak <jacek.tomasiak@gmail.com>
+Date:   Wed Apr 5 12:09:43 2017 +0200
+
+    upgrade: Fix prechecks after prepare
+    
+    It should be possible to run prechecks at any time. After prepare call,
+    nodes can't be found using roles anymore. Prechecks which rely on this
+    should be prepared to not find the nodes they expect.
+
+[1mdiff --git a/crowbar_framework/app/models/api/crowbar.rb b/crowbar_framework/app/models/api/crowbar.rb[m
+[1mindex e2919ad9..b3c7ad28 100644[m
+[1m--- a/crowbar_framework/app/models/api/crowbar.rb[m
+[1m+++ b/crowbar_framework/app/models/api/crowbar.rb[m
+[36m@@ -202,10 +202,12 @@[m [mmodule Api[m
+ [m
+           # So lbaas v1 is configured, let's find out if it is actually used[m
+           neutron = NodeObject.find("roles:neutron-server").first[m
+[31m-          out = neutron.run_ssh_cmd([m
+[31m-            "source /root/.openrc; neutron lb-pool-list -f value -c id"[m
+[31m-          )[m
+[31m-          ret[:lbaas_v1] = true unless out[:stdout].nil? || out[:stdout].empty?[m
+[32m+[m[32m          unless neutron.nil?[m
+[32m+[m[32m            out = neutron.run_ssh_cmd([m
+[32m+[m[32m              "source /root/.openrc; neutron lb-pool-list -f value -c id"[m
+[32m+[m[32m            )[m
+[32m+[m[32m            ret[:lbaas_v1] = true unless out[:stdout].nil? || out[:stdout].empty?[m
+[32m+[m[32m          end[m
+         end[m
+         ret[m
+       end[m
+
+[33mcommit 27cd5da47464fb7d350f6257438cc3c4119c3ce6[m
+Author: Jacek Tomasiak <jacek.tomasiak@gmail.com>
+Date:   Wed Apr 5 16:03:01 2017 +0200
+
+    upgrade: Log api exceptions to production.log
+    
+    Exceptions are caught in api endpoints to return proper json responses instead
+    of default 500.html. The backtraces need to be manualy logged to not lose this
+    information.
+    Already existing function log_exception() was used for logging.
+
+[1mdiff --git a/crowbar_framework/app/controllers/api/upgrade_controller.rb b/crowbar_framework/app/controllers/api/upgrade_controller.rb[m
+[1mindex a5d9f795..25664167 100644[m
+[1m--- a/crowbar_framework/app/controllers/api/upgrade_controller.rb[m
+[1m+++ b/crowbar_framework/app/controllers/api/upgrade_controller.rb[m
+[36m@@ -56,6 +56,7 @@[m [mclass Api::UpgradeController < ApiController[m
+   def prechecks[m
+     render json: Api::Upgrade.checks[m
+   rescue StandardError => e[m
+[32m+[m[32m    log_exception(e)[m
+     render json: {[m
+       errors: {[m
+         prechecks: {[m
+[36m@@ -89,6 +90,7 @@[m [mclass Api::UpgradeController < ApiController[m
+       }[m
+     }, status: :locked[m
+   rescue StandardError => e[m
+[32m+[m[32m    log_exception(e)[m
+     render json: {[m
+       errors: {[m
+         cancel: {[m
+[36m@@ -114,8 +116,17 @@[m [mclass Api::UpgradeController < ApiController[m
+     else[m
+       render json: check[m
+     end[m
+[31m-  rescue Crowbar::Error::UpgradeError,[m
+[31m-         StandardError => e[m
+[32m+[m[32m  rescue Crowbar::Error::UpgradeError => e[m
+[32m+[m[32m    render json: {[m
+[32m+[m[32m      errors: {[m
+[32m+[m[32m        repocheck_crowbar: {[m
+[32m+[m[32m          data: e.message,[m
+[32m+[m[32m          help: I18n.t("api.upgrade.adminrepocheck.help.default")[m
+[32m+[m[32m        }[m
+[32m+[m[32m      }[m
+[32m+[m[32m    }, status: :unprocessable_entity[m
+[32m+[m[32m  rescue StandardError => e[m
+[32m+[m[32m    log_exception(e)[m
+     render json: {[m
+       errors: {[m
+         repocheck_crowbar: {[m
+
+[33mcommit e63f9ade650aa155cc6a9dad3ee6b37bce36a8ca[m
+Author: Ralf Haferkamp <rhafer@suse.de>
+Date:   Thu Apr 6 17:15:35 2017 +0200
+
+    Revert wicked ifreload related changes (bsc#1032751)
+    
+    Calling ifreload here seems to have been a bad idea as it cause various
+    issue in HA setups:
+    - pacemaker mananged VIPs assigned to any of the reloaded interfaces are
+      temporary lost, Causing resource failures in the cluster.
+    - reloading an interface causes a small network outage that can
+      de-stabilize the cluster, leading to fenced nodes and other bad
+      things.
+    
+    https://bugzilla.suse.com/show_bug.cgi?id=1032751
+    (cherry picked from commit 41e310cf21642cf0dc2f2fa0b7294c1db7821b59)
+
+[1mdiff --git a/chef/cookbooks/network/recipes/default.rb b/chef/cookbooks/network/recipes/default.rb[m
+[1mindex e1927c06..2a42eed0 100644[m
+[1m--- a/chef/cookbooks/network/recipes/default.rb[m
+[1m+++ b/chef/cookbooks/network/recipes/default.rb[m
+[36m@@ -518,7 +518,6 @@[m [mwhen "suse"[m
+         nic: nic,[m
+         pre_up_script: pre_up_script[m
+       })[m
+[31m-      notifies :create, "ruby_block[wicked-ifreload-required]", :immediately[m
+     end[m
+     if ifs[nic.name]["gateway"][m
+       template "/etc/sysconfig/network/ifroute-#{nic.name}" do[m
+[36m@@ -527,7 +526,6 @@[m [mwhen "suse"[m
+                     interfaces: ifs,[m
+                     nic: nic[m
+                   })[m
+[31m-        notifies :create, "ruby_block[wicked-ifreload-required]", :immediately[m
+       end[m
+     else[m
+       file "/etc/sysconfig/network/ifroute-#{nic.name}" do[m
+[36m@@ -536,35 +534,6 @@[m [mwhen "suse"[m
+     end[m
+   end[m
+ [m
+[31m-  run_wicked_ifreload = false[m
+[31m-[m
+[31m-  # This, when notified by the above "ifcfg" templates, sets run_wicked_ifreload[m
+[31m-  # to true (which was initialized to false in the compile phase).[m
+[31m-  # run_wicked_ifreload is later used as a "only_if" guard for the[m
+[31m-  # "wicked ifreload all" call that is needs to happen when any of the config[m
+[31m-  # files got updated. The purpose of doing it this way (instead of notifying the[m
+[31m-  # "wicked-ifreload-all" resource directly), is to make sure that the[m
+[31m-  # ifrelaod is only run once after all ifcfg file have been update and[m
+[31m-  # independent of how many of them were changed.[m
+[31m-  ruby_block "wicked-ifreload-required" do[m
+[31m-    block do[m
+[31m-      run_wicked_ifreload = true[m
+[31m-    end[m
+[31m-    action :nothing[m
+[31m-  end[m
+[31m-[m
+[31m-  bash "wicked-ifreload-all" do[m
+[31m-    action :run[m
+[31m-    code <<-EOF[m
+[31m-      wicked ifcheck --changed --quiet all[m
+[31m-      rc=$?[m
+[31m-      if [[ $rc != 0 ]]; then[m
+[31m-        wicked ifreload all[m
+[31m-      fi[m
+[31m-    EOF[m
+[31m-    only_if { run_wicked_ifreload }[m
+[31m-  end[m
+[31m-[m
+   # Avoid running the wicked related thing on SLE11 nodes[m
+   unless node[:platform] == "suse" && node[:platform_version].to_f < 12.0[m
+     if ovs_bridge_created[m
+
+[33mcommit 6e458a049d3c83dfedf9432fffeae1cf1ef869aa[m
+Merge: f28adfee 63f62ccc
+Author: Jiří Suchomel <jiri.suchomel@suse.com>
+Date:   Thu Apr 6 14:36:34 2017 +0200
+
+    Merge pull request #1147 from jsuchome/cleanup-lib-3.0
+    
+    [stable/3.0] upgrade: Cleanup the current progress at the end of upgrade
+
+[33mcommit f28adfee7b697acf156eceaed01a52c76eda3c17[m
+Merge: 105b33c6 c912a484
+Author: Jiří Suchomel <jiri.suchomel@suse.com>
+Date:   Tue Apr 4 14:13:32 2017 +0200
+
+    Merge pull request #1195 from jsuchome/systemctl-disable
+    
+    upgrade: Do not try to disable non-existing service
+
+[33mcommit 105b33c679999312368ad43fbc4360a7798bd152[m
+Merge: eb9ee821 6cbee9c5
+Author: Jiří Suchomel <jiri.suchomel@suse.com>
+Date:   Fri Mar 31 16:57:45 2017 +0200
+
+    Merge pull request #1194 from jsuchome/check-for-active-proposals
+    
+    upgrade: Check for active proposals when looking for invalid setups
+
+[33mcommit c912a484a138644abbb858aaf1ee0c204b16df9a[m
+Author: Jiří Suchomel <jiri.suchomel@suse.com>
+Date:   Thu Mar 30 11:48:35 2017 +0200
+
+    upgrade: Do not try to disable non-existing service
+    
+    At SP2, systemctl disable complains when disabling service that is not installed.
+    This is normally not a problem, since we execute this code at SP1 (Cloud6)
+    nodes only, but it can fail in the corner case when user has Ceph nodes, upgrades them
+    (so they have SP2 and are staying in the crowbar-upgrade state) and the redeployes
+    some barclamp (e.g. for fixing some setting required for the Cloud upgrade).
+
+[1mdiff --git a/chef/cookbooks/crowbar/recipes/crowbar-upgrade.rb b/chef/cookbooks/crowbar/recipes/crowbar-upgrade.rb[m
+[1mindex 40c8ddf0..3bb274bc 100644[m
+[1m--- a/chef/cookbooks/crowbar/recipes/crowbar-upgrade.rb[m
+[1m+++ b/chef/cookbooks/crowbar/recipes/crowbar-upgrade.rb[m
+[36m@@ -48,9 +48,7 @@[m [mwhen "crowbar_upgrade"[m
+ [m
+   bash "disable_openstack_services" do[m
+     code <<-EOF[m
+[31m-      for i in $(systemctl list-units openstack* --no-legend | cut -d" " -f1) \[m
+[31m-               drbd.service \[m
+[31m-               pacemaker.service;[m
+[32m+[m[32m      for i in $(systemctl list-units openstack* drbd.service pacemaker.service --no-legend | cut -d" " -f1);[m
+       do[m
+         systemctl disable $i[m
+       done[m
+
+[33mcommit 6cbee9c5c80d332d52896968b1c3df6f93bb93ee[m
+Author: Jiří Suchomel <jiri.suchomel@suse.com>
+Date:   Thu Mar 30 11:06:03 2017 +0200
+
+    upgrade: Check for active proposals when looking for invalid setups
+
+[1mdiff --git a/crowbar_framework/app/models/api/crowbar.rb b/crowbar_framework/app/models/api/crowbar.rb[m
+[1mindex e10113b4..e2919ad9 100644[m
+[1m--- a/crowbar_framework/app/models/api/crowbar.rb[m
+[1m+++ b/crowbar_framework/app/models/api/crowbar.rb[m
+[36m@@ -179,7 +179,7 @@[m [mmodule Api[m
+         ret = {}[m
+         # swift replicas check vs. number of disks[m
+         prop = Proposal.where(barclamp: "swift").first[m
+[31m-        unless prop.nil?[m
+[32m+[m[32m        if !prop.nil? && prop.active?[m
+           replicas = prop["attributes"]["swift"]["replicas"] || 0[m
+           disks = 0[m
+           NodeObject.find("roles:swift-storage").each do |n|[m
+[36m@@ -189,14 +189,15 @@[m [mmodule Api[m
+         end[m
+         # keystone hybrid backend check[m
+         prop = Proposal.where(barclamp: "keystone").first[m
+[31m-        return ret if prop.nil?[m
+[31m-        driver = prop["attributes"]["keystone"]["identity"]["driver"] || "sql"[m
+[31m-        ret[:keystone_hybrid_backend] if driver == "hybrid"[m
+[32m+[m[32m        if !prop.nil? && prop.active?[m
+[32m+[m[32m          driver = prop["attributes"]["keystone"]["identity"]["driver"] || "sql"[m
+[32m+[m[32m          ret[:keystone_hybrid_backend] if driver == "hybrid"[m
+[32m+[m[32m        end[m
+ [m
+         # check for lbaas version[m
+         prop = Proposal.where(barclamp: "neutron").first[m
+[31m-        return ret if prop.nil?[m
+[31m-        if prop["attributes"]["neutron"]["use_lbaas"] &&[m
+[32m+[m[32m        if !prop.nil? && prop.active? &&[m
+[32m+[m[32m            prop["attributes"]["neutron"]["use_lbaas"] &&[m
+             !prop["attributes"]["neutron"]["use_lbaasv2"][m
+ [m
+           # So lbaas v1 is configured, let's find out if it is actually used[m
+[1mdiff --git a/crowbar_framework/spec/models/api/crowbar_spec.rb b/crowbar_framework/spec/models/api/crowbar_spec.rb[m
+[1mindex 608ec634..060914f0 100644[m
+[1m--- a/crowbar_framework/spec/models/api/crowbar_spec.rb[m
+[1m+++ b/crowbar_framework/spec/models/api/crowbar_spec.rb[m
+[36m@@ -369,6 +369,7 @@[m [mdescribe Api::Crowbar do[m
+       }[m
+       allow(Proposal).to(receive(:where).and_return([]))[m
+       allow(Proposal).to(receive(:where).with(barclamp: "cinder").and_return([cinder_proposal]))[m
+[32m+[m[32m      allow_any_instance_of(Proposal).to(receive(:active?).and_return(true))[m
+ [m
+       allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))[m
+       allow_any_instance_of(NodeObject).to([m
+[36m@@ -389,6 +390,7 @@[m [mdescribe Api::Crowbar do[m
+         "cinder" => { "volumes" => [{ "backend_driver" => "raw" }] }[m
+       }[m
+       allow(Proposal).to(receive(:where).and_return([cinder_proposal]))[m
+[32m+[m[32m      allow_any_instance_of(Proposal).to(receive(:active?).and_return(true))[m
+ [m
+       expect(subject.class.ha_config_check).to eq(cinder_wrong_backend: true)[m
+     end[m
+
+[33mcommit eb9ee8210fa44bbdc36b2975689726367b2168b9[m
+Merge: 67d83532 2d6e89f2
+Author: Jacek Tomasiak <jacek.tomasiak@gmail.com>
+Date:   Thu Mar 30 10:15:58 2017 +0200
+
+    Merge pull request #1190 from skazi0/upgrade-link
+    
+    upgrade: Fix upgrade link
+
+[33mcommit 67d835327886024e86f33485774c0d5fe8d4d212[m
+Merge: 05fb3254 60c3b216
+Author: Jiří Suchomel <jiri.suchomel@suse.com>
+Date:   Thu Mar 30 08:54:39 2017 +0200
+
+    Merge pull request #1189 from jsuchome/precheck-no-kvm
+    
+    upgrade: Remove checking for XEN nodes
+
+[33mcommit 60c3b2162bc285e083e582cfa32577f83ecac4a3[m
+Author: Jiří Suchomel <jiri.suchomel@suse.com>
+Date:   Tue Mar 28 15:41:04 2017 +0200
+
+    upgrade: Do not search for XEN nodes for non-disruptive upgrade
+    
+    Also, check for _any_ compute node when searching for deployment
+    error that could prevent any kind of upgrade.
+
+[1mdiff --git a/crowbar_framework/app/models/api/crowbar.rb b/crowbar_framework/app/models/api/crowbar.rb[m
+[1mindex 0ae31bf2..e10113b4 100644[m
+[1m--- a/crowbar_framework/app/models/api/crowbar.rb[m
+[1m+++ b/crowbar_framework/app/models/api/crowbar.rb[m
+[36m@@ -300,13 +300,11 @@[m [mmodule Api[m
+           "trove-server"[m
+         ][m
+         ret = {}[m
+[31m-        ["kvm", "xen"].each do |virt|[m
+[31m-          NodeObject.find("roles:nova-compute-#{virt}").each do |node|[m
+[31m-            conflict = node.roles & conflicting_roles[m
+[31m-            unless conflict.empty?[m
+[31m-              ret[:role_conflicts] ||= {}[m
+[31m-              ret[:role_conflicts][node.name] = conflict[m
+[31m-            end[m
+[32m+[m[32m        NodeObject.find("roles:nova-compute-kvm").each do |node|[m
+[32m+[m[32m          conflict = node.roles & conflicting_roles[m
+[32m+[m[32m          unless conflict.empty?[m
+[32m+[m[32m            ret[:role_conflicts] ||= {}[m
+[32m+[m[32m            ret[:role_conflicts][node.name] = conflict[m
+           end[m
+         end[m
+ [m
+[36m@@ -358,26 +356,24 @@[m [mmodule Api[m
+         ret = {}[m
+         # Make sure that node with nova-compute is not upgraded before nova-controller[m
+         nova_order = BarclampCatalog.run_order("nova")[m
+[31m-        ["kvm", "xen"].each do |virt|[m
+[31m-          NodeObject.find("roles:nova-compute-#{virt}").each do |node|[m
+[31m-            # nova-compute with nova-controller on one node is not non-disruptive,[m
+[31m-            # but at least it does not break the order[m
+[31m-            next if node.roles.include? "nova-controller"[m
+[31m-            next if ret.any?[m
+[31m-            wrong_roles = [][m
+[31m-            node.roles.each do |role|[m
+[31m-              # these storage roles are handled separately[m
+[31m-              next if ["cinder-volume", "swift-storage"].include? role[m
+[31m-              # compute node roles are fine[m
+[31m-              next if role.start_with?("nova-compute") || role == "pacemaker-remote"[m
+[31m-              r = RoleObject.find_role_by_name(role)[m
+[31m-              next if r.proposal?[m
+[31m-              b = r.barclamp[m
+[31m-              next if BarclampCatalog.category(b) != "OpenStack"[m
+[31m-              wrong_roles.push role if BarclampCatalog.run_order(b) < nova_order[m
+[31m-            end[m
+[31m-            ret = { controller_roles: { node: node.name, roles: wrong_roles } } if wrong_roles.any?[m
+[32m+[m[32m        NodeObject.find("roles:nova-compute-*").each do |node|[m
+[32m+[m[32m          # nova-compute with nova-controller on one node is not non-disruptive,[m
+[32m+[m[32m          # but at least it does not break the order[m
+[32m+[m[32m          next if node.roles.include? "nova-controller"[m
+[32m+[m[32m          next if ret.any?[m
+[32m+[m[32m          wrong_roles = [][m
+[32m+[m[32m          node.roles.each do |role|[m
+[32m+[m[32m            # these storage roles are handled separately[m
+[32m+[m[32m            next if ["cinder-volume", "swift-storage"].include? role[m
+[32m+[m[32m            # compute node roles are fine[m
+[32m+[m[32m            next if role.start_with?("nova-compute") || role == "pacemaker-remote"[m
+[32m+[m[32m            r = RoleObject.find_role_by_name(role)[m
+[32m+[m[32m            next if r.proposal?[m
+[32m+[m[32m            b = r.barclamp[m
+[32m+[m[32m            next if BarclampCatalog.category(b) != "OpenStack"[m
+[32m+[m[32m            wrong_roles.push role if BarclampCatalog.run_order(b) < nova_order[m
+           end[m
+[32m+[m[32m          ret = { controller_roles: { node: node.name, roles: wrong_roles } } if wrong_roles.any?[m
+         end[m
+         ret[m
+       end[m
+[1mdiff --git a/crowbar_framework/spec/models/api/crowbar_spec.rb b/crowbar_framework/spec/models/api/crowbar_spec.rb[m
+[1mindex c6c37b7a..608ec634 100644[m
+[1m--- a/crowbar_framework/spec/models/api/crowbar_spec.rb[m
+[1m+++ b/crowbar_framework/spec/models/api/crowbar_spec.rb[m
+[36m@@ -346,7 +346,6 @@[m [mdescribe Api::Crowbar do[m
+         receive(:find).with("pacemaker_founder:true AND pacemaker_config_environment:*").[m
+         and_return([node])[m
+       )[m
+[31m-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))[m
+       allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))[m
+       allow_any_instance_of(NodeObject).to([m
+         receive(:roles).and_return(["nova-compute-kvm", "cinder-volume", "swift-storage"])[m
+[36m@@ -371,7 +370,6 @@[m [mdescribe Api::Crowbar do[m
+       allow(Proposal).to(receive(:where).and_return([]))[m
+       allow(Proposal).to(receive(:where).with(barclamp: "cinder").and_return([cinder_proposal]))[m
+ [m
+[31m-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))[m
+       allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))[m
+       allow_any_instance_of(NodeObject).to([m
+         receive(:roles).and_return(["nova-compute-kvm", "cinder-volume", "swift-storage"])[m
+[36m@@ -400,7 +398,6 @@[m [mdescribe Api::Crowbar do[m
+       allow(NodeObject).to(receive(:find).with([m
+         "pacemaker_founder:true AND pacemaker_config_environment:*"[m
+       ).and_return([node]))[m
+[31m-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))[m
+       allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))[m
+       allow_any_instance_of(NodeObject).to([m
+         receive(:roles).and_return([m
+[36m@@ -616,8 +613,7 @@[m [mdescribe Api::Crowbar do[m
+ [m
+   context "with correct barclamps deployment" do[m
+     it "passes with nice compute nodes" do[m
+[31m-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))[m
+[31m-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))[m
+       allow_any_instance_of(NodeObject).to([m
+         receive(:roles).and_return([m
+           ["nova-compute-kvm", "cinder-volume", "swift-storage"][m
+[36m@@ -629,8 +625,7 @@[m [mdescribe Api::Crowbar do[m
+     end[m
+ [m
+     it "passes with remote compute node" do[m
+[31m-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))[m
+[31m-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))[m
+       allow_any_instance_of(NodeObject).to([m
+         receive(:roles).and_return([m
+           ["nova-compute-kvm", "pacemaker-remote"][m
+[36m@@ -642,8 +637,7 @@[m [mdescribe Api::Crowbar do[m
+     end[m
+ [m
+     it "passes with compute node together with nova-controller " do[m
+[31m-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))[m
+[31m-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))[m
+       allow_any_instance_of(NodeObject).to([m
+         receive(:roles).and_return([m
+           ["nova-compute-kvm", "cinder-controller", "nova-controller"][m
+[36m@@ -657,8 +651,7 @@[m [mdescribe Api::Crowbar do[m
+ [m
+   context "with broken barclamps deployment" do[m
+     it "fails when cinder-controller is on compute node" do[m
+[31m-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))[m
+[31m-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))[m
+       allow_any_instance_of(NodeObject).to([m
+         receive(:roles).and_return([m
+           ["nova-compute-kvm", "cinder-controller"][m
+
+[33mcommit 75a952313d0c17464e6db27e5faf4dba333967fb[m
+Author: Jiří Suchomel <jiri.suchomel@suse.com>
+Date:   Tue Mar 28 15:31:41 2017 +0200
+
+    upgrade: Precheck for presence of non-KVM compute nodes
+
+[1mdiff --git a/crowbar_framework/app/models/api/crowbar.rb b/crowbar_framework/app/models/api/crowbar.rb[m
+[1mindex a924f0e7..0ae31bf2 100644[m
+[1m--- a/crowbar_framework/app/models/api/crowbar.rb[m
+[1m+++ b/crowbar_framework/app/models/api/crowbar.rb[m
+[36m@@ -211,14 +211,15 @@[m [mmodule Api[m
+ [m
+       def compute_status[m
+         ret = {}[m
+[31m-        ["kvm", "xen"].each do |virt|[m
+[31m-          compute_nodes = NodeObject.find("roles:nova-compute-#{virt}")[m
+[31m-          next unless compute_nodes.size == 1[m
+[31m-          ret[:no_resources] ||= [][m
+[31m-          ret[:no_resources].push([m
+[31m-            "Found only one compute node of #{virt} type; non-disruptive upgrade is not possible"[m
+[31m-          )[m
+[32m+[m[32m        compute_nodes = NodeObject.find("roles:nova-compute-kvm")[m
+[32m+[m[32m        if compute_nodes.size == 1[m
+[32m+[m[32m          ret[:no_resources] =[m
+[32m+[m[32m            "Found only one KVM compute node; non-disruptive upgrade is not possible"[m
+         end[m
+[32m+[m[32m        non_kvm_nodes = NodeObject.find([m
+[32m+[m[32m          "roles:nova-compute-* AND NOT roles:nova-compute-kvm"[m
+[32m+[m[32m        ).map(&:name)[m
+[32m+[m[32m        ret[:non_kvm_computes] = non_kvm_nodes unless non_kvm_nodes.empty?[m
+         nova = NodeObject.find("roles:nova-controller").first[m
+         ret[:no_live_migration] = true if nova && !nova["nova"]["use_migration"][m
+         ret[m
+[1mdiff --git a/crowbar_framework/app/models/api/upgrade.rb b/crowbar_framework/app/models/api/upgrade.rb[m
+[1mindex 2d58d04b..d6cbfe06 100644[m
+[1m--- a/crowbar_framework/app/models/api/upgrade.rb[m
+[1m+++ b/crowbar_framework/app/models/api/upgrade.rb[m
+[36m@@ -463,6 +463,13 @@[m [mmodule Api[m
+             help: I18n.t("api.upgrade.prechecks.no_resources.help")[m
+           }[m
+         end[m
+[32m+[m[32m        if check[:non_kvm_computes][m
+[32m+[m[32m          ret[:non_kvm_computes] = {[m
+[32m+[m[32m            data: I18n.t("api.upgrade.prechecks.non_kvm_computes.error",[m
+[32m+[m[32m              nodes: check[:non_kvm_computes].join(", ")),[m
+[32m+[m[32m            help: I18n.t("api.upgrade.prechecks.non_kvm_computes.help")[m
+[32m+[m[32m          }[m
+[32m+[m[32m        end[m
+         if check[:no_live_migration][m
+           ret[:no_live_migration] = {[m
+             data: I18n.t("api.upgrade.prechecks.no_live_migration.error"),[m
+[1mdiff --git a/crowbar_framework/config/locales/crowbar/en.yml b/crowbar_framework/config/locales/crowbar/en.yml[m
+[1mindex 35b484f1..c18752e1 100644[m
+[1m--- a/crowbar_framework/config/locales/crowbar/en.yml[m
+[1m+++ b/crowbar_framework/config/locales/crowbar/en.yml[m
+[36m@@ -823,10 +823,13 @@[m [men:[m
+           help:[m
+             default: 'Make sure clusters are healthy'[m
+         no_resources:[m
+[31m-          help: 'Make sure you have enough compute nodes so the live migration of instances is possible.'[m
+[32m+[m[32m          help: 'Make sure you have enough KVM compute nodes so the live migration of instances is possible.'[m
+         no_live_migration:[m
+           error: 'Live migration is not configured in nova barclamp.'[m
+           help: 'Adapt the nova barclamp configuration to support live migration before proceeding with the upgrade.'[m
+[32m+[m[32m        non_kvm_computes:[m
+[32m+[m[32m          error: 'Found compute nodes different than KVM: %{nodes}.'[m
+[32m+[m[32m          help: 'Non-disruptive upgrade is only possible with KVM compute nodes.'[m
+         resources:[m
+           help: 'Make sure you have enough compute nodes so the live migration of instances is possible.'[m
+         ha_configured:[m
+[1mdiff --git a/crowbar_framework/spec/models/api/crowbar_spec.rb b/crowbar_framework/spec/models/api/crowbar_spec.rb[m
+[1mindex ed7e60f8..c6c37b7a 100644[m
+[1m--- a/crowbar_framework/spec/models/api/crowbar_spec.rb[m
+[1m+++ b/crowbar_framework/spec/models/api/crowbar_spec.rb[m
+[36m@@ -682,15 +682,14 @@[m [mdescribe Api::Crowbar do[m
+   end[m
+ [m
+   context "with enough compute resources" do[m
+[31m-    it "succeeds to find enough compute nodes" do[m
+[32m+[m[32m    it "succeeds to find enough KVM compute nodes" do[m
+       allow(NodeObject).to([m
+         receive(:find).with("roles:nova-compute-kvm").[m
+         and_return([node, node])[m
+       )[m
+[31m-      allow(NodeObject).to([m
+[31m-        receive(:find).with("roles:nova-compute-xen").[m
+[31m-        and_return([node, node])[m
+[31m-      )[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with([m
+[32m+[m[32m        "roles:nova-compute-* AND NOT roles:nova-compute-kvm"[m
+[32m+[m[32m      ).and_return([]))[m
+       allow(NodeObject).to([m
+         receive(:find).with("roles:nova-controller").[m
+         and_return([NodeObject.find_node_by_name("testing.crowbar.com")])[m
+[36m@@ -705,28 +704,34 @@[m [mdescribe Api::Crowbar do[m
+         receive(:find).with("roles:nova-compute-kvm").[m
+         and_return([node])[m
+       )[m
+[31m-      allow(NodeObject).to([m
+[31m-        receive(:find).with("roles:nova-compute-xen").[m
+[31m-        and_return([node, node])[m
+[31m-      )[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with([m
+[32m+[m[32m        "roles:nova-compute-* AND NOT roles:nova-compute-kvm"[m
+[32m+[m[32m      ).and_return([]))[m
+       allow(NodeObject).to([m
+         receive(:find).with("roles:nova-controller").and_return([node])[m
+       )[m
+[31m-      expect(subject.class.compute_status).to_not be_empty[m
+[32m+[m[32m      expect(subject.class.compute_status).to eq([m
+[32m+[m[32m        no_resources:[m
+[32m+[m[32m        "Found only one KVM compute node; non-disruptive upgrade is not possible"[m
+[32m+[m[32m      )[m
+     end[m
+[31m-    it "finds there is only one XEN compute node and fails" do[m
+[32m+[m[32m  end[m
+[32m+[m
+[32m+[m[32m  context "with various compute node types" do[m
+[32m+[m[32m    it "finds there is non KVM compute node and fails" do[m
+       allow(NodeObject).to([m
+         receive(:find).with("roles:nova-compute-kvm").[m
+         and_return([node, node])[m
+       )[m
+[31m-      allow(NodeObject).to([m
+[31m-        receive(:find).with("roles:nova-compute-xen").[m
+[31m-        and_return([node])[m
+[31m-      )[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with([m
+[32m+[m[32m        "roles:nova-compute-* AND NOT roles:nova-compute-kvm"[m
+[32m+[m[32m      ).and_return([node]))[m
+       allow(NodeObject).to([m
+         receive(:find).with("roles:nova-controller").and_return([node])[m
+       )[m
+[31m-      expect(subject.class.compute_status).to_not be_empty[m
+[32m+[m[32m      expect(subject.class.compute_status).to eq([m
+[32m+[m[32m        non_kvm_computes: ["testing.crowbar.com"][m
+[32m+[m[32m      )[m
+     end[m
+   end[m
+ [m
+[36m@@ -736,10 +741,9 @@[m [mdescribe Api::Crowbar do[m
+         receive(:find).with("roles:nova-compute-kvm").[m
+         and_return([])[m
+       )[m
+[31m-      allow(NodeObject).to([m
+[31m-        receive(:find).with("roles:nova-compute-xen").[m
+[31m-        and_return([])[m
+[31m-      )[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with([m
+[32m+[m[32m        "roles:nova-compute-* AND NOT roles:nova-compute-kvm"[m
+[32m+[m[32m      ).and_return([]))[m
+       allow(NodeObject).to([m
+         receive(:find).with("roles:nova-controller").and_return([node])[m
+       )[m
+
+[33mcommit 2d6e89f2e3088a7745b9fa348393a41a86682c27[m
+Author: Jacek Tomasiak <jacek.tomasiak@gmail.com>
+Date:   Wed Mar 29 11:29:14 2017 +0200
+
+    upgrade: Fix upgrade link
+    
+    Without proper entry in crowbar.yml the link would be removed by
+    `barclamp_install`.
+
+[1mdiff --git a/crowbar.yml b/crowbar.yml[m
+[1mindex fe09b46b..412476e2 100644[m
+[1m--- a/crowbar.yml[m
+[1m+++ b/crowbar.yml[m
+[36m@@ -82,6 +82,9 @@[m [mnav:[m
+     ceph_pre_upgrade:[m
+       order: 30[m
+       route: 'ceph_pre_upgrade_path'[m
+[32m+[m[32m    upgrade:[m
+[32m+[m[32m      order: 40[m
+[32m+[m[32m      route: '"/upgrade"'[m
+   help:[m
+     order: 80[m
+     route: 'docs_path'[m
+[1mdiff --git a/crowbar_framework/config/navigation.rb b/crowbar_framework/config/navigation.rb[m
+[1mindex 9bbdcf28..855376d1 100644[m
+[1m--- a/crowbar_framework/config/navigation.rb[m
+[1m+++ b/crowbar_framework/config/navigation.rb[m
+[36m@@ -39,7 +39,7 @@[m [mSimpleNavigation::Configuration.run do |navigation|[m
+       level2.item :repositories, t("nav.utils.repositories"), repositories_path[m
+       level2.item :backup, t("nav.utils.backup"), backups_path[m
+       level2.item :ceph_pre_upgrade, t("nav.utils.ceph_pre_upgrade"), ceph_pre_upgrade_path[m
+[31m-      level2.item :backup, t("nav.utils.upgrade"), "/upgrade"[m
+[32m+[m[32m      level2.item :upgrade, t("nav.utils.upgrade"), "/upgrade"[m
+       level2.item :logs, t("nav.utils.logs"), utils_path[m
+     end[m
+   end[m
+
+[33mcommit 05fb32548761349cfe0f1f2690ee0bdd25ae9b99[m
+Merge: a7e40065 5a3627b7
+Author: Jacek Tomasiak <jacek.tomasiak@gmail.com>
+Date:   Wed Mar 29 10:11:30 2017 +0200
+
+    Merge pull request #1185 from skazi0/unsupported-cluster-precheck
+    
+    upgrade: Precheck for supported cluster configs
+
+[33mcommit 5a3627b71162e2c38dcd30ed3848dbf61440a19c[m
+Author: Jacek Tomasiak <jacek.tomasiak@gmail.com>
+Date:   Fri Mar 24 10:01:02 2017 +0100
+
+    upgrade: Precheck for supported cluster configs
+    
+    The non-disruptive process supports only limited number of cluster
+    configurations. This precheck is there to verify that the detected
+    configuration matches one of the whitelisted options.
+
+[1mdiff --git a/crowbar_framework/app/models/api/crowbar.rb b/crowbar_framework/app/models/api/crowbar.rb[m
+[1mindex e7c1cd52..a924f0e7 100644[m
+[1m--- a/crowbar_framework/app/models/api/crowbar.rb[m
+[1m+++ b/crowbar_framework/app/models/api/crowbar.rb[m
+[36m@@ -261,14 +261,22 @@[m [mmodule Api[m
+           "nova"[m
+         ][m
+         roles_not_ha = [][m
+[32m+[m[32m        roles_clusters = {}[m
+[32m+[m[32m        clusters_roles = {}[m
+[32m+[m[32m        clusters_roles.default = [][m
+         barclamps.each do |barclamp|[m
+           proposal = Proposal.where(barclamp: barclamp).first[m
+           next if proposal.nil?[m
+           proposal["deployment"][barclamp]["elements"].each do |role, elements|[m
+             next unless clustered_roles.include? role[m
+             elements.each do |element|[m
+[31m-              next if ServiceObject.is_cluster?(element)[m
+[31m-              roles_not_ha |= [role][m
+[32m+[m[32m              if ServiceObject.is_cluster?(element)[m
+[32m+[m[32m                # currently roles can't be assigned to more than one cluster[m
+[32m+[m[32m                roles_clusters[role] = element[m
+[32m+[m[32m                clusters_roles[element] |= [role][m
+[32m+[m[32m              else[m
+[32m+[m[32m                roles_not_ha |= [role][m
+[32m+[m[32m              end[m
+             end[m
+           end[m
+         end[m
+[36m@@ -300,6 +308,48 @@[m [mmodule Api[m
+             end[m
+           end[m
+         end[m
+[32m+[m
+[32m+[m[32m        # example inputs:[m
+[32m+[m[32m        # roles_clusters = {[m
+[32m+[m[32m        #   "neutron-server": "cluster:cluster1",[m
+[32m+[m[32m        #   "neutron-network": "cluster:cluster1",[m
+[32m+[m[32m        #   "database-server": "cluster:cluster2",[m
+[32m+[m[32m        #   "rabbitmq-server": "cluster:cluster3"[m
+[32m+[m[32m        # }[m
+[32m+[m[32m        # clusters_roles = {[m
+[32m+[m[32m        #   "cluster:cluster1": ["neutron-server", "neutron-network"],[m
+[32m+[m[32m        #   "cluster:cluster2": ["database-server"],[m
+[32m+[m[32m        #   "cluster:cluster3": ["rabbitmq-server"][m
+[32m+[m[32m        # }[m
+[32m+[m[32m        deployment_supported =[m
+[32m+[m[32m          case clusters_roles.length[m
+[32m+[m[32m          when 0[m
+[32m+[m[32m            # no clusters, no point complaining as this will be detected by other prechecks[m
+[32m+[m[32m            true[m
+[32m+[m
+[32m+[m[32m          when 1[m
+[32m+[m[32m            # everything on one cluster = no problem[m
+[32m+[m[32m            true[m
+[32m+[m
+[32m+[m[32m          when 2[m
+[32m+[m[32m            # neutron-network in separate cluster[m
+[32m+[m[32m            true if clusters_roles[roles_clusters["neutron-network"]].length == 1 ||[m
+[32m+[m[32m                # neutron-network + neutron-server in separate cluster[m
+[32m+[m[32m                (clusters_roles[roles_clusters["neutron-network"]].length == 2 &&[m
+[32m+[m[32m                roles_clusters["neutron-network"] == roles_clusters["neutron-server"]) ||[m
+[32m+[m[32m                # database-server + rabbitmq-server in separate cluster[m
+[32m+[m[32m                (clusters_roles[roles_clusters["database-server"]].length == 2 &&[m
+[32m+[m[32m                roles_clusters["database-server"] == roles_clusters["rabbitmq-server"])[m
+[32m+[m
+[32m+[m[32m          when 3[m
+[32m+[m[32m            # neutron-network and database-server + rabbitmq-server in separate clusters[m
+[32m+[m[32m            # rest of *-server roles is implicitly on the third cluster[m
+[32m+[m[32m            true if clusters_roles[roles_clusters["neutron-network"]].length == 1 &&[m
+[32m+[m[32m                clusters_roles[roles_clusters["database-server"]].length == 2 &&[m
+[32m+[m[32m                roles_clusters["database-server"] == roles_clusters["rabbitmq-server"][m
+[32m+[m[32m          end[m
+[32m+[m[32m        ret[:unsupported_cluster_setup] = true unless deployment_supported[m
+[32m+[m
+         ret[m
+       end[m
+ [m
+[1mdiff --git a/crowbar_framework/app/models/api/upgrade.rb b/crowbar_framework/app/models/api/upgrade.rb[m
+[1mindex 812f870c..2d58d04b 100644[m
+[1m--- a/crowbar_framework/app/models/api/upgrade.rb[m
+[1m+++ b/crowbar_framework/app/models/api/upgrade.rb[m
+[36m@@ -407,6 +407,12 @@[m [mmodule Api[m
+             help: I18n.t("api.upgrade.prechecks.cinder_wrong_backend.help")[m
+           }[m
+         end[m
+[32m+[m[32m        if check[:unsupported_cluster_setup][m
+[32m+[m[32m          ret[:unsupported_cluster_setup] = {[m
+[32m+[m[32m            data: I18n.t("api.upgrade.prechecks.unsupported_cluster_setup.error"),[m
+[32m+[m[32m            help: I18n.t("api.upgrade.prechecks.unsupported_cluster_setup.help")[m
+[32m+[m[32m          }[m
+[32m+[m[32m        end[m
+         ret[m
+       end[m
+ [m
+[1mdiff --git a/crowbar_framework/config/locales/crowbar/en.yml b/crowbar_framework/config/locales/crowbar/en.yml[m
+[1mindex 253f1751..35b484f1 100644[m
+[1m--- a/crowbar_framework/config/locales/crowbar/en.yml[m
+[1m+++ b/crowbar_framework/config/locales/crowbar/en.yml[m
+[36m@@ -846,6 +846,9 @@[m [men:[m
+         cinder_wrong_backend:[m
+           error: 'Unsupported cinder backend detected. The Raw Devices and Local File backend cannot be used with non-disruptive upgrade.'[m
+           help: 'For non-disruptive upgrade, cinder cannot use Raw Devices or Local File as a backend. Adapt your Cinder configuration before proceeding with the upgrade.'[m
+[32m+[m[32m        unsupported_cluster_setup:[m
+[32m+[m[32m          error: 'Your cluster/role configuration is not supported by the non-disruptive upgrade process.'[m
+[32m+[m[32m          help: 'Please refer to the Deployment Guide for list of supported configurations.'[m
+         swift_replicas:[m
+           error: 'The number of replicas is bigger than the number of disks assigned for Swift.'[m
+           help: 'Such configuration is not supported in Swift delivered with SOC 7. Adapt your Swift configuration before proceeding with the upgrade.'[m
+[1mdiff --git a/crowbar_framework/spec/models/api/crowbar_spec.rb b/crowbar_framework/spec/models/api/crowbar_spec.rb[m
+[1mindex 73a62852..ed7e60f8 100644[m
+[1m--- a/crowbar_framework/spec/models/api/crowbar_spec.rb[m
+[1m+++ b/crowbar_framework/spec/models/api/crowbar_spec.rb[m
+[36m@@ -412,6 +412,181 @@[m [mdescribe Api::Crowbar do[m
+         role_conflicts: { "testing.crowbar.com" => ["cinder-controller", "neutron-server"] }[m
+       )[m
+     end[m
+[32m+[m
+[32m+[m[32m    def barclamp_config_helper(attributes, deployment)[m
+[32m+[m[32m      deployment.each do |bc, bc_data|[m
+[32m+[m[32m        allow(Proposal).to([m
+[32m+[m[32m          receive(:where).with(barclamp: bc).and_return([m
+[32m+[m[32m            [{[m
+[32m+[m[32m              "attributes" => attributes[bc],[m
+[32m+[m[32m              "deployment" => { bc => { "elements" => bc_data } }[m
+[32m+[m[32m            }][m
+[32m+[m[32m          )[m
+[32m+[m[32m        )[m
+[32m+[m[32m      end[m
+[32m+[m[32m    end[m
+[32m+[m
+[32m+[m[32m    it "succeeds when there are two clusters and one is dedicated to neutron" do[m
+[32m+[m[32m      allow(Api::Crowbar).to(receive(:addon_installed?).and_return(true))[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with([m
+[32m+[m[32m        "pacemaker_founder:true AND pacemaker_config_environment:*"[m
+[32m+[m[32m      ).and_return([node]))[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([]))[m
+[32m+[m
+[32m+[m[32m      barclamps_clusters = {[m
+[32m+[m[32m        "database" => { "database-server" => ["cluster1"] },[m
+[32m+[m[32m        "rabbitmq" => { "rabbitmq-server" => ["cluster1"] },[m
+[32m+[m[32m        "keystone" => { "keystone-server" => ["cluster1"] },[m
+[32m+[m[32m        "glance" => { "glance-server" => ["cluster1"] },[m
+[32m+[m[32m        "cinder" => { "cinder-controller" => ["cluster1"] },[m
+[32m+[m[32m        "neutron" => { "neutron-server" => ["cluster2"], "neutron-network" => ["cluster2"] },[m
+[32m+[m[32m        "nova" => { "nova-controller" => ["cluster1"] }[m
+[32m+[m[32m      }[m
+[32m+[m[32m      barclamps_attributes = {[m
+[32m+[m[32m        "cinder" => { "cinder" => { "volumes" => [] } }[m
+[32m+[m[32m      }[m
+[32m+[m[32m      barclamp_config_helper(barclamps_attributes, barclamps_clusters)[m
+[32m+[m
+[32m+[m[32m      allow(ServiceObject).to(receive(:is_cluster?).and_return(true))[m
+[32m+[m
+[32m+[m[32m      expect(subject.class.ha_config_check).to eq({})[m
+[32m+[m[32m    end[m
+[32m+[m
+[32m+[m[32m    it "succeeds when there are two clusters and one is dedicated to db" do[m
+[32m+[m[32m      allow(Api::Crowbar).to(receive(:addon_installed?).and_return(true))[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with([m
+[32m+[m[32m        "pacemaker_founder:true AND pacemaker_config_environment:*"[m
+[32m+[m[32m      ).and_return([node]))[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([]))[m
+[32m+[m
+[32m+[m[32m      barclamps_clusters = {[m
+[32m+[m[32m        "database" => { "database-server" => ["cluster2"] },[m
+[32m+[m[32m        "rabbitmq" => { "rabbitmq-server" => ["cluster2"] },[m
+[32m+[m[32m        "keystone" => { "keystone-server" => ["cluster1"] },[m
+[32m+[m[32m        "glance" => { "glance-server" => ["cluster1"] },[m
+[32m+[m[32m        "cinder" => { "cinder-controller" => ["cluster1"] },[m
+[32m+[m[32m        "neutron" => { "neutron-server" => ["cluster1"], "neutron-network" => ["cluster1"] },[m
+[32m+[m[32m        "nova" => { "nova-controller" => ["cluster1"] }[m
+[32m+[m[32m      }[m
+[32m+[m[32m      barclamps_attributes = {[m
+[32m+[m[32m        "cinder" => { "cinder" => { "volumes" => [] } }[m
+[32m+[m[32m      }[m
+[32m+[m[32m      barclamp_config_helper(barclamps_attributes, barclamps_clusters)[m
+[32m+[m
+[32m+[m[32m      allow(ServiceObject).to(receive(:is_cluster?).and_return(true))[m
+[32m+[m
+[32m+[m[32m      expect(subject.class.ha_config_check).to eq({})[m
+[32m+[m[32m    end[m
+[32m+[m
+[32m+[m[32m    it "succeeds when there are three clusters and they are db+apis+network" do[m
+[32m+[m[32m      allow(Api::Crowbar).to(receive(:addon_installed?).and_return(true))[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with([m
+[32m+[m[32m        "pacemaker_founder:true AND pacemaker_config_environment:*"[m
+[32m+[m[32m      ).and_return([node]))[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([]))[m
+[32m+[m
+[32m+[m[32m      barclamps_clusters = {[m
+[32m+[m[32m        "database" => { "database-server" => ["cluster1"] },[m
+[32m+[m[32m        "rabbitmq" => { "rabbitmq-server" => ["cluster1"] },[m
+[32m+[m[32m        "keystone" => { "keystone-server" => ["cluster2"] },[m
+[32m+[m[32m        "glance" => { "glance-server" => ["cluster2"] },[m
+[32m+[m[32m        "cinder" => { "cinder-controller" => ["cluster2"] },[m
+[32m+[m[32m        "neutron" => { "neutron-server" => ["cluster2"], "neutron-network" => ["cluster3"] },[m
+[32m+[m[32m        "nova" => { "nova-controller" => ["cluster2"] }[m
+[32m+[m[32m      }[m
+[32m+[m[32m      barclamps_attributes = {[m
+[32m+[m[32m        "cinder" => { "cinder" => { "volumes" => [] } }[m
+[32m+[m[32m      }[m
+[32m+[m[32m      barclamp_config_helper(barclamps_attributes, barclamps_clusters)[m
+[32m+[m
+[32m+[m[32m      allow(ServiceObject).to(receive(:is_cluster?).and_return(true))[m
+[32m+[m
+[32m+[m[32m      expect(subject.class.ha_config_check).to eq({})[m
+[32m+[m[32m    end[m
+[32m+[m
+[32m+[m[32m    it "fails when there are four clusters" do[m
+[32m+[m[32m      allow(Api::Crowbar).to(receive(:addon_installed?).and_return(true))[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with([m
+[32m+[m[32m        "pacemaker_founder:true AND pacemaker_config_environment:*"[m
+[32m+[m[32m      ).and_return([node]))[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([]))[m
+[32m+[m
+[32m+[m[32m      barclamps_clusters = {[m
+[32m+[m[32m        "database" => { "database-server" => ["cluster1"] },[m
+[32m+[m[32m        "rabbitmq" => { "rabbitmq-server" => ["cluster1"] },[m
+[32m+[m[32m        "keystone" => { "keystone-server" => ["cluster2"] },[m
+[32m+[m[32m        "glance" => { "glance-server" => ["cluster2"] },[m
+[32m+[m[32m        "cinder" => { "cinder-controller" => ["cluster2"] },[m
+[32m+[m[32m        "neutron" => { "neutron-server" => ["cluster2"], "neutron-network" => ["cluster3"] },[m
+[32m+[m[32m        "nova" => { "nova-controller" => ["cluster4"] }[m
+[32m+[m[32m      }[m
+[32m+[m[32m      barclamps_attributes = {[m
+[32m+[m[32m        "cinder" => { "cinder" => { "volumes" => [] } }[m
+[32m+[m[32m      }[m
+[32m+[m[32m      barclamp_config_helper(barclamps_attributes, barclamps_clusters)[m
+[32m+[m
+[32m+[m[32m      allow(ServiceObject).to(receive(:is_cluster?).and_return(true))[m
+[32m+[m
+[32m+[m[32m      expect(subject.class.ha_config_check).to have_key(:unsupported_cluster_setup)[m
+[32m+[m[32m    end[m
+[32m+[m
+[32m+[m[32m    it "fails when there are three clusters and db/api/network roles are mixed" do[m
+[32m+[m[32m      allow(Api::Crowbar).to(receive(:addon_installed?).and_return(true))[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with([m
+[32m+[m[32m        "pacemaker_founder:true AND pacemaker_config_environment:*"[m
+[32m+[m[32m      ).and_return([node]))[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([]))[m
+[32m+[m
+[32m+[m[32m      barclamps_clusters = {[m
+[32m+[m[32m        "database" => { "database-server" => ["cluster1"] },[m
+[32m+[m[32m        "rabbitmq" => { "rabbitmq-server" => ["cluster2"] },[m
+[32m+[m[32m        "keystone" => { "keystone-server" => ["cluster3"] },[m
+[32m+[m[32m        "glance" => { "glance-server" => ["cluster1"] },[m
+[32m+[m[32m        "cinder" => { "cinder-controller" => ["cluster2"] },[m
+[32m+[m[32m        "neutron" => { "neutron-server" => ["cluster3"], "neutron-network" => ["cluster1"] },[m
+[32m+[m[32m        "nova" => { "nova-controller" => ["cluster2"] }[m
+[32m+[m[32m      }[m
+[32m+[m[32m      barclamps_attributes = {[m
+[32m+[m[32m        "cinder" => { "cinder" => { "volumes" => [] } }[m
+[32m+[m[32m      }[m
+[32m+[m[32m      barclamp_config_helper(barclamps_attributes, barclamps_clusters)[m
+[32m+[m
+[32m+[m[32m      allow(ServiceObject).to(receive(:is_cluster?).and_return(true))[m
+[32m+[m
+[32m+[m[32m      expect(subject.class.ha_config_check).to have_key(:unsupported_cluster_setup)[m
+[32m+[m[32m    end[m
+[32m+[m
+[32m+[m[32m    it "fails when there are two clusters and roles assignment does not match supported patterns" do[m
+[32m+[m[32m      allow(Api::Crowbar).to(receive(:addon_installed?).and_return(true))[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with([m
+[32m+[m[32m        "pacemaker_founder:true AND pacemaker_config_environment:*"[m
+[32m+[m[32m      ).and_return([node]))[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([]))[m
+[32m+[m
+[32m+[m[32m      barclamps_clusters = {[m
+[32m+[m[32m        "database" => { "database-server" => ["cluster1"] },[m
+[32m+[m[32m        "rabbitmq" => { "rabbitmq-server" => ["cluster2"] },[m
+[32m+[m[32m        "keystone" => { "keystone-server" => ["cluster1"] },[m
+[32m+[m[32m        "glance" => { "glance-server" => ["cluster2"] },[m
+[32m+[m[32m        "cinder" => { "cinder-controller" => ["cluster1"] },[m
+[32m+[m[32m        "neutron" => { "neutron-server" => ["cluster2"], "neutron-network" => ["cluster1"] },[m
+[32m+[m[32m        "nova" => { "nova-controller" => ["cluster2"] }[m
+[32m+[m[32m      }[m
+[32m+[m[32m      barclamps_attributes = {[m
+[32m+[m[32m        "cinder" => { "cinder" => { "volumes" => [] } }[m
+[32m+[m[32m      }[m
+[32m+[m[32m      barclamp_config_helper(barclamps_attributes, barclamps_clusters)[m
+[32m+[m
+[32m+[m[32m      allow(ServiceObject).to(receive(:is_cluster?).and_return(true))[m
+[32m+[m
+[32m+[m[32m      expect(subject.class.ha_config_check).to have_key(:unsupported_cluster_setup)[m
+[32m+[m[32m    end[m
+   end[m
+ [m
+   context "with HA installed but not deployed" do[m
+
+[33mcommit a7e40065a12d8247d3fed6b1c14fd3994f932147[m
+Merge: b28c8b54 b0af29df
+Author: Jiří Suchomel <jiri.suchomel@suse.com>
+Date:   Mon Mar 27 14:30:36 2017 +0200
+
+    Merge pull request #1182 from jsuchome/volume-checks
+    
+    upgrade: Precheck to make sure cinder is using correct backend
+
+[33mcommit b28c8b544eb6405a6dcb7b39a47927b2f2513cd9[m
+Merge: c5ef7a69 f52359c0
+Author: Itxaka <itxakaserrano@gmail.com>
+Date:   Mon Mar 27 11:13:07 2017 +0200
+
+    Merge pull request #1152 from Itxaka/crowbarbackup
+    
+    backup: Fix upload params
+
+[33mcommit c5ef7a69752b832dc4acb30b4b0c196f28f1e8e7[m
+Merge: 485e9f85 89fe3b29
+Author: Vincent Untz <vuntz@gnome.org>
+Date:   Mon Mar 27 00:23:01 2017 -0700
+
+    Merge pull request #1173 from Itxaka/bemus
+    
+    [3.0] upgrade: better error output for wrong step order
+
+[33mcommit b0af29df6b9b6e89536d75ffd04e1e09339aad45[m
+Author: Jiří Suchomel <jiri.suchomel@suse.com>
+Date:   Thu Mar 23 08:25:01 2017 +0100
+
+    upgrade: Precheck to make sure cinder is using correct backend
+    
+    Backend for cinder cannot be raw or local for non-disruptive upgrade.
+    
+    This reverts commit 26a195da0d22fb99efc127542a2b1e28c8049c72 and brings
+    commit 7281972c3b4a7d7fbc0d5308708a75c7696d124c back.
+
+[1mdiff --git a/crowbar_framework/app/models/api/crowbar.rb b/crowbar_framework/app/models/api/crowbar.rb[m
+[1mindex 3fbd16a1..e7c1cd52 100644[m
+[1m--- a/crowbar_framework/app/models/api/crowbar.rb[m
+[1m+++ b/crowbar_framework/app/models/api/crowbar.rb[m
+[36m@@ -230,6 +230,16 @@[m [mmodule Api[m
+         founders = NodeObject.find("pacemaker_founder:true AND pacemaker_config_environment:*")[m
+         return { ha_not_configured: true } if founders.empty?[m
+ [m
+[32m+[m[32m        # Check if cinder is using correct backend enabling live-migration[m
+[32m+[m[32m        prop = Proposal.where(barclamp: "cinder").first[m
+[32m+[m[32m        unless prop.nil?[m
+[32m+[m[32m          backends = prop["attributes"]["cinder"]["volumes"].select do |volume|[m
+[32m+[m[32m            backend_driver = volume["backend_driver"][m
+[32m+[m[32m            ["local", "raw"].include? backend_driver[m
+[32m+[m[32m          end[m
+[32m+[m[32m          return { cinder_wrong_backend: true } unless backends.empty?[m
+[32m+[m[32m        end[m
+[32m+[m
+         # Check if roles important for non-disruptive upgrade are deployed in the cluster[m
+         clustered_roles = [[m
+           "database-server",[m
+[1mdiff --git a/crowbar_framework/app/models/api/upgrade.rb b/crowbar_framework/app/models/api/upgrade.rb[m
+[1mindex 594d44c6..812f870c 100644[m
+[1m--- a/crowbar_framework/app/models/api/upgrade.rb[m
+[1m+++ b/crowbar_framework/app/models/api/upgrade.rb[m
+[36m@@ -401,6 +401,12 @@[m [mmodule Api[m
+             help: I18n.t("api.upgrade.prechecks.role_conflicts.help")[m
+           }[m
+         end[m
+[32m+[m[32m        if check[:cinder_wrong_backend][m
+[32m+[m[32m          ret[:cinder_wrong_backend] = {[m
+[32m+[m[32m            data: I18n.t("api.upgrade.prechecks.cinder_wrong_backend.error"),[m
+[32m+[m[32m            help: I18n.t("api.upgrade.prechecks.cinder_wrong_backend.help")[m
+[32m+[m[32m          }[m
+[32m+[m[32m        end[m
+         ret[m
+       end[m
+ [m
+[1mdiff --git a/crowbar_framework/config/locales/crowbar/en.yml b/crowbar_framework/config/locales/crowbar/en.yml[m
+[1mindex ef7a7705..253f1751 100644[m
+[1m--- a/crowbar_framework/config/locales/crowbar/en.yml[m
+[1m+++ b/crowbar_framework/config/locales/crowbar/en.yml[m
+[36m@@ -843,6 +843,9 @@[m [men:[m
+         controller_roles:[m
+           error: 'Found compute node %{node} with controller roles: %{roles}.'[m
+           help: 'It is not possible to upgrade with such setup. These roles cannot be placed on compute node.'[m
+[32m+[m[32m        cinder_wrong_backend:[m
+[32m+[m[32m          error: 'Unsupported cinder backend detected. The Raw Devices and Local File backend cannot be used with non-disruptive upgrade.'[m
+[32m+[m[32m          help: 'For non-disruptive upgrade, cinder cannot use Raw Devices or Local File as a backend. Adapt your Cinder configuration before proceeding with the upgrade.'[m
+         swift_replicas:[m
+           error: 'The number of replicas is bigger than the number of disks assigned for Swift.'[m
+           help: 'Such configuration is not supported in Swift delivered with SOC 7. Adapt your Swift configuration before proceeding with the upgrade.'[m
+[1mdiff --git a/crowbar_framework/spec/fixtures/data_bags/template-cinder.json b/crowbar_framework/spec/fixtures/data_bags/template-cinder.json[m
+[1mnew file mode 100644[m
+[1mindex 00000000..a6dc6abf[m
+[1m--- /dev/null[m
+[1m+++ b/crowbar_framework/spec/fixtures/data_bags/template-cinder.json[m
+[36m@@ -0,0 +1,188 @@[m
+[32m+[m[32m{[m
+[32m+[m[32m  "id": "template-cinder",[m
+[32m+[m[32m  "description": "Installation for Cinder",[m
+[32m+[m[32m  "attributes": {[m
+[32m+[m[32m    "cinder": {[m
+[32m+[m[32m      "debug": false,[m
+[32m+[m[32m      "verbose": true,[m
+[32m+[m[32m      "max_header_line": 16384,[m
+[32m+[m[32m      "use_syslog": false,[m
+[32m+[m[32m      "rabbitmq_instance": "none",[m
+[32m+[m[32m      "keystone_instance": "none",[m
+[32m+[m[32m      "glance_instance": "none",[m
+[32m+[m[32m      "database_instance": "none",[m
+[32m+[m[32m      "service_user": "cinder",[m
+[32m+[m[32m      "service_password": "",[m
+[32m+[m[32m      "max_pool_size": 30,[m
+[32m+[m[32m      "max_overflow": 10,[m
+[32m+[m[32m      "pool_timeout": 30,[m
+[32m+[m[32m      "rpc_response_timeout": 60,[m
+[32m+[m[32m      "use_multi_backend": true,[m
+[32m+[m[32m      "use_multipath": false,[m
+[32m+[m[32m      "volume_defaults": {[m
+[32m+[m[32m        "raw": {[m
+[32m+[m[32m          "volume_name": "cinder-volumes",[m
+[32m+[m[32m          "cinder_raw_method": "first"[m
+[32m+[m[32m        },[m
+[32m+[m[32m        "local": {[m
+[32m+[m[32m          "volume_name": "cinder-volumes",[m
+[32m+[m[32m          "file_name": "/var/lib/cinder/volume.raw",[m
+[32m+[m[32m          "file_size": 2000[m
+[32m+[m[32m        },[m
+[32m+[m[32m        "eqlx": {[m
+[32m+[m[32m          "san_ip": "192.168.124.11",[m
+[32m+[m[32m          "san_login": "grpadmin",[m
+[32m+[m[32m          "san_password": "12345",[m
+[32m+[m[32m          "san_thin_provision": false,[m
+[32m+[m[32m          "eqlx_group_name": "group-0",[m
+[32m+[m[32m          "eqlx_use_chap": false,[m
+[32m+[m[32m          "eqlx_chap_login": "chapadmin",[m
+[32m+[m[32m          "eqlx_chap_password": "12345",[m
+[32m+[m[32m          "eqlx_cli_timeout": 30,[m
+[32m+[m[32m          "eqlx_pool": "default"[m
+[32m+[m[32m        },[m
+[32m+[m[32m        "netapp": {[m
+[32m+[m[32m          "storage_family": "ontap_7mode",[m
+[32m+[m[32m          "storage_protocol": "iscsi",[m
+[32m+[m[32m          "nfs_shares": "",[m
+[32m+[m[32m          "vserver": "",[m
+[32m+[m[32m          "netapp_server_hostname": "192.168.124.11",[m
+[32m+[m[32m          "netapp_server_port": 443,[m
+[32m+[m[32m          "netapp_login": "admin",[m
+[32m+[m[32m          "netapp_password": "",[m
+[32m+[m[32m          "netapp_vfiler": "",[m
+[32m+[m[32m          "netapp_transport_type": "https",[m
+[32m+[m[32m          "netapp_volume_list": ""[m
+[32m+[m[32m        },[m
+[32m+[m[32m        "emc": {[m
+[32m+[m[32m          "ecom_server_ip": "192.168.124.11",[m
+[32m+[m[32m          "ecom_server_port": 0,[m
+[32m+[m[32m          "ecom_server_username": "admin",[m
+[32m+[m[32m          "ecom_server_password": "",[m
+[32m+[m[32m          "ecom_server_portgroups": [ "OS-PORTGROUP1-PG", "OS-PORTGROUP2-PG" ],[m
+[32m+[m[32m          "ecom_server_array": "111111111111",[m
+[32m+[m[32m          "ecom_server_pool": "FC_GOLD1",[m
+[32m+[m[32m          "ecom_server_policy": "GOLD1"[m
+[32m+[m[32m        },[m
+[32m+[m[32m        "eternus": {[m
+[32m+[m[32m          "protocol": "fc",[m
+[32m+[m[32m          "ip": "",[m
+[32m+[m[32m          "port": 5988,[m
+[32m+[m[32m          "user": "",[m
+[32m+[m[32m          "password": "",[m
+[32m+[m[32m          "pool": "",[m
+[32m+[m[32m          "iscsi_ip": ""[m
+[32m+[m[32m        },[m
+[32m+[m[32m        "nfs": {[m
+[32m+[m[32m          "nfs_shares": "",[m
+[32m+[m[32m          "nfs_mount_options": ""[m
+[32m+[m[32m        },[m
+[32m+[m[32m        "rbd": {[m
+[32m+[m[32m          "use_crowbar": true,[m
+[32m+[m[32m          "config_file": "/etc/ceph/ceph.conf",[m
+[32m+[m[32m          "admin_keyring": "/etc/ceph/ceph.client.admin.keyring",[m
+[32m+[m[32m          "pool": "volumes",[m
+[32m+[m[32m          "user": "cinder",[m
+[32m+[m[32m          "secret_uuid": ""[m
+[32m+[m[32m        },[m
+[32m+[m[32m        "vmware": {[m
+[32m+[m[32m          "host": "",[m
+[32m+[m[32m          "user": "",[m
+[32m+[m[32m          "password": "",[m
+[32m+[m[32m          "cluster_name": [],[m
+[32m+[m[32m          "volume_folder": "cinder-volume",[m
+[32m+[m[32m          "ca_file": "",[m
+[32m+[m[32m          "insecure": false[m
+[32m+[m[32m        },[m
+[32m+[m[32m        "hitachi": {[m
+[32m+[m[32m          "storage_protocol": "fc",[m
+[32m+[m[32m          "hitachi_add_chap_user": false,[m
+[32m+[m[32m          "hitachi_async_copy_check_interval": 10,[m
+[32m+[m[32m          "hitachi_auth_method": "None",[m
+[32m+[m[32m          "hitachi_auth_password": "HBSD-CHAP-password",[m
+[32m+[m[32m          "hitachi_auth_user": "HBSD-CHAP-user",[m
+[32m+[m[32m          "hitachi_copy_check_interval": 3,[m
+[32m+[m[32m          "hitachi_copy_speed": 3,[m
+[32m+[m[32m          "hitachi_default_copy_method": "FULL",[m
+[32m+[m[32m          "hitachi_group_range": "None",[m
+[32m+[m[32m          "hitachi_group_request": false,[m
+[32m+[m[32m          "hitachi_horcm_add_conf": true,[m
+[32m+[m[32m          "hitachi_horcm_numbers": "200,201",[m
+[32m+[m[32m          "hitachi_horcm_password": "None",[m
+[32m+[m[32m          "hitachi_horcm_resource_lock_timeout": 600,[m
+[32m+[m[32m          "hitachi_horcm_user": "None",[m
+[32m+[m[32m          "hitachi_ldev_range": "None",[m
+[32m+[m[32m          "hitachi_pool_id": "None",[m
+[32m+[m[32m          "hitachi_serial_number": "None",[m
+[32m+[m[32m          "hitachi_target_ports": "None",[m
+[32m+[m[32m          "hitachi_thin_pool_id": "None",[m
+[32m+[m[32m          "hitachi_unit_name": "None",[m
+[32m+[m[32m          "hitachi_zoning_request": false[m
+[32m+[m[32m        },[m
+[32m+[m[32m        "manual": {[m
+[32m+[m[32m          "driver": "",[m
+[32m+[m[32m          "config": ""[m
+[32m+[m[32m        }[m
+[32m+[m[32m      },[m
+[32m+[m[32m      "volumes": [[m
+[32m+[m[32m        {[m
+[32m+[m[32m          "backend_driver": "raw",[m
+[32m+[m[32m          "backend_name": "default",[m
+[32m+[m[32m          "raw": {[m
+[32m+[m[32m              "volume_name": "cinder-volumes",[m
+[32m+[m[32m              "cinder_raw_method": "first"[m
+[32m+[m[32m          }[m
+[32m+[m[32m        }[m
+[32m+[m[32m      ],[m
+[32m+[m[32m      "api": {[m
+[32m+[m[32m        "protocol": "http",[m
+[32m+[m[32m        "bind_open_address": true,[m
+[32m+[m[32m        "bind_port": 8776[m
+[32m+[m[32m      },[m
+[32m+[m[32m      "strict_ssh_host_key_policy": false,[m
+[32m+[m[32m      "default_availability_zone": "",[m
+[32m+[m[32m      "default_volume_type": "",[m
+[32m+[m[32m      "ssl": {[m
+[32m+[m[32m        "certfile": "/etc/cinder/ssl/certs/signing_cert.pem",[m
+[32m+[m[32m        "keyfile": "/etc/cinder/ssl/private/signing_key.pem",[m
+[32m+[m[32m        "generate_certs": false,[m
+[32m+[m[32m        "insecure": false,[m
+[32m+[m[32m        "cert_required": false,[m
+[32m+[m[32m        "ca_certs": "/etc/cinder/ssl/certs/ca.pem"[m
+[32m+[m[32m      },[m
+[32m+[m[32m      "db": {[m
+[32m+[m[32m        "password": "",[m
+[32m+[m[32m        "user": "cinder",[m
+[32m+[m[32m        "database": "cinder"[m
+[32m+[m[32m      }[m
+[32m+[m[32m    }[m
+[32m+[m[32m  },[m
+[32m+[m[32m  "deployment": {[m
+[32m+[m[32m    "cinder": {[m
+[32m+[m[32m      "crowbar-revision": 0,[m
+[32m+[m[32m      "crowbar-applied": false,[m
+[32m+[m[32m      "schema-revision": 50,[m
+[32m+[m[32m      "element_states": {[m
+[32m+[m[32m          "cinder-controller": [ "readying", "ready", "applying" ],[m
+[32m+[m[32m          "cinder-volume": [ "readying", "ready", "applying" ][m
+[32m+[m[32m      },[m
+[32m+[m[32m      "elements": {},[m
+[32m+[m[32m      "element_order": [[m
+[32m+[m[32m          [ "cinder-controller" ],[m
+[32m+[m[32m          [ "cinder-volume" ][m
+[32m+[m[32m      ],[m
+[32m+[m[32m      "element_run_list_order": {[m
+[32m+[m[32m          "cinder-controller": 92,[m
+[32m+[m[32m          "cinder-volume": 93[m
+[32m+[m[32m      },[m
+[32m+[m[32m      "config": {[m
+[32m+[m[32m        "environment": "cinder-base-config",[m
+[32m+[m[32m        "mode": "full",[m
+[32m+[m[32m        "transitions": false,[m
+[32m+[m[32m        "transition_list": [[m
+[32m+[m[32m        ][m
+[32m+[m[32m      }[m
+[32m+[m[32m    }[m
+[32m+[m[32m  }[m
+[32m+[m[32m}[m
+[32m+[m
+[1mdiff --git a/crowbar_framework/spec/models/api/crowbar_spec.rb b/crowbar_framework/spec/models/api/crowbar_spec.rb[m
+[1mindex 9338a50c..73a62852 100644[m
+[1m--- a/crowbar_framework/spec/models/api/crowbar_spec.rb[m
+[1m+++ b/crowbar_framework/spec/models/api/crowbar_spec.rb[m
+[36m@@ -3,6 +3,10 @@[m [mrequire "spec_helper"[m
+ describe Api::Crowbar do[m
+   let(:pid) { rand(20000..30000) }[m
+   let(:admin_node) { NodeObject.find_node_by_name("admin") }[m
+[32m+[m[32m  let(:cinder_proposal) do[m
+[32m+[m[32m    Proposal.where(barclamp: "cinder", name: "default").create(barclamp: "cinder", name: "default")[m
+[32m+[m[32m  end[m
+[32m+[m
+   let!(:crowbar_upgrade_status) do[m
+     JSON.parse([m
+       File.read([m
+[36m@@ -351,6 +355,46 @@[m [mdescribe Api::Crowbar do[m
+       expect(subject.class.ha_config_check).to eq({})[m
+     end[m
+ [m
+[32m+[m[32m    it "succeeds to confirm that HA is deployed with correct cinder backend" do[m
+[32m+[m[32m      allow(Api::Crowbar).to(receive(:addon_installed?).and_return(true))[m
+[32m+[m[32m      allow(NodeObject).to([m
+[32m+[m[32m        receive(:find).with([m
+[32m+[m[32m          "pacemaker_founder:true AND pacemaker_config_environment:*"[m
+[32m+[m[32m        ).and_return([node])[m
+[32m+[m[32m      )[m
+[32m+[m[32m      cinder_proposal.raw_data["attributes"] = {[m
+[32m+[m[32m        "cinder" => { "volumes" => [{ "backend_driver" => "rbd" }] }[m
+[32m+[m[32m      }[m
+[32m+[m[32m      cinder_proposal.raw_data["deployment"] = {[m
+[32m+[m[32m        "cinder" => { "elements" => [] }[m
+[32m+[m[32m      }[m
+[32m+[m[32m      allow(Proposal).to(receive(:where).and_return([]))[m
+[32m+[m[32m      allow(Proposal).to(receive(:where).with(barclamp: "cinder").and_return([cinder_proposal]))[m
+[32m+[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))[m
+[32m+[m[32m      allow_any_instance_of(NodeObject).to([m
+[32m+[m[32m        receive(:roles).and_return(["nova-compute-kvm", "cinder-volume", "swift-storage"])[m
+[32m+[m[32m      )[m
+[32m+[m
+[32m+[m[32m      expect(subject.class.ha_config_check).to eq({})[m
+[32m+[m[32m    end[m
+[32m+[m
+[32m+[m[32m    it "fails when finding out cinder is using raw backend" do[m
+[32m+[m[32m      allow(Api::Crowbar).to(receive(:addon_installed?).and_return(true))[m
+[32m+[m[32m      allow(NodeObject).to([m
+[32m+[m[32m        receive(:find).with([m
+[32m+[m[32m          "pacemaker_founder:true AND pacemaker_config_environment:*"[m
+[32m+[m[32m        ).and_return([node])[m
+[32m+[m[32m      )[m
+[32m+[m[32m      cinder_proposal.raw_data["attributes"] = {[m
+[32m+[m[32m        "cinder" => { "volumes" => [{ "backend_driver" => "raw" }] }[m
+[32m+[m[32m      }[m
+[32m+[m[32m      allow(Proposal).to(receive(:where).and_return([cinder_proposal]))[m
+[32m+[m
+[32m+[m[32m      expect(subject.class.ha_config_check).to eq(cinder_wrong_backend: true)[m
+[32m+[m[32m    end[m
+[32m+[m
+     it "fails when controller role is deployed to compute node" do[m
+       allow(Api::Crowbar).to(receive(:addon_installed?).and_return(true))[m
+       allow(NodeObject).to(receive(:find).with([m
+
+[33mcommit 485e9f85e436c04983fde7234f606f29775efb12[m
+Merge: c578333c 084c34bb
+Author: Jiří Suchomel <jiri.suchomel@suse.com>
+Date:   Wed Mar 22 10:16:40 2017 +0100
+
+    Merge pull request #1177 from jsuchome/pacemaker-remote
+    
+    upgrade: Exclude pacemaker-remote from invalid roles for compute node
+
+[33mcommit 084c34bb311c04ee10b1187ea3f9acfdef56416b[m
+Author: Jiří Suchomel <jiri.suchomel@suse.com>
+Date:   Mon Mar 20 14:50:35 2017 +0100
+
+    upgrade: Exclude pacemaker-remote from invalid roles for compute node
+    
+    In the check for deployment order, we are making sure that compute nodes
+    do not have controller roles.
+    'pacemaker-remote' should not be considered controller role.
+
+[1mdiff --git a/crowbar_framework/app/models/api/crowbar.rb b/crowbar_framework/app/models/api/crowbar.rb[m
+[1mindex 9c06be59..3fbd16a1 100644[m
+[1m--- a/crowbar_framework/app/models/api/crowbar.rb[m
+[1m+++ b/crowbar_framework/app/models/api/crowbar.rb[m
+[36m@@ -307,7 +307,8 @@[m [mmodule Api[m
+             node.roles.each do |role|[m
+               # these storage roles are handled separately[m
+               next if ["cinder-volume", "swift-storage"].include? role[m
+[31m-              next if role.start_with?("nova-compute")[m
+[32m+[m[32m              # compute node roles are fine[m
+[32m+[m[32m              next if role.start_with?("nova-compute") || role == "pacemaker-remote"[m
+               r = RoleObject.find_role_by_name(role)[m
+               next if r.proposal?[m
+               b = r.barclamp[m
+[1mdiff --git a/crowbar_framework/spec/models/api/crowbar_spec.rb b/crowbar_framework/spec/models/api/crowbar_spec.rb[m
+[1mindex 1d2a0541..9338a50c 100644[m
+[1m--- a/crowbar_framework/spec/models/api/crowbar_spec.rb[m
+[1m+++ b/crowbar_framework/spec/models/api/crowbar_spec.rb[m
+[36m@@ -409,6 +409,19 @@[m [mdescribe Api::Crowbar do[m
+       expect(subject.class.deployment_check).to be_empty[m
+     end[m
+ [m
+[32m+[m[32m    it "passes with remote compute node" do[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))[m
+[32m+[m[32m      allow_any_instance_of(NodeObject).to([m
+[32m+[m[32m        receive(:roles).and_return([m
+[32m+[m[32m          ["nova-compute-kvm", "pacemaker-remote"][m
+[32m+[m[32m        )[m
+[32m+[m[32m      )[m
+[32m+[m[32m      allow_any_instance_of(RoleObject).to(receive(:proposal?).and_return(false))[m
+[32m+[m
+[32m+[m[32m      expect(subject.class.deployment_check).to be_empty[m
+[32m+[m[32m    end[m
+[32m+[m
+     it "passes with compute node together with nova-controller " do[m
+       allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))[m
+       allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))[m
+
+[33mcommit c578333ce833442ce97ac0d02cda8c523b879cf6[m
+Merge: f330729c 379e8590
+Author: Jacek Tomasiak <jacek.tomasiak@gmail.com>
+Date:   Mon Mar 20 14:51:11 2017 +0100
+
+    Merge pull request #1172 from skazi0/prechecks-exception
+    
+    upgrade: Expose precheck failures to client
+
+[33mcommit f330729c089401ddaf7f10248ac2a244b449aa62[m
+Merge: a2c09fc3 2a6781ce
+Author: Ralf Haferkamp <rhafer@suse.de>
+Date:   Mon Mar 20 10:15:14 2017 +0100
+
+    Merge pull request #1163 from rhafer/backport_restorebridge
+    
+    [stable/3.0] Restore ovs bridge settings after reboot (bsc#1029179)
+
+[33mcommit a2c09fc3c7eb5c086e55f7802034bace3f0988a4[m
+Merge: c982b3c6 df16ac34
+Author: Ralf Haferkamp <rhafer@suse.de>
+Date:   Fri Mar 17 14:48:45 2017 +0100
+
+    Merge pull request #1162 from rhafer/backport_bsc1011889_take_two
+    
+    [stable/3.0] network: Really run wicked ifreload when needed (refix bsc#1011889)
+
+[33mcommit 89fe3b29aa72d59297386b6592a28149e2507442[m
+Author: Itxaka <igarcia@suse.com>
+Date:   Wed Mar 15 15:25:16 2017 +0100
+
+    upgrade: better error output for wrong step order
+    
+    Provide the step that is currently running in the error output
+    for more clarity
+    
+    (cherry picked from commit 192165d4a4bc2af4139d827a5613be627231fcb1)
+
+[1mdiff --git a/crowbar_framework/lib/crowbar/upgrade_status.rb b/crowbar_framework/lib/crowbar/upgrade_status.rb[m
+[1mindex 2b4dca06..72214f25 100644[m
+[1m--- a/crowbar_framework/lib/crowbar/upgrade_status.rb[m
+[1m+++ b/crowbar_framework/lib/crowbar/upgrade_status.rb[m
+[36m@@ -115,8 +115,8 @@[m [mmodule Crowbar[m
+           raise Crowbar::Error::StartStepExistenceError.new(step_name)[m
+         end[m
+         if running?[m
+[31m-          @logger.warn("Some step is already running.")[m
+[31m-          raise Crowbar::Error::StartStepRunningError.new[m
+[32m+[m[32m          @logger.warn("Step #{current_step} is already running.")[m
+[32m+[m[32m          raise Crowbar::Error::StartStepRunningError.new(current_step)[m
+         end[m
+         unless step_allowed? step_name[m
+           @logger.warn("The start of step #{step_name} is requested in the wrong order")[m
+
+[33mcommit c982b3c66b8ca158e3f50ff698485159d37870e3[m
+Merge: 2800aee6 e956650a
+Author: Vincent Untz <vuntz@gnome.org>
+Date:   Fri Mar 17 12:40:13 2017 +0100
+
+    Merge pull request #1170 from jsuchome/better-ha-check
+    
+    upgrade: Extend the deployment prechecks
+
+[33mcommit 379e859039f32839eef372057eff92fbc87cf8a1[m
+Author: Jacek Tomasiak <jacek.tomasiak@gmail.com>
+Date:   Fri Mar 17 11:17:33 2017 +0100
+
+    upgrade: Expose precheck failures to client
+    
+    When there was some exception during prechecks execution, the info was
+    stored in the status file but not returned to the client as a response.
+    Instead a generic 500 response was generated by the framework as a result
+    of exception propagation.
+    Now the exceptions are caught in the controller and returned in proper
+    JSON response.
+
+[1mdiff --git a/crowbar_framework/app/controllers/api/upgrade_controller.rb b/crowbar_framework/app/controllers/api/upgrade_controller.rb[m
+[1mindex 2fa496da..a5d9f795 100644[m
+[1m--- a/crowbar_framework/app/controllers/api/upgrade_controller.rb[m
+[1m+++ b/crowbar_framework/app/controllers/api/upgrade_controller.rb[m
+[36m@@ -55,6 +55,15 @@[m [mclass Api::UpgradeController < ApiController[m
+ [m
+   def prechecks[m
+     render json: Api::Upgrade.checks[m
+[32m+[m[32m  rescue StandardError => e[m
+[32m+[m[32m    render json: {[m
+[32m+[m[32m      errors: {[m
+[32m+[m[32m        prechecks: {[m
+[32m+[m[32m          data: e.message,[m
+[32m+[m[32m          help: I18n.t("api.upgrade.prechecks.help.default")[m
+[32m+[m[32m        }[m
+[32m+[m[32m      }[m
+[32m+[m[32m    }, status: :unprocessable_entity[m
+   end[m
+ [m
+   def cancel[m
+[1mdiff --git a/crowbar_framework/config/locales/crowbar/en.yml b/crowbar_framework/config/locales/crowbar/en.yml[m
+[1mindex bd9a6699..ee0e8f40 100644[m
+[1m--- a/crowbar_framework/config/locales/crowbar/en.yml[m
+[1m+++ b/crowbar_framework/config/locales/crowbar/en.yml[m
+[36m@@ -794,6 +794,8 @@[m [men:[m
+           default: 'Refer to the error message in the response'[m
+     upgrade:[m
+       prechecks:[m
+[32m+[m[32m        help:[m
+[32m+[m[32m          default: 'Running prechecks have failed. Check /var/log/crowbar/production.log for details.'[m
+         network_checks:[m
+           help:[m
+             default: 'Examine the error messages'[m
+
+[33mcommit e956650a6f3932c528440847a0e86397172833a1[m
+Author: Jiří Suchomel <jiri.suchomel@suse.com>
+Date:   Thu Mar 16 14:51:41 2017 +0100
+
+    upgrade: Add a check for case where compute would be upgraded before controller
+    
+    If a compute node would have some controller role (but not nova-controller),
+    it might get upgraded before the node with nova-controller. This would break
+    when trying to start nova-compute service on upgraded node.
+    
+    This is related to normal (disruptive) upgrade mode only.
+
+[1mdiff --git a/crowbar_framework/app/models/api/crowbar.rb b/crowbar_framework/app/models/api/crowbar.rb[m
+[1mindex 8b9da510..f3ad2f0e 100644[m
+[1m--- a/crowbar_framework/app/models/api/crowbar.rb[m
+[1m+++ b/crowbar_framework/app/models/api/crowbar.rb[m
+[36m@@ -291,6 +291,33 @@[m [mmodule Api[m
+         ret[m
+       end[m
+ [m
+[32m+[m[32m      def deployment_check[m
+[32m+[m[32m        ret = {}[m
+[32m+[m[32m        # Make sure that node with nova-compute is not upgraded before nova-controller[m
+[32m+[m[32m        nova_order = BarclampCatalog.run_order("nova")[m
+[32m+[m[32m        ["kvm", "xen"].each do |virt|[m
+[32m+[m[32m          NodeObject.find("roles:nova-compute-#{virt}").each do |node|[m
+[32m+[m[32m            # nova-compute with nova-controller on one node is not non-disruptive,[m
+[32m+[m[32m            # but at least it does not break the order[m
+[32m+[m[32m            next if node.roles.include? "nova-controller"[m
+[32m+[m[32m            next if ret.any?[m
+[32m+[m[32m            wrong_roles = [][m
+[32m+[m[32m            node.roles.each do |role|[m
+[32m+[m[32m              # these storage roles are handled separately[m
+[32m+[m[32m              next if ["cinder-volume", "swift-storage"].include? role[m
+[32m+[m[32m              next if role.start_with?("nova-compute")[m
+[32m+[m[32m              r = RoleObject.find_role_by_name(role)[m
+[32m+[m[32m              next if r.proposal?[m
+[32m+[m[32m              b = r.barclamp[m
+[32m+[m[32m              next if BarclampCatalog.category(b) != "OpenStack"[m
+[32m+[m[32m              wrong_roles.push role if BarclampCatalog.run_order(b) < nova_order[m
+[32m+[m[32m            end[m
+[32m+[m[32m            ret = { controller_roles: { node: node.name, roles: wrong_roles } } if wrong_roles.any?[m
+[32m+[m[32m          end[m
+[32m+[m[32m        end[m
+[32m+[m[32m        ret[m
+[32m+[m[32m      end[m
+[32m+[m
+       def maintenance_updates_check[m
+         initial_repocheck = check_repositories("6")[m
+ [m
+[1mdiff --git a/crowbar_framework/app/models/api/upgrade.rb b/crowbar_framework/app/models/api/upgrade.rb[m
+[1mindex aeda8504..594d44c6 100644[m
+[1m--- a/crowbar_framework/app/models/api/upgrade.rb[m
+[1m+++ b/crowbar_framework/app/models/api/upgrade.rb[m
+[36m@@ -67,6 +67,13 @@[m [mmodule Api[m
+             errors: health_check.empty? ? {} : health_check_errors(health_check)[m
+           }[m
+ [m
+[32m+[m[32m          deployment = Api::Crowbar.deployment_check[m
+[32m+[m[32m          ret[:checks][:cloud_deployment] = {[m
+[32m+[m[32m            required: true,[m
+[32m+[m[32m            passed: deployment.empty?,[m
+[32m+[m[32m            errors: deployment.empty? ? {} : deployment_errors(deployment)[m
+[32m+[m[32m          }[m
+[32m+[m
+           maintenance_updates = Api::Crowbar.maintenance_updates_check[m
+           ret[:checks][:maintenance_updates_installed] = {[m
+             required: true,[m
+[36m@@ -275,6 +282,17 @@[m [mmodule Api[m
+         }[m
+       end[m
+ [m
+[32m+[m[32m      def deployment_errors(check)[m
+[32m+[m[32m        {[m
+[32m+[m[32m          controller_roles: {[m
+[32m+[m[32m            data: I18n.t("api.upgrade.prechecks.controller_roles.error",[m
+[32m+[m[32m              node: check[:controller_roles][:node],[m
+[32m+[m[32m              roles: check[:controller_roles][:roles]),[m
+[32m+[m[32m            help: I18n.t("api.upgrade.prechecks.controller_roles.help")[m
+[32m+[m[32m          }[m
+[32m+[m[32m        }[m
+[32m+[m[32m      end[m
+[32m+[m
+       def health_check_errors(check)[m
+         ret = {}[m
+         if check[:nodes_not_ready][m
+[1mdiff --git a/crowbar_framework/config/locales/crowbar/en.yml b/crowbar_framework/config/locales/crowbar/en.yml[m
+[1mindex c357fd8b..5722a54e 100644[m
+[1m--- a/crowbar_framework/config/locales/crowbar/en.yml[m
+[1m+++ b/crowbar_framework/config/locales/crowbar/en.yml[m
+[36m@@ -838,6 +838,9 @@[m [men:[m
+         role_conflicts:[m
+           error: 'These compute nodes have some roles that belong to controllers: %{nodes}.'[m
+           help: 'For non-disruptive upgrade, compute nodes cannot hold controller roles.'[m
+[32m+[m[32m        controller_roles:[m
+[32m+[m[32m          error: 'Found compute node %{node} with controller roles: %{roles}.'[m
+[32m+[m[32m          help: 'It is not possible to upgrade with such setup. These roles cannot be placed on compute node.'[m
+         swift_replicas:[m
+           error: 'The number of replicas is bigger than the number of disks assigned for Swift.'[m
+           help: 'Such configuration is not supported in Swift delivered with SOC 7. Adapt your Swift configuration before proceeding with the upgrade.'[m
+[1mdiff --git a/crowbar_framework/spec/fixtures/offline_chef/role_cinder-controller.json b/crowbar_framework/spec/fixtures/offline_chef/role_cinder-controller.json[m
+[1mnew file mode 100644[m
+[1mindex 00000000..748c7c8d[m
+[1m--- /dev/null[m
+[1m+++ b/crowbar_framework/spec/fixtures/offline_chef/role_cinder-controller.json[m
+[36m@@ -0,0 +1,18 @@[m
+[32m+[m[32m{[m
+[32m+[m[32m  "name": "cinder-controller",[m
+[32m+[m[32m  "description": "Cinder API and Scheduler Role",[m
+[32m+[m[32m  "json_class": "Chef::Role",[m
+[32m+[m[32m  "default_attributes": {[m
+[32m+[m[32m  },[m
+[32m+[m[32m  "override_attributes": {[m
+[32m+[m[32m  },[m
+[32m+[m[32m  "chef_type": "role",[m
+[32m+[m[32m  "run_list": [[m
+[32m+[m[32m    "recipe[cinder::api]",[m
+[32m+[m[32m    "recipe[cinder::scheduler]",[m
+[32m+[m[32m    "recipe[cinder::controller_ha]",[m
+[32m+[m[32m    "recipe[cinder::monitor]"[m
+[32m+[m[32m  ],[m
+[32m+[m[32m  "env_run_lists": {[m
+[32m+[m[32m  }[m
+[32m+[m[32m}[m
+[1mdiff --git a/crowbar_framework/spec/models/api/crowbar_spec.rb b/crowbar_framework/spec/models/api/crowbar_spec.rb[m
+[1mindex d9f10c4b..1d2a0541 100644[m
+[1m--- a/crowbar_framework/spec/models/api/crowbar_spec.rb[m
+[1m+++ b/crowbar_framework/spec/models/api/crowbar_spec.rb[m
+[36m@@ -18,6 +18,8 @@[m [mdescribe Api::Crowbar do[m
+     )[m
+   end[m
+   let!(:node) { NodeObject.find_node_by_name("testing") }[m
+[32m+[m[32m  let!(:crowbar_role) { RoleObject.find_role_by_name("crowbar") }[m
+[32m+[m[32m  let!(:cinder_controller_role) { RoleObject.find_role_by_name("cinder-controller") }[m
+ [m
+   before(:each) do[m
+     allow_any_instance_of(Kernel).to([m
+[36m@@ -393,6 +395,60 @@[m [mdescribe Api::Crowbar do[m
+     end[m
+   end[m
+ [m
+[32m+[m[32m  context "with correct barclamps deployment" do[m
+[32m+[m[32m    it "passes with nice compute nodes" do[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))[m
+[32m+[m[32m      allow_any_instance_of(NodeObject).to([m
+[32m+[m[32m        receive(:roles).and_return([m
+[32m+[m[32m          ["nova-compute-kvm", "cinder-volume", "swift-storage"][m
+[32m+[m[32m        )[m
+[32m+[m[32m      )[m
+[32m+[m[32m      allow_any_instance_of(RoleObject).to(receive(:proposal?).and_return(false))[m
+[32m+[m
+[32m+[m[32m      expect(subject.class.deployment_check).to be_empty[m
+[32m+[m[32m    end[m
+[32m+[m
+[32m+[m[32m    it "passes with compute node together with nova-controller " do[m
+[32m+[m[32m      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))[m
+[3
