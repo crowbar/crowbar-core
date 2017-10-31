@@ -22,12 +22,15 @@ require "ohai/log"
 
 provides "crowbar_ohai"
 
+MAX_ADDR_LEN = 32
+
 # From: "/usr/include/linux/sockios.h"
 SIOCETHTOOL = 0x8946
 
 # From: "/usr/include/linux/ethtool.h"
-ETHTOOL_GSET = 1
-ETHTOOL_GLINK = 10
+ETHTOOL_GSET = 0x01
+ETHTOOL_GLINK = 0x0a
+ETHTOOL_GPERMADDR = 0x20
 
 # From: "/usr/include/linux/ethtool.h"
 class EthtoolCmd < CStruct
@@ -84,36 +87,61 @@ end
 # #define SUPPORTED_56000baseSR4_Full  (1 << 29)
 # #define SUPPORTED_56000baseLR4_Full  (1 << 30)
 
+class EthtoolPermAddr < CStruct
+  uint32 :cmd
+  uint32 :size
+  uint64 :value
+end
+
 class EthtoolValue < CStruct
   uint32 :cmd
   uint32 :value
 end
 
 def get_supported_speeds(interface)
-  begin
-    ecmd = EthtoolCmd.new
-    ecmd.cmd = ETHTOOL_GSET
+  ecmd = EthtoolCmd.new
+  ecmd.cmd = ETHTOOL_GSET
 
-    ifreq = [interface, ecmd.data].pack("a16p")
-    sock = Socket.new(Socket::AF_INET, Socket::SOCK_DGRAM, 0)
-    sock.ioctl(SIOCETHTOOL, ifreq)
+  ifreq = [interface, ecmd.data].pack("a16p")
+  sock = Socket.new(Socket::AF_INET, Socket::SOCK_DGRAM, 0)
+  sock.ioctl(SIOCETHTOOL, ifreq)
 
-    rv = ecmd.class.new
-    rv.data = ifreq.unpack("a16p")[1]
+  rv = ecmd.class.new
+  rv.data = ifreq.unpack("a16p")[1]
 
-    speeds = []
-    speeds << "10m"  if (rv.supported & ((1 <<  0) | (1 <<  1))) != 0
-    speeds << "100m" if (rv.supported & ((1 <<  2) | (1 <<  3))) != 0
-    speeds << "1g"   if (rv.supported & ((1 <<  4) | (1 <<  5) | (1 << 17))) != 0
-    speeds << "10g"  if (rv.supported & ((1 << 12) | (1 << 18) | (1 << 19) | (1 << 20))) != 0
-    speeds << "20g"  if (rv.supported & ((1 << 21) | (1 << 22))) != 0
-    speeds << "40g"  if (rv.supported & ((1 << 23) | (1 << 24) | (1 << 25) | (1 << 26))) != 0
-    speeds << "56g"  if (rv.supported & ((1 << 27) | (1 << 28) | (1 << 29) | (1 << 30))) != 0
-    speeds
-  rescue Exception => e
-    puts "Failed to get ioctl for speed: #{e.message}"
-    speeds = ["1g", "0g"]
-  end
+  speeds = []
+  speeds << "10m"  if (rv.supported & ((1 <<  0) | (1 <<  1))) != 0
+  speeds << "100m" if (rv.supported & ((1 <<  2) | (1 <<  3))) != 0
+  speeds << "1g"   if (rv.supported & ((1 <<  4) | (1 <<  5) | (1 << 17))) != 0
+  speeds << "10g"  if (rv.supported & ((1 << 12) | (1 << 18) | (1 << 19) | (1 << 20))) != 0
+  speeds << "20g"  if (rv.supported & ((1 << 21) | (1 << 22))) != 0
+  speeds << "40g"  if (rv.supported & ((1 << 23) | (1 << 24) | (1 << 25) | (1 << 26))) != 0
+  speeds << "56g"  if (rv.supported & ((1 << 27) | (1 << 28) | (1 << 29) | (1 << 30))) != 0
+  speeds
+rescue StandardError => e
+  puts "Failed to get ioctl for speed: #{e.message}"
+  ["1g", "0g"]
+end
+
+def get_permanent_address(interface)
+  ecmd = EthtoolPermAddr.new
+  ecmd.cmd = ETHTOOL_GPERMADDR
+  ecmd.size = MAX_ADDR_LEN
+
+  ifreq = [interface, ecmd.data].pack("a16p")
+  sock = Socket.new(Socket::AF_INET, Socket::SOCK_DGRAM, 0)
+  sock.ioctl(SIOCETHTOOL, ifreq)
+
+  rv = ecmd.class.new
+  rv.data = ifreq.unpack("a16p")[1]
+
+  # unpack the uint64 we get to bytes, and then only take the size as
+  # specified in the reply, to build the MAC address
+  mac_bytes = [rv.value].pack("Q").each_byte.map { |b| b.to_s(16) }
+  mac_bytes.slice(0, rv.size).join(":")
+rescue StandardError => e
+  puts "Failed to get ioctl for permanent address: #{e.message}"
+  nil
 end
 
 #
@@ -121,22 +149,20 @@ end
 # false for down
 #
 def get_link_status(interface)
-  begin
-    ecmd = EthtoolValue.new
-    ecmd.cmd = ETHTOOL_GLINK
+  ecmd = EthtoolValue.new
+  ecmd.cmd = ETHTOOL_GLINK
 
-    ifreq = [interface, ecmd.data].pack("a16p")
-    sock = Socket.new(Socket::AF_INET, Socket::SOCK_DGRAM, 0)
-    sock.ioctl(SIOCETHTOOL, ifreq)
+  ifreq = [interface, ecmd.data].pack("a16p")
+  sock = Socket.new(Socket::AF_INET, Socket::SOCK_DGRAM, 0)
+  sock.ioctl(SIOCETHTOOL, ifreq)
 
-    rv = ecmd.class.new
-    rv.data = ifreq.unpack("a16p")[1]
+  rv = ecmd.class.new
+  rv.data = ifreq.unpack("a16p")[1]
 
-    rv.value != 0
-  rescue Exception => e
-    puts "Failed to get ioctl for link status: #{e.message}"
-    false
-  end
+  rv.value != 0
+rescue StandardError => e
+  puts "Failed to get ioctl for link status: #{e.message}"
+  false
 end
 
 crowbar_ohai Mash.new
@@ -185,7 +211,8 @@ Dir.foreach("/sys/class/net") do |entry|
   crowbar_ohai[:detected] = Mash.new unless crowbar_ohai[:detected]
   crowbar_ohai[:detected][:network] = Mash.new unless crowbar_ohai[:detected][:network]
   speeds = get_supported_speeds(entry)
-  crowbar_ohai[:detected][:network][entry] = { path: spath, speeds: speeds }
+  permanent_addr = get_permanent_address(entry)
+  crowbar_ohai[:detected][:network][entry] = { path: spath, speeds: speeds, addr: permanent_addr }
 
   logical_name = entry
   networks << logical_name
