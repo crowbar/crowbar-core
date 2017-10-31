@@ -1,3 +1,4 @@
+name "provisioner"
 maintainer "Dell Crowbar Team"
 maintainer_email "openstack@dell.com"
 license "Apache 2.0"

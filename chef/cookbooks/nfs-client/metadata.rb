@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+name "nfs-client"
 maintainer "Crowbar Project"
 maintainer_email "crowbar@dell.com"
 license "Apache 2.0"

@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+name "deployer"
 maintainer "Crowbar Project"
 maintainer_email "crowbar@googlegroups.com"
 license "Apache 2.0"
