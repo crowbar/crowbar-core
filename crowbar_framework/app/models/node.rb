@@ -1065,7 +1065,7 @@ class Node < ChefObject
       if @node[:platform_family] == "windows"
         net_rpc_cmd(:power_cycle)
       else
-        ssh_cmd("/sbin/reboot")
+        ssh_cmd("/usr/sbin/crowbar_join --stop || /sbin/reboot")
       end
     end
     result
