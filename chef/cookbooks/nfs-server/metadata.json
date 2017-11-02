@@ -28,7 +28,7 @@
       "nfs": "Installs nfs"
     },
     "maintainer_email": "crowbar@dell.com",
-    "name": "nfs",
+    "name": "nfs-server",
     "conflicting": {
     },
     "description": "Installs nfs",
