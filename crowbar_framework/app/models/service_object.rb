@@ -1826,4 +1826,16 @@ class ServiceObject
     logger.debug("skip_unready_nodes: exit for #{bc}:#{inst}")
     [cleaned_elements, pre_cached_nodes]
   end
+
+  # return true if the new attributes are different from the old ones
+  def node_changed_attributes?(node, old_role, new_role)
+    old_role.default_attributes[@bc_name] != new_role.default_attributes[@bc_name]
+  end
+
+  # return true if the node has changed roles
+  def node_changed_roles?(node, old_role, new_role)
+    roles_in_old = old_role.elements.keys.select { |r| old_role.elements[r].include?(node) }.sort
+    roles_in_new = new_role.elements.keys.select { |r| new_role.elements[r].include?(node) }.sort
+    roles_in_old != roles_in_new
+  end
 end
