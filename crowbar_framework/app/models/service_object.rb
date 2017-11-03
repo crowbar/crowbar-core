@@ -1830,7 +1830,7 @@ class ServiceObject
         node = pre_cached_nodes[n]
         next if node.nil?
         # skip if nodes are on ready or crowbar_upgrade state, we dont need to do anything
-        next if ["ready", "crowbar_upgrade"].include?(node.crowbar["state"])
+        next if ["ready", "crowbar_upgrade"].include?(node.state)
         logger.warn(
           "Node #{n} is skipped until next chef run for #{bc}:#{inst} with role #{role}"
         )
