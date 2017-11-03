@@ -20,7 +20,8 @@ module CrowbarRoleRecipe
     # If we're applying the nova-ha-compute batch, skip other roles to avoid
     # chef-client drift between nodes (since sync marks are only reset before
     # the first batch) - https://bugzilla.suse.com/show_bug.cgi?id=1004758
-    if node["crowbar"]["applying_for"].key?("nova") &&
+    if node.key?("crowbar") && node["crowbar"].key?("applying_for") &&
+        node["crowbar"]["applying_for"].key?("nova") &&
         node["crowbar"]["applying_for"]["nova"].include?("nova-ha-compute") &&
         role != "nova-ha-compute"
       return "not required in nova-ha-compute batch"
