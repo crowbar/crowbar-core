@@ -225,8 +225,9 @@ Dir.foreach("/sys/class/net") do |entry|
   tcpdump_out = tcpdump_file(logical_name)
   Ohai::Log.debug("tcpdump to: #{tcpdump_out}")
 
-  if ! File.exists? tcpdump_out
-    cmd = "ifconfig #{logical_name} up ; timeout 45 tcpdump -c 1 -lv -v -i #{logical_name} -a -e -s 1514 ether proto 0x88cc > #{tcpdump_out} &"
+  if !File.exist?(tcpdump_out) && get_link_status(logical_name)
+    cmd = "timeout 45 tcpdump -c 1 -lv -v -i #{logical_name} " \
+      "-a -e -s 1514 ether proto 0x88cc > #{tcpdump_out} &"
     Ohai::Log.debug("cmd: #{cmd}")
     system cmd
     wait=true
