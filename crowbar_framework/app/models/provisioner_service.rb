@@ -275,4 +275,63 @@ class ProvisionerService < ServiceObject
 
     [200, ""]
   end
+
+  # try to know if we can skip a node from running chef-client
+  def skip_unchanged_node?(node, old_role, new_role)
+    @logger.debug("Provisioner skip_batch_for_node? entering: #{node}")
+
+    # if old_role is nil, then we are applying the barclamp for the first time
+    if old_role.nil?
+      @logger.debug("Provisioner skip_batch_for_node?: not skipping #{node} (new role)")
+      return false
+    end
+
+    # if attributes have changed, we need to run
+    return false if node_changed_attributes?(node, old_role, new_role)
+
+    # if the node changed roles, then we need to apply
+    return false if node_changed_roles?(node, old_role, new_role)
+
+    # by this point its safe to assume that we can skip the node as nothing has changed on it
+    # same attributes, same roles so skip it
+    @logger.debug("Provisioner skip_batch_for_node? skipping: #{node}")
+    @logger.debug("Provisioner skip_batch_for_node? exiting: #{node}")
+    true
+  end
+
+  private
+
+  # return true if the new attributes are different from the old ones
+  def node_changed_attributes?(node, old_role, new_role)
+    if old_role.default_attributes[@bc_name] != new_role.default_attributes[@bc_name]
+      logger.debug("Provisioner skip_batch_for_node?: not skipping #{node} (attribute change)")
+      return true
+    end
+
+    false
+  end
+
+  # return true if the node has changed roles
+  def node_changed_roles?(node, old_role, new_role)
+    node_was_server = node_has_role?(node, old_role, "provisioner-server")
+    node_is_server = node_has_role?(node, new_role, "provisioner-server")
+    node_was_base = node_has_role?(node, old_role, "provisioner-base")
+    node_is_base = node_has_role?(node, old_role, "provisioner-base")
+
+    if node_was_server != node_is_server || node_was_base != node_is_base
+      @logger.debug("Provisioner skip_batch_for_node?: not skipping #{node} (role change)")
+      return true
+    end
+
+    false
+  end
+
+  def node_has_role?(node, role, role_name)
+    role.override_attributes[@bc_name]["elements"].each do |r_name, elements|
+      next if r_name != role_name
+      return true if elements.include?(node)
+    end
+
+    false
+  end
 end
