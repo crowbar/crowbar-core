@@ -275,4 +275,21 @@ class ProvisionerService < ServiceObject
 
     [200, ""]
   end
+
+  # try to know if we can skip a node from running chef-client
+  def skip_unchanged_node?(node_name, old_role, new_role)
+    # if old_role is nil, then we are applying the barclamp for the first time
+    return false if old_role.nil?
+
+    # if the node changed roles, then we need to apply
+    return false if node_changed_roles?(node_name, old_role, new_role)
+
+    # if attributes have changed, we need to run
+    return false if node_changed_attributes?(node_name, old_role, new_role)
+
+    # by this point its safe to assume that we can skip the node as nothing has changed on it
+    # same attributes, same roles so skip it
+    @logger.info("#{@bc_name} skip_batch_for_node? skipping: #{node_name}")
+    true
+  end
 end
