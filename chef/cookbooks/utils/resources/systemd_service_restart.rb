@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-actions :enable, :disable
+actions :enable, :disable, :override_config
 default_action :enable
 
 attribute :service, kind_of: String, name_attribute: true
@@ -27,3 +27,4 @@ attribute :restart_sec, kind_of: String
 attribute :success_exit_status, kind_of: Array
 attribute :restart_prevent_exit_status, kind_of: Array
 attribute :restart_force_exit_status, kind_of: Array
+attribute :extra_config, kind_of: Hash, default: {}

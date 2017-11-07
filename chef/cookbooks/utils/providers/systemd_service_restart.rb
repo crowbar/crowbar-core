@@ -79,3 +79,10 @@ action :disable do
 
   write_conf_snippet(new_resource, variables)
 end
+
+action :override_config do
+  variables = {
+    extra_config: new_resource.extra_config
+  }
+  write_conf_snippet(new_resource, variables)
+end
