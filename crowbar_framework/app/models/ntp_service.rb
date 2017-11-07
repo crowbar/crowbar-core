@@ -107,14 +107,27 @@ class NtpService < ServiceObject
     # if old_role is nil, then we are applying the barclamp for the first time
     return false if old_role.nil?
 
+    # if the servers have changed, we need to apply
+    old_servers = Set.new(old_role.elements["ntp-server"])
+    new_servers = Set.new(new_role.elements["ntp-server"])
+    return false if old_servers != new_servers
+
     # if the node changed roles, then we need to apply
     return false if node_changed_roles?(node_name, old_role, new_role)
 
-    # if attributes have changed, we need to run
-    return false if node_changed_attributes?(node_name, old_role, new_role)
+    # if we're a server, and any attribute has changed, then we need to apply
+    if new_role.elements["ntp-server"].include?(node_name) &&
+        node_changed_attributes?(node_name, old_role, new_role)
+      return false
+    end
 
-    # by this point its safe to assume that we can skip the node as nothing has changed on it
-    # same attributes, same roles so skip it
+    # if we're only a client, and relevant attributes have changed (we list
+    # here the ones to ignore), then we need to apply
+    return false if relevant_attributes_changed_if_roles?(node_name, old_role, new_role,
+      ["external_servers"], ["ntp-client"])
+
+    # by this point its safe to assume that we can skip the node as nothing has
+    # changed on it same attributes, same roles so skip it
     @logger.info("#{@bc_name} skip_batch_for_node? skipping: #{node_name}")
     true
   end
