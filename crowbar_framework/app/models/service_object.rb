@@ -152,6 +152,7 @@ class ServiceObject
 
   def set_to_applying(nodes, inst, pre_cached_nodes)
     with_lock "BA-LOCK" do
+      nodes_to_save = []
       nodes.each do |node_name|
         node = pre_cached_nodes[node_name]
         if node.nil?
@@ -161,8 +162,9 @@ class ServiceObject
 
         node.crowbar["state"] = "applying"
         node.crowbar["state_owner"] = "#{@bc_name}-#{inst}"
-        node.save
+        nodes_to_save.push node
       end
+      save_nodes nodes_to_save
     end
   end
 
@@ -173,6 +175,7 @@ class ServiceObject
 
   def restore_to_ready(nodes)
     with_lock "BA-LOCK" do
+      nodes_to_save = []
       nodes.each do |node_name|
         node = Node.find_by_name(node_name)
         next if node.nil?
@@ -185,8 +188,9 @@ class ServiceObject
         end
 
         node["crowbar"]["applying_for"] = {}
-        node.save
+        nodes_to_save.push node
       end
+      save_nodes nodes_to_save
     end
   end
 
@@ -1658,6 +1662,31 @@ class ServiceObject
     logger.debug "release_chef_locks: Waiting for #{THREAD_POOL_SIZE} unlock threads to finish..."
     workers.map(&:join)
     logger.debug "release_chef_locks: Finished waiting for #{THREAD_POOL_SIZE} lock threads"
+  end
+
+  def save_nodes(nodes)
+    return if nodes.empty?
+
+    queue = Queue.new
+    nodes.each { |n| queue.push n }
+
+    workers = (0...[THREAD_POOL_SIZE, nodes.count].min).map do
+      Thread.new do
+        loop do
+          begin
+            node = queue.pop(true)
+          rescue ThreadError
+            break
+          end
+
+          node.save
+        end
+      end
+    end
+
+    logger.debug "save_nodes: Waiting for #{workers.count} save threads to finish..."
+    workers.map(&:join)
+    logger.debug "save_nodes: Finished waiting for #{workers.count} save threads"
   end
 
   def lock_nodes(nodes, lock_owner, lock_reason)
