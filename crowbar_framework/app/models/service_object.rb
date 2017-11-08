@@ -1619,7 +1619,7 @@ class ServiceObject
       queue.push node_name unless node[:platform_family] == "windows"
     end
 
-    workers = (1...THREAD_POOL_SIZE).map do
+    workers = (0...THREAD_POOL_SIZE).map do
       Thread.new do
         loop do
           begin
@@ -1634,9 +1634,9 @@ class ServiceObject
     end
 
     logger.debug "wait_for_chef_daemons: Waiting " \
-      "for #{THREAD_POOL_SIZE} unlock threads to finish..."
+      "for #{workers.count} unlock threads to finish..."
     workers.map(&:join)
-    logger.debug "wait_for_chef_daemons: Finished waiting for #{THREAD_POOL_SIZE} lock threads"
+    logger.debug "wait_for_chef_daemons: Finished waiting for #{workers.count} lock threads"
   end
 
   def release_chef_locks(locks)
@@ -1645,7 +1645,7 @@ class ServiceObject
     queue = Queue.new
     locks.each { |l| queue.push l }
 
-    workers = (1...THREAD_POOL_SIZE).map do
+    workers = (0...THREAD_POOL_SIZE).map do
       Thread.new do
         loop do
           begin
@@ -1659,9 +1659,9 @@ class ServiceObject
       end
     end
 
-    logger.debug "release_chef_locks: Waiting for #{THREAD_POOL_SIZE} unlock threads to finish..."
+    logger.debug "release_chef_locks: Waiting for #{workers.count} unlock threads to finish..."
     workers.map(&:join)
-    logger.debug "release_chef_locks: Finished waiting for #{THREAD_POOL_SIZE} lock threads"
+    logger.debug "release_chef_locks: Finished waiting for #{workers.count} lock threads"
   end
 
   def save_nodes(nodes)
@@ -1701,7 +1701,7 @@ class ServiceObject
     queue = Queue.new
     nodes.each { |n| queue.push n }
 
-    workers = (1...THREAD_POOL_SIZE).map do
+    workers = (0...THREAD_POOL_SIZE).map do
       Thread.new do
         loop do
           begin
@@ -1728,9 +1728,9 @@ class ServiceObject
       end
     end
 
-    logger.debug "lock_nodes: Waiting for #{THREAD_POOL_SIZE} lock threads to finish..."
+    logger.debug "lock_nodes: Waiting for #{workers.count} lock threads to finish..."
     workers.map(&:join)
-    logger.debug "lock_nodes: Finished waiting for #{THREAD_POOL_SIZE} lock threads"
+    logger.debug "lock_nodes: Finished waiting for #{workers.count} lock threads"
 
     [locks, errors]
   end
