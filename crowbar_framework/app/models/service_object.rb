@@ -940,7 +940,7 @@ class ServiceObject
   # we simply do not run chef.
   def apply_role(role, inst, in_queue, bootstrap = false)
     Rails.logger.debug "apply_role(#{role.name}, #{inst}, #{in_queue}, #{bootstrap})"
-    Rails.logger.progress("Start applying role #{role.name}")
+    Rails.logger.progress("Starting to apply role #{role.name}")
 
     # Variables used in the global ensure
     apply_locks = []
@@ -1024,6 +1024,7 @@ class ServiceObject
       )
 
       unless delay.empty?
+        Rails.logger.progress("Queuing the application of role #{role.name}")
         # force not processing the queue further
         in_queue = true
         # FIXME: this breaks the convention that we return a string; but really,
@@ -1109,9 +1110,6 @@ class ServiceObject
     element_order.each do |roles|
       # roles is an Array of names of Chef roles which can all be
       # applied in parallel.
-      Rails.logger.progress(
-        "Preparing batch with following roles: #{roles.join(", ")}"
-      )
 
       # A list of nodes changed when applying roles from this batch
       nodes_in_batch = []
@@ -1235,6 +1233,7 @@ class ServiceObject
 
       # Mark nodes as applying; beware that all_nodes do not contain nodes that
       # are actually removed.
+      Rails.logger.progress("Marking #{applying_nodes.length} nodes as applying")
       set_to_applying(applying_nodes, inst, pre_cached_nodes)
 
       # Prevent any intervallic runs from running whilst we apply the
@@ -1248,11 +1247,18 @@ class ServiceObject
         node_attr_cache[node_name]["windows"] || node_attr_cache[node_name]["admin"]
       end
 
-      owner = "apply_role-#{role.name}-#{inst}-#{Process.pid}"
-      reason = "apply_role(#{role.name}, #{inst}, #{in_queue}) pid #{Process.pid}"
-      apply_locks, errors = lock_nodes(nodes_to_lock, owner, reason)
+      if nodes_to_lock.any?
+        owner = "apply_role-#{role.name}-#{inst}-#{Process.pid}"
+        reason = "apply_role(#{role.name}, #{inst}, #{in_queue}) pid #{Process.pid}"
+        Rails.logger.progress("Acquiring chef-client locks on #{nodes_to_lock.length} nodes")
+        apply_locks, errors = lock_nodes(nodes_to_lock, owner, reason)
+      else
+        apply_locks = []
+        errors = []
+      end
 
       unless errors.empty?
+        Rails.logger.progress("apply_role: Failed to apply role #{role.name}")
         message = "Failed to apply the proposal:\n#{errors.values.join("\n")}"
         update_proposal_status(inst, "failed", message)
         return [409, message] # 409 is 'Conflict', which makes sense for locks
@@ -1260,6 +1266,9 @@ class ServiceObject
 
       # Now that we've ensured no new intervallic runs can be started,
       # wait for any which started before we paused the daemons.
+      Rails.logger.progress(
+        "Waiting for existing chef-client to complete on #{applying_nodes.length} nodes"
+      )
       wait_for_chef_daemons(applying_nodes)
     end
 
@@ -1284,7 +1293,7 @@ class ServiceObject
 
     # Part III: Update run lists of nodes to reflect new deployment. I.e. write
     # through the deployment schedule in pending node actions into run lists.
-    Rails.logger.progress("Update the run_lists for #{pending_node_actions.inspect}")
+    Rails.logger.progress("Updating the run_lists for #{pending_node_actions.inspect}")
 
     pending_node_actions.each do |node_name, lists|
       # pre_cached_nodes contains only new_nodes, we need to look up the
@@ -1328,6 +1337,7 @@ class ServiceObject
 
     # Deployment pre (and later post) callbacks.
     # The barclamps override these.
+    Rails.logger.progress("Calling apply_role_pre_chef_call")
     begin
       apply_role_pre_chef_call(old_role, role, all_nodes)
     rescue StandardError => e
@@ -1352,10 +1362,10 @@ class ServiceObject
     # Each batch is a list of nodes that can be done in parallel.
     batches.each_with_index do |batch, index|
       roles, node_names = batch
-      Rails.logger.progress(
-        "Applying batch #{index + 1}/#{batches.count}: " \
+      batch_progress_message = \
+        "batch #{index + 1}/#{batches.count}: " \
         "#{node_names.join(", ")} for #{roles.join(", ")}"
-      )
+      Rails.logger.progress("Applying #{batch_progress_message}")
 
       ran_admin = true if node_names.detect do |node_name|
         node_attr_cache[node_name]["admin"]
@@ -1375,14 +1385,16 @@ class ServiceObject
       bad_nodes = []
       Rails.logger.progress("Waiting for #{threads.keys.length} threads to finish...")
       ThreadsWait.all_waits(threads.keys) do |t|
-        Rails.logger.progress("Thread #{t} for node #{threads[t]} finished")
         Rails.logger.debug("Thread #{t} for node #{threads[t]} finished (return '#{t.value}')")
         unless t.value == 0
           bad_nodes << threads[t]
         end
       end
 
-      next if bad_nodes.empty?
+      if bad_nodes.empty?
+        Rails.logger.progress("Applied #{batch_progress_message}")
+        next
+      end
 
       message = "Failed to apply the proposal to:\n"
       nodes_alias = []
@@ -1400,10 +1412,12 @@ class ServiceObject
     system("sudo", "-i", Rails.root.join("..", "bin", "single_chef_client.sh").expand_path.to_s) if !ran_admin
 
     # Post deploy callback
+    Rails.logger.progress("Calling apply_role_post_chef_call")
     begin
       apply_role_post_chef_call(old_role, role, all_nodes)
     rescue StandardError => e
       Rails.logger.fatal("apply_role: Exception #{e.message} #{e.backtrace.join("\n")}")
+      Rails.logger.progress("Failed to apply role #{role.name} after calling chef")
       message = "Failed to apply the proposal: exception after calling chef (#{e.message})"
       update_proposal_status(inst, "failed", message)
       return [405, message]
@@ -1447,8 +1461,15 @@ class ServiceObject
     update_proposal_status(inst, "failed", message)
     [405, message]
   ensure
-    release_chef_locks(apply_locks)
-    restore_to_ready(applying_nodes) if applying_nodes.any?
+    if apply_locks.any?
+      Rails.logger.progress("Releasing chef-client locks on #{apply_locks.length} nodes")
+      release_chef_locks(apply_locks)
+    end
+    if applying_nodes.any?
+      Rails.logger.progress("Restoring #{applying_nodes.length} nodes as ready")
+      restore_to_ready(applying_nodes)
+    end
+    Rails.logger.progress("Done applying role #{role.name}")
     process_queue unless in_queue
   end
 
