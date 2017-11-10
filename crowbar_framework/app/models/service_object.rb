@@ -923,41 +923,7 @@ class ServiceObject
     RoleObject.new role
   end
 
-  #
-  # After validation, this is where the role is applied to the system The old
-  # instance (if one exists) is compared with the new instance.  roles are
-  # removed and delete roles are added (if they exist) for nodes leaving roles
-  # roles are added for nodes joining roles.  Calls chef-client on nodes
-  #
-  # This function can be overriden to define a barclamp specific operation.  A
-  # call is provided that receives the role and all string names of the nodes
-  # before the chef-client call
-  #
-  # The in_queue signifies if apply_role was called from deployment queue's
-  # process_queue, and prevents recursion.
-  #
-  # The bootstrap parameter tells if we're in bootstrapping mode, in which case
-  # we simply do not run chef.
-  def apply_role(role, inst, in_queue, bootstrap = false)
-    Rails.logger.debug "apply_role(#{role.name}, #{inst}, #{in_queue}, #{bootstrap})"
-    Rails.logger.progress("Starting to apply role #{role.name}")
-
-    # Variables used in the global ensure
-    apply_locks = []
-    applying_nodes = []
-
-    # Cache some node attributes to avoid useless node reloads
-    node_attr_cache = {}
-
-    # experimental option
-    skip_unready_nodes_enabled = Rails.application.config.experimental.fetch(
-      "skip_unready_nodes", {}
-    ).fetch("enabled", false)
-
-    skip_unchanged_nodes_enabled = Rails.application.config.experimental.fetch(
-      "skip_unchanged_nodes", {}
-    ).fetch("enabled", false)
-
+  def lookup_data_and_run_checks(role, old_role, inst, in_queue, bootstrap)
     # Part I: Looking up data & checks
     #
     # we look up the role in the database (if there is one), the new one is
@@ -975,8 +941,14 @@ class ServiceObject
     # We also check that all nodes we'll require are in the ready state.
     #
 
-    # Query for this role
-    old_role = RoleObject.find_role_by_name(role.name)
+    # experimental option
+    skip_unready_nodes_enabled = Rails.application.config.experimental.fetch(
+      "skip_unready_nodes", {}
+    ).fetch("enabled", false)
+
+    skip_unchanged_nodes_enabled = Rails.application.config.experimental.fetch(
+      "skip_unchanged_nodes", {}
+    ).fetch("enabled", false)
 
     # Get the new elements list
     new_deployment = role.override_attributes[@bc_name]
@@ -1025,11 +997,9 @@ class ServiceObject
 
       unless delay.empty?
         Rails.logger.progress("Queuing the application of role #{role.name}")
-        # force not processing the queue further
-        in_queue = true
-        # FIXME: this breaks the convention that we return a string; but really,
-        # we should return a hash everywhere, to avoid this...
-        return [202, delay]
+        # raise an error with the nodes that need to be ready so we can transmit that info to the
+        # user
+        raise Crowbar::Error::ProposalDelayed.new(nil, 202, delay)
       end
 
       Rails.logger.debug "delay empty - running proposal"
@@ -1039,7 +1009,7 @@ class ServiceObject
     unless failures.nil?
       Rails.logger.progress("apply_role: Failed to apply role #{role.name}")
       update_proposal_status(inst, "failed", msg)
-      return [405, msg]
+      raise Crowbar::Error::RoleFailedToApply.new(msg, 405)
     end
 
     # save list of expanded elements, as this is needed when we look at the old
@@ -1057,7 +1027,7 @@ class ServiceObject
       unless failures.nil?
         Rails.logger.progress("apply_role: Failed to apply role #{role.name}")
         update_proposal_status(inst, "failed", msg)
-        return [405, msg]
+        raise Crowbar::Error::RoleFailedToApply.new(msg, 405)
       end
     end
 
@@ -1067,14 +1037,22 @@ class ServiceObject
     Rails.logger.debug "old_deployment #{old_deployment.pretty_inspect}"
     Rails.logger.debug "new_deployment #{new_deployment.pretty_inspect}"
 
+    [new_elements, old_elements, new_deployment, element_order, in_queue, pre_cached_nodes]
+  end
+
+  def create_changesets(
+    new_elements,
+    old_elements,
+    new_deployment,
+    element_order,
+    pre_cached_nodes,
+    role,
+    inst,
+    in_queue,
+    bootstrap
+  )
     # Part II. Creating add/remove changesets.
     #
-    # For Role ordering
-    runlist_priority_map = new_deployment["element_run_list_order"] || { }
-    local_chef_order = chef_order()
-
-    # List of all *new* nodes which will be changed (sans deleted ones)
-    all_nodes = new_elements.values.flatten
 
     # deployment["element_order"] tells us which order the various
     # roles should be applied, and deployment["elements"] tells us
@@ -1096,6 +1074,12 @@ class ServiceObject
     # We'll build an Array where each item represents a batch of work,
     # and the batches must be performed sequentially in this order.
     batches = []
+
+    # default needed empty vars
+    apply_locks = []
+    applying_nodes = []
+
+    node_attr_cache = {}
 
     # get proposal to remember potential removal of a role
     proposal = Proposal.where(barclamp: @bc_name, name: inst).first
@@ -1261,7 +1245,7 @@ class ServiceObject
         Rails.logger.progress("apply_role: Failed to apply role #{role.name}")
         message = "Failed to apply the proposal:\n#{errors.values.join("\n")}"
         update_proposal_status(inst, "failed", message)
-        return [409, message] # 409 is 'Conflict', which makes sense for locks
+        raise Crowbar::Error::LockingFailure.new(message, 409)
       end
 
       # Now that we've ensured no new intervallic runs can be started,
@@ -1290,10 +1274,20 @@ class ServiceObject
     # apply_role_pre_chef_client, but as said above, we need to save it before
     # we change the run lists.
     role.save
+    [batches, applying_nodes, pending_node_actions, apply_locks, node_attr_cache]
+  end
 
+  def update_runlists(role, pending_node_actions, new_deployment, new_elements, pre_cached_nodes)
     # Part III: Update run lists of nodes to reflect new deployment. I.e. write
     # through the deployment schedule in pending node actions into run lists.
     Rails.logger.progress("Updating the run_lists for #{pending_node_actions.inspect}")
+
+    # For Role ordering
+    runlist_priority_map = new_deployment["element_run_list_order"] || {}
+    local_chef_order = chef_order
+
+    # List of all *new* nodes which will be changed (sans deleted ones)
+    all_nodes = new_elements.values.flatten
 
     pending_node_actions.each do |node_name, lists|
       # pre_cached_nodes contains only new_nodes, we need to look up the
@@ -1329,7 +1323,10 @@ class ServiceObject
 
       node.save if save_it
     end
+  end
 
+
+  def deploy(new_elements, role, old_role, batches, bootstrap, node_attr_cache, inst)
     # Part IV: Deployment. Running chef clients as separate processes, each
     # independent batch is parallelized, admin and non-admin nodes are treated
     # separately. Lastly, chef client is executed manually on this (admin) node,
@@ -1339,13 +1336,15 @@ class ServiceObject
     # The barclamps override these.
     Rails.logger.progress("Calling apply_role_pre_chef_call")
     begin
+      # List of all *new* nodes which will be changed (sans deleted ones)
+      all_nodes = new_elements.values.flatten
       apply_role_pre_chef_call(old_role, role, all_nodes)
     rescue StandardError => e
       Rails.logger.fatal("apply_role: Exception #{e.message} #{e.backtrace.join("\n")}")
       Rails.logger.progress("Failed to apply role #{role.name} before calling chef")
       message = "Failed to apply the proposal: exception before calling chef (#{e.message})"
       update_proposal_status(inst, "failed", message)
-      return [405, message]
+      raise Crowbar::Error::ApplyRolePreChefFailed.new(message, 405)
     end
 
     # When boostrapping, we don't want to run chef.
@@ -1405,7 +1404,7 @@ class ServiceObject
       end
       Rails.logger.progress("Failed to apply the role to #{nodes_alias.join(", ")}")
       update_proposal_status(inst, "failed", message)
-      return [405, message]
+      raise Crowbar::Error::ProposalFailedToApply.new(message, 405)
     end
 
     # XXX: This should not be done this way.  Something else should request this.
@@ -1420,7 +1419,7 @@ class ServiceObject
       Rails.logger.progress("Failed to apply role #{role.name} after calling chef")
       message = "Failed to apply the proposal: exception after calling chef (#{e.message})"
       update_proposal_status(inst, "failed", message)
-      return [405, message]
+      raise Crowbar::Error::ApplyRolePostChefFailed.new(message, 405)
     end
 
     # Invalidate cache as apply_role_post_chef_call can save nodes
@@ -1433,6 +1432,7 @@ class ServiceObject
     #   "role1_remove" => ["node1"],
     #   "role2_remove" => ["node2", "node3"]
     # }
+    proposal = Proposal.where(barclamp: @bc_name, name: inst).first
     roles_to_remove = proposal.elements.keys.select do |r|
       r =~ /_remove$/
     end
@@ -1451,9 +1451,75 @@ class ServiceObject
 
     # Save if we did a change
     proposal.save unless roles_to_remove.empty?
+  end
+
+  #
+  # After validation, this is where the role is applied to the system The old
+  # instance (if one exists) is compared with the new instance.  roles are
+  # removed and delete roles are added (if they exist) for nodes leaving roles
+  # roles are added for nodes joining roles.  Calls chef-client on nodes
+  #
+  # This function can be overriden to define a barclamp specific operation.  A
+  # call is provided that receives the role and all string names of the nodes
+  # before the chef-client call
+  #
+  # The in_queue signifies if apply_role was called from deployment queue's
+  # process_queue, and prevents recursion.
+  #
+  # The bootstrap parameter tells if we're in bootstrapping mode, in which case
+  # we simply do not run chef.
+  def apply_role(role, inst, in_queue, bootstrap = false)
+    Rails.logger.debug "apply_role(#{role.name}, #{inst}, #{in_queue}, #{bootstrap})"
+    Rails.logger.progress("Starting to apply role #{role.name}")
+
+    # Variables used in the global ensure
+    applying_nodes = []
+    apply_locks = []
+
+    # Query for this role
+    old_role = RoleObject.find_role_by_name(role.name)
+
+    new_elements,
+    old_elements,
+    new_deployment,
+    element_order,
+    in_queue,
+    pre_cached_nodes = lookup_data_and_run_checks(role, old_role, inst, in_queue, bootstrap)
+
+    batches,
+    applying_nodes,
+    pending_node_actions,
+    apply_locks,
+    node_attr_cache = create_changesets(new_elements,
+                                        old_elements,
+                                        new_deployment,
+                                        element_order,
+                                        pre_cached_nodes,
+                                        role,
+                                        inst,
+                                        in_queue,
+                                        bootstrap)
+
+    update_runlists(role, pending_node_actions, new_deployment, new_elements, pre_cached_nodes)
+
+    deploy(new_elements, role, old_role, batches, bootstrap, node_attr_cache, inst)
 
     update_proposal_status(inst, "success", "")
     [200, {}]
+  rescue Crowbar::Error::ProposalDelayed => error
+    # force not processing the queue further
+    in_queue = true
+    return [error.http_code, error.nodes]
+  rescue Crowbar::Error::RoleFailedToApply => error
+    return [error.http_code, error.message]
+  rescue Crowbar::Error::LockingFailure => error
+    return [error.http_code, error.message]
+  rescue Crowbar::Error::ProposalFailedToApply => error
+    return [error.http_code, error.message]
+  rescue Crowbar::Error::ApplyRolePostChefFailed => error
+    return [error.http_code, error.message]
+  rescue Crowbar::Error::ApplyRolePreChefFailed => error
+    return [error.http_code, error.message]
   rescue StandardError => e
     Rails.logger.progress("Failed to apply proposal")
     Rails.logger.fatal("apply_role: Uncaught exception #{e.message} #{e.backtrace.join("\n")}")
