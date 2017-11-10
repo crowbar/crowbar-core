@@ -30,6 +30,10 @@ describe ServiceObject do
     it "responds to include cluster method" do
       expect(service_object).to respond_to(:available_clusters)
     end
+
+    it "responds to #apply_role" do
+      expect(service_object).to respond_to(:apply_role)
+    end
   end
 
   describe "validate_proposal_elements" do
@@ -320,6 +324,96 @@ describe ServiceObject do
         dns_service.validate_proposal_constraints(dns_proposal)
         expect(dns_service.validation_errors.first).to match(/can't be used for ubuntu/)
       end
+    end
+  end
+
+  describe "apply_role" do
+
+    before(:each) do
+      allow_any_instance_of(Proposal).to receive(:where).with(
+        barclamp: "crowbar", name: "default"
+      ).and_return(proposal)
+      allow(RoleObject).to receive(:find_role_by_name).and_call_original
+      allow(RoleObject).to receive(:find_role_by_name).with("crowbar_remove").and_return(nil)
+      allow(RemoteNode).to receive(:chef_ready?).with(
+        "admin.crowbar.com", 1200, 10, anything
+      ).and_return(true)
+      # we dont want to run the real commands here so just return an empty hash
+      allow(service_object).to receive(:remote_chef_client_threads).and_return({})
+      @role = RoleObject.find_role_by_name("crowbar-config-default")
+    end
+
+    it "returns a 200 code on success" do
+      # in_queue and bootstrap set to false
+      expect(service_object.apply_role(@role, "default", false, false)).to eq([200, {}])
+    end
+
+    it "returns 202 and a list of nodes if proposal is queued" do
+      allow_any_instance_of(
+        Crowbar::DeploymentQueue
+      ).to receive(:queue_proposal).and_return([["1", "2"], {}])
+      # should return status code 202 and the list of nodes that are not ready
+      expect(service_object.apply_role(@role, "default", false, false)).to eq([202, ["1", "2"]])
+    end
+
+    describe "if a generic error happens" do
+
+      before(:each) do
+        expect(service_object).to receive(:chef_order).and_raise(StandardError, "test_error")
+        @error_msg = "Failed to apply the proposal: uncaught exception (test_error)"
+      end
+
+      it "returns 405 and an error message" do
+        # should return status code 405 and a enhanced failure msg
+        expect(
+          service_object.apply_role(@role, "default", false, false)
+        ).to eq([405, @error_msg])
+      end
+
+      it "sets the proposal status to failure if a generic error happens" do
+        service_object.apply_role(@role, "default", false, false)
+        p = Proposal.where(barclamp: "crowbar", name: "default").first
+
+        expect(p["deployment"]["crowbar"]["crowbar-status"]).to eq("failed")
+        expect(p["deployment"]["crowbar"]["crowbar-failed"]).to eq(@error_msg)
+      end
+    end
+
+    describe "if items fail to expand for a role" do
+
+      before(:each) do
+        allow(service_object).to receive(:expand_items_in_elements).with(
+          "crowbar" => ["admin.crowbar.com"]
+        ).and_return([nil, ["failure"], "test_msg"])
+      end
+
+      it "returns 405 and an error message" do
+        # should return status code 405 and the failure msg
+        expect(service_object.apply_role(@role, "default", false, false)).to eq([405, "test_msg"])
+      end
+
+      it "sets the proposal status to failure" do
+        # run apply_role so it fails
+        service_object.apply_role(@role, "default", false, false)
+        # reload the proposal so its fresh
+        p = Proposal.where(barclamp: "crowbar", name: "default").first
+
+        expect(p["deployment"]["crowbar"]["crowbar-status"]).to eq("failed")
+        expect(p["deployment"]["crowbar"]["crowbar-failed"]).to eq("test_msg")
+      end
+
+    end
+
+    it "tries to close the locks" do
+      # fake that this node is not and admin so it tries to lock it
+      allow_any_instance_of(NodeObject).to receive(:admin?).and_return(false)
+      lock = double(Crowbar::Lock::SharedNonBlocking)
+      expect(service_object).to receive(:lock_nodes).and_return([[lock], {}])
+      # check if our fake lock has received the release
+      expect(lock).to receive(:release).and_return(true)
+      # mock this as there is a call to sudo in apply_role. Not nice!
+      expect(service_object).to receive(:system).and_return(true)
+      service_object.apply_role(@role, "default", false, false)
     end
   end
 end

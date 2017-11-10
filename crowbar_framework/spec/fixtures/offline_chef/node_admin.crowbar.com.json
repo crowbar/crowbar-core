@@ -69,6 +69,7 @@
     "crowbar": {
       "admin_node": true
     },
+    "crowbar_wall": {},
     "provisioner": {
       "chef_client_runs": 900
     }
