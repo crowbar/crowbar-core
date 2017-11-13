@@ -507,11 +507,13 @@ if [ "$MODE" == "setup" -o "$MODE" == "start" ]; then
 
     [ $final_state == "ready" ] || EXVAL=1
 elif [ "$MODE" == "stop" ]; then
-    RUNLEVEL=$(runlevel | awk '{print $2}')
-    final_state="shutdown"
-    [ "$RUNLEVEL" == "6" ] && final_state="reboot"
+    if systemctl --no-legend --full --no-pager list-jobs reboot.target | grep -q " start "; then
+        final_state="reboot"
+    else
+        final_state="shutdown"
+    fi
 
-    echo_debug "Stopping with state=$final_state (runlevel $RUNLEVEL)"
+    echo_debug "Stopping with state=$final_state"
 
     HOSTNAME=$(hostname -f)
     post_state $HOSTNAME "$final_state"
