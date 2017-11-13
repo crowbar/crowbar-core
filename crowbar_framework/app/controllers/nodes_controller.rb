@@ -499,7 +499,7 @@ class NodesController < ApplicationController
     @node = Node.find_by_name(params[:name])
     raise ActionController::RoutingError.new("Node #{params[:name]} not found.") if @node.nil?
     @attribute = @node.to_hash
-    params[:path].to_a.each do |element|
+    (params[:path] || "").split("/").each do |element|
       @attribute = @attribute[element]
       raise ActionController::RoutingError.new("Node #{params[:name]}: unknown attribute #{params[:path].join('/')}") if @attribute.nil?
     end
