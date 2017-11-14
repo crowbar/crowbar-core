@@ -210,6 +210,10 @@ input[type="search"] {
   margin-bottom: $form-group-margin-bottom;
 }
 
+.list-group-item-heading .form-group {
+  margin-top: $heading-form-group-margin-top;
+}
+
 
 // Checkboxes and radios
 //
