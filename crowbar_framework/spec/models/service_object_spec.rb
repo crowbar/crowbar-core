@@ -416,4 +416,190 @@ describe ServiceObject do
       service_object.apply_role(@role, "default", false, false)
     end
   end
+
+  describe "#lookup_data_and_run_checks" do
+    before(:each) do
+      @new_role = RoleObject.find_role_by_name("crowbar-config-default")
+      @old_role = RoleObject.find_role_by_name("crowbar-config-default")
+      @node = Node.find_by_name("admin")
+      @args = [@new_role, @old_role, "default", false, false]
+
+      # mock the 2 calls to non-existant nodes. The test wont fail if we dont, but is nicer to
+      # mimic it so we dont get errors on the log
+      allow(Node).to receive(:find_by_name).and_call_original
+      allow(Node).to receive(:find_by_name).with("1").and_return(@node)
+      allow(Node).to receive(:find_by_name).with("2").and_return(@node)
+    end
+    it "should return proper new_elements" do
+      # override the role elements
+      @new_role.override_attributes["crowbar"]["elements"] = { "crowbar" => ["1", "2"] }
+
+      new_elements, = service_object.lookup_data_and_run_checks(*@args)
+      expect(new_elements).to eq("crowbar" => ["1", "2"])
+    end
+
+    it "should return proper old_elements" do
+      # override the role elements
+      @new_role.override_attributes["crowbar"]["elements"] = { "crowbar" => ["1", "2"] }
+
+      _, old_elements = service_object.lookup_data_and_run_checks(*@args)
+      expect(old_elements).to eq("crowbar" => ["admin.crowbar.com"])
+    end
+
+    it "should return proper new_deployment" do
+      _, _, new_deployment = service_object.lookup_data_and_run_checks(*@args)
+      expect(new_deployment["elements"]).to eq("crowbar" => ["admin.crowbar.com"])
+      @new_role.override_attributes["crowbar"]["elements"] = { "crowbar" => ["1", "2"] }
+      _, _, new_deployment = service_object.lookup_data_and_run_checks(*@args)
+      expect(new_deployment["elements"]).to eq("crowbar" => ["1", "2"])
+    end
+
+    it "should return proper element_order" do
+      _, _, _, element_order, = service_object.lookup_data_and_run_checks(*@args)
+      expect(element_order).to eq([["crowbar"]])
+      @new_role.override_attributes["crowbar"]["element_order"] = [["crowbar", "crowbar2"]]
+      _, _, _, element_order, = service_object.lookup_data_and_run_checks(*@args)
+      expect(element_order).to eq([["crowbar", "crowbar2"]])
+    end
+
+    it "should modify new_deployment when expanding cluster nodes" do
+      @new_role.override_attributes["crowbar"]["elements"] = { "crowbar" => ["fakecluster"] }
+      allow(Node).to receive(:find_by_name).with("fakecluster").and_return(@node)
+      allow(
+        service_object
+      ).to receive(:expand_items_in_elements).with(
+        "crowbar" => ["fakecluster"]
+      ).and_return("crowbar" => ["1", "2"])
+      _, _, new_deployment = service_object.lookup_data_and_run_checks(*@args)
+      expect(new_deployment["elements"]).to eq("crowbar" => ["fakecluster"])
+      expect(new_deployment["elements_expanded"]).to eq("crowbar" => ["1", "2"])
+    end
+
+    it "should raise RoleFailedToApply if the role expansion fails" do
+      expect(service_object).to receive(:expand_items_in_elements).and_return([nil, ["1"], "fail"])
+      expect do
+        service_object.lookup_data_and_run_checks(*@args)
+      end.to raise_error(Crowbar::Error::RoleFailedToApply)
+    end
+
+    it "should return a filled pre_cached_nodes" do
+      _, _, _, _, _, pre_cached_nodes = service_object.lookup_data_and_run_checks(*@args)
+      expect(pre_cached_nodes).not_to be_empty
+      expect(pre_cached_nodes).to include("admin.crowbar.com")
+    end
+
+    describe "in_queue" do
+      it "should return false if the proposal is not queued" do
+        _, _, _, _, in_queue = service_object.lookup_data_and_run_checks(*@args)
+        expect(in_queue).to be(false)
+      end
+
+      it "should raise ProposalDelayed if the proposal is queued" do
+        allow_any_instance_of(
+          Crowbar::DeploymentQueue
+        ).to receive(:queue_proposal).and_return([["1", "2"], {}])
+        expect do
+          service_object.lookup_data_and_run_checks(*@args)
+        end.to raise_error(Crowbar::Error::ProposalDelayed)
+      end
+    end
+
+    describe "with boostrap flag enabled" do
+      before(:each) do
+        # modify the boostrap arg to be true
+        @args[4] = true
+      end
+      it "should not try to queue the proposal" do
+        expect(service_object).not_to receive(:proposal_dependencies)
+        expect(service_object).not_to receive(:queue_proposal)
+        _, _, _, _, in_queue = service_object.lookup_data_and_run_checks(*@args)
+        # in_queue gets set to true due to bootstrap
+        expect(in_queue).to eq(true)
+      end
+    end
+
+    describe "experimental options" do
+      describe "skip_unready_nodes" do
+        before(:each) do
+          allow(Rails.application.config.experimental).to receive(:fetch).and_call_original
+        end
+        describe "when enabled" do
+          before(:each) do
+            allow(
+              Rails.application.config.experimental
+            ).to receive(:fetch).with(
+              "skip_unready_nodes", {}
+            ).and_return("enabled" => true, "roles" => ["crowbar"])
+          end
+          it "should filter the unready nodes if nodes are unready" do
+            expect(service_object).to receive(:skip_unready_nodes).and_call_original
+            new_elements, = service_object.lookup_data_and_run_checks(*@args)
+            # should have removed the admin node
+            expect(new_elements).to eq("crowbar" => [])
+          end
+
+          it "should not filter the unready nodes if nodes are ready" do
+            expect(service_object).to receive(:skip_unready_nodes).and_call_original
+            allow_any_instance_of(Node).to receive(:state).and_return("ready")
+            new_elements, = service_object.lookup_data_and_run_checks(*@args)
+            # should NOT have removed the admin node
+            expect(new_elements).to eq("crowbar" => ["admin.crowbar.com"])
+          end
+        end
+
+        describe "when disabled" do
+          it "should do nothing" do
+            expect(service_object).not_to receive(:skip_unready_nodes)
+            new_elements, = service_object.lookup_data_and_run_checks(*@args)
+            # should have removed the admin node
+            expect(new_elements).to eq("crowbar" => ["admin.crowbar.com"])
+          end
+        end
+      end
+
+      # very basic tests for these, more tests should go in the appropiate barclamps where the
+      # meat of this filtering is done
+      describe "skip_unchanged_nodes" do
+        before(:each) do
+          allow(Rails.application.config.experimental).to receive(:fetch).and_call_original
+        end
+
+        describe "when enabled" do
+          before(:each) do
+            allow(
+              Rails.application.config.experimental
+            ).to receive(:fetch).with(
+              "skip_unchanged_nodes", {}
+            ).and_return("enabled" => true)
+          end
+
+          it "should filter nodes that have not changed" do
+            expect(service_object).to receive(:skip_unchanged_nodes).and_call_original
+            # fake the method that tells if we can skip the node to make sure the elements
+            # list is returned filtered
+            expect(service_object).to receive(:skip_unchanged_node?).and_return(true)
+            new_elements, = service_object.lookup_data_and_run_checks(*@args)
+            expect(new_elements).to eq("crowbar" => [])
+          end
+
+          it "should not filter nodes that have changed" do
+            expect(service_object).to receive(:skip_unchanged_nodes).and_call_original
+            # fake the method that tells if we can skip the node to make sure the elements
+            # list is returned filtered
+            expect(service_object).to receive(:skip_unchanged_node?).and_return(false)
+            new_elements, = service_object.lookup_data_and_run_checks(*@args)
+            expect(new_elements).to eq("crowbar" => ["admin.crowbar.com"])
+          end
+        end
+
+        describe "when disabled" do
+          it "should do nothing" do
+            expect(service_object).not_to receive(:skip_unchanged_nodes)
+            new_elements, = service_object.lookup_data_and_run_checks(*@args)
+            expect(new_elements).to eq("crowbar" => ["admin.crowbar.com"])
+          end
+        end
+      end
+    end
+  end
 end
