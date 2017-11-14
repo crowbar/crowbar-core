@@ -15,7 +15,11 @@ module ServiceRestart
           @cache["cache_time"] = ohai_time
         end
 
-        @cache["config"] ||= Chef::DataBagItem.load("crowbar-config", "disallow_restart") rescue {}
+        @cache["config"] ||= begin
+          Chef::DataBagItem.load("crowbar-config", "disallow_restart")
+        rescue Net::HTTPServerException
+          {}
+        end
       end
     end
 
