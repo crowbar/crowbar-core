@@ -418,32 +418,28 @@ Nic.nics.each do |nic|
 
   # Do some MTU checks/configuration for the parent of the vlan nic
   if nic.is_a?(Nic::Vlan)
-    # 1) validate that the parent of vlan nic is not used by a network directly
-    # and the requested mtu for the parent is lower than the vlan nic mtu.
-    # That would not work and setting the mtu on the vlan would fail.
-    networks_using_parent = if_mapping.select { |net, ifaces| ifaces.include? nic.parent }.keys
-    networks_using_parent.each do |net_name|
-      net = Barclamp::Inventory.get_network_by_type(node, net_name)
-      unless net.use_vlan
-        nic_parent = Nic.new nic.parent
-        if nic_parent.mtu.to_i < ifs[nic.name]["mtu"].to_i
-          msg = "#{nic.name} wants mtu #{ifs[nic.name]["mtu"]} but network #{net_name} " \
-                "using the parent nic #{nic.parent} wants a lower mtu #{net.mtu}. " \
-                "This network mtu configuration is invalid."
-          Chef::Log.fatal(msg)
-          raise msg
-        end
-      end
-    end
-    # 2) set the mtu for the parent if needed
-    if !ifs[nic.parent].key? "mtu" || (ifs[nic.parent]["mtu"].to_i < ifs[nic.name]["mtu"].to_i)
-      # we want the highest mtu to end up in the ifcfg-$parent config
-      ifs[nic.parent]["mtu"] = ifs[nic.name]["mtu"]
+    if nic.parent
       parent_nic = Nic.new(nic.parent)
-      Chef::Log.info("vlan #{nic.name} wants mtu #{ifs[nic.name]["mtu"]} but " \
-                     "parent #{parent_nic.name} wants no/lower mtu. Set mtu "\
-                     "for #{parent_nic.name} to #{ifs[nic.parent]['mtu']}")
-      parent_nic.mtu = ifs[nic.parent]["mtu"]
+      Chef::Log.info("Checking MTU for nic #{nic.name} with parent #{parent_nic.name}")
+      if ifs[nic.name].key?("mtu") &&
+          ifs.key?(parent_nic.name) &&
+          ifs[parent_nic.name].key?("mtu") &&
+          ifs[parent_nic.name]["mtu"].to_i < ifs[nic.name]["mtu"].to_i
+        # parent has custom mtu lower than the nic custom mtu
+        msg = "Interface #{parent_nic.name} has a custom mtu of #{ifs[parent_nic.name]["mtu"]} "\
+               "but children vlan #{nic.name} wants a mtu of #{ifs[nic.name]["mtu"]}."\
+               "This configuration is invalid."
+        Chef::Log.fatal(msg)
+        raise msg
+      end
+      # set the highest mtu of all children in the same interface
+      all_children = ifs.select { |k, v| v["parent"] == nic.parent && v.key?("mtu") }
+
+      unless all_children.empty?
+        max_mtu_nic = all_children.max_by { |k, v| v["mtu"] }[0]
+        ifs[nic.parent]["mtu"] = ifs[max_mtu_nic]["mtu"].to_i
+        parent_nic.mtu = ifs[max_mtu_nic]["mtu"].to_i
+      end
     end
   end
 
