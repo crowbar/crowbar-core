@@ -137,7 +137,7 @@ def get_permanent_address(interface)
 
   # unpack the uint64 we get to bytes, and then only take the size as
   # specified in the reply, to build the MAC address
-  mac_bytes = [rv.value].pack("Q").each_byte.map { |b| b.to_s(16) }
+  mac_bytes = [rv.value].pack("Q").each_byte.map { |b| format("%02X", b) }
   mac_bytes.slice(0, rv.size).join(":")
 rescue StandardError => e
   puts "Failed to get ioctl for permanent address: #{e.message}"
