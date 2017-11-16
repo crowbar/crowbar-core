@@ -602,4 +602,122 @@ describe ServiceObject do
       end
     end
   end
+
+  describe "#create_changesets" do
+    before(:each) do
+      Proposal.where(
+        barclamp: "crowbar", name: "default"
+      ).first_or_create(barclamp: "crowbar", name: "default")
+
+      @node_name = "admin.crowbar.com"
+      @new_elements = { "crowbar" => [@node_name] }
+      @old_elements = { "crowbar" => [@node_name] }
+      @new_deployment = {
+        "element_order" => [["crowbar"]],
+        "crowbar-committing" => true,
+        "config" => {
+          "transitions" => false,
+          "transition_list" => [],
+          "mode" => "full",
+          "environment" => "crowbar-config-default"
+        },
+        "crowbar-revision" => 4,
+        "elements" => {
+          "crowbar" => [@node_name]
+        }
+      }
+      @element_order = [["crowbar"]]
+      @pre_cached_nodes = {}
+      @inst = "default"
+      @in_queue = false
+      @bootstrap = false
+
+      @role = RoleObject.find_role_by_name("crowbar-config-default")
+      @args = [
+        @new_elements, @old_elements, @new_deployment, @element_order,
+        @pre_cached_nodes, @role, @inst, @in_queue, @bootstrap
+      ]
+      allow(RemoteNode).to receive(:chef_ready?).with(
+        @node_name, 1200, 10, anything
+      ).and_return(true)
+      # we dont want to run the real commands here so just return an empty hash
+      allow(service_object).to receive(:remote_chef_client_threads).and_return({})
+    end
+
+    it "should call the expected functions" do
+      # fake the admin node status and the lock so we can check that its calling the needed methods
+      allow_any_instance_of(NodeObject).to receive(:admin?).and_return(false)
+      lock = double(Crowbar::Lock::SharedNonBlocking)
+      expect(
+        service_object
+      ).to receive(:expand_items_in_elements).with(@new_deployment["elements"]).and_call_original
+      expect(service_object).to receive(:set_to_applying).and_call_original
+      expect(service_object).to receive(:lock_nodes).and_return([[lock], {}])
+      expect(service_object).to receive(:wait_for_chef_daemons).and_call_original
+      service_object.create_changesets(*@args)
+    end
+
+    it "should return proper batches" do
+      batches, = service_object.create_changesets(*@args)
+      # what a strange format for the batches. Room to improve here with a nicer structure?
+      expect(batches).to eq([[["crowbar"], [@node_name]]])
+    end
+
+    it "should return proper applying nodes" do
+      _, applying_nodes = service_object.create_changesets(*@args)
+      expect(applying_nodes).to eq([@node_name])
+    end
+
+    it "should return proper pending_node_actions" do
+      _, _, pending_node_actions = service_object.create_changesets(*@args)
+      # keys for actions are symbols here unless every other part on service_object
+      expect(pending_node_actions).to eq(@node_name => { remove: [], add: ["crowbar"] })
+    end
+
+    it "should return proper apply_locks" do
+      _, _, _, apply_locks = service_object.create_changesets(*@args)
+      expect(apply_locks).to eq([])
+
+      # fake a lock so we can confirm that its returned properly
+      allow_any_instance_of(NodeObject).to receive(:admin?).and_return(false)
+      lock = double(Crowbar::Lock::SharedNonBlocking)
+      expect(service_object).to receive(:lock_nodes).and_return([[lock], {}])
+      _, _, _, apply_locks = service_object.create_changesets(*@args)
+      expect(apply_locks).not_to be_empty
+      expect(apply_locks.first).to be(lock)
+    end
+
+    it "should return proper node_attr_cache" do
+      expected_value = { @node_name => { "alias" => "admin", "windows" => false, "admin" => true } }
+      _, _, _, _, node_attr_cache = service_object.create_changesets(*@args)
+      expect(node_attr_cache).to eq(expected_value)
+    end
+
+    it "modifies pending_node_actions with proper roles to add" do
+      # update new_deployment[elements] to include the new role+node
+      @args[2]["elements"].update("crowbar2" => [@node_name])
+      # update element_order to include the new role
+      @args[3] = [["crowbar", "crowbar2"]]
+      # update new_elements to include the new role+node
+      @args[0] = { "crowbar" => [@node_name], "crowbar2" => [@node_name] }
+
+      _, _, pending_node_actions = service_object.create_changesets(*@args)
+      expect(pending_node_actions).to eq(@node_name => { remove: [], add: ["crowbar", "crowbar2"] })
+    end
+
+    describe "with bootstrap flag enabled" do
+      it "should not call chef/lock_nodes/set_to_applying" do
+        @args[8] = true
+        allow_any_instance_of(NodeObject).to receive(:admin?).and_return(false)
+        expect(
+          service_object
+        ).to receive(:expand_items_in_elements).with(@new_deployment["elements"]).and_call_original
+        expect(service_object).not_to receive(:set_to_applying)
+        expect(service_object).not_to receive(:lock_nodes)
+        expect(service_object).not_to receive(:wait_for_chef_daemons)
+        service_object.create_changesets(*@args)
+      end
+    end
+
+  end
 end
