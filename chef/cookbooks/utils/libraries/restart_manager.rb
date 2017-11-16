@@ -1,5 +1,28 @@
 module ServiceRestart
   class RestartManager
+    class << self
+      def data_bag
+        # Cache the flags from the data bag item
+        # This cache needs to be invalidated for each chef-client run from
+        # chef-client daemon (which are all in the same process); so use the
+        # ohai time as a marker for that.
+        @cache ||= {}
+        ohai_time = BarclampLibrary::Barclamp::Config.node[:ohai_time]
+
+        if @cache["cache_time"] != ohai_time
+          # Invalidating cache
+          @cache["config"] = nil
+          @cache["cache_time"] = ohai_time
+        end
+
+        @cache["config"] ||= begin
+          Chef::DataBagItem.load("crowbar-config", "disallow_restart")
+        rescue Net::HTTPServerException
+          {}
+        end
+      end
+    end
+
     def initialize(cookbook_name, node, new_resource, is_pacemaker_service)
       @cookbook_name = cookbook_name
       @node = node
@@ -26,10 +49,7 @@ module ServiceRestart
     end
 
     def disallow_restart?
-      # if the databag or item does not exits it returns a 404
-      data_bag = Chef::DataBagItem.load("crowbar-config", "disallow_restart") rescue {}
-
-      data_bag[cookbook] || false
+      RestartManager.data_bag[cookbook] || false
     end
 
     def register_restart_request
