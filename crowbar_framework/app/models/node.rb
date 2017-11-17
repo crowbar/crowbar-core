@@ -1039,11 +1039,18 @@ class Node < ChefObject
           #   - if the run marker is removed because chef-client run is over,
           #     but another chef-client run is triggered; all of this while we
           #     are in sleep(1).
-          # First race is totally unlikely.
+          # First race is totally unlikely, but we add a sleep for this.
           # Second race is worked around by the conditional sleep between our
           # two loops.
           # The last two races just lead to this method taking longer than
           # needed, and the timeout protects us from an infinite loop.
+
+          # Give some time to the looper_chef_client.sh to create the queue
+          # marker (in case the rails app goes really fast). While it looks
+          # awful to do some sleep() here, it's actually fine because we wait
+          # for chef-client to end anyway -- and chef won't be faster than 2
+          # seconds.
+          sleep(2)
 
           had_queue = false
           while File.exist?("/var/run/crowbar/chef-client.run")
