@@ -281,14 +281,50 @@ class ProvisionerService < ServiceObject
     # if old_role is nil, then we are applying the barclamp for the first time
     return false if old_role.nil?
 
+    # if the servers have changed, we need to apply
+    old_servers = Set.new(old_role.elements["provisioner-server"])
+    new_servers = Set.new(new_role.elements["provisioner-server"])
+    return false if old_servers != new_servers
+
     # if the node changed roles, then we need to apply
     return false if node_changed_roles?(node_name, old_role, new_role)
 
-    # if attributes have changed, we need to run
-    return false if node_changed_attributes?(node_name, old_role, new_role)
+    # if we're a server, and any attribute has changed, then we need to apply
+    if new_role.elements["provisioner-server"].include?(node_name) &&
+        node_changed_attributes?(node_name, old_role, new_role)
+      return false
+    end
 
-    # by this point its safe to assume that we can skip the node as nothing has changed on it
-    # same attributes, same roles so skip it
+    # if we're only "base", and relevant attributes have changed (we list
+    # here the ones to ignore), then we need to apply
+    ignore_attributes = [
+      # only relevant for provisioner-server
+      "default_os",
+      "dhcp",
+      "enable_pxe",
+      "supported_oses",
+      # only impacts discovery, so only relevant for provisioner-server
+      "discovery",
+      "serial_tty",
+      # only impacts installation of the OS, so only relevant for
+      # provisioner-server
+      "default_user",
+      "default_password",
+      "default_password_hash",
+      "root_password_hash",
+      "suse.autoyast",
+      "use_local_security",
+      "use_serial_console",
+      "windows",
+      # only impacts creation of crowbar_register, so only relevant for
+      # provisioner-server
+      "keep_existing_hostname"
+    ]
+    return false if relevant_attributes_changed_if_roles?(node_name, old_role, new_role,
+      ignore_attributes, ["provisioner-base"])
+
+    # by this point its safe to assume that we can skip the node as nothing has
+    # changed on it same attributes, same roles so skip it
     @logger.info("#{@bc_name} skip_batch_for_node? skipping: #{node_name}")
     true
   end
