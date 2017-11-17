@@ -280,7 +280,7 @@ describe NodesController do
     # FIXME: maybe regular 404 would be better?
     it "raises for missing node" do
       expect {
-        get :attribute, name: "missing", path: ["name"]
+        get :attribute, name: "missing", path: "name"
       }.to raise_error(ActionController::RoutingError)
     end
 
@@ -296,7 +296,7 @@ describe NodesController do
     end
 
     it "looks up the attribute by path" do
-      get :attribute, name: @node.name, path: ["name"]
+      get :attribute, name: @node.name, path: "name"
       json = JSON.parse(response.body)
       expect(json["value"]).to be == @node.name
     end
