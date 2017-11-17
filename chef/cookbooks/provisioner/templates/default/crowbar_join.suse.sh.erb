@@ -258,23 +258,23 @@ EOF
     for line in 'require "/var/chef/handlers/reboot_handler"' \
         'reboot_handler = RebootHandler.new' \
         'report_handlers << reboot_handler # these fire at the end of a successful run'; do
-        grep -q -e "^$line$" /etc/chef/client.rb || echo "$line" >> /etc/chef/client.rb
+        grep -qxF -e "$line" /etc/chef/client.rb || echo "$line" >> /etc/chef/client.rb
     done
 
     # add reboot handler reset as start_handler
     for line in 'require "/var/chef/handlers/reboot_handler_reset"' \
         'reboot_handler_reset = RebootHandlerReset.new' \
         'start_handlers << reboot_handler_reset # these fire at the start of a run'; do
-        grep -q -e "^$line$" /etc/chef/client.rb || echo "$line" >> /etc/chef/client.rb
+        grep -qxF -e "$line" /etc/chef/client.rb || echo "$line" >> /etc/chef/client.rb
     done
 
     # work around: https://tickets.opscode.com/browse/CHEF-3304
     line='Encoding.default_external = Encoding::UTF_8 if RUBY_VERSION > "1.9"'
-    grep -q -e "^$line$" /etc/chef/client.rb || echo "$line" >> /etc/chef/client.rb
+    grep -qxF -e "$line" /etc/chef/client.rb || echo "$line" >> /etc/chef/client.rb
 
     # work around: avoid excessively large node attributes due to large number of accounts
     line='Ohai::Config[:disabled_plugins] << "passwd"'
-    grep -q -e "^$line$" /etc/chef/client.rb || echo "$line" >> /etc/chef/client.rb
+    grep -qxF -e "$line" /etc/chef/client.rb || echo "$line" >> /etc/chef/client.rb
 }
 
 do_chef_client_after_setup() {
