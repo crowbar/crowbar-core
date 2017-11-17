@@ -1902,4 +1902,50 @@ class ServiceObject
     roles_in_new = new_role.elements.keys.select { |r| new_role.elements[r].include?(node) }.sort
     roles_in_old != roles_in_new
   end
+
+  # return true if no other attribute than the ignored has changed, but only if
+  # the node has no other role than the ones listed in only_for_roles
+  def relevant_attributes_changed_if_roles?(node, old_role, new_role, ignore_attr, only_for_roles)
+    # if only_for_roles has some sole
+    unless only_for_roles.nil? || only_for_roles.empty?
+      # get roles for this node
+      roles_in_new = new_role.elements.keys.select { |r| new_role.elements[r].include?(node) }
+
+      # return false if node has other roles that ones in the list
+      # (only_for_roles) -- this test is not for us
+      return false unless Set.new(roles_in_new).subset?(Set.new(only_for_roles))
+    end
+
+    # if the ingnore_attr has some element, apply filters
+    if ignore_attr.nil? || ignore_attr.empty?
+      old_role.default_attributes[@bc_name] != new_role.default_attributes[@bc_name]
+    else
+      # prepare a clone of default attributes of old and new roles
+      old_selected_attributes = old_role.default_attributes[@bc_name].deep_dup
+      new_selected_attributes = new_role.default_attributes[@bc_name].deep_dup
+
+      # function to remove all ignored attributes from a list
+      remove_ignored = lambda do |attributes, ignored|
+        ignored.each do |path|
+          iterator = attributes
+          path = path.split(".")
+
+          while path.length > 1
+            iterator = iterator[path[0]]
+            break if iterator.nil?
+            path.slice!(0)
+          end
+
+          iterator.delete(path[0]) unless iterator.nil?
+        end
+      end
+
+      # remove ignored attributes from old and new attributes
+      remove_ignored.call(old_selected_attributes, ignore_attr)
+      remove_ignored.call(new_selected_attributes, ignore_attr)
+
+      # return true if the attributes have changed, except for the ignored ones
+      old_selected_attributes != new_selected_attributes
+    end
+  end
 end

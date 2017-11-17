@@ -101,4 +101,34 @@ class LoggingService < ServiceObject
     instance = Crowbar::DataBagConfig.instance_from_role(old_role, role)
     Crowbar::DataBagConfig.save("core", instance, @bc_name, config)
   end
+
+  # try to know if we can skip a node from running chef-client
+  def skip_unchanged_node?(node_name, old_role, new_role)
+    # if old_role is nil, then we are applying the barclamp for the first time
+    return false if old_role.nil?
+
+    # if the servers have changed, we need to apply
+    old_servers = Set.new(old_role.elements["logging-server"])
+    new_servers = Set.new(new_role.elements["logging-server"])
+    return false if old_servers != new_servers
+
+    # if the node changed roles, then we need to apply
+    return false if node_changed_roles?(node_name, old_role, new_role)
+
+    # if we're a server, and any attribute has changed, then we need to apply
+    if new_role.elements["logging-server"].include?(node_name) &&
+        node_changed_attributes?(node_name, old_role, new_role)
+      return false
+    end
+
+    # if we're only a client, and relevant attributes have changed (we list
+    # here the ones to ignore), then we need to apply
+    return false if relevant_attributes_changed_if_roles?(node_name, old_role, new_role,
+      ["external_servers"], ["logging-client"])
+
+    # by this point its safe to assume that we can skip the node as nothing has
+    # changed on it same attributes, same roles so skip it
+    @logger.info("#{@bc_name} skip_batch_for_node? skipping: #{node_name}")
+    true
+  end
 end
