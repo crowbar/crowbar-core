@@ -1,5 +1,7 @@
 [Service]
+<% unless @restart.nil? || @restart.empty? -%>
 Restart=<%= @restart %>
+<% end -%>
 <% unless @restart_sec.nil? || @restart_sec.empty? -%>
 RestartSec=<%= @restart_sec %>
 <% end -%>
@@ -11,4 +13,11 @@ RestartPreventExitStatus=<%= @restart_prevent_exit_status.map { |x| x.to_s }.joi
 <% end -%>
 <% unless @restart_force_exit_status.nil? || @restart_force_exit_status.empty? -%>
 RestartForceExitStatus=<%= @restart_force_exit_status.map { |x| x.to_s }.join(" ") %>
+<% end -%>
+<% unless @extra_config.nil? -%>
+  <% @extra_config.each do |key,value| -%>
+    <% unless value.nil? -%>
+<%= key %>=<%= value %>
+    <% end -%>
+  <% end -%>
 <% end -%>
