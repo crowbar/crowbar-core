@@ -791,4 +791,109 @@ describe ServiceObject do
       service_object.update_runlists(*@args)
     end
   end
+
+  describe "#deploy" do
+    before(:each) do
+      allow_any_instance_of(Proposal).to receive(:where).with(
+        barclamp: "crowbar", name: "default"
+      ).and_return(proposal)
+      @new_role = RoleObject.find_role_by_name("crowbar-config-default")
+      @old_role = RoleObject.find_role_by_name("crowbar-config-default")
+      @node_name = "admin.crowbar.com"
+      @new_elements = { "crowbar" => [@node_name] }
+      @batches = [[["crowbar"], [@node_name]]]
+      @node_attr_cache = {
+        @node_name => {
+          "alias" => "admin", "windows" => false, "admin" => true
+        }
+      }
+      @bootstrap = false
+      @inst = "default"
+      @args = [@new_elements, @new_role, @old_role, @batches, @bootstrap, @node_attr_cache, @inst]
+      # we dont want to run the real commands here so just return an empty hash
+      allow(service_object).to receive(:remote_chef_client_threads).and_return({})
+    end
+
+    it "should work" do
+      service_object.deploy(*@args)
+    end
+
+    it "should raise ProposalFailedToApply if the chef run fails" do
+      thread = double(Thread)
+      expect(
+        service_object
+      ).to receive(:remote_chef_client_threads).and_return(thread => @node_name)
+      expect(thread).to receive(:value).at_least(:once).and_return(666)
+      expect(service_object).to receive(:get_log_lines).with(@node_name).and_return("")
+      expect(service_object).to receive(:update_proposal_status).with(@inst, "failed", anything)
+      expect do
+        service_object.deploy(*@args)
+      end.to raise_error(Crowbar::Error::ProposalFailedToApply)
+    end
+
+    it "should call single_chef_client if node is not admin" do
+      # fake that this node is not and admin
+      @args[5] = { @node_name => { "alias" => "admin", "windows" => false, "admin" => false } }
+      expect(service_object).to receive(:system).and_return(true)
+      service_object.deploy(*@args)
+    end
+
+    it "removes the role_remove roles" do
+      # add a remove role to the proposal
+      proposal.raw_data["deployment"]["crowbar"]["elements"] = { "role1_remove" => [@node_name] }
+      proposal.save
+      expect_any_instance_of(Node).to receive(:delete_from_run_list).with("role1_remove")
+      # should save the proposal after removing the role
+      expect_any_instance_of(Proposal).to receive(:save).once
+      service_object.deploy(*@args)
+    end
+
+    describe "apply_role_pre_chef_call" do
+      it "should call it" do
+        expect(
+          service_object
+        ).to receive(:apply_role_pre_chef_call).with(
+          @old_role, @new_role, @new_elements.values.flatten
+        ).and_call_original
+        service_object.deploy(*@args)
+      end
+
+      it "should raise ApplyRolePreChefFailed if something fails" do
+        expect(
+          service_object
+        ).to receive(:apply_role_pre_chef_call).with(
+          @old_role, @new_role, @new_elements.values.flatten
+        ).and_raise(StandardError)
+
+        expect(service_object).to receive(:update_proposal_status).with(@inst, "failed", anything)
+        expect do
+          service_object.deploy(*@args)
+        end.to raise_error(Crowbar::Error::ApplyRolePreChefFailed)
+      end
+    end
+
+    describe "apply_role_post_chef_call" do
+      it "should call it" do
+        expect(
+          service_object
+        ).to receive(:apply_role_post_chef_call).with(
+          @old_role, @new_role, @new_elements.values.flatten
+        ).and_call_original
+        service_object.deploy(*@args)
+      end
+
+      it "should raise ApplyRolePostChefFailed if something fails" do
+        expect(
+          service_object
+        ).to receive(:apply_role_post_chef_call).with(
+          @old_role, @new_role, @new_elements.values.flatten
+        ).and_raise(StandardError)
+
+        expect(service_object).to receive(:update_proposal_status).with(@inst, "failed", anything)
+        expect do
+          service_object.deploy(*@args)
+        end.to raise_error(Crowbar::Error::ApplyRolePostChefFailed)
+      end
+    end
+  end
 end
