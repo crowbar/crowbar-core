@@ -720,4 +720,75 @@ describe ServiceObject do
     end
 
   end
+
+  describe "#update_runlists" do
+    before(:each) do
+      @role = RoleObject.find_role_by_name("crowbar-config-default")
+      @node_name = "admin.crowbar.com"
+      @node = Node.find_by_name(@node_name)
+      @new_elements = { "crowbar" => [@node_name] }
+      @pre_cached_nodes = {}
+      @new_deployment = {
+        "element_order" => [["crowbar"]],
+        "element_run_list_order" => { "dns" => 666 },
+        "crowbar-committing" => true,
+        "config" => {
+          "transitions" => false,
+          "transition_list" => [],
+          "mode" => "full",
+          "environment" => "crowbar-config-default"
+        },
+        "crowbar-revision" => 4,
+        "elements" => {
+          "crowbar" => [@node_name]
+        }
+      }
+      @pending_node_actions = { "admin" => { remove: [], add: ["crowbar"] } }
+
+      @args = [@role, @pending_node_actions, @new_deployment, @new_elements, @pre_cached_nodes]
+    end
+
+    it "should call the expected functions" do
+      expect(service_object).to receive(:chef_order).and_call_original
+      expect_any_instance_of(Node).to receive(:add_to_run_list).twice.and_call_original
+      service_object.update_runlists(*@args)
+    end
+
+    it "should add a new role" do
+      # add a new role to pending_node_actions
+      @args[1] = { "admin" => { remove: [], add: ["crowbar", "crowbar2"] } }
+      expect_any_instance_of(Node).to receive(:add_to_run_list).with("crowbar", 0).and_call_original
+      expect_any_instance_of(
+        Node
+      ).to receive(:add_to_run_list).with("crowbar-config-default", 0).and_call_original
+      # should call add_to_runlist with the new role
+      expect_any_instance_of(
+        Node
+      ).to receive(:add_to_run_list).with("crowbar2", 0).and_call_original
+      expect_any_instance_of(Node).to receive(:save).and_call_original
+      service_object.update_runlists(*@args)
+    end
+
+    it "should delete a removed role" do
+      @args[1] = { "admin" => { remove: ["crowbar2"], add: ["crowbar"] } }
+      expect_any_instance_of(
+        Node
+      ).to receive(:delete_from_run_list).with("crowbar2").and_call_original
+      expect_any_instance_of(Node).to receive(:save).and_call_original
+      service_object.update_runlists(*@args)
+    end
+
+    it "should set the role priority in the runlist" do
+      @args[1] = { "admin" => { remove: [], add: ["crowbar", "dns"] } }
+      expect_any_instance_of(Node).to receive(:add_to_run_list).with("crowbar", 0).and_call_original
+      expect_any_instance_of(
+        Node
+      ).to receive(:add_to_run_list).with("crowbar-config-default", 0).and_call_original
+      # should call add_to_runlist with the proper priority
+      expect_any_instance_of(
+        Node
+      ).to receive(:add_to_run_list).with("dns", 666).and_call_original
+      service_object.update_runlists(*@args)
+    end
+  end
 end
