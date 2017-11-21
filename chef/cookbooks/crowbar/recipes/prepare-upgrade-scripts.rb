@@ -40,13 +40,13 @@ web_path = "#{provisioner_config['root_url']}/#{node[:target_platform]}/#{arch}"
 new_install_url = "#{web_path}/install"
 
 # try to create an alias for new base repo from the original base repo
-repo_alias = "SLES12-SP1-12.1-0"
+repo_alias = "SLES12-SP2-12.2-0"
 doc = REXML::Document.new(`zypper --xmlout lr --details`)
 doc.elements.each("stream/repo-list/repo") do |repo|
   repo_alias = repo.attributes["alias"] if repo.elements["url"].text == old_install_url
 end
 
-new_alias = repo_alias.gsub("SP1", "SP2").gsub(node[:platform_version], target_platform_version)
+new_alias = repo_alias.gsub("SP2", "SP3").gsub(node[:platform_version], target_platform_version)
 
 template "/usr/sbin/crowbar-prepare-repositories.sh" do
   source "crowbar-prepare-repositories.sh.erb"
