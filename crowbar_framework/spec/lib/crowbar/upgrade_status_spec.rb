@@ -32,11 +32,16 @@ describe Crowbar::UpgradeStatus do
   let(:current_action) { "os-upgrade" }
   let(:crowbar_backup) { "/var/lib/crowbar.tgz" }
   let(:openstack_backup) { "/var/lib/openstack.tgz" }
+  let(:running_7_8) { "/var/lib/crowbar/upgrade/7-to-8-upgrade-running" }
 
   context "with a status file that does not exist" do
     it "ensures the default initial values are correct" do
       expect(subject.current_substep).to be_nil
       expect(subject.finished?).to be false
+    end
+
+    it "starts with default upgrade path" do
+      expect(subject.running_file_location).to eq running_7_8
     end
 
     it "ensures that the defaults are saved" do
