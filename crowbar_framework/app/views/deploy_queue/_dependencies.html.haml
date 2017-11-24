@@ -11,7 +11,7 @@
           = dep["inst"]
       - else
         - status = proposal_dep.real_status(@active)
-        - led_update_path = status_proposal_path(:id => barclamp_instance, :barclamp => proposal_dep.barclamp, :name => proposal_dep.name)
+        - led_update_path = status_proposal_path(:controller => 'barclamp', :id => barclamp_instance, :barclamp => proposal_dep.barclamp, :name => proposal_dep.name)
         = display_led_for(status, barclamp_instance, led_update_path)
         %span
           = proposal_dep.barclamp
