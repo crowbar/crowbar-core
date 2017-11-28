@@ -40,8 +40,8 @@ barclamps:
     display: "Provisioner"
     description: "The roles and recipes to set up the provisioning server and a base environment for all nodes"
     order: 10
-    chef_order: 1060
-    run_order: 1060
+    chef_order: 10
+    run_order: 10
   ipmi:
     user_managed: true
     display: "IPMI"
