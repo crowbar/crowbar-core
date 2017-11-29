@@ -92,6 +92,12 @@ execute "enable netfilter for bridges" do
   subscribes :run, resources(cookbook_file: "modprobe-bridge.conf"), :delayed
 end
 
+# Read this before doing any network reconfigurations, as these calls require
+# network access, which we might lack for some time during the run of this
+# recipe. (Especially in the compile phase)
+provisioner_config = Barclamp::Config.load("core", "provisioner")
+provisioner_address = provisioner_config["server"]
+
 conduit_map = Barclamp::Inventory.build_node_map(node)
 Chef::Log.debug("Conduit mapping for this node:  #{conduit_map.inspect}")
 route_pref = 10000
@@ -498,9 +504,6 @@ if ["delete","reset"].member?(node["state"])
 end
 
 # Wait for the administrative network to come back up.
-provisioner_config = Barclamp::Config.load("core", "provisioner")
-provisioner_address = provisioner_config["server"]
-
 if provisioner_address
   Chef::Log.info("Checking we can ping #{provisioner_address}; " \
                  "will wait up to 60 seconds")
