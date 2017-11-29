@@ -638,12 +638,8 @@ class ::Nic
       if self.exists?(nic)
         raise ::ArgumentError.new("#{nic} already exists.")
       elsif ! ::File.exists?("/sys/module/bonding")
-        unless ::Kernel.system("modprobe bonding")
+        unless ::Kernel.system("modprobe bonding max_bonds=0")
           raise ::RuntimeError.new("Unable to load bonding module.")
-        end
-        # Kill any bonds that were automatically created
-        ifs = ::File.read(MASTER).strip.split.each do |i|
-          self.kill_bond(i)
         end
       end
       self.create_bond(nic)
