@@ -226,6 +226,11 @@ sorted_networks.each do |network|
       # interface is brought back up.
       unless bond.slaves.include? i
         ::Kernel.system("wicked ifdown #{i.name}")
+        # Delete the associated config file as well. Otherwise, in cases where
+        # this recipe fails (for whatever reason) before writing the new
+        # configuration files, a "network restart", as e.g. issued by crowbar_join
+        # will endup with an inconsistent configuration.
+        kill_nic_files(i)
       end
       bond.add_slave i
       ifs[bond.name]["slaves"] << i.name
