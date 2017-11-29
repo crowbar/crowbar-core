@@ -23,16 +23,28 @@ require_relative "error/upgrade_status"
 
 module Crowbar
   class UpgradeStatus
-    attr_reader :progress_file_path
+    attr_reader :progress_file_path, :running_file_location
     attr_accessor :progress
 
     # Return the current state of upgrade process.
     # We're keeping the information in the file so is accessible by
     # external applications and different crowbar versions.
-    def initialize(
-      logger = Rails.logger,
-      yaml_file = "/var/lib/crowbar/upgrade/6-to-7-progress.yml"
-    )
+    def initialize(logger = Rails.logger, yaml_file = nil)
+      # If no upgrade is currently running, the default behavior
+      # is to start 7-8 upgrade.
+      # 6-7 upgrade can be only running because it was already started
+      # from Cloud6 (before admin server package upgrade)
+      if yaml_file.nil? || yaml_file.empty?
+        yaml_file = File.exist?(running_file_6_7) ? yaml_file_6_7 : yaml_file_7_8
+      end
+
+      @running_file_location =
+        if yaml_file == yaml_file_6_7
+          running_file_6_7
+        else
+          running_file_7_8
+        end
+
       @logger = logger
       @progress_file_path = Pathname.new(yaml_file)
       load
@@ -48,7 +60,7 @@ module Crowbar
 
     def initialize_state
       @progress = {
-        current_step: upgrade_steps_6_7.first,
+        current_step: upgrade_steps.first,
         # substep is needed for more complex steps like upgrading the nodes
         current_substep: nil,
         current_substep_status: nil,
@@ -66,10 +78,10 @@ module Crowbar
         selected_upgrade_mode: nil
       }
       # in 'steps', we save the information about each step that was executed
-      @progress[:steps] = upgrade_steps_6_7.map do |step|
+      @progress[:steps] = upgrade_steps.map do |step|
         [step, { status: :pending }]
       end.to_h
-      FileUtils.rm_f running_file
+      FileUtils.rm_f @running_file_location
       save
     end
 
@@ -110,7 +122,7 @@ module Crowbar
     # 'step' is name of the step user wants to start.
     def start_step(step_name)
       ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
-        unless upgrade_steps_6_7.include?(step_name)
+        unless upgrade_steps.include?(step_name)
           @logger.warn("The step #{step_name} doesn't exist")
           raise Crowbar::Error::StartStepExistenceError.new(step_name)
         end
@@ -127,7 +139,7 @@ module Crowbar
         progress[:steps][step_name][:status] = :running
         progress[:steps][step_name].delete :errors
         if step_name == :prepare
-          FileUtils.touch running_file
+          FileUtils.touch @running_file_location
         end
         save
       end
@@ -144,9 +156,9 @@ module Crowbar
           status: success ? :passed : :failed
         }
         progress[:steps][current_step][:errors] = errors unless errors.empty?
-        if current_step == upgrade_steps_6_7.last && success
+        if current_step == upgrade_steps.last && success
           # Mark the end of the upgrade process and cleanup the progress
-          FileUtils.rm_f running_file
+          FileUtils.rm_f @running_file_location
           progress[:current_substep] = :end_of_upgrade
           progress[:current_substep_status] = :finished
           progress[:current_nodes] = {}
@@ -185,7 +197,7 @@ module Crowbar
     end
 
     def finished?
-      current_step == upgrade_steps_6_7.last && !File.exist?(running_file)
+      current_step == upgrade_steps.last && !File.exist?(@running_file_location)
     end
 
     def cancel_allowed?
@@ -300,14 +312,6 @@ module Crowbar
       raise ::Crowbar::Error::SaveUpgradeStatusError.new(e.message)
     end
 
-    # advance the current step if the latest one finished successfully
-    def next_step
-      return true if finished?
-      return false if current_step_state[:status] != :passed
-      i = upgrade_steps_6_7.index current_step
-      progress[:current_step] = upgrade_steps_6_7[i + 1]
-    end
-
     # global list of the steps of the upgrade process
     def upgrade_steps_6_7
       [
@@ -324,6 +328,37 @@ module Crowbar
       ]
     end
 
+    def upgrade_steps_7_8
+      [
+        :prechecks,
+        :prepare,
+        :backup_crowbar,
+        :repocheck_crowbar,
+        :admin,
+        :database,
+        :repocheck_nodes,
+        :services,
+        :backup_openstack,
+        :nodes
+      ]
+    end
+
+    def upgrade_steps
+      if @running_file_location == running_file_6_7
+        upgrade_steps_6_7
+      else
+        upgrade_steps_7_8
+      end
+    end
+
+    # advance the current step if the latest one finished successfully
+    def next_step
+      return true if finished?
+      return false if current_step_state[:status] != :passed
+      i = upgrade_steps.index current_step
+      progress[:current_step] = upgrade_steps[i + 1]
+    end
+
     # Return true if user is allowed to execute given step
     # In normal cases, that should be true only for next step in the sequence.
     # But for some cases, we allow repeating of the step that has just passed.
@@ -337,8 +372,8 @@ module Crowbar
       ].include? step
         # Allow repeating one of these steps if it was the last one finished
         # and no other one has been started yet.
-        i = upgrade_steps_6_7.index step
-        return upgrade_steps_6_7[i + 1] == current_step && pending?(current_step)
+        i = upgrade_steps.index step
+        return upgrade_steps[i + 1] == current_step && pending?(current_step)
       end
       false
     end
@@ -348,16 +383,28 @@ module Crowbar
     def next_step_to_execute
       step = current_step
       return step unless running? step
-      i = upgrade_steps_6_7.index step
-      upgrade_steps_6_7[i + 1]
+      i = upgrade_steps.index step
+      upgrade_steps[i + 1]
     end
 
     def lock_path
       "/opt/dell/crowbar_framework/tmp/upgrade_status_lock"
     end
 
-    def running_file
+    def running_file_6_7
       "/var/lib/crowbar/upgrade/6-to-7-upgrade-running"
+    end
+
+    def running_file_7_8
+      "/var/lib/crowbar/upgrade/7-to-8-upgrade-running"
+    end
+
+    def yaml_file_6_7
+      "/var/lib/crowbar/upgrade/6-to-7-progress.yml"
+    end
+
+    def yaml_file_7_8
+      "/var/lib/crowbar/upgrade/7-to-8-progress.yml"
     end
   end
 end
