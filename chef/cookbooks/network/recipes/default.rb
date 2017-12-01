@@ -115,15 +115,7 @@ def net_weight(net)
   res
 end
 
-def kill_nic(nic)
-  raise "Cannot kill #{nic.name} because it does not exist!" unless Nic.exists?(nic.name)
-
-  # Ignore loopback interfaces for now.
-  return if nic.loopback?
-
-  Chef::Log.info("Interface #{nic.name} is no longer being used, deconfiguring it.")
-  nic.destroy
-
+def kill_nic_files(nic)
   case node[:platform_family]
   when "rhel"
     # Redhat and Centos have lots of small files definining interfaces.
@@ -143,6 +135,18 @@ def kill_nic(nic)
       ::File.delete("/etc/wicked/scripts/#{nic.name}-pre-up")
     end
   end
+end
+
+def kill_nic(nic)
+  raise "Cannot kill #{nic.name} because it does not exist!" unless Nic.exists?(nic.name)
+
+  # Ignore loopback interfaces for now.
+  return if nic.loopback?
+
+  Chef::Log.info("Interface #{nic.name} is no longer being used, deconfiguring it.")
+  nic.destroy
+
+  kill_nic_files(nic)
 end
 
 require "securerandom"
