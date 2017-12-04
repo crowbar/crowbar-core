@@ -37,9 +37,9 @@ done
 <% end %>
 
 # stop cinder-volume at all nodes so the service could be removed from the database later
-if test -e /etc/init.d/openstack-cinder-volume; then
+if test -e /usr/sbin/rcopenstack-cinder-volume; then
     log "Stopping cinder-volume service"
-    /etc/init.d/openstack-cinder-volume stop
+    /usr/sbin/rcopenstack-cinder-volume stop
 fi
 
 <% else %>
@@ -48,11 +48,10 @@ fi
 # Note that for HA setup, they should be stopped by pacemaker.
 log "Stopping OpenStack services..."
 
-for i in /etc/init.d/openstack-* \
-         /etc/init.d/apache2 \
-         /etc/init.d/rabbitmq-server \
-         /etc/init.d/ovs-usurp-config-* \
-         /etc/init.d/hawk;
+for i in /usr/sbin/rcopenstack-* \
+         /usr/sbin/rcapache2 \
+         /usr/sbin/rcrabbitmq-server \
+         /usr/sbin/rchawk;
 do
     if test -e $i; then
         log "Stopping service $i"
