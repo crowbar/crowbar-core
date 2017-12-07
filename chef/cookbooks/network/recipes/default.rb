@@ -92,6 +92,12 @@ execute "enable netfilter for bridges" do
   subscribes :run, resources(cookbook_file: "modprobe-bridge.conf"), :delayed
 end
 
+# Read this before doing any network reconfigurations, as these calls require
+# network access, which we might lack for some time during the run of this
+# recipe. (Especially in the compile phase)
+provisioner_config = Barclamp::Config.load("core", "provisioner")
+provisioner_address = provisioner_config["server"]
+
 conduit_map = Barclamp::Inventory.build_node_map(node)
 Chef::Log.debug("Conduit mapping for this node:  #{conduit_map.inspect}")
 route_pref = 10000
@@ -115,15 +121,7 @@ def net_weight(net)
   res
 end
 
-def kill_nic(nic)
-  raise "Cannot kill #{nic.name} because it does not exist!" unless Nic.exists?(nic.name)
-
-  # Ignore loopback interfaces for now.
-  return if nic.loopback?
-
-  Chef::Log.info("Interface #{nic.name} is no longer being used, deconfiguring it.")
-  nic.destroy
-
+def kill_nic_files(nic)
   case node[:platform_family]
   when "rhel"
     # Redhat and Centos have lots of small files definining interfaces.
@@ -143,6 +141,18 @@ def kill_nic(nic)
       ::File.delete("/etc/wicked/scripts/#{nic.name}-pre-up")
     end
   end
+end
+
+def kill_nic(nic)
+  raise "Cannot kill #{nic.name} because it does not exist!" unless Nic.exists?(nic.name)
+
+  # Ignore loopback interfaces for now.
+  return if nic.loopback?
+
+  Chef::Log.info("Interface #{nic.name} is no longer being used, deconfiguring it.")
+  nic.destroy
+
+  kill_nic_files(nic)
 end
 
 require "securerandom"
@@ -222,6 +232,11 @@ sorted_networks.each do |network|
       # interface is brought back up.
       unless bond.slaves.include? i
         ::Kernel.system("wicked ifdown #{i.name}")
+        # Delete the associated config file as well. Otherwise, in cases where
+        # this recipe fails (for whatever reason) before writing the new
+        # configuration files, a "network restart", as e.g. issued by crowbar_join
+        # will endup with an inconsistent configuration.
+        kill_nic_files(i)
       end
       bond.add_slave i
       ifs[bond.name]["slaves"] << i.name
@@ -489,9 +504,6 @@ if ["delete","reset"].member?(node["state"])
 end
 
 # Wait for the administrative network to come back up.
-provisioner_config = Barclamp::Config.load("core", "provisioner")
-provisioner_address = provisioner_config["server"]
-
 if provisioner_address
   Chef::Log.info("Checking we can ping #{provisioner_address}; " \
                  "will wait up to 60 seconds")
