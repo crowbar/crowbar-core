@@ -196,10 +196,11 @@
   };
 
   JsonAttribute.prototype.splitString = function(value) {
+    // note(jhesketh): filters out empty elements
     return $.map(
       value.replace(/,+/g, ',').split(','),
       $.trim
-    );
+    ).filter(Boolean);
   };
 
   $.fn.readJsonAttribute = function(key, value, type) {
