@@ -437,7 +437,7 @@
         value = this.splitValue(value);
 
         for (i in value) {
-          value[i] = value[i].toLowerCase() == 'true'
+          value[i] = value[i].toLowerCase() == 'true';
         }
 
         return value;
@@ -464,7 +464,11 @@
   };
 
   DynamicTable.prototype.splitValue = function(value) {
-    return value.replace(/ /g, ',').replace(/,+/g, ',').split(',');
+    // note(jhesketh): filters out empty elements
+    return $.map(
+      value.replace(/ /g, ',').replace(/,+/g, ',').split(','),
+      $.trim
+    ).filter(Boolean);
   };
 
   $.fn.dynamicTable = function(options) {
