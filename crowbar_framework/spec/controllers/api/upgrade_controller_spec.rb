@@ -29,14 +29,6 @@ describe Api::UpgradeController, type: :request do
     end
     let(:tarball) { Rails.root.join("spec", "fixtures", "crowbar_backup.tar.gz") }
 
-    before do
-      # pretend we're in the middle of upgrade to not hit the filters
-      allow(File).to receive(:exist?).and_call_original
-      allow(File).to receive(:exist?).with(
-        "/var/lib/crowbar/upgrade/6-to-7-upgrade-running"
-      ).and_return(true)
-    end
-
     it "shows the upgrade status object" do
       allow(Api::Upgrade).to receive(:network_checks).and_return([])
       allow(Crowbar::Sanity).to receive(:check).and_return([])

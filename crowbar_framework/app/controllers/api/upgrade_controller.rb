@@ -15,20 +15,6 @@
 #
 
 class Api::UpgradeController < ApiController
-  # disable upgrade API until upgrade to next version is implemented
-  before_action do
-    # skip filter if we're in the middle of upgrade from previos version
-    unless File.exist?("/var/lib/crowbar/upgrade/6-to-7-upgrade-running")
-      render json: {
-        errors: {
-          unexpected_error: {
-            data: "Upgrade not yet supported in this version"
-          }
-        }
-      }, status: :unprocessable_entity
-    end
-  end
-
   skip_before_filter :upgrade
 
   api :GET, "/api/upgrade", "Show the Upgrade progress"
