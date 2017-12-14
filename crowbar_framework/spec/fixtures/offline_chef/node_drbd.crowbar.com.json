@@ -13,6 +13,7 @@
       }
     },
     "pacemaker" : {
+      "founder": "drbd.crowbar.com",
       "config": {
         "environment": "data"
       }

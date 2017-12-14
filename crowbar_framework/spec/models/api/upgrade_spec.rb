@@ -550,14 +550,18 @@ describe Api::Upgrade do
       allow(Node).to(
         receive(:find).
         with(
-          "pacemaker_founder:true AND run_list_map:neutron-network " \
+          "run_list_map:pacemaker-cluster-member AND run_list_map:neutron-network " \
           "AND NOT run_list_map:neutron-server"
         ).and_return([])
       )
       allow(Node).to(
-        receive(:find).with("pacemaker_founder:true").
-        and_return([Node.find_by_name("drbd")])
+        receive(:find).with("run_list_map:pacemaker-cluster-member").and_return([drbd_master])
       )
+
+      allow(Node).to(
+        receive(:find_by_name).with("drbd.crowbar.com").and_return(drbd_master)
+      )
+
       allow(Node).to(
         receive(:find).
         with("pacemaker_config_environment:data "\
@@ -718,19 +722,26 @@ describe Api::Upgrade do
       allow(Node).to(
         receive(:find).
         with(
-          "pacemaker_founder:true AND run_list_map:neutron-network " \
+          "run_list_map:pacemaker-cluster-member AND run_list_map:neutron-network " \
           "AND NOT run_list_map:neutron-server"
         ).and_return([])
       )
       allow(Node).to(
-        receive(:find).with("pacemaker_founder:true").
-        and_return([Node.find_by_name("testing.crowbar.com")])
+        receive(:find).with(
+          "run_list_map:pacemaker-cluster-member"
+        ).and_return([Node.find_by_name("testing.crowbar.com")])
       )
+
+      allow(Node).to(
+        receive(:find).with("testing.crowbar.com").and_return([])
+      )
+
       allow(Node).to(
         receive(:find).with(
-          "pacemaker_founder:false AND pacemaker_config_environment:data " \
-          "AND run_list_map:pacemaker-cluster-member"
-        ).and_return([Node.find_by_name("testing.crowbar.com")])
+          "pacemaker_config_environment:data " \
+          "AND run_list_map:pacemaker-cluster-member " \
+          "AND NOT fqdn:testing.crowbar.com"
+        ).and_return([])
       )
       allow_any_instance_of(Node).to receive(:upgraded?).and_return(true)
       allow(Api::Upgrade).to receive(:upgrade_non_compute_nodes).and_return(true)

@@ -444,7 +444,8 @@ module Api
         cinder_node = nil
         upgrade_nodes.each do |node|
           if node.roles.include?("cinder-controller") &&
-              (!node.roles.include?("pacemaker-cluster-member") || node["pacemaker"]["founder"])
+              (!node.roles.include?("pacemaker-cluster-member") ||
+                  node["pacemaker"]["founder"] == node[:fqdn])
             cinder_node = node
           end
           cmd = node.shutdown_services_before_upgrade
@@ -611,10 +612,10 @@ module Api
       end
 
       def upgrade_pacemaker_cluster(cluster_env)
-        founder = ::Node.find(
-          "pacemaker_founder:true AND " \
+        founder_name = ::Node.find(
           "pacemaker_config_environment:#{cluster_env}"
-        ).first
+        ).first[:pacemaker][:founder]
+        founder = ::Node.find_by_name(founder_name)
         upgrade_cluster founder, cluster_env
       end
 
@@ -838,16 +839,29 @@ module Api
 
         return upgrade_controllers_disruptive if upgrade_mode == :normal
 
-        network_node = ::Node.find(
-          "pacemaker_founder:true AND " \
+        network_cluster_members = ::Node.find(
+          "run_list_map:pacemaker-cluster-member AND " \
           "run_list_map:neutron-network AND NOT " \
           "run_list_map:neutron-server"
-        ).first
+        )
+
+        network_node = if network_cluster_members.empty?
+          nil
+        else
+          ::Node.find_by_name(network_cluster_members.first[:pacemaker][:founder])
+        end
+
         prepare_network_node(network_node) unless network_node.nil?
 
         # Now we must upgrade the clusters in the correct order:
         # 1. data, 2. API, 3. network
-        cluster_founders = ::Node.find("pacemaker_founder:true")
+
+        # search in all the cluster members to get a unique list of founders for all clusters
+        cluster_founders_names = ::Node.find("run_list_map:pacemaker-cluster-member").map! do |node|
+          node[:pacemaker][:founder]
+        end.uniq
+
+        cluster_founders = cluster_founders_names.map { |name| ::Node.find_by_name(name) }
 
         sorted_founders = cluster_founders.sort do |n1, n2|
           first_data = n1[:run_list_map].key? "database-server"
@@ -923,9 +937,9 @@ module Api
         Rails.logger.info("Upgrading controller nodes in cluster #{cluster}")
 
         non_founder_nodes = ::Node.find(
-          "pacemaker_founder:false AND " \
           "pacemaker_config_environment:#{cluster} AND " \
-          "run_list_map:pacemaker-cluster-member"
+          "run_list_map:pacemaker-cluster-member AND " \
+          "NOT fqdn:#{founder[:fqdn]}"
         )
         non_founder_nodes.select! { |n| !n.upgraded? }
 
@@ -1242,10 +1256,10 @@ module Api
           # find the controller in this cluster
           cluster_name = ServiceObject.cluster_name(cluster)
           cluster_env = "pacemaker-config-#{cluster_name}"
-          controller = ::Node.find(
-            "pacemaker_founder:true AND " \
+          founder_name = ::Node.find(
             "pacemaker_config_environment:#{cluster_env}"
-          ).first
+          ).first[:pacemaker][:founder]
+          controller = ::Node.find_by_name(founder_name)
 
           # restart remote resources for each node
           role.cluster_remote_nodes.each do |node|

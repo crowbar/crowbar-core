@@ -15,6 +15,7 @@
     "crowbar_wall" : {
     },
     "pacemaker" : {
+      "founder": "testing.crowbar.com",
       "config": {
         "environment": "data"
       }

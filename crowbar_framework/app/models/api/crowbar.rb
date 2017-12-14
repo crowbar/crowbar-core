@@ -335,7 +335,7 @@ module Api
         when "ceph"
           ::Node.find("roles:ceph-* AND ceph_config_environment:*").any?
         when "ha"
-          ::Node.find("pacemaker_founder:true AND pacemaker_config_environment:*").any?
+          ::Node.find("pacemaker_config_environment:*").any?
         end
       end
     end
