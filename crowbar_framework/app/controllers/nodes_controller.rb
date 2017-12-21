@@ -238,11 +238,11 @@ class NodesController < ApplicationController
 
   api :POST, "/nodes/groups/1.0/:id/:group", "Add a node to a group"
   header "Accept", "application/json", required: true
-  param :id, String, desc: "Node name", required: true
+  param :id, String, desc: "Node name or alias", required: true
   param :group, String, desc: "Group name", required: true
   error 404, "Node not found"
   def group_change
-    Node.find_by_name(params[:id]).tap do |node|
+    Node.find_node_by_name_or_alias(params[:id]).tap do |node|
       raise ActionController::RoutingError.new("Not Found") if node.nil?
 
       if params[:group].downcase.eql? "automatic"
