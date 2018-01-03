@@ -16,6 +16,7 @@ nodes.each do |n|
   roster.push(
     fqdn: n[:fqdn],
     ip: node_admin_ip,
+    roles: n.roles,
     alias: nalias
   )
 end
@@ -24,6 +25,14 @@ roster.sort_by! { |n| n[:alias] }
 # Rewrite our roster file
 template "/etc/salt/roster" do
   source "roster.erb"
+  mode 0o644
+  owner "root"
+  group "root"
+  variables(roster: roster)
+end
+
+template "/srv/pillar/roles.sls" do
+  source "pillar-roles.erb"
   mode 0o644
   owner "root"
   group "root"
