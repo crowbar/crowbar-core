@@ -146,38 +146,6 @@
             "kernel": "boot/x86_64/loader/linux",
             "append": " "
           }
-        },
-        "windows-6.2": {
-          "x86_64": {
-            "initrd": " ",
-            "kernel": "boot/pxeboot.0",
-            "append": " ",
-            "require_install_dir": false
-          }
-        },
-        "hyperv-6.2": {
-          "x86_64": {
-            "initrd": " ",
-            "kernel": "boot/pxeboot.0",
-            "append": " ",
-            "require_install_dir": false
-          }
-        },
-        "windows-6.3": {
-          "x86_64": {
-            "initrd": " ",
-            "kernel": "boot/pxeboot.0",
-            "append": " ",
-            "require_install_dir": false
-          }
-        },
-        "hyperv-6.3": {
-          "x86_64": {
-            "initrd": " ",
-            "kernel": "boot/pxeboot.0",
-            "append": " ",
-            "require_install_dir": false
-          }
         }
       },
       "keep_existing_hostname": false,
