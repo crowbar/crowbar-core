@@ -373,23 +373,25 @@ include_recipe "apache2::mod_auth_digest"
 include_recipe "apache2::mod_ssl"
 include_recipe "apache2::mod_headers"
 
-# Verify that we have the certificate available before configuring things to use it
-if node[:crowbar][:apache][:ssl] && !node[:crowbar][:apache][:generate_certs]
-  unless ::File.size? node[:crowbar][:apache][:ssl_crt_file]
-    message = "The file \"#{node[:crowbar][:apache][:ssl_crt_file]}\" does not exist or is empty."
-    Chef::Log.fatal(message)
-    raise message
-  end
-end
+if node[:crowbar][:apache][:ssl]
+  if !node[:crowbar][:apache][:generate_certs]
+    if ::File.size? node[:crowbar][:apache][:ssl_crt_file]
+      Chef::Log.info("SSL certificates for Crowbar HTTPS exist.")
+    else
+      message = "The file \"#{node[:crowbar][:apache][:ssl_crt_file]}\" does not exist or is empty."
+      Chef::Log.fatal(message)
+      raise message
+    end
+  else
+    package "apache2-utils"
 
-if node[:crowbar][:apache][:ssl] && node[:crowbar][:apache][:generate_certs]
-  package "apache2-utils"
-
-  bash "Generate Apache certificate" do
-    code <<-EOH
-      (umask 377 ; /usr/bin/gensslcert -C crowbar )
-EOH
-    not_if { File.size?(node[:crowbar][:apache][:ssl_crt_file]) }
+    Chef::Log.info("Generating SSL certificates for Crowbar.")
+    bash "generate apache certificate" do
+      code <<-GENSSLCERT
+        (umask 377 ; /usr/bin/gensslcert -c crowbar )
+      GENSSLCERT
+      not_if { file.size?(node[:crowbar][:apache][:ssl_crt_file]) }
+    end
   end
 end
 
