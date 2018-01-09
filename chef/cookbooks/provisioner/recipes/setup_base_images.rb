@@ -343,6 +343,8 @@ if node[:provisioner][:default_os].nil?
 end
 
 unless node[:provisioner][:supported_oses].keys.select{ |os| /^(hyperv|windows)/ =~ os }.empty?
+  raise "Binary files (chef-client, curl) need to be added back to the cookbook for Hyper-V support"
+
   common_dir="#{tftproot}/windows-common"
   extra_dir="#{common_dir}/extra"
 
