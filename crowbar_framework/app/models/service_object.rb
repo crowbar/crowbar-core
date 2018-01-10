@@ -1828,8 +1828,8 @@ class ServiceObject
         else
           f.readlines[l_counter-50..l_counter]
         end
-      "Most recent logged lines from the Chef run: \n\n" +
-        logged_lines.join(" ")
+      "Most recent logged lines from the Chef run: \n\n<pre>" +
+        logged_lines.join + "</pre>"
     rescue
       Rails.logger.error("Error reporting: Couldn't open /var/log/crowbar/chef-client/#{pid}.log ")
       raise "Error reporting: Couldn't open  /var/log/crowbar/chef-client/#{pid}.log"
