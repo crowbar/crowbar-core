@@ -1619,11 +1619,11 @@ class ServiceObject
     end
   end
 
-  def get_log_lines(pid)
+  def get_log_lines(node)
     begin
       l_counter = 1
       find_counter = 0
-      f = File.open("/var/log/crowbar/chef-client/#{pid}.log")
+      f = File.open("/var/log/crowbar/chef-client/#{node}.log")
       f.each do |line|
         if line == "="*80
            find_counter = l_counter
