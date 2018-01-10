@@ -1822,11 +1822,14 @@ class ServiceObject
         l_counter += 1
       end
       f.seek(0, IO::SEEK_SET)
-      if (find_counter > 0) && (l_counter - find_counter) < 50
-        "Most recent logged lines from the Chef run: \n\n" + f.readlines[find_counter -3..l_counter].join(" ")
-      else
-        "Most recent logged lines from the Chef run: \n\n" + f.readlines[l_counter-50..l_counter].join(" ")
-      end
+      logged_lines =
+        if (find_counter > 0) && (l_counter - find_counter) < 50
+          f.readlines[find_counter -3..l_counter]
+        else
+          f.readlines[l_counter-50..l_counter]
+        end
+      "Most recent logged lines from the Chef run: \n\n" +
+        logged_lines.join(" ")
     rescue
       Rails.logger.error("Error reporting: Couldn't open /var/log/crowbar/chef-client/#{pid}.log ")
       raise "Error reporting: Couldn't open  /var/log/crowbar/chef-client/#{pid}.log"
