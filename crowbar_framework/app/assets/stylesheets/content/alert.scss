@@ -7,4 +7,14 @@
   p:last-child {
     margin-bottom: 0
   }
+
+  pre {
+    background-color: $state-danger-pre-bg;
+    max-height: 20em;
+    overflow: scroll;
+
+    br {
+      display: none;
+    }
+  }
 }
