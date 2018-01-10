@@ -1631,12 +1631,15 @@ class ServiceObject
         line_count += 1
       end
       f.seek(0, IO::SEEK_SET)
-      logged_lines =
+      starting_line =
+        # If we found a delimiter in the last (say) 10 lines, we don't need
+        # to show all of the last 50.
         if (last_delimiter_line > 0) && (line_count - last_delimiter_line) < 50
-          f.readlines[last_delimiter_line -3..line_count]
+          last_delimiter_line - 3
         else
-          f.readlines[line_count-50..line_count]
+          line_count - 50
         end
+      logged_lines = f.readlines[starting_line..line_count]
       "Most recent logged lines from the Chef run: \n\n<pre>" +
         logged_lines.join + "</pre>"
     rescue
