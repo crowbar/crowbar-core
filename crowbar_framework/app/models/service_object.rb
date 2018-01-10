@@ -1816,21 +1816,21 @@ class ServiceObject
 
   def get_log_lines(node)
     begin
-      l_counter = 1
-      find_counter = 0
+      line_count = 0
+      last_delimiter_line = 0
       f = File.open("/var/log/crowbar/chef-client/#{node}.log")
       f.each do |line|
-        if line == "="*80
-           find_counter = l_counter
+        if line == "=" * 80
+          last_delimiter_line = line_count
         end
-        l_counter += 1
+        line_count += 1
       end
       f.seek(0, IO::SEEK_SET)
       logged_lines =
-        if (find_counter > 0) && (l_counter - find_counter) < 50
-          f.readlines[find_counter -3..l_counter]
+        if (last_delimiter_line > 0) && (line_count - last_delimiter_line) < 50
+          f.readlines[last_delimiter_line -3..line_count]
         else
-          f.readlines[l_counter-50..l_counter]
+          f.readlines[line_count-50..line_count]
         end
       "Most recent logged lines from the Chef run: \n\n<pre>" +
         logged_lines.join + "</pre>"
