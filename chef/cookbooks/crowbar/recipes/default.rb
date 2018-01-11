@@ -388,9 +388,9 @@ if node[:crowbar][:apache][:ssl]
     Chef::Log.info("Generating SSL certificates for Crowbar.")
     bash "generate apache certificate" do
       code <<-GENSSLCERT
-        (umask 377 ; /usr/bin/gensslcert -c crowbar )
+        (umask 377 ; /usr/bin/gensslcert -C crowbar )
       GENSSLCERT
-      not_if { file.size?(node[:crowbar][:apache][:ssl_crt_file]) }
+      not_if { ::File.size?(node[:crowbar][:apache][:ssl_crt_file]) }
     end
   end
 end
