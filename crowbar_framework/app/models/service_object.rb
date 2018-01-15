@@ -1814,23 +1814,29 @@ class ServiceObject
     end
   end
 
-  def get_log_lines(pid)
+  def get_log_lines(node)
     begin
-      l_counter = 1
-      find_counter = 0
-      f = File.open("/var/log/crowbar/chef-client/#{pid}.log")
+      line_count = 0
+      last_delimiter_line = 0
+      f = File.open("/var/log/crowbar/chef-client/#{node}.log")
       f.each do |line|
-        if line == "="*80
-           find_counter = l_counter
+        if line == "=" * 80
+          last_delimiter_line = line_count
         end
-        l_counter += 1
+        line_count += 1
       end
       f.seek(0, IO::SEEK_SET)
-      if (find_counter > 0) && (l_counter - find_counter) < 50
-        "Most recent logged lines from the Chef run: \n\n" + f.readlines[find_counter -3..l_counter].join(" ")
-      else
-        "Most recent logged lines from the Chef run: \n\n" + f.readlines[l_counter-50..l_counter].join(" ")
-      end
+      starting_line =
+        # If we found a delimiter in the last (say) 10 lines, we don't need
+        # to show all of the last 50.
+        if (last_delimiter_line > 0) && (line_count - last_delimiter_line) < 50
+          last_delimiter_line - 3
+        else
+          line_count - 50
+        end
+      logged_lines = f.readlines[starting_line..line_count]
+      "Most recent logged lines from the Chef run: \n\n<pre>" +
+        logged_lines.join + "</pre>"
     rescue
       Rails.logger.error("Error reporting: Couldn't open /var/log/crowbar/chef-client/#{pid}.log ")
       raise "Error reporting: Couldn't open  /var/log/crowbar/chef-client/#{pid}.log"
