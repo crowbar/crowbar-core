@@ -669,7 +669,7 @@ class ServiceObject
     Rails.logger.info "validating proposal #{@bc_name}"
 
     errors = validator.validate(proposal)
-    @validation_errors = errors.map { |e| e.message }
+    @validation_errors = errors.map { |e| "#{e.path} #{e.message}" }
     handle_validation_errors
   end
 
