@@ -114,11 +114,15 @@ class BarclampController < ApplicationController
   def transition
     id = params[:id]       # Provisioner id
     state = params[:state] # State of node transitioning
-    name = params[:name] # Name of node transitioning
+    name = params[:name] # Name or alias of node transitioning
 
-    unless valid_transition_states.include?(state)
-      render text: "State '#{state}' is not valid.", status: 400
-    else
+    unless state == "discovering"
+      node = Node.find_node_by_name_or_alias(name)
+      raise ActionController::RoutingError, "Not Found" if node.nil? # raise an error if not found
+      name = node.name # replace the alias with the real name
+    end
+
+    if valid_transition_states.include?(state)
       status, response = @service_object.transition(id, name, state)
       if status != 200
         render text: response, status: status
@@ -131,6 +135,8 @@ class BarclampController < ApplicationController
           render json: response
         end
       end
+    else
+      render text: "State '#{state}' is not valid.", status: 400
     end
   end
 
