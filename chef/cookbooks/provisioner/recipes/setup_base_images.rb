@@ -133,7 +133,8 @@ discovery_arches.each do |arch|
     package "shim"
     shim_code = "cp /usr/lib64/efi/shim.efi boot#{short_arch}.efi; cp /usr/lib64/efi/grub.efi grub.efi"
   else
-    shim_code = "cp /usr/lib64/efi/grub.efi boot#{short_arch}.efi"
+    # aarch64
+    shim_code = "cp /usr/lib/efi/grub.efi boot#{short_arch}.efi"
   end
 
   directory "#{uefi_dir}/default/boot" do

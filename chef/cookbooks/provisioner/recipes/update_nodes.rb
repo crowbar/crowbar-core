@@ -506,7 +506,7 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
     if arch == "aarch64"
       grub2arch = "arm64"
       short_arch = "aa64"
-      shim_code = "cp /usr/lib64/efi/grub.efi boot/boot#{short_arch}.efi"
+      shim_code = "cp /usr/lib/efi/grub.efi boot/boot#{short_arch}.efi"
     end
 
     bash "Copy UEFI shim loader with grub2 for #{mnode[:fqdn]} (#{new_group})" do
