@@ -153,6 +153,13 @@ unless node[:platform_family] == "suse"
   end
 end
 
+template "/etc/logrotate.d/apache2-all" do
+  source "apache.logrotate.erb"
+  mode 0o644
+  owner "root"
+  group "root"
+end
+
 template "#{node[:apache][:dir]}/ports.conf" do
   path "#{node[:apache][:dir]}/listen.conf" if node[:platform_family] == "suse"
   source "ports.conf.erb"
