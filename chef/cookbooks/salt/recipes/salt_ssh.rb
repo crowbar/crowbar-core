@@ -5,10 +5,9 @@ package "salt-ssh" do
   action :install
 end
 
-nodes = node_search_with_cache("roles:network")
+nodes = node_search_with_cache("roles:dns-client OR roles:dns-server")
 roster = []
 nodes.each do |n|
-  next if n[:dns].nil?
   base_name_no_net = n[:fqdn].chomp(".#{n[:dns][:domain]}")
   nalias = n["crowbar"]["display"]["alias"] rescue nil
   nalias = base_name_no_net unless nalias && !nalias.empty?
