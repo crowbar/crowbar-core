@@ -516,6 +516,7 @@ $state-warning-border:           darken(adjust-hue($state-warning-bg, -10), 5%) 
 
 $state-danger-text:              #a94442 !default;
 $state-danger-bg:                #f2dede !default;
+$state-danger-pre-bg:            lighten($state-danger-bg, 5%);
 $state-danger-border:            darken(adjust-hue($state-danger-bg, -10), 5%) !default;
 
 
