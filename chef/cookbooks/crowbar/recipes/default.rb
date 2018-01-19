@@ -309,6 +309,44 @@ utils_systemd_service_restart "chef-expander"
 utils_systemd_service_restart "chef-server"
 
 if node[:platform_family] == "suse"
+  # With new erlang packages, we move to a system-wide epmd service, with a
+  # epmd.socket unit. This is enabled by default but only listens on 127.0.0.1,
+  # while we need it to listen on the admin network too.
+
+  # on initial setup, we have no info about addresses, so we won't get the
+  # admin address
+  admin_network = BarclampLibrary::Barclamp::Inventory.get_network_by_type(node, "admin")
+  admin_address = admin_network.nil? ? nil : admin_network.address
+
+  directory "/etc/systemd/system/epmd.socket.d" do
+    owner "root"
+    group "root"
+    mode 0o755
+    action :create
+    not_if { admin_address.nil? }
+    only_if "grep -q Requires=epmd.service /usr/lib/systemd/system/rabbitmq-server.service"
+  end
+
+  template "/etc/systemd/system/epmd.socket.d/port.conf" do
+    source "epmd.socket-port.conf.erb"
+    owner "root"
+    group "root"
+    mode 0o644
+    variables(
+      listen_address: admin_address
+    )
+    not_if { admin_address.nil? }
+    only_if "grep -q Requires=epmd.service /usr/lib/systemd/system/rabbitmq-server.service"
+  end
+
+  bash "reload systemd for epmd.socket extension" do
+    code "systemctl daemon-reload"
+    action :nothing
+    subscribes :run, "template[/etc/systemd/system/epmd.socket.d/port.conf]", :immediate
+  end
+
+  # Now do the config for the crowbar service
+
   cookbook_file "/etc/tmpfiles.d/crowbar.conf" do
     owner "root"
     group "root"
