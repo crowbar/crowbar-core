@@ -122,6 +122,7 @@ discovery_arches.each do |arch|
   # we use grub2; steps taken from
   # https://github.com/openSUSE/kiwi/wiki/Setup-PXE-boot-with-EFI-using-grub2
   grub2arch = arch
+  grubcfgfile = "#{uefi_dir}/default/boot/grub.cfg"
   if arch == "aarch64"
     grub2arch = "arm64"
   end
@@ -145,7 +146,7 @@ discovery_arches.each do |arch|
     action :create
   end
 
-  template "#{uefi_dir}/default/grub.cfg" do
+  template "#{grubcfgfile}" do
     mode 0o644
     owner "root"
     group "root"
@@ -158,11 +159,12 @@ discovery_arches.each do |arch|
               kernel: "discovery/#{arch}/vmlinuz0")
   end
 
+  # Secure Boot Shim
   bash "Copy UEFI shim loader with grub2" do
     cwd "#{uefi_dir}/default/boot"
     code shim_code
     action :nothing
-    subscribes :run, resources("template[#{uefi_dir}/default/grub.cfg]"), :immediately
+    subscribes :run, resources("template[#{grubcfgfile}]"), :immediately
   end
 end
 
