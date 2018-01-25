@@ -290,7 +290,14 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
     end
 
     if mnode["uefi"] && mnode["uefi"]["boot"]["last_mac"]
-      append << "BOOTIF=01-#{mnode["uefi"]["boot"]["last_mac"].tr(":", "-")}"
+      # We know we configured dhcpd correctly to boot from the required
+      # interface and grub has this nice $net_default_mac variable that we can
+      # use here.
+      # We don't use the last_mac attribute as it may be wrong: the boot
+      # interface on discovery is not necessarily the one that will be used for
+      # the admin server. However what matters is that we last booted from a
+      # network interface (last_mac tells us that).
+      append << "BOOTIF=01-$net_default_mac"
     end
 
     case os
