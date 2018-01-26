@@ -84,7 +84,7 @@ class LoggingService < ServiceObject
       config = nil
     else
       server_nodes_names = role.override_attributes["logging"]["elements"]["logging-server"]
-      server_nodes = server_nodes_names.map { |n| Node.find_by_name(n) }
+      server_nodes = server_nodes_names.map { |n| Node.find_by_name(n) }.compact
 
       addresses = server_nodes.map do |n|
         admin_net = n.get_network_by_type("admin")
