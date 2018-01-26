@@ -649,6 +649,19 @@ when "suse"
     only_if { run_wicked_ifup }
   end
 
+  # Running 'wicked ifup all' sometimes has an unwanted side effect of removing
+  # the default route, so we have to restore it here.
+  ruby_block "check-restore-default-route" do
+    block do
+      gateway = default_route[:gateway]
+      unless ::Kernel.system("ip route show dev #{default_route[:nic]} |grep -q default")
+        Chef::Log.info("Restoring default route via #{gateway} to #{default_route[:nic]}")
+        ::Kernel.system("ip route add default via #{gateway} dev #{default_route[:nic]}")
+      end
+    end
+    only_if { run_wicked_ifup }
+  end
+
   # Avoid running the wicked related thing on SLE11 nodes
   unless node[:platform] == "suse" && node[:platform_version].to_f < 12.0
     if ovs_bridge_created
