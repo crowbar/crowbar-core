@@ -12,8 +12,6 @@ menuentry '<%= @install_name %>' --class os {
      # dhcp, tftp server in my network
      set net_default_server=<%= @admin_ip %>
 
-     net_bootp
-
      echo 'Network status: '
      net_ls_cards
      net_ls_addr
