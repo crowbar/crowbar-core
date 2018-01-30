@@ -1161,7 +1161,6 @@ module Api
           )
         else
           node_api.upgrade
-          node_api.reboot_and_wait
           node_api.post_upgrade
           node_api.join_and_chef
         end
