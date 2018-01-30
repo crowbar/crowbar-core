@@ -32,6 +32,7 @@
       },
       "apache": {
         "ssl": false,
+        "insecure": false,
         "generate_certs": false
       }
     }
