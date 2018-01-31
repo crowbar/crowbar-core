@@ -277,6 +277,7 @@ fi
 # Setup the repos
 # ---------------
 
+rm -f /etc/zypp/repos.d/*.repo
 <% @repos.keys.sort.each do |name| %>
 zypper -n ar "<%= @repos[name][:url] %>" "<%= name %>"
   <% unless @repos[name][:priority] == 99 -%>
