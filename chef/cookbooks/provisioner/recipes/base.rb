@@ -345,3 +345,21 @@ template "/etc/sh.shrc.local" do
   group "root"
   mode "0644"
 end
+
+crowbar_node = node_search_with_cache("roles:crowbar").first
+address = crowbar_node["crowbar"]["network"]["admin"]["address"]
+protocol = crowbar_node["crowbar"]["apache"]["ssl"] ? "https" : "http"
+server = "#{protocol}://#{address}"
+password = crowbar_node["crowbar"]["users"]["crowbar"]["password"]
+verify_ssl = !crowbar_node["crowbar"]["apache"]["insecure"]
+template "/etc/crowbarrc" do
+  source "crowbarrc.erb"
+  variables(
+    server: server,
+    password: password,
+    verify_ssl: verify_ssl
+  )
+  owner "root"
+  group "root"
+  mode "0o600"
+end

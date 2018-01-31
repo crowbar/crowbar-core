@@ -1,0 +1,7 @@
+[default]
+server = <%= @server %>
+username = crowbar
+password = <%= @password %>
+<% unless @verify_ssl %>
+verify_ssl = 0
+<% end %>
