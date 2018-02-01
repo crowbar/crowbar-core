@@ -60,6 +60,10 @@ provisioner_web = "http://#{admin_ip}:#{web_port}"
 dhcp_hosts_dir = node["provisioner"]["dhcp_hosts"]
 virtual_intfs = ["tap", "qbr", "qvo", "qvb", "brq", "ovs"]
 
+crowbar_node = node_search_with_cache("roles:crowbar").first
+crowbar_protocol = crowbar_node[:crowbar][:apache][:ssl] ? "https" : "http"
+crowbar_verify_ssl = !crowbar_node["crowbar"]["apache"]["insecure"]
+
 discovery_dir = "#{tftproot}/discovery"
 pxecfg_subdir = "bios/pxelinux.cfg"
 uefi_subdir = "efi"
@@ -385,6 +389,8 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
         group "root"
         variables(
           admin_node_ip: admin_ip,
+          crowbar_protocol: crowbar_protocol,
+          crowbar_verify_ssl: crowbar_verify_ssl,
           web_port: web_port,
           packages: packages,
           repos: repos,

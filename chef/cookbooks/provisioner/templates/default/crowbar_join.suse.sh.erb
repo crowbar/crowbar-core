@@ -65,33 +65,17 @@ log_to() {
 
 get_state() {
   local output
-  local curlargs=(--connect-timeout 60 -s -L \
-      -H "Accept: application/json" -H "Content-Type: application/json" \
-      --max-time 240 --insecure --location)
-  [[ $CROWBAR_KEY ]] && curlargs+=(-u "$CROWBAR_KEY" --digest --anyauth)
-  # we expect something like {"value":"ready"}
-  output=$(curl "${curlargs[@]}" "http://$IP/dashboard/$1/attribute/state" | \
-      tr -d "{}\"'[:space:][:cntrl:]")
+  # we expect something like "status": "Ready"
+  output=$(crowbarctl node status --json --filter $1 | grep status | \
+      tr '[:upper:]' '[:lower:]' | tr -d "\"'[:space:][:cntrl:]")
   # note that we removed all quotes, whitespaces and control characters, so
   # it's safe to use the variable if quoted
-  state="${output##value:}"
+  state="${output##status:}"
   if [ "$state" != "$output" ]; then
       echo "$state"
   else
       echo "unknown"
   fi
-}
-
-post_state() {
-  local curlargs=(-o /dev/null --connect-timeout 60 -s \
-      -L -X POST --data-binary "{ \"name\": \"$1\", \"state\": \"$2\" }" \
-      -H "Accept: application/json" -H "Content-Type: application/json" \
-      --max-time 240 --insecure --location)
-  [[ $CROWBAR_KEY ]] && curlargs+=(-u "$CROWBAR_KEY" --digest --anyauth)
-  oldumask=`umask`
-  umask 077
-  curl "${curlargs[@]}" "http://$IP/crowbar/crowbar/1.0/transition/default"
-  umask $oldumask
 }
 
 wait_for_network() {
@@ -303,7 +287,7 @@ do_chef_client() {
     # we didn't succeed with chef-client, so let's try running it again with a
     # state where some roles will not be active
     echo_debug "Failed to run chef-client, trying with state \"recovering\""
-    post_state $HOSTNAME "recovering"
+    crowbarctl node transition  $HOSTNAME "recovering"
 
     echo_debug "Syncing Time"
     sync_time
@@ -313,7 +297,7 @@ do_chef_client() {
     echo_verbose "Running Chef Client (try 2, pass 1) - cache cleanup"
     if log_to chef chef-client $CHEF_CLIENT_OPTIONS; then
 	# it worked, cool, let's try again with "readying" state
-        post_state $HOSTNAME "readying"
+        crowbarctl node transition  $HOSTNAME "readying"
         echo_verbose "Running Chef Client (try 2, pass 2) - cache cleanup"
         if log_to chef chef-client $CHEF_CLIENT_OPTIONS; then
             return
@@ -504,7 +488,7 @@ if [ "$MODE" == "setup" -o "$MODE" == "start" ]; then
     sync_time
 
     # Mark us as readying, and get our cert.
-    post_state $HOSTNAME "readying"
+    crowbarctl node transition  $HOSTNAME "readying"
     final_state="ready"
 
     [ "$MODE" == "setup" ] && do_setup
@@ -519,7 +503,7 @@ if [ "$MODE" == "setup" -o "$MODE" == "start" ]; then
     do_chef_client
 
     # Transition to our final state
-    post_state $HOSTNAME "$final_state"
+    crowbarctl node transition  $HOSTNAME "$final_state"
 
     # make sure to keep hostname
     [ "$MODE" == "setup" ] && echo $HOSTNAME > /etc/HOSTNAME
@@ -529,8 +513,8 @@ if [ "$MODE" == "setup" -o "$MODE" == "start" ]; then
 
     [ $final_state == "ready" ] || EXVAL=1
 elif [ "$MODE" == "stop" ]; then
-    HOSTNAME=$(hostname -f)
     state=$(get_state $HOSTNAME)
+    HOSTNAME=$(hostname -f)
 
     case "$state" in
         "reset"|"reinstall"|"confupdate")
@@ -543,7 +527,7 @@ elif [ "$MODE" == "stop" ]; then
             else
                 final_state="shutdown"
             fi
-            post_state $HOSTNAME "$final_state"
+            crowbarctl node transition  $HOSTNAME "$final_state"
             ;;
      esac
 
