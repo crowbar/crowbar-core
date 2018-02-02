@@ -51,7 +51,7 @@
   <scripts>
     <chroot-scripts config:type="list">
       <script>
-        <chrooted config:type="boolean">false</chrooted>
+        <chrooted config:type="boolean">true</chrooted>
         <debug config:type="boolean">true</debug>
         <filename>crowbar_post</filename>
         <source>
@@ -64,9 +64,9 @@
           key_re='crowbar\.install\.key=([^ ]+)'
           if [[ $(cat /proc/cmdline) =~ $key_re ]]; then
               export CROWBAR_KEY="${BASH_REMATCH[1]}"
-              echo "$CROWBAR_KEY" >/mnt/etc/crowbar.install.key
-          elif [[ -f /mnt/etc/crowbar.install.key ]]; then
-              export CROWBAR_KEY="$(cat /mnt/etc/crowbar.install.key)"
+              echo "$CROWBAR_KEY" >/etc/crowbar.install.key
+          elif [[ -f /etc/crowbar.install.key ]]; then
+              export CROWBAR_KEY="$(cat /etc/crowbar.install.key)"
           fi
 
           export CROWBAR_PASS="$(sed -e 's/^machine-install://' <<< $CROWBAR_KEY)"
@@ -84,7 +84,7 @@ EOF
           curl -s -o /usr/sbin/crowbar_join <%= @crowbar_join %>
           chmod +x /usr/sbin/crowbar_join
 
-          mkdir -p /mnt/var/log/crowbar
+          mkdir -p /var/log/crowbar
           crowbarctl node transition $HOSTNAME "os-upgraded"
 
           # Wait for DHCP to update - this is mainly for virtual environments or really large deploys

@@ -260,7 +260,7 @@ sed -i s/"^[[:space:]]*DEFAULT_FS=.*"/DEFAULT_FS=\"<%= @default_fs %>\"/ /etc/sy
     <% end %>
     <chroot-scripts config:type="list">
         <script>
-            <chrooted config:type="boolean">false</chrooted>
+            <chrooted config:type="boolean">true</chrooted>
             <debug config:type="boolean">true</debug>
             <filename>crowbar_post</filename>
             <source>
@@ -273,14 +273,14 @@ HOSTNAME="<%= @node_fqdn %>"
 key_re='crowbar\.install\.key=([^ ]+)'
 if [[ $(cat /proc/cmdline) =~ $key_re ]]; then
 export CROWBAR_KEY="${BASH_REMATCH[1]}"
-echo "$CROWBAR_KEY" >/mnt/etc/crowbar.install.key
-elif [[ -f /mnt/etc/crowbar.install.key ]]; then
-export CROWBAR_KEY="$(cat /mnt/etc/crowbar.install.key)"
+echo "$CROWBAR_KEY" >/etc/crowbar.install.key
+elif [[ -f /etc/crowbar.install.key ]]; then
+export CROWBAR_KEY="$(cat /etc/crowbar.install.key)"
 fi
 
 export CROWBAR_PASS="$(sed -e 's/^machine-install://' <<< $CROWBAR_KEY)"
 
-cat <<EOF > /mnt/etc/crowbarrc
+cat <<EOF > /etc/crowbarrc
 [default]
 server = <%= @crowbar_protocol %>://<%= @admin_node_ip %>
 username = machine-install
@@ -290,22 +290,22 @@ verify_ssl = 0
 <% end %>
 EOF
 
-mkdir -p /mnt/root/.ssh
-chmod 700 /mnt/root/.ssh
-if ! curl -s -o /mnt/root/.ssh/authorized_keys.wget \
+mkdir -p /root/.ssh
+chmod 700 /root/.ssh
+if ! curl -s -o /root/.ssh/authorized_keys.wget \
     http://$HTTP_SERVER/authorized_keys ||\
-    grep -q "Error 404" /mnt/root/.ssh/authorized_keys.wget; then
-    rm -f /mnt/root/.ssh/authorized_keys.wget
+    grep -q "Error 404" /root/.ssh/authorized_keys.wget; then
+    rm -f /root/.ssh/authorized_keys.wget
 else
-    chmod 644 /mnt/root/.ssh/authorized_keys
-    cat /mnt/root/.ssh/authorized_keys.wget >> /mnt/root/.ssh/authorized_keys
-    rm -f /mnt/root/.ssh/authorized_keys.wget
+    chmod 644 /root/.ssh/authorized_keys
+    cat /root/.ssh/authorized_keys.wget >> /root/.ssh/authorized_keys
+    rm -f /root/.ssh/authorized_keys.wget
 fi
 
-curl -s -o /mnt/usr/sbin/crowbar_join <%= @crowbar_join %>
-chmod +x /mnt/usr/sbin/crowbar_join
+curl -s -o /usr/sbin/crowbar_join <%= @crowbar_join %>
+chmod +x /usr/sbin/crowbar_join
 
-mkdir -p /mnt/var/log/crowbar
+mkdir -p /var/log/crowbar
 crowbarctl node transition $HOSTNAME "installed"
 
 # Wait for DHCP to update - this is mainly for virtual environments or really large deploys
