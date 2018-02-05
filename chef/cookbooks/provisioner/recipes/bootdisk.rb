@@ -23,6 +23,19 @@ if node["crowbar_wall"]["registering"]
  node.save
 end
 
+# Look at the disks known by BarclampLibrary first
+unless node[:crowbar_wall][:boot_device]
+  BarclampLibrary::Barclamp::Inventory::Disk.unclaimed(node, true).each do |unclaimed_disk|
+    next if unclaimed_disk.nil? || unclaimed_disk.removable?
+    dev = unclaimed_disk.name
+    unclaimed_disk.claim("Boot")
+    dev = dev.split("/")[-1]
+    node[:crowbar_wall][:boot_device] = dev
+    node.save
+    break
+  end
+end
+
 # Find the first thing that looks like a hard drive based on
 # PCI bus enumeration, and use it as the target disk.
 # Unless some other barclamp has set it, that is.
