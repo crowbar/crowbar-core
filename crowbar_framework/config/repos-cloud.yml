@@ -301,11 +301,11 @@ suse-12.3:
       required: "mandatory"
       features: ["openstack"]
       repomd:
-        tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP3:Update:Products:Cloud8/suse-openstack-cloud/8/cd/aarch64",
+        tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP3:Update:Products:Cloud8/suse-openstack-cloud-crowbar/8/cd/aarch64",
               "obsproduct://build.suse.de/Devel:Cloud:8:Ocata/suse-openstack-cloud/8/cd/aarch64",
               "obsproduct://build.suse.de/Devel:Cloud:8:Pike/suse-openstack-cloud/8/cd/aarch64",
-              "obsproduct://build.suse.de/Devel:Cloud:8:Staging/suse-openstack-cloud/8/cd/aarch64",
-              "obsproduct://build.suse.de/Devel:Cloud:8/suse-openstack-cloud/8/cd/aarch64"]
+              "obsproduct://build.suse.de/Devel:Cloud:8:Staging/suse-openstack-cloud-crowbar/8/cd/aarch64",
+              "obsproduct://build.suse.de/Devel:Cloud:8/suse-openstack-cloud-crowbar/8/cd/aarch64"]
         fingerprint: []
       url:
       ask_on_error: false
@@ -314,7 +314,7 @@ suse-12.3:
       required: "optional"
       features: ["openstack"]
       repomd:
-        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP3:Update:Products:Cloud8/suse-openstack-cloud/8/POOL/aarch64"
+        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP3:Update:Products:Cloud8/suse-openstack-cloud-crowbar/8/POOL/aarch64"
         fingerprint: ""
       url:
       smt_path: "SUSE/Products/OpenStack-Cloud/8/aarch64/product"
@@ -400,11 +400,11 @@ suse-12.3:
       required: "mandatory"
       features: ["openstack"]
       repomd:
-        tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP3:Update:Products:Cloud8/suse-openstack-cloud/8/cd/x86_64",
+        tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP3:Update:Products:Cloud8/suse-openstack-cloud-crowbar/8/cd/x86_64",
               "obsproduct://build.suse.de/Devel:Cloud:8:Ocata/suse-openstack-cloud/8/cd/x86_64",
               "obsproduct://build.suse.de/Devel:Cloud:8:Pike/suse-openstack-cloud/8/cd/x86_64",
-              "obsproduct://build.suse.de/Devel:Cloud:8:Staging/suse-openstack-cloud/8/cd/x86_64",
-              "obsproduct://build.suse.de/Devel:Cloud:8/suse-openstack-cloud/8/cd/x86_64"]
+              "obsproduct://build.suse.de/Devel:Cloud:8:Staging/suse-openstack-cloud-crowbar/8/cd/x86_64",
+              "obsproduct://build.suse.de/Devel:Cloud:8/suse-openstack-cloud-crowbar/8/cd/x86_64"]
         fingerprint: []
       url:
       ask_on_error: false
@@ -413,7 +413,7 @@ suse-12.3:
       required: "optional"
       features: ["openstack"]
       repomd:
-        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP3:Update:Products:Cloud8/suse-openstack-cloud/8/POOL/x86_64"
+        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP3:Update:Products:Cloud8/suse-openstack-cloud-crowbar/8/POOL/x86_64"
         fingerprint: ""
       url:
       smt_path: "SUSE/Products/OpenStack-Cloud/8/x86_64/product"
@@ -498,11 +498,11 @@ suse-12.3:
       required: "mandatory"
       features: ["openstack"]
       repomd:
-        tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP3:Update:Products:Cloud8/suse-openstack-cloud/8/cd/s390x",
+        tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP3:Update:Products:Cloud8/suse-openstack-cloud-crowbar/8/cd/s390x",
               "obsproduct://build.suse.de/Devel:Cloud:8:Ocata/suse-openstack-cloud/8/cd/s390x",
               "obsproduct://build.suse.de/Devel:Cloud:8:Pike/suse-openstack-cloud/8/cd/s390x",
-              "obsproduct://build.suse.de/Devel:Cloud:8:Staging/suse-openstack-cloud/8/cd/s390x",
-              "obsproduct://build.suse.de/Devel:Cloud:8/suse-openstack-cloud/8/cd/s390x"]
+              "obsproduct://build.suse.de/Devel:Cloud:8:Staging/suse-openstack-cloud-crowbar/8/cd/s390x",
+              "obsproduct://build.suse.de/Devel:Cloud:8/suse-openstack-cloud-crowbar/8/cd/s390x"]
         fingerprint: []
       url:
       ask_on_error: false
@@ -516,7 +516,7 @@ suse-12.3:
       required: "optional"
       features: ["openstack"]
       repomd:
-        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP3:Update:Products:Cloud8/suse-openstack-cloud/8/POOL/s390x"
+        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP3:Update:Products:Cloud8/suse-openstack-cloud-crowbar/8/POOL/s390x"
         fingerprint: ""
       url:
       smt_path: "SUSE/Products/OpenStack-Cloud/8/s390x/product"

@@ -325,7 +325,7 @@ zypper --non-interactive install -t pattern $PATTERNS_INSTALL
 <% if @is_ses -%>
 zypper --non-interactive install --auto-agree-with-licenses ses-release supportutils-plugin-ses
 <% else -%>
-zypper --non-interactive install --auto-agree-with-licenses suse-openstack-cloud-release supportutils-plugin-suse-openstack-cloud
+zypper --non-interactive install --auto-agree-with-licenses suse-openstack-cloud-crowbar-release supportutils-plugin-suse-openstack-cloud
 <% end -%>
 <% end -%>
 zypper --non-interactive install $PACKAGES_INSTALL<%= " '#{@packages.join("' '")}'" unless @packages.empty? %>

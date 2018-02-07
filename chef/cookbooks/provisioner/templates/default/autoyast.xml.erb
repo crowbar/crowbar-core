@@ -348,7 +348,7 @@ sync
   <% if @platform == "suse" && @target_platform_version == "11.3" -%>
       <package>suse-sle11-openstack-cloud-release</package>
   <% elsif @platform == "suse" && @target_platform_version.to_f >= 12.1 -%>
-      <package>suse-openstack-cloud-release</package>
+      <package>suse-openstack-cloud-crowbar-release</package>
       <package>supportutils-plugin-suse-openstack-cloud</package>
   <% end -%>
 <% end -%>
