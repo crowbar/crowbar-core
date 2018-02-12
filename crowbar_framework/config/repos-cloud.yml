@@ -31,7 +31,7 @@ suse-12.3:
       url:
       ask_on_error: false
     suse-openstack-cloud-8-pool:
-      name: "SUSE-OpenStack-Cloud-8-Pool"
+      name: "SUSE-OpenStack-Cloud-Crowbar-8-Pool"
       required: "optional"
       features: ["openstack"]
       repomd:
@@ -41,7 +41,7 @@ suse-12.3:
       smt_path: "SUSE/Products/OpenStack-Cloud/8/aarch64/product"
       ask_on_error: false
     suse-openstack-cloud-8-updates:
-      name: "SUSE-OpenStack-Cloud-8-Updates"
+      name: "SUSE-OpenStack-Cloud-Crowbar-8-Updates"
       required: "optional"
       features: ["openstack"]
       repomd:
@@ -128,7 +128,7 @@ suse-12.3:
       url:
       ask_on_error: false
     suse-openstack-cloud-8-pool:
-      name: "SUSE-OpenStack-Cloud-8-Pool"
+      name: "SUSE-OpenStack-Cloud-Crowbar-8-Pool"
       required: "optional"
       features: ["openstack"]
       repomd:
@@ -138,7 +138,7 @@ suse-12.3:
       smt_path: "SUSE/Products/OpenStack-Cloud/8/x86_64/product"
       ask_on_error: false
     suse-openstack-cloud-8-updates:
-      name: "SUSE-OpenStack-Cloud-8-Updates"
+      name: "SUSE-OpenStack-Cloud-Crowbar-8-Updates"
       required: "optional"
       features: ["openstack"]
       repomd:
@@ -229,7 +229,7 @@ suse-12.3:
       url:
       ask_on_error: false
     suse-openstack-cloud-8-pool:
-      name: "SUSE-OpenStack-Cloud-8-Pool"
+      name: "SUSE-OpenStack-Cloud-Crowbar-8-Pool"
       required: "optional"
       features: ["openstack"]
       repomd:
@@ -239,7 +239,7 @@ suse-12.3:
       smt_path: "SUSE/Products/OpenStack-Cloud/8/s390x/product"
       ask_on_error: false
     suse-openstack-cloud-8-updates:
-      name: "SUSE-OpenStack-Cloud-8-Updates"
+      name: "SUSE-OpenStack-Cloud-Crowbar-8-Updates"
       required: "optional"
       features: ["openstack"]
       repomd:
