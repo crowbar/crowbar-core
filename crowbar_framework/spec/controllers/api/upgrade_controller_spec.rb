@@ -240,8 +240,8 @@ describe Api::UpgradeController, type: :request do
         "openstack" => {
           "available" => true,
           "repos" => [
-            "SUSE-OpenStack-Cloud-8-Pool",
-            "SUSE-OpenStack-Cloud-8-Updates"
+            "SUSE-OpenStack-Cloud-Crowbar-8-Pool",
+            "SUSE-OpenStack-Cloud-Crowbar-8-Updates"
           ],
           "errors" => {
           }

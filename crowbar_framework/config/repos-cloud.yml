@@ -25,15 +25,13 @@ suse-12.3:
       features: ["openstack"]
       repomd:
         tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP3:Update:Products:Cloud8/suse-openstack-cloud-crowbar/8/cd/aarch64",
-              "obsproduct://build.suse.de/Devel:Cloud:8:Ocata/suse-openstack-cloud/8/cd/aarch64",
-              "obsproduct://build.suse.de/Devel:Cloud:8:Pike/suse-openstack-cloud/8/cd/aarch64",
               "obsproduct://build.suse.de/Devel:Cloud:8:Staging/suse-openstack-cloud-crowbar/8/cd/aarch64",
               "obsproduct://build.suse.de/Devel:Cloud:8/suse-openstack-cloud-crowbar/8/cd/aarch64"]
         fingerprint: []
       url:
       ask_on_error: false
     suse-openstack-cloud-8-pool:
-      name: "SUSE-OpenStack-Cloud-8-Pool"
+      name: "SUSE-OpenStack-Cloud-Crowbar-8-Pool"
       required: "optional"
       features: ["openstack"]
       repomd:
@@ -43,7 +41,7 @@ suse-12.3:
       smt_path: "SUSE/Products/OpenStack-Cloud/8/aarch64/product"
       ask_on_error: false
     suse-openstack-cloud-8-updates:
-      name: "SUSE-OpenStack-Cloud-8-Updates"
+      name: "SUSE-OpenStack-Cloud-Crowbar-8-Updates"
       required: "optional"
       features: ["openstack"]
       repomd:
@@ -124,15 +122,13 @@ suse-12.3:
       features: ["openstack"]
       repomd:
         tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP3:Update:Products:Cloud8/suse-openstack-cloud-crowbar/8/cd/x86_64",
-              "obsproduct://build.suse.de/Devel:Cloud:8:Ocata/suse-openstack-cloud/8/cd/x86_64",
-              "obsproduct://build.suse.de/Devel:Cloud:8:Pike/suse-openstack-cloud/8/cd/x86_64",
               "obsproduct://build.suse.de/Devel:Cloud:8:Staging/suse-openstack-cloud-crowbar/8/cd/x86_64",
               "obsproduct://build.suse.de/Devel:Cloud:8/suse-openstack-cloud-crowbar/8/cd/x86_64"]
         fingerprint: []
       url:
       ask_on_error: false
     suse-openstack-cloud-8-pool:
-      name: "SUSE-OpenStack-Cloud-8-Pool"
+      name: "SUSE-OpenStack-Cloud-Crowbar-8-Pool"
       required: "optional"
       features: ["openstack"]
       repomd:
@@ -142,7 +138,7 @@ suse-12.3:
       smt_path: "SUSE/Products/OpenStack-Cloud/8/x86_64/product"
       ask_on_error: false
     suse-openstack-cloud-8-updates:
-      name: "SUSE-OpenStack-Cloud-8-Updates"
+      name: "SUSE-OpenStack-Cloud-Crowbar-8-Updates"
       required: "optional"
       features: ["openstack"]
       repomd:
@@ -222,8 +218,6 @@ suse-12.3:
       features: ["openstack"]
       repomd:
         tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP3:Update:Products:Cloud8/suse-openstack-cloud-crowbar/8/cd/s390x",
-              "obsproduct://build.suse.de/Devel:Cloud:8:Ocata/suse-openstack-cloud/8/cd/s390x",
-              "obsproduct://build.suse.de/Devel:Cloud:8:Pike/suse-openstack-cloud/8/cd/s390x",
               "obsproduct://build.suse.de/Devel:Cloud:8:Staging/suse-openstack-cloud-crowbar/8/cd/s390x",
               "obsproduct://build.suse.de/Devel:Cloud:8/suse-openstack-cloud-crowbar/8/cd/s390x"]
         fingerprint: []
@@ -235,7 +229,7 @@ suse-12.3:
       url:
       ask_on_error: false
     suse-openstack-cloud-8-pool:
-      name: "SUSE-OpenStack-Cloud-8-Pool"
+      name: "SUSE-OpenStack-Cloud-Crowbar-8-Pool"
       required: "optional"
       features: ["openstack"]
       repomd:
@@ -245,7 +239,7 @@ suse-12.3:
       smt_path: "SUSE/Products/OpenStack-Cloud/8/s390x/product"
       ask_on_error: false
     suse-openstack-cloud-8-updates:
-      name: "SUSE-OpenStack-Cloud-8-Updates"
+      name: "SUSE-OpenStack-Cloud-Crowbar-8-Updates"
       required: "optional"
       features: ["openstack"]
       repomd:
