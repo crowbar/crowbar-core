@@ -1,5 +1,5 @@
 language: ruby
-sudo: false
+sudo: required
 cache: bundler
 dist: trusty
 
@@ -24,9 +24,15 @@ matrix:
     - gemfile: chef/cookbooks/barclamp/Gemfile
       script:
        - cd chef/cookbooks/barclamp && bundle exec rake
-    - gemfile: crowbar_framework/Gemfile
+    - env: SYNTAX_CHECKS
+      gemfile: crowbar_framework/Gemfile
       script:
        - crowbar_framework/bin/bundle exec knife cookbook test -c .knife-test.rb -a
+    - env: KITCHEN_TESTS
+      gemfile: chef/Gemfile
+      script:
+        - cd chef
+        - bundle exec kitchen test
 
 
 addons:
