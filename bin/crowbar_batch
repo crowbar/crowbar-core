@@ -160,8 +160,8 @@ def get_aliases
     fqdn  = node["name"]
     aliaz = node["alias"]
     nodename = fqdn.split(".").first
+    host_by_alias[aliaz] = fqdn
     if aliaz != nodename
-      host_by_alias[aliaz] = fqdn
       alias_by_host[fqdn] = aliaz
     end
   end
