@@ -1,6 +1,6 @@
 #
 # Copyright 2011-2013, Dell
-# Copyright 2013-2014, SUSE LINUX Products GmbH
+# Copyright 2013-2017, SUSE Linux GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ class ApplicationController < ActionController::Base
 
   before_action do |c|
     Crowbar::Sanity.cache! unless Rails.cache.exist?(:sanity_check_errors)
+    check_eol if Rails.cache.fetch(:eol_checked).blank?
   end
 
   before_filter :enforce_installer, unless: proc {
@@ -214,5 +215,19 @@ class ApplicationController < ActionController::Base
         render "errors/during_upgrade", status: :service_unavailable
       end
     end
+  end
+
+  def check_eol
+    Rails.cache.write(:eol_checked, true, expires_in: 24.hours)
+
+    branding = YAML.load_file(Rails.root.join("config", "branding.yml"))
+    return if branding["eol_date"].blank?
+    return if Time.parse(branding["eol_date"]).future?
+
+    flash[:alert] = I18n.t(
+      "dashboard.eol",
+      product: branding["page_title"],
+      date: branding["eol_date"]
+    )
   end
 end
