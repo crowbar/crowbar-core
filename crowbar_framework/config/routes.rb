@@ -271,9 +271,6 @@ Rails.application.routes.draw do
 
     # service restart management
     resource :restart_management,
-      constraints: lambda { |request|
-        Rails.application.config.experimental.fetch("disallow_restart", {}).fetch("enabled", false)
-      },
       controller: :restart_management,
       only: [] do
       member do

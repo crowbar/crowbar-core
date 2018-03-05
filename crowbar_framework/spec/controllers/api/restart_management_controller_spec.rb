@@ -200,34 +200,34 @@ describe Api::RestartManagementController, type: :request, focus: true do
   context "Feature disabled" do
 
     context "GET configuration" do
-      it "should fail to reach the route" do
-        expect do
-          get "/api/restart_management/configuration", {}, headers
-        end.to raise_error(ActionController::RoutingError)
+      it "should receive error response" do
+        get "/api/restart_management/configuration", {}, headers
+        expect(response).to have_http_status(:not_acceptable)
+        expect(ActiveSupport::JSON.decode(response.body)).to include("error")
       end
     end
 
     context "POST configuration" do
-      it "should fail to reach the route" do
-        expect do
-          post "/api/restart_management/configuration", {}, headers
-        end.to raise_error(ActionController::RoutingError)
+      it "should receive error response" do
+        post "/api/restart_management/configuration", {}, headers
+        expect(response).to have_http_status(:not_acceptable)
+        expect(ActiveSupport::JSON.decode(response.body)).to include("error")
       end
     end
 
     context "GET restarts" do
-      it "should fail to reach the route" do
-        expect do
-          get "/api/restart_management/restarts", {}, headers
-        end.to raise_error(ActionController::RoutingError)
+      it "should receive error response" do
+        get "/api/restart_management/restarts", {}, headers
+        expect(response).to have_http_status(:not_acceptable)
+        expect(ActiveSupport::JSON.decode(response.body)).to include("error")
       end
     end
 
     context "POST restarts" do
-      it "should fail to reach the route" do
-        expect do
-          post "/api/restart_management/restarts", {}, headers
-        end.to raise_error(ActionController::RoutingError)
+      it "should receive error response" do
+        post "/api/restart_management/restarts", {}, headers
+        expect(response).to have_http_status(:not_acceptable)
+        expect(ActiveSupport::JSON.decode(response.body)).to include("error")
       end
     end
   end
