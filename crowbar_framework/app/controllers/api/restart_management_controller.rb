@@ -81,7 +81,6 @@ class Api::RestartManagementController < ApiController
 
   def restarts_post
     params.require(:node)
-    params.require(:service)
 
     node_name = params[:node]
     service = params[:service]
@@ -92,8 +91,17 @@ class Api::RestartManagementController < ApiController
       next unless node.key? :crowbar_wall
       next unless node[:crowbar_wall].key? :requires_restart
       next unless node[:crowbar_wall][:requires_restart].key? cookbook
-      next unless node[:crowbar_wall][:requires_restart][cookbook].key? service
-      node[:crowbar_wall][:requires_restart][cookbook].delete(service)
+
+      # clear all services or, clear all services of a cookbook
+      if service.nil? || cookbook == service
+        node[:crowbar_wall][:requires_restart][cookbook].each_key do |the_service|
+          node[:crowbar_wall][:requires_restart][cookbook].delete(the_service)
+        end
+      else
+        # clear the specified service
+        next unless node[:crowbar_wall][:requires_restart][cookbook].key? service
+        node[:crowbar_wall][:requires_restart][cookbook].delete(service)
+      end
     end
 
     node.save
