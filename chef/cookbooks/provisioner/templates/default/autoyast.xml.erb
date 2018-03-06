@@ -339,6 +339,11 @@ sync
 <% if @architecture == "x86_64" -%>
       <package>biosdevname</package>
 <% end -%>
+<% if @platform == "suse" && @cpu_model == "intel" -%>
+      <package>ucode-intel</package>
+<% elsif @platform == "suse" && @cpu_model == "amd" -%>
+      <package>ucode-amd</package>
+<%end -%>
       <package>netcat</package>
       <package>ruby2.1-rubygem-chef</package>
       <package>ruby2.1-rubygem-crowbar-client</package>
