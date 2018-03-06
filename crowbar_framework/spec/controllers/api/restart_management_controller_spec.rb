@@ -17,7 +17,7 @@
 require "spec_helper"
 require "json"
 
-describe Api::RestartManagementController, type: :request, focus: true do
+describe Api::RestartManagementController, type: :request, restartmanagement: true do
   let(:headers) { { ACCEPT: "application/vnd.crowbar.v2.0+json" } }
 
   context "Feature enabled" do
@@ -52,6 +52,7 @@ describe Api::RestartManagementController, type: :request, focus: true do
       allow(NodeObject).to receive(:find_by_name).with("testing.crowbar.com").and_return(
         @testing_node
       )
+
       @databag_item = ::Chef::DataBagItem.load("crowbar-config", "disallow_restart")
 
       # mock experimental config to test the controller
@@ -164,14 +165,15 @@ describe Api::RestartManagementController, type: :request, focus: true do
       end
     end
 
-    context "POST restarts" do
-      it "cleans the restart flag for a service" do
+    context "POST restarts", restartmanagement_post_restarts: true do
+      it "cleans the restart flag for a service by service name",
+        restartmanagement_by_cookbook: true do
         @admin_node.set["crowbar_wall"]["requires_restart"]["nova"] = {
           "openstack-nova-api" => {}
         }
-        allow(NodeObject).to receive(:find).with(
-          "name:admin.crowbar.com"
-        ).and_return([@admin_node])
+        allow(NodeObject).to receive(:find_node_by_name_or_alias).with(
+          "admin.crowbar.com"
+        ).and_return(@admin_node)
 
         # check that the key is in ther first
         expect(
@@ -179,6 +181,7 @@ describe Api::RestartManagementController, type: :request, focus: true do
         ).to include("openstack-nova-api")
         post "/api/restart_management/restarts", {
           node: "admin.crowbar.com",
+          cookbook: "nova",
           service: "openstack-nova-api"
         }, headers
 
@@ -189,11 +192,76 @@ describe Api::RestartManagementController, type: :request, focus: true do
         ).to_not include("openstack-nova-api")
       end
 
-      it "returns a 404 if the node could not be found" do
+      it "cleans the restart flag for a service by cookbook name",
+        restartmanagement_by_service: true do
+        @admin_node.set["crowbar_wall"]["requires_restart"]["nova"] = {
+          "openstack-nova-api" => {}
+        }
+        allow(NodeObject).to receive(:find_node_by_name_or_alias).with(
+          "admin.crowbar.com"
+        ).and_return(@admin_node)
+
+        # check that the key is in ther first
+        expect(
+          @admin_node["crowbar_wall"]["requires_restart"]["nova"]
+        ).to include("openstack-nova-api")
+        post "/api/restart_management/restarts", {
+          node: "admin.crowbar.com",
+          cookbook: "nova"
+        }, headers
+
+        expect(response).to have_http_status(:ok)
+        # it should be now removed from the node attributes
+        expect(
+          @admin_node["crowbar_wall"]["requires_restart"]
+        ).to_not include "nova"
+      end
+
+      it "cleans the restart flag for all services in a node",
+        restartmanagement_all_services: true do
+        @admin_node.set["crowbar_wall"]["requires_restart"]["nova"] = {
+          "openstack-nova-api" => {}
+        }
+        allow(NodeObject).to receive(:find_node_by_name_or_alias).with(
+          "admin.crowbar.com"
+        ).and_return(@admin_node)
+
+        # check that the key is in ther first
+        expect(
+          @admin_node["crowbar_wall"]["requires_restart"]["nova"]
+        ).to include("openstack-nova-api")
+        post "/api/restart_management/restarts", {
+          node: "admin.crowbar.com"
+        }, headers
+
+        expect(response).to have_http_status(:ok)
+        # it should be now removed from the node attributes
+        expect(
+          @admin_node["crowbar_wall"]
+        ).to_not include "requires_restart"
+      end
+
+      it "returns a 404 if the node could not be found", restartmanagement_node_not_found: true do
+        allow(NodeObject).to receive(:find_by_name).and_call_original
+
         post "/api/restart_management/restarts", { node: "partyparrot", service: "_" }, headers
         expect(response).to have_http_status(:not_found)
       end
 
+      it "returns a 404 if the cookbook could not be found",
+        restartmanagement_service_not_found: true do
+        @admin_node.set["crowbar_wall"]["requires_restart"]["nova"] = {
+          "openstack-nova-api" => {}
+        }
+
+        allow(NodeObject).to receive(:find_node_by_name_or_alias).with(
+          "admin.crowbar.com"
+        ).and_return(@admin_node)
+
+        post "/api/restart_management/restarts", { node: "admin.crowbar.com", cookbook: "_" },
+        headers
+        expect(response).to have_http_status(:not_found)
+      end
     end
   end
 
