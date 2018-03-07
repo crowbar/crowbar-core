@@ -138,6 +138,7 @@ class Api::RestartManagementController < ApiController
 
   def get_node_or_raise(node_name)
     node = NodeObject.find("name:#{node_name}").first
+    node = NodeObject.find_node_by_alias(node_name) if node.nil?
     raise Crowbar::Error::NotFound if node.nil?
     node
   end
