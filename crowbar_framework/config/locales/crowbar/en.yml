@@ -777,6 +777,8 @@ en:
       cache_error: 'Failed to cache sanity checks'
 
   api:
+    experimental:
+      disabled: 'This experimental API is currently disabled in experimental.yml config file (%{option} option).'
     error:
       destroy_failed: 'Failed to destroy %{component}'
     crowbar:
