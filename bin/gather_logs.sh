@@ -48,10 +48,10 @@ sort_by_last() {
 	-o 'UserKnownHostsFile /dev/null')
     logs=(/var/log /etc)
     logs+=(/var/chef/cache /var/cache/chef /opt/dell/crowbar_framework/db)
-    crowbarctl node list -U machine-install -P $CROWBAR_PASS
+    crowbarctl node list -U machine-install -P $CROWBAR_PASS --no-verify-ssl
 
     for to_get in proposals roles; do
-        crowbarctl $to_get proposal list crowbar -U machine-install -P $CROWBAR_PASS
+        crowbarctl $to_get proposal list crowbar -U machine-install -P $CROWBAR_PASS --no-verify-ssl
     done
     for node in $(sudo -H knife node list); do
 	tarfile="${node%%.*}-${tarname}.tar.gz"
