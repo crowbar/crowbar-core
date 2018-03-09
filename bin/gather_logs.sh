@@ -51,7 +51,7 @@ sort_by_last() {
     crowbarctl node list -U machine-install -P $CROWBAR_PASS
 
     for to_get in proposals roles; do
-        crowbarctl $to_get proposal list crowbar
+        crowbarctl $to_get proposal list crowbar -U machine-install -P $CROWBAR_PASS
     done
     for node in $(sudo -H knife node list); do
 	tarfile="${node%%.*}-${tarname}.tar.gz"
