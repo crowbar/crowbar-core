@@ -94,46 +94,6 @@ fi
 # Helper functions
 # ----------------
 
-get_common_curl_args() {
-  local curlargs=(--connect-timeout 60 -s -L --max-time 240 --insecure --location)
-
-  [[ $CROWBAR_KEY ]] && curlargs+=(-u "$CROWBAR_KEY" --digest --anyauth)
-
-  echo ${curlargs[@]}
-}
-
-get_nodes_allow_fail() {
-  # --fail is important here as we rely on the failure to know if we can
-  # communicate with the admin server
-  local curlargs=($(get_common_curl_args) --fail -H "Accept: application/json")
-
-  curl "${curlargs[@]}" "http://$ADMIN_IP/crowbar/machines/1.0/"
-}
-
-get_node_allow_fail() {
-  # --fail is important here as we rely on the failure for 404
-  local curlargs=($(get_common_curl_args) --fail -H "Accept: application/json")
-
-  curl "${curlargs[@]}" "http://$ADMIN_IP/crowbar/machines/1.0/$HOSTNAME"
-}
-
-post_allocate() {
-  local curlargs=($(get_common_curl_args) \
-                  -X POST --data-binary "{ \"name\": \"$1\" }" \
-                  -H "Accept: application/json" -H "Content-Type: application/json")
-
-  curl "${curlargs[@]}" "http://$ADMIN_IP/crowbar/machines/1.0/allocate/0"
-}
-
-post_state() {
-  local curlargs=($(get_common_curl_args) \
-                  -o /dev/null
-                  -X POST --data-binary "{ \"name\": \"$1\", \"state\": \"$2\" }" \
-                  -H "Accept: application/json" -H "Content-Type: application/json")
-
-  curl "${curlargs[@]}" "http://$ADMIN_IP/crowbar/crowbar/1.0/transition/default"
-}
-
 add_group() {
   gid=$(getent group $1 | cut -f 3 -d ":")
   if [[ -z "$gid" ]]; then
@@ -242,38 +202,6 @@ if test "x$MD5_ADMIN" != "x$MD5_LOCAL"; then
     exit 1
 fi
 
-
-# Check that we can really register this node
-# -------------------------------------------
-
-nodes=$(get_nodes_allow_fail || echo "")
-if test -z "$nodes"; then
-  echo "Failed to contact the administration server."
-  echo "Is the administration server up?"
-  exit 1
-fi
-
-# Copied from sledgehammer
-MAC=$(cat /sys/class/net/$BOOTDEV/address)
-if test $KEEP_EXISTING_HOSTNAME -ne 1; then
-  HOSTNAME="d${MAC//:/-}.${DOMAIN}"
-else
-  HOSTNAME=$(cat /etc/HOSTNAME)
-  if ! echo "$HOSTNAME" | grep -q "\.$DOMAIN$"; then
-    echo "The fully qualified domain name did not contain the $DOMAIN cloud domain."
-    exit 1
-  elif echo "${HOSTNAME%%.$DOMAIN}" | grep -q "\."; then
-    echo "The hostname is in a subdomain of the $DOMAIN cloud domain."
-    exit 1
-  fi
-fi
-
-if get_node_allow_fail > /dev/null; then
-  echo "This node seems to be already registered."
-  exit 1
-fi
-
-
 # Setup the repos
 # ---------------
 
@@ -310,7 +238,7 @@ PATTERNS_INSTALL="$PATTERNS_INSTALL Minimal base"
 <% elsif @platform == "opensuse" -%>
 PATTERNS_INSTALL="$PATTERNS_INSTALL base enhanced_base sw_management"
 <% end -%>
-PACKAGES_INSTALL="$PACKAGES_INSTALL netcat ruby2.1-rubygem-chef"
+PACKAGES_INSTALL="$PACKAGES_INSTALL netcat ruby2.1-rubygem-chef ruby2.1-rubygem-crowbar-client"
 
 # We also need ntp for this script
 PACKAGES_INSTALL="$PACKAGES_INSTALL ntp"
@@ -348,6 +276,51 @@ if ! which chef-client &> /dev/null; then
   echo "chef-client is not available."
   exit 1
 fi
+
+# Set up /etc/crowbarrc with crowbarctl credentials
+# -------------------------------------------
+export CROWBAR_PASS="$(sed -e 's/^machine-install://' <<< $CROWBAR_KEY)"
+
+cat <<EOF > /etc/crowbarrc
+[default]
+server = <%= @crowbar_protocol %>://<%= @admin_ip %>
+username = machine-install
+password = $CROWBAR_PASS
+<% unless @crowbar_verify_ssl %>
+verify_ssl = 0
+<% end %>
+EOF
+
+
+# Check that we can really register this node
+# -------------------------------------------
+
+if ! crowbarctl node list > /dev/null; then
+  echo "Failed to contact the administration server."
+  echo "Is the administration server up?"
+  exit 1
+fi
+
+# Copied from sledgehammer
+MAC=$(cat /sys/class/net/$BOOTDEV/address)
+if test $KEEP_EXISTING_HOSTNAME -ne 1; then
+  HOSTNAME="d${MAC//:/-}.${DOMAIN}"
+else
+  HOSTNAME=$(cat /etc/HOSTNAME)
+  if ! echo "$HOSTNAME" | grep -q "\.$DOMAIN$"; then
+    echo "The fully qualified domain name did not contain the $DOMAIN cloud domain."
+    exit 1
+  elif echo "${HOSTNAME%%.$DOMAIN}" | grep -q "\."; then
+    echo "The hostname is in a subdomain of the $DOMAIN cloud domain."
+    exit 1
+  fi
+fi
+
+if crowbarctl node show $HOSTNAME > /dev/null; then
+  echo "This node seems to be already registered."
+  exit 1
+fi
+
 
 
 # Some initial setup
@@ -409,28 +382,28 @@ TMP_ATTRIBUTES=$(mktemp --suffix .json)
 # Make sure that we have the right target platform
 echo "{ \"target_platform\": \"$CROWBAR_OS\", \"crowbar_wall\": { \"registering\": true } }" > "$TMP_ATTRIBUTES"
 
-post_state $HOSTNAME "discovering"
+crowbarctl node transition $HOSTNAME "discovering"
 chef-client -S http://$ADMIN_IP:4000/ -N "$HOSTNAME" --json-attributes "$TMP_ATTRIBUTES"
-post_state $HOSTNAME "discovered"
+crowbarctl node transition $HOSTNAME "discovered"
 # TODO need to find way of knowing that chef run is over on server side
 sleep 30
 
-post_allocate $HOSTNAME
+crowbarctl node allocate $HOSTNAME
 
 # Cheat to make sure that the bootdisk finder attribute will claim the right disks
 echo '{ "crowbar_wall": { "registering": true } }' > "$TMP_ATTRIBUTES"
 
 rm -f /etc/chef/client.pem
-post_state $HOSTNAME "hardware-installing"
+crowbarctl node transition $HOSTNAME "hardware-installing"
 chef-client -S http://$ADMIN_IP:4000/ -N "$HOSTNAME" --json-attributes "$TMP_ATTRIBUTES"
-post_state $HOSTNAME "hardware-installed"
+crowbarctl node transition $HOSTNAME "hardware-installed"
 #TODO
 #wait_for_pxe_state ".*_install"
 sleep 30
 
 rm -f "$TMP_ATTRIBUTES"
 
-post_state $HOSTNAME "installing"
+crowbarctl node transition $HOSTNAME "installing"
 
 # Obviously, on reboot from sledgehammer, we lose the client key
 rm -f /etc/chef/client.pem
@@ -457,7 +430,7 @@ systemctl enable chef-client.service
 curl -s -o /usr/sbin/crowbar_join $HTTP_SERVER/$CROWBAR_OS/$CROWBAR_ARCH/crowbar_join.sh
 chmod +x /usr/sbin/crowbar_join
 
-post_state $HOSTNAME "installed"
+crowbarctl node transition $HOSTNAME "installed"
 #TODO
 # Wait for DHCP to update
 sleep 30

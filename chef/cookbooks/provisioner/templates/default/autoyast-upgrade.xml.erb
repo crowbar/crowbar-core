@@ -51,7 +51,7 @@
   <scripts>
     <chroot-scripts config:type="list">
       <script>
-        <chrooted config:type="boolean">false</chrooted>
+        <chrooted config:type="boolean">true</chrooted>
         <debug config:type="boolean">true</debug>
         <filename>crowbar_post</filename>
         <source>
@@ -64,25 +64,28 @@
           key_re='crowbar\.install\.key=([^ ]+)'
           if [[ $(cat /proc/cmdline) =~ $key_re ]]; then
               export CROWBAR_KEY="${BASH_REMATCH[1]}"
-              echo "$CROWBAR_KEY" >/mnt/etc/crowbar.install.key
-          elif [[ -f /mnt/etc/crowbar.install.key ]]; then
-              export CROWBAR_KEY="$(cat /mnt/etc/crowbar.install.key)"
+              echo "$CROWBAR_KEY" >/etc/crowbar.install.key
+          elif [[ -f /etc/crowbar.install.key ]]; then
+              export CROWBAR_KEY="$(cat /etc/crowbar.install.key)"
           fi
-          post_state() {
-              mkdir -p /var/log/crowbar
-              local curlargs=(-o /dev/null --connect-timeout 60 -s \
-                -L -X POST --data-binary "{ \"name\": \"$1\", \"state\": \"$2\" }" \
-                -H "Accept: application/json" -H "Content-Type: application/json" \
-                --max-time 240)
-              [[ $CROWBAR_KEY ]] && curlargs+=(-u "$CROWBAR_KEY" --digest --anyauth)
-              curl "${curlargs[@]}" "http://$IP/crowbar/crowbar/1.0/transition/default"
-          }
 
-          curl -s -o /mnt/usr/sbin/crowbar_join <%= @crowbar_join %>
-          chmod +x /mnt/usr/sbin/crowbar_join
+          export CROWBAR_PASS="$(sed -e 's/^machine-install://' <<< $CROWBAR_KEY)"
 
-          mkdir -p /mnt/var/log/crowbar
-          post_state $HOSTNAME "os-upgraded"
+          cat <<EOF > /etc/crowbarrc
+[default]
+server = <%= @crowbar_protocol %>://<%= @admin_node_ip %>
+username = machine-install
+password = $CROWBAR_PASS
+<% unless @crowbar_verify_ssl %>
+verify_ssl = 0
+<% end %>
+EOF
+
+          curl -s -o /usr/sbin/crowbar_join <%= @crowbar_join %>
+          chmod +x /usr/sbin/crowbar_join
+
+          mkdir -p /var/log/crowbar
+          crowbarctl node transition $HOSTNAME "os-upgraded"
 
           # Wait for DHCP to update - this is mainly for virtual environments or really large deploys
           sleep 30
