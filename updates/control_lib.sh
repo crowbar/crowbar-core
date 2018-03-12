@@ -75,22 +75,15 @@ try_to() {
 }
 
 __post_state() {
-  local curlargs=(--connect-timeout 60 -s -L -X POST \
-      --data-binary "{ \"name\": \"$1\", \"state\": \"$2\" }" \
-      -H "Accept: application/json" -H "Content-Type: application/json" \
-      --insecure --location)
-  [[ $CROWBAR_KEY ]] && curlargs+=(-u "$CROWBAR_KEY" --digest --anyauth)
-  parse_node_data < <(curl "${curlargs[@]}" \
-      "http://$ADMIN_IP/crowbar/crowbar/1.0/transition/default")
+  # $1 = hostname, $2 = target state
+  PASS="$(sed -e 's/^machine-install://' <<< $CROWBAR_KEY)"
+  crowbarctl node transition "$1" "$2" -s "http://$ADMIN_IP" -U machine-install -P $PASS --no-verify-ssl
 }
 
 __get_state() {
-    # $1 = hostname
-    local curlargs=(--connect-timeout 60 -s -L -H "Accept: application/json" \
-        -H "Content-Type: application/json" --insecure --location)
-  [[ $CROWBAR_KEY ]] && curlargs+=(-u "$CROWBAR_KEY" --digest)
-  parse_node_data < <(curl "${curlargs[@]}" \
-      "http://$ADMIN_IP/crowbar/machines/1.0/show?name=$1")
+  # $1 = hostname
+  PASS="$(sed -e 's/^machine-install://' <<< $CROWBAR_KEY)"
+  parse_node_data < <(crowbarctl node show $1 -s "http://$ADMIN_IP" -U machine-install -P $PASS --no-verify-ssl --json)
 }
 
 post_state() { try_to "$MAXTRIES" 15 __post_state "$@"; }

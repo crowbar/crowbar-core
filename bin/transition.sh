@@ -22,17 +22,7 @@ if [[ $(cat /proc/cmdline) =~ $key_re ]]; then
 elif [[ -f /etc/crowbar.install.key ]]; then
     export CROWBAR_KEY="$(cat /etc/crowbar.install.key)"
 fi
-
-HOST="127.0.0.1"
-
-post_state() {
-  local curlargs=(-o "/var/log/crowbar/$1-$2.json" --connect-timeout 60 -s \
-      -L -X POST --data-binary "{ \"name\": \"$1\", \"state\": \"$2\" }" \
-      -H "Accept: application/json" -H "Content-Type: application/json" \
-      --insecure --location)
-  [[ $CROWBAR_KEY ]] && curlargs+=(-u "$CROWBAR_KEY" --digest --anyauth)
-  curl "${curlargs[@]}" "http://${HOST}/crowbar/crowbar/1.0/transition/default"
-}
+export CROWBAR_PASS="$(sed -e 's/^machine-install://' <<< $CROWBAR_KEY)"
 
 if [ "$1" == "" ]
 then
@@ -51,7 +41,7 @@ do
   if [ $1 == $line ]
   then
     echo "Transitioning node $1 to state $2"
-    post_state $1 $2
+    crowbarctl node transition $1 $2 -U machine-install -P $CROWBAR_PASS --no-verify-ssl
     break
   fi
 done
