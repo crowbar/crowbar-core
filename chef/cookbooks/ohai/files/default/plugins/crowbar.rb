@@ -242,7 +242,13 @@ networks.each do |network|
   sw_port = -1
   sw_port_name = nil
 
-  line = IO.readlines(tcpdump_out).grep(/Subtype Interface Name/).join ""
+  tcpdump_lines = if File.exist?(tcpdump_out)
+    IO.readlines(tcpdump_out)
+  else
+    []
+  end
+
+  line = tcpdump_lines.grep(/Subtype Interface Name/).join ""
   Ohai::Log.debug("subtype intf name line: #{line}")
   if line =~ %r!(\d+)/\d+/(\d+)!
     sw_unit, sw_port = $1, $2
@@ -260,7 +266,7 @@ networks.each do |network|
 
   sw_name = -1
   # Using mac for now, but should change to something else later.
-  line = IO.readlines(tcpdump_out).grep(/Subtype MAC address/).join ""
+  line = tcpdump_lines.grep(/Subtype MAC address/).join ""
   Ohai::Log.debug("subtype MAC line: #{line}")
   if line =~ /: (.*) \(oui/
     sw_name = $1
