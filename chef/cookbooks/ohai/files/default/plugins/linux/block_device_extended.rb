@@ -25,6 +25,21 @@ if File.exists?("/sys/block")
         File.open("/sys/block/#{dir}/queue/#{check}") { |f| block[dir][check] = f.read_nonblock(1024).strip }
       end
     end
+
+    # correct that the aacraid driver always sets the removable flag
+    if block[dir]["removable"] == "1"
+      parts = File.realpath(dir, "/sys/block/").split("/")
+      # example:
+      # /sys/devices/pci0000:00/0000:00:02.0/0000:03:00.0/host0/target0:1:4/0:1:4:0/block/sdb
+      parts = parts[0..4] + ["driver"]
+      path = parts.join("/")
+      # example:
+      # /sys/devices/pci0000:00/0000:00:02.0/driver
+      # -> ../../../bus/pci/drivers/aacraid
+      if File.exists?(path) && File.readlink(path).split("/")[-1] == "aacraid"
+        block[dir]["removable"] = "0"
+      end
+    end
   end
 
   disk_path = Pathname.new "/dev/disk"
