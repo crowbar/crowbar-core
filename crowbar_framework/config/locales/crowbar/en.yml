@@ -411,7 +411,6 @@ en:
     show:
       title: 'Node'
       ganglia: 'Ganglia'
-      nagios: 'Nagios'
       bmc: 'IP Mgmt Interface'
       chef: 'Chef'
       raid: 'RAID'
