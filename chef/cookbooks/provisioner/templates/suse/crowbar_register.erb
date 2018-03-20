@@ -247,6 +247,14 @@ case $ARCH in
     x86_64) PACKAGES_INSTALL+=" biosdevname";;
 esac
 
+# Also install relevant microcode packages
+case $(grep -m 1 'model name' /proc/cpuinfo) in
+    *Intel\(R\)*)
+        PACKAGES_INSTALL+=" ucode-intel";;
+    *AuthenticAMD*)
+        PACKAGES_INSTALL+=" ucode-amd";;
+esac
+
 zypper --non-interactive install -t pattern $PATTERNS_INSTALL
 # Auto-agree with the license since it was already agreed on for the admin server
 <% if @platform == "suse" && @target_platform_version.to_f >= 12.1 -%>

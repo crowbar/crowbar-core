@@ -381,6 +381,16 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
         cloud_available = true if name.include? "Cloud"
       end
 
+      cpu_model = ""
+      if mnode.key?("cpu") && mnode[:cpu].length >= 1
+        case mnode[:cpu]["0"][:model_name]
+        when /^Intel\(R\)/
+          cpu_model = "intel"
+        when /^AuthenticAMD/
+          cpu_model = "amd"
+        end
+      end
+
       autoyast_template = mnode[:state] == "os-upgrading" ? "autoyast-upgrade" : "autoyast"
       template "#{node_cfg_dir}/autoyast.xml" do
         mode 0o644
@@ -405,6 +415,7 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
           platform: target_platform_distro,
           target_platform_version: target_platform_version,
           architecture: arch,
+          cpu_model: cpu_model,
           is_ses: storage_available && !cloud_available,
           crowbar_join: "#{os_url}/crowbar_join.sh",
           default_fs: mnode[:crowbar_wall][:default_fs] || "ext4",
