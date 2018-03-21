@@ -27,8 +27,7 @@
             },
             "links": {
                 "Chef": "http://192.168.124.10:4040/nodes/admin.crowbar.com",
-                "Ganglia": "http://192.168.124.10/ganglia/?c=Crowbar PoC&h=admin.crowbar.com&m=load_one&r=hour&s=descending&hc=4&mc=2",
-                "Nagios": "http://192.168.124.10/nagios3/cgi-bin/extinfo.cgi?type=1&host=admin"
+                "Ganglia": "http://192.168.124.10/ganglia/?c=Crowbar PoC&h=admin.crowbar.com&m=load_one&r=hour&s=descending&hc=4&mc=2"
             },
             "network": {
                 "admin": {

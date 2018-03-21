@@ -10,7 +10,6 @@
         "network": [ "default" ],
         "ntp": [ "default" ],
         "dns": [ "default" ],
-        "nagios": [ "default" ],
         "ganglia": [ "default" ],
         "logging": [ "default" ]
       },
