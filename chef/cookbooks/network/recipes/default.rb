@@ -221,11 +221,14 @@ node["crowbar"]["network"].keys.sort{|a,b|
     ifs[bond.name]["type"] = "bond"
     ifs[bond.name]["miimon"] = miimon
     ifs[bond.name]["xmit_hash_policy"] = xmit_hash_policy
-    # Also save miimon and xmit_hash_policy to the NIC object, since that is
-    # safe to change on the fly, and will be used to write the configuration
+    # Save miimon and xmit_hash_policy to the NIC object if they are different,
+    # since writing them causes the kernel to emit messages about setting them,
+    # and we want the information saved so it makes it into the configuration
     # files.
-    bond.miimon = miimon
-    bond.xmit_hash_policy = xmit_hash_policy
+    bond.miimon = miimon unless bond.miimon == miimon
+    unless bond.xmit_hash_policy == xmit_hash_policy
+      bond.xmit_hash_policy = xmit_hash_policy
+    end
     our_iface = bond
     node.set["crowbar"]["bond_list"] = {} if node["crowbar"]["bond_list"].nil?
     node.set["crowbar"]["bond_list"][bond.name] = ifs[bond.name]["slaves"]
