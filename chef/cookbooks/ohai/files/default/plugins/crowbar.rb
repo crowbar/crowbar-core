@@ -119,7 +119,7 @@ def get_supported_speeds(interface)
   speeds << "56g"  if (rv.supported & ((1 << 27) | (1 << 28) | (1 << 29) | (1 << 30))) != 0
   speeds
 rescue StandardError => e
-  puts "Failed to get ioctl for speed: #{e.message}"
+  puts "Failed to get ioctl for speed of #{interface}: #{e.message}"
   ["1g", "0g"]
 end
 
@@ -140,7 +140,7 @@ def get_permanent_address(interface)
   mac_bytes = [rv.value].pack("Q").each_byte.map { |b| format("%02X", b) }
   mac_bytes.slice(0, rv.size).join(":")
 rescue StandardError => e
-  puts "Failed to get ioctl for permanent address: #{e.message}"
+  puts "Failed to get ioctl for permanent address of #{interface}: #{e.message}"
   nil
 end
 
@@ -161,7 +161,7 @@ def get_link_status(interface)
 
   rv.value != 0
 rescue StandardError => e
-  puts "Failed to get ioctl for link status: #{e.message}"
+  puts "Failed to get ioctl for link status of #{interface}: #{e.message}"
   false
 end
 
@@ -242,7 +242,13 @@ networks.each do |network|
   sw_port = -1
   sw_port_name = nil
 
-  line = IO.readlines(tcpdump_out).grep(/Subtype Interface Name/).join ""
+  tcpdump_lines = if File.exist?(tcpdump_out)
+    IO.readlines(tcpdump_out)
+  else
+    []
+  end
+
+  line = tcpdump_lines.grep(/Subtype Interface Name/).join ""
   Ohai::Log.debug("subtype intf name line: #{line}")
   if line =~ %r!(\d+)/\d+/(\d+)!
     sw_unit, sw_port = $1, $2
@@ -260,7 +266,7 @@ networks.each do |network|
 
   sw_name = -1
   # Using mac for now, but should change to something else later.
-  line = IO.readlines(tcpdump_out).grep(/Subtype MAC address/).join ""
+  line = tcpdump_lines.grep(/Subtype MAC address/).join ""
   Ohai::Log.debug("subtype MAC line: #{line}")
   if line =~ /: (.*) \(oui/
     sw_name = $1
