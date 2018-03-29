@@ -135,7 +135,7 @@ node_search_with_cache("*:*").each do |mnode|
       pxefile = "#{discovery_dir}/#{arch}/#{pxecfg_subdir}/#{boot_ip_hex}"
       uefi_dir = "#{discovery_dir}/#{arch}/#{uefi_subdir}"
       grubdir = "#{uefi_dir}/#{boot_ip_hex}"
-      grubcfgfile = "#{grubdir}/grub.cfg"
+      grubcfgfile = "#{grubdir}/boot/grub.cfg"
       grubfile = "#{uefi_dir}/#{boot_ip_hex}.efi"
       windows_tftp_file = "#{tftproot}/windows-common/tftp/#{boot_ip_hex}"
     else
