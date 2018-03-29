@@ -351,7 +351,9 @@ address = crowbar_node["crowbar"]["network"]["admin"]["address"]
 protocol = crowbar_node["crowbar"]["apache"]["ssl"] ? "https" : "http"
 server = "#{protocol}://#{address}"
 password = crowbar_node["crowbar"]["users"]["crowbar"]["password"]
-verify_ssl = !crowbar_node["crowbar"]["apache"]["insecure"]
+verify_ssl = !crowbar_node["crowbar"]["apache"]["insecure"] ||
+  crowbar_node["crowbar"]["apache"]["generate_certs"]
+
 template "/etc/crowbarrc" do
   source "crowbarrc.erb"
   variables(

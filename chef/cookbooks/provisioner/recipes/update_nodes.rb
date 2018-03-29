@@ -62,7 +62,8 @@ virtual_intfs = ["tap", "qbr", "qvo", "qvb", "brq", "ovs"]
 
 crowbar_node = node_search_with_cache("roles:crowbar").first
 crowbar_protocol = crowbar_node[:crowbar][:apache][:ssl] ? "https" : "http"
-crowbar_verify_ssl = !crowbar_node["crowbar"]["apache"]["insecure"]
+crowbar_verify_ssl = !crowbar_node["crowbar"]["apache"]["insecure"] ||
+  crowbar_node["crowbar"]["apache"]["generate_certs"]
 
 discovery_dir = "#{tftproot}/discovery"
 pxecfg_subdir = "bios/pxelinux.cfg"
