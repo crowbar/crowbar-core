@@ -253,7 +253,7 @@ class Backup < ActiveRecord::Base
 
   def validate_hostname
     backup_hostname = data.join("crowbar", "configs", "hostname").read.strip
-    system_hostname = `hostname -f`.strip
+    system_hostname = File.read("/etc/hostname").strip
 
     unless system_hostname == backup_hostname
       errors.add(:base, I18n.t("backups.validation.hostnames_not_identical"))
