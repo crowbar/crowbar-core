@@ -160,7 +160,7 @@ class DnsService < ServiceObject
     else
       if server_nodes.nil?
         server_nodes_names = role.override_attributes["dns"]["elements"]["dns-server"]
-        server_nodes = server_nodes_names.map { |n| Node.find_by_name(n) }
+        server_nodes = server_nodes_names.map { |n| Node.find_by_name(n) }.compact
       end
 
       addresses = server_nodes.map do |n|
