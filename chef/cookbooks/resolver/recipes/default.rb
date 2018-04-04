@@ -38,35 +38,33 @@ search_domains.unshift(node[:dns][:domain])
 search_domains.uniq!
 
 unless node[:platform_family] == "windows"
-  unless CrowbarHelper.in_sledgehammer?(node)
-    package "dnsmasq"
+  package "dnsmasq"
 
-    template "/etc/dnsmasq.conf" do
-      source "dnsmasq.conf.erb"
-      owner "root"
-      group "root"
-      mode 0644
-      # do a dup, because we'll insert 127.0.0.1 later on
-      variables(nameservers: dns_list.dup)
-    end
-
-    file "/etc/resolv-forwarders.conf" do
-      action :delete
-    end
-
-    service "dnsmasq" do
-      supports status: true, start: true, stop: true, restart: true
-      action [:enable, :start]
-      subscribes :restart, "template[/etc/dnsmasq.conf]"
-      if node["roles"].include?("dns-server")
-        # invalidate dnsmasq cache if local zone changes
-        subscribes :reload, "template[/etc/bind/db.#{node[:dns][:domain]}]"
-      end
-      not_if { node["crowbar"]["admin_node"] && ::File.exist?("/var/lib/crowbar/install/disable_dns") }
-    end
-
-    dns_list = dns_list.insert(0, "127.0.0.1").take(3)
+  template "/etc/dnsmasq.conf" do
+    source "dnsmasq.conf.erb"
+    owner "root"
+    group "root"
+    mode 0644
+    # do a dup, because we'll insert 127.0.0.1 later on
+    variables(nameservers: dns_list.dup)
   end
+
+  file "/etc/resolv-forwarders.conf" do
+    action :delete
+  end
+
+  service "dnsmasq" do
+    supports status: true, start: true, stop: true, restart: true
+    action [:enable, :start]
+    subscribes :restart, "template[/etc/dnsmasq.conf]"
+    if node["roles"].include?("dns-server")
+      # invalidate dnsmasq cache if local zone changes
+      subscribes :reload, "template[/etc/bind/db.#{node[:dns][:domain]}]"
+    end
+    not_if { node["crowbar"]["admin_node"] && ::File.exist?("/var/lib/crowbar/install/disable_dns") }
+  end
+
+  dns_list = dns_list.insert(0, "127.0.0.1").take(3)
 
   template "/etc/resolv.conf" do
     source "resolv.conf.erb"

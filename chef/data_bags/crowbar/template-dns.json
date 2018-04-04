@@ -16,10 +16,10 @@
     "dns": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 11,
+      "schema-revision": 12,
       "element_states": {
         "dns-server": [ "readying", "ready", "applying" ],
-        "dns-client": [ "all" ]
+        "dns-client": [ "readying", "ready", "applying" ]
       },
       "elements": {},
       "element_order": [
