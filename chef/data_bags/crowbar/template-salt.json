@@ -23,10 +23,8 @@
       "config": {
         "environment": "salt-base-config",
         "mode": "full",
-        "transitions": true,
+        "transitions": false,
         "transition_list": [
-          "installed",
-          "readying"
         ]
       }
     }
