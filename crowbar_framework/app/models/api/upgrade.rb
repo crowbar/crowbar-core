@@ -281,7 +281,7 @@ module Api
             }
           end
 
-          cloud_available = repo_version_available?(products, "suse-openstack-cloud", "8")
+          cloud_available = repo_version_available?(products, "suse-openstack-cloud-crowbar", "8")
           ret[:openstack] = {
             available: cloud_available,
             repos: [
