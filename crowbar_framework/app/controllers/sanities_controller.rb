@@ -17,6 +17,7 @@
 class SanitiesController < ApplicationController
   skip_before_filter :sanity_checks
   skip_before_filter :enforce_installer
+  skip_before_filter :upgrade
   before_filter :hide_navigation
 
   def show
