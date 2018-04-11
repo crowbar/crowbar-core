@@ -67,6 +67,21 @@ describe Node do
         expect(node.alias).to be == "testing"
       end
     end
+
+    describe "find_node_by_name_or_alias", find_node_by_name_or_alias: true do
+      it "returns nodes matching node (first part of method)" do
+        node = Node.find_node_by_name_or_alias("testing.crowbar.com")
+        expect(node).to_not be_nil
+        expect(node.alias).to be == "testing"
+      end
+
+      it "returns nodes matching alias (second part of method)" do
+        testing_node = Node.find_node_by_name_or_alias("testing")
+        allow(Node).to receive(:find_node_by_alias).with("testing2").and_return(testing_node)
+        node = Node.find_node_by_name_or_alias("testing2")
+        expect(node).to_not be_nil
+      end
+    end
   end
 
   describe "license_key" do
