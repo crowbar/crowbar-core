@@ -45,7 +45,7 @@ suse-12.3:
       required: "optional"
       features: ["openstack"]
       repomd:
-        tag: "obsrepository://build.suse.de/SUSE:Updates:OpenStack-Cloud:8:aarch64/update"
+        tag: "obsrepository://build.suse.de/SUSE:Updates:OpenStack-Cloud-Crowbar:8:aarch64/update"
         fingerprint: ""
       url:
       smt_path: "SUSE/Updates/OpenStack-Cloud/8/aarch64/update"
@@ -142,7 +142,7 @@ suse-12.3:
       required: "optional"
       features: ["openstack"]
       repomd:
-        tag: "obsrepository://build.suse.de/SUSE:Updates:OpenStack-Cloud:8:x86_64/update"
+        tag: "obsrepository://build.suse.de/SUSE:Updates:OpenStack-Cloud-Crowbar:8:x86_64/update"
         fingerprint: ""
       url:
       smt_path: "SUSE/Updates/OpenStack-Cloud/8/x86_64/update"
@@ -243,7 +243,7 @@ suse-12.3:
       required: "optional"
       features: ["openstack"]
       repomd:
-        tag: "obsrepository://build.suse.de/SUSE:Updates:OpenStack-Cloud:8:s390x/update"
+        tag: "obsrepository://build.suse.de/SUSE:Updates:OpenStack-Cloud-Crowbar:8:s390x/update"
         fingerprint: ""
       url:
       smt_path: "SUSE/Updates/OpenStack-Cloud/8/s390x/update"
