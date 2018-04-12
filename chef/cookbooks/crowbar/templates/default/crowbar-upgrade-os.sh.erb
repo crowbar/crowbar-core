@@ -67,6 +67,15 @@ initiate_node_upgrade()
 
     trap cleanup INT EXIT
 
+    # we need to change the horizon django NullHandler in the custom conf files as its been
+    # deprecated so horizon related packages wont be able to install correctly, as they run some
+    # manage.py commands, which loads the conf files and errors out
+    # only needed from soc7 -> soc8
+    horizon_custom_config="/srv/www/openstack-dashboard/openstack_dashboard/local/local_settings.d/_100_local_settings.py"
+    if [[ -f $horizon_custom_config ]] ; then
+      sed -i s/django.utils.log.NullHandler/logging.NullHandler/g $horizon_custom_config
+    fi
+
     # Upgrade the distribution non-interactively
     log "Executing zypper ref"
     zypper --no-color --releasever <%= @target_platform_version %> ref -f
