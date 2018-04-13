@@ -15,7 +15,7 @@
 #
 
 class SuseManagerClientService < ServiceObject
-  def initialize
+  def initialize(thelogger = nil)
     super
     @bc_name = "suse_manager_client"
   end
