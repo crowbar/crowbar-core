@@ -292,7 +292,7 @@ class ServiceObject
     [200, { versions: ["1.0"] }]
   end
 
-  def transition
+  def transition(inst, name, state)
     [200, {}]
   end
 
