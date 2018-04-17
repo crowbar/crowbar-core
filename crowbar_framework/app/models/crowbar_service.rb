@@ -271,7 +271,7 @@ class CrowbarService < ServiceObject
     proposal.raw_data["deployment"]["crowbar"]["elements"]["crowbar-upgrade"] = nodes_to_upgrade
     proposal.save
     # commit the proposal so chef recipe get executed
-    proposal_commit("default", in_queue: false, validate_after_save: false)
+    commit_and_check_proposal
   end
 
   def disable_non_core_proposals
