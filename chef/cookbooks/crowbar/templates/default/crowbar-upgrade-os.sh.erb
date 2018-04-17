@@ -79,13 +79,6 @@ initiate_node_upgrade()
     # Upgrade the distribution non-interactively
     log "Executing zypper ref"
     zypper --no-color --releasever <%= @target_platform_version %> ref -f
-
-    # check to see if openvswitch is gonna be updated
-    is_openvswitch_updated=`zypper --no-color --non-interactive list-updates|grep -q openvswitch`
-    # check if openvswitch is enabled on boot
-    [ -f /etc/systemd/system/multi-user.target.wants/openvswitch.service ]
-    was_openvswitch_enabled=$?
-
     log "Executing zypper dist-upgrade"
     zypper --no-color --non-interactive dist-upgrade -l --recommends --replacefiles
     ret=$?
@@ -144,13 +137,6 @@ initiate_node_upgrade()
     # Remove possibly existing temporary config files from the compute nodes
     rm -f /etc/nova/nova.conf.d/200-crowbar-upgrade.conf
     rm -f /etc/neutron/neutron-openvswitch-agent.conf.d/200-crowbar-upgrade.conf
-
-    if [ $is_openvswitch_updated == 0 ] && [ $was_openvswitch_enabled == 0 ]; then
-      # mark openvswitch as enabled so it comes correctly after a node reboot
-      # this is due to the package upgrade deleting the systemd unit and adding a new unit for the
-      # service, which causes this new service unit to not be enabled.
-      systemctl enable openvswitch
-    fi
 
     # Signalize that the upgrade correctly ended
     echo "<%= @target_platform_version %>" >> $UPGRADEDIR/crowbar-upgrade-os-ok
