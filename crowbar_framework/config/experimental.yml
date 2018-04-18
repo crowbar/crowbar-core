@@ -23,6 +23,8 @@ default: &default
      - updater
   skip_unchanged_nodes:
     enabled: false
+  haproxy_balance:
+    enabled: true
 
 development:
   <<: *default
