@@ -699,12 +699,36 @@ module Api
         Rails.logger.info("Successfully finished disruptive upgrade of controller nodes")
       end
 
+      # Rabbitmq uses native clustering in SOC8, we need to adapt the configuration
+      def update_rabbitmq_setup
+        rabbit_cluster_members = ::Node.find(
+          "run_list_map:pacemaker-cluster-member AND " \
+          "run_list_map:rabbitmq-server"
+        )
+        return if rabbit_cluster_members.empty?
+
+        erlang_cookie = ServiceObject.new.random_password
+        prop = Proposal.find_by(barclamp: "rabbitmq", name: "default")
+        unless prop.raw_data["attributes"]["rabbitmq"]["cluster"]
+          prop.raw_data["attributes"]["rabbitmq"]["cluster"] = true
+          prop.raw_data["attributes"]["rabbitmq"]["erlang_cookie"] = erlang_cookie
+          prop.save
+        end
+
+        rabbit_cluster_members.each do |node|
+          node["rabbitmq"]["cluster"] = true
+          node["rabbitmq"]["erlang_cookie"] = erlang_cookie
+          node.save
+        end
+      end
+
       def do_controllers_substep(substep)
         if substep == :ceph_nodes
           join_ceph_nodes
           substep = :controller_nodes
         end
         if substep == :controller_nodes
+          update_rabbitmq_setup
           upgrade_controller_clusters
           upgrade_non_compute_nodes
           prepare_all_compute_nodes
