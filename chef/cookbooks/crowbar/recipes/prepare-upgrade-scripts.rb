@@ -215,18 +215,12 @@ template "/usr/sbin/crowbar-lbaas-evacuation.sh" do
   only_if { roles.include? "neutron-network" }
 end
 
-has_drbd = use_ha && node.fetch("drbd", {}).fetch("rsc", {}).any?
-
 template "/usr/sbin/crowbar-post-upgrade.sh" do
   source "crowbar-post-upgrade.sh.erb"
   mode "0775"
   owner "root"
   group "root"
   action :create
-  variables(
-    use_ha: use_ha,
-    has_drbd: has_drbd
-  )
 end
 
 template "/usr/sbin/crowbar-chef-upgraded.sh" do
