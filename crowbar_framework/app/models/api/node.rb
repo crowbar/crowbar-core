@@ -164,6 +164,59 @@ module Api
       reboot_and_wait
     end
 
+    # only rabbit upgrade
+    def upgrade_rabbit
+      prepare_repositories
+      delete_rabbit_resources
+      upgrade_rabbit_packages
+      create_rabbit_resources
+    end
+
+    # removes all rabbit resources from pacemaker
+    def delete_rabbit_resources
+      action = "delete_rabbit_resources"
+      save_node_action(action)
+      execute_and_wait_for_finish("/usr/sbin/#{action}.sh", 120)
+      Rails.logger.info("#{action} was successful.")
+    rescue StandardError => e
+      Api::Upgrade.raise_node_upgrade_error(
+        "Error while executing #{action} script. " + e.message
+      )
+    end
+
+    def upgrade_rabbit_packages
+      action = "upgrade_rabbit_packages"
+      save_node_action(action)
+      execute_and_wait_for_finish("/usr/sbin/#{action}.sh", 120)
+      Rails.logger.info("#{action} was successful.")
+    rescue StandardError => e
+      Api::Upgrade.raise_node_upgrade_error(
+        "Error while executing #{action} script. " + e.message
+      )
+    end
+
+    # creates pacemaker rabbit resources
+    def create_rabbit_resources
+      # save and change the status so we dont run the wrong recipe
+      backup_state = @node.crowbar["node_upgrade_state"]
+      @node.crowbar["node_upgrade_state"] = "rabbit_upgrade"
+      @node["rabbitmq"]["cluster"] = true
+      @node["rabbitmq"]["erlang_cookie"] = ServiceObject.new.random_password
+      @node.save
+      action = "create_rabbit_resources"
+      save_node_action(action)
+      execute_and_wait_for_finish("chef-client", 120)
+      Rails.logger.info("#{action} was successful.")
+    rescue StandardError => e
+      Api::Upgrade.raise_node_upgrade_error(
+        "Error while executing #{action} script. " + e.message
+      )
+    ensure
+      # recover the old state
+      @node.crowbar["node_upgrade_state"] = backup_state
+      @node.save
+    end
+
     # Disable "pre-upgrade" attribute for given node
     # We must do it from a node where pacemaker is running
     def disable_pre_upgrade_attribute_for(name)

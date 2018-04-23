@@ -705,6 +705,7 @@ module Api
           substep = :controller_nodes
         end
         if substep == :controller_nodes
+          upgrade_rabbitmq_clusters
           upgrade_controller_clusters
           upgrade_non_compute_nodes
           prepare_all_compute_nodes
@@ -743,6 +744,9 @@ module Api
         end
 
         status.save_substep(substep, :running)
+
+        p = Proposal.where(barclamp: "rabbitmq", name: "default").first
+        p.raw_data["attributes"]["rabbitmq"]["cluster"] = true
 
         # decide what needs to be upgraded
         case component
@@ -829,6 +833,14 @@ module Api
         return if network_node.upgraded?
         evacuate_network_node(network_node, network_node)
         delete_pacemaker_resources network_node
+      end
+
+      def upgrade_rabbitmq_clusters
+        rabbit_cluster_members = ::Node.find(
+          "run_list_map:pacemaker-cluster-member AND run_list_map:rabbitmq-server "
+        )
+
+        rabbit_cluster_members.each(&:upgrade_rabbit)
       end
 
       #
