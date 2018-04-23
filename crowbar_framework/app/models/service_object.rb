@@ -855,6 +855,19 @@ class ServiceObject
   end
 
   #
+  # Ensure that the proposal contains at least 2 nodes for role or a cluster
+  #
+  def validate_multiple_for_role_or_cluster(proposal, role)
+    elements = proposal["deployment"][@bc_name]["elements"]
+
+    if !elements.key?(role) ||
+        (elements[role].length < 2 &&
+         elements[role].none? { |e| is_cluster? e })
+      validation_error("Need at least 2 #{role} nodes or a cluster.")
+    end
+  end
+
+  #
   # Ensure that the proposal contains an odd number of nodes for role
   #
   def validate_count_as_odd_for_role(proposal, role)
