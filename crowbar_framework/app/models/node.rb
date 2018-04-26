@@ -39,6 +39,10 @@ class Node < ChefObject
         raise Crowbar::Error::NotFound.new
       end
     end
+    unless node.run_list.run_list_items.include?("role[#{@role.name}]")
+      node.run_list.run_list_items << "role[#{@role.name}]"
+      node.save
+    end
     # deep clone of @role.default_attributes, used when saving node
     @attrs_last_saved = @role.default_attributes.deep_dup
     @node = node
