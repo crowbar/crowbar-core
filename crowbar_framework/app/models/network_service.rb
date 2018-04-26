@@ -54,6 +54,7 @@ class NetworkService < ServiceObject
       return [404, "No node found"] if node.nil?
       name = node.name.to_s
     else
+      node = nil
       name = object.to_s
     end
 
@@ -70,7 +71,7 @@ class NetworkService < ServiceObject
     begin
       lock = acquire_ip_lock
       db = Chef::DataBag.load("crowbar/#{network}_network") rescue nil
-      net_info = build_net_info(role, network)
+      net_info = build_net_info(role, network, node)
 
       # Did we already allocate this, but the node lost it?
       if db["allocated_by_name"].key?(name)
@@ -428,13 +429,13 @@ class NetworkService < ServiceObject
     node.save
 
     Rails.logger.info("Network enable_interface: Assigned: #{name} #{network}")
-    [200, build_net_info(role, network)]
+    [200, build_net_info(role, network, nil)]
   end
 
-  def build_net_info(role, network)
-    net_info = {}
-    role.default_attributes["network"]["networks"][network].each do |k, v|
-      net_info[k] = v unless v.nil?
+  def build_net_info(role, network, node)
+    net_info = role.default_attributes["network"]["networks"][network].to_hash
+    unless node.nil? || node.crowbar.nil?
+      net_info.merge!(node["crowbar"]["network"][network] || {})
     end
     net_info
   end
