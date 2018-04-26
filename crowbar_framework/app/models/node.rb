@@ -39,10 +39,7 @@ class Node < ChefObject
         raise Crowbar::Error::NotFound.new
       end
     end
-    unless node.run_list.run_list_items.include?("role[#{@role.name}]")
-      node.run_list.run_list_items << "role[#{@role.name}]"
-      node.save
-    end
+    Node.ensure_node_role(node, @role.name)
     # deep clone of @role.default_attributes, used when saving node
     @attrs_last_saved = @role.default_attributes.deep_dup
     @node = node
@@ -1705,11 +1702,18 @@ class Node < ChefObject
       role.default_attributes["crowbar"]["network"] = {}
       role.save
 
-      # This run_list call is to add the crowbar tracking role to the node. (SAFE)
-      machine.run_list.run_list_items << "role[#{role.name}]"
-      machine.save
+      Node.ensure_node_role(machine, role.name)
 
       role
+    end
+
+    def ensure_node_role(node, role_name = nil)
+      role_name = make_role_name(node.name) if role_name.nil?
+      return if node.run_list.run_list_items.include?("role[#{role_name}]")
+
+      # This run_list call is to add the crowbar tracking role to the node. (SAFE)
+      node.run_list.run_list_items << "role[#{role_name}]"
+      node.save
     end
 
     def create_new(new_name)
