@@ -352,6 +352,9 @@ protocol = crowbar_node["crowbar"]["apache"]["ssl"] ? "https" : "http"
 server = "#{protocol}://#{address}"
 password = crowbar_node["crowbar"]["users"]["crowbar"]["password"]
 verify_ssl = !crowbar_node["crowbar"]["apache"]["insecure"]
+
+package "ruby2.1-rubygem-crowbar-client"
+
 template "/etc/crowbarrc" do
   source "crowbarrc.erb"
   variables(
