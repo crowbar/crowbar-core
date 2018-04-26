@@ -180,6 +180,9 @@ sorted_networks.each do |network|
   else
     nil
   end
+  unless conduit_map.key?(network.conduit)
+    raise "Conduit \"#{network.conduit}\" does not exist in conduit mapping!"
+  end
   base_ifs = conduit_map[network.conduit]["if_list"]
   # Error out if we were handed an invalid conduit mapping.
   unless base_ifs.all? { |i| i.is_a?(String) && ::Nic.exists?(i) }
