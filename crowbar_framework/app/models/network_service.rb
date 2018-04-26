@@ -434,8 +434,8 @@ class NetworkService < ServiceObject
 
   def build_net_info(role, network, node)
     net_info = role.default_attributes["network"]["networks"][network].to_hash
-    unless node.nil? || node.crowbar.nil?
-      net_info.merge!(node["crowbar"]["network"][network] || {})
+    unless node.nil?
+      net_info.merge!(node.crowbar_network[network] || {})
     end
     net_info
   end
