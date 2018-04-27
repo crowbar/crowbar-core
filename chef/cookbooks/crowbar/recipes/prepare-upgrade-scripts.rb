@@ -104,14 +104,6 @@ template "/usr/sbin/crowbar-delete-cinder-services-before-upgrade.sh" do
   only_if { cinder_controller && (!use_ha || is_cluster_founder) }
 end
 
-# Find all ovs bridges that we manage to be able to reset their fail-mode
-# in preparation for the OS upgrade
-bridges_to_reset = []
-Barclamp::Inventory.list_networks(node).each do |network|
-  next unless network.add_ovs_bridge
-  bridges_to_reset << network.bridge_name
-end
-
 nova = search(:node, "run_list_map:nova-controller").first
 
 template "/usr/sbin/crowbar-evacuate-host.sh" do
@@ -161,7 +153,6 @@ template "/usr/sbin/crowbar-pre-upgrade.sh" do
     compute_node: compute_node,
     remote_node: remote_node,
     swift_storage: swift_storage,
-    bridges_to_reset: bridges_to_reset,
     cinder_volume: cinder_volume,
     neutron_agent: neutron_agent,
     l3_agent: l3_agent,
