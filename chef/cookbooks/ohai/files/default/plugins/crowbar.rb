@@ -102,12 +102,12 @@ def get_supported_speeds(interface)
   ecmd = EthtoolCmd.new
   ecmd.cmd = ETHTOOL_GSET
 
-  ifreq = [interface, ecmd.data].pack("a16p")
+  ifreq = [interface, ecmd.data].pack("a16P")
   sock = Socket.new(Socket::AF_INET, Socket::SOCK_DGRAM, 0)
   sock.ioctl(SIOCETHTOOL, ifreq)
 
   rv = ecmd.class.new
-  rv.data = ifreq.unpack("a16p")[1]
+  rv.data = ifreq.unpack("a16P#{rv.data.length}")[1]
 
   speeds = []
   speeds << "10m"  if (rv.supported & ((1 <<  0) | (1 <<  1))) != 0
@@ -128,12 +128,12 @@ def get_permanent_address(interface)
   ecmd.cmd = ETHTOOL_GPERMADDR
   ecmd.size = MAX_ADDR_LEN
 
-  ifreq = [interface, ecmd.data].pack("a16p")
+  ifreq = [interface, ecmd.data].pack("a16P")
   sock = Socket.new(Socket::AF_INET, Socket::SOCK_DGRAM, 0)
   sock.ioctl(SIOCETHTOOL, ifreq)
 
   rv = ecmd.class.new
-  rv.data = ifreq.unpack("a16p")[1]
+  rv.data = ifreq.unpack("a16P#{rv.data.length}")[1]
 
   # unpack the uint64 we get to bytes, and then only take the size as
   # specified in the reply, to build the MAC address
@@ -152,12 +152,12 @@ def get_link_status(interface)
   ecmd = EthtoolValue.new
   ecmd.cmd = ETHTOOL_GLINK
 
-  ifreq = [interface, ecmd.data].pack("a16p")
+  ifreq = [interface, ecmd.data].pack("a16P")
   sock = Socket.new(Socket::AF_INET, Socket::SOCK_DGRAM, 0)
   sock.ioctl(SIOCETHTOOL, ifreq)
 
   rv = ecmd.class.new
-  rv.data = ifreq.unpack("a16p")[1]
+  rv.data = ifreq.unpack("a16P#{rv.data.length}")[1]
 
   rv.value != 0
 rescue StandardError => e
