@@ -1709,10 +1709,10 @@ class Node < ChefObject
 
     def ensure_node_role(node, role_name = nil)
       role_name = make_role_name(node.name) if role_name.nil?
-      return if node.run_list.run_list_items.include?("role[#{role_name}]")
+      return if node.run_list.include?("role[#{role_name}]")
 
       # This run_list call is to add the crowbar tracking role to the node. (SAFE)
-      node.run_list.run_list_items << "role[#{role_name}]"
+      node.run_list << "role[#{role_name}]"
       node.save
     end
 
