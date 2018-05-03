@@ -39,6 +39,14 @@ old_install_url = "#{web_path}/install"
 web_path = "#{provisioner_config['root_url']}/#{node[:target_platform]}/#{arch}"
 new_install_url = "#{web_path}/install"
 
+# read data required for initial crowbarctl setup
+crowbar_node = node_search_with_cache("roles:crowbar").first
+crowbar_protocol = crowbar_node[:crowbar][:apache][:ssl] ? "https" : "http"
+crowbar_verify_ssl = !crowbar_node["crowbar"]["apache"]["insecure"]
+
+admin_net = Barclamp::Inventory.get_network_by_type(crowbar_node, "admin")
+admin_node_ip = admin_net.address
+
 # try to create an alias for new base repo from the original base repo
 repo_alias = "SLES12-SP1-12.1-0"
 doc = REXML::Document.new(`zypper --xmlout lr --details`)
@@ -235,6 +243,9 @@ template "/usr/sbin/crowbar-chef-upgraded.sh" do
   owner "root"
   group "root"
   variables(
+    admin_node_ip: admin_node_ip,
+    crowbar_protocol: crowbar_protocol,
+    crowbar_verify_ssl: crowbar_verify_ssl,
     crowbar_join: "#{web_path}/crowbar_join.sh"
   )
 end
