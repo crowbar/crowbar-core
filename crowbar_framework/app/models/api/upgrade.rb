@@ -1458,7 +1458,7 @@ module Api
       # Live migrate all instances of the specified
       # node to other available hosts.
       def live_evacuate_compute_node(controller, compute)
-        save_node_action("live-evacuting nova instances")
+        save_node_action("live-migrating nova instances from current node")
         controller.wait_for_script_to_finish(
           "/usr/sbin/crowbar-evacuate-host.sh",
           timeouts[:evacuate_host],
