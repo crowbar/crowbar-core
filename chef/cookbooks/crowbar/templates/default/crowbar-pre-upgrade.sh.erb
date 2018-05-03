@@ -75,32 +75,15 @@ log "No HA setup found..."
 
 <% end %>
 
-<% @bridges_to_reset.each do |bridge| %>
-log "Resetting fail-mode on ovs-bridge <%= bridge %>"
-ovs-vsctl set-fail-mode <%= bridge %> standalone
-<% end %>
-
-log "Reloading wicked configuration for all interfaces"
-wicked ifreload all
-
 <% if @compute_node %>
 
 log "Upgrading packages needed for nova-compute node"
 
 zypper --non-interactive up openstack-nova-compute
-# This is ugly, but fixing neutron spec to upgrade to correct version of pecan is even uglier:
-zypper --non-interactive up python-pecan
-zypper --non-interactive install crudini
 
-log "Upgrading configuration for Newton based packages"
-
-crudini --set /etc/nova/nova.conf.d/200-crowbar-upgrade.conf DEFAULT use_neutron true
+log "Restarting services for Pike"
 
 zypper --non-interactive up <%= @neutron_agent %>
-<% if @neutron_agent == "openstack-neutron-openvswitch-agent" %>
-crudini --set /etc/neutron/neutron-openvswitch-agent.conf.d/200-crowbar-upgrade.conf ovs ovsdb_interface vsctl
-crudini --set /etc/neutron/neutron-openvswitch-agent.conf.d/200-crowbar-upgrade.conf ovs of_interface ovs-ofctl
-<% end %>
 <% unless @remote_node %>
 systemctl restart <%= @neutron_agent %>
 <% end %>
@@ -134,10 +117,7 @@ systemctl restart openstack-cinder-volume.service
 <% end %>
 
 <% if @swift_storage %>
-log "Upgrading swift-storage configuration"
-crudini --set /etc/swift/object-server.conf DEFAULT bind_port 6200
-crudini --set /etc/swift/container-server.conf DEFAULT bind_port 6201
-crudini --set /etc/swift/account-server.conf DEFAULT bind_port 6202
+log "Restarting swift-storage services"
 systemctl restart openstack-swift-account
 systemctl restart openstack-swift-object
 systemctl restart openstack-swift-container
