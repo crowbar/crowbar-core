@@ -44,7 +44,8 @@ class Api::RestartManagementController < ApiController
   api :POST, "/api/restart_management/restarts", "Clean the service restart flags"
   header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   param :node, String, desc: "Node name", required: true
-  param :service, String, desc: "Service to clean restart flag for", required: true
+  param :cookbook, String, desc: "Cookbook to clean restart flags for", required: false
+  param :service, String, desc: "Service to clean restart flag for", required: false
   api_version "2.0"
 
   api :GET, "/api/restart_management/restarts", "Get a list of services that need restart"
@@ -88,22 +89,39 @@ class Api::RestartManagementController < ApiController
 
   def restarts_post
     params.require(:node)
-    params.require(:service)
 
     node_name = params[:node]
+    cookbook = params[:cookbook]
     service = params[:service]
 
     node = get_node_or_raise(node_name)
+    dirty = false
 
-    managed_cookbooks.each do |cookbook|
-      next unless node.key? :crowbar_wall
-      next unless node[:crowbar_wall].key? :requires_restart
-      next unless node[:crowbar_wall][:requires_restart].key? cookbook
-      next unless node[:crowbar_wall][:requires_restart][cookbook].key? service
-      node[:crowbar_wall][:requires_restart][cookbook].delete(service)
+    if cookbook.nil?
+      node[:crowbar_wall].delete(:requires_restart)
+      Rails.logger.info("restart_management: node #{node_name} cleaned")
+      dirty = true
+    else
+      raise Crowbar::Error::NotFound unless managed_cookbooks.include? cookbook
+
+      if service.nil?
+        node[:crowbar_wall][:requires_restart].delete(cookbook)
+        Rails.logger.info("restart_management: cookbook #{cookbook} flags cleaned on node "\
+          "#{node_name}")
+        dirty = true
+      else
+        if node[:crowbar_wall][:requires_restart].key? cookbook
+          node[:crowbar_wall][:requires_restart][cookbook].delete(service)
+          Rails.logger.info("restart_management: service #{service} of cookbook #{cookbook} "\
+          "flags cleaned in node #{node_name}")
+          dirty = true
+        else
+          raise Crowbar::Error::NotFound("Cookbook #{cookbook} not found on node #{node_name}")
+        end
+      end
     end
 
-    node.save
+    node.save if dirty
 
     head :ok
   end
@@ -136,7 +154,7 @@ class Api::RestartManagementController < ApiController
   end
 
   def get_node_or_raise(node_name)
-    node = NodeObject.find("name:#{node_name}").first
+    node = NodeObject.find_node_by_name_or_alias(node_name)
     raise Crowbar::Error::NotFound if node.nil?
     node
   end
