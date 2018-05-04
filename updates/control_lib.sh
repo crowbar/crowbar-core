@@ -46,6 +46,7 @@ parse_node_data() {
         echo "BMC_NETMASK=${BMC_NETMASK}"
         echo "CROWBAR_STATE=${CROWBAR_STATE}"
         echo "HOSTNAME=${HOSTNAME}"
+        echo "ADMIN_ADDRESS=${ADMIN_ADDRESS}"
         echo "ALLOCATED=${ALLOCATED}"
     else
         res=$?
@@ -78,6 +79,9 @@ __post_state() {
   # $1 = hostname, $2 = target state
   PASS="$(sed -e 's/^machine-install://' <<< $CROWBAR_KEY)"
   crowbarctl node transition "$1" "$2" -s "http://$ADMIN_IP" -U machine-install -P $PASS --no-verify-ssl
+  local RET=$?
+  __get_state "$1"
+  return $RET
 }
 
 __get_state() {
