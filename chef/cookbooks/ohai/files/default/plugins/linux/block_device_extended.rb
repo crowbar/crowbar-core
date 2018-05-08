@@ -1,6 +1,6 @@
 provides "block_device"
 
-if File.exists?("/sys/block")
+if File.exist?("/sys/block")
   require "pathname"
 
   block = Mash.new
@@ -9,22 +9,35 @@ if File.exists?("/sys/block")
     block[dir] = Mash.new
 
     %w{size removable}.each do |check|
-      if File.exists?("/sys/block/#{dir}/#{check}")
+      if File.exist?("/sys/block/#{dir}/#{check}")
         File.open("/sys/block/#{dir}/#{check}") { |f| block[dir][check] = f.read_nonblock(1024).strip }
       end
     end
 
     %w{model rev state timeout vendor}.each do |check|
-      if File.exists?("/sys/block/#{dir}/device/#{check}")
+      if File.exist?("/sys/block/#{dir}/device/#{check}")
         File.open("/sys/block/#{dir}/device/#{check}") { |f| block[dir][check] = f.read_nonblock(1024).strip }
       end
     end
 
     %w{rotational}.each do |check|
-      if File.exists?("/sys/block/#{dir}/queue/#{check}")
+      if File.exist?("/sys/block/#{dir}/queue/#{check}")
         File.open("/sys/block/#{dir}/queue/#{check}") { |f| block[dir][check] = f.read_nonblock(1024).strip }
       end
     end
+
+    # correct that the aacraid driver always sets the removable flag
+    next unless block[dir]["removable"] == "1"
+    parts = File.realpath(dir, "/sys/block/").split("/")
+    # example:
+    # /sys/devices/pci0000:00/0000:00:02.0/0000:03:00.0/host0/target0:1:4/0:1:4:0/block/sdb
+    parts = parts[0..4] + ["driver"]
+    path = parts.join("/")
+    # example:
+    # /sys/devices/pci0000:00/0000:00:02.0/driver
+    # -> ../../../bus/pci/drivers/aacraid
+    next unless File.exist?(path) && File.readlink(path).split("/")[-1] == "aacraid"
+    block[dir]["removable"] = "0"
   end
 
   disk_path = Pathname.new "/dev/disk"
