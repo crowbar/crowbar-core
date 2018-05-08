@@ -89,7 +89,8 @@ template "/usr/sbin/crowbar-shutdown-services-before-upgrade.sh" do
   action :create
   variables(
     use_ha: use_ha || remote_node,
-    cluster_founder: is_cluster_founder
+    cluster_founder: is_cluster_founder,
+    nova_controller: roles.include?("nova-controller")
   )
 end
 
