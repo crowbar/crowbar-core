@@ -10,6 +10,7 @@
   "openstack_backup": null,
   "suggested_upgrade_mode": null,
   "selected_upgrade_mode": null,
+  "compute_nodes_postponed": false,
   "steps":{
     "prechecks":{
       "status":"pending"
