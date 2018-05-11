@@ -836,6 +836,9 @@ en:
         controller_roles:
           error: 'Found compute node %{node} with controller roles: %{roles}.'
           help: 'It is not possible to upgrade with such setup. These roles cannot be placed on compute node.'
+        wrong_sql_engine:
+          error: 'OpenStack database is not set up with MariaDB.'
+          help: 'It is not possible to upgrade when MariaDB is not set up. Database migration has to be done first.'
         unsupported_cluster_setup:
           error: 'Your cluster/role configuration is not supported by the non-disruptive upgrade process.'
           help: 'Please refer to the Deployment Guide for list of supported configurations.'

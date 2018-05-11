@@ -25,6 +25,9 @@
     "state": "discovered",
     "nova": {
       "use_migration": true
+    },
+    "database": {
+      "sql_engine": "mysql"
     }
   },
   "name": "testing.crowbar.com",

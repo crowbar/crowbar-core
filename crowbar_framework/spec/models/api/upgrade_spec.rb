@@ -133,6 +133,9 @@ describe Api::Upgrade do
         :addons
       ).and_return(["ceph", "ha"])
       allow(Api::Crowbar).to receive(
+        :deployment_check
+      ).and_return({})
+      allow(Api::Crowbar).to receive(
         :health_check
       ).and_return({})
       allow(Api::Crowbar).to receive(
@@ -939,6 +942,9 @@ describe Api::Upgrade do
       allow(Api::Crowbar).to receive(
         :addons
       ).and_return(["ceph", "ha"])
+      allow(Api::Crowbar).to receive(
+        :deployment_check
+      ).and_return({})
       allow(Api::Pacemaker).to(
         receive(:ha_presence_check).and_return({})
       )
@@ -965,6 +971,9 @@ describe Api::Upgrade do
       allow(Api::Crowbar).to receive(
         :addons
       ).and_return(["ceph", "ha"])
+      allow(Api::Crowbar).to receive(
+        :deployment_check
+      ).and_return({})
       allow(Api::Pacemaker).to receive(
         :ha_presence_check
       ).and_return(error: "ERROR")
@@ -990,6 +999,9 @@ describe Api::Upgrade do
       ).and_return(errors: ["Some Error"])
       allow(Api::Crowbar).to receive(
         :ha_config_check
+      ).and_return({})
+      allow(Api::Crowbar).to receive(
+        :deployment_check
       ).and_return({})
       allow(Api::Pacemaker).to receive(
         :health_report
