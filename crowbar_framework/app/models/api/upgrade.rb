@@ -1555,14 +1555,22 @@ module Api
       end
 
       def deployment_errors(check)
-        {
-          controller_roles: {
+        ret = {}
+        if check[:controller_roles]
+          ret[:controller_roles] = {
             data: I18n.t("api.upgrade.prechecks.controller_roles.error",
               node: check[:controller_roles][:node],
               roles: check[:controller_roles][:roles]),
             help: I18n.t("api.upgrade.prechecks.controller_roles.help")
           }
-        }
+        end
+        if check[:wrong_sql_engine]
+          ret[:wrong_sql_engine] = {
+            data: I18n.t("api.upgrade.prechecks.wrong_sql_engine.error"),
+            help: I18n.t("api.upgrade.prechecks.wrong_sql_engine.help")
+          }
+        end
+        ret
       end
 
       def health_check_errors(check)
