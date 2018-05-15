@@ -109,14 +109,12 @@ module Api
             errors: compute.empty? ? {} : compute_status_errors(compute)
           }
 
-          if Api::Crowbar.addons.include?("ceph")
-            ceph_status = Api::Crowbar.ceph_status
-            ret[:checks][:ceph_healthy] = {
-              required: true,
-              passed: ceph_status.empty?,
-              errors: ceph_status.empty? ? {} : ceph_health_check_errors(ceph_status)
-            }
-          end
+          ceph_status = Api::Crowbar.ceph_status
+          ret[:checks][:ceph_status] = {
+            required: true,
+            passed: ceph_status.empty?,
+            errors: ceph_status.empty? ? {} : ceph_errors(ceph_status)
+          }
 
           ha_config = Api::Pacemaker.ha_presence_check.merge(
             Api::Crowbar.ha_config_check
@@ -1569,26 +1567,12 @@ module Api
         }
       end
 
-      def ceph_health_check_errors(check)
+      def ceph_errors(check)
         ret = {}
-        if check[:health_errors]
-          ret[:ceph_not_healthy] = {
-            data: I18n.t("api.upgrade.prechecks.ceph_not_healthy.error",
-              error: check[:health_errors]),
-            help: I18n.t("api.upgrade.prechecks.ceph_not_healthy.help")
-          }
-        end
-        if check[:old_version]
-          ret[:ceph_old_version] = {
-            data: I18n.t("api.upgrade.prechecks.ceph_old_version.error"),
-            help: I18n.t("api.upgrade.prechecks.ceph_old_version.help")
-          }
-        end
-        if check[:not_prepared]
-          ret[:ceph_not_prepared] = {
-            data: I18n.t("api.upgrade.prechecks.ceph_not_prepared.error",
-              nodes: check[:not_prepared].join(", ")),
-            help: I18n.t("api.upgrade.prechecks.ceph_not_prepared.help")
+        if check[:crowbar_ceph_nodes]
+          ret[:crowbar_ceph_nodes] = {
+            data: I18n.t("api.upgrade.prechecks.crowbar_ceph_present.error"),
+            help: I18n.t("api.upgrade.prechecks.crowbar_ceph_present.help")
           }
         end
         ret
