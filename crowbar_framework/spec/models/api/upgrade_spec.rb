@@ -161,8 +161,9 @@ describe Api::Upgrade do
         :prepare_nodes_for_os_upgrade
       ).and_return(true)
       allow(Node).to(
-        receive(:find).with("state:crowbar_upgrade AND NOT roles:ceph-*").
-        and_return([Node.find_by_name("testing.crowbar.com")])
+        receive(:find).with("state:crowbar_upgrade").and_return(
+          [Node.find_by_name("testing.crowbar.com")]
+        )
       )
       allow_any_instance_of(Node).to(
         receive(:shutdown_services_before_upgrade).
@@ -464,7 +465,6 @@ describe Api::Upgrade do
   context "upgrading the nodes in normal mode" do
     it "successfully upgrades controller nodes" do
       allow(Api::Upgrade).to receive(:remaining_nodes).and_return(1)
-      allow(Api::Upgrade).to receive(:join_ceph_nodes).and_return(true)
 
       allow(Api::Upgrade).to receive(:upgrade_mode).and_return(:normal)
 
@@ -546,7 +546,6 @@ describe Api::Upgrade do
       drbd_master = Node.find_by_name("drbd.crowbar.com")
       drbd_slave = Node.find_by_name("drbd.crowbar.com")
       allow(Api::Upgrade).to receive(:remaining_nodes).and_return(1)
-      allow(Api::Upgrade).to receive(:join_ceph_nodes).and_return(true)
       allow(Node).to(
         receive(:find).
         with(
@@ -619,7 +618,6 @@ describe Api::Upgrade do
       testing = Node.find_by_name("testing.crowbar.com")
 
       allow(Node).to(receive(:find).with("state:crowbar_upgrade").and_return([testing]))
-      allow(Api::Upgrade).to receive(:join_ceph_nodes).and_return(true)
       allow(Api::Upgrade).to receive(:upgrade_controller_clusters).and_return(true)
 
       # upgrade_non_compute_nodes:
@@ -718,7 +716,6 @@ describe Api::Upgrade do
         :start_step
       ).with(:nodes).and_return(true)
       allow(Api::Upgrade).to receive(:remaining_nodes).and_return(1)
-      allow(Api::Upgrade).to receive(:join_ceph_nodes).and_return(true)
       allow(Node).to(
         receive(:find).
         with(

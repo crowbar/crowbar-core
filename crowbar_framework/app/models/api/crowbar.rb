@@ -79,7 +79,7 @@ module Api
 
       def addons
         [].tap do |list|
-          ["ceph", "ha"].each do |addon|
+          ["ha"].each do |addon|
             list.push(addon) if addon_installed?(addon) && addon_deployed?(addon)
           end
         end
@@ -89,8 +89,7 @@ module Api
       def health_check
         ret = {}
         unready = []
-        # We are ignoring the ceph nodes, as they should already be in crowbar_upgrade state
-        NodeObject.find("NOT roles:ceph-*").each do |node|
+        NodeObject.all.each do |node|
           unready << node.name unless node.ready?
         end
         ret[:nodes_not_ready] = unready unless unready.empty?
@@ -318,8 +317,6 @@ module Api
 
       def addon_installed?(addon)
         case addon
-        when "ceph"
-          CephService
         when "ha"
           PacemakerService
         else
@@ -332,8 +329,6 @@ module Api
 
       def addon_deployed?(addon)
         case addon
-        when "ceph"
-          ::Node.find("roles:ceph-* AND ceph_config_environment:*").any?
         when "ha"
           ::Node.find("pacemaker_config_environment:*").any?
         end
