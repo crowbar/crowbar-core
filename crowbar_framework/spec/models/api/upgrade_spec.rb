@@ -945,6 +945,9 @@ describe Api::Upgrade do
       allow(Api::Crowbar).to(
         receive(:health_check).and_return({})
       )
+      allow(Api::Crowbar).to(
+        receive(:ceph_status).and_return({})
+      )
       allow(Api::Crowbar).to receive(
         :ha_config_check
       ).and_return({})
@@ -970,6 +973,9 @@ describe Api::Upgrade do
       ).and_return(error: "ERROR")
       allow(Api::Crowbar).to(
         receive(:health_check).and_return({})
+      )
+      allow(Api::Crowbar).to(
+        receive(:ceph_status).and_return({})
       )
       allow(Api::Crowbar).to receive(
         :ha_config_check
