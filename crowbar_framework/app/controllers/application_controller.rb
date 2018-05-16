@@ -34,7 +34,7 @@ class ApplicationController < ActionController::Base
     Rails.env.test?
   }
   before_filter :upgrade, if: proc {
-    File.exist?("/var/lib/crowbar/upgrade/6-to-7-upgrade-running")
+    Dir.glob("/var/lib/crowbar/upgrade/*-upgrade-running").any?
   }
   before_filter :sanity_checks, unless: proc {
     Rails.env.test? || \
