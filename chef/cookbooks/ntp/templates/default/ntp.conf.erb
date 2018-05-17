@@ -4,6 +4,9 @@ driftfile <%= @driftfile %>
 
 interface ignore wildcard
 interface listen <%= @admin_interface %>
+<% @listen_interfaces.each do |interface| %>
+interface listen <%= interface %>
+<% end %>
 
 # Enable this if you want statistics to be logged.
 #statsdir /var/log/ntpstats/
@@ -31,9 +34,25 @@ server <%= ntp_server %> iburst minpoll 4
 # that might be intended to block requests from certain clients could also end
 # up blocking replies from your own upstream servers.
 
+<% if @is_server -%>
+# By default, ignore all inbound traffic from all hosts
+restrict -4 default ignore
+restrict -6 default ignore
+
+# Exchange time with all hosts in the admin subnet, but don't allow configuration.
+restrict <%= @admin_subnet %> mask <%= @admin_netmask %> notrap nomodify nopeer noquery
+
+# Exchange time with external NTP servers, but don't allow configuration
+# and use rate-limiting.
+<% @ntp_servers.each do |ntp_server| -%>
+restrict <%= ntp_server %> kod limited notrap nomodify nopeer noquery
+<% end -%>
+
+<% else -%>
 # By default, exchange time with everybody, but don't allow configuration.
-restrict -4 default kod notrap nomodify nopeer noquery
-restrict -6 default kod notrap nomodify nopeer noquery
+restrict -4 default notrap nomodify nopeer noquery
+restrict -6 default notrap nomodify nopeer noquery
+<% end -%>
 
 # Local users may interrogate the ntp server more closely.
 restrict 127.0.0.1
@@ -42,7 +61,6 @@ restrict ::1
 # Clients from this (example!) subnet have unlimited access, but only if
 # cryptographically authenticated.
 #restrict 192.168.123.0 mask 255.255.255.0 notrust
-
 
 # If you want to provide time to your local subnet, change the next line.
 # (Again, the address is an example only.)
