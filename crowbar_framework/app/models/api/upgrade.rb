@@ -1433,15 +1433,16 @@ module Api
           return
         end
         controller.run_ssh_cmd(
-          "source /root/.openrc; nova --insecure service-enable #{hostname} nova-compute"
+          "source /root/.openrc; " \
+          "openstack --insecure compute service set --enable #{hostname} nova-compute"
         )
         out = controller.run_ssh_cmd(
           "source /root/.openrc; " \
-          "nova --insecure service-list --host #{hostname} --binary nova-compute " \
-          "| grep -q enabled",
+          "openstack --insecure compute service list --service nova-compute " \
+          "--host #{hostname} -f value -c Status",
           "60s"
         )
-        unless out[:exit_code].zero?
+        unless out[:stdout].chomp == "enabled"
           raise_node_upgrade_error(
             "Enabling nova-compute service for '#{hostname}' has failed. " \
             "Check nova log files at '#{controller.name}' and '#{hostname}'."

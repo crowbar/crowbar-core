@@ -817,7 +817,10 @@ describe Api::Upgrade do
       allow_any_instance_of(Api::Node).to receive(:reboot_and_wait).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:post_upgrade).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:join_and_chef).and_return(true)
-      allow_any_instance_of(Node).to receive(:run_ssh_cmd).and_return(exit_code: 0)
+      allow_any_instance_of(Node).to receive(:run_ssh_cmd).and_return(
+        exit_code: 0,
+        stdout: "enabled"
+      )
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
       ).with(:nodes).and_return(true)
