@@ -32,7 +32,7 @@ set +x
 source /root/.openrc
 set -x
 
-nova --insecure service-disable "$host" nova-compute
+openstack --insecure compute service set --disable "$host" nova-compute
 
 <% if @needs_block_migrate %>
 blockmigrate="--block-migrate"

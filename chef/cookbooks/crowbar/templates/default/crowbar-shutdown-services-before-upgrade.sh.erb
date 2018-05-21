@@ -26,7 +26,7 @@ set +x
 source /root/.openrc
 set -x
 
-for id in `openstack compute service list --service nova-cert -f value -c ID`; do
+for id in `openstack --insecure compute service list --service nova-cert -f value -c ID`; do
   log "Removing nova-cert service $id"
   openstack compute service delete $id
 done
