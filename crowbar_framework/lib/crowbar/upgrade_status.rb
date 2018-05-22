@@ -335,7 +335,6 @@ module Crowbar
         :backup_crowbar,
         :repocheck_crowbar,
         :admin,
-        :database,
         :repocheck_nodes,
         :services,
         :backup_openstack,
