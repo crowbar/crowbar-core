@@ -440,7 +440,7 @@ module Api
 
         # Initiate the services shutdown for all nodes
         errors = []
-        upgrade_nodes = ::Node.find("state:crowbar_upgrade AND NOT roles:ceph-*")
+        upgrade_nodes = ::Node.find("state:crowbar_upgrade")
         cinder_node = nil
         upgrade_nodes.each do |node|
           if node.roles.include?("cinder-controller") &&
@@ -700,10 +700,6 @@ module Api
       end
 
       def do_controllers_substep(substep)
-        if substep == :ceph_nodes
-          join_ceph_nodes
-          substep = :controller_nodes
-        end
         if substep == :controller_nodes
           upgrade_controller_clusters
           upgrade_non_compute_nodes
@@ -731,10 +727,6 @@ module Api
         end
 
         if substep.nil? || substep.empty?
-          substep = :ceph_nodes
-        end
-
-        if substep == :ceph_nodes && substep_status == :finished
           substep = :controller_nodes
         end
 
@@ -901,23 +893,6 @@ module Api
         ].map { |f| "/usr/sbin/crowbar-#{f}.sh" }.join(" ")
         scripts_to_delete << "/etc/neutron/lbaas-connection.conf"
         node.run_ssh_cmd("rm -f #{scripts_to_delete}")
-      end
-
-      # Ceph nodes were upgraded independently, we only need to make them ready again
-      def join_ceph_nodes
-        ceph_nodes = ::Node.find("roles:ceph-*")
-        ceph_nodes.sort! { |n| n.upgrading? ? -1 : 1 }
-
-        ceph_nodes.each do |node|
-          return true if node.upgraded?
-          Rails.logger.info("Joining ceph node #{node.name}")
-          node_api = Api::Node.new node.name
-          node_api.save_node_state("ceph", "upgrading")
-          node_api.join_and_chef
-          node_api.save_node_state("ceph", "upgraded")
-        end
-        ::Crowbar::UpgradeStatus.new.save_substep(:ceph_nodes, :finished)
-        save_nodes_state([], "", "")
       end
 
       def finalize_nodes_upgrade

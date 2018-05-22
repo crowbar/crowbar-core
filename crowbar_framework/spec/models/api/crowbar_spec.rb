@@ -91,7 +91,7 @@ describe Api::Crowbar do
 
   context "with addons enabled" do
     it "lists the enabled addons" do
-      ["ceph", "ha"].each do |addon|
+      ["ha"].each do |addon|
         allow(Api::Crowbar).to(
           receive(:addon_installed?).with(addon).
           and_return(true)
@@ -107,7 +107,7 @@ describe Api::Crowbar do
         )
       end
 
-      expect(subject.class.addons).to eq(["ceph", "ha"])
+      expect(subject.class.addons).to eq(["ha"])
     end
   end
 
@@ -131,8 +131,9 @@ describe Api::Crowbar do
   context "with cloud not healthy" do
     it "finds a node that is not ready" do
       allow(NodeObject).to(
-        receive(:find).with("NOT roles:ceph-*").
-        and_return([NodeObject.find_node_by_name("testing.crowbar.com")])
+        receive(:find_all_nodes).and_return(
+          [NodeObject.find_node_by_name("testing.crowbar.com")]
+        )
       )
       allow_any_instance_of(NodeObject).to(receive(:ready?).and_return(false))
 
