@@ -149,10 +149,28 @@ class Api::UpgradeController < ApiController
   # The method runs asynchronously, so there's a need to poll for the status and possible errors
   def nodes
     if params[:component]
+      component = params[:component]
       upgrade_status = ::Crowbar::UpgradeStatus.new
       substep = upgrade_status.current_substep
       status = upgrade_status.current_substep_status
-      if ["all", "controllers"].include? params[:component]
+      if upgrade_status.compute_nodes_postponed? && component != "resume"
+        raise ::Crowbar::Error::UpgradeError,
+          "Upgrade is currently postponed. " \
+          "It has to be resumed before proceeding with any other action."
+      elsif ["resume", "postpone"].include? component
+        if status == :failed
+          raise ::Crowbar::Error::UpgradeError,
+            "Previous step ended with a failure. Not possible to postpone or resume."
+        end
+        if component == "resume" && !upgrade_status.compute_nodes_postponed?
+          raise ::Crowbar::Error::UpgradeError,
+            "Upgrade is currently not postponed. No reason to resume."
+        end
+        if component == "postpone" && substep == :controller_nodes && status != :finished
+          raise ::Crowbar::Error::UpgradeError,
+            "Postponing is only possible when all controller nodes are already upgraded."
+        end
+      elsif ["all", "controllers"].include? component
         # When controller nodes have been upgraded previously,
         # whole 'nodes' step was not actually finished, just a substep.
         # It makes sense at this time to upgrade the rest with 'all'.
@@ -192,14 +210,16 @@ class Api::UpgradeController < ApiController
           ::Crowbar::UpgradeStatus.new.start_step(:nodes)
         end
       end
-      Api::Upgrade.nodes params[:component]
+      Api::Upgrade.nodes component
       head :ok
     else
       render json: {
         errors: {
           nodes: {
             data: "No component parameter has been specified. " \
-              "Pass 'all', 'controllers' or a node name."
+              "Pass 'all', 'controllers' or a node name for upgrade actions. " \
+              "Use 'postpone' for postponing upgrade of compute nodes. " \
+              "Use 'resume' to resume postponed upgrade."
           }
         }
       }, status: :unprocessable_entity
