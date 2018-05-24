@@ -1,0 +1,34 @@
+{
+  "id": "template-salt",
+  "description": "Manages the salt configs for the cluster",
+  "attributes": {
+    "salt": {
+    }
+  },
+  "deployment": {
+    "salt": {
+      "crowbar-revision": 0,
+      "crowbar-applied": false,
+      "schema-revision": 1,
+      "element_states": {
+        "salt-ssh": [ "readying", "ready", "applying" ]
+      },
+      "elements": {},
+      "element_order": [
+        [ "salt-ssh" ]
+      ],
+      "element_run_list_order": {
+        "salt-ssh": 30
+      },
+      "config": {
+        "environment": "salt-base-config",
+        "mode": "full",
+        "transitions": true,
+        "transition_list": [
+          "installed",
+          "readying"
+        ]
+      }
+    }
+  }
+}
