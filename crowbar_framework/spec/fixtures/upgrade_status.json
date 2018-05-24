@@ -26,9 +26,6 @@
     "admin":{
       "status":"pending"
     },
-    "database":{
-      "status":"pending"
-    },
     "repocheck_nodes":{
       "status":"pending"
     },
