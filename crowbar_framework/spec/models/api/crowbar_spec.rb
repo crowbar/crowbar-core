@@ -157,118 +157,14 @@ describe Api::Crowbar do
     end
   end
 
-  context "with ceph cluster healthy" do
-    it "succeeds to check ceph cluster health and version" do
-      allow(Node).to(
-        receive(:find).with("roles:ceph-* AND ceph_config_environment:*").
-        and_return([Node.find_by_name("ceph.crowbar.com")])
-      )
-      allow(Node).to(receive(:find).with(
-        "run_list_map:ceph-mon AND ceph_config_environment:*"
-      ).and_return([Node.find_node_by_name("ceph")]))
-      allow_any_instance_of(Node).to(
-        receive(:run_ssh_cmd).with("LANG=C ceph health --connect-timeout 5 2>&1").
-        and_return(exit_code: 0, stdout: "HEALTH_OK\n", stderr: "")
-      )
-      allow_any_instance_of(Node).to(
-        receive(:run_ssh_cmd).with("LANG=C ceph --version | cut -d ' ' -f 3").
-        and_return(exit_code: 0, stdout: "10.2.4-211-g12b091b\n", stderr: "")
-      )
-
-      expect(subject.class.ceph_status).to be_empty
-    end
-
-    it "succeeds to check ceph cluster health and version but finds unprepared node" do
-      allow(Node).to(
-        receive(:find).with("roles:ceph-* AND ceph_config_environment:*").
-        and_return([Node.find_by_name("testing"), Node.find_by_name("ceph")])
-      )
-      allow(Node).to(receive(:find).with(
-        "run_list_map:ceph-mon AND ceph_config_environment:*"
-      ).and_return([Node.find_node_by_name("ceph")]))
-      allow_any_instance_of(Node).to(
-        receive(:run_ssh_cmd).with("LANG=C ceph health --connect-timeout 5 2>&1").
-        and_return(exit_code: 0, stdout: "HEALTH_OK\n", stderr: "")
-      )
-      allow_any_instance_of(Node).to(
-        receive(:run_ssh_cmd).with("LANG=C ceph --version | cut -d ' ' -f 3").
-        and_return(exit_code: 0, stdout: "10.2.4-211-g12b091b\n", stderr: "")
-      )
-
-      expect(subject.class.ceph_status).to eq(not_prepared: ["testing.crowbar.com"])
-    end
-
-    it "succeeds to check ceph cluster health but fails on version" do
-      allow(Node).to(
-        receive(:find).with("roles:ceph-* AND ceph_config_environment:*").
-        and_return([Node.find_by_name("ceph.crowbar.com")])
-      )
-      allow(Node).to(receive(:find).with(
-        "run_list_map:ceph-mon AND ceph_config_environment:*"
-      ).and_return([Node.find_node_by_name("ceph")]))
-      allow_any_instance_of(Node).to(
-        receive(:run_ssh_cmd).with("LANG=C ceph health --connect-timeout 5 2>&1").
-        and_return(exit_code: 0, stdout: "HEALTH_OK\n", stderr: "")
-      )
-      allow_any_instance_of(Node).to(
-        receive(:run_ssh_cmd).with("LANG=C ceph --version | cut -d ' ' -f 3").
-        and_return(exit_code: 0, stdout: "0.94.9-93-g239fe15\n", stderr: "")
-      )
-
-      expect(subject.class.ceph_status).to eq(old_version: true)
-    end
-  end
-
-  context "with ceph cluster not healthy" do
-    it "fails when checking ceph cluster health" do
+  context "with ceph cluster deployed by crowbar" do
+    it "fails when ceph roles are found" do
       allow(Node).to(
         receive(:find).with("roles:ceph-* AND ceph_config_environment:*").
         and_return([Node.find_by_name("testing.crowbar.com")])
       )
-      allow(Node).to(receive(:find).with(
-        "run_list_map:ceph-mon AND ceph_config_environment:*"
-      ).and_return([Node.find_node_by_name("ceph")]))
-      allow_any_instance_of(Node).to(
-        receive(:run_ssh_cmd).with("LANG=C ceph health --connect-timeout 5 2>&1").
-        and_return(exit_code: 1, stdout: "HEALTH_ERR\n", stderr: "")
-      )
-      expect(subject.class.ceph_status).to_not be_empty
-    end
-
-    it "fails when exit value of ceph check is 0 but stdout still not correct" do
-      allow(Node).to(
-        receive(:find).with("roles:ceph-* AND ceph_config_environment:*").
-        and_return([Node.find_by_name("testing.crowbar.com")])
-      )
-      allow(Node).to(receive(:find).with(
-        "run_list_map:ceph-mon AND ceph_config_environment:*"
-      ).and_return([Node.find_node_by_name("ceph")]))
-      allow_any_instance_of(Node).to(
-        receive(:run_ssh_cmd).with("LANG=C ceph health --connect-timeout 5 2>&1").
-        and_return(exit_code: 0, stdout: "HEALTH_WARN", stderr: "")
-      )
-      expect(subject.class.ceph_status).to_not be_empty
-    end
-
-    it "fails when connection to ceph cluster times out" do
-      allow(Node).to(
-        receive(:find).with("roles:ceph-* AND ceph_config_environment:*").
-        and_return([Node.find_by_name("testing.crowbar.com")])
-      )
-      allow(Node).to(receive(:find).with(
-        "run_list_map:ceph-mon AND ceph_config_environment:*"
-      ).and_return([Node.find_node_by_name("ceph")]))
-      allow_any_instance_of(Node).to(
-        receive(:run_ssh_cmd).with("LANG=C ceph health --connect-timeout 5 2>&1").
-        and_return(
-          exit_code: 1,
-          stdout: "",
-          stderr: "Error connecting to cluster: InterruptedOrTimeoutError"
-        )
-      )
-
       expect(subject.class.ceph_status).to eq(
-        health_errors: "Error connecting to cluster: InterruptedOrTimeoutError"
+        crowbar_ceph_nodes: true
       )
     end
   end
