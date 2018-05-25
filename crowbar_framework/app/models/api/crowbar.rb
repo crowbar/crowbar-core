@@ -101,7 +101,7 @@ module Api
       def ceph_status
         ret = {}
         ceph_nodes = ::Node.find("roles:ceph-* AND ceph_config_environment:*")
-        ret[:crowbar_ceph_nodes] = ceph_nodes.any?
+        ret[:crowbar_ceph_nodes] = true if ceph_nodes.any?
         ret
       end
 
