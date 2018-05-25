@@ -269,6 +269,10 @@ module Api
 
       def deployment_check
         ret = {}
+        # Only allow the upgrade for mariadb setup
+        # TODO: update the search if we allow multiple proposals
+        db_node = ::Node.find("roles:database-server").first
+        ret[:wrong_sql_engine] = true if db_node[:database][:sql_engine] != "mysql"
         # Make sure that node with nova-compute is not upgraded before nova-controller
         nova_order = BarclampCatalog.run_order("nova")
         ::Node.find("roles:nova-compute-*").each do |node|
@@ -288,7 +292,7 @@ module Api
             next if BarclampCatalog.category(b) != "OpenStack"
             wrong_roles.push role if BarclampCatalog.run_order(b) < nova_order
           end
-          ret = { controller_roles: { node: node.name, roles: wrong_roles } } if wrong_roles.any?
+          ret[:controller_roles] = { node: node.name, roles: wrong_roles } if wrong_roles.any?
         end
         ret
       end

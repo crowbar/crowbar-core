@@ -25,6 +25,9 @@
         }
       }
     },
+    "database": {
+      "sql_engine": "postgresql"
+    },
     "hostname": "drbd",
     "state": "discovered",
     "run_list_map": {}

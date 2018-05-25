@@ -22,6 +22,7 @@ describe Api::Crowbar do
     )
   end
   let!(:node) { Node.find_by_name("testing.crowbar.com") }
+  let!(:drbd_node) { Node.find_by_name("drbd.crowbar.com") }
   let!(:crowbar_role) { RoleObject.find_role_by_name("crowbar") }
   let!(:cinder_controller_role) { RoleObject.find_role_by_name("cinder-controller") }
 
@@ -500,6 +501,7 @@ describe Api::Crowbar do
 
   context "with correct barclamps deployment" do
     it "passes with nice compute nodes" do
+      allow(NodeObject).to(receive(:find).with("roles:database-server").and_return([node]))
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(
@@ -512,6 +514,7 @@ describe Api::Crowbar do
     end
 
     it "passes with remote compute node" do
+      allow(NodeObject).to(receive(:find).with("roles:database-server").and_return([node]))
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(
@@ -524,6 +527,7 @@ describe Api::Crowbar do
     end
 
     it "passes with compute node together with nova-controller " do
+      allow(NodeObject).to(receive(:find).with("roles:database-server").and_return([node]))
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(
@@ -538,6 +542,7 @@ describe Api::Crowbar do
 
   context "with broken barclamps deployment" do
     it "fails when cinder-controller is on compute node" do
+      allow(NodeObject).to(receive(:find).with("roles:database-server").and_return([node]))
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(
@@ -559,6 +564,21 @@ describe Api::Crowbar do
         controller_roles: { node: "testing.crowbar.com", roles: ["cinder-controller"] }
       )
     end
+    it "fails when postgresql is deployed as OpenStack DB" do
+      allow(NodeObject).to(receive(:find).with("roles:database-server").and_return([drbd_node]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
+      allow_any_instance_of(NodeObject).to(
+        receive(:roles).and_return(
+          ["nova-compute-kvm", "cinder-volume", "swift-storage"]
+        )
+      )
+      allow_any_instance_of(RoleObject).to(receive(:proposal?).and_return(false))
+
+      expect(subject.class.deployment_check).to eq(
+        wrong_sql_engine: true
+      )
+    end
+
   end
 
   context "with enough compute resources" do
