@@ -372,13 +372,10 @@ module Api
       def target_platform(options = {})
         platform_exception = options.fetch(:platform_exception, nil)
 
-        case ENV["CROWBAR_VERSION"]
-        when "4.0"
-          if platform_exception == :ceph
-            ::Crowbar::Product.ses_platform
-          else
-            ::Node.admin_node.target_platform
-          end
+        if ENV["CROWBAR_VERSION"] == "4.0" && platform_exception == :ceph
+          ::Crowbar::Product.ses_platform
+        else
+          ::Node.admin_node.target_platform
         end
       end
 
