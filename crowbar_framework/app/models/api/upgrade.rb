@@ -752,6 +752,7 @@ module Api
         if status.progress[:remaining_nodes].zero?
           status.save_substep(substep, :finished)
           finalize_nodes_upgrade
+          unlock_crowbar_ui_package
           status.end_step
         end
       rescue ::Crowbar::Error::Upgrade::NodeError => e
@@ -1505,6 +1506,24 @@ module Api
           raise "Possible error during execution of #{script} at node(s) " \
             "#{running.join(",")}. " \
             "Action did not finish after #{seconds} seconds."
+        end
+      end
+
+      # remove crowbar-ui package lock for future upgrades
+      def unlock_crowbar_ui_package
+        ui_unlock = run_cmd("sudo zypper-retry removelock 'crowbar-ui*'")
+        unless ui_unlock[:exit_code].zero?
+          raise_node_upgrade_error(
+            "Removing crowbar-ui package lock has failed. " \
+            "Please re-try current step to finalize the upgrade."
+          )
+        end
+        ui_update = run_cmd("sudo zypper-retry -n update crowbar-ui")
+        unless ui_update[:exit_code].zero?
+          raise_node_upgrade_error(
+            "Updating crowbar-ui package has failed. " \
+            "Please re-try current step to finalize the upgrade."
+          )
         end
       end
 
