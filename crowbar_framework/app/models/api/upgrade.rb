@@ -739,11 +739,12 @@ module Api
           # Upgrade everything
           do_controllers_substep(substep)
           substep = :compute_nodes
-          upgrade_all_compute_nodes
+          prepare_compute_nodes_for_live_migrations
         when "controllers"
           # Upgrade controller clusters only
           do_controllers_substep(substep)
         else
+          prepare_compute_nodes_for_live_migrations
           # Upgrade given compute node
           upgrade_one_compute_node component
           ::Crowbar::UpgradeStatus.new.save_substep(substep, :node_finished)
@@ -1151,6 +1152,54 @@ module Api
         save_nodes_state([], "", "")
       end
 
+      # Prepere compute nodes by upgrading selected packages and restarting the services
+      # (like nova-compute, cinder-volume, swift)
+      # By upgrading relevant packages, there's better changce live-migration will work
+      # then when using prepare_all_compute_nodes only.
+      def prepare_compute_nodes_for_live_migrations
+        return if upgrade_mode == :normal
+
+        Rails.logger.info("Preparing #{virt} compute nodes before live migrations step... ")
+        compute_nodes = ::Node.find("roles:nova-compute-*")
+        if compute_nodes.empty?
+          Rails.logger.info("There are no compute nodes.")
+          return
+        end
+
+        # remove upgraded compute nodes
+        compute_nodes.select! { |n| !n.upgraded? }
+        if compute_nodes.empty?
+          Rails.logger.info(
+            "All compute nodes are already upgraded."
+          )
+          return
+        end
+        save_node_action("preparing compute nodes before the live migration")
+
+        # This action can be executed in parallel for all compute nodes
+        begin
+          if upgrade_mode == :non_disruptive
+            execute_scripts_and_wait_for_finish(
+              compute_nodes,
+              "/usr/sbin/crowbar-packages-before-upgrade.sh",
+              timeouts[:pre_upgrade]
+            )
+            Rails.logger.info("Services on compute nodes upgraded and prepared.")
+          end
+        rescue StandardError => e
+          raise_node_upgrade_error(
+            "Error while upgrading services on compute nodes. " + e.message
+          )
+        end
+# FIXME
+#        prepare_remote_nodes if upgrade_mode == :non_disruptive
+        save_node_action("compute nodes prepared for live-migrations")
+      end
+
+      # Prepare the compute nodes by starting services that are located there
+      # (nova-compute, cinder-volume, swift).
+      # After this, live-migrations could work if the services don't need an upgrade
+      # (specifically if there's only nova-compute service on compute node)
       def prepare_all_compute_nodes
         # We do not support any non-kvm kind of compute, but in future we might...
         type = upgrade_mode == :normal ? "*" : "kvm"
@@ -1272,7 +1321,7 @@ module Api
               "/usr/sbin/crowbar-pre-upgrade.sh",
               timeouts[:pre_upgrade]
             )
-            Rails.logger.info("Services on compute nodes upgraded and prepared.")
+            Rails.logger.info("Services on compute nodes were started.")
           end
         rescue StandardError => e
           raise_node_upgrade_error(
