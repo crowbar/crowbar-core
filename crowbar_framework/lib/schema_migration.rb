@@ -26,7 +26,6 @@ module SchemaMigration
 
   def self.run_for_bc bc_name
     return unless File.exist?("/var/lib/crowbar/install/crowbar-installed-ok")
-    return if File.exist?("/var/run/crowbar/admin-server-upgrading")
     db_host = Rails.configuration.database_configuration[Rails.env]["host"]
     if ["localhost", "127.0.0.1"].include?(db_host) && !system("systemctl is-active postgresql")
       raise "Cannot run schema migrations for #{bc_name}. Database server is not running"
