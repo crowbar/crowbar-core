@@ -77,18 +77,29 @@ log "No HA setup found..."
 
 <% if @compute_node %>
 
+log "Upgrading packages needed for nova-compute node"
+
+zypper --non-interactive up openstack-nova-compute
+
 log "Restarting services for Pike"
 
+zypper --non-interactive up <%= @neutron_agent %>
 <% unless @remote_node %>
 systemctl restart <%= @neutron_agent %>
 <% end %>
 
-<% if @l3_agent && !@remote_node %>
+<% if @l3_agent %>
+zypper --non-interactive up <%= @l3_agent %>
+<% unless @remote_node %>
 systemctl restart <%= @l3_agent %>
 <% end %>
+<% end %>
 
-<% if @metadata_agent && !@remote_node%>
+<% if @metadata_agent %>
+zypper --non-interactive up <%= @metadata_agent %>
+<% unless @remote_node %>
 systemctl restart <%= @metadata_agent %>
+<% end %>
 <% end %>
 
 <% if @remote_node %>
@@ -101,6 +112,7 @@ systemctl restart openstack-nova-compute.service
 
 <% if @cinder_volume %>
 log "Upgrading and setting cinder-volume configuration"
+zypper --non-interactive up openstack-cinder-volume
 systemctl restart openstack-cinder-volume.service
 <% end %>
 
