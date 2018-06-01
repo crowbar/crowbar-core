@@ -54,7 +54,8 @@ end
 
 # When starting the process during the upgrade (after reboot),
 # mark the end of "admin server upgrade" step.
-if File.exist?("/var/lib/crowbar/upgrade/7-to-8-upgrade-running")
+if File.exist?("/var/lib/crowbar/upgrade/7-to-8-upgrade-running") &&
+    !File.exist?("/var/run/crowbar/admin-server-upgrading")
   CROWBAR_LIB_DIR = "/opt/dell/crowbar_framework/lib".freeze
   $LOAD_PATH.push CROWBAR_LIB_DIR if Dir.exist?(CROWBAR_LIB_DIR)
 
