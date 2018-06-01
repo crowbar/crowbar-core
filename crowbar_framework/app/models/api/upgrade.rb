@@ -283,8 +283,8 @@ module Api
           ret[:openstack] = {
             available: cloud_available,
             repos: [
-              "SUSE-OpenStack-Cloud-8-Pool",
-              "SUSE-OpenStack-Cloud-8-Updates"
+              "SUSE-OpenStack-Cloud-Crowbar-8-Pool",
+              "SUSE-OpenStack-Cloud-Crowbar-8-Updates"
             ],
             errors: {}
           }
