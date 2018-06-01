@@ -388,14 +388,14 @@ class Api::UpgradeController < ApiController
     "openstack": {
       "available": false,
       "repos": [
-        "SUSE-OpenStack-Cloud-8-Pool",
-        "SUSE-OpenStack-Cloud-8-Updates"
+        "SUSE-OpenStack-Cloud-Crowbar-8-Pool",
+        "SUSE-OpenStack-Cloud-Crowbar-8-Updates"
       ],
       "errors":
         "x86_64": {
           "missing": [
-            "SUSE-OpenStack-Cloud-8-Pool",
-            "SUSE-OpenStack-Cloud-8-Updates"
+            "SUSE-OpenStack-Cloud-Crowbar-8-Pool",
+            "SUSE-OpenStack-Cloud-Crowbar-8-Updates"
           ]
         }
       }
