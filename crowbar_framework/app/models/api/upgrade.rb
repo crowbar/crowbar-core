@@ -713,6 +713,14 @@ module Api
       def nodes(component = "all")
         status = ::Crowbar::UpgradeStatus.new
 
+        if component == "postpone"
+          status.postpone
+          return
+        elsif component == "resume"
+          status.resume
+          return
+        end
+
         substep = status.current_substep
         substep_status = status.current_substep_status
 
@@ -741,6 +749,10 @@ module Api
         when "controllers"
           # Upgrade controller clusters only
           do_controllers_substep(substep)
+          # Finalize only upgraded nodes (compute nodes might be postponed)
+          ::Node.find("state:crowbar_upgrade").each do |node|
+            finalize_node_upgrade node
+          end
         else
           # Upgrade given compute node
           upgrade_one_compute_node component

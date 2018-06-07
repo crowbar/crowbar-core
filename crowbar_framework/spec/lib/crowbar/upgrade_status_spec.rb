@@ -382,6 +382,18 @@ describe Crowbar::UpgradeStatus do
       )
     end
 
+    it "postpones and resumes compute node upgrade" do
+      expect(subject.progress[:compute_nodes_postponed]).to be false
+
+      allow(FileUtils).to receive(:touch).and_return(true)
+      expect(subject.postpone).to be true
+      expect(subject.progress[:compute_nodes_postponed]).to be true
+
+      allow(FileUtils).to receive(:rm_f).and_return(true)
+      expect(subject.resume).to be true
+      expect(subject.progress[:compute_nodes_postponed]).to be false
+    end
+
     it "fails while saving the status initially" do
       allow_any_instance_of(Pathname).to(
         receive(:open).and_raise("Failed to write File")

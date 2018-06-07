@@ -34,7 +34,8 @@ class ApplicationController < ActionController::Base
     Rails.env.test?
   }
   before_filter :upgrade, if: proc {
-    File.exist?("/var/lib/crowbar/upgrade/7-to-8-upgrade-running")
+    File.exist?("/var/lib/crowbar/upgrade/7-to-8-upgrade-running") &&
+      !File.exist?("/var/lib/crowbar/upgrade/7-to-8-upgrade-compute-nodes-postponed")
   }
   before_filter :sanity_checks, unless: proc {
     Rails.env.test? || \
