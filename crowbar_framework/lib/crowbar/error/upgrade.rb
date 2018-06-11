@@ -1,5 +1,5 @@
 #
-# Copyright 2017, SUSE LINUX GmbH
+# Copyright 2017-2018, SUSE LINUX GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,10 +15,6 @@
 #
 module Crowbar
   module Error
-    # generic upgrade
-    class UpgradeError < StandardError
-    end
-
     module Upgrade
       # cancel upgrade
       class CancelError < UpgradeError
