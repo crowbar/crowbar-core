@@ -436,32 +436,10 @@ module Api
         # Initiate the services shutdown for all nodes
         errors = []
         upgrade_nodes = ::Node.find("state:crowbar_upgrade")
-        cinder_node = nil
         upgrade_nodes.each do |node|
-          if node.roles.include?("cinder-controller") &&
-              (!node.roles.include?("pacemaker-cluster-member") ||
-                  node["pacemaker"]["founder"] == node[:fqdn])
-            cinder_node = node
-          end
           cmd = node.shutdown_services_before_upgrade
           next if cmd[0] == 200
           errors.push(cmd[1])
-        end
-
-        begin
-          unless cinder_node.nil?
-            cinder_node.wait_for_script_to_finish(
-              "/usr/sbin/crowbar-delete-cinder-services-before-upgrade.sh",
-              timeouts[:delete_cinder_services]
-            )
-            Rails.logger.info("Deleting of cinder services was successful.")
-          end
-        rescue StandardError => e
-          errors.push(
-            e.message +
-            "Check /var/log/crowbar/node-upgrade.log at #{cinder_node.name} "\
-            "for details."
-          )
         end
 
         if errors.any?
