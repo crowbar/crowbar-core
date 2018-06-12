@@ -52,19 +52,6 @@ end
   FileUtils.mkdir_p File.join(ROOT, name)
 end
 
-# When starting the process during the upgrade (after reboot),
-# mark the end of "admin server upgrade" step.
-if File.exist?("/var/lib/crowbar/upgrade/7-to-8-upgrade-running") &&
-    !File.exist?("/var/run/crowbar/admin-server-upgrading")
-  CROWBAR_LIB_DIR = "/opt/dell/crowbar_framework/lib".freeze
-  $LOAD_PATH.push CROWBAR_LIB_DIR if Dir.exist?(CROWBAR_LIB_DIR)
-
-  require "logger"
-  require "crowbar/upgrade_status"
-  upgrade_status = ::Crowbar::UpgradeStatus.new(Logger.new(Logger::STDOUT))
-  upgrade_status.end_step if upgrade_status.current_step == :admin
-end
-
 stdout_redirect(
   "/var/log/crowbar/production.log",
   "/var/log/crowbar/production.log",
