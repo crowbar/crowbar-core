@@ -728,7 +728,7 @@ module Api
           # Upgrade controller clusters only
           do_controllers_substep(substep)
           # Finalize only upgraded nodes (compute nodes might be postponed)
-          ::Node.find("state:crowbar_upgrade").each do |node|
+          ::Node.find("state:ready").each do |node|
             finalize_node_upgrade node
           end
         else
