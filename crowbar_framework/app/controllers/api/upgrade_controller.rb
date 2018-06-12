@@ -183,6 +183,12 @@ class Api::UpgradeController < ApiController
           ::Crowbar::UpgradeStatus.new.start_step(:nodes)
         end
       else
+        # At this point params[:component] should be a node, if it is not,
+        # raise an error.
+        unless Node.all.map(&:name).include? params[:component]
+          raise ::Crowbar::Error::UpgradeError, "Component must be 'all', "\
+            "'controllers', 'resume', 'postpone' or a node name."
+        end
         if substep != :compute_nodes && status != :finished
           raise ::Crowbar::Error::UpgradeError.new(
             "Controller nodes must be upgraded first!"
