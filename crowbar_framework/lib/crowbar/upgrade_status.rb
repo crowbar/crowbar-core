@@ -75,13 +75,16 @@ module Crowbar
         openstack_backup: nil,
         # :normal vs. :non_disruptive
         suggested_upgrade_mode: nil,
-        selected_upgrade_mode: nil
+        selected_upgrade_mode: nil,
+        # if upgrade of compute nodes has been postponed
+        compute_nodes_postponed: false
       }
       # in 'steps', we save the information about each step that was executed
       @progress[:steps] = upgrade_steps.map do |step|
         [step, { status: :pending }]
       end.to_h
       FileUtils.rm_f @running_file_location
+      FileUtils.rm_f postponed_file
       save
     end
 
@@ -170,6 +173,10 @@ module Crowbar
       end
     end
 
+    def compute_nodes_postponed?
+      progress[:compute_nodes_postponed]
+    end
+
     # Check if given step is running.
     # Without argument, check if any step is running
     def running?(step_name = nil)
@@ -208,6 +215,25 @@ module Crowbar
         :repocheck_crowbar,
         :admin
       ].include?(current_step) && !running?
+    end
+
+    # Resume the upgrade that has been postponed
+    def resume
+      ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
+        load_while_locked
+        progress[:compute_nodes_postponed] = false
+        FileUtils.rm_f postponed_file
+        save
+      end
+    end
+
+    def postpone
+      ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
+        load_while_locked
+        progress[:compute_nodes_postponed] = true
+        FileUtils.touch postponed_file
+        save
+      end
     end
 
     def save_crowbar_backup(backup_location)
@@ -396,6 +422,10 @@ module Crowbar
 
     def running_file_7_8
       "/var/lib/crowbar/upgrade/7-to-8-upgrade-running"
+    end
+
+    def postponed_file
+      "/var/lib/crowbar/upgrade/7-to-8-upgrade-compute-nodes-postponed"
     end
 
     def yaml_file_6_7
