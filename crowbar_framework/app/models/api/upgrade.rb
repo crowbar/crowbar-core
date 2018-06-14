@@ -637,7 +637,7 @@ module Api
             # skip nova compute nodes, they will be upgraded separately
             next if el.start_with?("nova-compute") || elements[el].nil?
             # skip some roles if they are assigned to compute nodes
-            if ["cinder-volume", "ceilometer-agent", "swift-storage"].include? el
+            if ["cinder-volume", "ceilometer-agent", "swift-storage", "manila-share"].include? el
               # expanding elements so we catch the case of cinder-volume in cluster
               ServiceObject.expand_nodes_for_all(elements[el]).flatten.each do |node|
                 next if compute_nodes[node]

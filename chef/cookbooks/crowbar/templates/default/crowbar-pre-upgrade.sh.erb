@@ -111,6 +111,11 @@ systemctl restart openstack-swift-object
 systemctl restart openstack-swift-container
 <% end %>
 
+<% if @manila_share %>
+log "Restarting manila-share service"
+systemctl restart openstack-manila-share
+<% end %>
+
 <% end %>
 
 touch $UPGRADEDIR/crowbar-pre-upgrade-ok
