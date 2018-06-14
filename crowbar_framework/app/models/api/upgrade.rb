@@ -863,6 +863,11 @@ module Api
         node.crowbar.delete "node_upgrade_state"
         node.save
 
+      end
+
+      def delete_upgrade_scripts(node)
+        return if node.admin?
+
         scripts_to_delete = [
           "prepare-repositories",
           "upgrade-os",
@@ -883,6 +888,7 @@ module Api
       def finalize_nodes_upgrade
         ::Node.find_all_nodes.each do |node|
           finalize_node_upgrade node
+          delete_upgrade_scripts node
         end
       end
 
