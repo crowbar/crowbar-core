@@ -728,8 +728,8 @@ module Api
           # Upgrade controller clusters only
           do_controllers_substep(substep)
           # Finalize only upgraded nodes (compute nodes might be postponed)
-          ::Node.find("state:ready").each do |node|
-            finalize_node_upgrade node
+          ::Node.all.each do |node|
+            finalize_node_upgrade(node) if !node.admin? && node.upgraded?
           end
         else
           # Upgrade given compute node
