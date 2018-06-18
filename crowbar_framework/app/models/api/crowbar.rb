@@ -178,6 +178,7 @@ module Api
         # Make sure nova compute role is not mixed with a controller roles
         conflicting_roles = [
           "cinder-controller",
+          "cinder-volume",
           "glance-server",
           "keystone-server",
           "neutron-server",
