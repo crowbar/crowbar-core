@@ -19,6 +19,12 @@ log "Executing $BASH_SOURCE"
 
 set -x
 
+# Stop and disable cron early to avoid any cronjob trying to access openstack
+# APIs while upgrading the cluster. It will be enabled and started again after
+# the node is fully upgraded (as part of "crowbar-chef-upgraded.sh")
+systemctl stop cron
+systemctl disable cron
+
 <% if @nova_controller && (!@use_ha || @cluster_founder) %>
 # Remove nova-cert service which has been deprecated in Newton and is not present in Pike
 
@@ -73,8 +79,5 @@ do
 done
 
 <% end %>
-
-systemctl stop cron
-systemctl disable cron
 
 log "$BASH_SOURCE is finished."
