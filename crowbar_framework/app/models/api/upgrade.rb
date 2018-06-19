@@ -1493,13 +1493,13 @@ module Api
           failed = scripts_status.select { |_, v| v == "failed" }.keys
           unless failed.empty?
             raise "Execution of script #{script} has failed at node(s) " \
-            "#{failed.join(",")}. " \
+            "#{failed.join(", ")}. " \
             "Check /var/log/crowbar/node-upgrade.log for details."
           end
         rescue Timeout::Error
           running = scripts_status.select { |_, v| v == "running" }.keys
           raise "Possible error during execution of #{script} at node(s) " \
-            "#{running.join(",")}. " \
+            "#{running.join(", ")}. " \
             "Action did not finish after #{seconds} seconds."
         end
       end
@@ -1545,14 +1545,14 @@ module Api
         if check[:nodes_not_ready]
           ret[:nodes_not_ready] = {
             data: I18n.t("api.upgrade.prechecks.not_ready.error",
-              nodes: check[:nodes_not_ready].join(",")),
+              nodes: check[:nodes_not_ready].join(", ")),
             help: I18n.t("api.upgrade.prechecks.not_ready.help")
           }
         end
         if check[:failed_proposals]
           ret[:failed_proposals] = {
             data: I18n.t("api.upgrade.prechecks.failed_proposals.error",
-              proposals: check[:failed_proposals].join(",")),
+              proposals: check[:failed_proposals].join(", ")),
             help: I18n.t("api.upgrade.prechecks.failed_proposals.help")
           }
         end

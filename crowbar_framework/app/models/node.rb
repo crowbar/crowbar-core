@@ -906,6 +906,8 @@ class Node < ChefObject
     cmd = script
     cmd += " " + args.join(" ") unless args.empty?
 
+    raise "Script #{script} is not present on the node #{@node.name}." unless file_exist?(script)
+
     base = "/var/lib/crowbar/upgrade/" + File.basename(script, ".sh")
     ok_file = base + "-ok"
     failed_file = base + "-failed"
