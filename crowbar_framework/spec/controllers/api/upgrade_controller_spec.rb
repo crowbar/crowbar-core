@@ -84,6 +84,7 @@ describe Api::UpgradeController, type: :request do
         :prepare_nodes_for_os_upgrade
       ).and_return(true)
       allow_any_instance_of(Node).to receive(:ssh_cmd).and_return([200, {}])
+      allow(Api::Upgrade).to receive(:execute_scripts_and_wait_for_finish).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:start_step).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 

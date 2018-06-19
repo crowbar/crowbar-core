@@ -433,28 +433,20 @@ module Api
 
         check_for_running_instances if upgrade_mode == :normal
 
-        # Initiate the services shutdown for all nodes
-        errors = []
+        # For all nodes in cluster, set the pre-upgrade attribute
         upgrade_nodes = ::Node.find("state:crowbar_upgrade")
         upgrade_nodes.each do |node|
-          cmd = node.shutdown_services_before_upgrade
-          next if cmd[0] == 200
-          errors.push(cmd[1])
+          node.set_pre_upgrade_attribute
         end
 
-        if errors.any?
-          ::Crowbar::UpgradeStatus.new.end_step(
-            false,
-            services: {
-              data: errors,
-              help: "Check /var/log/crowbar/production.log at admin server. " \
-                "If the action failed at a specific node, " \
-                "check /var/log/crowbar/node-upgrade.log at the node."
-            }
-          )
-        else
-          ::Crowbar::UpgradeStatus.new.end_step
-        end
+        # Initiate the services shutdown for all nodes
+        execute_scripts_and_wait_for_finish(
+          upgrade_nodes,
+          "/usr/sbin/crowbar-shutdown-services-before-upgrade.sh",
+          timeouts[:shutdown_services]
+        )
+        Rails.logger.info("Services were shut down on all nodes.")
+        ::Crowbar::UpgradeStatus.new.end_step
       rescue ::Crowbar::Error::Upgrade::ServicesError => e
         ::Crowbar::UpgradeStatus.new.end_step(
           false,
@@ -468,10 +460,11 @@ module Api
           false,
           services: {
             data: e.message,
-            help: "Crowbar has failed. Check /var/log/crowbar/production.log for details."
+            help: "Check /var/log/crowbar/production.log on admin server for details. " \
+              "If the action failed on a specific node, " \
+              "check /var/log/crowbar/node-upgrade.log on that node."
           }
         )
-        raise e
       end
       handle_asynchronously :services
 
