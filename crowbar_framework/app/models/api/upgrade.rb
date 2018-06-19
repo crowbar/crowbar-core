@@ -874,7 +874,7 @@ module Api
           "post-upgrade",
           "chef-upgraded"
         ].map { |f| "/usr/sbin/crowbar-#{f}.sh" }.join(" ")
-        scripts_to_delete << "/etc/neutron/lbaas-connection.conf"
+        scripts_to_delete << " /etc/neutron/lbaas-connection.conf"
         node.run_ssh_cmd("rm -f #{scripts_to_delete}")
       end
 
