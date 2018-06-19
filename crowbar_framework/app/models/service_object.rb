@@ -682,7 +682,41 @@ class ServiceObject
   #
   def validate_proposal_after_save proposal
     validate_proposal_constraints proposal
+    validate_postponed_nodes proposal
     handle_validation_errors
+  end
+
+  #
+  # Make sure that when user wants to apply changes affecting the nodes that are postponed
+  # (= not upgraded while rest of the cloud is already upgraded)
+  # the nodes can be skipped.
+  #
+  def validate_postponed_nodes(proposal)
+    return unless File.exist?("/var/lib/crowbar/upgrade/7-to-8-upgrade-compute-nodes-postponed")
+
+    skip_unready_nodes_enabled = Rails.application.config.experimental.fetch(
+      "skip_unready_nodes", {}
+    ).fetch("enabled", false)
+
+    skip_unready_nodes_roles = Rails.application.config.experimental.fetch(
+      "skip_unready_nodes", {}
+    ).fetch("roles", [])
+
+    postponed_nodes = []
+    proposal["deployment"][@bc_name]["elements"].each do |role, nodes|
+      next if skip_unready_nodes_enabled && skip_unready_nodes_roles.include?(role)
+      nodes.each do |n|
+        next if is_cluster? n
+        node = NodeObject.find_by_name(n)
+        postponed_nodes << n unless node.upgraded?
+      end
+    end
+    return if postponed_nodes.empty?
+
+    validation_error "The upgrade of some nodes has been postponed: " +
+      postponed_nodes.join(", ") + ". " \
+      "It is necessary to have 'skip_unready_nodes' experimental feature enabled for the roles " \
+      "in this barclamp, so these nodes could be properly skipped when applying the barclamp."
   end
 
   def violates_count_constraint?(elements, role)
