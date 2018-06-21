@@ -150,6 +150,9 @@ template "/usr/sbin/crowbar-pre-upgrade.sh" do
   )
 end
 
+rabbitmq_servers = search(:node, "run_list_map:rabbitmq-server")
+use_rabbitmq_cluster = rabbitmq_servers.first[:rabbitmq][:cluster]
+mnesia_dir = rabbitmq_servers.first[:rabbitmq][:mnesiadir] || "/var/lib/rabbitmq/mnesia"
 template "/usr/sbin/crowbar-delete-pacemaker-resources.sh" do
   source "crowbar-delete-pacemaker-resources.sh.erb"
   mode "0755"
@@ -157,6 +160,9 @@ template "/usr/sbin/crowbar-delete-pacemaker-resources.sh" do
   group "root"
   action :create
   variables(
+    use_rabbitmq_cluster: use_rabbitmq_cluster,
+    mnesia_dir: mnesia_dir,
+    rabbitmq_nodes: rabbitmq_servers.map { |node| node["hostname"] },
     use_ha: use_ha
   )
 end

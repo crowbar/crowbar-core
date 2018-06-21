@@ -70,6 +70,20 @@ if [ $ret != 0 ] ; then
     exit $ret
 fi
 
+<% if @use_rabbitmq_cluster %>
+log "Resetting rabbitmq cluster..."
+# Reset the nodes in rabbitmq cluster to avoid ordering problems when cluster is re-built.
+# Re-synchronization of cluster can take a long time and include some restarts which can lead
+# to temporary service unavailability and confusing error messages in logs.
+# We could use rabbitmqctl force_reset here but it is less reliable in this case as it requires
+# rabbitmq to be (partially) running which can be hard to ensure.
+for node in <%= @rabbitmq_nodes.join(" ") %>; do
+    ssh $node rm -rf <%= @mnesia_dir %>
+done
+<% end %>
+
+
+
 <% else %>
 
 log "No HA setup found..."
