@@ -692,7 +692,7 @@ class ServiceObject
   # the nodes can be skipped.
   #
   def validate_postponed_nodes(proposal)
-    return unless File.exist?("/var/lib/crowbar/upgrade/7-to-8-upgrade-compute-nodes-postponed")
+    return unless upgrade_postponed?
 
     skip_unready_nodes_enabled = Rails.application.config.experimental.fetch(
       "skip_unready_nodes", {}
@@ -1681,6 +1681,11 @@ class ServiceObject
 
   THREAD_POOL_SIZE = 20
 
+  # Is the upgrade of (some) compute nodes postponed
+  def upgrade_postponed?
+    Dir.glob("/var/lib/crowbar/upgrade/*-upgrade-compute-nodes-postponed").any?
+  end
+
   def wait_for_chef_daemons(node_list)
     return if node_list.empty?
 
@@ -1936,8 +1941,14 @@ class ServiceObject
         pre_cached_nodes[n] ||= Node.find_by_name(n)
         node = pre_cached_nodes[n]
         next if node.nil?
-        # skip if nodes are on ready or crowbar_upgrade state, we dont need to do anything
-        next if ["ready", "crowbar_upgrade"].include?(node.state)
+        # skip if nodes are on ready, we dont need to do anything
+        next if node.state == "ready"
+        # crowbar_upgrade is not an error state and some upgrade specific recipes are executed
+        # for the nodes in this state. So we do not want to skip it by default.
+        # The exceptional case is when the upgrade of compute nodes is postponed and
+        # user wants to apply some proposal. In such case we really want to skip such nodes
+        # so the proposal can be applied only to the nodes that are already upgraded and ready.
+        next if node.state == "crowbar_upgrade" && !upgrade_postponed?
         logger.warn(
           "Node #{n} is skipped until next chef run for #{bc}:#{inst} with role #{role}"
         )
