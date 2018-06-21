@@ -26,6 +26,7 @@ module Crowbar
         pre_upgrade: @timeouts_config[:pre_upgrade] || 300,
         upgrade_os: @timeouts_config[:upgrade_os] || 1500,
         post_upgrade: @timeouts_config[:post_upgrade] || 600,
+        shutdown_services: @timeouts_config[:shitdown_services] || 600,
         evacuate_host: @timeouts_config[:evacuate_host] || 300,
         chef_upgraded: @timeouts_config[:chef_upgraded] || 1200,
         router_migration: @timeouts_config[:router_migration] || 600,

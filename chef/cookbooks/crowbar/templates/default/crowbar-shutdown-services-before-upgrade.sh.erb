@@ -25,6 +25,15 @@ set -x
 systemctl stop cron
 systemctl disable cron
 
+mkdir -p $UPGRADEDIR
+
+if [[ -f $UPGRADEDIR/crowbar-shutdown-services-before-upgrade-ok ]] ; then
+    log "Services are already shut down."
+    exit 0
+fi
+
+rm -f $UPGRADEDIR/crowbar-shutdown-services-before-upgrade-failed
+
 <% if @nova_controller && (!@use_ha || @cluster_founder) %>
 # Remove nova-cert service which has been deprecated in Newton and is not present in Pike
 
@@ -50,16 +59,16 @@ for type in clone ms primitive; do
     do
         log "Stopping resource $resource"
         crm --force --wait resource stop $resource
+        ret=$?
+        if [ $ret != 0 ] ; then
+          log "Error occured during stopping resource $resource."
+          echo $ret > $UPGRADEDIR/crowbar-shutdown-services-before-upgrade-failed
+          exit $ret
+        fi
     done
 done
 
 <% end %>
-
-# stop cinder-volume at all nodes so the service could be removed from the database later
-if test -e /usr/sbin/rcopenstack-cinder-volume; then
-    log "Stopping cinder-volume service"
-    /usr/sbin/rcopenstack-cinder-volume stop
-fi
 
 <% else %>
 
@@ -80,4 +89,5 @@ done
 
 <% end %>
 
+touch $UPGRADEDIR/crowbar-shutdown-services-before-upgrade-ok
 log "$BASH_SOURCE is finished."

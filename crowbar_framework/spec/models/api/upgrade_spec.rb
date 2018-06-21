@@ -169,24 +169,13 @@ describe Api::Upgrade do
         )
       )
       allow_any_instance_of(Node).to(
-        receive(:shutdown_services_before_upgrade).
-        and_return([200, ""])
+        receive(:set_pre_upgrade_attribute).and_return([200, ""])
       )
+      allow(Api::Upgrade).to receive(:execute_scripts_and_wait_for_finish).and_return(true)
+
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :end_step
       ).and_return(true)
-      allow_any_instance_of(Node).to(
-        receive(:wait_for_script_to_finish).with(
-          "/usr/sbin/crowbar-delete-cinder-services-before-upgrade.sh",
-          ::Crowbar::UpgradeTimeouts.new.values[:delete_cinder_services]
-        ).and_return(true)
-      )
-      allow(Api::Crowbar).to(
-        receive(:health_check).and_return({})
-      )
-      allow(Api::Crowbar).to(
-        receive(:compute_status).and_return({})
-      )
 
       expect(subject.class.services_without_delay).to be true
     end
