@@ -185,7 +185,7 @@ class Api::UpgradeController < ApiController
       else
         # At this point params[:component] should be a node, if it is not,
         # raise an error.
-        unless Node.all.map(&:name).include? params[:component]
+        unless Node.all.map(&:name).include?(params[:component])
           raise ::Crowbar::Error::UpgradeError, "Component must be 'all', "\
             "'controllers', 'resume', 'postpone' or a node name."
         end
