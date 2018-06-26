@@ -682,7 +682,41 @@ class ServiceObject
   #
   def validate_proposal_after_save proposal
     validate_proposal_constraints proposal
+    validate_postponed_nodes proposal
     handle_validation_errors
+  end
+
+  #
+  # Make sure that when user wants to apply changes affecting the nodes that are postponed
+  # (= not upgraded while rest of the cloud is already upgraded)
+  # the nodes can be skipped.
+  #
+  def validate_postponed_nodes(proposal)
+    return unless upgrade_postponed?
+
+    skip_unready_nodes_enabled = Rails.application.config.experimental.fetch(
+      "skip_unready_nodes", {}
+    ).fetch("enabled", false)
+
+    skip_unready_nodes_roles = Rails.application.config.experimental.fetch(
+      "skip_unready_nodes", {}
+    ).fetch("roles", [])
+
+    postponed_nodes = []
+    proposal["deployment"][@bc_name]["elements"].each do |role, nodes|
+      next if skip_unready_nodes_enabled && skip_unready_nodes_roles.include?(role)
+      nodes.each do |n|
+        next if is_cluster? n
+        node = NodeObject.find_by_name(n)
+        postponed_nodes << n unless node.upgraded?
+      end
+    end
+    return if postponed_nodes.empty?
+
+    validation_error "The upgrade of some nodes has been postponed: " +
+      postponed_nodes.join(", ") + ". " \
+      "It is necessary to have 'skip_unready_nodes' experimental feature enabled for the roles " \
+      "in this barclamp, so these nodes could be properly skipped when applying the barclamp."
   end
 
   def violates_count_constraint?(elements, role)
@@ -1647,6 +1681,11 @@ class ServiceObject
 
   THREAD_POOL_SIZE = 20
 
+  # Is the upgrade of (some) compute nodes postponed
+  def upgrade_postponed?
+    Dir.glob("/var/lib/crowbar/upgrade/*-upgrade-compute-nodes-postponed").any?
+  end
+
   def wait_for_chef_daemons(node_list)
     return if node_list.empty?
 
@@ -1902,8 +1941,14 @@ class ServiceObject
         pre_cached_nodes[n] ||= Node.find_by_name(n)
         node = pre_cached_nodes[n]
         next if node.nil?
-        # skip if nodes are on ready or crowbar_upgrade state, we dont need to do anything
-        next if ["ready", "crowbar_upgrade"].include?(node.state)
+        # skip if nodes are on ready, we dont need to do anything
+        next if node.state == "ready"
+        # crowbar_upgrade is not an error state and some upgrade specific recipes are executed
+        # for the nodes in this state. So we do not want to skip it by default.
+        # The exceptional case is when the upgrade of compute nodes is postponed and
+        # user wants to apply some proposal. In such case we really want to skip such nodes
+        # so the proposal can be applied only to the nodes that are already upgraded and ready.
+        next if node.state == "crowbar_upgrade" && !upgrade_postponed?
         logger.warn(
           "Node #{n} is skipped until next chef run for #{bc}:#{inst} with role #{role}"
         )
