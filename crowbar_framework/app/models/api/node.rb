@@ -102,7 +102,8 @@ module Api
         )
       rescue StandardError => e
         Api::Upgrade.raise_node_upgrade_error(
-          "Error while running the initial chef-client. " + e.message
+          "Error while running the initial chef-client. #{e.message} " \
+          "Important information might be found under /var/log/crowbar/crowbar_join/."
         )
       end
       # We know that the script has succeeded, but it does not necessary mean we're fine:
