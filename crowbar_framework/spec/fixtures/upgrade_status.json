@@ -11,6 +11,7 @@
   "suggested_upgrade_mode": null,
   "selected_upgrade_mode": null,
   "compute_nodes_postponed": false,
+  "nodes_selected_for_upgrade": null,
   "steps":{
     "prechecks":{
       "status":"pending"

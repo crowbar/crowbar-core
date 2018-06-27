@@ -32,6 +32,7 @@ describe Crowbar::UpgradeStatus do
   let(:current_action) { "os-upgrade" }
   let(:crowbar_backup) { "/var/lib/crowbar.tgz" }
   let(:openstack_backup) { "/var/lib/openstack.tgz" }
+  let(:all_nodes) { "all" }
 
   context "with a status file that does not exist" do
     it "ensures the default initial values are correct" do
@@ -380,6 +381,12 @@ describe Crowbar::UpgradeStatus do
       expect { subject.save_selected_upgrade_mode(:normal) }.to raise_error(
         Crowbar::Error::SaveUpgradeModeError
       )
+    end
+
+    it "checks and changes nodes for upgrade" do
+      expect(subject.progress[:nodes_selected_for_upgrade]).to be nil
+      expect(subject.save_nodes_selected_for_upgrade(all_nodes)).to be true
+      expect(subject.progress[:nodes_selected_for_upgrade]).to be all_nodes
     end
 
     it "postpones and resumes compute node upgrade" do
