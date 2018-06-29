@@ -182,6 +182,7 @@ class Api::UpgradeController < ApiController
             (substep == :compute_nodes && status == :node_finished)
           ::Crowbar::UpgradeStatus.new.start_step(:nodes)
         end
+        ::Crowbar::UpgradeStatus.new.save_nodes_selected_for_upgrade(component)
       else
         # At this point params[:component] should be a node, if it is not,
         # raise an error.

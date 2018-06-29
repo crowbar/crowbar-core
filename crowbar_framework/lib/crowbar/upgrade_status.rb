@@ -65,7 +65,8 @@ module Crowbar
         suggested_upgrade_mode: nil,
         selected_upgrade_mode: nil,
         # if upgrade of compute nodes has been postponed
-        compute_nodes_postponed: false
+        compute_nodes_postponed: false,
+        nodes_selected_for_upgrade: nil
       }
       # in 'steps', we save the information about each step that was executed
       @progress[:steps] = upgrade_steps_7_8.map do |step|
@@ -236,6 +237,14 @@ module Crowbar
       ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
         load_while_locked
         progress[:openstack_backup] = backup_location
+        save
+      end
+    end
+
+    def save_nodes_selected_for_upgrade(selected)
+      ::Crowbar::Lock::LocalBlocking.with_lock(shared: false, logger: @logger, path: lock_path) do
+        load_while_locked
+        progress[:nodes_selected_for_upgrade] = selected
         save
       end
     end
