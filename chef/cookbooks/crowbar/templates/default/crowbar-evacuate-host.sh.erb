@@ -45,6 +45,19 @@ ORIGINAL_INSTANCES=$UPGRADEDIR/original_instances
 # List active instances on host before the live-migration starts
 openstack server list --insecure --all-projects --status active --host $host -f value -c ID > $ORIGINAL_INSTANCES
 
+i=0
+while [[ $i -lt 10 ]] && openstack --insecure compute service list --service nova-compute -f value -c State | grep down ; do
+    log "Some nova-compute service is still down..."
+    sleep 6
+    i=$(($i + 1))
+done
+
+if openstack --insecure compute service list --service nova-compute -f value -c State | grep down ; then
+    log "Some nova-compute service is still down. Check the state of compute nodes before proceeding with the live-migration."
+    echo 4 > $UPGRADEDIR/crowbar-evacuate-host-failed
+    exit 4
+fi
+
 if ! nova --insecure host-evacuate-live "$host" $blockmigrate; then
     log "Live migration of instances from host $host has failed!"
     echo 2 > $UPGRADEDIR/crowbar-evacuate-host-failed
