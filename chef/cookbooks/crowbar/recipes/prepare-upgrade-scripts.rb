@@ -129,6 +129,7 @@ if !neutron.nil? && neutron[:neutron][:use_dvr]
 end
 
 swift_storage = roles.include? "swift-storage"
+manila_share = roles.include? "manila-share"
 
 # Following script executes all actions that are needed directly on the node
 # directly before the OS upgrade is initiated.
@@ -143,6 +144,7 @@ template "/usr/sbin/crowbar-pre-upgrade.sh" do
     compute_node: compute_node,
     remote_node: remote_node,
     swift_storage: swift_storage,
+    manila_share: manila_share,
     cinder_volume: cinder_volume,
     neutron_agent: neutron_agent,
     l3_agent: l3_agent,
