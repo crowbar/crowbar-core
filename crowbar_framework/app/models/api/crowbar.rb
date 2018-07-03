@@ -191,6 +191,7 @@ module Api
           "heat-server",
           "horizon-server",
           "manila-server",
+          "manila-share",
           "trove-server"
         ]
         ret = {}
