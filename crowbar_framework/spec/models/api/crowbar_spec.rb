@@ -180,7 +180,7 @@ describe Api::Crowbar do
 
       allow(Node).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))
       allow_any_instance_of(Node).to(
-        receive(:roles).and_return(["nova-compute-kvm", "cinder-volume", "swift-storage"])
+        receive(:roles).and_return(["nova-compute-kvm", "swift-storage"])
       )
 
       expect(subject.class.ha_config_check).to eq({})
@@ -197,25 +197,18 @@ describe Api::Crowbar do
     end
 
     it "fails when controller role is deployed to compute node" do
-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))
-      allow_any_instance_of(NodeObject).to(
-        receive(:roles).and_return(["nova-compute-kvm", "cinder-volume", "swift-storage"])
-      )
-
-      expect(subject.class.ha_config_check).to eq({})
-    end
-
-    it "fails when controller role is deployed to compute node" do
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([node]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(
-          ["cinder-controller", "nova-compute-kvm", "neutron-server"]
+          ["cinder-controller", "nova-compute-kvm", "neutron-server", "cinder-volume"]
         )
       )
 
       expect(subject.class.ha_config_check).to eq(
-        role_conflicts: { "testing.crowbar.com" => ["cinder-controller", "neutron-server"] }
+        role_conflicts: {
+          "testing.crowbar.com" => ["cinder-controller", "neutron-server", "cinder-volume"]
+        }
       )
     end
 
