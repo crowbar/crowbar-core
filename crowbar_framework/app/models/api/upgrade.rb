@@ -1507,6 +1507,13 @@ module Api
             "Please re-try current step to finalize the upgrade."
           )
         end
+        zypper_refresh = run_cmd("sudo zypper-retry -n refresh")
+        unless zypper_refresh[:exit_code].zero?
+          raise_node_upgrade_error(
+            "Refreshing repos for crowbar-ui update has failed. " \
+            "Please re-try current step to finalize the upgrade."
+          )
+        end
         ui_update = run_cmd("sudo zypper-retry -n update crowbar-ui")
         unless ui_update[:exit_code].zero?
           raise_node_upgrade_error(
