@@ -98,7 +98,7 @@ o.all_plugins
 node.automatic_attrs.merge! o.data
 
 # drop virtual interfaces, to not overload chef
-virtual_intfs = ["tap", "qbr", "qvo", "qvb", "brq"]
+virtual_intfs = ["tap", "qbr", "qvo", "qvb", "brq", "vxl"]
 node.automatic_attrs["network"]["interfaces"].each_key do |intf|
   if virtual_intfs.include?(intf.slice(0..2))
     node.automatic_attrs["network"]["interfaces"].delete(intf)
