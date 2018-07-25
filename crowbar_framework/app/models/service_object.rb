@@ -1851,8 +1851,8 @@ class ServiceObject
       "Most recent logged lines from the Chef run: \n\n<pre>" +
         logged_lines.join + "</pre>"
     rescue
-      Rails.logger.error("Error reporting: Couldn't open /var/log/crowbar/chef-client/#{pid}.log ")
-      raise "Error reporting: Couldn't open  /var/log/crowbar/chef-client/#{pid}.log"
+      Rails.logger.error("Error reporting: Couldn't open /var/log/crowbar/chef-client/#{node}.log ")
+      raise "Error reporting: Couldn't open  /var/log/crowbar/chef-client/#{node}.log"
     end
   end
 
