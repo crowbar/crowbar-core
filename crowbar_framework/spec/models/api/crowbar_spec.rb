@@ -233,7 +233,7 @@ describe Api::Crowbar do
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([]))
 
       barclamps_clusters = {
-        "database" => { "database-server" => ["cluster1"] },
+        "database" => { "mysql-server" => ["cluster1"] },
         "rabbitmq" => { "rabbitmq-server" => ["cluster1"] },
         "keystone" => { "keystone-server" => ["cluster1"] },
         "glance" => { "glance-server" => ["cluster1"] },
@@ -260,7 +260,7 @@ describe Api::Crowbar do
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([]))
 
       barclamps_clusters = {
-        "database" => { "database-server" => ["cluster2"] },
+        "database" => { "mysql-server" => ["cluster2"] },
         "rabbitmq" => { "rabbitmq-server" => ["cluster2"] },
         "keystone" => { "keystone-server" => ["cluster1"] },
         "glance" => { "glance-server" => ["cluster1"] },
@@ -287,7 +287,7 @@ describe Api::Crowbar do
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([]))
 
       barclamps_clusters = {
-        "database" => { "database-server" => ["cluster1"] },
+        "database" => { "mysql-server" => ["cluster1"] },
         "rabbitmq" => { "rabbitmq-server" => ["cluster1"] },
         "keystone" => { "keystone-server" => ["cluster2"] },
         "glance" => { "glance-server" => ["cluster2"] },
@@ -314,7 +314,7 @@ describe Api::Crowbar do
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([]))
 
       barclamps_clusters = {
-        "database" => { "database-server" => ["cluster1"] },
+        "database" => { "mysql-server" => ["cluster1"] },
         "rabbitmq" => { "rabbitmq-server" => ["cluster1"] },
         "keystone" => { "keystone-server" => ["cluster2"] },
         "glance" => { "glance-server" => ["cluster2"] },
@@ -341,7 +341,7 @@ describe Api::Crowbar do
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([]))
 
       barclamps_clusters = {
-        "database" => { "database-server" => ["cluster1"] },
+        "database" => { "mysql-server" => ["cluster1"] },
         "rabbitmq" => { "rabbitmq-server" => ["cluster2"] },
         "keystone" => { "keystone-server" => ["cluster3"] },
         "glance" => { "glance-server" => ["cluster1"] },
@@ -368,7 +368,7 @@ describe Api::Crowbar do
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-kvm").and_return([]))
 
       barclamps_clusters = {
-        "database" => { "database-server" => ["cluster1"] },
+        "database" => { "mysql-server" => ["cluster1"] },
         "rabbitmq" => { "rabbitmq-server" => ["cluster2"] },
         "keystone" => { "keystone-server" => ["cluster1"] },
         "glance" => { "glance-server" => ["cluster2"] },
@@ -389,7 +389,7 @@ describe Api::Crowbar do
 
   context "with correct barclamps deployment" do
     it "passes with nice compute nodes" do
-      allow(NodeObject).to(receive(:find).with("roles:database-server").and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:mysql-server").and_return([node]))
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(
@@ -402,7 +402,7 @@ describe Api::Crowbar do
     end
 
     it "passes with remote compute node" do
-      allow(NodeObject).to(receive(:find).with("roles:database-server").and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:mysql-server").and_return([node]))
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(
@@ -415,7 +415,7 @@ describe Api::Crowbar do
     end
 
     it "passes with compute node together with nova-controller " do
-      allow(NodeObject).to(receive(:find).with("roles:database-server").and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:mysql-server").and_return([node]))
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(
@@ -430,7 +430,7 @@ describe Api::Crowbar do
 
   context "with broken barclamps deployment" do
     it "fails when cinder-controller is on compute node" do
-      allow(NodeObject).to(receive(:find).with("roles:database-server").and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:mysql-server").and_return([node]))
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(
@@ -453,14 +453,16 @@ describe Api::Crowbar do
       )
     end
     it "fails when postgresql is deployed as OpenStack DB" do
-      allow(NodeObject).to(receive(:find).with("roles:database-server").and_return([drbd_node]))
-      allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
-      allow_any_instance_of(NodeObject).to(
-        receive(:roles).and_return(
-          ["nova-compute-kvm", "cinder-volume", "swift-storage"]
-        )
+      allow(NodeObject).to(receive(:find).with("roles:mysql-server").and_return([]))
+
+      expect(subject.class.deployment_check).to eq(
+        wrong_sql_engine: true
       )
-      allow_any_instance_of(RoleObject).to(receive(:proposal?).and_return(false))
+    end
+
+    it "fails when postgresql is still set as default OpenStack DB" do
+      # drbd_node has "sql_engine": "postgresql"
+      allow(NodeObject).to(receive(:find).with("roles:mysql-server").and_return([drbd_node]))
 
       expect(subject.class.deployment_check).to eq(
         wrong_sql_engine: true
