@@ -29,6 +29,12 @@ rm -f $UPGRADEDIR/crowbar-delete-pacemaker-resources-failed
 
 <% if @use_ha %>
 
+# Before stopping all remaining services, put the openvswitch agents into admin_state_down
+# See https://jira.prv.suse.net/browse/SCRD-3751
+for agent in $(neutron agent-list | grep openvswitch | awk {'print $2'}); do
+    neutron agent-update --admin-state-down $agent
+done
+
 log "Stopping pacemaker resources..."
 
 # Services need to be stopped before deletion.
