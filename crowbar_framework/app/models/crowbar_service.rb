@@ -342,6 +342,16 @@ class CrowbarService < ServiceObject
       prop.save
     end
 
+    # change pacemaker setting to not use pacemaker for stateless services
+    pacemaker_proposals = Proposal.all.where(barclamp: "pacemaker")
+    pacemaker_proposals.each do |proposal|
+      role = proposal.role
+      proposal.raw_data["attributes"]["pacemaker"]["clone_stateless_services"] = false
+      role.default_attributes["pacemaker"]["clone_stateless_services"] = false
+      role.save
+      proposal.save
+    end
+
     # unset `db_synced` flag for OpenStack components
     ::Openstack::Upgrade.unset_db_synced
 
