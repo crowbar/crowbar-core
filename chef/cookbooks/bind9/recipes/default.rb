@@ -371,6 +371,9 @@ if node["crowbar"]["admin_node"] && ::File.exist?("/var/lib/crowbar/install/disa
   end
 end
 
+### FIXME Change to "any" once IPv6 support has been implemented
+admin_addr6 = "none"
+
 # Rewrite our default configuration file
 template "/etc/bind/named.conf" do
   source "named.conf.erb"
@@ -379,7 +382,8 @@ template "/etc/bind/named.conf" do
   group bindgroup
   variables(forwarders: node[:dns][:forwarders],
             allow_transfer: allow_transfer,
-            ipaddress: admin_addr)
+            ipaddress: admin_addr,
+            ip6address: admin_addr6)
   notifies :restart, "service[bind9]", :immediately
 end
 
