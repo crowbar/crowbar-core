@@ -84,6 +84,7 @@ en:
       logs: 'Exported Items'
       repositories: 'Repositories'
       backup: 'Backup & Restore'
+      upgrade: 'Upgrade'
     help: 'Help'
 
   layouts:
