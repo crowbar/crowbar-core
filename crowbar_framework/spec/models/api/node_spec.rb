@@ -18,21 +18,21 @@ describe Api::Node do
   let!(:os_repo_missing) do
     allow(::Crowbar::Repository).to(
       receive(:provided_and_enabled_with_repolist).with(
-        "os", "suse-12.3", "x86_64"
+        "os", "suse-12.4", "x86_64"
       ).and_return(
         [
           false,
           {
             "missing" => {
               "x86_64" => [
-                "SLES12-SP3-Pool",
-                "SLES12-SP3-Updates"
+                "SLES12-SP4-Pool",
+                "SLES12-SP4-Updates"
               ]
             },
             "inactive" => {
               "x86_64" => [
-                "SLES12-SP3-Pool",
-                "SLES12-SP3-Updates"
+                "SLES12-SP4-Pool",
+                "SLES12-SP4-Updates"
               ]
             }
           }
@@ -43,7 +43,7 @@ describe Api::Node do
   let!(:openstack_repo_missing) do
     allow(::Crowbar::Repository).to(
       receive(:provided_and_enabled_with_repolist).with(
-        "openstack", "suse-12.3", "x86_64"
+        "openstack", "suse-12.4", "x86_64"
       ).and_return(
         [
           false,
@@ -51,15 +51,15 @@ describe Api::Node do
             "missing" => {
               "x86_64" => [
                 "Cloud",
-                "SUSE-OpenStack-Cloud-Crowbar-8-Pool",
-                "SUSE-OpenStack-Cloud-Crowbar-8-Updates"
+                "SUSE-OpenStack-Cloud-Crowbar-9-Pool",
+                "SUSE-OpenStack-Cloud-Crowbar-9-Updates"
               ]
             },
             "inactive" => {
               "x86_64" => [
                 "Cloud",
-                "SUSE-OpenStack-Cloud-Crowbar-8-Pool",
-                "SUSE-OpenStack-Cloud-Crowbar-8-Updates"
+                "SUSE-OpenStack-Cloud-Crowbar-9-Pool",
+                "SUSE-OpenStack-Cloud-Crowbar-9-Updates"
               ]
             }
           }
@@ -70,7 +70,7 @@ describe Api::Node do
 
   before(:each) do
     allow(Api::Upgrade).to(
-      receive(:target_platform).and_return("suse-12.3")
+      receive(:target_platform).and_return("suse-12.4")
     )
     allow(Api::Node).to(
       receive(:node_architectures).and_return(
@@ -89,7 +89,7 @@ describe Api::Node do
     it "finds the os repositories required to upgrade the nodes" do
       allow(::Crowbar::Repository).to(
         receive(:provided_and_enabled_with_repolist).with(
-          "os", "suse-12.3", "x86_64"
+          "os", "suse-12.4", "x86_64"
         ).and_return([true, {}])
       )
       allow_any_instance_of(ProvisionerService).to receive(:enable_repository).and_return(true)
@@ -108,7 +108,7 @@ describe Api::Node do
       ["os", "ceph", "ha", "openstack"].each do |feature|
         allow(::Crowbar::Repository).to(
           receive(:provided_and_enabled_with_repolist).with(
-            feature, "suse-12.3", "x86_64"
+            feature, "suse-12.4", "x86_64"
           ).and_return([true, {}])
         )
 
@@ -141,7 +141,7 @@ describe Api::Node do
     it "finds any node with the ceph addon deployed" do
       allow(::Crowbar::Repository).to(
         receive(:provided_and_enabled_with_repolist).with(
-          "ceph", "suse-12.3", "x86_64"
+          "ceph", "suse-12.4", "x86_64"
         ).and_return([true, {}])
       )
       allow_any_instance_of(ProvisionerService).to receive(:enable_repository).and_return(true)

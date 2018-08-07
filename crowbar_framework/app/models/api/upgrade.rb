@@ -264,7 +264,7 @@ module Api
 
           products = zypper_stream["product_list"]["product"]
 
-          os_available = repo_version_available?(products, "SLES", "12.3")
+          os_available = repo_version_available?(products, "SLES", "12.4")
           ret[:os] = {
             available: os_available,
             repos: [
