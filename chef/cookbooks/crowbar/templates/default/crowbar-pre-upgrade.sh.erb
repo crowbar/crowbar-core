@@ -60,6 +60,16 @@ if [ $ret != 0 ] ; then
     exit $ret
 fi
 
+# Make sure services are shut down - they may not have to be managed by pacemaker
+# (if clone_stateless_services is set to false)
+for i in $(systemctl list-units openstack-* --no-legend | cut -d" " -f1) ; do
+    log "Stopping service $i"
+    systemctl stop $i
+    systemctl disable $i
+done
+systemctl stop apache2
+systemctl disable apache2
+
 # Make sure sbd is shut down (if it was configured) before proceeding with next actions
 if systemctl --quiet is-enabled sbd 2>/dev/null ; then
     SBD_PIDFILE=$(systemctl show sbd.service --property PIDFile | sed -n 's/^PIDFile=//p')
