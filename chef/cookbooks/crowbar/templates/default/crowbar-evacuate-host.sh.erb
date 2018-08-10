@@ -64,7 +64,7 @@ if ! nova --insecure host-evacuate-live "$host" $blockmigrate; then
     exit 2
 fi
 
-while nova --insecure list --all-tenants --host "$host" --fields host,status 2>/dev/null | grep -e ACTIVE -e MIGRATING | grep -q "$host"; do
+while nova --insecure list --all-tenants --host "$host" --fields host,status 2>/dev/null | grep -e ACTIVE -e MIGRATING | grep "$host"; do
     log "There is still some VM running at $host..."
     sleep 10
 done
