@@ -945,6 +945,7 @@ module Api
         other_node_api.disable_pre_upgrade_attribute_for node.name
         # delete old pacemaker resources (from the node where old pacemaker is running)
         delete_pacemaker_resources other_node
+        shutdown_all_services_in_cluster node
         # start crowbar-join at the first node
         node_api.post_upgrade
         node_api.join_and_chef
@@ -1050,6 +1051,38 @@ module Api
           e.message +
             " Check /var/log/crowbar/node-upgrade.log for details."
         )
+      end
+
+      # Shutdown all remaining services on the nodes that are not being upgraded
+      # This would be solved by delete_pacemaker_resources, however if
+      # clone_stateless_services option is set to false, pacemaker does not manage
+      # all services so it's necessary to do an extra shutdown step
+      #
+      # As an argument there's a node that is currently being upgraded.
+      # There's no need to care about this one, we only need to shut down services
+      # on remaining nodes of the cluster.
+      def shutdown_all_services_in_cluster(node)
+        save_node_action("Making sure that OpenStack services are stopped")
+
+        cluster = node[:pacemaker][:config][:environment]
+
+        cluster_nodes = ::Node.find(
+          "pacemaker_config_environment:#{cluster} AND " \
+          "run_list_map:pacemaker-cluster-member AND " \
+          "NOT fqdn:#{node[:fqdn]}"
+        )
+        begin
+          execute_scripts_and_wait_for_finish(
+            cluster_nodes,
+            "/usr/sbin/crowbar-shutdown-remaining-services.sh",
+            timeouts[:shutdown_remaining_services]
+          )
+          Rails.logger.info("All OpenStack services were shut down.")
+        rescue StandardError => e
+          raise_node_upgrade_error(
+            "Error while shutting down ervices. " + e.message
+          )
+        end
       end
 
       # Evacuate all routers and loadbalancers away from the specified network

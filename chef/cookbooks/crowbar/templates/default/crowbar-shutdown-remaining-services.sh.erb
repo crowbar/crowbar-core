@@ -1,0 +1,41 @@
+#!/bin/bash
+#
+# This makes sure openstack related services are really shut down
+# We intend to do this by shutting down pacemaker resources, but if
+# clone_stateless_services is set to false, some services are not managed by pacemaker.
+
+LOGFILE=/var/log/crowbar/node-upgrade.log
+UPGRADEDIR=/var/lib/crowbar/upgrade
+mkdir -p "`dirname "$LOGFILE"`"
+exec >>"$LOGFILE" 2>&1
+
+log()
+{
+    set +x
+    echo "[$(date --iso-8601=ns)] [$$] $@"
+    set -x
+}
+
+log "Executing $BASH_SOURCE"
+
+set -x
+
+mkdir -p $UPGRADEDIR
+rm -f $UPGRADEDIR/crowbar-shutdown-remaining-services-failed
+
+if [[ -f $UPGRADEDIR/crowbar-shutdown-remaining-services-ok ]] ; then
+    log "Shut down of remaining services was already done."
+    exit 0
+fi
+
+# Make sure all services are shut down
+for i in $(systemctl list-units openstack* --no-legend | cut -d" " -f1) ; do
+    log "Stopping service $i"
+    systemctl stop $i
+    systemctl disable $i
+done
+systemctl stop apache2
+systemctl disable apache2
+
+touch $UPGRADEDIR/crowbar-shutdown-remaining-services-ok
+log "$BASH_SOURCE is finished."
