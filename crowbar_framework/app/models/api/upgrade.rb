@@ -948,6 +948,7 @@ module Api
         # start crowbar-join at the first node
         node_api.post_upgrade
         node_api.join_and_chef
+        re_enable_network_agents(node, node)
         node_api.save_node_state("controller", "upgraded")
       end
 
@@ -967,6 +968,7 @@ module Api
         # and we want the configuration to be updated first
         # (disabling attribute causes starting the services on the node)
         node_api.disable_pre_upgrade_attribute_for node.name
+        re_enable_network_agents(founder, node)
         node_api.save_node_state("controller", "upgraded")
       end
 
@@ -1086,11 +1088,41 @@ module Api
         )
         Rails.logger.info("Migrating loadbalancers away from #{hostname} was successful.")
 
+        args = [hostname, "disable"]
+        save_node_action("disabling network agents")
+        controller.wait_for_script_to_finish(
+          "/usr/sbin/crowbar-set-network-agents-state.sh",
+          timeouts[:set_network_agents_state],
+          args
+        )
+        Rails.logger.info("Disabling network agents on #{hostname} was successful.")
+
         network_node.run_ssh_cmd("mkdir -p /var/lib/crowbar/upgrade; touch #{migrated_file}")
         # Cleanup up the ok/failed state files, as we likely need to
         # run the script again on this node (to evacuate other nodes)
         controller.delete_script_exit_files("/usr/sbin/crowbar-router-migration.sh")
         controller.delete_script_exit_files("/usr/sbin/crowbar-lbaas-evacuation.sh")
+        controller.delete_script_exit_files("/usr/sbin/crowbar-set-network-agents-state.sh")
+      rescue StandardError => e
+        raise_node_upgrade_error(
+          e.message +
+          " Check /var/log/crowbar/node-upgrade.log at #{controller.name} for details."
+        )
+      end
+
+      # Re-enable neutron network agents on a just upgraded node
+      def re_enable_network_agents(controller, network_node)
+        hostname = network_node["hostname"]
+        save_node_action("Enabling neutron networking agents on #{hostname}")
+        args = [hostname, "enable"]
+        save_node_action("re-enabling network agents")
+        controller.wait_for_script_to_finish(
+          "/usr/sbin/crowbar-set-network-agents-state.sh",
+          timeouts[:set_network_agents_state],
+          args
+        )
+        Rails.logger.info("Enabling network agents on #{hostname} was successful.")
+        controller.delete_script_exit_files("/usr/sbin/crowbar-set-network-agents-state.sh")
       rescue StandardError => e
         raise_node_upgrade_error(
           e.message +
