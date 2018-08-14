@@ -586,6 +586,7 @@ describe Api::Upgrade do
       allow_any_instance_of(Api::Node).to receive(:disable_pre_upgrade_attribute_for).
         and_return(true)
       allow(Api::Upgrade).to receive(:delete_pacemaker_resources).and_return(true)
+      allow(Api::Upgrade).to receive(:shutdown_all_services_in_cluster).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:post_upgrade).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:join_and_chef).and_return(true)
       allow_any_instance_of(Api::Node).to receive(:save_node_state).and_return(true)
