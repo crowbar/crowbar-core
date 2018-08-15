@@ -184,6 +184,14 @@ template "/usr/sbin/crowbar-router-migration.sh" do
   action :create
 end
 
+template "/usr/sbin/crowbar-set-network-agents-state.sh" do
+  source "crowbar-set-network-agents-state.sh.erb"
+  mode "0755"
+  owner "root"
+  group "root"
+  action :create
+end
+
 neutron_server = search(:node, "run_list_map:neutron-server").first
 template "/etc/neutron/lbaas-connection.conf" do
   source "lbaas-connection.conf"
