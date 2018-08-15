@@ -27,7 +27,10 @@
       "use_migration": true
     },
     "database": {
-      "sql_engine": "mysql"
+      "sql_engine": "mysql",
+      "mysql": {
+          "server_root_password": "secret"
+      }
     }
   },
   "name": "testing.crowbar.com",
