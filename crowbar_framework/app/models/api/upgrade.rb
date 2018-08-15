@@ -484,6 +484,9 @@ module Api
           ::Crowbar::UpgradeStatus.new.end_step
           return
         end
+        # Note: Trying to (gu)estimate the size of the (compressed) database
+        #       SQL dump from the sizes report via the below query is probably a
+        #       bit far fetched. Is there a more realistic way for this?
         query = "SELECT SUM(pg_database_size(pg_database.datname)) FROM pg_database;"
         cmd = "PGPASSWORD=#{psql[:pass]} psql -t -h #{psql[:host]} -U #{psql[:user]} -c '#{query}'"
 
