@@ -1,0 +1,64 @@
+#!/bin/bash
+#
+# This script disables the l3, dhcp and l2 neutron agents on a certain
+# network node to avoid neutron to schedule any resource to this node
+# while it is being upgraded. After the upgrade completed the agents need
+# to be enabled again.
+
+LOGFILE=/var/log/crowbar/node-upgrade.log
+UPGRADEDIR=/var/lib/crowbar/upgrade
+mkdir -p "`dirname "$LOGFILE"`"
+exec >>"$LOGFILE" 2>&1
+
+hostname=$1
+mode=$2
+
+log()
+{
+    set +x
+    echo "[$(date --iso-8601=ns)] [$$] $@"
+    set -x
+}
+
+log "Executing $BASH_SOURCE"
+
+set -x
+
+mkdir -p $UPGRADEDIR
+rm -f $UPGRADEDIR/crowbar-set-network-agents-state-failed
+
+agent_order="dhcp l3 openvswitch linuxbridge"
+# Enable in the reverse order of disabling (e.g. l2-agents should to be
+# active before l3 and dhcp)
+if [[ "$mode" = "enable" ]]; then
+    agent_order="linuxbridge openvswitch l3 dhcp"
+elif [[ "$mode" != "disable" ]]; then
+    echo "Invalid mode \"$mode\" for crowbar-set-network-agents-state."
+    echo 255 > $UPGRADEDIR/crowbar-set-network-agents-state-failed
+    exit 255
+fi
+
+set +x
+source /root/.openrc
+set -x
+
+for agenttype in $agent_order; do
+    # Using "neutron" here as the "openstack" client doesn't support
+    # listing agents by type in Newton (got added with later versions)
+    id=$(/usr/bin/neutron --insecure agent-list --binary neutron-$agenttype-agent --host $hostname -c id -f value)
+    if [ -n "$id" ]; then
+        log "Setting state of $agenttype agent ($id) on node $hostname to $mode"
+        /usr/bin/openstack --insecure network agent set --$mode $id
+        ret=$?
+        if [ $ret != 0 ] ; then
+            echo "Failed to set state of $agenttype agent ($id) on host: $hostname"
+            echo $ret > $UPGRADEDIR/crowbar-set-network-agents-state-failed
+            exit $ret
+        fi
+    else
+        log "Node $hostname doesn't run $agenttype."
+    fi
+done
+
+touch $UPGRADEDIR/crowbar-set-network-agents-state-ok
+log "$BASH_SOURCE is finished."
