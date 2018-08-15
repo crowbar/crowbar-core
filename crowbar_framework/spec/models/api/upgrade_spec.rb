@@ -1060,12 +1060,25 @@ describe Api::Upgrade do
   end
 
   context "with a successful backup creation for OpenStack" do
+    let(:size_query) { "SELECT SUM(data_length + index_length) FROM information_schema.tables ;" }
+    let(:size_cmd) { "echo \"#{size_query}\" | mysql -N -u root -psecret" }
+    let(:db_node) do
+      Node.find_by_name("testing.crowbar.com")
+    end
+
     it "creates a backup for OpenStack" do
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
       ).with(:backup_openstack).and_return(true)
       allow(::Node).to receive(:find).with("roles:database-config-default").and_return(
-        [::Node.find_by_name("testing.crowbar.com")]
+        [db_node]
+      )
+      allow(db_node).to receive(:run_ssh_cmd).with(
+        size_cmd,
+        "60s"
+      ).and_return(
+        exit_code: 0,
+        stdout: "12345678"
       )
       allow(File).to receive(:exist?).with(
         "/var/lib/crowbar/backup/7-to-8-openstack_dump.sql.gz"
@@ -1073,11 +1086,6 @@ describe Api::Upgrade do
       allow(Api::Upgrade).to receive(:run_cmd).and_return(
         exit_code: 0,
         stdout_and_stderr: ""
-      )
-      allow(Api::Upgrade).to receive(:postgres_params).and_return(
-        user: "postgres",
-        pass: "password",
-        host: "8.8.8.8"
       )
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :end_step
@@ -1104,13 +1112,18 @@ describe Api::Upgrade do
   context "with a failed backup creation for OpenStack" do
     let(:crowbar_lib_dir) { "/var/lib/crowbar" }
     let(:dump_path) { "#{crowbar_lib_dir}/backup/7-to-8-openstack_dump.sql.gz" }
-    let(:query) { "SELECT SUM(pg_database_size(pg_database.datname)) FROM pg_database;" }
-    let(:size_cmd) { "PGPASSWORD=password psql -t -h 8.8.8.8 -U postgres -c '#{query}'" }
+    let(:size_query) { "SELECT SUM(data_length + index_length) FROM information_schema.tables ;" }
+    let(:size_cmd) { "echo \"#{size_query}\" | mysql -N -u root -psecret" }
     let(:dump_cmd) do
-      "PGPASSWORD=password pg_dumpall -h 8.8.8.8 -U postgres | gzip > #{dump_path}"
+      "sudo ssh -o ConnectTimeout=10 root@testing.crowbar.com " \
+      "\'mysqldump -u root -psecret --all-databases | gzip\' " \
+      "> #{dump_path}"
     end
     let(:disk_space_cmd) do
       "LANG=C df -x 'tmpfs' -x 'devtmpfs' -B1 -l --output='avail' #{crowbar_lib_dir} | tail -n1"
+    end
+    let(:db_node) do
+      Node.find_by_name("testing.crowbar.com")
     end
 
     it "fails to create a backup for OpenStack" do
@@ -1118,19 +1131,15 @@ describe Api::Upgrade do
         :start_step
       ).with(:backup_openstack).and_return(true)
       allow(::Node).to receive(:find).with("roles:database-config-default").and_return(
-        [::Node.find_by_name("testing.crowbar.com")]
+        [db_node]
       )
       allow(File).to receive(:exist?).with(dump_path).and_return(false)
-      allow(Api::Upgrade).to receive(:postgres_params).and_return(
-        user: "postgres",
-        pass: "password",
-        host: "8.8.8.8"
-      )
-      allow(Api::Upgrade).to receive(:run_cmd).with(
-        size_cmd
+      allow(db_node).to receive(:run_ssh_cmd).with(
+        size_cmd,
+        "60s"
       ).and_return(
         exit_code: 0,
-        stdout_and_stderr: ""
+        stdout: "12345678"
       )
       allow(Api::Upgrade).to receive(:run_cmd).with(
         disk_space_cmd
@@ -1156,17 +1165,16 @@ describe Api::Upgrade do
         :start_step
       ).with(:backup_openstack).and_return(true)
       allow(::Node).to receive(:find).with("roles:database-config-default").and_return(
-        [::Node.find_by_name("testing.crowbar.com")]
+        [db_node]
       )
       allow(File).to receive(:exist?).with(dump_path).and_return(false)
-      allow(Api::Upgrade).to receive(:postgres_params).and_return(
-        user: "postgres",
-        pass: "password",
-        host: "8.8.8.8"
-      )
-      allow(Api::Upgrade).to receive(:run_cmd).with(size_cmd).and_return(
+      allow(db_node).to receive(:run_ssh_cmd).with(
+        size_cmd,
+        "60s"
+      ).and_return(
         exit_code: 1,
-        stdout_and_stderr: "Error"
+        stdout: "12345678",
+        stderr: "Error"
       )
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :end_step
@@ -1180,23 +1188,19 @@ describe Api::Upgrade do
         :start_step
       ).with(:backup_openstack).and_return(true)
       allow(::Node).to receive(:find).with("roles:database-config-default").and_return(
-        [::Node.find_by_name("testing.crowbar.com")]
+        [db_node]
       )
       allow(File).to receive(:exist?).with(dump_path).and_return(false)
-      allow(Api::Upgrade).to receive(:postgres_params).and_return(
-        user: "postgres",
-        pass: "password",
-        host: "8.8.8.8"
-      )
       allow(Api::Upgrade).to receive(:run_cmd).with(disk_space_cmd).and_return(
         exit_code: 1,
         stdout_and_stderr: "Error"
       )
-      allow(Api::Upgrade).to receive(:run_cmd).with(
-        size_cmd
+      allow(db_node).to receive(:run_ssh_cmd).with(
+        size_cmd,
+        "60s"
       ).and_return(
         exit_code: 0,
-        stdout_and_stderr: ""
+        stdout: "12345678"
       )
       allow(Api::Upgrade).to receive(:run_cmd).with(
         dump_cmd
@@ -1216,17 +1220,15 @@ describe Api::Upgrade do
         :start_step
       ).with(:backup_openstack).and_return(true)
       allow(::Node).to receive(:find).with("roles:database-config-default").and_return(
-        [::Node.find_by_name("testing.crowbar.com")]
+        [db_node]
       )
       allow(File).to receive(:exist?).with(dump_path).and_return(false)
-      allow(Api::Upgrade).to receive(:postgres_params).and_return(
-        user: "postgres",
-        pass: "password",
-        host: "8.8.8.8"
-      )
-      allow(Api::Upgrade).to receive(:run_cmd).with(size_cmd).and_return(
+      allow(db_node).to receive(:run_ssh_cmd).with(
+        size_cmd,
+        "60s"
+      ).and_return(
         exit_code: 0,
-        stdout_and_stderr: "1000000"
+        stdout: "1000000"
       )
       allow(Api::Upgrade).to receive(:run_cmd).with(disk_space_cmd).and_return(
         exit_code: 0,
