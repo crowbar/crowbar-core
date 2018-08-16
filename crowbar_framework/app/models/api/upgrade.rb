@@ -477,24 +477,34 @@ module Api
           return
         end
 
-        psql = postgres_params
-        if psql.nil?
+        db_node = openstack_db_node
+        if db_node.nil?
           # This can happen if only the crowbar node was deployed and will be upgraded
           Rails.logger.warn("Can not get database parameters for OpenStack backup. Skipping...")
           ::Crowbar::UpgradeStatus.new.end_step
           return
         end
-        query = "SELECT SUM(pg_database_size(pg_database.datname)) FROM pg_database;"
-        cmd = "PGPASSWORD=#{psql[:pass]} psql -t -h #{psql[:host]} -U #{psql[:user]} -c '#{query}'"
 
+        db_user = "root"
+        db_password = db_node["database"]["mysql"]["server_root_password"]
+
+        # Note: Trying to (gu)estimate the size of the (compressed) database
+        #       SQL dump from the sizes report via the below query is probably a
+        #       bit far fetched. Is there a more realistic way for this?
+        size_query = "SELECT SUM(data_length + index_length) FROM information_schema.tables ;"
+        cmd = "echo \"#{size_query}\" | mysql -N -u #{db_user} -p#{db_password}"
         Rails.logger.debug("Checking size of OpenStack database")
-        db_size = run_cmd(cmd)
+        # Note: We need to run this on a database node since the mysql root
+        #       user doesn't have remote access to the mysql server.
+        db_size = db_node.run_ssh_cmd(cmd, "60s")
         unless db_size[:exit_code].zero?
           Rails.logger.error(
-            "Failed to check size of OpenStack database: #{db_size[:stdout_and_stderr]}"
+            "Failed to check size of OpenStack database: \n" \
+            "    stdout: #{db_size[:stdout]} \n" \
+            "    stderr: #{db_size[:stderr]}"
           )
           raise ::Crowbar::Error::Upgrade::DatabaseSizeError.new(
-            db_size[:stdout_and_stderr]
+            "stdout: #{db_size[:stdout]}\n stderr:#{db_size[:stderr]}"
           )
         end
 
@@ -507,15 +517,20 @@ module Api
             free_space[:stdout_and_stderr]
           )
         end
-        if free_space[:stdout_and_stderr].strip.to_i < db_size[:stdout_and_stderr].strip.to_i
+        if free_space[:stdout_and_stderr].strip.to_i < db_size[:stdout].strip.to_i
           Rails.logger.error("Not enough free disk space to create the OpenStack database dump")
           raise ::Crowbar::Error::Upgrade::NotEnoughDiskSpaceError.new("#{crowbar_lib_dir}/backup")
         end
 
         Rails.logger.debug("Creating OpenStack database dump")
-        db_dump = run_cmd(
-          "PGPASSWORD=#{psql[:pass]} pg_dumpall -h #{psql[:host]} -U #{psql[:user]} | " \
-            "gzip > #{dump_path}"
+
+        # Note: We need to run this on a database node since the mysql root user
+        #       doesn't have remote access to the mysql server. But we can't
+        #       use Node.run_ssh_cmd here because we want to redirect to a file
+        #       on the crowbar node.
+        db_dump = run_cmd("sudo ssh -o ConnectTimeout=10 root@#{db_node.name} " \
+                          "\'mysqldump -u #{db_user} -p#{db_password} --all-databases | gzip\' " \
+                          "> #{dump_path}"
         )
         unless db_dump[:exit_code].zero?
           Rails.logger.error(
@@ -1793,17 +1808,13 @@ module Api
       #
       # openstackbackup helpers
       #
-      def postgres_params
+      def openstack_db_node
         db_node = ::Node.find("roles:database-config-default").first
         if db_node.nil?
           Rails.logger.warn("No node with role 'database-config-default' found")
           return nil
         end
-        {
-          user: "postgres",
-          pass: db_node[:postgresql][:password][:postgres],
-          host: db_node[:postgresql].config[:listen_addresses]
-        }
+        db_node
       end
 
       #
