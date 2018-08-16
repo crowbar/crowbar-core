@@ -70,10 +70,21 @@ done
 
 <% end %>
 
+# It's possible services are not managed by pacemaker (if clone_stateless_services was not set),
+# so to make sure that services are stopped, use additional systemctl commands.
+log "Stopping OpenStack services..."
+
+# We do not want to stop neutron services just yet, they are needed in later upgrade stage
+for i in $(systemctl list-units openstack-* --no-legend | cut -d" " -f1 | grep -v neutron) ; do
+    log "Stopping service $i"
+    systemctl stop $i
+    systemctl disable $i
+done
+
 <% else %>
 
 # Stop openstack services on this node.
-# Note that for HA setup, they should be stopped by pacemaker.
+# Normally for HA setup, they should be stopped by pacemaker.
 log "Stopping OpenStack services..."
 
 for i in /usr/sbin/rcopenstack-* \

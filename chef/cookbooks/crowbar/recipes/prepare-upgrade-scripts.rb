@@ -167,6 +167,15 @@ template "/usr/sbin/crowbar-delete-pacemaker-resources.sh" do
   )
 end
 
+template "/usr/sbin/crowbar-shutdown-remaining-services.sh" do
+  source "crowbar-shutdown-remaining-services.sh.erb"
+  mode "0755"
+  owner "root"
+  group "root"
+  action :create
+  only_if { use_ha }
+end
+
 template "/usr/sbin/crowbar-router-migration.sh" do
   source "crowbar-router-migration.sh.erb"
   mode "0755"
