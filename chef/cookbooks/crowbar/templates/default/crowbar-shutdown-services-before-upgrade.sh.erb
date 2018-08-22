@@ -34,19 +34,6 @@ fi
 
 rm -f $UPGRADEDIR/crowbar-shutdown-services-before-upgrade-failed
 
-<% if @nova_controller && (!@use_ha || @cluster_founder) %>
-# Remove nova-cert service which has been deprecated in Newton and is not present in Pike
-
-set +x
-source /root/.openrc
-set -x
-
-for id in `openstack --insecure compute service list --service nova-cert -f value -c ID`; do
-  log "Removing nova-cert service $id"
-  openstack compute service delete $id
-done
-<% end %>
-
 <% if @use_ha %>
 
 <% if @cluster_founder %>

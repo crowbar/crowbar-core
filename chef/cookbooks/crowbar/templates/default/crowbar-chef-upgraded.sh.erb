@@ -45,5 +45,19 @@ rm -f /usr/sbin/crowbar_join_tmp
 systemctl start cron
 systemctl enable cron
 
+# Remove nova-cert service which has been deprecated in Newton and is not present in Pike
+<% if @nova_controller %>
+
+set +x
+source /root/.openrc
+set -x
+
+for id in `openstack --insecure compute service list --service nova-cert -f value -c ID`; do
+  log "Removing nova-cert service $id"
+  openstack compute service delete $id
+done
+<% end %>
+
+
 touch $UPGRADEDIR/crowbar-chef-upgraded-ok
 log "$BASH_SOURCE is finished."

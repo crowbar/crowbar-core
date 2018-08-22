@@ -89,8 +89,7 @@ template "/usr/sbin/crowbar-shutdown-services-before-upgrade.sh" do
   action :create
   variables(
     use_ha: use_ha || remote_node,
-    cluster_founder: is_cluster_founder,
-    nova_controller: roles.include?("nova-controller")
+    cluster_founder: is_cluster_founder
   )
 end
 
@@ -233,6 +232,7 @@ template "/usr/sbin/crowbar-chef-upgraded.sh" do
   owner "root"
   group "root"
   variables(
-    crowbar_join: "#{web_path}/crowbar_join.sh"
+    crowbar_join: "#{web_path}/crowbar_join.sh",
+    nova_controller: roles.include?("nova-controller")
   )
 end
