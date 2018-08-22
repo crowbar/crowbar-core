@@ -42,13 +42,17 @@ set +x
 source /root/.openrc
 set -x
 
+# We need "neutron" and "openstack" here which might not be there if we are
+# running this script on a network node.
+zypper --non-interactive install python-neutronclient python-openstackclient
+
 for agenttype in $agent_order; do
     # Using "neutron" here as the "openstack" client doesn't support
     # listing agents by type in Newton (got added with later versions)
     id=$(/usr/bin/neutron --insecure agent-list --binary neutron-$agenttype-agent --host $hostname -c id -f value)
     if [ -n "$id" ]; then
         log "Setting state of $agenttype agent ($id) on node $hostname to $mode"
-        /usr/bin/openstack --insecure network agent set --$mode $id
+        /usr/bin/openstack --os-interface internal --insecure network agent set --$mode $id
         ret=$?
         if [ $ret != 0 ] ; then
             echo "Failed to set state of $agenttype agent ($id) on host: $hostname"
