@@ -52,7 +52,7 @@ for agenttype in $agent_order; do
     id=$(/usr/bin/neutron --insecure agent-list --binary neutron-$agenttype-agent --host $hostname -c id -f value)
     if [ -n "$id" ]; then
         log "Setting state of $agenttype agent ($id) on node $hostname to $mode"
-        /usr/bin/openstack --insecure network agent set --$mode $id
+        /usr/bin/openstack --os-interface internal --insecure network agent set --$mode $id
         ret=$?
         if [ $ret != 0 ] ; then
             echo "Failed to set state of $agenttype agent ($id) on host: $hostname"
