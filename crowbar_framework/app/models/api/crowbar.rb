@@ -136,7 +136,7 @@ module Api
 
         # Check if roles important for non-disruptive upgrade are deployed in the cluster
         clustered_roles = [
-          "database-server",
+          "mysql-server",
           "rabbitmq-server",
           "keystone-server",
           "glance-server",
@@ -207,12 +207,12 @@ module Api
         # roles_clusters = {
         #   "neutron-server": "cluster:cluster1",
         #   "neutron-network": "cluster:cluster1",
-        #   "database-server": "cluster:cluster2",
+        #   "mysql-server": "cluster:cluster2",
         #   "rabbitmq-server": "cluster:cluster3"
         # }
         # clusters_roles = {
         #   "cluster:cluster1": ["neutron-server", "neutron-network"],
-        #   "cluster:cluster2": ["database-server"],
+        #   "cluster:cluster2": ["mysql-server"],
         #   "cluster:cluster3": ["rabbitmq-server"]
         # }
         deployment_supported =
@@ -231,16 +231,16 @@ module Api
                 # neutron-network + neutron-server in separate cluster
                 (clusters_roles[roles_clusters["neutron-network"]].length == 2 &&
                 roles_clusters["neutron-network"] == roles_clusters["neutron-server"]) ||
-                # database-server + rabbitmq-server in separate cluster
-                (clusters_roles[roles_clusters["database-server"]].length == 2 &&
-                roles_clusters["database-server"] == roles_clusters["rabbitmq-server"])
+                # mysql-server + rabbitmq-server in separate cluster
+                (clusters_roles[roles_clusters["mysql-server"]].length == 2 &&
+                roles_clusters["mysql-server"] == roles_clusters["rabbitmq-server"])
 
           when 3
-            # neutron-network and database-server + rabbitmq-server in separate clusters
+            # neutron-network and mysql-server + rabbitmq-server in separate clusters
             # rest of *-server roles is implicitly on the third cluster
             true if clusters_roles[roles_clusters["neutron-network"]].length == 1 &&
-                clusters_roles[roles_clusters["database-server"]].length == 2 &&
-                roles_clusters["database-server"] == roles_clusters["rabbitmq-server"]
+                clusters_roles[roles_clusters["mysql-server"]].length == 2 &&
+                roles_clusters["mysql-server"] == roles_clusters["rabbitmq-server"]
           end
         ret[:unsupported_cluster_setup] = true unless deployment_supported
 
@@ -250,9 +250,12 @@ module Api
       def deployment_check
         ret = {}
         # Only allow the upgrade for mariadb setup
-        # TODO: update the search if we allow multiple proposals
-        db_node = ::Node.find("roles:database-server").first
-        ret[:wrong_sql_engine] = true if db_node[:database][:sql_engine] != "mysql"
+        db_nodes = ::Node.find("roles:mysql-server")
+        return { wrong_sql_engine: true } if db_nodes.empty?
+        if db_nodes[0][:database][:sql_engine] != "mysql"
+          Rails.logger.warn("SQL engine is still set to postgresql")
+          return { wrong_sql_engine: true }
+        end
         # Make sure that node with nova-compute is not upgraded before nova-controller
         nova_order = BarclampCatalog.run_order("nova")
         ::Node.find("roles:nova-compute-*").each do |node|
