@@ -15,7 +15,7 @@
 #
 
 if CrowbarRoleRecipe.node_state_valid_for_role?(node, "ipmi", "ipmi")
-  if ["discovering", "hardware-installing", "readying"].include? node[:state]
+  if ["discovering", "hardware-installing", "readying", "ready"].include? node[:state]
     include_recipe "ipmi::ipmi-discover"
   end
 
