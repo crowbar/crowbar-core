@@ -1,81 +1,83 @@
 ---
-suse-12.3:
+suse-12.4:
   aarch64:
-    sles12-sp3-pool:
-      name: "SLES12-SP3-Pool"
+    sles12-sp4-pool:
+      name: "SLES12-SP4-Pool"
       required: "mandatory"
       features: ["os"]
       repomd:
-        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP3:GA/SLES/12.3/POOL/aarch64"
+        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP4:GA/SLES/12.4/POOL/aarch64"
       url:
-      smt_path: "SUSE/Products/SLE-SERVER/12-SP3/aarch64/product"
+      smt_path: "SUSE/Products/SLE-SERVER/12-SP4/aarch64/product"
       ask_on_error: false
-    sles12-sp3-updates:
-      name: "SLES12-SP3-Updates"
+    sles12-sp4-updates:
+      name: "SLES12-SP4-Updates"
       required: "mandatory"
       features: ["os"]
       repomd:
-        tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-SERVER:12-SP3:aarch64/update"
+        tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-SERVER:12-SP4:aarch64/update"
       url:
-      smt_path: "SUSE/Updates/SLE-SERVER/12-SP3/aarch64/update"
+      smt_path: "SUSE/Updates/SLE-SERVER/12-SP4/aarch64/update"
       ask_on_error: false
     cloud:
       name: "Cloud"
       required: "mandatory"
       features: ["openstack"]
       repomd:
-        tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP3:Update:Products:Cloud8/suse-openstack-cloud-crowbar/8/cd/aarch64",
-              "obsproduct://build.suse.de/Devel:Cloud:8:Staging/suse-openstack-cloud-crowbar/8/cd/aarch64",
-              "obsproduct://build.suse.de/Devel:Cloud:8/suse-openstack-cloud-crowbar/8/cd/aarch64"]
+        tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP4:Update:Products:Cloud9/suse-openstack-cloud-crowbar/9/cd/aarch64",
+              "obsproduct://build.suse.de/Devel:Cloud:9:Rocky/suse-openstack-cloud-crowbar/9/cd/aarch64",
+              "obsproduct://build.suse.de/Devel:Cloud:9:Queens/suse-openstack-cloud-crowbar/9/cd/aarch64",
+              "obsproduct://build.suse.de/Devel:Cloud:9:Staging/suse-openstack-cloud-crowbar/9/cd/aarch64",
+              "obsproduct://build.suse.de/Devel:Cloud:9/suse-openstack-cloud-crowbar/9/cd/aarch64"]
         fingerprint: []
       url:
       ask_on_error: false
-    suse-openstack-cloud-8-pool:
-      name: "SUSE-OpenStack-Cloud-Crowbar-8-Pool"
+    suse-openstack-cloud-9-pool:
+      name: "SUSE-OpenStack-Cloud-Crowbar-9-Pool"
       required: "optional"
       features: ["openstack"]
       repomd:
-        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP3:Update:Products:Cloud8/suse-openstack-cloud-crowbar/8/POOL/aarch64"
+        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP4:Update:Products:Cloud9/suse-openstack-cloud-crowbar/9/POOL/aarch64"
         fingerprint: ""
       url:
-      smt_path: "SUSE/Products/OpenStack-Cloud/8/aarch64/product"
+      smt_path: "SUSE/Products/OpenStack-Cloud/9/aarch64/product"
       ask_on_error: false
-    suse-openstack-cloud-8-updates:
-      name: "SUSE-OpenStack-Cloud-Crowbar-8-Updates"
+    suse-openstack-cloud-9-updates:
+      name: "SUSE-OpenStack-Cloud-Crowbar-9-Updates"
       required: "optional"
       features: ["openstack"]
       repomd:
-        tag: "obsrepository://build.suse.de/SUSE:Updates:OpenStack-Cloud-Crowbar:8:aarch64/update"
+        tag: "obsrepository://build.suse.de/SUSE:Updates:OpenStack-Cloud-Crowbar:9:aarch64/update"
         fingerprint: ""
       url:
-      smt_path: "SUSE/Updates/OpenStack-Cloud/8/aarch64/update"
+      smt_path: "SUSE/Updates/OpenStack-Cloud/9/aarch64/update"
       ask_on_error: false
-    sle12-sp3-ha-pool:
-      name: "SLE12-SP3-HA-Pool"
+    sle12-sp4-ha-pool:
+      name: "SLE12-SP4-HA-Pool"
       required: "optional"
       features: ["ha"]
       repomd:
-        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP3:GA/sle-ha/12.3/POOL/aarch64"
+        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP4:GA/sle-ha/12.4/POOL/aarch64"
         fingerprint: ""
       url:
-      smt_path: "SUSE/Products/SLE-HA/12-SP3/aarch64/product"
+      smt_path: "SUSE/Products/SLE-HA/12-SP4/aarch64/product"
       ask_on_error: false
-    sle12-sp3-ha-updates:
-      name: "SLE12-SP3-HA-Updates"
+    sle12-sp4-ha-updates:
+      name: "SLE12-SP4-HA-Updates"
       required: "optional"
       features: ["ha"]
       repomd:
-        tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-HA:12-SP3:aarch64/update"
+        tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-HA:12-SP4:aarch64/update"
         fingerprint: ""
       url:
-      smt_path: "SUSE/Updates/SLE-HA/12-SP3/aarch64/update"
+      smt_path: "SUSE/Updates/SLE-HA/12-SP4/aarch64/update"
       ask_on_error: false
     suse-enterprise-storage-5-pool:
       name: "SUSE-Enterprise-Storage-5-Pool"
       required: "optional"
       features: ["ceph"]
       repomd:
-        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP3:Update:Products:SES5/ses/5/POOL/aarch64"
+        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP4:Update:Products:SES5/ses/5/POOL/aarch64"
         fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Products/Storage/5/aarch64/product"
@@ -96,83 +98,85 @@ suse-12.3:
       url:
       ask_on_error: false
   x86_64:
-    sles12-sp3-pool:
-      name: "SLES12-SP3-Pool"
+    sles12-sp4-pool:
+      name: "SLES12-SP4-Pool"
       required: "mandatory"
       features: ["os"]
       repomd:
-        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP3:GA/SLES/12.3/POOL/x86_64"
+        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP4:GA/SLES/12.4/POOL/x86_64"
         fingerprint: ""
       url:
-      smt_path: "SUSE/Products/SLE-SERVER/12-SP3/x86_64/product"
+      smt_path: "SUSE/Products/SLE-SERVER/12-SP4/x86_64/product"
       ask_on_error: false
-    sles12-sp3-updates:
-      name: "SLES12-SP3-Updates"
+    sles12-sp4-updates:
+      name: "SLES12-SP4-Updates"
       required: "mandatory"
       features: ["os"]
       repomd:
-        tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-SERVER:12-SP3:x86_64/update"
+        tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-SERVER:12-SP4:x86_64/update"
         fingerprint: ""
       url:
-      smt_path: "SUSE/Updates/SLE-SERVER/12-SP3/x86_64/update"
+      smt_path: "SUSE/Updates/SLE-SERVER/12-SP4/x86_64/update"
       ask_on_error: false
     cloud:
       name: "Cloud"
       required: "mandatory"
       features: ["openstack"]
       repomd:
-        tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP3:Update:Products:Cloud8/suse-openstack-cloud-crowbar/8/cd/x86_64",
-              "obsproduct://build.suse.de/Devel:Cloud:8:Staging/suse-openstack-cloud-crowbar/8/cd/x86_64",
-              "obsproduct://build.suse.de/Devel:Cloud:8/suse-openstack-cloud-crowbar/8/cd/x86_64"]
+        tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP4:Update:Products:Cloud9/suse-openstack-cloud-crowbar/9/cd/x86_64",
+              "obsproduct://build.suse.de/Devel:Cloud:9:Rocky/suse-openstack-cloud-crowbar/9/cd/x86_64",
+              "obsproduct://build.suse.de/Devel:Cloud:9:Queens/suse-openstack-cloud-crowbar/9/cd/x86_64",
+              "obsproduct://build.suse.de/Devel:Cloud:9:Staging/suse-openstack-cloud-crowbar/9/cd/x86_64",
+              "obsproduct://build.suse.de/Devel:Cloud:9/suse-openstack-cloud-crowbar/9/cd/x86_64"]
         fingerprint: []
       url:
       ask_on_error: false
-    suse-openstack-cloud-8-pool:
-      name: "SUSE-OpenStack-Cloud-Crowbar-8-Pool"
+    suse-openstack-cloud-9-pool:
+      name: "SUSE-OpenStack-Cloud-Crowbar-9-Pool"
       required: "optional"
       features: ["openstack"]
       repomd:
-        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP3:Update:Products:Cloud8/suse-openstack-cloud-crowbar/8/POOL/x86_64"
+        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP4:Update:Products:Cloud9/suse-openstack-cloud-crowbar/9/POOL/x86_64"
         fingerprint: ""
       url:
-      smt_path: "SUSE/Products/OpenStack-Cloud/8/x86_64/product"
+      smt_path: "SUSE/Products/OpenStack-Cloud/9/x86_64/product"
       ask_on_error: false
-    suse-openstack-cloud-8-updates:
-      name: "SUSE-OpenStack-Cloud-Crowbar-8-Updates"
+    suse-openstack-cloud-9-updates:
+      name: "SUSE-OpenStack-Cloud-Crowbar-9-Updates"
       required: "optional"
       features: ["openstack"]
       repomd:
-        tag: "obsrepository://build.suse.de/SUSE:Updates:OpenStack-Cloud-Crowbar:8:x86_64/update"
+        tag: "obsrepository://build.suse.de/SUSE:Updates:OpenStack-Cloud-Crowbar:9:x86_64/update"
         fingerprint: ""
       url:
-      smt_path: "SUSE/Updates/OpenStack-Cloud/8/x86_64/update"
+      smt_path: "SUSE/Updates/OpenStack-Cloud/9/x86_64/update"
       ask_on_error: false
-    sle12-sp3-ha-pool:
-      name: "SLE12-SP3-HA-Pool"
+    sle12-sp4-ha-pool:
+      name: "SLE12-SP4-HA-Pool"
       required: "optional"
       features: ["ha"]
       repomd:
-        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP3:GA/sle-ha/12.3/POOL/x86_64"
+        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP4:GA/sle-ha/12.4/POOL/x86_64"
         fingerprint: ""
       url:
-      smt_path: "SUSE/Products/SLE-HA/12-SP3/x86_64/product"
+      smt_path: "SUSE/Products/SLE-HA/12-SP4/x86_64/product"
       ask_on_error: false
-    sle12-sp3-ha-updates:
-      name: "SLE12-SP3-HA-Updates"
+    sle12-sp4-ha-updates:
+      name: "SLE12-SP4-HA-Updates"
       required: "optional"
       features: ["ha"]
       repomd:
-        tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-HA:12-SP3:x86_64/update"
+        tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-HA:12-SP4:x86_64/update"
         fingerprint: ""
       url:
-      smt_path: "SUSE/Updates/SLE-HA/12-SP3/x86_64/update"
+      smt_path: "SUSE/Updates/SLE-HA/12-SP4/x86_64/update"
       ask_on_error: false
     suse-enterprise-storage-5-pool:
       name: "SUSE-Enterprise-Storage-5-Pool"
       required: "optional"
       features: ["ceph"]
       repomd:
-        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP3:Update:Products:SES5/ses/5/POOL/x86_64"
+        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP4:Update:Products:SES5/ses/5/POOL/x86_64"
         fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Products/Storage/5/x86_64/product"
@@ -192,34 +196,36 @@ suse-12.3:
       url:
       ask_on_error: false
   s390x:
-    sles12-sp3-pool:
-      name: "SLES12-SP3-Pool"
+    sles12-sp4-pool:
+      name: "SLES12-SP4-Pool"
       required: "optional"
       features: ["os"]
       repomd:
-        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP3:GA/SLES/12.3/POOL/s390x"
+        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP4:GA/SLES/12.4/POOL/s390x"
         fingerprint: ""
       url:
-      smt_path: "SUSE/Products/SLE-SERVER/12-SP3/s390x/product"
+      smt_path: "SUSE/Products/SLE-SERVER/12-SP4/s390x/product"
       ask_on_error: false
-    sles12-sp3-updates:
-      name: "SLES12-SP3-Updates"
+    sles12-sp4-updates:
+      name: "SLES12-SP4-Updates"
       required: "optional"
       features: ["os"]
       repomd:
-        tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-SERVER:12-SP3:s390x/update"
+        tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-SERVER:12-SP4:s390x/update"
         fingerprint: ""
       url:
-      smt_path: "SUSE/Updates/SLE-SERVER/12-SP3/s390x/update"
+      smt_path: "SUSE/Updates/SLE-SERVER/12-SP4/s390x/update"
       ask_on_error: false
     cloud:
       name: "Cloud"
       required: "mandatory"
       features: ["openstack"]
       repomd:
-        tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP3:Update:Products:Cloud8/suse-openstack-cloud-crowbar/8/cd/s390x",
-              "obsproduct://build.suse.de/Devel:Cloud:8:Staging/suse-openstack-cloud-crowbar/8/cd/s390x",
-              "obsproduct://build.suse.de/Devel:Cloud:8/suse-openstack-cloud-crowbar/8/cd/s390x"]
+        tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP4:Update:Products:Cloud9/suse-openstack-cloud-crowbar/9/cd/s390x",
+              "obsproduct://build.suse.de/Devel:Cloud:9:Rocky/suse-openstack-cloud-crowbar/9/cd/s390x",
+              "obsproduct://build.suse.de/Devel:Cloud:9:Queens/suse-openstack-cloud-crowbar/9/cd/s390x",
+              "obsproduct://build.suse.de/Devel:Cloud:9:Staging/suse-openstack-cloud-crowbar/9/cd/s390x",
+              "obsproduct://build.suse.de/Devel:Cloud:9/suse-openstack-cloud-crowbar/9/cd/s390x"]
         fingerprint: []
       url:
       ask_on_error: false
@@ -228,43 +234,43 @@ suse-12.3:
       required: "recommended"
       url:
       ask_on_error: false
-    suse-openstack-cloud-8-pool:
-      name: "SUSE-OpenStack-Cloud-Crowbar-8-Pool"
+    suse-openstack-cloud-9-pool:
+      name: "SUSE-OpenStack-Cloud-Crowbar-9-Pool"
       required: "optional"
       features: ["openstack"]
       repomd:
-        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP3:Update:Products:Cloud8/suse-openstack-cloud-crowbar/8/POOL/s390x"
+        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP4:Update:Products:Cloud9/suse-openstack-cloud-crowbar/9/POOL/s390x"
         fingerprint: ""
       url:
-      smt_path: "SUSE/Products/OpenStack-Cloud/8/s390x/product"
+      smt_path: "SUSE/Products/OpenStack-Cloud/9/s390x/product"
       ask_on_error: false
-    suse-openstack-cloud-8-updates:
-      name: "SUSE-OpenStack-Cloud-Crowbar-8-Updates"
+    suse-openstack-cloud-9-updates:
+      name: "SUSE-OpenStack-Cloud-Crowbar-9-Updates"
       required: "optional"
       features: ["openstack"]
       repomd:
-        tag: "obsrepository://build.suse.de/SUSE:Updates:OpenStack-Cloud-Crowbar:8:s390x/update"
+        tag: "obsrepository://build.suse.de/SUSE:Updates:OpenStack-Cloud-Crowbar:9:s390x/update"
         fingerprint: ""
       url:
-      smt_path: "SUSE/Updates/OpenStack-Cloud/8/s390x/update"
+      smt_path: "SUSE/Updates/OpenStack-Cloud/9/s390x/update"
       ask_on_error: false
-    sle12-sp3-ha-pool:
-      name: "SLE12-SP3-HA-Pool"
+    sle12-sp4-ha-pool:
+      name: "SLE12-SP4-HA-Pool"
       required: "optional"
       features: ["ha"]
       repomd:
-        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP3:GA/sle-ha/12.3/POOL/s390x"
+        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP4:GA/sle-ha/12.4/POOL/s390x"
         fingerprint: ""
       url:
-      smt_path: "SUSE/Products/SLE-HA/12-SP3/s390x/product"
+      smt_path: "SUSE/Products/SLE-HA/12-SP4/s390x/product"
       ask_on_error: false
-    sle12-sp3-ha-updates:
-      name: "SLE12-SP3-HA-Updates"
+    sle12-sp4-ha-updates:
+      name: "SLE12-SP4-HA-Updates"
       required: "optional"
       features: ["ha"]
       repomd:
-        tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-HA:12-SP3:s390x/update"
+        tag: "obsrepository://build.suse.de/SUSE:Updates:SLE-HA:12-SP4:s390x/update"
         fingerprint: ""
       url:
-      smt_path: "SUSE/Updates/SLE-HA/12-SP3/s390x/update"
+      smt_path: "SUSE/Updates/SLE-HA/12-SP4/s390x/update"
       ask_on_error: false
