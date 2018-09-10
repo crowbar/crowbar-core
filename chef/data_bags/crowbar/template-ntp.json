@@ -11,7 +11,7 @@
     "ntp": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 100,
+      "schema-revision": 300,
       "element_states": {
         "ntp-server": [ "readying", "ready", "applying" ],
         "ntp-client": [ "readying", "ready", "applying" ]
