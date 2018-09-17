@@ -7,7 +7,7 @@ describe BarclampLibrary::Barclamp::Inventory::Disk do
   before(:each) do
     @chef_run = ::ChefSpec::Runner.new
     @node = @chef_run.node
-    @node.default[:block_device] = {
+    @node.automatic[:block_device] = {
       dm0: { removable: "0" },
       xvd1: { removable: "0" },
       xvd2: { removable: "1" }
@@ -16,16 +16,15 @@ describe BarclampLibrary::Barclamp::Inventory::Disk do
 
   specify "#unclaimed returns the proper number of unclaimed devices" do
     a = BarclampLibrary::Barclamp::Inventory::Disk
-    expect(a).to receive(:`).exactly(5).times.and_return(`exit 1`)
+    expect(a).to receive(:`).exactly(3).times.and_return(`exit 1`)
     expect(::File).to receive(:exist?).with("/sys/block/dm0/dm/uuid").and_return(true)
     expect(::File).to receive(:exist?).with("/sys/block/xvd2/dm/uuid").and_return(false)
-    expect(::File).to receive(:exist?).with("/sys/block/sr0/dm/uuid").and_return(false)
     expect(::File).to receive(:open).exactly(1).times.with(
       "/sys/block/dm0/dm/uuid"
     ).and_yield(StringIO.new("mpath-test"))
     # return holders
-    expect(::Dir).to receive(:entries).exactly(5).times.and_return([])
-    expect(a.unclaimed(@node).length).to eq(3)
+    expect(::Dir).to receive(:entries).exactly(3).times.and_return([])
+    expect(a.unclaimed(@node).length).to eq(2)
   end
 
   describe "multipath features" do
