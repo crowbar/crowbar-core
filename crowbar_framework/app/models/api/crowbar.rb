@@ -272,6 +272,7 @@ module Api
             # ceph roles are not allowed, but they are already handled by different check
             # so we treat them as OK in this one
             next if role.start_with?("ceph")
+            next if role == "neutron-sdn-cisco-aci-agents"
             r = RoleObject.find_role_by_name(role)
             next if r.proposal?
             b = r.barclamp
