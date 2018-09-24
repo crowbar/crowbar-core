@@ -807,6 +807,7 @@ en:
         clusters_health:
           crm_failures: 'Please check that all cluster resources are online or refer to the SUSE High Availability documentation for possible troubleshooting.'
           failed_actions: 'Please clean the resource history and re−check the current state with "crm_resource -C" or refer to the SUSE High Availability documentation for possible troubleshooting.'
+          unready_nodes: 'Some pacemaker nodes are in maintenance or standby node. Make sure all nodes are online and ready.'
           help:
             default: 'Make sure clusters are healthy'
         no_resources:
