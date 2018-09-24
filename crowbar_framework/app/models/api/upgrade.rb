@@ -268,8 +268,8 @@ module Api
           ret[:os] = {
             available: os_available,
             repos: [
-              "SLES12-SP3-Pool",
-              "SLES12-SP3-Updates"
+              "SLES12-SP4-Pool",
+              "SLES12-SP4-Updates"
             ],
             errors: {}
           }
@@ -283,8 +283,8 @@ module Api
           ret[:openstack] = {
             available: cloud_available,
             repos: [
-              "SUSE-OpenStack-Cloud-Crowbar-8-Pool",
-              "SUSE-OpenStack-Cloud-Crowbar-8-Updates"
+              "SUSE-OpenStack-Cloud-Crowbar-9-Pool",
+              "SUSE-OpenStack-Cloud-Crowbar-9-Updates"
             ],
             errors: {}
           }
