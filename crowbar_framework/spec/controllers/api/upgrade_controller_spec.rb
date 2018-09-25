@@ -232,8 +232,8 @@ describe Api::UpgradeController, type: :request do
         "os" => {
           "available" => true,
           "repos" => [
-            "SLES12-SP3-Pool",
-            "SLES12-SP3-Updates"
+            "SLES12-SP4-Pool",
+            "SLES12-SP4-Updates"
           ],
           "errors" => {
           }
@@ -241,8 +241,8 @@ describe Api::UpgradeController, type: :request do
         "openstack" => {
           "available" => true,
           "repos" => [
-            "SUSE-OpenStack-Cloud-Crowbar-8-Pool",
-            "SUSE-OpenStack-Cloud-Crowbar-8-Updates"
+            "SUSE-OpenStack-Cloud-Crowbar-9-Pool",
+            "SUSE-OpenStack-Cloud-Crowbar-9-Updates"
           ],
           "errors" => {
           }
