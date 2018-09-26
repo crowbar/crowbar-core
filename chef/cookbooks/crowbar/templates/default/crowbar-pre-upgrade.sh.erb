@@ -87,6 +87,24 @@ log "No HA setup found..."
 
 <% if @compute_node %>
 
+<% if @rabbitmq_cluster %>
+
+# update rabbitmq config for clients if it was changed
+zypper --non-interactive install crudini
+
+crudini --set /etc/neutron/neutron.conf.d/200-crowbar-upgrade.conf oslo_messaging_rabbit rabbit_ha_queues true
+crudini --set /etc/neutron/neutron.conf.d/200-crowbar-upgrade.conf oslo_messaging_rabbit amqp_durable_queues true
+
+crudini --set /etc/nova/nova.conf.d/200-crowbar-upgrade.conf oslo_messaging_rabbit rabbit_ha_queues true
+crudini --set /etc/nova/nova.conf.d/200-crowbar-upgrade.conf oslo_messaging_rabbit amqp_durable_queues true
+
+<% if @cinder_volume %>
+crudini --set /etc/cinder/cinder.conf.d/200-crowbar-upgrade.conf oslo_messaging_rabbit rabbit_ha_queues true
+crudini --set /etc/cinder/cinder.conf.d/200-crowbar-upgrade.conf oslo_messaging_rabbit amqp_durable_queues true
+<% end %>
+
+<% end %>
+
 log "Restarting services for Pike"
 
 <% unless @remote_node %>

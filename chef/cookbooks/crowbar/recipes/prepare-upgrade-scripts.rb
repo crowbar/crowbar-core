@@ -129,6 +129,11 @@ end
 
 swift_storage = roles.include? "swift-storage"
 
+rabbitmq_server = search(:node, "run_list_map:rabbitmq-server").first
+# original DRBD setup is switched to cluster one in prepare_nodes_for_os_upgrade
+rabbitmq_cluster = rabbitmq_server[:rabbitmq][:ha][:enabled] &&
+  rabbitmq_server[:rabbitmq][:ha][:storage][:mode] == "drbd"
+
 # Following script executes all actions that are needed directly on the node
 # directly before the OS upgrade is initiated.
 template "/usr/sbin/crowbar-pre-upgrade.sh" do
@@ -145,7 +150,8 @@ template "/usr/sbin/crowbar-pre-upgrade.sh" do
     cinder_volume: cinder_volume,
     neutron_agent: neutron_agent,
     l3_agent: l3_agent,
-    metadata_agent: metadata_agent
+    metadata_agent: metadata_agent,
+    rabbitmq_cluster: rabbitmq_cluster
   )
 end
 
