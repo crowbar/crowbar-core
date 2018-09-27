@@ -187,8 +187,10 @@ fi
 add_group glance 200
 add_group qemu 201
 add_group kvm 202
+add_group cinder 203
 add_user glance 200 glance
 add_user qemu 201 kvm
+add_user cinder 203 cinder
 
 # Check that we're really on the admin network
 # --------------------------------------------
