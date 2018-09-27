@@ -9,7 +9,7 @@
     "salt": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 1,
+      "schema-revision": 300,
       "element_states": {
         "salt-ssh": [ "readying", "ready", "applying" ]
       },

@@ -18,7 +18,7 @@
     "ipmi": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 200,
+      "schema-revision": 300,
       "element_states": {
         "ipmi": [ "discovering", "hardware-installing", "readying" ],
         "bmc-nat-router": [ "readying", "ready", "applying" ],
