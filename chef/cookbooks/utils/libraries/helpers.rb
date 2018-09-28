@@ -40,11 +40,11 @@ module CrowbarHelper
 
       # Specify default as the configured public name
       public_name = CrowbarPacemakerHelper.cluster_haproxy_vpublic_name(node)
-      public_fqdn = "public.#{cluster_vhostname}.#{node[:domain]}"
+      public_fqdn = "public-#{cluster_vhostname}.#{node[:domain]}"
       public_ip = CrowbarPacemakerHelper.cluster_vip(node, "public", cluster_vhostname)
     else
       public_name = node[:crowbar][:public_name]
-      public_fqdn = "public."+node[:fqdn]
+      public_fqdn = "public-"+node[:fqdn]
       public_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "public").address
     end
 
