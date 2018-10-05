@@ -260,11 +260,7 @@ esac
 zypper --non-interactive install -t pattern $PATTERNS_INSTALL
 # Auto-agree with the license since it was already agreed on for the admin server
 <% if @platform == "suse" && @target_platform_version.to_f >= 12.1 -%>
-<% if @is_ses -%>
-zypper --non-interactive install --auto-agree-with-licenses ses-release supportutils-plugin-ses
-<% else -%>
 zypper --non-interactive install --auto-agree-with-licenses suse-openstack-cloud-crowbar-release supportutils-plugin-suse-openstack-cloud
-<% end -%>
 <% end -%>
 zypper --non-interactive install $PACKAGES_INSTALL<%= " '#{@packages.join("' '")}'" unless @packages.empty? %>
 

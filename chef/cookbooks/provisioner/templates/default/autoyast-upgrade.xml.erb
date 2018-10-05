@@ -145,12 +145,8 @@ EOF
 <% end -%>
       <package>netcat-openbsd</package>
       <package>ruby2.1-rubygem-chef</package>
-<% if @is_ses -%>
-      <package>ses-release</package>
-<% else -%>
       <package>suse-openstack-cloud-crowbar-release</package>
       <package>supportutils-plugin-suse-openstack-cloud</package>
-<% end -%>
 <% @packages.each do |package| -%>
       <package><%= package %></package>
 <% end -%>

@@ -26,11 +26,7 @@ module Crowbar
 
         etc_yml = "/etc/crowbar/repos.yml"
 
-        if Crowbar::Product.is_ses?
-          @all_repos = YAML.load_file(Rails.root.join("config/repos-ses.yml"))
-        else
-          @all_repos = YAML.load_file(Rails.root.join("config/repos-cloud.yml"))
-        end
+        @all_repos = YAML.load_file(Rails.root.join("config/repos-cloud.yml"))
 
         # merge data from etc config file
         etc_repos = {}

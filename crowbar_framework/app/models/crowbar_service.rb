@@ -163,14 +163,6 @@ class CrowbarService < ServiceObject
         add_role_to_instance_and_node("crowbar", inst, name, db, crole, "crowbar")
       end
 
-      if Crowbar::Product::is_ses?
-        # For SUSE Enterprise Storage, default all non-admin nodes to the right platform
-        if state == "discovering" and !node.admin?
-          node["target_platform"] = Crowbar::Product::ses_platform
-          node.save
-        end
-      end
-
       roles = RoleObject.find_roles_by_search "transitions:true AND (transition_list:all OR transition_list:#{ChefObject.chef_escape(state)})"
       # Sort rules for transition order (deployer should be near the beginning if not first).
       roles.sort! do |x,y|

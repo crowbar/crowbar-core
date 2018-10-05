@@ -518,15 +518,6 @@ node[:provisioner][:supported_oses].each do |os, arches|
                                                   target_platform_version,
                                                   arch)
 
-      # Need to know if we're doing a storage-only deploy so we can tweak
-      # crowbar_register slightly (same as in update_nodes.rb)
-      storage_available = false
-      cloud_available = false
-      repos.each do |name, repo|
-        storage_available = true if name.include? "Storage"
-        cloud_available = true if name.include? "Cloud"
-      end
-
       packages = node[:provisioner][:packages][os] || []
 
       template "#{os_dir}/crowbar_register" do
@@ -545,7 +536,6 @@ node[:provisioner][:supported_oses].each do |os, arches|
                   crowbar_key: crowbar_key,
                   domain: domain_name,
                   repos: repos,
-                  is_ses: storage_available && !cloud_available,
                   packages: packages,
                   platform: target_platform_distro,
                   target_platform_version: target_platform_version)
