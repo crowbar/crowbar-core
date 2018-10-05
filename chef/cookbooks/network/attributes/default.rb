@@ -66,3 +66,14 @@ default[:network][:ovs_module] = "openvswitch"
 # This flag be overridden on the node/role level (e.g. by the neutron
 # barclamp) to indicate that a node needs openvswitch installed and running
 default[:network][:needs_openvswitch] = false
+
+# Open vSwitch older than 2.11 is starting 2*$(nproc)*3/4 netlink sockets per
+# number of cpu cores and per port. On machines with high core
+# count (e.g. 56 or higher) this can quickly exceed the total fd
+# limit set by ovs on itself on startup of 65536.
+
+# By Limit the handler threads to 8 per port we can handle ~ 4000 ports
+# instead of just ~ 700.
+# see https://mail.openvswitch.org/pipermail/ovs-dev/2018-September/352402.html
+# see bsc#1110865
+default[:network][:ovs_max_handler_threads] = 8

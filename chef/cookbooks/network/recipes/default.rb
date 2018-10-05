@@ -44,6 +44,10 @@ if node[:network][:needs_openvswitch]
   s.run_action :enable
   s.run_action :start
 
+  # limit the number of handler threads to avoid exceeding
+  # hardcoded 65536 limit in the ovs-start script (bsc##1110865)
+  ::Kernel.system("ovs-vsctl set Open_vSwitch . other_config:n-handler-threads=#{node[:network][:ovs_max_handler_threads]}")
+
   # Cleanup on SLE12. Disable (NOT stop) old sysvinit service for ovs to avoid
   # issues (https://bugzilla.suse.com/show_bug.cgi?id=935912). We use the
   # (differently named) systemd unit on newer suse platforms now.
