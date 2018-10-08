@@ -8,7 +8,7 @@ describe Api::BackupsController, type: :request do
     {
       name: "crowbar_backup",
       migration_level: 20151222144602,
-      version: "5.0",
+      version: "6.0",
       size: 30
     }
   end
