@@ -58,7 +58,7 @@ admin_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").
 web_port = node[:provisioner][:web_port]
 provisioner_web = "http://#{admin_ip}:#{web_port}"
 dhcp_hosts_dir = node["provisioner"]["dhcp_hosts"]
-virtual_intfs = ["tap", "qbr", "qvo", "qvb", "brq", "ovs"]
+virtual_intfs = ["tap", "qbr", "qvo", "qvb", "brq", "ovs", "vxl"]
 
 crowbar_node = node_search_with_cache("roles:crowbar").first
 crowbar_protocol = crowbar_node[:crowbar][:apache][:ssl] ? "https" : "http"
