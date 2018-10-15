@@ -38,7 +38,7 @@ suse-12.3:
         tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP3:Update:Products:Cloud8/suse-openstack-cloud-crowbar/8/POOL/aarch64"
         fingerprint: ""
       url:
-      smt_path: "SUSE/Products/OpenStack-Cloud/8/aarch64/product"
+      smt_path: "SUSE/Products/OpenStack-Cloud-Crowbar/8/aarch64/product"
       ask_on_error: false
     suse-openstack-cloud-8-updates:
       name: "SUSE-OpenStack-Cloud-Crowbar-8-Updates"
@@ -48,7 +48,7 @@ suse-12.3:
         tag: "obsrepository://build.suse.de/SUSE:Updates:OpenStack-Cloud-Crowbar:8:aarch64/update"
         fingerprint: ""
       url:
-      smt_path: "SUSE/Updates/OpenStack-Cloud/8/aarch64/update"
+      smt_path: "SUSE/Updates/OpenStack-Cloud-Crowbar/8/aarch64/update"
       ask_on_error: false
     sle12-sp3-ha-pool:
       name: "SLE12-SP3-HA-Pool"
@@ -135,7 +135,7 @@ suse-12.3:
         tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP3:Update:Products:Cloud8/suse-openstack-cloud-crowbar/8/POOL/x86_64"
         fingerprint: ""
       url:
-      smt_path: "SUSE/Products/OpenStack-Cloud/8/x86_64/product"
+      smt_path: "SUSE/Products/OpenStack-Cloud-Crowbar/8/x86_64/product"
       ask_on_error: false
     suse-openstack-cloud-8-updates:
       name: "SUSE-OpenStack-Cloud-Crowbar-8-Updates"
@@ -145,7 +145,7 @@ suse-12.3:
         tag: "obsrepository://build.suse.de/SUSE:Updates:OpenStack-Cloud-Crowbar:8:x86_64/update"
         fingerprint: ""
       url:
-      smt_path: "SUSE/Updates/OpenStack-Cloud/8/x86_64/update"
+      smt_path: "SUSE/Updates/OpenStack-Cloud-Crowbar/8/x86_64/update"
       ask_on_error: false
     sle12-sp3-ha-pool:
       name: "SLE12-SP3-HA-Pool"
@@ -236,7 +236,7 @@ suse-12.3:
         tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP3:Update:Products:Cloud8/suse-openstack-cloud-crowbar/8/POOL/s390x"
         fingerprint: ""
       url:
-      smt_path: "SUSE/Products/OpenStack-Cloud/8/s390x/product"
+      smt_path: "SUSE/Products/OpenStack-Cloud-Crowbar/8/s390x/product"
       ask_on_error: false
     suse-openstack-cloud-8-updates:
       name: "SUSE-OpenStack-Cloud-Crowbar-8-Updates"
@@ -246,7 +246,7 @@ suse-12.3:
         tag: "obsrepository://build.suse.de/SUSE:Updates:OpenStack-Cloud-Crowbar:8:s390x/update"
         fingerprint: ""
       url:
-      smt_path: "SUSE/Updates/OpenStack-Cloud/8/s390x/update"
+      smt_path: "SUSE/Updates/OpenStack-Cloud-Crowbar/8/s390x/update"
       ask_on_error: false
     sle12-sp3-ha-pool:
       name: "SLE12-SP3-HA-Pool"
