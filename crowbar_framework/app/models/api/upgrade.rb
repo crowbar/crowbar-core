@@ -673,7 +673,10 @@ module Api
             end
           end
         end
-        to_upgrade
+        # Filter out non-existent nodes (e.g. from unsaved proposals after "forget")
+        # Not using Node.all here as we only need node names
+        all_node_names = ChefObject.fetch_nodes_from_cdb.first.map(&:name)
+        to_upgrade.select { |node| all_node_names.include? node }
       end
 
       def upgrade_controllers_disruptive

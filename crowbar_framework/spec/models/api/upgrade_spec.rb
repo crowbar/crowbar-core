@@ -29,6 +29,13 @@ describe Api::Upgrade do
       )
     )
   end
+  let!(:nodes_for_upgrade) do
+    JSON.parse(
+      File.read(
+        "spec/fixtures/nodes_for_upgrade.json"
+      )
+    ).map { |n| OpenStruct.new(n) }
+  end
   let!(:crowbar_repocheck_zypper) do
     File.read(
       "spec/fixtures/crowbar_repocheck_zypper.xml"
@@ -385,11 +392,18 @@ describe Api::Upgrade do
 
   context "while sorting elements for upgrade" do
     before(:example) do
-      database_proposal.elements["database-server"] = ["data"]
-      cinder_proposal.elements["cinder-controller"] = ["services"]
-      cinder_proposal.elements["cinder-volume"] = ["services"]
-      nova_proposal.elements["nova-controller"] = ["services"]
-      nova_proposal.elements["nova-compute-kvm"] = ["compute"]
+      # "removed" is a node which was removed from crowbar but left in proposals.
+      # it is included in all proposals but not expected in any of tests or fixtures
+      # this implicitly means that it gets removed from the result list in all cases.
+      database_proposal.elements["database-server"] = ["data", "removed"]
+      cinder_proposal.elements["cinder-controller"] = ["services", "removed"]
+      cinder_proposal.elements["cinder-volume"] = ["services", "removed"]
+      nova_proposal.elements["nova-controller"] = ["services", "removed"]
+      nova_proposal.elements["nova-compute-kvm"] = ["compute", "removed"]
+
+      allow(ChefObject).to(
+        receive(:fetch_nodes_from_cdb).and_return([nodes_for_upgrade, 0, nodes_for_upgrade.count])
+      )
     end
 
     it "leaves node with nova-compute role" do
