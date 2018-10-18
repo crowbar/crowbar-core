@@ -694,11 +694,11 @@ class ServiceObject
   def validate_postponed_nodes(proposal)
     return unless upgrade_postponed?
 
-    skip_unready_nodes_enabled = Rails.application.config.experimental.fetch(
+    skip_unready_nodes_enabled = Rails.application.config.crowbar.fetch(
       "skip_unready_nodes", {}
     ).fetch("enabled", false)
 
-    skip_unready_nodes_roles = Rails.application.config.experimental.fetch(
+    skip_unready_nodes_roles = Rails.application.config.crowbar.fetch(
       "skip_unready_nodes", {}
     ).fetch("roles", [])
 
@@ -715,7 +715,7 @@ class ServiceObject
 
     validation_error "The upgrade of some nodes has been postponed: " +
       postponed_nodes.join(", ") + ". " \
-      "It is necessary to have 'skip_unready_nodes' experimental feature enabled for the roles " \
+      "It is necessary to have 'skip_unready_nodes' feature enabled for the roles " \
       "in this barclamp, so these nodes could be properly skipped when applying the barclamp."
   end
 
@@ -996,8 +996,7 @@ class ServiceObject
     # Cache some node attributes to avoid useless node reloads
     node_attr_cache = {}
 
-    # experimental option
-    skip_unready_nodes_enabled = Rails.application.config.experimental.fetch(
+    skip_unready_nodes_enabled = Rails.application.config.crowbar.fetch(
       "skip_unready_nodes", {}
     ).fetch("enabled", false)
 
@@ -1925,7 +1924,7 @@ class ServiceObject
 
   def skip_unready_nodes(bc, inst, new_elements, old_elements)
     logger.debug("skip_unready_nodes: enter for #{bc}:#{inst}")
-    skip_unready_nodes_roles = Rails.application.config.experimental.fetch(
+    skip_unready_nodes_roles = Rails.application.config.crowbar.fetch(
       "skip_unready_nodes", {}
     ).fetch("roles", [])
     pre_cached_nodes = {}
