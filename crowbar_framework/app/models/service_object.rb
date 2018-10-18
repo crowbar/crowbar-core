@@ -962,8 +962,7 @@ class ServiceObject
     # Cache some node attributes to avoid useless node reloads
     node_attr_cache = {}
 
-    # experimental option
-    skip_unready_nodes_enabled = Rails.application.config.experimental.fetch(
+    skip_unready_nodes_enabled = Rails.application.config.crowbar.fetch(
       "skip_unready_nodes", {}
     ).fetch("enabled", false)
 
@@ -1886,7 +1885,7 @@ class ServiceObject
 
   def skip_unready_nodes(bc, inst, new_elements, old_elements)
     logger.debug("skip_unready_nodes: enter for #{bc}:#{inst}")
-    skip_unready_nodes_roles = Rails.application.config.experimental.fetch(
+    skip_unready_nodes_roles = Rails.application.config.crowbar.fetch(
       "skip_unready_nodes", {}
     ).fetch("roles", [])
     pre_cached_nodes = {}
