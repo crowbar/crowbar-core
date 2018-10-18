@@ -93,8 +93,19 @@ module Api
           unready << node.name unless node.ready?
         end
         ret[:nodes_not_ready] = unready unless unready.empty?
-        failed = Proposal.all.select { |p| p.active? && p.failed? }
+        proposals = Proposal.all
+        failed = proposals.select { |p| p.active? && p.failed? }
         ret[:failed_proposals] = failed.map(&:display_name) unless failed.empty?
+        # Not using Node.all here as we only need node names
+        nodes = ChefObject.fetch_nodes_from_cdb.first.map(&:name)
+        clusters = ServiceObject.available_clusters.keys
+        valid_elements = nodes + clusters
+        bad_proposals = proposals.reject { |p| (p.elements.values.flatten - valid_elements).empty? }
+        bad_elements = (proposals.map { |p| p.elements.values }.flatten - valid_elements).uniq
+        ret[:unrecognized_elements] = {
+          proposals: bad_proposals.map(&:display_name),
+          elements: bad_elements
+        } unless bad_proposals.empty?
         ret
       end
 
