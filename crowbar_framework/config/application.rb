@@ -65,7 +65,5 @@ module Crowbar
     end
     # normal options
     config.crowbar = config_for(:crowbar)
-    # experimental options
-    config.experimental = config_for(:experimental)
   end
 end
