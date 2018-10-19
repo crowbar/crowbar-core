@@ -37,7 +37,9 @@ when "revert_to_ready", "done_os_upgrade"
   end
 
   service "chef-client" do
-    action [:enable, :start]
+    # Do not start chef-client right after the upgrade, we still might need to
+    # save some node data and do not want chef-client running on a node to interfere
+    action upgrade_step == "done_os_upgrade" ? :enable : [:enable, :start]
   end
 
 when "crowbar_upgrade"
