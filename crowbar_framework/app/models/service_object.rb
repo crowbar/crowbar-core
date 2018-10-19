@@ -1000,7 +1000,7 @@ class ServiceObject
       "skip_unready_nodes", {}
     ).fetch("enabled", false)
 
-    skip_unchanged_nodes_enabled = Rails.application.config.experimental.fetch(
+    skip_unchanged_nodes_enabled = Rails.application.config.crowbar.fetch(
       "skip_unchanged_nodes", {}
     ).fetch("enabled", false)
 
