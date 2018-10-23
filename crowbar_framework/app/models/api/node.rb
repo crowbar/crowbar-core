@@ -279,8 +279,13 @@ module Api
             ret["os"] ||= []
             ret["os"].push(arch) unless ret["os"].include?(arch)
 
-            ret["openstack"] ||= []
-            ret["openstack"].push(arch) unless ret["openstack"].include?(arch)
+            if ceph_node?(node)
+              ret["ceph"] ||= []
+              ret["ceph"].push(arch) unless ret["ceph"].include?(arch)
+            else
+              ret["openstack"] ||= []
+              ret["openstack"].push(arch) unless ret["openstack"].include?(arch)
+            end
 
             if pacemaker_node?(node)
               ret["ha"] ||= []
@@ -288,6 +293,10 @@ module Api
             end
           end
         end
+      end
+
+      def ceph_node?(node)
+        node.roles.include?("ceph-config-default")
       end
 
       def pacemaker_node?(node)
