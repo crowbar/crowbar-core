@@ -866,12 +866,14 @@ module Api
       def finalize_node_upgrade(node)
         return unless node.crowbar.key? "crowbar_upgrade_step"
 
-        Rails.logger.info("Finalizing upgade of node #{node.name}")
+        Rails.logger.info("Finalizing upgrade of node #{node.name}")
 
         node.crowbar.delete "crowbar_upgrade_step"
         node.crowbar.delete "node_upgrade_state"
         node.save
 
+        Rails.logger.info("Starting chef-client service on #{node.name}")
+        node.ssh_cmd("systemctl start chef-client")
       end
 
       def delete_upgrade_scripts(node)
