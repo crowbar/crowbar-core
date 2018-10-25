@@ -42,12 +42,34 @@ class ProvisionerService < ServiceObject
   end
 
   def validate_proposal_after_save proposal
+    require "set"
+
     proposal["attributes"]["provisioner"]["packages"].each do |platform, packages|
       packages.each do |package|
         unless Crowbar::Validator::PackageNameValidator.new.validate(package)
           validation_error("Package \"#{package}\" for \"#{platform}\" is not a valid package name.")
         end
       end
+    end
+
+    keys_found = Set[]
+
+    proposal["attributes"]["provisioner"]["access_keys"].strip.split("\n").each do |key|
+      key.strip!
+
+      next if key.empty?
+
+      method, public_key, comment = key.split(" ")
+      unless ["ssh-rsa", "ssh-ed25519", "ssh-dss"].include? method
+        validation_error("SSH key \"#{key}\" should start with a supported \"ssh-*\" method.")
+      end
+      if public_key.nil? || public_key.length < 64
+        validation_error("SSH key \"#{key}\" has missing public key part or is too short.")
+      end
+      if comment.nil? || comment.empty? || keys_found.include?(comment)
+        validation_error("SSH key \"#{key}\" has missing or duplicated comment.")
+      end
+      keys_found.add(comment)
     end
 
     validate_one_for_role proposal, "provisioner-server"
