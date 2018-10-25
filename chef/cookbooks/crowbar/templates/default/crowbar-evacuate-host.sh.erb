@@ -56,15 +56,30 @@ openstack server list --insecure --all-projects --status active --host $host -f 
 i=0
 while [[ $i -lt 10 ]] && openstack --insecure compute service list --service nova-compute -f value -c State | grep down ; do
     log "Some nova-compute service is still down..."
+    # Find out hosts where nova-compute is down
+    hosts=$(openstack --insecure compute service list --service nova-compute -f value -c Host -c State | grep down | cut -f 1 -d " ")
+    some_host_is_up=0
+    for host_down in $hosts; do
+        # Check if hypervisor is down as well
+        if [ $(openstack --insecure hypervisor list --matching $host_down -f value -c State) = "up" ] ; then
+            some_host_is_up=1
+            break
+        fi
+    done
+    # Ignore cases where also the hosts (not just services) are down 
+    if [ "$some_host_is_up" = 0 ]; then
+        log "It appears that hypervisors are down as well."
+        break
+    fi
     sleep 6
     i=$(($i + 1))
+    # Give up after last cycle
+    if [[ $i -eq 10 ]]; then
+        log "Some nova-compute service is still down. Check the state of compute nodes before proceeding with the live-migration."
+        echo 4 > $UPGRADEDIR/crowbar-evacuate-host-failed
+        exit 4
+    fi
 done
-
-if openstack --insecure compute service list --service nova-compute -f value -c State | grep down ; then
-    log "Some nova-compute service is still down. Check the state of compute nodes before proceeding with the live-migration."
-    echo 4 > $UPGRADEDIR/crowbar-evacuate-host-failed
-    exit 4
-fi
 
 if ! nova --insecure host-evacuate-live "$host" $blockmigrate; then
     log "Live migration of instances from host $host has failed!"

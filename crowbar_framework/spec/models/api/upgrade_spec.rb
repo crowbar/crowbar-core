@@ -504,7 +504,8 @@ describe Api::Upgrade do
       allow(Api::Upgrade).to receive(:do_controllers_substep).and_return(true)
 
       allow(Node).to(
-        receive(:find).with("roles:nova-compute-*").and_return([node1, node2])
+        receive(:find).with("roles:nova-compute-* AND NOT state:shutdown")
+        .and_return([node1, node2])
       )
 
       # parallel_upgrade_compute_nodes:
@@ -572,7 +573,8 @@ describe Api::Upgrade do
       allow(Api::Upgrade).to receive(:remaining_nodes).and_return(1)
       allow(Api::Upgrade).to receive(:do_controllers_substep).and_return(true)
       allow(Node).to(
-        receive(:find).with("roles:nova-compute-kvm").and_return([])
+        receive(:find).with("roles:nova-compute-kvm AND NOT state:shutdown")
+        .and_return([])
       )
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
@@ -606,8 +608,8 @@ describe Api::Upgrade do
       allow(Api::Upgrade).to receive(:remaining_nodes).and_return(1)
       allow(Api::Upgrade).to receive(:do_controllers_substep).and_return(true)
       allow(Node).to(
-        receive(:find).with("roles:nova-compute-kvm").
-        and_return([Node.find_by_name("testing.crowbar.com")])
+        receive(:find).with("roles:nova-compute-kvm AND NOT state:shutdown")
+        .and_return([Node.find_by_name("testing.crowbar.com")])
       )
       allow_any_instance_of(Node).to receive(:upgraded?).and_return(false)
       allow(Node).to(
@@ -681,8 +683,8 @@ describe Api::Upgrade do
       allow(Api::Upgrade).to receive(:remaining_nodes).and_return(1)
       allow(Api::Upgrade).to receive(:do_controllers_substep).and_return(true)
       allow(Node).to(
-        receive(:find).with("roles:nova-compute-kvm").
-        and_return([Node.find_by_name("testing.crowbar.com")])
+        receive(:find).with("roles:nova-compute-kvm AND NOT state:shutdown")
+        .and_return([Node.find_by_name("testing.crowbar.com")])
       )
       allow_any_instance_of(Node).to receive(:upgraded?).and_return(true)
       allow(Api::Upgrade).to receive(:upgrade_all_compute_nodes).and_return(true)
@@ -703,8 +705,8 @@ describe Api::Upgrade do
       allow(Api::Upgrade).to receive(:do_controllers_substep).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:save_substep).and_return(true)
       allow(Node).to(
-        receive(:find).with("roles:nova-compute-kvm").
-        and_return([Node.find_by_name("testing.crowbar.com")])
+        receive(:find).with("roles:nova-compute-kvm AND NOT state:shutdown")
+        .and_return([Node.find_by_name("testing.crowbar.com")])
       )
       allow_any_instance_of(Node).to receive(:upgraded?).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
@@ -720,8 +722,8 @@ describe Api::Upgrade do
       allow(Api::Upgrade).to receive(:remaining_nodes).and_return(1)
       allow(Api::Upgrade).to receive(:do_controllers_substep).and_return(true)
       allow(Node).to(
-        receive(:find).with("roles:nova-compute-kvm").
-        and_return([Node.find_by_name("testing.crowbar.com")])
+        receive(:find).with("roles:nova-compute-kvm AND NOT state:shutdown")
+        .and_return([Node.find_by_name("testing.crowbar.com")])
       )
       allow(Node).to(
         receive(:find).with("roles:nova-controller").
