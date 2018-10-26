@@ -372,15 +372,6 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
 
       packages = node[:provisioner][:packages][os] || []
 
-      # Need to know if we're doing a storage-only deploy so we can tweak
-      # the autoyast profile slightly (same as in setup_base_images.rb)
-      storage_available = false
-      cloud_available = false
-      repos.each do |name, repo|
-        storage_available = true if name.include? "Storage"
-        cloud_available = true if name.include? "Cloud"
-      end
-
       cpu_model = ""
       if mnode.key?("cpu") && mnode[:cpu].length >= 1
         case mnode[:cpu]["0"][:model_name]
@@ -416,7 +407,6 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
           target_platform_version: target_platform_version,
           architecture: arch,
           cpu_model: cpu_model,
-          is_ses: storage_available && !cloud_available,
           crowbar_join: "#{os_url}/crowbar_join.sh",
           default_fs: mnode[:crowbar_wall][:default_fs] || "ext4",
           needs_openvswitch: (mnode[:network] && mnode[:network][:needs_openvswitch]) || false,
