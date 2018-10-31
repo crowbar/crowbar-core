@@ -37,10 +37,11 @@ root_pub_key = `cat /root/.ssh/id_rsa.pub`.chomp
 access_keys[node.name] = root_pub_key
 
 # Add additional keys
+nullnodecounter = 0
 node["provisioner"]["access_keys"].strip.split("\n").each do |key|
   key.strip!
   unless key.empty?
-    nodename = key.split(" ")[2]
+    nodename = key.split(" ")[2] || "hostless-key-#{nullnodecounter += 1}"
     access_keys[nodename] = key
   end
 end
