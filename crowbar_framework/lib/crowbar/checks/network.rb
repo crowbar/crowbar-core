@@ -69,7 +69,7 @@ module Crowbar
         end
 
         def ping_succeeds?
-          system("ping -c 1 #{fqdn} > /dev/null 2>&1")
+          system("ping -c 1 #{fqdn} > /dev/null 2>&1 || ping6 -c 1 #{fqdn} > /dev/null 2>&1")
         end
 
         def hostname

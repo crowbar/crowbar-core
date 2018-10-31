@@ -71,16 +71,18 @@ describe Crowbar::Checks::Network do
     it "returns true if fqdn is pingable" do
       allow_any_instance_of(Kernel).to(
         receive(:system).with(
-          "ping -c 1 #{subject.fqdn} > /dev/null 2>&1"
+          "ping -c 1 #{subject.fqdn} > /dev/null 2>&1 || "\
+          "ping6 -c 1 #{subject.fqdn} > /dev/null 2>&1"
         ).and_return(true)
       )
       expect(subject.ping_succeeds?).to be true
     end
 
-    it "returns palse if fqdn is not pingable" do
+    it "returns false if fqdn is not pingable" do
       allow_any_instance_of(Kernel).to(
         receive(:system).with(
-          "ping -c 1 #{subject.fqdn} > /dev/null 2>&1"
+          "ping -c 1 #{subject.fqdn} > /dev/null 2>&1 || "\
+          "ping6 -c 1 #{subject.fqdn} > /dev/null 2>&1"
         ).and_return(false)
       )
       expect(subject.ping_succeeds?).to be false
