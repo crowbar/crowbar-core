@@ -1396,11 +1396,15 @@ module Api
               save_nodes_state(nodes_to_upgrade + [node], "compute", "upgrading")
               live_evacuate_compute_node(controller, hostname)
               nodes_to_upgrade << node
-            rescue StandardError
-              Rails.logger.info("live evacuate of #{hostname} failed, exiting loop")
-              # We do not need to enable nova-service on the failed node again:
-              # the node is already marked as "upgrading" so it will be picked up first
-              # with the next bunch
+            rescue StandardError => e
+              # We could safely ignore the error when the execution failed with a timeout,
+              # raise it otherwise.
+              failed_file = "/var/lib/crowbar/upgrade/crowbar-evacuate-host-failed"
+              raise e if controller.file_exist? failed_file
+              Rails.logger.info("attempt to live evacuate #{hostname} took too long, exiting loop")
+              # We need to enable nova-service on the failed node again so its compute powers could
+              # be used when upgrading next bunch of compute nodes
+              enable_compute_service(controller, node, true)
               break
             end
           end
@@ -1499,7 +1503,8 @@ module Api
         controller.wait_for_script_to_finish(
           "/usr/sbin/crowbar-evacuate-host.sh",
           timeouts[:evacuate_host],
-          [compute]
+          [compute],
+          true
         )
         Rails.logger.info(
           "Migrating instances from node #{compute} was successful."
