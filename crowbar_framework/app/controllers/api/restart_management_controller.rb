@@ -18,8 +18,9 @@ class Api::RestartManagementController < ApiController
   skip_before_filter :upgrade
 
   before_action do
-    unless Rails.application.config.experimental.fetch("disallow_restart", {}).fetch("enabled", false)
-      render json: { error: I18n.t("api.experimental.disabled", option: "disallow_restart") },
+    unless Rails.application.config.crowbar.fetch("disallow_restart", {}).fetch("enabled", false)
+      render json: { error: I18n.t("api.crowbar.disallow_chef_restart_disabled",
+        option: "disallow_restart") },
              status: :not_acceptable
     end
   end
