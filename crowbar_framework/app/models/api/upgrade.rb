@@ -1452,11 +1452,14 @@ module Api
         while compute_nodes.any?
           # 1. Evacuate as many as possible, create a subset of nodes without instances.
           nodes_to_upgrade = []
+          already_upgrading = false
           compute_nodes.each do |node|
+            # if nodes are already in upgrading state, we can skip the live-migration part
+            already_upgrading = true if node.upgrading?
+            break if already_upgrading && !node.upgrading?
             hostname = node[:hostname]
             begin
-              save_nodes_state(nodes_to_upgrade + [node], "compute", "upgrading")
-              live_evacuate_compute_node(controller, hostname)
+              live_evacuate_compute_node(controller, hostname) unless already_upgrading
               nodes_to_upgrade << node
             rescue StandardError => e
               # We could safely ignore the error when the execution failed with a timeout,
@@ -1471,6 +1474,7 @@ module Api
             end
           end
           compute_nodes -= nodes_to_upgrade
+          save_nodes_state(nodes_to_upgrade, "compute", "upgrading")
 
           # 2. Use original parallel upgrade method for nodes that are free of instances.
           parallel_upgrade_compute_nodes(nodes_to_upgrade)
@@ -1507,7 +1511,7 @@ module Api
 
       # After compute node upgrade, nova-compute service needs to be enabled
       # so that the node compute power can be used when live-migrating other nodes
-      def enable_compute_service(controller, node)
+      def enable_compute_service(controller, node, only_enable = false)
         hostname = node[:hostname]
         controller.run_ssh_cmd(
           "source /root/.openrc; " \
@@ -1525,6 +1529,7 @@ module Api
             "Check nova log files at '#{controller.name}' and '#{hostname}'."
           )
         end
+        return if only_enable
 
         return unless node[:pacemaker] && node[:pacemaker][:is_remote]
         start_remote_resources(controller, hostname)
