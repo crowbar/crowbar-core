@@ -57,6 +57,7 @@ done
 
 <% end %>
 
+<% unless @clone_stateless %>
 # It's possible services are not managed by pacemaker (if clone_stateless_services was not set),
 # so to make sure that services are stopped, use additional systemctl commands.
 log "Stopping OpenStack services..."
@@ -67,6 +68,7 @@ for i in $(systemctl list-units openstack-* --no-legend | cut -d" " -f1 | grep -
     systemctl stop $i
     systemctl disable $i
 done
+<% end %>
 
 <% else %>
 

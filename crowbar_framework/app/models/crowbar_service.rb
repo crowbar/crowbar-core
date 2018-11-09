@@ -349,6 +349,12 @@ class CrowbarService < ServiceObject
       role = proposal.role
       proposal.raw_data["attributes"]["pacemaker"]["clone_stateless_services"] = false
       proposal.raw_data["attributes"]["pacemaker"]["drbd"]["enabled"] = false
+      # Save the original value of clone_stateless_services, we need it for determining
+      # some actions from recipes.
+      unless role.default_attributes["pacemaker"].key? "clone_stateless_services_orig"
+        role.default_attributes["pacemaker"]["clone_stateless_services_orig"] =
+          role.default_attributes["pacemaker"]["clone_stateless_services"]
+      end
       role.default_attributes["pacemaker"]["clone_stateless_services"] = false
       role.default_attributes["pacemaker"]["drbd"]["enabled"] = false
       role.save
