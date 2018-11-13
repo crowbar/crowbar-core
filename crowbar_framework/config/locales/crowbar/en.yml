@@ -776,11 +776,10 @@ en:
       cache_error: 'Failed to cache sanity checks'
 
   api:
-    experimental:
-      disabled: 'This experimental API is currently disabled in experimental.yml config file (%{option} option).'
     error:
       destroy_failed: 'Failed to destroy %{component}'
     crowbar:
+      disallow_chef_restart_disabled: 'This API is currently disabled in crowbar.yml config file (%{option} option).'
       upgrade_ongoing: 'Upgrade is already ongoing. Please wait.'
       zypper_locked: '%{zypper_locked_message}'
       zypper_prompt: '%{zypper_prompt_text}'
