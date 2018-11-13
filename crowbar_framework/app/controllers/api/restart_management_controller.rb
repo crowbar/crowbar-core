@@ -17,6 +17,14 @@
 class Api::RestartManagementController < ApiController
   skip_before_filter :upgrade
 
+  before_action do
+    unless Rails.application.config.crowbar.fetch("disallow_restart", {}).fetch("enabled", false)
+      render json: { error: I18n.t("api.crowbar.disallow_chef_restart_disabled",
+        option: "disallow_restart") },
+             status: :not_acceptable
+    end
+  end
+
   api :POST, "/api/restart_management/configuration", "Set the disallow restart value for cookbooks"
   header "Accept", "application/vnd.crowbar.v2.0+json", required: true
   param :disallow_restart, [true, false], desc: "Disallow service reboots", required: true

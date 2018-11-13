@@ -55,9 +55,9 @@ describe Api::RestartManagementController, type: :request, restartmanagement: tr
 
       @databag_item = ::Chef::DataBagItem.load("crowbar-config", "disallow_restart")
 
-      # mock experimental config to test the controller
+      # mock config to test the controller
       allow(
-        Rails.application.config.experimental
+        Rails.application.config.crowbar
       ).to receive(:fetch).with("disallow_restart", {}).and_return("enabled" => true)
     end
 
