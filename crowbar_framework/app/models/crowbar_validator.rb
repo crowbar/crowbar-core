@@ -98,15 +98,28 @@ class CrowbarValidator < Kwalify::Validator
            errors << Kwalify::ValidationError.new(msg, path)
          end
       when "IpAddress"
-         regex = /\A(?:25[0-5]|(?:2[0-4]|1\d|[1-9])?\d)(?:\.(?:25[0-5]|(?:2[0-4]|1\d|[1-9])?\d)){3}\z/
-         if value[regex].nil?
+         regex_v4 = /\A(?:25[0-5]|(?:2[0-4]|1\d|[1-9])?\d)(?:\.(?:25[0-5]|(?:2[0-4]|1\d|[1-9])?\d)){3}\z/
+         regex_v6 = /\A(?:[0-9A-Fa-f]{0,4})(?:\:(?:[0-9A-Fa-f]{0,4})){2,7}\z/
+         regex_cidr = /\A(?:12[0-8]|(?:1[0-1]|\d)?\d)\z/
+         regex_empty = /\A\z/
+         error = false
+         if value[regex_v4].nil? && value[regex_v6].nil? && value[regex_cidr].nil?
+           error = true
+         end
+
+         if path.include? "broadcast" && value.empty?
+           error = false
+         end
+
+         if error
            msg = "Should be an IP Address: #{value}"
            errors << Kwalify::ValidationError.new(msg, path)
          end
       when "IpAddressMap"
          regex = /\A(?:25[0-5]|(?:2[0-4]|1\d|[1-9])?\d)(?:\.(?:25[0-5]|(?:2[0-4]|1\d|[1-9])?\d)){3}\z/
+         regex_v6 = /\A(?:[0-9A-Fa-f]{0,4})(?:\:(?:[0-9A-Fa-f]{0,4})){2,7}\z/
          value.each_key do |key|
-           if key[regex].nil?
+           if key[regex].nil? && key[regex_v6].nil?
              msg = "Should be an IP Address: #{key}"
              errors << Kwalify::ValidationError.new(msg, path)
            end
