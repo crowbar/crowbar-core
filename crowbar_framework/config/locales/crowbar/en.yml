@@ -802,6 +802,9 @@ en:
         failed_proposals:
           error: 'These proposals report deployment failures: %{proposals}.'
           help: 'Check the state of the specific barclamps and redeploy them correctly or disable failing proposals.'
+        unrecognized_elements:
+          error: 'These proposals contain elements which were not recognized or have been deleted: %{proposals}. Offending elements: %{elements}'
+          help: 'Save the proposals to remove unrecognized elements from the role assignments.'
         maintenance_updates_check:
           help:
             default: 'Make sure maintenance updates are installed'
