@@ -138,6 +138,7 @@ initiate_node_upgrade()
     # Remove possibly existing temporary config files from the compute nodes
     rm -f /etc/nova/nova.conf.d/200-crowbar-upgrade.conf
     rm -f /etc/neutron/neutron.conf.d/200-crowbar-upgrade.conf
+    rm -f /etc/neutron/neutron-openvswitch-agent.conf.d/200-crowbar-upgrade.conf
     rm -f /etc/cinder/cinder.conf.d/200-crowbar-upgrade.conf
 
     # Signalize that the upgrade correctly ended
