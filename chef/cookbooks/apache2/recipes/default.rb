@@ -22,7 +22,7 @@ package "apache2" do
   when "rhel", "fedora"
     package_name "httpd"
   when "debian", "suse"
-    package_name "apache2"
+    package_name "apache2-worker"
   when "arch"
     package_name "apache"
   end
