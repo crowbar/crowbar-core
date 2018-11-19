@@ -31,11 +31,11 @@ if File.exist?("/sys/block")
     parts = File.realpath(dir, "/sys/block/").split("/")
     # example:
     # /sys/devices/pci0000:00/0000:00:02.0/0000:03:00.0/host0/target0:1:4/0:1:4:0/block/sdb
-    parts = parts[0..4] + ["driver"]
+    parts = parts[0..5] + ["driver"]
     path = parts.join("/")
     # example:
-    # /sys/devices/pci0000:00/0000:00:02.0/driver
-    # -> ../../../bus/pci/drivers/aacraid
+    # /sys/devices/pci0000:00/0000:00:02.0/0000:03:00.0/driver
+    # -> ../../../../bus/pci/drivers/aacraid
     next unless File.exist?(path) && File.readlink(path).split("/")[-1] == "aacraid"
     block[dir]["removable"] = "0"
   end
