@@ -34,6 +34,14 @@ set -x
 
 openstack --insecure compute service set --disable "$host" nova-compute
 
+# Initial check if there's anything running on a host
+if ! nova --insecure list --all-tenants --host "$host" --fields host,status 2>/dev/null | grep -e ACTIVE -e MIGRATING | grep "$host"; then
+    touch $UPGRADEDIR/crowbar-evacuate-host-ok
+    log "No running VM's found on $host, exiting now."
+    log "$BASH_SOURCE is finished."
+    exit 0
+fi
+
 <% if @needs_block_migrate %>
 blockmigrate="--block-migrate"
 <% else %>
