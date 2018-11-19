@@ -280,6 +280,8 @@ module Api
             next if ["cinder-volume", "swift-storage"].include? role
             # compute node roles are fine
             next if role.start_with?("nova-compute") || role == "pacemaker-remote"
+            # monitoring roles on compute nodes are fine
+            next if ["monasca-agent", "monasca-log-agent"].include? role
             # ceph roles are not allowed, but they are already handled by different check
             # so we treat them as OK in this one
             next if role.start_with?("ceph")
