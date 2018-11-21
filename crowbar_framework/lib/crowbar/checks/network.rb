@@ -60,16 +60,17 @@ module Crowbar
           unless ipv4_configured || ipv4_addrs.empty?
             return false
           end
-          # we don't really depend on IPv6, so no big deal
-          # unless ipv6_configured || ipv6_addrs.empty?
-          #   return false
-          # end
+
+          unless ipv6_configured || ipv6_addrs.empty?
+            return false
+          end
 
           true
         end
 
         def ping_succeeds?
-          system("ping -c 1 #{fqdn} > /dev/null 2>&1 || ping6 -c 1 #{fqdn} > /dev/null 2>&1")
+          return system("ping6 -c 1 #{fqdn} > /dev/null 2>&1") unless ipv6_addrs.empty?
+          system("ping -c 1 #{fqdn} > /dev/null 2>&1")
         end
 
         def hostname
