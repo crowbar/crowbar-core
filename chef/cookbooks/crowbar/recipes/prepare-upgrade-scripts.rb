@@ -81,6 +81,12 @@ use_ha = roles.include? "pacemaker-cluster-member"
 remote_node = roles.include? "pacemaker-remote"
 is_cluster_founder = use_ha && node["pacemaker"]["founder"] == node[:fqdn]
 
+clone_stateless = if node["pacemaker"]
+  node["pacemaker"]["clone_stateless_services_orig"] || true
+else
+  true
+end
+
 template "/usr/sbin/crowbar-shutdown-services-before-upgrade.sh" do
   source "crowbar-shutdown-services-before-upgrade.sh.erb"
   mode "0755"
@@ -89,7 +95,8 @@ template "/usr/sbin/crowbar-shutdown-services-before-upgrade.sh" do
   action :create
   variables(
     use_ha: use_ha || remote_node,
-    cluster_founder: is_cluster_founder
+    cluster_founder: is_cluster_founder,
+    clone_stateless: clone_stateless
   )
 end
 

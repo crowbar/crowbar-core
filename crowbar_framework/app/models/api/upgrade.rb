@@ -446,6 +446,15 @@ module Api
           timeouts[:shutdown_services]
         )
         Rails.logger.info("Services were shut down on all nodes.")
+
+        # Remove the temporary key from the role object
+        pacemaker_proposals = Proposal.all.where(barclamp: "pacemaker")
+        pacemaker_proposals.each do |proposal|
+          role = proposal.role
+          role.default_attributes["pacemaker"].delete "clone_stateless_services_orig"
+          role.save
+        end
+
         ::Crowbar::UpgradeStatus.new.end_step
       rescue ::Crowbar::Error::Upgrade::ServicesError => e
         ::Crowbar::UpgradeStatus.new.end_step(
