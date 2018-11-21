@@ -77,7 +77,7 @@ describe Crowbar::Checks::Network do
       expect(subject.ping_succeeds?).to be true
     end
     it "returns true if fqdn is pingable and ipv6" do
-      allow(subject).to receive(:ipv6_addrs).and_return(["fd00:0:0:3::1"])
+      allow(subject).to receive(:ipv6_addrs).and_return(["::1"])
       allow_any_instance_of(Kernel).to(
         receive(:system).with(
           "ping6 -c 1 #{subject.fqdn} > /dev/null 2>&1"
