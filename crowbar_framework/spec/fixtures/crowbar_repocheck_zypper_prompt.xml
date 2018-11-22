@@ -1,5 +1,6 @@
 <?xml version='1.0'?>
 <stream>
+<message type="info">Repository &apos;Cloud&apos; is up to date.</message>
 <prompt id="14">
 <text>
 New repository or package signing key received:

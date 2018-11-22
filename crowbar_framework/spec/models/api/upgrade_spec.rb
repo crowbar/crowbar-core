@@ -355,6 +355,10 @@ describe Api::Upgrade do
       check = subject.class.adminrepocheck
       expect(check[:status]).to eq(:service_unavailable)
       expect(check[:error]).to eq(
+        "Zypper requires user interaction.\n" \
+        "\nMessage: " +
+        Hash.from_xml(crowbar_repocheck_zypper_prompt)["stream"]["message"] +
+        "\nPrompt: " +
         Hash.from_xml(crowbar_repocheck_zypper_prompt)["stream"]["prompt"]["text"]
       )
     end
