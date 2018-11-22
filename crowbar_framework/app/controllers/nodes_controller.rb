@@ -517,6 +517,7 @@ class NodesController < ApplicationController
     # if raid is selected, we need a couple of selected disks
     raid_disks_selected = params.fetch(:raid_disks, []).length
     if (params[:raid_type] == "raid1" and raid_disks_selected < 2) or \
+      (params[:raid_type] == "raid0" and raid_disks_selected < 1) or \
       (params[:raid_type] == "raid5" and raid_disks_selected < 3) or \
       (params[:raid_type] == "raid6" and raid_disks_selected < 4) or \
       (params[:raid_type] == "raid10" and raid_disks_selected < 4)
