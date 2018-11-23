@@ -104,7 +104,9 @@ module Crowbar
               else
                 next unless ip_addr.ipv4?
               end
-              addresses.push address
+              # Sanitise the ip string, as ipv6 writing shortcuts can make
+              # string comparisons fail.
+              addresses.push ip_addr.to_s
             end
           end
         end
