@@ -82,8 +82,7 @@ module Api
       )
     end
 
-    def join_and_chef
-      save_node_action("upgrading configuration and re-joining the crowbar environment")
+    def prepare_join
       # Mark this upgrade step, so chef-client run can also start disabled services
       unless @node.crowbar["crowbar_upgrade_step"] == "done_os_upgrade"
         # Make sure we save with the latest node data
@@ -91,17 +90,9 @@ module Api
         @node.crowbar["crowbar_upgrade_step"] = "done_os_upgrade"
         @node.save
       end
-      begin
-        execute_and_wait_for_finish(
-          "/usr/sbin/crowbar-chef-upgraded.sh",
-          @timeouts.values[:chef_upgraded]
-        )
-      rescue StandardError => e
-        Api::Upgrade.raise_node_upgrade_error(
-          "Error while running the initial chef-client. #{e.message} " \
-          "Important information might be found under /var/log/crowbar/crowbar_join/."
-        )
-      end
+    end
+
+    def post_join_cleanup
       # We know that the script has succeeded, but it does not necessary mean we're fine:
       @node = ::Node.find_by_name(@node.name)
       if @node.ready_after_upgrade?
@@ -116,6 +107,23 @@ module Api
           "Check /var/log/crowbar/crowbar_join/chef.log."
         )
       end
+    end
+
+    def join_and_chef
+      prepare_join
+      save_node_action("upgrading configuration and re-joining the crowbar environment")
+      begin
+        execute_and_wait_for_finish(
+          "/usr/sbin/crowbar-chef-upgraded.sh",
+          @timeouts.values[:chef_upgraded]
+        )
+      rescue StandardError => e
+        Api::Upgrade.raise_node_upgrade_error(
+          "Error while running the initial chef-client. #{e.message} " \
+          "Important information might be found under /var/log/crowbar/crowbar_join/."
+        )
+      end
+      post_join_cleanup
     end
 
     def wait_for_ssh_state(desired_state, action)
@@ -133,14 +141,14 @@ module Api
       )
     end
 
-    # Reboot the node and wait until it comes back online
-    def reboot_and_wait
-      save_node_action("rebooting")
+    # initiate the reboot and wait until the node is down
+    def reboot
       rebooted_file = "/var/lib/crowbar/upgrade/crowbar-node-rebooted-ok"
       if @node.file_exist? rebooted_file
         Rails.logger.info("Node was already rebooted after the package upgrade.")
         return true
       end
+      save_node_action("rebooting")
 
       ssh_status = @node.ssh_cmd("/sbin/reboot")
       if ssh_status[0] != 200
@@ -148,9 +156,24 @@ module Api
       end
 
       wait_for_ssh_state(:down, "reboot")
+    end
+
+    # wait after the node is back online
+    def wait_after_reboot
+      rebooted_file = "/var/lib/crowbar/upgrade/crowbar-node-rebooted-ok"
+      if @node.file_exist? rebooted_file
+        Rails.logger.info("Node was already rebooted after the package upgrade.")
+        return true
+      end
       save_node_action("waiting for node to be back after reboot")
       wait_for_ssh_state(:up, "come up")
       @node.run_ssh_cmd("touch #{rebooted_file}")
+    end
+
+    # Reboot the node and wait until it comes back online
+    def reboot_and_wait
+      reboot
+      wait_after_reboot
     end
 
     # Do the complete package upgrade of one node
