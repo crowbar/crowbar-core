@@ -1,0 +1,40 @@
+#!/bin/bash
+#
+# This makes sure that keystone is stopped by removing the vhost configuration
+# and shutting down the apache2 service. Addtionally it will restart memcached
+# to have its caches flushed,
+#
+
+LOGFILE=/var/log/crowbar/node-upgrade.log
+UPGRADEDIR=/var/lib/crowbar/upgrade
+mkdir -p "`dirname "$LOGFILE"`"
+exec >>"$LOGFILE" 2>&1
+
+log()
+{
+    set +x
+    echo "[$(date --iso-8601=ns)] [$$] $@"
+    set -x
+}
+
+log "Executing $BASH_SOURCE"
+
+set -x
+
+mkdir -p $UPGRADEDIR
+rm -f $UPGRADEDIR/crowbar-shutdown-keystone-failed
+
+if [[ -f $UPGRADEDIR/crowbar-shutdown-keystone-ok ]] ; then
+    log "Shut down of keystone was already done."
+    exit 0
+fi
+
+rm /etc/apache2/vhosts.d/keystone-*.conf
+systemctl stop apache2
+systemctl disable apache2
+
+# flush memcached caches
+systemctl restart memcached
+
+touch $UPGRADEDIR/crowbar-shutdown-keystone-ok
+log "$BASH_SOURCE is finished."
