@@ -238,6 +238,22 @@ template "/usr/sbin/crowbar-post-upgrade.sh" do
   action :create
 end
 
+template "/usr/sbin/crowbar-shutdown-keystone.sh" do
+  source "crowbar-shutdown-keystone.sh.erb"
+  mode "0775"
+  owner "root"
+  group "root"
+  action :create
+end
+
+template "/usr/sbin/crowbar-migrate-keystone-and-start.sh" do
+  source "crowbar-migrate-keystone-and-start.sh.erb"
+  mode "0775"
+  owner "root"
+  group "root"
+  action :create
+end
+
 template "/usr/sbin/crowbar-chef-upgraded.sh" do
   source "crowbar-chef-upgraded.sh.erb"
   mode "0775"

@@ -1,0 +1,48 @@
+#!/bin/bash
+#
+# This will execute the database schema migrations for keystone and start the
+# service by re-enabling the vhost config
+#
+
+LOGFILE=/var/log/crowbar/node-upgrade.log
+UPGRADEDIR=/var/lib/crowbar/upgrade
+mkdir -p "`dirname "$LOGFILE"`"
+exec >>"$LOGFILE" 2>&1
+
+log()
+{
+    set +x
+    echo "[$(date --iso-8601=ns)] [$$] $@"
+    set -x
+}
+
+log "Executing $BASH_SOURCE"
+
+set -x
+
+mkdir -p $UPGRADEDIR
+rm -f $UPGRADEDIR/crowbar-migrate-keystone-and-start-failed
+
+if [[ -f $UPGRADEDIR/crowbar-migrate-keystone-and-start-ok ]] ; then
+    log "database migration for keystone and restart of the vhost was already done."
+    exit 0
+fi
+
+# flush memcached caches
+systemctl restart memcached
+
+log "Running database migrations for keystone"
+keystone-manage db_sync
+log "Keystone database migrations completed"
+
+for vhost in admin public; do
+    log "Enabling apache vhost for keystone"
+    mv /etc/apache2/vhosts.d/keystone-$vhost.conf.disabled \
+       /etc/apache2/vhosts.d/keystone-$vhost.conf
+done
+
+log "Reloading apache2 service to start keystone vhosts"
+systemctl reload apache2
+
+touch $UPGRADEDIR/crowbar-migrate-keystone-and-start-ok
+log "$BASH_SOURCE is finished."
