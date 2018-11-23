@@ -34,8 +34,14 @@ for i in $(systemctl list-units openstack* --no-legend | cut -d" " -f1) ; do
     systemctl stop $i
     systemctl disable $i
 done
-systemctl stop apache2
-systemctl disable apache2
+
+# Shutdown all apache vhost apart from keystone. Note: on the node that is
+# currently upgraded apache is being shutdown by the pre-upgrade script. So
+# this is here to ensure that the apache vhost for keystone keeps running for a
+# while on the non-upgraded nodes
+shopt -s extglob
+rm /etc/apache2/vhosts.d/!(keystone-admin|keystone-public).conf
+systemctl reload apache2
 
 touch $UPGRADEDIR/crowbar-shutdown-remaining-services-ok
 log "$BASH_SOURCE is finished."
