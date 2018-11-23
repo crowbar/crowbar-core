@@ -1384,19 +1384,49 @@ module Api
             "Error while upgrading compute nodes. " + e.message
           )
         end
-        # FIXME: should we paralelize this as well?
+        # reboot block
         compute_nodes.each do |node|
           next if node.upgraded?
           node_api = Api::Node.new node.name
-          if node.ready_after_upgrade?
-            Rails.logger.info(
-              "Node #{node.name} is ready after the initial chef-client run."
-            )
-          else
-            node_api.save_node_state("compute", "upgrading")
-            node_api.reboot_and_wait
-            node_api.join_and_chef
-          end
+          node_api.reboot
+        end
+        # wait block (we have to wait for each node to be back)
+        compute_nodes.each do |node|
+          next if node.upgraded?
+          node_api = Api::Node.new node.name
+          node_api.wait_after_reboot
+        end
+        # crowbar_join preparations
+        compute_nodes.each do |node|
+          next if node.upgraded?
+          node_api = Api::Node.new node.name
+          node_api.prepare_join
+        end
+        # Now, run time consuming crowbar_join action in parallel
+        save_node_action("upgrading configuration and re-joining the crowbar environment")
+        begin
+          execute_scripts_and_wait_for_finish(
+            compute_nodes,
+            "/usr/sbin/crowbar-chef-upgraded.sh",
+            timeouts[:chef_upgraded]
+          )
+          Rails.logger.info("Crowbar-join executed successfully on all nodes in this set.")
+        rescue StandardError => e
+          raise_node_upgrade_error(
+            "Error while running the initial chef-client. #{e.message} " \
+            "Important information might be found under /var/log/crowbar/crowbar_join/."
+          )
+        end
+        # post crowbar_join actions
+        compute_nodes.each do |node|
+          next if node.upgraded?
+          node_api = Api::Node.new node.name
+          node_api.post_join_cleanup
+        end
+        # mark the finish states
+        compute_nodes.each do |node|
+          next if node.upgraded?
+          node_api = Api::Node.new node.name
           node_api.save_node_state("compute", "upgraded")
         end
         save_nodes_state([], "", "") if upgrade_mode == :normal
