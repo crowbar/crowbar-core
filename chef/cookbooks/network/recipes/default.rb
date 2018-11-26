@@ -513,8 +513,15 @@ end
 if provisioner_address
   Chef::Log.info("Checking we can ping #{provisioner_address}; " \
                  "will wait up to 60 seconds")
+  require "ipaddr"
+  ping_cmd = if IPAddr.new(provisioner_address).ipv6?
+    "ping6"
+  else
+    "ping"
+  end
+
   60.times do
-    break if ::Kernel.system("ping -c 1 -w 1 -q #{provisioner_address} > /dev/null")
+    break if ::Kernel.system("#{ping_cmd} -c 1 -w 1 -q #{provisioner_address} > /dev/null")
     sleep 1
   end
 end

@@ -71,6 +71,7 @@ class NetworkService < ServiceObject
       lock = acquire_ip_lock
       db = Chef::DataBag.load("crowbar/#{network}_network") rescue nil
       net_info = build_net_info(role, network)
+      netmask = network_to_netmask(net_info)
 
       # Did we already allocate this, but the node lost it?
       if db["allocated_by_name"].key?(name)
@@ -79,8 +80,8 @@ class NetworkService < ServiceObject
       else
         if suggestion.present?
           Rails.logger.info("Allocating with suggestion: #{suggestion}")
-          subsug = IPAddr.new(suggestion) & IPAddr.new(net_info["netmask"])
-          subnet = IPAddr.new(net_info["subnet"]) & IPAddr.new(net_info["netmask"])
+          subsug = IPAddr.new(suggestion) & IPAddr.new(netmask)
+          subnet = IPAddr.new(net_info["subnet"]) & IPAddr.new(netmask)
           if subnet == subsug
             if db["allocated"][suggestion].nil?
               Rails.logger.info("Using suggestion for #{type}: #{name} #{network} #{suggestion}")
@@ -95,9 +96,9 @@ class NetworkService < ServiceObject
           range_def = net_info["ranges"][range]
           range_def = net_info["ranges"]["host"] if range_def.nil?
 
-          index = IPAddr.new(range_def["start"]) & ~IPAddr.new(net_info["netmask"])
+          index = IPAddr.new(range_def["start"]) & ~IPAddr.new(netmask)
           index = index.to_i
-          stop_address = IPAddr.new(range_def["end"]) & ~IPAddr.new(net_info["netmask"])
+          stop_address = IPAddr.new(range_def["end"]) & ~IPAddr.new(netmask)
           stop_address = IPAddr.new(net_info["subnet"]) | (stop_address.to_i + 1)
 
           until found
@@ -437,5 +438,22 @@ class NetworkService < ServiceObject
       net_info[k] = v unless v.nil?
     end
     net_info
+  end
+
+  def cidr_to_netmask(cidr, ipv6 = false)
+    if ipv6
+      IPAddr.new("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff").mask(cidr).to_s
+    else
+      IPAddr.new("255.255.255.255").mask(cidr).to_s
+    end
+  end
+
+  def network_to_netmask(network)
+    ip_addr = IPAddr.new(network["subnet"])
+    range = ip_addr.ipv6? ? 128 : 32
+
+    is_cidr = (1..range).cover? Integer(network["netmask"]) rescue false
+    return cidr_to_netmask(network["netmask"], ip_addr.ipv6?) if is_cidr
+    network["netmask"]
   end
 end
