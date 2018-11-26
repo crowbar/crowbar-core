@@ -53,6 +53,7 @@ def write_conf_snippet(new_resource, snippet_variables)
     cookbook "utils"
     source "systemd_service_restart.conf.erb"
     variables snippet_variables
+    action :nothing
     notifies :run, "bash[#{systemd_reload_resource_name}]", :immediately
   end
   template_resource.run_action(:create)
