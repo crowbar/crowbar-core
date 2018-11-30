@@ -244,6 +244,7 @@ template "/usr/sbin/crowbar-shutdown-keystone.sh" do
   owner "root"
   group "root"
   action :create
+  only_if { roles.include? "keystone-server" }
 end
 
 template "/usr/sbin/crowbar-migrate-keystone-and-start.sh" do
@@ -252,6 +253,7 @@ template "/usr/sbin/crowbar-migrate-keystone-and-start.sh" do
   owner "root"
   group "root"
   action :create
+  only_if { roles.include? "keystone-server" }
 end
 
 template "/usr/sbin/crowbar-chef-upgraded.sh" do

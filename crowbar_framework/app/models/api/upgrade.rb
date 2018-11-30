@@ -975,10 +975,11 @@ module Api
         # After the cluster was upgraded, remove the temporary attribute from
         # the proposal role that was used for tracking the original (pre-upgrade)
         # value of "clone_stateless_services"
-        pacemaker_proposal = Proposal.where(barclamp: "pacemaker", name: cluster).first
-        role = pacemaker_proposal.role
-        role.default_attributes["pacemaker"].delete "clone_stateless_services_orig"
-        role.save
+        pacemaker_proposal_role = RoleObject.find_roles_by_name(cluster).first
+        pacemaker_proposal_role.default_attributes["pacemaker"].delete(
+          "clone_stateless_services_orig"
+        )
+        pacemaker_proposal_role.save
 
         Rails.logger.info("Nodes in cluster #{cluster} successfully upgraded")
       end
@@ -1009,24 +1010,31 @@ module Api
         delete_pacemaker_resources other_node
         shutdown_all_services_in_cluster node
 
-        # prevent first upgrade node to start keystone during the
-        # crowbar join call
-        node = ::Node.find_by_name(node.name)
-        node["keystone"]["disable_vhost"] = true
-        node.save
+        clone_stateless_pre_upgrade = node["pacemaker"]["clone_stateless_services_orig"].nil? ||
+          node["pacemaker"]["clone_stateless_services_orig"]
+
+        if !clone_stateless_pre_upgrade && node[:run_list_map].key?("keystone-server")
+          # prevent first upgrade node to start keystone during the
+          # crowbar join call
+          node = ::Node.find_by_name(node.name)
+          node["keystone"]["disable_vhost"] = true
+          node.save
+        end
 
         # start crowbar-join at the first node
         node_api.post_upgrade
         node_api.join_and_chef
 
-        # stop keystone on non-upgraded nodes, run db migrations
-        # and start on the upgrade node
-        keystone_migrate_and_restart node
+        if !clone_stateless_pre_upgrade && node[:run_list_map].key?("keystone-server")
+          # stop keystone on non-upgraded nodes, run db migrations
+          # and start on the upgrade node
+          keystone_migrate_and_restart node
 
-        # allow keystone to be handled by chef again
-        node = ::Node.find_by_name(node.name)
-        node["keystone"].delete "disable_vhost"
-        node.save
+          # allow keystone to be handled by chef again
+          node = ::Node.find_by_name(node.name)
+          node["keystone"].delete "disable_vhost"
+          node.save
+        end
 
         re_enable_network_agents(node, node)
         node_api.save_node_state("controller", "upgraded")
