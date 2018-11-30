@@ -479,14 +479,6 @@ module Api
           )
         end
 
-        # Remove the temporary key from the role object
-        pacemaker_proposals = Proposal.all.where(barclamp: "pacemaker")
-        pacemaker_proposals.each do |proposal|
-          role = proposal.role
-          role.default_attributes["pacemaker"].delete "clone_stateless_services_orig"
-          role.save
-        end
-
         ::Crowbar::UpgradeStatus.new.end_step
       rescue ::Crowbar::Error::Upgrade::ServicesError => e
         ::Crowbar::UpgradeStatus.new.end_step(
@@ -976,6 +968,14 @@ module Api
         non_founder_nodes.each do |node|
           upgrade_next_cluster_node node, founder
         end
+
+        # After the cluster was upgraded, remove the temporary attribute from
+        # the proposal role that was used for tracking the original (pre-upgrade)
+        # value of "clone_stateless_services"
+        pacemaker_proposal = Proposal.where(barclamp: "pacemaker", name: cluster).first
+        role = pacemaker_proposal.role
+        role.default_attributes["pacemaker"].delete "clone_stateless_services_orig"
+        role.save
 
         Rails.logger.info("Nodes in cluster #{cluster} successfully upgraded")
       end
