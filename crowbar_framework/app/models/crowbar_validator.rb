@@ -100,9 +100,10 @@ class CrowbarValidator < Kwalify::Validator
          end
       when "IpAddress"
         cidr = (1..128).cover? Integer(value) rescue false
+        blank_broadcast = path.is_a?(String) && path.include?("broadcast") \
+          && value.empty?
         begin
-          IPAddr.new(value) if !(path.is_a?(String) && path.include?("broadcast") \
-                                 && value.empty?) && !cidr
+          IPAddr.new(value) unless blank_broadcast || cidr
         rescue IPAddr::InvalidAddressError
           msg = "Should be an IP Address: #{value}"
           errors << Kwalify::ValidationError.new(msg, path)
