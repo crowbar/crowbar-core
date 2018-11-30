@@ -82,7 +82,8 @@ remote_node = roles.include? "pacemaker-remote"
 is_cluster_founder = use_ha && node["pacemaker"]["founder"] == node[:fqdn]
 
 clone_stateless = if node["pacemaker"]
-  node["pacemaker"]["clone_stateless_services_orig"] || true
+  node["pacemaker"]["clone_stateless_services_orig"].nil? ||
+    node["pacemaker"]["clone_stateless_services_orig"]
 else
   true
 end
