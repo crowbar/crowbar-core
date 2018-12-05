@@ -2,6 +2,7 @@
 # Do not edit.
 <% unless @interfaces.empty? -%>
 DHCPD_INTERFACE="<%= @interfaces.collect! {|i| "#{i}" }.join(" ") %>"
+DHCPD6_INTERFACE="<%= @interfaces.collect! {|i| "#{i}" }.join(" ") %>"
 <% end -%>
 DHCPD_IFUP_RESTART=""
 DHCPD_RUN_CHROOTED="no"

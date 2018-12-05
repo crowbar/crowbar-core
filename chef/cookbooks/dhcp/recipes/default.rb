@@ -33,17 +33,25 @@ directory "/etc/dhcp3/groups.d"
 directory "/etc/dhcp3/subnets.d"
 directory "/etc/dhcp3/hosts.d"
 
-file "/etc/dhcp3/groups.d/group_list.conf" do
+# This needs to be evaled.
+admin_network = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin")
+address = admin_network.address
+intfs = [admin_network.interface]
+
+group_list = DhcpHelper.config_filename("group_list", admin_network.ip_version)
+file "/etc/dhcp3/groups.d/#{group_list}" do
   owner "root"
   group "root"
   mode 0644
 end
-file "/etc/dhcp3/subnets.d/subnet_list.conf" do
+subnet_list = DhcpHelper.config_filename("subnet_list", admin_network.ip_version)
+file "/etc/dhcp3/subnets.d/#{subnet_list}" do
   owner "root"
   group "root"
   mode 0644
 end
-file "/etc/dhcp3/hosts.d/host_list.conf" do
+host_list = DhcpHelper.config_filename("host_list", admin_network.ip_version)
+file "/etc/dhcp3/hosts.d/#{host_list}" do
   owner "root"
   group "root"
   mode 0644
@@ -59,22 +67,20 @@ EOH
   not_if "test -f /etc/dhcp3/omapi.key"
 end
 
-# This needs to be evaled.
-intfs = [Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").interface]
-address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
 
-d_opts = node[:dhcp][:options]
+d_opts = node[:dhcp][:options]["v#{admin_network.ip_version}"]
+dhcpd_conf = DhcpHelper.config_filename("dhcpd", admin_network.ip_version)
 
 case node[:platform_family]
 when "debian"
   case node[:lsb][:codename]
   when "natty","oneiric","precise"
-    template "/etc/dhcp/dhcpd.conf" do
+    template "/etc/dhcp/#{dhcpd_conf}" do
       owner "root"
       group "root"
       mode 0644
       source "dhcpd.conf.erb"
-      variables(options: d_opts)
+      variables(options: d_opts, ip_version: admin_network.ip_version)
       if node[:provisioner][:enable_pxe]
         notifies :restart, "service[dhcp3-server]"
       end
@@ -90,12 +96,12 @@ when "debian"
       end
     end
   else
-    template "/etc/dhcp3/dhcpd.conf" do
+    template "/etc/dhcp3/#{dhcpd_conf}" do
       owner "root"
       group "root"
       mode 0644
       source "dhcpd.conf.erb"
-      variables(options: d_opts)
+      variables(options: d_opts, ip_version: admin_network.ip_version)
       if node[:provisioner][:enable_pxe]
         notifies :restart, "service[dhcp3-server]"
       end
@@ -115,9 +121,9 @@ when "rhel"
 
   dhcp_config_file = case
     when node[:platform_version].to_f >= 6
-      "/etc/dhcp/dhcpd.conf"
+      "/etc/dhcp/#{dhcpd_conf}"
     else
-      "/etc/dhcpd.conf"
+      "/etc/#{dhcpd_conf}"
     end
 
   template dhcp_config_file do
@@ -125,7 +131,7 @@ when "rhel"
     group "root"
     mode 0644
     source "dhcpd.conf.erb"
-    variables(options: d_opts)
+    variables(options: d_opts, ip_version: admin_network.ip_version)
     if node[:provisioner][:enable_pxe]
       notifies :restart, "service[dhcp3-server]"
     end
@@ -143,12 +149,12 @@ when "rhel"
   end
 
 when "suse"
-  template "/etc/dhcpd.conf" do
+  template "/etc/#{dhcpd_conf}" do
     owner "root"
     group "root"
     mode 0644
     source "dhcpd.conf.erb"
-    variables(options: d_opts)
+    variables(options: d_opts, ip_version: admin_network.ip_version)
     if node[:provisioner][:enable_pxe]
       notifies :restart, "service[dhcp3-server]"
     end
@@ -168,7 +174,7 @@ end
 
 service "dhcp3-server" do
   if %w(suse rhel).include?(node[:platform_family])
-    service_name "dhcpd"
+    service_name DhcpHelper.config_filename("dhcpd", admin_network.ip_version, "")
   elsif node[:platform] == "ubuntu"
     case node[:lsb][:codename]
     when "maverick"

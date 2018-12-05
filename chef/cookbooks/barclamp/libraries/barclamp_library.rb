@@ -92,6 +92,7 @@ module BarclampLibrary
         attr_reader :vlan, :use_vlan
         attr_reader :add_bridge, :add_ovs_bridge, :bridge_name
         attr_reader :conduit
+        attr_reader :ip_version
 
         def initialize(node, net, data)
           @node = node
@@ -112,6 +113,13 @@ module BarclampLibrary
           # let's resolve this only if needed
           @interface = nil
           @interface_list = nil
+
+          require "ipaddr"
+          @ip_version = if IPAddr.new(@subnet).ipv6?
+            "6"
+          else
+            "4"
+          end
         end
 
         def interface

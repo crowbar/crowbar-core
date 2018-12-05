@@ -152,6 +152,7 @@ node_search_with_cache("*:*").each do |mnode|
   admin_data_net = Chef::Recipe::Barclamp::Inventory.get_network_by_type(mnode, "admin")
   admin_mac_addresses = find_node_boot_mac_addresses(mnode, admin_data_net)
   admin_ip_address = admin_data_net.nil? ? mnode[:ipaddress] : admin_data_net.address
+  admin_prefix = admin_data_net.nil? ? "" : "#{admin_data_net.subnet}/#{admin_data_net.netmask}"
 
   ####
   # First deal with states that don't require PXE booting
@@ -181,6 +182,8 @@ node_search_with_cache("*:*").each do |mnode|
         hostname mnode.name
         if admin_mac_addresses.include?(mac_list[i])
           ipaddress admin_ip_address
+          prefix admin_prefix
+          ip_version admin_data_net.ip_version
         end
         macaddress mac_list[i]
         action :add
@@ -219,19 +222,33 @@ node_search_with_cache("*:*").each do |mnode|
   ####
   # Everything below is for states that require PXE booting
 
-  append = []
-  mac_list.each_index do |i|
-    dhcp_host "#{mnode.name}-#{i}" do
-      hostname mnode.name
-      macaddress mac_list[i]
-      if admin_mac_addresses.include?(mac_list[i])
-        ipaddress admin_ip_address
-        options [
-          "if exists dhcp-parameter-request-list {
+  if admin_data_net.ip_version == "6"
+    admin6_uri = "http://[#{admin_ip}]:#{web_port}/discovery"
+    dchp_options = [
+      "option dhcp6.vendor-class 0 10 \"HTTPClient\"",
+      "if option dhcp6.client-arch-type = 00:06 {
+       option dhcp6.bootfile-url \"#{admin6_uri}/ia32/efi/bootia32.efi\";
+     } else if option dhcp6.client-arch-type = 00:07 {
+       option dhcp6.bootfile-url \"#{admin6_uri}x86_64/efi/#{boot_ip_hex}/boot/bootx64.efi\";
+     } else if option dhcp6.client-arch-type = 00:09 {
+       option dhcp6.bootfile-url \"#{admin6_uri}/x86_64/efi/#{boot_ip_hex}/boot/bootx64.efi\";
+     } else if option dhcp6.client-arch-type = 00:10 {
+       option dhcp6.bootfile-url \"#{admin6_uri}/x86_64/efi/#{boot_ip_hex}/boot/bootx64.efi\";
+     } else if option dhcp6.client-arch-type = 00:0b {
+       option dhcp6.bootfile-url \"#{admin6_uri}/aarch64/efi/#{boot_ip_hex}/boot/bootaa64.efi\";
+     } else if option dhcp6.client-arch-type = 00:0e {
+       option dhcp6.bootfile-url \"#{admin6_uri}/ppc64le/bios/\";
+     } else {
+       option dhcp6.bootfile-url \"#{admin6_uri}/x86_64/efi/#{boot_ip_hex}/boot/bootx64.efi\";
+     }"
+    ]
+  else
+    dchp_options = [
+      "if exists dhcp-parameter-request-list {
 # Always send the PXELINUX options (specified in hexadecimal)
 option dhcp-parameter-request-list = concat(option dhcp-parameter-request-list,d0,d1,d2,d3);
 }",
-          "if option arch = 00:06 {
+      "if option arch = 00:06 {
 filename = \"discovery/ia32/efi/#{boot_ip_hex}/boot/bootx64.efi\";
 } else if option arch = 00:07 {
 filename = \"discovery/x86_64/efi/#{boot_ip_hex}/boot/bootx64.efi\";
@@ -245,8 +262,20 @@ filename = \"\";
 } else {
 filename = \"discovery/x86_64/bios/pxelinux.0\";
 }",
-          "next-server #{admin_ip}"
-        ]
+      "next-server #{admin_ip}"
+    ]
+  end
+
+  append = []
+  mac_list.each_index do |i|
+    dhcp_host "#{mnode.name}-#{i}" do
+      hostname mnode.name
+      macaddress mac_list[i]
+      if admin_mac_addresses.include?(mac_list[i])
+        ipaddress admin_ip_address
+        options dchp_options
+        prefix admin_prefix
+        ip_version admin_data_net.ip_version
       end
       action :add
     end

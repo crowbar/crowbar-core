@@ -111,7 +111,11 @@ wait_for_hostname() {
 wait_for_admin_server() {
     # wait for admin server to become pingable
     tries_left=120
-    while ! ping -q -c1 $IP > /dev/null; do
+    local ping="ping"
+    if (( $IPV6 > 0 )); then
+      ping="ping6"
+    fi
+    while ! $ping -q -c1 $IP > /dev/null; do
       tries_left=$(($tries_left-1))
       if [ $tries_left -eq 0 ]; then
         return 1
@@ -160,9 +164,9 @@ do_setup() {
     # Make sure that the client knows how to talk to the server.
     local cfg=/etc/chef/client.rb
     if ! [ -f $cfg ] || \
-       ! grep -q "^\s*chef_server_url\s*[\"\']http://$IP:4000[\"\']" $cfg; then
+       ! grep -q "^\s*chef_server_url\s*[\"\']http://$IP_WRAPPED:4000[\"\']" $cfg; then
         test -f $cfg && mv $cfg $cfg.bak
-        echo "chef_server_url \"http://$IP:4000\"" >$cfg
+        echo "chef_server_url \"http://$IP_WRAPPED:4000\"" >$cfg
         echo "zypper_check_gpg true" >> $cfg
     fi
 
@@ -395,7 +399,17 @@ EXVAL=0
 export HOME=/root
 
 IP="<%= @admin_ip %>"
-HTTP_SERVER="<%= @admin_ip %>:<%= @web_port %>"
+<% if @ip_version == "6" -%>
+IPV6=1
+<% else  -%>
+IPV6=0
+<% end -%>
+if (( $IPV6 > 0 )); then
+  IP_WRAPPED="[$IP]"
+else
+  IP_WRAPPED="$IP"
+fi
+HTTP_SERVER="$IP_WRAPPED:<%= @web_port %>"
 NTP_SERVERS="<%= @ntp_servers_ips.join(" ") %>"
 VALID_NTP_SERVERS=""
 

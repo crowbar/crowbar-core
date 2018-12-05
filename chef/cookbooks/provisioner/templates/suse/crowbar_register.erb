@@ -131,7 +131,12 @@ add_user() {
 ADMIN_IP="<%= @admin_ip %>"
 ADMIN_BROADCAST="<%= @admin_broadcast %>"
 WEB_PORT="<%= @web_port %>"
-HTTP_SERVER="http://${ADMIN_IP}:${WEB_PORT}"
+<% if @ip_version == "6" -%>
+ADMIN_IP_WRAPPED="[$ADMIN_IP]"
+<% else -%>
+ADMIN_IP_WRAPPED="$ADMIN_IP"
+<% end -%>
+HTTP_SERVER="http://${ADMIN_IP_WRAPPED}:${WEB_PORT}"
 CROWBAR_OS="<%= @os %>"
 CROWBAR_ARCH="<%= @arch %>"
 DOMAIN="<%= @domain %>"
@@ -387,7 +392,7 @@ TMP_ATTRIBUTES=$(mktemp --suffix .json)
 echo "{ \"target_platform\": \"$CROWBAR_OS\", \"crowbar_wall\": { \"registering\": true } }" > "$TMP_ATTRIBUTES"
 
 crowbarctl restricted transition $HOSTNAME "discovering"
-chef-client -S http://$ADMIN_IP:4000/ -N "$HOSTNAME" --json-attributes "$TMP_ATTRIBUTES"
+chef-client -S http://$ADMIN_IP_WRAPPED:4000/ -N "$HOSTNAME" --json-attributes "$TMP_ATTRIBUTES"
 crowbarctl restricted transition $HOSTNAME "discovered"
 # TODO need to find way of knowing that chef run is over on server side
 sleep 30
@@ -399,7 +404,7 @@ echo '{ "crowbar_wall": { "registering": true } }' > "$TMP_ATTRIBUTES"
 
 rm -f /etc/chef/client.pem
 crowbarctl restricted transition $HOSTNAME "hardware-installing"
-chef-client -S http://$ADMIN_IP:4000/ -N "$HOSTNAME" --json-attributes "$TMP_ATTRIBUTES"
+chef-client -S http://$ADMIN_IP_WRAPPED:4000/ -N "$HOSTNAME" --json-attributes "$TMP_ATTRIBUTES"
 crowbarctl restricted transition $HOSTNAME "hardware-installed"
 #TODO
 #wait_for_pxe_state ".*_install"

@@ -24,7 +24,9 @@ action :add do
       hostname: new_resource.hostname,
       macaddress: new_resource.macaddress,
       ipaddress: new_resource.ipaddress,
-      options: new_resource.options
+      options: new_resource.options,
+      prefix: new_resource.prefix,
+      ip_version: new_resource.ip_version
     )
     owner "root"
     group "root"
@@ -35,7 +37,7 @@ action :add do
   end
   utils_line "include \"#{filename}\";" do
     action :add
-    file "/etc/dhcp3/hosts.d/host_list.conf"
+    file "/etc/dhcp3/hosts.d/#{DhcpHelper.config_filename("host_list", new_resource.ip_version)}"
     if node[:provisioner][:enable_pxe]
       notifies :restart, resources(service: "dhcp3-server"), :delayed
     end
@@ -54,11 +56,13 @@ action :remove do
     end
     new_resource.updated_by_last_action(true)
   end
-  utils_line "include \"#{filename}\";" do
-    action :remove
-    file "/etc/dhcp3/hosts.d/host_list.conf"
-    if node[:provisioner][:enable_pxe]
-      notifies :restart, resources(service: "dhcp3-server"), :delayed
+  ["host_list.conf", "host_list6.conf"].each do |host_list|
+    utils_line "include \"#{filename}\";" do
+      action :remove
+      file "/etc/dhcp3/hosts.d/#{host_list}"
+      if node[:provisioner][:enable_pxe]
+        notifies :restart, resources(service: "dhcp3-server"), :delayed
+      end
     end
   end
 end
