@@ -186,9 +186,14 @@ class Api::UpgradeController < ApiController
       else
         # At this point params[:component] should be a node, if it is not,
         # raise an error.
-        unless Node.all.map(&:name).include?(params[:component])
-          raise ::Crowbar::Error::UpgradeError, "Component must be 'all', "\
-            "'controllers', 'resume', 'postpone' or a node name."
+        nodes_names = params[:component].split(/[\s,;]/)
+        nodes_names.each do |name_or_alias|
+          node = ::Node.find_node_by_name_or_alias(name_or_alias)
+          next unless node.nil?
+          raise ::Crowbar::Error::UpgradeError,
+            "Component must be 'all', 'controllers', 'resume', "\
+            "'postpone' or a node name(s). "\
+            "No node with '#{name_or_alias}' name or alias was found. "
         end
         if substep != :compute_nodes && status != :finished
           raise ::Crowbar::Error::UpgradeError.new(
@@ -224,7 +229,7 @@ class Api::UpgradeController < ApiController
         errors: {
           nodes: {
             data: "No component parameter has been specified. " \
-              "Pass 'all', 'controllers' or a node name for upgrade actions. " \
+              "Pass 'all', 'controllers' or a node name(s) for upgrade actions. " \
               "Use 'postpone' for postponing upgrade of compute nodes. " \
               "Use 'resume' to resume postponed upgrade."
           }

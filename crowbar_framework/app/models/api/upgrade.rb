@@ -750,7 +750,12 @@ module Api
           end
         else
           # Upgrade given compute node
-          upgrade_one_compute_node component
+          names = component.split(/[\s,;]/)
+          if names.size == 1
+            upgrade_one_compute_node component
+          else
+            non_disruptive_upgrade_compute_nodes(names)
+          end
           ::Crowbar::UpgradeStatus.new.save_substep(substep, :node_finished)
         end
 
@@ -1301,7 +1306,8 @@ module Api
       end
 
       def parallel_upgrade_compute_nodes(compute_nodes)
-        Rails.logger.info("Entering disruptive upgrade of compute nodes")
+        Rails.logger.info("Entering parallel upgrade of compute nodes, #{upgrade_mode} mode")
+        Rails.logger.info("Nodes for upgrade: #{compute_nodes.map(&:name).join(', ')}")
         save_nodes_state(compute_nodes, "compute", "upgrading")
         save_node_action("upgrading the packages")
         begin
@@ -1316,22 +1322,52 @@ module Api
             "Error while upgrading compute nodes. " + e.message
           )
         end
-        # FIXME: should we paralelize this as well?
+        # reboot block
         compute_nodes.each do |node|
           next if node.upgraded?
           node_api = Api::Node.new node.name
-          if node.ready_after_upgrade?
-            Rails.logger.info(
-              "Node #{node.name} is ready after the initial chef-client run."
-            )
-          else
-            node_api.save_node_state("compute", "upgrading")
-            node_api.reboot_and_wait
-            node_api.join_and_chef
-          end
+          node_api.reboot
+        end
+        # wait block (we have to wait for each node to be back)
+        compute_nodes.each do |node|
+          next if node.upgraded?
+          node_api = Api::Node.new node.name
+          node_api.wait_after_reboot
+        end
+        # crowbar_join preparations
+        compute_nodes.each do |node|
+          next if node.upgraded?
+          node_api = Api::Node.new node.name
+          node_api.prepare_join
+        end
+        # Now, run time consuming crowbar_join action in parallel
+        save_node_action("upgrading configuration and re-joining the crowbar environment")
+        begin
+          execute_scripts_and_wait_for_finish(
+            compute_nodes,
+            "/usr/sbin/crowbar-chef-upgraded.sh",
+            timeouts[:chef_upgraded]
+          )
+          Rails.logger.info("Crowbar-join executed successfully on all nodes in this set.")
+        rescue StandardError => e
+          raise_node_upgrade_error(
+            "Error while running the initial chef-client. #{e.message} " \
+            "Important information might be found under /var/log/crowbar/crowbar_join/."
+          )
+        end
+        # post crowbar_join actions
+        compute_nodes.each do |node|
+          next if node.upgraded?
+          node_api = Api::Node.new node.name
+          node_api.post_join_cleanup
+        end
+        # mark the finish states
+        compute_nodes.each do |node|
+          next if node.upgraded?
+          node_api = Api::Node.new node.name
           node_api.save_node_state("compute", "upgraded")
         end
-        save_nodes_state([], "", "")
+        save_nodes_state([], "", "") if upgrade_mode == :normal
       end
 
       def upgrade_compute_nodes(virt)
@@ -1364,6 +1400,58 @@ module Api
         compute_nodes.each do |n|
           upgrade_compute_node(controller, n)
         end
+      end
+
+      # Non-disruptive way of upgrading more compute nodes at once.
+      # Does live-evacuation of each compute node first, then starts parallel upgrade.
+      # Argument is list of node names.
+      def non_disruptive_upgrade_compute_nodes(names)
+        compute_nodes = names.map do |name|
+          ::Node.find_node_by_name_or_alias(name)
+        end
+
+        controller = fetch_nova_controller
+
+        # If there's a compute node which we already started to upgrade,
+        # (and the upgrade process was restarted due to the failure)
+        # continue with that one.
+        compute_nodes.sort! { |n| n.upgrading? ? -1 : 1 }
+
+        while compute_nodes.any?
+          # 1. Evacuate as many as possible, create a subset of nodes without instances.
+          nodes_to_upgrade = []
+          already_upgrading = false
+          compute_nodes.each do |node|
+            # if nodes are already in upgrading state, we can skip the live-migration part
+            already_upgrading = true if node.upgrading?
+            break if already_upgrading && !node.upgrading?
+            hostname = node[:hostname]
+            begin
+              live_evacuate_compute_node(controller, hostname) unless already_upgrading
+              nodes_to_upgrade << node
+            rescue StandardError => e
+              # We could safely ignore the error when the execution failed with a timeout,
+              # raise it otherwise.
+              failed_file = "/var/lib/crowbar/upgrade/crowbar-evacuate-host-failed"
+              raise e if controller.file_exist? failed_file
+              Rails.logger.info("attempt to live evacuate #{hostname} took too long, exiting loop")
+              # We need to enable nova-service on the failed node again so its compute powers could
+              # be used when upgrading next bunch of compute nodes
+              enable_compute_service(controller, node, true)
+              break
+            end
+          end
+          compute_nodes -= nodes_to_upgrade
+          save_nodes_state(nodes_to_upgrade, "compute", "upgrading")
+
+          # 2. Use original parallel upgrade method for nodes that are free of instances.
+          parallel_upgrade_compute_nodes(nodes_to_upgrade)
+
+          # 3. Enable nova-compute services for upgraded nodes.
+          nodes_to_upgrade.each do |node|
+            enable_compute_service(controller, node)
+          end
+        end
         save_nodes_state([], "", "")
       end
 
@@ -1389,6 +1477,32 @@ module Api
         upgrade_compute_node(controller, node)
       end
 
+      # After compute node upgrade, nova-compute service needs to be enabled
+      # so that the node compute power can be used when live-migrating other nodes
+      def enable_compute_service(controller, node, only_enable = false)
+        hostname = node[:hostname]
+        controller.run_ssh_cmd(
+          "source /root/.openrc; " \
+          "openstack --insecure compute service set --enable #{hostname} nova-compute"
+        )
+        out = controller.run_ssh_cmd(
+          "source /root/.openrc; " \
+          "openstack --insecure compute service list --service nova-compute " \
+          "--host #{hostname} -f value -c Status",
+          "60s"
+        )
+        unless out[:stdout].chomp == "enabled"
+          raise_node_upgrade_error(
+            "Enabling nova-compute service for '#{hostname}' has failed. " \
+            "Check nova log files at '#{controller.name}' and '#{hostname}'."
+          )
+        end
+        return if only_enable
+
+        return unless node[:pacemaker] && node[:pacemaker][:is_remote]
+        start_remote_resources(controller, hostname)
+      end
+
       # Fully upgrade one compute node
       def upgrade_compute_node(controller, node)
         return if node.upgraded?
@@ -1412,38 +1526,20 @@ module Api
           node_api.save_node_state("compute", "upgraded")
           return
         end
-        controller.run_ssh_cmd(
-          "source /root/.openrc; " \
-          "openstack --insecure compute service set --enable #{hostname} nova-compute"
-        )
-        out = controller.run_ssh_cmd(
-          "source /root/.openrc; " \
-          "openstack --insecure compute service list --service nova-compute " \
-          "--host #{hostname} -f value -c Status",
-          "60s"
-        )
-        unless out[:stdout].chomp == "enabled"
-          raise_node_upgrade_error(
-            "Enabling nova-compute service for '#{hostname}' has failed. " \
-            "Check nova log files at '#{controller.name}' and '#{hostname}'."
-          )
-        end
 
-        if node[:pacemaker] && node[:pacemaker][:is_remote]
-          start_remote_resources(controller, hostname)
-        end
-
+        enable_compute_service(controller, node)
         node_api.save_node_state("compute", "upgraded")
       end
 
       # Live migrate all instances of the specified
       # node to other available hosts.
       def live_evacuate_compute_node(controller, compute)
-        save_node_action("live-migrating nova instances from current node")
+        save_node_action("live-migrating nova instances from #{compute}")
         controller.wait_for_script_to_finish(
           "/usr/sbin/crowbar-evacuate-host.sh",
           timeouts[:evacuate_host],
-          [compute]
+          [compute],
+          true
         )
         Rails.logger.info(
           "Migrating instances from node #{compute} was successful."
