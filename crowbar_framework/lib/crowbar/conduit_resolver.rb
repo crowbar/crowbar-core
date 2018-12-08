@@ -34,8 +34,11 @@ module Crowbar
         if cr_network_config.key?("interface_map")
           cr_network_config["interface_map"].each do |data|
             next unless cr_dmi_system["product_name"] =~ /#{data["pattern"]}/
-            next if data.key?("serial_number") &&
-                cr_dmi_system["serial_number"].strip != data["serial_number"].strip
+            if data.key?("serial_number")
+              data_serial = data["serial_number"].strip
+              next if data_serial != (cr_dmi_system["serial_number"] || "").strip &&
+                  data_serial != (cr_dmi_base_board["serial_number"] || "").strip
+            end
 
             result = data["bus_order"]
             break
@@ -331,6 +334,14 @@ module Crowbar
       return {} if @node.automatic_attrs["dmi"].nil? || @node.automatic_attrs["dmi"]["system"].nil?
 
       @node.automatic_attrs["dmi"]["system"]
+    end
+
+    ## Return the DMI base_board attributes from the node
+    def cr_dmi_base_board
+      return {} if @node.automatic_attrs["dmi"].nil? ||
+          @node.automatic_attrs["dmi"]["base_board"].nil?
+
+      @node.automatic_attrs["dmi"]["base_board"]
     end
 
     ## Return the list of bonds from the node
