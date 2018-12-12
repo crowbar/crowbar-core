@@ -216,6 +216,7 @@ class Api::UpgradeController < ApiController
           Rails.logger.info("Restarting the 'nodes' step after previous failure")
           ::Crowbar::UpgradeStatus.new.start_step(:nodes)
         end
+        ::Crowbar::UpgradeStatus.new.save_nodes_selected_for_upgrade("compute")
       end
       Api::Upgrade.nodes component
       head :ok
