@@ -203,8 +203,7 @@ class Api::UpgradeController < ApiController
           raise ::Crowbar::Error::UpgradeError,
             "All requested nodes are already upgraded."
         end
-
-        if substep != :compute_nodes && status != :finished
+        if substep == :controller_nodes && status != :finished
           raise ::Crowbar::Error::UpgradeError.new(
             "Controller nodes must be upgraded first!"
           )

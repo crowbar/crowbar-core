@@ -812,6 +812,11 @@ module Api
         status = ::Crowbar::UpgradeStatus.new
         if status.progress[:remaining_nodes].zero?
           status.save_substep(substep, :finished)
+
+          status.save_substep(:reload_nova, :running)
+          reload_nova_services
+          status.save_substep(:reload_nova, :finished)
+
           finalize_nodes_upgrade
           unlock_crowbar_ui_package
           status.end_step
@@ -939,6 +944,32 @@ module Api
         node.ssh_cmd("systemctl start chef-client")
       end
 
+      # Once all nova services are upgraded to current version (that is Pike for current SOC)
+      # we need to tell services to start using latest RPC
+      # According to https://docs.openstack.org/nova/pike/user/upgrade.html this means
+      # sending SIG_HUP to all nova services
+      def reload_nova_services
+        all_nova_nodes = ::Node.find("roles:nova-*").sort do |n|
+          n.roles.include?("nova-controller") ? -1 : 1
+        end
+        all_nova_nodes.each do |node|
+          save_node_action("Reloading nova services at #{node.name}")
+          begin
+            node.wait_for_script_to_finish(
+              "/usr/sbin/crowbar-reload-nova-after-upgrade.sh",
+              timeouts[:reload_nova_services]
+            )
+          rescue StandardError => e
+            raise_node_upgrade_error(
+              "Reloading of some nova service has failed on node #{node.name}: " \
+              "#{e.message} Check /var/log/crowbar/node-upgrade.log for details."
+            )
+          end
+          Rails.logger.info("Nova services reloaded at #{node.name}.")
+          save_node_action("Nova services reload finished.")
+        end
+      end
+
       def delete_upgrade_scripts(node)
         return if node.admin?
 
@@ -953,7 +984,9 @@ module Api
           "router-migration",
           "lbaas-evacuation",
           "post-upgrade",
-          "chef-upgraded"
+          "chef-upgraded",
+          "reload-nova-after-upgrade",
+          "run-nova-online-migrations"
         ].map { |f| "/usr/sbin/crowbar-#{f}.sh" }.join(" ")
         scripts_to_delete << " /etc/neutron/lbaas-connection.conf"
         node.run_ssh_cmd("rm -f #{scripts_to_delete}")
