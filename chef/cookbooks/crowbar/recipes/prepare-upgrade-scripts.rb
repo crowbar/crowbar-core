@@ -101,6 +101,17 @@ template "/usr/sbin/crowbar-shutdown-services-before-upgrade.sh" do
   )
 end
 
+cinder_controller = roles.include? "cinder-controller"
+
+template "/usr/sbin/crowbar-delete-cinder-services-before-upgrade.sh" do
+  source "crowbar-delete-cinder-services-before-upgrade.sh.erb"
+  mode "0755"
+  owner "root"
+  group "root"
+  action :create
+  only_if { cinder_controller && (!use_ha || is_cluster_founder) }
+end
+
 nova = search(:node, "run_list_map:nova-controller").first
 
 template "/usr/sbin/crowbar-evacuate-host.sh" do
