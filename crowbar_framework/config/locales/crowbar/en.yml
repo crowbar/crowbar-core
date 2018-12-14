@@ -782,7 +782,7 @@ en:
       disallow_chef_restart_disabled: 'This API is currently disabled in crowbar.yml config file (%{option} option).'
       upgrade_ongoing: 'Upgrade is already ongoing. Please wait.'
       zypper_locked: '%{zypper_locked_message}'
-      zypper_prompt: '%{zypper_prompt_text}'
+      zypper_prompt: "Zypper requires user interaction.\n\nMessage: %{zypper_message}\nPrompt: %{zypper_prompt_text}"
       upgrade_script_path: 'Could not find %{path}'
       upgrade:
         help:
