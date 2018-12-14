@@ -19,13 +19,13 @@ barclamp:
   display: 'Salt'
   description: 'Salt Management'
   version: 0
-  user_managed: false
+  user_managed: true
   member:
     - 'crowbar'
 
 crowbar:
   layout: 1
-  order: 30
-  run_order: 30
-  chef_order: 30
-  proposal_schema_version: 1
+  order: 99
+  run_order: 99
+  chef_order: 99
+  proposal_schema_version: 3
