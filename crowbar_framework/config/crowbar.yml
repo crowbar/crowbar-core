@@ -18,6 +18,7 @@ default: &default
     - nova-compute-vmware
     - nova-compute-xen
     - nova-compute-zvm
+    - network
     - ntp-client
     - provisioner-base
     - suse-manager-client
