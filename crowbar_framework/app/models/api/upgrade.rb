@@ -441,8 +441,14 @@ module Api
 
         # For all nodes in cluster, set the pre-upgrade attribute
         upgrade_nodes = ::Node.find("state:crowbar_upgrade")
+        cinder_node = nil
         upgrade_nodes.each do |node|
           node.set_pre_upgrade_attribute
+          if node.roles.include?("cinder-controller") &&
+              (!node.roles.include?("pacemaker-cluster-member") ||
+                  node["pacemaker"]["founder"] == node[:fqdn])
+            cinder_node = node
+          end
         end
 
         # Initiate the services shutdown for all nodes
@@ -452,6 +458,26 @@ module Api
           timeouts[:shutdown_services]
         )
         Rails.logger.info("Services were shut down on all nodes.")
+
+        begin
+          unless cinder_node.nil?
+            cinder_node.wait_for_script_to_finish(
+              "/usr/sbin/crowbar-delete-cinder-services-before-upgrade.sh",
+              timeouts[:delete_cinder_services]
+            )
+            Rails.logger.info("Deleting of cinder services was successful.")
+          end
+        rescue StandardError => e
+          ::Crowbar::UpgradeStatus.new.end_step(
+            false,
+            services: {
+              data: "Problem while deleting cinder services: " + e.message,
+              help: "Check /var/log/crowbar/production.log at admin server. " \
+                "If the action failed at a specific node, " \
+                "check /var/log/crowbar/node-upgrade.log at the node."
+            }
+          )
+        end
 
         # Remove the temporary key from the role object
         pacemaker_proposals = Proposal.all.where(barclamp: "pacemaker")
