@@ -1442,6 +1442,12 @@ module Api
           ::Node.find_node_by_name_or_alias(name)
         end
 
+        # make sure we upgrade each node only once
+        compute_nodes.uniq!(&:name)
+
+        # remove nodes which were already upgraded
+        compute_nodes.reject!(&:upgraded?)
+
         controller = fetch_nova_controller
 
         # If there's a compute node which we already started to upgrade,
