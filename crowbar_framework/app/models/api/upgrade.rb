@@ -825,6 +825,10 @@ module Api
           reload_nova_services
           status.save_substep(:reload_nova, :finished)
 
+          status.save_substep(:run_online_migrations, :running)
+          run_online_migrations
+          status.save_substep(:run_online_migrations, :finished)
+
           finalize_nodes_upgrade
           unlock_crowbar_ui_package
           status.end_step
@@ -976,6 +980,31 @@ module Api
           Rails.logger.info("Nova services reloaded at #{node.name}.")
           save_node_action("Nova services reload finished.")
         end
+      end
+
+      # Once all nova services are running Pike, it's possible to execute
+      # online db migrations
+      def run_online_migrations
+        nova_controllers = ::Node.find("roles:nova-controller")
+        return if nova_controllers.empty?
+
+        if nova_controllers.size > 1
+          nova_controllers.select! { |n| n[:fqdn] == n[:pacemaker][:founder] }
+        end
+        node = nova_controllers.first
+
+        save_node_action("Executing nova online migrations on #{node.name}...")
+        node.wait_for_script_to_finish(
+          "/usr/sbin/crowbar-run-nova-online-migrations.sh",
+          timeouts[:nova_online_migrations]
+        )
+        Rails.logger.info("Nova online migrations finished.")
+        save_node_action("Nova online migrations finished.")
+      rescue StandardError => e
+        raise_node_upgrade_error(
+          "Problem while running nova online migrations on node #{node.name}: " \
+          "#{e.message} Check /var/log/crowbar/node-upgrade.log for details."
+        )
       end
 
       def delete_upgrade_scripts(node)
