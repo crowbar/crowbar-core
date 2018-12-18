@@ -307,3 +307,11 @@ template "/usr/sbin/crowbar-reload-nova-after-upgrade.sh" do
   )
   only_if { nova_node }
 end
+
+template "/usr/sbin/crowbar-run-nova-online-migrations.sh" do
+  source "crowbar-run-nova-online-migrations.sh.erb"
+  mode "0775"
+  owner "root"
+  group "root"
+  only_if { roles.include?("nova-controller") }
+end
