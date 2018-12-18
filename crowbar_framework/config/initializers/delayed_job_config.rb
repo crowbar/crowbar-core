@@ -35,3 +35,4 @@ else
   File.join(Rails.root, "log", "background_jobs.log")
 end
 Delayed::Worker.logger = Logger.new(log_file)
+Delayed::Worker.max_run_time = 7.days
