@@ -1373,7 +1373,7 @@ module Api
         upgrade_compute_nodes type
       end
 
-      def parallel_upgrade_compute_nodes(compute_nodes)
+      def parallel_upgrade_compute_nodes(compute_nodes, controller = nil)
         Rails.logger.info("Entering parallel upgrade of compute nodes, #{upgrade_mode} mode")
         Rails.logger.info("Nodes for upgrade: #{compute_nodes.map(&:name).join(', ')}")
         save_nodes_state(compute_nodes, "compute", "upgrading")
@@ -1428,6 +1428,13 @@ module Api
           next if node.upgraded?
           node_api = Api::Node.new node.name
           node_api.post_join_cleanup
+        end
+        # enable nova-compute services for upgraded nodes.
+        unless controller.nil?
+          compute_nodes.each do |node|
+            next if node.upgraded?
+            enable_compute_service(controller, node)
+          end
         end
         # mark the finish states
         compute_nodes.each do |node|
@@ -1513,12 +1520,7 @@ module Api
           save_nodes_state(nodes_to_upgrade, "compute", "upgrading")
 
           # 2. Use original parallel upgrade method for nodes that are free of instances.
-          parallel_upgrade_compute_nodes(nodes_to_upgrade)
-
-          # 3. Enable nova-compute services for upgraded nodes.
-          nodes_to_upgrade.each do |node|
-            enable_compute_service(controller, node)
-          end
+          parallel_upgrade_compute_nodes(nodes_to_upgrade, controller)
         end
         save_nodes_state([], "", "")
       end
@@ -1559,7 +1561,7 @@ module Api
           "--host #{hostname} -f value -c Status",
           "60s"
         )
-        unless out[:stdout].chomp == "enabled"
+        if out[:stdout].nil? || out[:stdout].chomp != "enabled"
           raise_node_upgrade_error(
             "Enabling nova-compute service for '#{hostname}' has failed. " \
             "Check nova log files at '#{controller.name}' and '#{hostname}'."
