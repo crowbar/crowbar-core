@@ -1557,6 +1557,13 @@ module Api
               break
             end
           end
+          if nodes_to_upgrade.empty?
+            raise_node_upgrade_error(
+              "There was a problem during live evacuation of #{compute_nodes.first[:name]}. " \
+              "Cannot proceed with upgrade of compute nodes. " \
+              "Check /var/log/crowbar/production.log and nova logs for details."
+            )
+          end
           compute_nodes -= nodes_to_upgrade
           save_nodes_state(nodes_to_upgrade, "compute", "upgrading")
 
