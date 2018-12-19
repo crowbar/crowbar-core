@@ -1466,6 +1466,8 @@ module Api
               # raise it otherwise.
               failed_file = "/var/lib/crowbar/upgrade/crowbar-evacuate-host-failed"
               raise e if controller.file_exist? failed_file
+              # Exit with error if this is the only node left, otherwise we can end in endless loop
+              raise e if nodes_to_upgrade.size == 1
               Rails.logger.info("attempt to live evacuate #{hostname} took too long, exiting loop")
               # We need to enable nova-service on the failed node again so its compute powers could
               # be used when upgrading next bunch of compute nodes
