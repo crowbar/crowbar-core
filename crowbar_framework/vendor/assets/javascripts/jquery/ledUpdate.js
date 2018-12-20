@@ -70,8 +70,8 @@
             val.status.ready,
             val.status.failed,
             val.status.unknown,
-            val.status.crowbar_upgrade,
-            val.status.unready + val.status.pending
+            val.status.unready + val.status.pending,
+            val.status.crowbar_upgrade
           ];
 
           current.attr('title', val.tooltip).tooltip('destroy').tooltip({
@@ -89,7 +89,8 @@
                 '#0f0',
                 '#f00',
                 '#999',
-                '#ff0'
+                '#ff0',
+                '#39f',
               ]
             }
           );
