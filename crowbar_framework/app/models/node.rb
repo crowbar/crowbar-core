@@ -638,9 +638,38 @@ class Node < ChefObject
     Rails.logger.debug("Done with removal of node: #{@node.name} - #{crowbar_revision}")
   end
 
+  def crowbar_network
+    # This is slightly annoying: we store data in the node role, but since we
+    # allow overriding the network data on a per-node basis, users may also put
+    # some data in the node directly.
+    # Within a chef cookbook, it's fine because it's all merged and accessible
+    # directly through the attribute, but we can't rely on this here as the
+    # merge of the node attributes and the node role attributes only occurs on
+    # a chef run. That means that if the rails app is changing the node role
+    # attribute and then trying to read the data before a chef run, it cannot
+    # rely solely on the the node attributes.
+    # Therefore we manually merge here the two sets of attributes...
+
+    role_attrs = crowbar["crowbar"]["network"].to_hash
+
+    # We don't take default attributes, as we would also include the node role
+    # attributes as they exists on the last chef run, therefore always
+    # overriding the possibly different node role attributes that exist now. As
+    # a result, the attribute path may not exist and we need some care when
+    # accessing what we look for.
+    node_normal_crowbar = @node.normal_attrs["crowbar"]
+    node_attrs = if node_normal_crowbar.nil? || node_normal_crowbar["network"].nil?
+      {}
+    else
+      @node.normal_attrs["crowbar"]["network"].to_hash
+    end
+
+    role_attrs.merge(node_attrs)
+  end
+
   def networks
     networks = {}
-    crowbar["crowbar"]["network"].each do |name, data|
+    crowbar_network.each do |name, data|
       # note that node might not be part of network proposal yet (for instance:
       # if discovered, and IP got allocated by user)
       next if @node["network"]["networks"].nil? || !@node["network"]["networks"].key?(name)
@@ -651,11 +680,11 @@ class Node < ChefObject
 
   def get_network_by_type(type)
     return nil if @role.nil?
-    return nil unless crowbar["crowbar"]["network"].key?(type)
+    return nil unless crowbar_network.key?(type)
     # note that node might not be part of network proposal yet (for instance:
     # if discovered, and IP got allocated by user)
     return nil if @node["network"]["networks"].nil? || !@node["network"]["networks"].key?(type)
-    @node["network"]["networks"][type].to_hash.merge(crowbar["crowbar"]["network"][type].to_hash)
+    @node["network"]["networks"][type].to_hash.merge(crowbar_network[type].to_hash)
   end
 
   def set_network_attribute(network, attribute, value)
