@@ -479,14 +479,6 @@ module Api
           )
         end
 
-        # Remove the temporary key from the role object
-        pacemaker_proposals = Proposal.all.where(barclamp: "pacemaker")
-        pacemaker_proposals.each do |proposal|
-          role = proposal.role
-          role.default_attributes["pacemaker"].delete "clone_stateless_services_orig"
-          role.save
-        end
-
         ::Crowbar::UpgradeStatus.new.end_step
       rescue ::Crowbar::Error::Upgrade::ServicesError => e
         ::Crowbar::UpgradeStatus.new.end_step(
@@ -977,6 +969,15 @@ module Api
           upgrade_next_cluster_node node, founder
         end
 
+        # After the cluster was upgraded, remove the temporary attribute from
+        # the proposal role that was used for tracking the original (pre-upgrade)
+        # value of "clone_stateless_services"
+        pacemaker_proposal_role = RoleObject.find_roles_by_name(cluster).first
+        pacemaker_proposal_role.default_attributes["pacemaker"].delete(
+          "clone_stateless_services_orig"
+        )
+        pacemaker_proposal_role.save
+
         Rails.logger.info("Nodes in cluster #{cluster} successfully upgraded")
       end
 
@@ -1005,9 +1006,33 @@ module Api
         # delete old pacemaker resources (from the node where old pacemaker is running)
         delete_pacemaker_resources other_node
         shutdown_all_services_in_cluster node
+
+        clone_stateless_pre_upgrade = node["pacemaker"]["clone_stateless_services_orig"].nil? ||
+          node["pacemaker"]["clone_stateless_services_orig"]
+
+        if !clone_stateless_pre_upgrade && node[:run_list_map].key?("keystone-server")
+          # prevent first upgrade node to start keystone during the
+          # crowbar join call
+          node = ::Node.find_by_name(node.name)
+          node["keystone"]["disable_vhost"] = true
+          node.save
+        end
+
         # start crowbar-join at the first node
         node_api.post_upgrade
         node_api.join_and_chef
+
+        if !clone_stateless_pre_upgrade && node[:run_list_map].key?("keystone-server")
+          # stop keystone on non-upgraded nodes, run db migrations
+          # and start on the upgrade node
+          keystone_migrate_and_restart node
+
+          # allow keystone to be handled by chef again
+          node = ::Node.find_by_name(node.name)
+          node["keystone"].delete "disable_vhost"
+          node.save
+        end
+
         re_enable_network_agents(node, node)
         node_api.save_node_state("controller", "upgraded")
       end
@@ -1075,6 +1100,47 @@ module Api
         rescue StandardError => e
           raise_node_upgrade_error(
             "Error while shutting down ervices. " + e.message
+          )
+        end
+      end
+
+      # "shutdown_all_services_in_cluster" kept the keystone vhost running
+      # on the non-upgraded nodes. This method will stop the vhost on those
+      # nodes, run the db migrations and start the upgrade keystone instance
+      # on "node".
+      def keystone_migrate_and_restart(node)
+        save_node_action("Making sure that Keystone is stopped on non-upgraded nodes")
+
+        cluster = node[:pacemaker][:config][:environment]
+
+        cluster_nodes = ::Node.find(
+          "pacemaker_config_environment:#{cluster} AND " \
+          "run_list_map:pacemaker-cluster-member AND " \
+          "NOT fqdn:#{node[:fqdn]}"
+        )
+        begin
+          execute_scripts_and_wait_for_finish(
+            cluster_nodes,
+            "/usr/sbin/crowbar-shutdown-keystone.sh",
+            timeouts[:shutdown_remaining_services]
+          )
+          Rails.logger.info("All non-upgraded keystone instances were shut down.")
+        rescue StandardError => e
+          raise_node_upgrade_error(
+            "Error while shutting down keystone. " + e.message
+          )
+        end
+
+        save_node_action("Running keystone db migrations and starting keystone on upgraded node")
+        begin
+          node.wait_for_script_to_finish(
+            "/usr/sbin/crowbar-migrate-keystone-and-start.sh",
+            timeouts[:shutdown_remaining_services]
+          )
+          Rails.logger.info("Keystone DB migrated and service started.")
+        rescue StandardError => e
+          raise_node_upgrade_error(
+            "Error while migrating and restarting keystone. " + e.message
           )
         end
       end

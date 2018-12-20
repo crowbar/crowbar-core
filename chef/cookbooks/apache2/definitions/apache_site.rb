@@ -21,8 +21,29 @@ define :apache_site, enable: true do
   include_recipe "apache2"
   if node[:platform_family] == "suse"
     if not params[:enable]
-      file "#{node[:apache][:dir]}/vhosts.d/#{params[:name]}" do
-        action :delete
+      ruby_block "disabling vhost #{params[:name]}" do
+        block do
+          filename = "#{node[:apache][:dir]}/vhosts.d/#{params[:name]}"
+          Chef::Log.debug("Renaming #{filename} to #{filename}.disabled")
+          ::File.rename(filename, "#{filename}.disabled")
+        end
+        only_if do
+          ::File.exist?("#{node[:apache][:dir]}/vhosts.d/#{params[:name]}")
+        end
+        notifies :reload, "service[apache2]", :immediately
+      end
+    else
+      ruby_block "enabling vhost #{params[:name]}" do
+        block do
+          filename = "#{node[:apache][:dir]}/vhosts.d/#{params[:name]}"
+          if File.exist?("#{filename}.disabled")
+            Chef::Log.debug("Renaming #{filename}.disabled to #{filename}")
+            File.rename("#{filename}.disabled", filename)
+          end
+        end
+        not_if do
+          File.exist?(filename)
+        end
         notifies :reload, "service[apache2]", :immediately
       end
     end
