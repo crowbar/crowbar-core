@@ -60,15 +60,16 @@ module Crowbar
           unless ipv4_configured || ipv4_addrs.empty?
             return false
           end
-          # we don't really depend on IPv6, so no big deal
-          # unless ipv6_configured || ipv6_addrs.empty?
-          #   return false
-          # end
+
+          unless ipv6_configured || ipv6_addrs.empty?
+            return false
+          end
 
           true
         end
 
         def ping_succeeds?
+          return system("ping6 -c 1 #{fqdn} > /dev/null 2>&1") unless ipv6_addrs.empty?
           system("ping -c 1 #{fqdn} > /dev/null 2>&1")
         end
 
@@ -103,7 +104,9 @@ module Crowbar
               else
                 next unless ip_addr.ipv4?
               end
-              addresses.push address
+              # Sanitise the ip string, as ipv6 writing shortcuts can make
+              # string comparisons fail.
+              addresses.push ip_addr.to_s
             end
           end
         end
