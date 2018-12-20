@@ -906,11 +906,15 @@ class Node < ChefObject
   # Executes a script in background and Waits until it finishes.
   # We expect that the script generates two kinds of files to indicate success or failure.
   # Raise a timeout exception if the waiting time exceedes 'seconds'
-  def wait_for_script_to_finish(script, seconds, args = [])
+  def wait_for_script_to_finish(script, seconds, args = [], enforce_timeout = false)
     cmd = script
     cmd += " " + args.join(" ") unless args.empty?
 
     raise "Script #{script} is not present on the node #{@node.name}." unless file_exist?(script)
+
+    # Pass timeout directly to the node executing the script
+    # so the script is killed if it runs too long
+    cmd = "timeout #{seconds} " + cmd if enforce_timeout
 
     base = "/var/lib/crowbar/upgrade/" + File.basename(script, ".sh")
     ok_file = base + "-ok"
