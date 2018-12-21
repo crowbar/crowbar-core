@@ -17,6 +17,7 @@
 
 require "kwalify"
 require "uri"
+require "ipaddr"
 
 class CrowbarValidator < Kwalify::Validator
    def initialize(schema_filename)
@@ -98,15 +99,20 @@ class CrowbarValidator < Kwalify::Validator
            errors << Kwalify::ValidationError.new(msg, path)
          end
       when "IpAddress"
-         regex = /\A(?:25[0-5]|(?:2[0-4]|1\d|[1-9])?\d)(?:\.(?:25[0-5]|(?:2[0-4]|1\d|[1-9])?\d)){3}\z/
-         if value[regex].nil?
-           msg = "Should be an IP Address: #{value}"
-           errors << Kwalify::ValidationError.new(msg, path)
-         end
+        cidr = (1..128).cover? Integer(value) rescue false
+        blank_broadcast = path.is_a?(String) && path.include?("broadcast") \
+          && value.empty?
+        begin
+          IPAddr.new(value) unless blank_broadcast || cidr
+        rescue IPAddr::InvalidAddressError
+          msg = "Should be an IP Address: #{value}"
+          errors << Kwalify::ValidationError.new(msg, path)
+        end
       when "IpAddressMap"
-         regex = /\A(?:25[0-5]|(?:2[0-4]|1\d|[1-9])?\d)(?:\.(?:25[0-5]|(?:2[0-4]|1\d|[1-9])?\d)){3}\z/
          value.each_key do |key|
-           if key[regex].nil?
+           begin
+             IPAddr.new(key)
+           rescue IPAddr::InvalidAddressError
              msg = "Should be an IP Address: #{key}"
              errors << Kwalify::ValidationError.new(msg, path)
            end
