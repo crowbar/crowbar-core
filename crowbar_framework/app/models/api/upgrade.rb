@@ -1522,6 +1522,10 @@ module Api
         # continue with that one.
         compute_nodes.sort! { |n| n.upgrading? ? -1 : 1 }
 
+        # before the upgrade starts, reset the current nodes list
+        # (so it does not show possibly old situation from previous run)
+        save_nodes_state([], "", "")
+
         while compute_nodes.any?
           # 1. Evacuate as many as possible, create a subset of nodes without instances.
           nodes_to_upgrade = []
