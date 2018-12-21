@@ -1,0 +1,62 @@
+#!/bin/bash
+#
+# Before the nodes upgrade, we should delete nova services
+# that are supposed to run on the nodes that are not known to crowbar.
+#
+# If such old services would stay in database, it would not be possible
+# to convince fully upgraded nova to use the latest RPC API.
+#
+# The script should be run only from nova controller.
+
+LOGFILE=/var/log/crowbar/node-upgrade.log
+UPGRADEDIR=/var/lib/crowbar/upgrade
+mkdir -p "`dirname "$LOGFILE"`"
+exec >>"$LOGFILE" 2>&1
+
+log()
+{
+    set +x
+    echo "[$(date --iso-8601=ns)] [$$] $@"
+    set -x
+}
+
+log "Executing $BASH_SOURCE"
+
+set -x
+
+mkdir -p $UPGRADEDIR
+
+if [[ -f $UPGRADEDIR/crowbar-delete-unknown-nova-services-ok ]] ; then
+    log "Unknown services were was already deleted"
+    exit 0
+fi
+
+set +x
+source /root/.openrc
+set -x
+
+# Delete all nova-compute services that are registered to a node
+# that does not have nova-compute crowbar role
+for host in $(openstack compute service list --service nova-compute -f value -c Host | sort | uniq); do
+    # @compute_nodes is comma separated string like "node1,node2,node3"
+    if [[ ! ",<%=@compute_nodes%>," =~ ",$host," ]]; then
+        for service in $(openstack compute service list --service nova-compute --host "$host" -f value -c ID); do
+            openstack compute service delete $service
+        done
+    fi
+
+# Delete all controller based nova services that are registered to a node
+# that does not have nova-controller crowbar role
+for s in cert conductor consoleauth scheduler; do
+    for host in $(openstack compute service list --service "nova-$s" -f value -c Host | sort | uniq); do
+        # @controller_nodes is comma separated string like "node1,node2,node3"
+        if [[ ! ",<%=@controller_nodes%>," =~ ",$host," ]]; then
+            for service in $(openstack compute service list --service "nova-$s" --host "$host" -f value -c ID); do
+                openstack compute service delete $service
+            done
+        fi
+    done
+done
+
+touch $UPGRADEDIR/crowbar-delete-unknown-nova-services-ok
+log "$BASH_SOURCE is finished."
