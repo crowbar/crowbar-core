@@ -64,6 +64,14 @@ module SchemaMigration
     end
   end
 
+  # set the schema revision number to revision
+  # This is useful to rerun migration scripts
+  def self.set_proposal_schema_revision(bc_name, revision)
+    proposal = Proposal.where(barclamp: bc_name).limit(1)[0]
+    proposal.properties["deployment"][bc_name]["schema-revision"] = revision.to_i
+    proposal.save
+  end
+
   def self.migrate_proposal_from_json(bc_name, json)
     template = get_template_for_barclamp bc_name
     return if template.nil?

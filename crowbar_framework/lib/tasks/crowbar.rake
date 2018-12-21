@@ -16,6 +16,13 @@
 #
 
 namespace :crowbar do
+  desc "Set the schema-revision for a given barclmap"
+  task :set_schema_revision, [:barclamp, :schema_revision] => :environment do |t, args|
+
+    require "schema_migration"
+    SchemaMigration.set_proposal_schema_revision(args[:barclamp], args[:schema_revision])
+  end
+
   desc "Run schema migration on proposals"
   task :schema_migrate, [:barclamps] => :environment do |t, args|
     args.with_defaults(barclamps: "all")
