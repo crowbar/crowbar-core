@@ -91,7 +91,12 @@ module Api
         unready = []
         # We are ignoring the ceph nodes, as they should already be in crowbar_upgrade state
         NodeObject.find("NOT roles:ceph-*").each do |node|
-          unready << node.name unless node.ready?
+          next if node.ready?
+          if node.state == "shutdown" && node.roles.include?("nova-compute-kvm")
+            Rails.logger.info("ignoring powered off compute node...")
+            next
+          end
+          unready << node.name
         end
         ret[:nodes_not_ready] = unready unless unready.empty?
         proposals = Proposal.all

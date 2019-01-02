@@ -240,7 +240,7 @@ class CrowbarService < ServiceObject
     admin_with_dns_server_role = false
     all_nodes = Node.all
     all_nodes.each do |n|
-      not_ready_for_upgrade.push n.name if !n.admin? && !%w(ready crowbar_upgrade).include?(n.state)
+      not_ready_for_upgrade.push n.name if !n.admin? && !%w(ready crowbar_upgrade shutdown).include?(n.state)
       admin_with_dns_server_role = true if n.admin? && n.role?("dns-server")
     end
 
@@ -256,6 +256,7 @@ class CrowbarService < ServiceObject
 
     all_nodes.each do |node|
       next if node.admin?
+      next if node.state == "shutdown"
 
       if node[:platform] == "windows"
         # for Hyper-V nodes, only change the state, but do not run chef-client
