@@ -868,6 +868,7 @@ class Node < ChefObject
 
   def upgraded?
     upgrade_state = crowbar["node_upgrade_state"] || ""
+    return false if upgrade_state == "" && @node.state == "shutdown"
     if upgrade_state == "upgraded" ||
         (upgrade_state == "" && !crowbar.key?("crowbar_upgrade_step"))
       Rails.logger.info("Node #{@node.name} was already upgraded.")

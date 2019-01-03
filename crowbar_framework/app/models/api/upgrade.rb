@@ -1353,7 +1353,7 @@ module Api
       # Prepare the compute nodes for upgrade by upgrading necessary packages
       def prepare_compute_nodes(virt)
         Rails.logger.info("Preparing #{virt} compute nodes for upgrade... ")
-        compute_nodes = ::Node.find("roles:nova-compute-#{virt}")
+        compute_nodes = ::Node.find("roles:nova-compute-#{virt} AND NOT state:shutdown")
         if compute_nodes.empty?
           Rails.logger.info("There are no compute nodes of #{virt} type.")
           return
@@ -1477,7 +1477,7 @@ module Api
 
       def upgrade_compute_nodes(virt)
         Rails.logger.info("Upgrading #{virt} compute nodes... ")
-        compute_nodes = ::Node.find("roles:nova-compute-#{virt}")
+        compute_nodes = ::Node.find("roles:nova-compute-#{virt} AND NOT state:shutdown")
         if compute_nodes.empty?
           Rails.logger.info("There are no compute nodes of #{virt} type.")
           return
