@@ -33,3 +33,7 @@ addons:
   apt:
     packages:
       - libarchive-dev
+
+# pin bundler to avoid problems with old ruby and new deps
+before_install:
+  - rvm @global do gem install bundler -v '< 2.0.0'
