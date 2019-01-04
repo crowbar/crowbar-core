@@ -187,14 +187,23 @@ class Api::UpgradeController < ApiController
         # At this point params[:component] should be a node, if it is not,
         # raise an error.
         nodes_names = params[:component].split(/[\s,;]/)
+        upgraded_nodes_names = []
         nodes_names.each do |name_or_alias|
           node = ::Node.find_node_by_name_or_alias(name_or_alias)
-          next unless node.nil?
-          raise ::Crowbar::Error::UpgradeError,
-            "Component must be 'all', 'controllers', 'resume', "\
-            "'postpone' or a node name(s). "\
-            "No node with '#{name_or_alias}' name or alias was found. "
+          if node.nil?
+            raise ::Crowbar::Error::UpgradeError,
+              "Component must be 'all', 'controllers', 'resume', "\
+              "'postpone' or a node name(s). "\
+              "No node with '#{name_or_alias}' name or alias was found. "
+          end
+          upgraded_nodes_names << name_or_alias if node.upgraded?
         end
+
+        if (nodes_names - upgraded_nodes_names).empty?
+          raise ::Crowbar::Error::UpgradeError,
+            "All requested nodes are already upgraded."
+        end
+
         if substep != :compute_nodes && status != :finished
           raise ::Crowbar::Error::UpgradeError.new(
             "Controller nodes must be upgraded first!"

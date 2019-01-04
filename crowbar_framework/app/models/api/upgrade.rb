@@ -952,7 +952,7 @@ module Api
           "run_list_map:pacemaker-cluster-member AND " \
           "NOT fqdn:#{founder[:fqdn]}"
         )
-        non_founder_nodes.select! { |n| !n.upgraded? }
+        non_founder_nodes.reject!(&:upgraded?)
 
         if founder.upgraded? && non_founder_nodes.empty?
           Rails.logger.info("All nodes in cluster #{cluster} have already been upgraded.")
@@ -1360,7 +1360,7 @@ module Api
         end
 
         # remove upgraded compute nodes
-        compute_nodes.select! { |n| !n.upgraded? }
+        compute_nodes.reject!(&:upgraded?)
         if compute_nodes.empty?
           Rails.logger.info(
             "All compute nodes of #{virt} type are already upgraded."
@@ -1484,7 +1484,7 @@ module Api
         end
 
         # remove upgraded compute nodes
-        compute_nodes.select! { |n| !n.upgraded? }
+        compute_nodes.reject!(&:upgraded?)
         if compute_nodes.empty?
           Rails.logger.info(
             "All compute nodes of #{virt} type are already upgraded."
@@ -1514,6 +1514,12 @@ module Api
         compute_nodes = names.map do |name|
           ::Node.find_node_by_name_or_alias(name)
         end
+
+        # make sure we upgrade each node only once
+        compute_nodes.uniq!(&:name)
+
+        # remove nodes which were already upgraded
+        compute_nodes.reject!(&:upgraded?)
 
         controller = fetch_nova_controller
 
@@ -1549,6 +1555,13 @@ module Api
               enable_compute_service(controller, node, true)
               break
             end
+          end
+          if nodes_to_upgrade.empty?
+            raise_node_upgrade_error(
+              "There was a problem during live evacuation of #{compute_nodes.first[:name]}. " \
+              "Cannot proceed with upgrade of compute nodes. " \
+              "Check /var/log/crowbar/production.log and nova logs for details."
+            )
           end
           compute_nodes -= nodes_to_upgrade
           save_nodes_state(nodes_to_upgrade, "compute", "upgrading")
