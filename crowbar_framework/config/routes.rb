@@ -94,6 +94,14 @@ Rails.application.routes.draw do
 
   # support paths
   get "utils", controller: :support, action: :index, as: "utils"
+
+  get "utils/ceph_pre_upgrade(.:format)",
+    controller: "ceph_pre_upgrade", action: "index", as: "ceph_pre_upgrade"
+  post "utils/ceph_pre_upgrade/prepare(.:format)",
+    controller: "ceph_pre_upgrade",
+    action: "prepare",
+    as: "prepare_ceph_pre_upgrade"
+
   scope :utils do
     get ":controller/1.0/export", action: :export, as: "utils_export"
     get ":controller/1.0", action: :utils

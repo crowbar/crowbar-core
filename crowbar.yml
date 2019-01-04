@@ -82,6 +82,9 @@ nav:
     upgrade:
       order: 40
       route: '"/upgrade"'
+    ceph_pre_upgrade:
+      order: 30
+      route: 'ceph_pre_upgrade_path'
   help:
     order: 80
     route: 'docs_path'

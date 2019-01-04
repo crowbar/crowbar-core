@@ -84,6 +84,7 @@ en:
       logs: 'Exported Items'
       repositories: 'Repositories'
       backup: 'Backup & Restore'
+      ceph_pre_upgrade: 'Prepare Ceph Upgrade'
       upgrade: 'Upgrade'
     help: 'Help'
 
@@ -569,6 +570,21 @@ en:
       active: 'Active'
       active_repo_tooltip: 'Managed nodes will be automatically configured to use repositories only if they are marked as active'
 
+  ceph_pre_upgrade:
+    index:
+      title: 'Preparation of Ceph Nodes'
+      hint_html: |
+        The upgrade from SUSE Enterprise Storage 2.1 to 4 must be performed as outlined in the <a href="https://www.suse.com/documentation/ses-4/book_storage_admin/data/ceph_upgrade_to4.html">SUSE Enterprise Storage 4 documentation</a>.<br>
+        For this to work, the Ceph nodes must first be put into a prepared state, so that Crowbar will stop configuring them for the duration of the upgrade of both SUSE Enterprise Storage and SUSE OpenStack Cloud products.
+      prepare: 'Prepare for the Upgrade'
+      revert: 'Revert to normal state'
+      nodes_prepared: 'Ceph nodes are already prepared for the upgrade.'
+      nodes_not_prepared: 'Ceph nodes are currently not prepared for the upgrade.'
+      blockui_message: 'Processing, please wait...'
+      no_ceph_nodes: 'No Ceph nodes were found. Upgrade preparation is not needed.'
+    success_prepare: 'Ceph nodes were successfully prepared for SES upgrade.'
+    success_revert: 'Ceph nodes were successfully reverted to normal state.'
+
   installer:
     title: 'Installer'
     index:
@@ -808,6 +824,9 @@ en:
         maintenance_updates_check:
           help:
             default: 'Make sure maintenance updates are installed'
+        ceph_health_check:
+          help:
+            default: 'Make sure Ceph is healthy'
         clusters_health:
           crm_failures: 'Please check that all cluster resources are online or refer to the SUSE High Availability documentation for possible troubleshooting.'
           failed_actions: 'Please clean the resource history and re−check the current state with "crm_resource -C" or refer to the SUSE High Availability documentation for possible troubleshooting.'
@@ -845,9 +864,22 @@ en:
         unsupported_cluster_setup:
           error: 'Your cluster/role configuration is not supported by the non-disruptive upgrade process.'
           help: 'Please refer to the Deployment Guide for list of supported configurations.'
-        crowbar_ceph_present:
-          error: 'There are nodes with ceph roles present. Remove all ceph roles deployed by crowbar and migrate to external Ceph cluster.'
-          help: 'Refer to the SUSE Enterprise Storage documentation for the information about upgrading from Crowbar Deployment.'
+        ceph_not_healthy:
+          error: |
+            Ceph cluster health check has failed with:
+            
+            %{error}
+                       
+            Make sure cluster is healthy before proceeding with the upgrade.
+          help: 'Refer to the SUSE Enterprise Storage documentation for possible troubleshooting.'
+        ceph_old_version:
+          error: 'It appears you have an old version of SUSE Enterprise Storage installed. Upgrade to the latest version of SES before proceeding with the Cloud upgrade.'
+          help: 'Refer to the SUSE Enterprise Storage documentation for the information about upgrading.'
+        ceph_not_prepared:
+          error: 'Some ceph nodes are not prepared for the upgrade: %{nodes}.'
+          help: |
+            Unlike normal nodes, ceph nodes must already be upgraded and kept waiting in the upgrade state until the upgrade of whole Cloud is finished.
+            Refer to the SUSE Enterprise Storage documentation for the information about upgrading ceph nodes.
       prepare:
         help:
           default: 'Refer to the error message in the response'
