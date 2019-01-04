@@ -156,7 +156,7 @@ module Api
 
       ssh_status = @node.ssh_cmd("/sbin/reboot")
       if ssh_status[0] != 200
-        Api::Upgrade.raise_node_upgrade_error("Failed to reboot the machine. Could not ssh.")
+        Api::Upgrade.raise_node_upgrade_error("Failed to reboot node #{@node.name}. Could not ssh.")
       end
 
       wait_for_ssh_state(:down, "reboot")
