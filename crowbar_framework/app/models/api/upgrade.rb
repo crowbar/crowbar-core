@@ -442,6 +442,7 @@ module Api
         # For all nodes in cluster, set the pre-upgrade attribute
         upgrade_nodes = ::Node.find("state:crowbar_upgrade")
         cinder_node = nil
+        nova_node = nil
         upgrade_nodes.each do |node|
           node.set_pre_upgrade_attribute
           if node.roles.include?("cinder-controller") &&
@@ -449,6 +450,30 @@ module Api
                   node["pacemaker"]["founder"] == node[:fqdn])
             cinder_node = node
           end
+          if node.roles.include?("nova-controller") &&
+              (!node.roles.include?("pacemaker-cluster-member") ||
+                  node["pacemaker"]["founder"] == node[:fqdn])
+            nova_node = node
+          end
+        end
+
+        begin
+          unless nova_node.nil?
+            nova_node.wait_for_script_to_finish(
+              "/usr/sbin/crowbar-delete-unknown-nova-services.sh",
+              timeouts[:delete_nova_services]
+            )
+            Rails.logger.info("Deleting of nova services was successful.")
+          end
+        rescue StandardError => e
+          ::Crowbar::UpgradeStatus.new.end_step(
+            false,
+            services: {
+              data: "Problem while deleting unknown nova services: " + e.message,
+              help: "Check /var/log/crowbar/production.log at admin server " \
+                "and /var/log/crowbar/node-upgrade.log at #{nova_node.name}."
+            }
+          )
         end
 
         # Initiate the services shutdown for all nodes

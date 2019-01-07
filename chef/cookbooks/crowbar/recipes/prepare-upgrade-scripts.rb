@@ -112,6 +112,22 @@ template "/usr/sbin/crowbar-delete-cinder-services-before-upgrade.sh" do
   only_if { cinder_controller && (!use_ha || is_cluster_founder) }
 end
 
+controller_nodes = search(:node, "run_list_map:nova-controller").map { |n| n["hostname"] }
+compute_nodes = search(:node, "run_list_map:nova-compute-*").map { |n| n["hostname"] }
+
+template "/usr/sbin/crowbar-delete-unknown-nova-services.sh" do
+  source "crowbar-delete-unknown-nova-services.sh.erb"
+  mode "0755"
+  owner "root"
+  group "root"
+  action :create
+  variables(
+    controller_nodes: controller_nodes.join(","),
+    compute_nodes: compute_nodes.join(",")
+  )
+  only_if { roles.include?("nova-controller") }
+end
+
 nova = search(:node, "run_list_map:nova-controller").first
 
 template "/usr/sbin/crowbar-evacuate-host.sh" do
