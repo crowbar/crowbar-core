@@ -566,6 +566,8 @@ describe Api::Upgrade do
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :progress
       ).and_return(remaining_nodes: 0)
+      allow(Api::Upgrade).to receive(:reload_nova_services).and_return(true)
+      allow(Api::Upgrade).to receive(:run_online_migrations).and_return(true)
       allow(Api::Upgrade).to receive(:finalize_nodes_upgrade).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
@@ -584,6 +586,8 @@ describe Api::Upgrade do
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :progress
       ).and_return(remaining_nodes: 0)
+      allow(Api::Upgrade).to receive(:reload_nova_services).and_return(true)
+      allow(Api::Upgrade).to receive(:run_online_migrations).and_return(true)
       allow(Api::Upgrade).to receive(:finalize_nodes_upgrade).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
@@ -672,6 +676,8 @@ describe Api::Upgrade do
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :progress
       ).and_return(remaining_nodes: 0)
+      allow(Api::Upgrade).to receive(:reload_nova_services).and_return(true)
+      allow(Api::Upgrade).to receive(:run_online_migrations).and_return(true)
       allow(Api::Upgrade).to receive(:finalize_nodes_upgrade).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
@@ -693,6 +699,8 @@ describe Api::Upgrade do
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :progress
       ).and_return(remaining_nodes: 0)
+      allow(Api::Upgrade).to receive(:reload_nova_services).and_return(true)
+      allow(Api::Upgrade).to receive(:run_online_migrations).and_return(true)
       allow(Api::Upgrade).to receive(:finalize_nodes_upgrade).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
@@ -714,6 +722,8 @@ describe Api::Upgrade do
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :progress
       ).and_return(remaining_nodes: 0)
+      allow(Api::Upgrade).to receive(:reload_nova_services).and_return(true)
+      allow(Api::Upgrade).to receive(:run_online_migrations).and_return(true)
       allow(Api::Upgrade).to receive(:finalize_nodes_upgrade).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 
@@ -749,6 +759,8 @@ describe Api::Upgrade do
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :progress
       ).and_return(remaining_nodes: 0)
+      allow(Api::Upgrade).to receive(:reload_nova_services).and_return(true)
+      allow(Api::Upgrade).to receive(:run_online_migrations).and_return(true)
       allow(Api::Upgrade).to receive(:finalize_nodes_upgrade).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(:end_step).and_return(true)
 

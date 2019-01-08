@@ -1,0 +1,42 @@
+#!/bin/bash
+#
+# After the upgrade of all services on all nodes is finished, it's
+# necessary to signal all nova services so that they start using latest RPC API version.
+
+LOGFILE=/var/log/crowbar/node-upgrade.log
+UPGRADEDIR=/var/lib/crowbar/upgrade
+mkdir -p "`dirname "$LOGFILE"`"
+exec >>"$LOGFILE" 2>&1
+
+log()
+{
+    set +x
+    echo "[$(date --iso-8601=ns)] [$$] $@"
+    set -x
+}
+
+log "Executing $BASH_SOURCE"
+
+set -x
+
+mkdir -p $UPGRADEDIR
+rm -f $UPGRADEDIR/crowbar-reload-nova-after-upgrade-failed
+
+if [[ -f $UPGRADEDIR/crowbar-reload-nova-after-upgrade-ok ]] ; then
+    log "Reload nova script was already successfully executed"
+    exit 0
+fi
+
+<% if @nova_controller %>
+for service in conductor consoleauth scheduler novncproxy serialproxy api; do
+    fullname="openstack-nova-$service"
+    if systemctl --quiet is-active $fullname 2>/dev/null ; then
+        systemctl kill -s HUP $fullname
+    fi
+done
+<% else %>
+systemctl kill -s HUP openstack-nova-compute
+<% end %>
+
+touch $UPGRADEDIR/crowbar-reload-nova-after-upgrade-ok
+log "$BASH_SOURCE is finished."

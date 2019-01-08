@@ -203,8 +203,7 @@ class Api::UpgradeController < ApiController
           raise ::Crowbar::Error::UpgradeError,
             "All requested nodes are already upgraded."
         end
-
-        if substep != :compute_nodes && status != :finished
+        if substep == :controller_nodes && status != :finished
           raise ::Crowbar::Error::UpgradeError.new(
             "Controller nodes must be upgraded first!"
           )
@@ -226,7 +225,8 @@ class Api::UpgradeController < ApiController
         end
         # If the 'nodes' step did not fail, it is still running and user can continue
         # with upgrading single compute node.
-        if substep == :compute_nodes && status == :failed
+        if [:compute_nodes, :reload_nova, :run_online_migrations].include?(substep) &&
+            status == :failed
           Rails.logger.info("Restarting the 'nodes' step after previous failure")
           ::Crowbar::UpgradeStatus.new.start_step(:nodes)
         end

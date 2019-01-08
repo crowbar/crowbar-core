@@ -145,6 +145,7 @@ template "/usr/sbin/crowbar-evacuate-host.sh" do
 end
 
 compute_node = roles.include? "nova-compute-kvm"
+nova_node = compute_node || roles.include?("nova-controller")
 cinder_volume = roles.include? "cinder-volume"
 neutron = search(:node, "run_list_map:neutron-server").first
 
@@ -294,4 +295,23 @@ template "/usr/sbin/crowbar-chef-upgraded.sh" do
     crowbar_join: "#{web_path}/crowbar_join.sh",
     nova_controller: roles.include?("nova-controller")
   )
+end
+
+template "/usr/sbin/crowbar-reload-nova-after-upgrade.sh" do
+  source "crowbar-reload-nova-after-upgrade.sh.erb"
+  mode "0775"
+  owner "root"
+  group "root"
+  variables(
+    nova_controller: roles.include?("nova-controller")
+  )
+  only_if { nova_node }
+end
+
+template "/usr/sbin/crowbar-run-nova-online-migrations.sh" do
+  source "crowbar-run-nova-online-migrations.sh.erb"
+  mode "0775"
+  owner "root"
+  group "root"
+  only_if { roles.include?("nova-controller") }
 end

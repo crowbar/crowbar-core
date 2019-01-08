@@ -1,0 +1,50 @@
+#!/bin/bash
+#
+# After the upgrade of all services on all nodes is finished and all nova services
+# run the new version, it's recommended to run nova online data migrations
+
+LOGFILE=/var/log/crowbar/node-upgrade.log
+UPGRADEDIR=/var/lib/crowbar/upgrade
+mkdir -p "`dirname "$LOGFILE"`"
+exec >>"$LOGFILE" 2>&1
+
+log()
+{
+    set +x
+    echo "[$(date --iso-8601=ns)] [$$] $@"
+    set -x
+}
+
+log "Executing $BASH_SOURCE"
+
+set -x
+
+mkdir -p $UPGRADEDIR
+rm -f $UPGRADEDIR/crowbar-run-nova-online-migrations-failed
+
+if [[ -f $UPGRADEDIR/crowbar-run-nova-online-migrations-ok ]] ; then
+    log "Nova migrations were already executed"
+    exit 0
+fi
+
+nova-manage db online_data_migrations
+
+# From the manual:
+# "Returns exit code 0 if migrations were successful or exit code 1 for partial updates.
+# If the command exits with partial updates (exit code 1) the command will need to be called again."
+
+# So let's call it again right away. If it fails for second time, throw an error and give
+# control to user.
+
+nova-manage db online_data_migrations
+
+ret=$?
+if [ $ret != 0 ] ; then
+    log "Error occured during online_data_migrations run"
+    echo $ret > $UPGRADEDIR/crowbar-run-nova-online-migrations-failed
+    exit $ret
+fi
+
+
+touch $UPGRADEDIR/crowbar-run-nova-online-migrations-ok
+log "$BASH_SOURCE is finished."

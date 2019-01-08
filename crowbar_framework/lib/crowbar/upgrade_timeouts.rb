@@ -36,7 +36,9 @@ module Crowbar
         delete_pacemaker_resources: @timeouts_config[:delete_pacemaker_resources] || 600,
         delete_cinder_services: @timeouts_config[:delete_cinder_services] || 300,
         delete_nova_services: @timeouts_config[:delete_nova_services] || 300,
-        wait_until_compute_started: @timeouts_config[:wait_until_compute_started] || 60
+        wait_until_compute_started: @timeouts_config[:wait_until_compute_started] || 60,
+        reload_nova_services: @timeouts_config[:reload_nova_services] || 120,
+        nova_online_migrations: @timeouts_config[:nova_online_migrations] || 1800
       }
     end
   end
