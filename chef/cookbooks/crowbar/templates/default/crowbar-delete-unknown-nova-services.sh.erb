@@ -44,6 +44,7 @@ for host in $(openstack compute service list --service nova-compute -f value -c 
             openstack compute service delete $service
         done
     fi
+done
 
 # Delete all controller based nova services that are registered to a node
 # that does not have nova-controller crowbar role
