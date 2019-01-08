@@ -35,6 +35,7 @@ module Crowbar
         set_network_agents_state: @timeouts_config[:set_network_agents_state] || 300,
         delete_pacemaker_resources: @timeouts_config[:delete_pacemaker_resources] || 600,
         delete_cinder_services: @timeouts_config[:delete_cinder_services] || 300,
+        delete_nova_services: @timeouts_config[:delete_nova_services] || 300,
         wait_until_compute_started: @timeouts_config[:wait_until_compute_started] || 60
       }
     end
