@@ -474,6 +474,8 @@ module Api
                 "and /var/log/crowbar/node-upgrade.log at #{nova_node.name}."
             }
           )
+          # Stop here and error out
+          return
         end
 
         # Initiate the services shutdown for all nodes
@@ -502,6 +504,8 @@ module Api
                 "check /var/log/crowbar/node-upgrade.log at the node."
             }
           )
+          # Stop here and error out
+          return
         end
 
         # Remove the temporary key from the role object
