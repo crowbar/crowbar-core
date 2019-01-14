@@ -820,6 +820,15 @@ module Api
         status = ::Crowbar::UpgradeStatus.new
         if status.progress[:remaining_nodes].zero?
           status.save_substep(substep, :finished)
+
+          status.save_substep(:reload_nova, :running)
+          reload_nova_services
+          status.save_substep(:reload_nova, :finished)
+
+          status.save_substep(:run_online_migrations, :running)
+          run_online_migrations
+          status.save_substep(:run_online_migrations, :finished)
+
           finalize_nodes_upgrade
           unlock_crowbar_ui_package
           status.end_step
@@ -947,6 +956,57 @@ module Api
         node.ssh_cmd("systemctl start chef-client")
       end
 
+      # Once all nova services are upgraded to current version (that is Pike for current SOC)
+      # we need to tell services to start using latest RPC
+      # According to https://docs.openstack.org/nova/pike/user/upgrade.html this means
+      # sending SIG_HUP to all nova services
+      def reload_nova_services
+        all_nova_nodes = ::Node.find("roles:nova-*").sort do |n|
+          n.roles.include?("nova-controller") ? -1 : 1
+        end
+        all_nova_nodes.each do |node|
+          save_node_action("Reloading nova services at #{node.name}")
+          begin
+            node.wait_for_script_to_finish(
+              "/usr/sbin/crowbar-reload-nova-after-upgrade.sh",
+              timeouts[:reload_nova_services]
+            )
+          rescue StandardError => e
+            raise_node_upgrade_error(
+              "Reloading of some nova service has failed on node #{node.name}: " \
+              "#{e.message} Check /var/log/crowbar/node-upgrade.log for details."
+            )
+          end
+          Rails.logger.info("Nova services reloaded at #{node.name}.")
+          save_node_action("Nova services reload finished.")
+        end
+      end
+
+      # Once all nova services are running Pike, it's possible to execute
+      # online db migrations
+      def run_online_migrations
+        nova_controllers = ::Node.find("roles:nova-controller")
+        return if nova_controllers.empty?
+
+        if nova_controllers.size > 1
+          nova_controllers.select! { |n| n[:fqdn] == n[:pacemaker][:founder] }
+        end
+        node = nova_controllers.first
+
+        save_node_action("Executing nova online migrations on #{node.name}...")
+        node.wait_for_script_to_finish(
+          "/usr/sbin/crowbar-run-nova-online-migrations.sh",
+          timeouts[:nova_online_migrations]
+        )
+        Rails.logger.info("Nova online migrations finished.")
+        save_node_action("Nova online migrations finished.")
+      rescue StandardError => e
+        raise_node_upgrade_error(
+          "Problem while running nova online migrations on node #{node.name}: " \
+          "#{e.message} Check /var/log/crowbar/node-upgrade.log for details."
+        )
+      end
+
       def delete_upgrade_scripts(node)
         return if node.admin?
 
@@ -961,7 +1021,9 @@ module Api
           "router-migration",
           "lbaas-evacuation",
           "post-upgrade",
-          "chef-upgraded"
+          "chef-upgraded",
+          "reload-nova-after-upgrade",
+          "run-nova-online-migrations"
         ].map { |f| "/usr/sbin/crowbar-#{f}.sh" }.join(" ")
         scripts_to_delete << " /etc/neutron/lbaas-connection.conf"
         node.run_ssh_cmd("rm -f #{scripts_to_delete}")
