@@ -33,7 +33,7 @@ describe Api::UpgradeController, type: :request do
       # pretend we're in the middle of upgrade to not hit the filters
       allow(File).to receive(:exist?).and_call_original
       allow(File).to receive(:exist?).with(
-        "/var/lib/crowbar/upgrade/7-to-8-upgrade-running"
+        "/var/lib/crowbar/upgrade/8-to-9-upgrade-running"
       ).and_return(true)
     end
 
