@@ -208,7 +208,7 @@ class ApplicationController < ActionController::Base
 
   def upgrade
     respond_to do |format|
-      format.json do
+      format.any(:json, :jsonapi) do
         if request.post?
           render json: { error: I18n.t("error.during_upgrade") }, status: :service_unavailable
         else
