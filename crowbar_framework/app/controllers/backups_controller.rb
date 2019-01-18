@@ -17,6 +17,7 @@
 class BackupsController < ApplicationController
   skip_before_filter :enforce_installer
   before_action :set_backup, only: [:destroy, :restore, :download]
+  skip_before_action :upgrade, only: [:index, :download]
 
   api :GET, "/utils/backups", "Returns a list of available backups"
   def index

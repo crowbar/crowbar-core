@@ -17,6 +17,7 @@
 class Api::BackupsController < ApiController
   skip_before_filter :enforce_installer
   before_action :set_backup, only: [:destroy, :show, :restore, :download]
+  skip_before_action :upgrade, only: [:index, :download]
 
   api :GET, "/api/crowbar/backups", "Returns a list of available backups"
   header "Accept", "application/vnd.crowbar.v2.0+json", required: true
