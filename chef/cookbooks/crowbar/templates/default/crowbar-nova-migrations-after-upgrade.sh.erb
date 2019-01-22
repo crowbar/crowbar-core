@@ -20,9 +20,9 @@ log "Executing $BASH_SOURCE"
 set -x
 
 mkdir -p $UPGRADEDIR
-rm -f $UPGRADEDIR/crowbar-run-nova-online-migrations-failed
+rm -f $UPGRADEDIR/crowbar-nova-migrations-after-upgrade-failed
 
-if [[ -f $UPGRADEDIR/crowbar-run-nova-online-migrations-ok ]] ; then
+if [[ -f $UPGRADEDIR/crowbar-nova-migrations-after-upgrade-ok ]] ; then
     log "Nova migrations were already executed"
     exit 0
 fi
@@ -40,10 +40,9 @@ done
 
 if [ $ret -gt 1 ] ; then
     log "Error occured during online_data_migrations run"
-    echo $ret > $UPGRADEDIR/crowbar-run-nova-online-migrations-failed
+    echo $ret > $UPGRADEDIR/crowbar-nova-migrations-after-upgrade-failed
     exit $ret
 fi
 
-
-touch $UPGRADEDIR/crowbar-run-nova-online-migrations-ok
+touch $UPGRADEDIR/crowbar-nova-migrations-after-upgrade-ok
 log "$BASH_SOURCE is finished."

@@ -1,0 +1,41 @@
+#!/bin/bash
+#
+# After the upgrade of all services on all nodes is finished update legacy heat properties
+
+LOGFILE=/var/log/crowbar/node-upgrade.log
+UPGRADEDIR=/var/lib/crowbar/upgrade
+mkdir -p "`dirname "$LOGFILE"`"
+exec >>"$LOGFILE" 2>&1
+
+log()
+{
+    set +x
+    echo "[$(date --iso-8601=ns)] [$$] $@"
+    set -x
+}
+
+log "Executing $BASH_SOURCE"
+
+set -x
+
+mkdir -p $UPGRADEDIR
+rm -f $UPGRADEDIR/crowbar-heat-migrations-after-upgrade-failed
+
+if [[ -f $UPGRADEDIR/crowbar-heat-migrations-after-upgrade-ok ]] ; then
+    log "Heat migrations were already executed"
+    exit 0
+fi
+
+# According to documentation:
+# "Migrates properties data from the legacy locations in the db
+# (resource.properties_data and event.resource_properties) to the modern location, the resource_properties_data table."
+heat-manage migrate_properties_data
+ret=$?
+if [ $ret != 0 ] ; then
+    log "Error occured during heat properties migration"
+    echo $ret > $UPGRADEDIR/crowbar-heat-migrations-after-upgrade-failed
+    exit $ret
+fi
+
+touch $UPGRADEDIR/crowbar-heat-migrations-after-upgrade-ok
+log "$BASH_SOURCE is finished."
