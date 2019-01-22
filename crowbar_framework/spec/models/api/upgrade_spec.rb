@@ -171,6 +171,9 @@ describe Api::Upgrade do
       allow_any_instance_of(Node).to(
         receive(:set_pre_upgrade_attribute).and_return([200, ""])
       )
+      allow_any_instance_of(Node).to(
+        receive(:wait_for_script_to_finish).and_return(nil)
+      )
       allow(Api::Upgrade).to receive(:execute_scripts_and_wait_for_finish).and_return(true)
 
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
