@@ -27,19 +27,18 @@ if [[ -f $UPGRADEDIR/crowbar-run-nova-online-migrations-ok ]] ; then
     exit 0
 fi
 
-nova-manage db online_data_migrations
-
 # From the manual:
 # "Returns exit code 0 if migrations were successful or exit code 1 for partial updates.
 # If the command exits with partial updates (exit code 1) the command will need to be called again."
 
-# So let's call it again right away. If it fails for second time, throw an error and give
-# control to user.
+ret=1
 
-nova-manage db online_data_migrations
+while [[ $ret = 1 ]] ; do
+  nova-manage db online_data_migrations --max-count 200
+  ret=$?
+done
 
-ret=$?
-if [ $ret != 0 ] ; then
+if [ $ret -gt 1 ] ; then
     log "Error occured during online_data_migrations run"
     echo $ret > $UPGRADEDIR/crowbar-run-nova-online-migrations-failed
     exit $ret
