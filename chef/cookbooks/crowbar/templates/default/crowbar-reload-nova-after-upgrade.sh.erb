@@ -31,11 +31,11 @@ fi
 for service in conductor consoleauth scheduler novncproxy serialproxy api; do
     fullname="openstack-nova-$service"
     if systemctl --quiet is-active $fullname 2>/dev/null ; then
-        systemctl kill -s HUP $fullname
+        systemctl kill --signal HUP --kill-who main $fullname
     fi
 done
 <% else %>
-systemctl kill -s HUP openstack-nova-compute
+systemctl kill --signal HUP --kill-who main openstack-nova-compute
 <% end %>
 
 touch $UPGRADEDIR/crowbar-reload-nova-after-upgrade-ok
