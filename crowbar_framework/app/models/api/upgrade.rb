@@ -747,8 +747,8 @@ module Api
           upgrade_controller_clusters
           upgrade_non_compute_nodes
           prepare_all_compute_nodes
+          ::Crowbar::UpgradeStatus.new.save_substep(substep, :finished)
         end
-        ::Crowbar::UpgradeStatus.new.save_substep(substep, :finished)
       end
 
       def remaining_nodes
