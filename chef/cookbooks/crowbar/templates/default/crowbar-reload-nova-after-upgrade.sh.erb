@@ -35,7 +35,9 @@ for service in conductor consoleauth scheduler novncproxy serialproxy api; do
     fi
 done
 <% else %>
-systemctl kill --signal HUP --kill-who main openstack-nova-compute
+# As nova-compute on Pike doesn't handle SIGHUPs correctly currently we
+# need to restart it until https://launchpad.net/bugs/1715374 is fixed
+systemctl restart openstack-nova-compute
 <% end %>
 
 touch $UPGRADEDIR/crowbar-reload-nova-after-upgrade-ok
