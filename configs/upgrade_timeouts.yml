@@ -1,0 +1,17 @@
+:prepare_repositories: 120
+:pre_upgrade: 300
+:upgrade_os: 1500
+:post_upgrade: 600
+:shutdown_services: 600
+:shutdown_remaining_services: 600
+:evacuate_host: 300
+:chef_upgraded: 1200
+:router_migration: 600
+:lbaas_evacuation: 600
+:set_network_agents_state: 300
+:delete_pacemaker_resources: 600
+:delete_cinder_services: 300
+:delete_nova_services: 300
+:wait_until_compute_started: 60
+:reload_nova_services: 120
+:online_migrations: 1800
