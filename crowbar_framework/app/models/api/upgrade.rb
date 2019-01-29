@@ -981,24 +981,37 @@ module Api
       # Once all nova services are running Pike, it's possible to execute
       # online db migrations
       def run_online_migrations
-        nova_controllers = ::Node.find("roles:nova-controller")
-        return if nova_controllers.empty?
+        nova_nodes = ::Node.find("roles:nova-controller")
+        heat_nodes = ::Node.find("roles:heat-server")
+        return if nova_nodes.empty? && heat_nodes.empty?
 
-        if nova_controllers.size > 1
-          nova_controllers.select! { |n| n[:fqdn] == n[:pacemaker][:founder] }
+        nova_nodes.select! { |n| n[:fqdn] == n[:pacemaker][:founder] } if nova_nodes.size > 1
+        heat_nodes.select! { |n| n[:fqdn] == n[:pacemaker][:founder] } if heat_nodes.size > 1
+
+        if nova_nodes.any?
+          node = nova_nodes.first
+          save_node_action("Executing nova online migrations on #{node.name}...")
+          node.wait_for_script_to_finish(
+            "/usr/sbin/crowbar-nova-migrations-after-upgrade.sh",
+            timeouts[:online_migrations]
+          )
+          Rails.logger.info("Nova online migrations finished.")
         end
-        node = nova_controllers.first
 
-        save_node_action("Executing nova online migrations on #{node.name}...")
-        node.wait_for_script_to_finish(
-          "/usr/sbin/crowbar-run-nova-online-migrations.sh",
-          timeouts[:nova_online_migrations]
-        )
-        Rails.logger.info("Nova online migrations finished.")
-        save_node_action("Nova online migrations finished.")
+        if heat_nodes.any?
+          node = heat_nodes.first
+          save_node_action("Executing heat migrations on #{node.name}...")
+          node.wait_for_script_to_finish(
+            "/usr/sbin/crowbar-heat-migrations-after-upgrade.sh",
+            timeouts[:online_migrations]
+          )
+          Rails.logger.info("Heat migrations finished.")
+        end
+
+        save_node_action("Data migrations finished.")
       rescue StandardError => e
         raise_node_upgrade_error(
-          "Problem while running nova online migrations on node #{node.name}: " \
+          "Problem while running online migrations on node #{node.name}: " \
           "#{e.message} Check /var/log/crowbar/node-upgrade.log for details."
         )
       end
