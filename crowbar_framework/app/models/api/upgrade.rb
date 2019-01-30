@@ -219,7 +219,6 @@ module Api
       def adminrepocheck
         upgrade_status = ::Crowbar::UpgradeStatus.new
         upgrade_status.start_step(:repocheck_crowbar)
-        # FIXME: once we start working on 7 to 8 upgrade we have to adapt the sles version
         zypper_stream = Hash.from_xml(
           `sudo /usr/bin/zypper-retry --xmlout products`
         )["stream"]
@@ -270,12 +269,12 @@ module Api
 
           products = zypper_stream["product_list"]["product"]
 
-          os_available = repo_version_available?(products, "SLES", "12.3")
+          os_available = repo_version_available?(products, "SLES", "12.4")
           ret[:os] = {
             available: os_available,
             repos: [
-              "SLES12-SP3-Pool",
-              "SLES12-SP3-Updates"
+              "SLES12-SP4-Pool",
+              "SLES12-SP4-Updates"
             ],
             errors: {}
           }
@@ -285,12 +284,12 @@ module Api
             }
           end
 
-          cloud_available = repo_version_available?(products, "suse-openstack-cloud-crowbar", "8")
+          cloud_available = repo_version_available?(products, "suse-openstack-cloud-crowbar", "9")
           ret[:openstack] = {
             available: cloud_available,
             repos: [
-              "SUSE-OpenStack-Cloud-Crowbar-8-Pool",
-              "SUSE-OpenStack-Cloud-Crowbar-8-Updates"
+              "SUSE-OpenStack-Cloud-Crowbar-9-Pool",
+              "SUSE-OpenStack-Cloud-Crowbar-9-Updates"
             ],
             errors: {}
           }
