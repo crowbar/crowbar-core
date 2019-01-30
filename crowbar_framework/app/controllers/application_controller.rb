@@ -38,7 +38,7 @@ class ApplicationController < ActionController::Base
       flash[:warning] = "Some nodes are not upgraded yet. " \
         "Continue to <a href='/upgrade'>upgrade wizard</a> to complete the upgrade."
     end
-    File.exist?("/var/lib/crowbar/upgrade/7-to-8-upgrade-running") &&
+    Dir.glob("/var/lib/crowbar/upgrade/*-upgrade-running").any? &&
       !File.exist?("/var/lib/crowbar/upgrade/7-to-8-upgrade-compute-nodes-postponed")
   }
   before_filter :sanity_checks, unless: proc {
