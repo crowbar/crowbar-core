@@ -272,14 +272,14 @@ describe Api::Upgrade do
         receive(:repo_version_available?).with(
           Hash.from_xml(crowbar_repocheck_zypper)["stream"]["product_list"]["product"],
           "SLES",
-          "12.3"
+          "12.4"
         ).and_return(false)
       )
       allow(Api::Upgrade).to(
         receive(:repo_version_available?).with(
           Hash.from_xml(crowbar_repocheck_zypper)["stream"]["product_list"]["product"],
           "suse-openstack-cloud-crowbar",
-          "8"
+          "9"
         ).and_return(true)
       )
       allow(Api::Upgrade).to(
