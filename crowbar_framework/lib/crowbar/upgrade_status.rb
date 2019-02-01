@@ -425,7 +425,7 @@ module Crowbar
     end
 
     def postponed_file
-      "/var/lib/crowbar/upgrade/8-to-9-upgrade-compute-nodes-postponed"
+      "/var/lib/crowbar/upgrade/7-to-8-upgrade-compute-nodes-postponed"
     end
 
     def running_file_7_8
