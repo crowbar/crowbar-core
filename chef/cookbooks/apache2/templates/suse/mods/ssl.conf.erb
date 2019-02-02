@@ -7,7 +7,7 @@
 
 # These are the configuration directives to instruct the server how to
 # serve pages over an https connection. For detailing information about these
-# directives see <URL:https://httpd.apache.org/docs-2.2/mod/mod_ssl.html>
+# directives see <URL:https:///httpd.apache.org/docs/2.4/mod/mod_ssl.html>
 #
 # Do NOT simply read the instructions in here without understanding
 # what they do.  They're here only as hints or reminders.  If you are unsure
@@ -25,11 +25,13 @@
 	AddType application/x-x509-ca-cert .crt
 	AddType application/x-pkcs7-crl    .crl
 
-	#   SSL Cipher Suite:
-	#   List the ciphers that the client is permitted to negotiate.
-	#   See the mod_ssl documentation for a complete list.
-	#
-	SSLCipherSuite ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:ECDH+3DES:DH+3DES:RSA+AESGCM:RSA+AES:RSA+3DES:!aNULL:!MD5:!DSS
+
+
+        #   SSL Cipher Suite:
+        #   List the ciphers that the client is permitted to negotiate.
+        #   See the mod_ssl documentation for a complete list.
+        #
+        SSLCipherSuite          DEFAULT_SUSE
 
 	#   SSLHonorCipherOrder
 	#   If SSLHonorCipherOrder is disabled, then the client's preferences
@@ -37,6 +39,7 @@
 	#   If set to on, then the above SSLCipherSuite is used, in the order
 	#   given, with the first supported match on both ends.
 	SSLHonorCipherOrder on
+
 
 	#   Pass Phrase Dialog:
 	#   Configure the pass phrase gathering process.
@@ -57,23 +60,15 @@
 	#   network-mounted drives, so in that case you need to use the dbm method.
 	#SSLSessionCache        none
 
-	#<IfModule socache_dbm>
+	#<IfModule mod_socache_dbm.c>
 	#SSLSessionCache         dbm:/var/lib/apache2/ssl_scache
 	#</IfModule>
 
-	<IfVersion < 2.4>
-	#   This configures the SSL engine's semaphore (aka. lock) which is
-	#   used for mutual exclusion of operations which have to be done in a
-	#   synchronized way between the pre-forked Apache server processes.
-	#   "default" tells the SSL Module to pick the default locking
-	#   implementation as determined by the platform and APR.
-	SSLMutex  default
-	</IfVersion>
-
-	<IfModule socache_shmcb>
-	SSLSessionCache         shmcb:/var/lib/apache2/ssl_scache(512000)
+	<IfModule mod_socache_shmcb.c>
+	SSLSessionCache         shmcb:/var/lib/apache2/ssl_scache(1024000)
 	</IfModule>
-	SSLSessionCacheTimeout  300
+	SSLSessionCacheTimeout  1800
+
 
 	#   Pseudo Random Number Generator (PRNG):
 	#   Configure one or more sources to seed the PRNG of the 
