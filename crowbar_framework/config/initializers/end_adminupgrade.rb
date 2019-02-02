@@ -16,7 +16,7 @@
 
 # When starting crowbar during the upgrade (e.g. after a reboot),
 # mark the end of "admin server upgrade" step.
-if File.exist?("/var/lib/crowbar/upgrade/7-to-8-upgrade-running") &&
+if File.exist?("/var/lib/crowbar/upgrade/8-to-9-upgrade-running") &&
     !File.exist?("/var/run/crowbar/admin-server-upgrading")
   upgrade_status = ::Crowbar::UpgradeStatus.new(Logger.new(STDOUT))
   upgrade_status.end_step if upgrade_status.current_step == :admin

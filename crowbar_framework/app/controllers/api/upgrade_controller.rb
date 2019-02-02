@@ -18,7 +18,7 @@ class Api::UpgradeController < ApiController
   # disable upgrade API until upgrade to next version is implemented
   before_action(except: :show) do
     # skip filter if we're in the middle of upgrade from previos version
-    unless File.exist?("/var/lib/crowbar/upgrade/7-to-8-upgrade-running")
+    unless File.exist?("/var/lib/crowbar/upgrade/8-to-9-upgrade-running")
       render json: {
         errors: {
           unexpected_error: {

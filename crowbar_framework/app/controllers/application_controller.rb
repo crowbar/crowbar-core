@@ -34,12 +34,12 @@ class ApplicationController < ActionController::Base
     Rails.env.test?
   }
   before_filter :upgrade, if: proc {
-    if File.exist?("/var/lib/crowbar/upgrade/7-to-8-upgrade-compute-nodes-postponed")
+    if File.exist?("/var/lib/crowbar/upgrade/8-to-9-upgrade-compute-nodes-postponed")
       flash[:warning] = "Some nodes are not upgraded yet. " \
         "Continue to <a href='/upgrade'>upgrade wizard</a> to complete the upgrade."
     end
-    File.exist?("/var/lib/crowbar/upgrade/7-to-8-upgrade-running") &&
-      !File.exist?("/var/lib/crowbar/upgrade/7-to-8-upgrade-compute-nodes-postponed")
+    Dir.glob("/var/lib/crowbar/upgrade/*-upgrade-running").any? &&
+      !File.exist?("/var/lib/crowbar/upgrade/8-to-9-upgrade-compute-nodes-postponed")
   }
   before_filter :sanity_checks, unless: proc {
     Rails.env.test? || \
