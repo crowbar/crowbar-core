@@ -516,10 +516,11 @@ class NodesController < ApplicationController
 
     # if raid is selected, we need a couple of selected disks
     raid_disks_selected = params.fetch(:raid_disks, []).length
-    if (params[:raid_type] == "raid1" and raid_disks_selected < 2) or \
-      (params[:raid_type] == "raid5" and raid_disks_selected < 3) or \
-      (params[:raid_type] == "raid6" and raid_disks_selected < 4) or \
-      (params[:raid_type] == "raid10" and raid_disks_selected < 4)
+    if (params[:raid_type] == "raid1" && raid_disks_selected < 2) || \
+        (params[:raid_type] == "raid0" && raid_disks_selected < 1) || \
+        (params[:raid_type] == "raid5" && raid_disks_selected < 3) || \
+        (params[:raid_type] == "raid6" && raid_disks_selected < 4) || \
+        (params[:raid_type] == "raid10" && raid_disks_selected < 4)
       flash[:alert] = t("nodes.form.raid_disks_selected", node: @node.name)
       return false
     end
