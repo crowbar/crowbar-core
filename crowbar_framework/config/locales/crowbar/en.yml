@@ -492,6 +492,7 @@ en:
       raid_type: 'Software RAID'
       raid_types:
         single: 'Single disk'
+        raid0: 'RAID 0'
         raid1: 'RAID 1'
         raid5: 'RAID 5'
         raid6: 'RAID 6'
