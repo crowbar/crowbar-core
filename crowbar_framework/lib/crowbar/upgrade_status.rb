@@ -30,13 +30,7 @@ module Crowbar
     # We're keeping the information in the file so is accessible by
     # external applications and different crowbar versions.
     def initialize(logger = Rails.logger, yaml_file = nil)
-      # If no upgrade is currently running, the default behavior
-      # is to start 8-9 upgrade.
-      # 7-8 upgrade can be only running because it was already started
-      # from Cloud7 (before admin server package upgrade)
-      if yaml_file.nil? || yaml_file.empty?
-        yaml_file = File.exist?(running_file_7_8) ? yaml_file_7_8 : yaml_file_8_9
-      end
+      yaml_file = current_status_file if yaml_file.nil? || yaml_file.empty?
 
       @running_file_location =
         if yaml_file == yaml_file_7_8
@@ -167,6 +161,8 @@ module Crowbar
           progress[:current_substep_status] = :finished
           progress[:current_nodes] = {}
           progress[:current_node_action] = "finished"
+          # Store time when the upgrade was finished
+          File.write(finished_file, Time.now.to_i)
         end
         next_step
         save
@@ -420,12 +416,44 @@ module Crowbar
       upgrade_steps[i + 1]
     end
 
+    def upgrade_finished_recently?
+      return false unless File.exist?(finished_file)
+      finish_time = nil
+      begin
+        # read timestamp stored in the file
+        finish_time = File.read(finished_file).to_i
+      rescue StandardError
+        # if anything was wrong with the file, fall back to last modification time
+        finish_time = File.mtime(finished_file).to_i
+      end
+      # here "recently" means within last 24hrs
+      (Time.now.to_i - finish_time) < 24 * 60 * 60
+    end
+
+    def current_status_file
+      # 7-8 upgrade can be only running because it was already started
+      # from Cloud7 (before admin server package upgrade)
+
+      # In addition we return status of previous upgrade when it has been
+      # finished recently to not confuse the users. If we switch to new status
+      # immediately after previous upgrade is finished, clients might never
+      # see the "finished" status. Instead they would see the first status
+      # of the new (not yet started) upgrade.
+      return yaml_file_7_8 if File.exist?(running_file_7_8) || upgrade_finished_recently?
+      # The default behavior is to start or continue 8-9 upgrade.
+      yaml_file_8_9
+    end
+
     def lock_path
       "/opt/dell/crowbar_framework/tmp/upgrade_status_lock"
     end
 
     def postponed_file
       "/var/lib/crowbar/upgrade/7-to-8-upgrade-compute-nodes-postponed"
+    end
+
+    def finished_file
+      "/var/lib/crowbar/upgrade/7-to-8-upgraded-ok"
     end
 
     def running_file_7_8
