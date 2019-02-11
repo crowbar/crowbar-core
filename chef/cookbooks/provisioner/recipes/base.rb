@@ -366,3 +366,22 @@ template "/etc/crowbarrc" do
   group "root"
   mode "0o600"
 end
+
+if node.roles.include?("nova-compute-kvm") || node.roles.include?("database-server")
+  package "tuned"
+
+  service "tuned" do
+    action [:enable, :start]
+  end
+
+  if node.roles.include?("nova-compute-kvm")
+    profile = "virtual-host"
+  elsif node.roles.include?("database-server")
+    profile = "throughput-performance"
+  end
+
+  execute "Set proper tuned profile to #{profile}" do
+    command "tuned-adm profile #{profile}"
+    not_if "tuned-adm active|grep -q '#{profile}'"
+  end
+end
