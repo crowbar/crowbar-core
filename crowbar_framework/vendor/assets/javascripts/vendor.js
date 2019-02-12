@@ -3,5 +3,4 @@
 //= require misc
 //= require codemirror
 //= require bootstrap-sprockets
-//= require bootstrap
 //= require fontawesome

@@ -55,10 +55,9 @@
           %p
             = f.text_field(:name, class: "form-control")
         .modal-footer
-          .row
-            .btn.btn-default{ data: { dismiss: "modal" } }
-              = t("cancel")
-            = f.submit(class: "btn btn-success")
+          .btn.btn-default{ data: { dismiss: "modal" } }
+            = t("cancel")
+          = f.submit(class: "btn btn-success")
 
 .modal.fade{ id: "upload_backup_modal" }
   .modal-dialog
