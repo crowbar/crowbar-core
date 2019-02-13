@@ -31,7 +31,11 @@ rm -f /etc/zypp/repos.d/*.repo
 
 log "Adding new repositories..."
 <% @new_repos.each do |name, attrs| %>
+    <% if name =~ /-Updates/ -%>
+zypper --non-interactive addrepo -f <%= attrs[:url] %> <%= name %>
+    <% else -%>
 zypper --non-interactive addrepo <%= attrs[:url] %> <%= name %>
+    <% end -%>
 <% end %>
 zypper --non-interactive addrepo <%= @new_base_repo %> <%= @new_alias %>
 
