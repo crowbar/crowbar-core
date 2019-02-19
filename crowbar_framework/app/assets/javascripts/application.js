@@ -285,6 +285,16 @@ jQuery(document).ready(function($) {
     location.reload();
   });
 
+  $('body.ses input[name="sesconfig[file]"]').fileinput({
+    uploadUrl: Routes.ses_settings_upload_path(),
+    uploadAsync: true,
+    allowedFileExtensions: ['yml', 'yaml'],
+    dropZoneEnabled: false
+  })
+  .on('fileuploaded', function() {
+    location.reload();
+  });
+
   $('body.installer-upgrades input[name="file"]').fileinput({
     showPreview: false,
     showUpload: false,
