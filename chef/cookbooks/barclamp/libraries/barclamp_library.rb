@@ -418,8 +418,11 @@ module BarclampLibrary
       end
     end
 
+    # this class holds the recipe_depedencies object
+    # the object is added as the class level
     class DependsOn
       class << self
+        # api to add recipe dependency
         def add(dependency)
           @recipe_depedencies ||= Mash.new
           @recipe_depedencies.merge!(dependency)
@@ -442,6 +445,12 @@ module BarclampLibrary
           return prev_cfg, cur_cfg.default_attributes[barclamp]
         end
 
+		# a attrlist is ['api','bind_port'] (array)
+		# and collection is assumed to be a hash like object
+		# this method will return collection['api']['bind_port']
+		# 
+		# - abort and return nil , if any key not found
+		# - log accordingly
         def loadattr(collection, attrlist)
           begin
             attrlist.each do |item|
@@ -452,7 +461,9 @@ module BarclampLibrary
               collection = collection[item]
             end
           rescue NoMethodError
-            Chef::Log.info("[smart] collection did not respond to []/key? while looking for #{item}")
+            msg = "[smart] collection variable did not " \
+                   "respond to []/key? while looking for #{item}"
+            Chef::Log.info(msg)
             return nil
           end
           collection
