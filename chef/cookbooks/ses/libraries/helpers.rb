@@ -30,5 +30,30 @@ module SesHelper
     def keyring_path(user)
       "/etc/ceph/ceph.client.#{user}.keyring"
     end
+
+    def populate_cinder_volumes_with_ses_settings(cinder_controller)
+      ses_volume_found = false
+      ses_config = ses_settings
+
+      # Loop to check if we have SES managed cluster and update configs
+      cinder_controller[:cinder][:volumes].each_with_index do |volume, volid|
+        next unless volume[:backend_driver] == "rbd" && volume[:rbd][:use_ses]
+
+        # Trying to use_ses but no SES config is available?
+        if ses_config.nil? || !ses_config.key?("cinder")
+          message = "SES configuration was not found but it was enabled for some backend!"
+          Chef::Log.fatal(message)
+          raise message
+        end
+
+        ses_volume_found = true
+
+        cinder_controller.default[:cinder][:volumes][volid][:rbd][:config_file] = ceph_conf_path
+        cinder_controller.default[:cinder][:volumes][volid][:rbd][:user] = ses_config["cinder"]["rbd_store_user"]
+        cinder_controller.default[:cinder][:volumes][volid][:rbd][:pool] = ses_config["cinder"]["rbd_store_pool"]
+      end
+
+      ses_volume_found
+    end
   end
 end
