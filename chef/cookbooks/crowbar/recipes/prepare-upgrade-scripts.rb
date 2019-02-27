@@ -137,7 +137,7 @@ template "/usr/sbin/crowbar-evacuate-host.sh" do
   only_if { roles.include? "nova-controller" }
 end
 
-compute_node = roles.include? "nova-compute-kvm"
+compute_node = compute_nodes.include? node["hostname"]
 nova_node = compute_node || roles.include?("nova-controller")
 cinder_volume = roles.include? "cinder-volume"
 neutron = search(:node, "run_list_map:neutron-server").first
