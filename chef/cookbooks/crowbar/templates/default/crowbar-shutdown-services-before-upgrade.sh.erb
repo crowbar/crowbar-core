@@ -52,7 +52,7 @@ done
 <% if @cluster_founder %>
 log "Stopping pacemaker resources..."
 
-exclude="postgresql|vip|rabbitmq|keystone|neutron|haproxy|remote|galera|apache"
+exclude="vip|rabbitmq|keystone|neutron|haproxy|remote|galera|apache"
 
 for type in clone ms primitive; do
     for resource in $(crm configure show | grep ^$type | grep -Ev $exclude | cut -d " " -f2);

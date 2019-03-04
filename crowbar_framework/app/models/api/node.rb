@@ -68,13 +68,9 @@ module Api
       )
     end
 
-    # Execute post upgrade actions: prepare drbd and start pacemaker
+    # Execute post upgrade actions
     def post_upgrade
-      if @node["drbd"] && @node["drbd"]["rsc"] && @node["drbd"]["rsc"].any?
-        save_node_action("synchronizing DRBD")
-      else
-        save_node_action("doing post-upgrade cleanup")
-      end
+      save_node_action("doing post-upgrade cleanup")
       execute_and_wait_for_finish(
         "/usr/sbin/crowbar-post-upgrade.sh",
         @timeouts.values[:post_upgrade]

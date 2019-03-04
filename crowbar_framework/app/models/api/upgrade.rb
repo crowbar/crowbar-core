@@ -1048,10 +1048,6 @@ module Api
       # upgrade of controller nodes in given cluster
       #
       def upgrade_cluster(founder, cluster)
-        if founder["drbd"] && founder["drbd"]["rsc"] && founder["drbd"]["rsc"].any?
-          return upgrade_drbd_cluster(cluster)
-        end
-
         Rails.logger.info("Upgrading controller nodes in cluster #{cluster}")
 
         non_founder_nodes = ::Node.find(
@@ -1162,73 +1158,6 @@ module Api
         node_api.disable_pre_upgrade_attribute_for node.name
         re_enable_network_agents(founder, node)
         node_api.save_node_state("controller", "upgraded")
-      end
-
-      def upgrade_drbd_cluster(cluster)
-        Rails.logger.info("Upgrading controller nodes with DRBD-based storage " \
-                           "in cluster \"#{cluster}\"")
-
-        drbd_nodes = ::Node.find(
-          "pacemaker_config_environment:#{cluster} AND " \
-          "(roles:database-server OR roles:rabbitmq-server)"
-        )
-        if drbd_nodes.empty?
-          Rails.logger.info("There's no DRBD-based node in cluster #{cluster}")
-          return
-        end
-
-        # First node to upgrade is DRBD slave. There might be more resources using DRBD backend
-        # but the Master/Slave distribution might be different among them.
-        # Therefore, we decide only by looking at the first DRBD resource we find in the cluster.
-        #
-        # But we have to make sure that when this method is invoked for a second time
-        # (probably after previous failure), same order of nodes is selected as in the first case.
-        # Looking at the DRBD state could be problematic, because master and slave are normally
-        # switched during the upgrade. So in such case we have to look at the data we have about
-        # the upgraded nodes.
-        first = nil
-        second = nil
-
-        nodes_processed = drbd_nodes.select(&:upgraded?)
-        if nodes_processed.size == drbd_nodes.size
-          Rails.logger.info("All nodes in cluster #{cluster} have already been upgraded.")
-          return
-        end
-
-        # if no node is fully upgraded already, check if the upgrade was started on any of the nodes
-        if nodes_processed.empty?
-          nodes_processed = drbd_nodes.select(&:upgrading?)
-        end
-
-        if nodes_processed.empty?
-          # No DRBD node upgrade has started yet, so let's pick the first/second as slave/master
-          drbd_nodes.each do |drbd_node|
-            cmd = "LANG=C crm resource status ms-drbd-{postgresql,rabbitmq}\
-            | sort | head -n 2 | grep \\$(hostname) | grep -q Master"
-            out = drbd_node.run_ssh_cmd(cmd)
-            if out[:exit_code].zero?
-              second = drbd_node
-            else
-              # this is DRBD slave
-              first = drbd_node
-            end
-          end
-        else
-          # If one node is already fully upgraded, we can continue with the other one.
-          # If one node is being upgraded (and we know none is fully upgraded),
-          # we can continue with that one as it is still the first node.
-          first = nodes_processed.first # there is only one item here anyway
-          second = drbd_nodes.detect { |n| n.name != first.name }
-        end
-
-        if first.nil? || second.nil?
-          raise_node_upgrade_error("Unable to detect DRBD master and/or slave nodes.")
-        end
-
-        upgrade_first_cluster_node first, second
-        upgrade_next_cluster_node second, first
-
-        Rails.logger.info("Nodes in DRBD-based cluster successfully upgraded")
       end
 
       # Delete existing pacemaker resources, from other node in the cluster
