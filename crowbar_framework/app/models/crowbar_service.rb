@@ -37,6 +37,12 @@ class CrowbarService < ServiceObject
     end
   end
 
+  def create_proposal
+    base = super
+    base["attributes"]["crowbar"]["client_user"]["password"] = random_password
+    base
+  end
+
   # This is relevant to upgrade process only.
   #
   # Commit current proposal of crowbar barclamp and check if the commit doesn't

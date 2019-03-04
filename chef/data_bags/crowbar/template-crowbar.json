@@ -24,6 +24,10 @@
         "default_timeout": 60,
         "timeout_multiplier": 1.0
       },
+      "client_user": {
+        "username": "client",
+        "password": "client_password"
+      },
       "simple_proposal_ui": true,
       "upgrade": {
         "db_dump_location": "/var/lib/pgsql/openstack-db-before-upgrade.dump"
@@ -46,7 +50,7 @@
     "crowbar": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 201,
+      "schema-revision": 202,
       "element_states": {
         "crowbar": [ "all" ],
         "crowbar-upgrade": [ "readying", "ready", "applying", "crowbar_upgrade" ]

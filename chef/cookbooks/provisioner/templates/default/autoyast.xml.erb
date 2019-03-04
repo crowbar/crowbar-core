@@ -298,8 +298,8 @@ export CROWBAR_PASS="$(sed -e 's/^machine-install://' <<< $CROWBAR_KEY)"
 cat <<EOF > /etc/crowbarrc
 [default]
 server = <%= @crowbar_protocol %>://<%= @admin_node_ip %>
-username = machine-install
-password = $CROWBAR_PASS
+username = <%= @crowbar_client_username %>
+password = <%= @crowbar_client_password %>
 <% unless @crowbar_verify_ssl %>
 verify_ssl = 0
 <% end %>

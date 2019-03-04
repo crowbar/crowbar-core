@@ -23,6 +23,12 @@
                 }
               }
             },
+            "client_user": { "type": "map", "required": true,
+              "mapping": {
+                "username": { "type": "str"},
+                "password": { "type": "str" }
+              }
+            },
             "upgrade": {
               "type": "map",
               "required": true,
