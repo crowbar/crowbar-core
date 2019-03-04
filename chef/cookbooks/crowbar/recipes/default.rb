@@ -258,6 +258,20 @@ unless node["crowbar"].nil? or node["crowbar"]["users"].nil? or node["crowbar"][
     group node[:apache][:group]
     mode "0640"
   end
+
+  client_users = users.dup
+  client_username = node["crowbar"]["client_user"]["username"]
+  # Fix passwords into digests.
+  client_password = node["crowbar"]["client_user"]["password"]
+  client_digest = Digest::MD5.hexdigest("#{client_username}:#{realm}:#{client_password}")
+  client_users[client_username] = { "digest" => client_digest }
+  template "/opt/dell/crowbar_framework/htdigest-clients" do
+    source "htdigest.erb"
+    variables(users: client_users, realm: realm)
+    owner "root"
+    group node[:apache][:group]
+    mode "0640"
+  end
 else
   web_port = 3000
   realm = nil
