@@ -63,6 +63,8 @@ virtual_intfs = ["tap", "qbr", "qvo", "qvb", "brq", "ovs", "vxl"]
 crowbar_node = node_search_with_cache("roles:crowbar").first
 crowbar_protocol = crowbar_node[:crowbar][:apache][:ssl] ? "https" : "http"
 crowbar_verify_ssl = !crowbar_node["crowbar"]["apache"]["insecure"]
+crowbar_client_username = crowbar_node["crowbar"]["client_user"]["username"]
+crowbar_client_password = crowbar_node["crowbar"]["client_user"]["password"]
 
 discovery_dir = "#{tftproot}/discovery"
 pxecfg_subdir = "bios/pxelinux.cfg"
@@ -392,6 +394,8 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
           admin_node_ip: admin_ip,
           crowbar_protocol: crowbar_protocol,
           crowbar_verify_ssl: crowbar_verify_ssl,
+          crowbar_client_username: crowbar_client_username,
+          crowbar_client_password: crowbar_client_password,
           web_port: web_port,
           packages: packages,
           repos: repos,
