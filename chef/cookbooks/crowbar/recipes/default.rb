@@ -242,6 +242,34 @@ unless node["crowbar"].nil? or node["crowbar"]["users"].nil? or node["crowbar"][
     "/var/cache/chef/solr/data"
   end
 
+  # If all nodes are done installing, change the machine-install password so it
+  # can't be reused. This will change it on every chef run.  This only changes
+  # the install key on the admin node. This will be injected into future nodes
+  # that are added later.
+  all_nodes = node_search_with_cache("*:*")
+  unready_nodes = node_search_with_cache("NOT state:ready")
+  nodes_ready = all_nodes.length > 1 && unready_nodes.empty?
+  live_nodes = all_nodes.length
+  # Change the install key when all nodes are ready and the number of nodes in
+  # the deployment has changed since the last time it was set
+  if nodes_ready && live_nodes != node["crowbar"]["known_nodes"]
+    node["crowbar"]["known_nodes"] = live_nodes
+    secret = SecureRandom.hex(64)
+    node["crowbar"]["users"]["machine-install"]["password"] = secret
+    file "/etc/crowbar.install.key" do
+      content "machine-install:#{secret}\n"
+      owner "root"
+      group "root"
+      mode "0o600"
+    end
+    execute "update crowbar proposal with new machine-install password" do
+      command "crowbarctl proposal edit crowbar default \
+               --data \"$(crowbarctl  proposal show crowbar default --json | \
+               /opt/dell/bin/json-edit \
+                 --attribute attributes.crowbar.users.machine-install.password \
+                 --value #{secret} - )\""
+    end
+  end
   users = {}
   node["crowbar"]["users"].each do |k,h|
     next if h["disabled"]
@@ -253,6 +281,20 @@ unless node["crowbar"].nil? or node["crowbar"]["users"].nil? or node["crowbar"][
   template "/opt/dell/crowbar_framework/htdigest" do
     source "htdigest.erb"
     variables(users: users, realm: realm)
+    owner "root"
+    group node[:apache][:group]
+    mode "0640"
+  end
+
+  client_users = users.dup
+  client_username = node["crowbar"]["client_user"]["username"]
+  # Fix passwords into digests.
+  client_password = node["crowbar"]["client_user"]["password"]
+  client_digest = Digest::MD5.hexdigest("#{client_username}:#{realm}:#{client_password}")
+  client_users[client_username] = { "digest" => client_digest }
+  template "/opt/dell/crowbar_framework/htdigest-clients" do
+    source "htdigest.erb"
+    variables(users: client_users, realm: realm)
     owner "root"
     group node[:apache][:group]
     mode "0640"
