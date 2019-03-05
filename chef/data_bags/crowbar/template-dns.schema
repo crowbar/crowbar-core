@@ -54,7 +54,9 @@
             "auto_assign_server": {
               "type": "bool",
               "required": true
-            }
+            },
+            "designate_rndc_key": { "type": "str", "required": false },
+            "enable_designate": { "type": "bool", "required": false }
           }
         }
       }
