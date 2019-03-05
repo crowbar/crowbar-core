@@ -1,0 +1,11 @@
+key "designate-key" {
+    algorithm hmac-md5;
+    secret "<%= @rndc_key -%>";
+};
+
+controls {
+    # listen on the admin interface and
+    # allow access via the desgiante-key
+    # from ips of admin_subnet
+    inet <%= @master_ip -%> allow { <%= @admin_subnet -%>; } keys { designate-key; };
+};

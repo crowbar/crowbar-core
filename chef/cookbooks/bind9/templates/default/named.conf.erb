@@ -49,3 +49,6 @@ include "/etc/bind/named.conf.default-zones";
 include "/etc/bind/named.conf.crowbar";
 include "/etc/bind/named.conf.local";
 include "/etc/named.d/rndc-access.conf";
+<% if @enable_designate -%>
+include "/etc/named.d/designate-rndc-access.conf";
+<% end -%>

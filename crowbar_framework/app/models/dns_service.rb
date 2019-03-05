@@ -49,6 +49,11 @@ class DnsService < ServiceObject
       validation_error("At least one nameserver or one node with the dns-server role must be specified.")
     end
 
+    if proposal["attributes"]["dns"]["enable_designate"]
+      rndckey = proposal["attributes"]["dns"]["designate_rndc_key"]
+      validation_error("designate_rndc_key cannot be empty with designate enabled") if rndckey.empty?
+    end
+
     proposal["attributes"]["dns"]["records"].each do |host, records|
       unless ["A", "CNAME"].include?(records[:type])
         validation_error I18n.t(
@@ -66,6 +71,14 @@ class DnsService < ServiceObject
     end
 
     super
+  end
+
+  def create_proposal
+    base = super
+    # a 512 bit password, max from rndc-confgen -h
+    rndckey = random_password(64)
+    base["attributes"][@bc_name]["designate_rndc_key"] = rndckey
+    base
   end
 
   def proposal_create_bootstrap(params)

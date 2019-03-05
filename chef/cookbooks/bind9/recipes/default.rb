@@ -294,7 +294,8 @@ when "suse"
 end
 
 # We would like to bind service only to ip address from admin network
-admin_addr = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
+admin_network = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin")
+admin_addr = admin_network.address
 
 # Load up our default zones.  These never change.
 if node[:dns][:master]
@@ -353,6 +354,21 @@ template "/etc/bind/named.conf.crowbar" do
   notifies :reload, "service[bind9]"
 end
 
+if node[:dns][:enable_designate] && node[:dns][:master]
+  template "/etc/named.d/designate-rndc-access.conf" do
+    source "designate-rndc-access.conf.erb"
+    mode 0o640
+    owner "root"
+    group bindgroup
+    variables(
+      rndc_key: node[:dns][:designate_rndc_key],
+      master_ip: admin_network.address,
+      admin_subnet: admin_network.subnet
+    )
+    notifies :restart, "service[bind9]", :delayed
+  end
+end
+
 if node[:dns][:master]
   allow_transfer = node[:dns][:allow_transfer].to_a + node[:dns][:slave_ips].to_a
   allow_transfer = allow_transfer.uniq.sort.compact.delete_if { |n| n.empty? }
@@ -383,7 +399,9 @@ template "/etc/bind/named.conf" do
   variables(forwarders: node[:dns][:forwarders],
             allow_transfer: allow_transfer,
             ipaddress: admin_addr,
-            ip6address: admin_addr6)
+            ip6address: admin_addr6,
+            enable_designate: node[:dns][:enable_designate]
+           )
   notifies :restart, "service[bind9]", :immediately
 end
 
