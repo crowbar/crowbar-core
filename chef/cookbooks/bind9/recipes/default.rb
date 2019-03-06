@@ -400,7 +400,7 @@ template "/etc/bind/named.conf" do
             allow_transfer: allow_transfer,
             ipaddress: admin_addr,
             ip6address: admin_addr6,
-            enable_designate: node[:dns][:enable_designate]
+            enable_designate: node[:dns][:enable_designate] && node[:dns][:master]
            )
   notifies :restart, "service[bind9]", :immediately
 end
