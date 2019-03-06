@@ -390,6 +390,9 @@ end
 
 ### FIXME Change to "any" once IPv6 support has been implemented
 admin_addr6 = "none"
+if node[:dns][:enable_designate] && !node[:dns][:master]
+  node[:dns][:forwarders].push master_ip
+end
 
 # Rewrite our default configuration file
 template "/etc/bind/named.conf" do
