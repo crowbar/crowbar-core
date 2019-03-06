@@ -363,7 +363,8 @@ if node[:dns][:enable_designate] && node[:dns][:master]
     variables(
       rndc_key: node[:dns][:designate_rndc_key],
       master_ip: admin_network.address,
-      admin_subnet: admin_network.subnet
+      admin_subnet: IP::IP4.netmask_to_subnet(admin_network.netmask),
+      admin_network: admin_network.subnet
     )
     notifies :restart, "service[bind9]", :delayed
   end
