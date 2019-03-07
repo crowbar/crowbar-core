@@ -3,38 +3,39 @@
   width: 16px;
   height: 16px;
   vertical-align: middle;
-  background: image-url("jquery/ledUpdate/grey.png");
+  background: $bc-gray-500;
+  border-radius: 8px;
 
   &.ready,
   &.active,
   &.green {
-    background: image-url("jquery/ledUpdate/green.png");
+    background: $bc-green-500;
   }
 
   &.yellow,
   &.building {
-    background: image-url("jquery/ledUpdate/yellow.png");
+    background: $bc-yellow-500
   }
 
   &.unknown,
   &.off {
-    background: image-url("jquery/ledUpdate/grey.png");
+    background: $bc-gray-500;
   }
 
   &.none,
   &.diamond {
-    background: image-url("jquery/ledUpdate/white.png");
+    background: $bc-gray-100;
   }
 
   &.pending,
   &.waiting {
-    background: image-url("jquery/ledUpdate/yellow.png");
+    background: $bc-yellow-500;
   }
 
   &.failed,
   &.red,
   &.error {
-    background: image-url("jquery/ledUpdate/red.png");
+    background: $bc-red-500;
   }
 
   &.blink {
@@ -45,11 +46,18 @@
   &.unready,
   &.spin,
   &.in_process {
-    background: image-url("jquery/ledUpdate/animation.png");
+    background: $bc-green-500;
+    @include animation(in-progress 2.0s steps(8) infinite);
   }
 
   &.crowbar_upgrade,
   &.blue {
-    background: image-url("jquery/ledUpdate/blue.png");
+    background: $bc-cerulean-500;
   }
+}
+
+@include keyframes(in-progress) {
+  0% { opacity: 1;}
+  50% { opacity: .5; }
+  100% { opacity: 1; }
 }
