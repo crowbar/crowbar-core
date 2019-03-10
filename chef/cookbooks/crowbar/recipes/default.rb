@@ -156,10 +156,11 @@ end
 
 ruby_block "Ensure /etc/sudoers.d is included in sudoers" do
   block do
-    f = Chef::Util::FileEdit.new("/etc/sudoers")
-    f.insert_line_if_no_match(/^#includedir \/etc\/sudoers.d\/?$/,
-                              "#includedir /etc/sudoers.d")
-    f.write_file
+    sudoers = "/etc/sudoers"
+    # do not rely on Chef::Util::FileEdit that does not handle multibyte encodings
+    if File.readlines(sudoers).none? { |l| l.start_with? "#includedir /etc/sudoers.d" }
+      File.open(sudoers, "a") { |f| f.puts "\n#includedir /etc/sudoers.d" }
+    end
   end
   only_if { File.exists?("/etc/sudoers") }
 end
