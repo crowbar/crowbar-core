@@ -99,8 +99,10 @@ add_group() {
   if [[ -z "$gid" ]]; then
     groupadd --system --gid $2 $1
   elif [[ "$gid" != "$2" ]]; then
-    echo "Group $1 does not have gid $2."
-    exit 1
+    groupmod -g $2 $1
+    if [[ -n "$3" ]] && rpm -q $3 >/dev/null; then
+      zypper --non-interactive install --force $3
+    fi
   fi
 }
 
@@ -110,8 +112,15 @@ add_user() {
   if [[ -z "$uid" ]]; then
     useradd --system --shell /sbin/nologin -d / --gid $2 --uid $2 --groups $3 $1
   elif [[ "$uid" != $2 ]] || [[ "$gid" != $2 ]]; then
-    echo "User $1 does not have uid/gid $2."
-    exit 1
+    if [[ -n "$gid" ]]; then
+      echo "Group $1 for the same username doesn't exist. Please clean up manually."
+      exit 1
+    fi
+    usermod -u $2 $1
+    groupmod -g $2 $1
+    if [[ -n "$4" ]] && rpm -q $4 >/dev/null; then
+      zypper --non-interactive install --force $4
+    fi
   fi
 }
 
@@ -184,13 +193,13 @@ fi
 # ---------------
 
 # for making HA on shared NFS backend storage work
-add_group glance 200
-add_group qemu 201
-add_group kvm 202
-add_group cinder 203
-add_user glance 200 glance
-add_user qemu 201 kvm
-add_user cinder 203 cinder
+add_group glance 200 openstack-glance
+add_group qemu 201 qemu
+add_group kvm 202 qemu
+add_group cinder 203 openstack-cinder
+add_user glance 200 glance openstack-glance
+add_user qemu 201 kvm qemu
+add_user cinder 203 cinder openstack-cinder
 
 # Check that we're really on the admin network
 # --------------------------------------------
