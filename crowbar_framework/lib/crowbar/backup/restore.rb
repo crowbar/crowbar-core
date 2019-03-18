@@ -265,10 +265,20 @@ module Crowbar
       end
 
       def run_installer
+        # Start crowbar-init.service so that the installer can run.
+        # See c99b83262936e4bccb832a47f921c5c66a7b6a1f for details.
+        Rails.logger.debug "Starting crowbar-init.service"
+        system("sudo systemctl start crowbar-init.service")
+
         Rails.logger.debug "Starting Crowbar installation"
         Crowbar::Installer.install!
         Rails.logger.debug "Waiting for installation to be successful"
         sleep(1) until Crowbar::Installer.successful? || Crowbar::Installer.failed?
+
+        # Start crowbar-init.service so that the installer can run.
+        # See c99b83262936e4bccb832a47f921c5c66a7b6a1f for details.
+        Rails.logger.debug "Stopping crowbar-init.service"
+        system("sudo systemctl stop crowbar-init.service")
 
         if Crowbar::Installer.failed?
           Rails.logger.error "Crowbar Installation Failed"
