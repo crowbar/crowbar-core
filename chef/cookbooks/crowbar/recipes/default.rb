@@ -17,106 +17,42 @@
 # limitations under the License.
 #
 
-unless node[:platform_family] == "suse"
-  include_recipe "bluepill"
-end
-
 pkglist = ()
 logdir = "/var/log/crowbar"
 crowbar_home = "/var/lib/crowbar"
 
-case node[:platform_family]
-when "debian"
-  pkglist = %w(
-    curl
-    sudo
-    postgresql-9.4
-    postgresql-server-dev-9.4
-    libshadow-ruby1.8
-    markdown
-  )
-  unless search(:node, "platform_family:windows").empty?
-    pkglist.push "smbclient"
-  end
-when "rhel"
-  pkglist = %w(
-    curl
-    sudo
-    postgresql94-server
-    postgresql-libs
-    python-markdown
-  )
-  unless search(:node, "platform_family:windows").empty?
-    pkglist.push "samba-client"
-  end
-when "suse"
-  pkglist = %w(
-    curl
-    sudo
-    postgresql-server
+pkglist = %w[
+  curl
+  sudo
+  postgresql-server
 
-    ruby2.1-rubygem-activerecord-session_store
-    ruby2.1-rubygem-activeresource
-    ruby2.1-rubygem-active_model_serializers
-    ruby2.1-rubygem-chef
-    ruby2.1-rubygem-uglifier
-    ruby2.1-rubygem-dotenv
-    ruby2.1-rubygem-haml-rails
-    ruby2.1-rubygem-hashie
-    ruby2.1-rubygem-js-routes
-    ruby2.1-rubygem-kwalify
-    ruby2.1-rubygem-mime-types
-    ruby2.1-rubygem-mixlib-shellout
-    ruby2.1-rubygem-ohai-6
-    ruby2.1-rubygem-rails-4_2
-    ruby2.1-rubygem-puma
-    ruby2.1-rubygem-ruby-shadow
-    ruby2.1-rubygem-sass-rails
-    ruby2.1-rubygem-simple-navigation
-    ruby2.1-rubygem-simple_navigation_renderers
-    ruby2.1-rubygem-pg
-    ruby2.1-rubygem-syslogger
-    ruby2.1-rubygem-yaml_db
-  )
-  unless search(:node, "platform_family:windows").empty?
-    pkglist.push "samba-client"
-  end
-end
+  ruby2.1-rubygem-activerecord-session_store
+  ruby2.1-rubygem-activeresource
+  ruby2.1-rubygem-active_model_serializers
+  ruby2.1-rubygem-chef
+  ruby2.1-rubygem-uglifier
+  ruby2.1-rubygem-dotenv
+  ruby2.1-rubygem-haml-rails
+  ruby2.1-rubygem-hashie
+  ruby2.1-rubygem-js-routes
+  ruby2.1-rubygem-kwalify
+  ruby2.1-rubygem-mime-types
+  ruby2.1-rubygem-mixlib-shellout
+  ruby2.1-rubygem-ohai-6
+  ruby2.1-rubygem-rails-4_2
+  ruby2.1-rubygem-puma
+  ruby2.1-rubygem-ruby-shadow
+  ruby2.1-rubygem-sass-rails
+  ruby2.1-rubygem-simple-navigation
+  ruby2.1-rubygem-simple_navigation_renderers
+  ruby2.1-rubygem-pg
+  ruby2.1-rubygem-syslogger
+  ruby2.1-rubygem-yaml_db
+]
 
 pkglist.each do |p|
   package p do
     action :install
-  end
-end
-
-unless node[:platform_family] == "suse"
-  gemlist = %w(
-    activerecord-session_store
-    activeresource
-    chef
-    uglifier
-    dotenv
-    dotenv-deployment
-    haml-rails
-    hashie
-    js-routes
-    kwalify
-    mime-types
-    mixlib-shellout
-    ohai
-    rails
-    sass-rails
-    simple-navigation
-    simple_navigation_renderers
-    pg
-    syslogger
-    puma
-  )
-
-  gemlist.each do |g|
-    gem_package g do
-      action :install
-    end
   end
 end
 
@@ -197,15 +133,6 @@ file "/opt/dell/crowbar_framework/tmp/ip.lock" do
   group "crowbar"
   mode "0644"
   action :create
-end
-
-unless node[:platform_family] == "suse"
-  file "/var/run/crowbar-webserver.pid" do
-    owner "crowbar"
-    group "crowbar"
-    mode "0644"
-    action :create
-  end
 end
 
 directory "/var/run/crowbar" do
@@ -308,97 +235,62 @@ utils_systemd_service_restart "chef-solr"
 utils_systemd_service_restart "chef-expander"
 utils_systemd_service_restart "chef-server"
 
-if node[:platform_family] == "suse"
-  # With new erlang packages, we move to a system-wide epmd service, with a
-  # epmd.socket unit. This is enabled by default but only listens on 127.0.0.1,
-  # while we need it to listen on the admin network too.
+# With new erlang packages, we move to a system-wide epmd service, with a
+# epmd.socket unit. This is enabled by default but only listens on 127.0.0.1,
+# while we need it to listen on the admin network too.
 
-  # on initial setup, we have no info about addresses, so we won't get the
-  # admin address
-  admin_network = BarclampLibrary::Barclamp::Inventory.get_network_by_type(node, "admin")
-  admin_address = admin_network.nil? ? nil : admin_network.address
+# on initial setup, we have no info about addresses, so we won't get the
+# admin address
+admin_network = BarclampLibrary::Barclamp::Inventory.get_network_by_type(node, "admin")
+admin_address = admin_network.nil? ? nil : admin_network.address
 
-  directory "/etc/systemd/system/epmd.socket.d" do
-    owner "root"
-    group "root"
-    mode 0o755
-    action :create
-    not_if { admin_address.nil? }
-    only_if "grep -q Requires=epmd.service /usr/lib/systemd/system/rabbitmq-server.service"
-  end
-
-  template "/etc/systemd/system/epmd.socket.d/port.conf" do
-    source "epmd.socket-port.conf.erb"
-    owner "root"
-    group "root"
-    mode 0o644
-    variables(
-      listen_address: admin_address
-    )
-    not_if { admin_address.nil? }
-    only_if "grep -q Requires=epmd.service /usr/lib/systemd/system/rabbitmq-server.service"
-  end
-
-  bash "reload systemd for epmd.socket extension" do
-    code "systemctl daemon-reload"
-    action :nothing
-    subscribes :run, "template[/etc/systemd/system/epmd.socket.d/port.conf]", :immediate
-  end
-
-  # Now do the config for the crowbar service
-
-  cookbook_file "/etc/tmpfiles.d/crowbar.conf" do
-    owner "root"
-    group "root"
-    mode "0644"
-    action :create
-    source "crowbar.tmpfiles"
-  end
-
-  bash "create tmpfiles.d files for crowbar" do
-    code "systemd-tmpfiles --create /etc/tmpfiles.d/crowbar.conf"
-    action :nothing
-    subscribes :run, resources("cookbook_file[/etc/tmpfiles.d/crowbar.conf]"), :immediately
-  end
-
-  service "crowbar" do
-    action :enable
-  end
-  # No need for utils_systemd_service_restart: Restart= is already in the .service file
-else
-  %w(chef-server-api chef-server-webui chef-solr rabbitmq-server).each do |f|
-    file "/etc/logrotate.d/#{f}" do
-      action :delete
-    end
-  end
-
-  cookbook_file "/etc/logrotate.d/chef-server"
-
-  template "/etc/bluepill/crowbar-webserver.pill" do
-    source "crowbar-webserver.pill.erb"
-    variables(logdir: logdir, crowbar_home: crowbar_home)
-  end
-
-  bluepill_service "crowbar-webserver" do
-    action [:load, :start]
-  end
-
-  cookbook_file "/etc/init.d/crowbar" do
-    owner "root"
-    group "root"
-    mode "0755"
-    action :create
-    source "crowbar"
-  end
-
-  ["3", "5", "2"].each do |i|
-    link "/etc/rc#{i}.d/S99xcrowbar" do
-      action :create
-      to "/etc/init.d/crowbar"
-      not_if "test -L /etc/rc#{i}.d/S99xcrowbar"
-    end
-  end
+directory "/etc/systemd/system/epmd.socket.d" do
+  owner "root"
+  group "root"
+  mode 0o755
+  action :create
+  not_if { admin_address.nil? }
+  only_if "grep -q Requires=epmd.service /usr/lib/systemd/system/rabbitmq-server.service"
 end
+
+template "/etc/systemd/system/epmd.socket.d/port.conf" do
+  source "epmd.socket-port.conf.erb"
+  owner "root"
+  group "root"
+  mode 0o644
+  variables(
+    listen_address: admin_address
+  )
+  not_if { admin_address.nil? }
+  only_if "grep -q Requires=epmd.service /usr/lib/systemd/system/rabbitmq-server.service"
+end
+
+bash "reload systemd for epmd.socket extension" do
+  code "systemctl daemon-reload"
+  action :nothing
+  subscribes :run, "template[/etc/systemd/system/epmd.socket.d/port.conf]", :immediate
+end
+
+# Now do the config for the crowbar service
+
+cookbook_file "/etc/tmpfiles.d/crowbar.conf" do
+  owner "root"
+  group "root"
+  mode "0644"
+  action :create
+  source "crowbar.tmpfiles"
+end
+
+bash "create tmpfiles.d files for crowbar" do
+  code "systemd-tmpfiles --create /etc/tmpfiles.d/crowbar.conf"
+  action :nothing
+  subscribes :run, resources("cookbook_file[/etc/tmpfiles.d/crowbar.conf]"), :immediately
+end
+
+service "crowbar" do
+  action :enable
+end
+# No need for utils_systemd_service_restart: Restart= is already in the .service file
 
 include_recipe "apache2"
 include_recipe "apache2::mod_proxy"

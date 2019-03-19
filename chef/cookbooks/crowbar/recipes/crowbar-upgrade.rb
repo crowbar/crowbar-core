@@ -22,8 +22,6 @@
 # consists of several steps which we distinguish by various attributes
 # saved in the node structure.
 
-return unless node[:platform_family] == "suse"
-
 upgrade_step = node["crowbar_upgrade_step"] || "none"
 
 Chef::Log.info("Current upgrade step: #{upgrade_step}")
