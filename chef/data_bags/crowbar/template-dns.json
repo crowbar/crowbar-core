@@ -9,14 +9,16 @@
       "nameservers": [ ],
       "additional_search_domains": [ ],
       "records": { },
-      "auto_assign_server": true
+      "auto_assign_server": true,
+      "designate_rndc_key": "",
+      "enable_designate": false
     }
   },
   "deployment": {
     "dns": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 300,
+      "schema-revision": 301,
       "element_states": {
         "dns-server": [ "readying", "ready", "applying" ],
         "dns-client": [ "readying", "ready", "applying" ]
