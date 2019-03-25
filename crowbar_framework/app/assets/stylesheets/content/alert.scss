@@ -9,7 +9,7 @@
   }
 
   pre {
-    background-color: $state-danger-pre-bg;
+    background-color: darken(adjust-hue($state-danger-bg, -10), 5%);
     max-height: 20em;
     overflow: scroll;
 
