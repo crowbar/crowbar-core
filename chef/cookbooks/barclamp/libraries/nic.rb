@@ -712,6 +712,13 @@ class ::Nic
       self
     end
 
+    def mtu=(mtu)
+      slaves.each do |slave|
+        slave.mtu = mtu
+      end
+      super
+    end
+
     def up
       slaves.each(&:up)
       super
