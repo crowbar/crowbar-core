@@ -71,10 +71,10 @@ jQuery(document).ready(function($) {
     disableTooltips: true,
     disableHighlight: true,
     sliceColors: [
-      '#0f0',
-      '#f00',
-      '#999',
-      '#ff0'
+      '#00C081',
+      '#DC3545',
+      '#797777',
+      '#FFBB06'
     ]
   });
 

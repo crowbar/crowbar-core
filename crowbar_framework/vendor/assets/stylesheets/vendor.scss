@@ -1,7 +1,11 @@
 @import "bootstrap-sprockets";
-@import "variables";
+@import "bootstrap/mixins";
+@import "mixins/keyframes";
+@import "lato";
+@import "eos-branding";
 @import "jquery";
 @import "codemirror";
 @import "bootstrap";
+@import "patches";
 @import "fontawesome-sprockets";
 @import "fontawesome";

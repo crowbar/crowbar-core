@@ -1,0 +1,121 @@
+// (c) Copyright 2019 SUSE LLC
+/**
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*    http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+**/
+
+//
+// Variables
+// --------------------------------------------------
+
+// (c) Copyright 2017-2019 SUSE LLC
+
+/* Primary colors variables
+   ========================================================================== */
+/* brand color - green */
+$bc-green-100: #E0F7F0; //rgb(179, 236, 217)
+$bc-green-200: #B3ECD9; //rgb(128, 224, 192)
+$bc-green-300: #4DD3A7; //rgb(77, 211, 167);
+$bc-green-400: #26C994; //rgb(38, 201, 148);
+$bc-green-500: #00C081; //rgb(0, 192, 129);
+$bc-green-600: #00BA79; //rgb(0, 186, 121);
+$bc-green-700: #00B26E; //rgb(0, 178, 110);
+$bc-green-800: #00AA64; //rgb(0, 170, 100);
+$bc-green-900: #009C51; //rgb(0, 156, 81);
+
+$color-1: #0f0;
+$color-2: #f00;
+$color-3: #999;
+$color-4: #ff0;
+
+/* brand color - blue */
+$bc-blue-100: #B6C0C6; //rgb(182, 192, 198);
+$bc-blue-200: #8696A0; //rgb(134, 150, 160);
+$bc-blue-300: #566B79; //rgb(86, 107, 121);
+$bc-blue-400: #314C5D; //rgb(49, 76, 93);
+$bc-blue-500: #0D2C40; //rgb(13, 44, 64);
+$bc-blue-600: #0B273A; //rgb(11, 39, 58);
+$bc-blue-700: #092132; //rgb(9, 33, 50);
+$bc-blue-800: #071B2A; //rgb(7, 27, 42);
+$bc-blue-900: #03101C; //rgb(3, 16, 28);
+
+/* brand color - orange */
+$bc-orange-100: #FDCEB3; //rgb(253, 206, 179);
+$bc-orange-200: #FBAE81; //rgb(251, 174, 129);
+$bc-orange-300: #F98D4F; //rgb(249, 141, 79);
+$bc-orange-400: #F87429; //rgb(248, 116, 41);
+$bc-orange-500: #F75C03; //rgb(247, 92, 3);
+$bc-orange-600: #F65403; //rgb(246, 84, 3);
+$bc-orange-700: #F54A02; //rgb(245, 74, 2);
+$bc-orange-800: #F34102; //rgb(243, 65, 2);
+$bc-orange-900: #F13001; //rgb(241, 48, 1);
+
+/* brand color - cerulean */
+$bc-cerulean-100: #B3E8F6; //rgb(179, 232, 246);
+$bc-cerulean-200: #80D9F1; //rgb(128, 217, 241);
+$bc-cerulean-300: #4DC9EB; //rgb(77, 201, 235);
+$bc-cerulean-400: #26BEE6; //rgb(38, 190, 230);
+$bc-cerulean-500: #00B2E2; //rgb(0, 178, 226);
+$bc-cerulean-600: #00ABDF; //rgb(0, 171, 223);
+$bc-cerulean-700: #00A2DA; //rgb(0, 162, 218);
+$bc-cerulean-800: #0099D6; //rgb(0, 153, 214);
+$bc-cerulean-900: #008ACF; //rgb(0, 138, 207);
+
+/* brand color - violet */
+$bc-violet-100: #DAB9D9; //rgb(218, 185, 217);
+$bc-violet-200: #C28BC0; //rgb(194, 139, 192);
+$bc-violet-300: #A95DA7; //rgb(169, 93, 167);
+$bc-violet-400: #963A94; //rgb(150, 58, 148);
+$bc-violet-500: #841781; //rgb(132, 23, 129);
+$bc-violet-600: #7C1479; //rgb(124, 20, 121);
+$bc-violet-700: #71116E; //rgb(113, 17, 110);
+$bc-violet-800: #670D64; //rgb(103, 13, 100);
+$bc-violet-900: #540751; //rgb(84, 7, 81);
+
+/* brand color - red */
+$bc-red-100: #F5C2C7; //rgb(245, 194, 199);
+$bc-red-200: #EE9AA2; //rgb(238, 154, 162);
+$bc-red-300: #E7727D; //rgb(231, 114, 125);
+$bc-red-400: #E15361; //rgb(225, 83, 97);
+$bc-red-500: #DC3545; //rgb(220, 53, 69);
+$bc-red-600: #D8303E; //rgb(216, 48, 62);
+$bc-red-700: #D32836; //rgb(211, 40, 54);
+$bc-red-800: #CE222E; //rgb(206, 34, 46);
+$bc-red-900: #C5161F; //rgb(197, 22, 31);
+
+/* brand color - yellow */
+$bc-yellow-100: #FFECB5; //rgb(255, 236, 181);
+$bc-yellow-200: #FFE083; //rgb(255, 224, 131);
+$bc-yellow-300: #FFD451; //rgb(255, 212, 81);
+$bc-yellow-400: #FFCA2C; //rgb(255, 202, 44);
+$bc-yellow-500: #FFC107; //rgb(255, 193, 7);
+$bc-yellow-600: #FFBB06; //rgb(255, 187, 6);
+$bc-yellow-700: #FFB305; //rgb(255, 179, 5);
+$bc-yellow-800: #FFAB04; //rgb(255, 171, 4);
+$bc-yellow-900: #FF9E02; //rgb(255, 158, 2);
+
+/* brand color - gray */
+$bc-gray-50: #fcfcfc; //rgb(252, 252, 252);
+$bc-gray-80: #edeff0; //rgb(237, 239, 240);
+$bc-gray-100: #E0DFDF; //rgb(224, 223, 223);
+$bc-gray-200: #CBCACA; //rgb(203, 202, 202);
+$bc-gray-300: #B6B4B4; //rgb(182, 180, 180);
+$bc-gray-400: #A6A4A4; //rgb(166, 164, 164);
+$bc-gray-500: #969494; //rgb(150, 148, 148);
+$bc-gray-600: #8E8C8C; //rgb(142, 140, 140);
+$bc-gray-700: #838181; //rgb(131, 129, 129);
+$bc-gray-800: #797777; //rgb(121, 119, 119);
+$bc-gray-900: #686565; //rgb(104, 101, 101);
+
+/* brand color - neutral */
+$bc-white: #ffffff; //rgb(255, 255, 255);
+$bc-black: #000000; //rgb(0, 0, 0);
