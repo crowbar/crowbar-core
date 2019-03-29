@@ -80,7 +80,7 @@ discovery_arches.each do |arch|
     owner "root"
     group "root"
     source "default.erb"
-    variables(append_line: "#{append_line} crowbar.state=discovery",
+    variables(append_line: "#{append_line} crowbar.state=discovery adminip=#{admin_ip}",
               install_name: "discovery",
               initrd: "../initrd0.img",
               kernel: "../vmlinuz0")
@@ -151,7 +151,7 @@ discovery_arches.each do |arch|
     owner "root"
     group "root"
     source "grub.conf.erb"
-    variables(append_line: "#{append_line} crowbar.state=discovery",
+    variables(append_line: "#{append_line} crowbar.state=discovery adminip=#{admin_ip}",
               install_name: "Crowbar Discovery Image",
               admin_ip: admin_ip,
               efi_suffix: arch == "x86_64",
