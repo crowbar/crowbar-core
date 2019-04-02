@@ -57,19 +57,7 @@
         <source>
           <![CDATA[
           export PS4='${BASH_SOURCE}@${LINENO}(${FUNCNAME[0]}): '
-          HTTP_SERVER="<%= @admin_node_ip %>:<%= @web_port %>"
-          IP="<%= @admin_node_ip %>"
           HOSTNAME="<%= @node_fqdn %>"
-
-          key_re='crowbar\.install\.key=([^ ]+)'
-          if [[ $(cat /proc/cmdline) =~ $key_re ]]; then
-              export CROWBAR_KEY="${BASH_REMATCH[1]}"
-              echo "$CROWBAR_KEY" >/etc/crowbar.install.key
-          elif [[ -f /etc/crowbar.install.key ]]; then
-              export CROWBAR_KEY="$(cat /etc/crowbar.install.key)"
-          fi
-
-          export CROWBAR_PASS="$(sed -e 's/^.*://' <<< $CROWBAR_KEY)"
 
           cat <<EOF > /etc/crowbarrc
 [default]
