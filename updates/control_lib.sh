@@ -77,8 +77,9 @@ try_to() {
 
 __post_state() {
   # $1 = hostname, $2 = target state
-  PASS="$(sed -e 's/^machine-install://' <<< $CROWBAR_KEY)"
-  crowbarctl node transition "$1" "$2" -s "http://$ADMIN_IP" -U machine-install -P $PASS --no-verify-ssl
+  USER="$(sed -e 's/:[^:]*$//' <<< $CROWBAR_KEY)"
+  PASS="$(sed -e 's/^.*://' <<< $CROWBAR_KEY)"
+  crowbarctl node transition "$1" "$2" -s "http://$ADMIN_IP" -U $USER -P $PASS --no-verify-ssl
   local RET=$?
   __get_state "$1"
   return $RET
@@ -86,8 +87,9 @@ __post_state() {
 
 __get_state() {
   # $1 = hostname
-  PASS="$(sed -e 's/^machine-install://' <<< $CROWBAR_KEY)"
-  parse_node_data < <(crowbarctl node show $1 -s "http://$ADMIN_IP" -U machine-install -P $PASS --no-verify-ssl --json)
+  USER="$(sed -e 's/:[^:]*$//' <<< $CROWBAR_KEY)"
+  PASS="$(sed -e 's/^.*://' <<< $CROWBAR_KEY)"
+  parse_node_data < <(crowbarctl node show $1 -s "http://$ADMIN_IP" -U $USER -P $PASS --no-verify-ssl --json)
 }
 
 post_state() { try_to "$MAXTRIES" 15 __post_state "$@"; }
