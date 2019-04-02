@@ -73,7 +73,7 @@ EOF
           chmod +x /usr/sbin/crowbar_join
 
           mkdir -p /var/log/crowbar
-          crowbarctl node transition $HOSTNAME "os-upgraded"
+          crowbarctl restricted transition $HOSTNAME "os-upgraded"
 
           # Wait for DHCP to update - this is mainly for virtual environments or really large deploys
           sleep 30
