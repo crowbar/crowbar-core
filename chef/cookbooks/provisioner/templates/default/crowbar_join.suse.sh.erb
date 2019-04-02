@@ -402,10 +402,6 @@ HTTP_SERVER="<%= @admin_ip %>:<%= @web_port %>"
 NTP_SERVERS="<%= @ntp_servers_ips.join(" ") %>"
 VALID_NTP_SERVERS=""
 
-if [[ -f /etc/crowbar.install.key ]]; then
-    export CROWBAR_KEY="$(cat /etc/crowbar.install.key)"
-fi
-
 CHEF_CLIENT_OPTIONS=
 if [ "$DEBUG" -ne 0 ]; then
     CHEF_CLIENT_OPTIONS="-l debug"
