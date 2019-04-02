@@ -43,6 +43,59 @@ module Crowbar
         ]
         valid_transition_states + other_states
       end
+
+      def valid_restricted_transition?(current, target)
+        return true if current == target
+
+        valid_restricted_transitions = {
+          ## first, states related to discovery image / OS install
+          # debug state can be triggered from any state in the discovery image
+          "discovering" => ["discovered", "debug"],
+          # we can go back to discovering if reboot
+          "discovered" => ["hardware-installing", "discovering", "debug"],
+          "hardware-installing" => ["hardware-installed", "debug"],
+          "hardware-installed" => ["installing", "debug"],
+          "hardware-updating" => ["hardware-updated", "debug"],
+          "hardware-updated" => ["readying", "debug"],
+          "installing" => ["installed", "debug"],
+          "installed" => ["readying"],
+          "os-upgrading" => ["os-upgraded"],
+          "os-upgraded" => ["readying"],
+          # debug happens when there's an issue in the discovery image, and
+          # we'll reboot there
+          "debug" => ["discovering", "hardware-installing", "hardware-updating"],
+          ## live system, we only have crowbar_join that change things there
+          "readying" => ["ready", "reboot", "shutdown", "recovering", "problem"],
+          "ready" => ["readying", "reboot", "shutdown"],
+          "applying" => ["readying", "reboot", "shutdown"],
+          "reboot" => ["readying"],
+          "shutdown" => ["readying"],
+          "recovering" => ["readying", "reboot", "shutdown", "problem"],
+          "problem" => ["readying", "reboot", "shutdown"],
+          ## other states that can be set by rails app
+          # upgrade is controlled by rails app
+          "crowbar_upgrade" => [],
+          "confupdate" => ["hardware-updating"],
+          "update" => ["hardware-updating"],
+          # noupdate is when we have no up-to-date data from chef; in theory
+          # it's only a volatile state overriding the "ready" state, but we
+          # track it here to be safe
+          "noupdate" => ["readying", "ready", "reboot", "shutdown"],
+          "reset" => ["discovering"],
+          "reinstall" => ["installed"],
+          "delete" => [],
+          "delete-final" => [],
+          # this is only for testing purpose
+          "testing" => []
+        }
+
+        if valid_restricted_transitions.keys.sort != valid_states.sort
+          raise "Incomplete list of states while checking restricted transitions!"
+        end
+
+        valid_targets = valid_restricted_transitions[current] || []
+        valid_targets.include?(target)
+      end
     end
   end
 end

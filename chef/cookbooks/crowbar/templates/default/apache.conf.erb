@@ -30,15 +30,7 @@
     </Location>
 
     <%- unless @realm.nil? %>
-    <Location /crowbar/crowbar/1.0/transition/>
-        AuthType Digest
-        AuthName "<%= @realm %>"
-        AuthDigestProvider file
-        AuthUserFile /opt/dell/crowbar_framework/htdigest-clients
-        Require valid-user
-    </Location>
-
-    <Location /nodes/status >
+    <Location /restricted/>
         AuthType Digest
         AuthName "<%= @realm %>"
         AuthDigestProvider file
