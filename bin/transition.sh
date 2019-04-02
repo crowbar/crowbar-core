@@ -22,7 +22,8 @@ if [[ $(cat /proc/cmdline) =~ $key_re ]]; then
 elif [[ -f /etc/crowbar.install.key ]]; then
     export CROWBAR_KEY="$(cat /etc/crowbar.install.key)"
 fi
-export CROWBAR_PASS="$(sed -e 's/^machine-install://' <<< $CROWBAR_KEY)"
+export CROWBAR_USER="$(sed -e 's/:[^:]*$//' <<< $CROWBAR_KEY)"
+export CROWBAR_PASS="$(sed -e 's/^.*://' <<< $CROWBAR_KEY)"
 
 if [ "$1" == "" ]
 then
@@ -41,7 +42,7 @@ do
   if [ $1 == $line ]
   then
     echo "Transitioning node $1 to state $2"
-    crowbarctl node transition $1 $2 -U machine-install -P $CROWBAR_PASS --no-verify-ssl
+    crowbarctl node transition $1 $2 -U $CROWBAR_USER -P $CROWBAR_PASS --no-verify-ssl
     break
   fi
 done
