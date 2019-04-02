@@ -22,23 +22,23 @@
 parse_node_data() {
     local res=0
     if node_data=$(/tmp/parse_node_data -a name \
-        -a crowbar.network.admin.address \
-        -a crowbar.network.bmc.netmask \
-        -a crowbar.network.bmc.address \
-        -a crowbar.network.bmc.router \
+        -a address \
+        -a bmc_netmask \
+        -a bmc_address \
+        -a bmc_router \
         -a state \
-        -a crowbar.allocated)
+        -a allocated)
     then
         for s in ${node_data} ; do
             VAL=${s#*=}
             case ${s%%=*} in
                 name) export HOSTNAME=$VAL;;
                 state) export CROWBAR_STATE=$VAL;;
-                crowbar.allocated) export ALLOCATED=$VAL;;
-                crowbar.network.admin.address) export ADMIN_ADDRESS=$VAL;;
-                crowbar.network.bmc.router) export BMC_ROUTER=$VAL;;
-                crowbar.network.bmc.address) export BMC_ADDRESS=$VAL;;
-                crowbar.network.bmc.netmask) export BMC_NETMASK=$VAL;;
+                allocated) export ALLOCATED=$VAL;;
+                address) export ADMIN_ADDRESS=$VAL;;
+                bmc_router) export BMC_ROUTER=$VAL;;
+                bmc_address) export BMC_ADDRESS=$VAL;;
+                bmc_netmask) export BMC_NETMASK=$VAL;;
             esac
         done
         echo "BMC_ROUTER=${BMC_ROUTER}"
@@ -79,7 +79,7 @@ __post_state() {
   # $1 = hostname, $2 = target state
   USER="$(sed -e 's/:[^:]*$//' <<< $CROWBAR_KEY)"
   PASS="$(sed -e 's/^.*://' <<< $CROWBAR_KEY)"
-  crowbarctl node transition "$1" "$2" -s "http://$ADMIN_IP" -U $USER -P $PASS --no-verify-ssl
+  crowbarctl restricted transition "$1" "$2" -s "http://$ADMIN_IP" -U $USER -P $PASS --no-verify-ssl
   local RET=$?
   __get_state "$1"
   return $RET
@@ -89,7 +89,7 @@ __get_state() {
   # $1 = hostname
   USER="$(sed -e 's/:[^:]*$//' <<< $CROWBAR_KEY)"
   PASS="$(sed -e 's/^.*://' <<< $CROWBAR_KEY)"
-  parse_node_data < <(crowbarctl node show $1 -s "http://$ADMIN_IP" -U $USER -P $PASS --no-verify-ssl --json)
+  parse_node_data < <(crowbarctl restricted show $1 -s "http://$ADMIN_IP" -U $USER -P $PASS --no-verify-ssl --json)
 }
 
 post_state() { try_to "$MAXTRIES" 15 __post_state "$@"; }
