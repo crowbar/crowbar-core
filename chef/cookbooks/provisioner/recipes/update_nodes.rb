@@ -65,6 +65,7 @@ crowbar_protocol = crowbar_node[:crowbar][:apache][:ssl] ? "https" : "http"
 crowbar_verify_ssl = !crowbar_node["crowbar"]["apache"]["insecure"]
 crowbar_client_username = crowbar_node["crowbar"]["client_user"]["username"]
 crowbar_client_password = crowbar_node["crowbar"]["client_user"]["password"]
+restricted_install_key = "#{crowbar_client_username}:#{crowbar_client_password}"
 
 discovery_dir = "#{tftproot}/discovery"
 pxecfg_subdir = "bios/pxelinux.cfg"
@@ -422,7 +423,6 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
 
     when /^(hyperv|windows)/
       os_dir_win = "#{tftproot}/#{os}"
-      crowbar_key = ::File.read("/etc/crowbar.install.key").chomp.strip
 
       case os
       when "windows-6.3"
@@ -455,7 +455,7 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
                   image_name: image_name,
                   admin_ip: admin_ip,
                   admin_name: node[:hostname],
-                  crowbar_key: crowbar_key,
+                  crowbar_key: restricted_install_key,
                   admin_password: node[:provisioner][:windows][:admin_password],
                   domain_name: node.fetch(:dns, {})[:domain] || node[:domain])
       end
