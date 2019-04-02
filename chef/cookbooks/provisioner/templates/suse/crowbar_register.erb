@@ -279,7 +279,7 @@ fi
 
 # Set up /etc/crowbarrc with crowbarctl credentials
 # -------------------------------------------
-export CROWBAR_PASS="$(sed -e 's/^machine-install://' <<< $CROWBAR_KEY)"
+export CROWBAR_PASS="$(sed -e 's/^.*://' <<< $CROWBAR_KEY)"
 
 cat <<EOF > /etc/crowbarrc
 [default]

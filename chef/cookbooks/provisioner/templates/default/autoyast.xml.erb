@@ -278,7 +278,7 @@ elif [[ -f /etc/crowbar.install.key ]]; then
 export CROWBAR_KEY="$(cat /etc/crowbar.install.key)"
 fi
 
-export CROWBAR_PASS="$(sed -e 's/^machine-install://' <<< $CROWBAR_KEY)"
+export CROWBAR_PASS="$(sed -e 's/^.*://' <<< $CROWBAR_KEY)"
 
 cat <<EOF > /etc/crowbarrc
 [default]
