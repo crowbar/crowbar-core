@@ -125,7 +125,6 @@ WEB_PORT="<%= @web_port %>"
 HTTP_SERVER="http://${ADMIN_IP}:${WEB_PORT}"
 CROWBAR_OS="<%= @os %>"
 CROWBAR_ARCH="<%= @arch %>"
-CROWBAR_KEY="<%= @crowbar_key %>"
 DOMAIN="<%= @domain %>"
 NTP_SERVERS="<%= @ntp_servers_ips.join(" ") %>"
 
@@ -279,13 +278,11 @@ fi
 
 # Set up /etc/crowbarrc with crowbarctl credentials
 # -------------------------------------------
-export CROWBAR_PASS="$(sed -e 's/^.*://' <<< $CROWBAR_KEY)"
-
 cat <<EOF > /etc/crowbarrc
 [default]
 server = <%= @crowbar_protocol %>://<%= @admin_ip %>
-username = machine-install
-password = $CROWBAR_PASS
+username = <%= @crowbar_client_username %>
+password = <%= @crowbar_client_password %>
 <% unless @crowbar_verify_ssl %>
 verify_ssl = 0
 <% end %>
@@ -422,8 +419,6 @@ sed -i -e "s/\(127\.0\.0\.1.*\)/127.0.0.1 localhost.localdomain localhost/" /etc
 
 # Steps from autoyast profile
 # ---------------------------
-echo "$CROWBAR_KEY" > /etc/crowbar.install.key
-
 # normally done by crowbar_join, but only when chef is installed by crowbar_join
 systemctl enable chef-client.service
 

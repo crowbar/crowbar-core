@@ -29,6 +29,8 @@ enable_pxe = node[:provisioner][:enable_pxe]
 crowbar_node = node_search_with_cache("roles:crowbar").first
 crowbar_protocol = crowbar_node[:crowbar][:apache][:ssl] ? "https" : "http"
 crowbar_verify_ssl = !crowbar_node["crowbar"]["apache"]["insecure"]
+crowbar_client_username = crowbar_node["crowbar"]["client_user"]["username"]
+crowbar_client_password = crowbar_node["crowbar"]["client_user"]["password"]
 
 tftproot = node[:provisioner][:root]
 
@@ -535,11 +537,12 @@ node[:provisioner][:supported_oses].each do |os, arches|
                   crowbar_protocol: crowbar_protocol,
                   crowbar_verify_ssl: crowbar_verify_ssl,
                   enable_pxe: enable_pxe,
+                  crowbar_client_username: crowbar_client_username,
+                  crowbar_client_password: crowbar_client_password,
                   web_port: web_port,
                   ntp_servers_ips: ntp_servers,
                   os: os,
                   arch: arch,
-                  crowbar_key: crowbar_key,
                   domain: domain_name,
                   repos: repos,
                   is_ses: storage_available && !cloud_available,
