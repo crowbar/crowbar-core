@@ -16,14 +16,6 @@
 # limitations under the License.
 #
 
-key_re='crowbar\.install\.key=([^ ]+)'
-if [[ $(cat /proc/cmdline) =~ $key_re ]]; then
-    export CROWBAR_KEY="${BASH_REMATCH[1]}"
-elif [[ -f /etc/crowbar.install.key ]]; then
-    export CROWBAR_KEY="$(cat /etc/crowbar.install.key)"
-fi
-export CROWBAR_PASS="$(sed -e 's/^machine-install://' <<< $CROWBAR_KEY)"
-
 if [ "$1" == "" ]
 then
   echo "Please specify a node to transition"
@@ -41,7 +33,7 @@ do
   if [ $1 == $line ]
   then
     echo "Transitioning node $1 to state $2"
-    crowbarctl node transition $1 $2 -U machine-install -P $CROWBAR_PASS --no-verify-ssl
+    crowbarctl node transition $1 $2 --no-verify-ssl
     break
   fi
 done
