@@ -21,23 +21,18 @@
 
 IP="127.0.0.1"
 
-if [[ -f /etc/crowbar.install.key ]]; then
-    export CROWBAR_KEY="$(cat /etc/crowbar.install.key)"
-    export CROWBAR_PASS="$(sed -e 's/^machine-install://' <<< $CROWBAR_KEY)"
-fi
-
 case $1 in
     start|'')
         # clean up files just in case
         rm -rf /var/run/crowbar/looper-chef-client.lock /var/run/crowbar/chef-client.run /var/run/crowbar/chef-client.lock
 
         # Mark us as readying, and get our cert.
-	crowbarctl node transition $HOSTNAME "readying" -U machine-install -P $CROWBAR_PASS --no-verify-ssl
+	crowbarctl node transition $HOSTNAME "readying" --no-verify-ssl
         if [ -f /etc/default/tftpd-hpa ] ; then
           service tftpd-hpa stop
           service tftpd-hpa start
         fi
-	crowbarctl node transition $HOSTNAME "ready" -U machine-install -P $CROWBAR_PASS --no-verify-ssl
+	crowbarctl node transition $HOSTNAME "ready" --no-verify-ssl
 
 	echo "Done";;
     stop) bluepill crowbar-webserver stop;;
