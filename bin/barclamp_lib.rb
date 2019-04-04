@@ -19,6 +19,7 @@ require "rubygems"
 require "net/http"
 require "net/http/digest_auth"
 require "uri"
+require "inifile"
 require "json"
 require "getoptlong"
 
@@ -33,7 +34,6 @@ require "getoptlong"
 @data = ""
 @allow_zero_args = false
 @timeout = 500
-@crowbar_key_file = "/etc/crowbar.install.key"
 
 #
 # Parsing options can be added by adding to this list before calling opt_parse
@@ -465,17 +465,24 @@ def opt_parse
 end
 
 def get_user_password
-  key = ENV["CROWBAR_KEY"]
-  if key.nil? and ::File.exists?(@crowbar_key_file) and ::File.readable?(@crowbar_key_file)
-    begin
-      key = File.read(@crowbar_key_file).strip
-    rescue => e
-      warn "Unable to read crowbar key from #{@crowbar_key_file}: #{e}"
-    end
-  end
+  @username = ENV["CROWBAR_USERNAME"]
+  @password = ENV["CROWBAR_PASSWORD"]
 
-  if key
-    @username, @password = key.split(":",2)
+  return unless @username.nil?
+
+  [
+    File.join(ENV["HOME"], ".crowbarrc"),
+    File.join("/etc", "crowbarrc")
+  ].each do |file|
+    next unless File.exist?(file)
+    begin
+      site = ENV["CROWBAR_ALIAS"] || "default"
+      config = IniFile.load(file).to_h[site]
+      @username = config["username"]
+      @password = config["password"]
+    rescue IniFile::Error
+      STDERR.puts "Could not parse config file \"#{file}\""
+    end
   end
 end
 
@@ -529,8 +536,9 @@ end
 
 def check_user_password
   if @username.nil? or @password.nil?
-    STDERR.puts "CROWBAR_KEY not set, will not be able to authenticate!"
-    STDERR.puts "Please set CROWBAR_KEY or use -U and -P"
+    STDERR.puts "Incomplete credentials, will not be able to authenticate!"
+    STDERR.puts "Please a crowbarrc configuration file, " \
+        "set CROWBAR_USERNAME and CROWBAR_PASSWORD, or use -U and -P"
     exit 1
   end
 end
