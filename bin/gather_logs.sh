@@ -16,10 +16,6 @@
 # limitations under the License.
 #
 
-if [[ -f /etc/crowbar.install.key ]]; then
-    export CROWBAR_KEY=$(cat /etc/crowbar.install.key)
-    export CROWBAR_PASS="$(sed -e 's/^machine-install://' <<< $CROWBAR_KEY)"
-fi
 mkdir -p /tmp/crowbar-logs
 tarname="${1-$(date '+%Y%m%d-%H%M%S')}"
 targetdir="/opt/dell/crowbar_framework/public/export"
@@ -48,10 +44,10 @@ sort_by_last() {
 	-o 'UserKnownHostsFile /dev/null')
     logs=(/var/log /etc)
     logs+=(/var/chef/cache /var/cache/chef /opt/dell/crowbar_framework/db)
-    crowbarctl node list -U machine-install -P $CROWBAR_PASS --no-verify-ssl
+    crowbarctl node list --no-verify-ssl
 
     for to_get in proposals roles; do
-        crowbarctl $to_get proposal list crowbar -U machine-install -P $CROWBAR_PASS --no-verify-ssl
+        crowbarctl $to_get proposal list crowbar --no-verify-ssl
     done
     for node in $(sudo -H knife node list); do
 	tarfile="${node%%.*}-${tarname}.tar.gz"
