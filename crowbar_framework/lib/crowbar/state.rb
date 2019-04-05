@@ -53,8 +53,17 @@ module Crowbar
           "discovering" => ["discovered", "debug"],
           # we can go back to discovering if reboot
           "discovered" => ["hardware-installing", "discovering", "debug"],
-          "hardware-installing" => ["hardware-installed", "debug"],
-          "hardware-installed" => ["installing", "debug"],
+          # strictly speaking, "hardware-installing" -> "discovering" should
+          # not be possible; however, if the node is "hardware-installing" and
+          # it reboots before chef-client on the node completes a run that will
+          # make sure it inherits all the right attributes, then dhcp will
+          # still be configured with the discovery IP address (due to missing
+          # chef attributes) and the discovery process will start again. It
+          # could be argued it's a race, or a flaw in how we configure dhcp...
+          "hardware-installing" => ["hardware-installed", "discovering", "debug"],
+          # "discovering" is there for the same reason it is there for
+          # "hardware-installing"
+          "hardware-installed" => ["installing", "discovering", "debug"],
           "hardware-updating" => ["hardware-updated", "debug"],
           "hardware-updated" => ["readying", "debug"],
           "installing" => ["installed", "debug"],
