@@ -26,10 +26,22 @@ module Crowbar
           "applying", "discovered", "discovering", "hardware-installed",
           "hardware-installing", "hardware-updated", "hardware-updating",
           "installed", "installing", "ready", "readying", "recovering",
-          "crowbar_upgrade", "os-upgrading", "os-upgraded",
+          "os-upgrading", "os-upgraded",
           # used by sledgehammer / crowbar_join
           "debug", "problem", "reboot", "shutdown"
         ]
+      end
+
+      def valid_states
+        # these are states that the rails app can move to, but that should not
+        # be reachable through a standard transition
+        other_states = [
+          "crowbar_upgrade",
+          "confupdate", "update", "noupdate",
+          "reset", "reinstall", "delete", "delete-final",
+          "testing"
+        ]
+        valid_transition_states + other_states
       end
     end
   end
