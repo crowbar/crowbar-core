@@ -231,7 +231,15 @@ directory "#{logdir}/chef-client" do
   action :create
 end
 
-unless node["crowbar"].nil? or node["crowbar"]["users"].nil? or node["crowbar"]["realm"].nil?
+if !node["crowbar"].nil? && !node["crowbar"]["realm"].nil?
+  # After installation of a gem, we have a new path for the new gem, so we
+  # need to reset the paths if we can't load the gem
+  begin
+    require "inifile"
+  rescue LoadError
+    Gem.clear_paths
+  end
+
   web_port = node["crowbar"]["web_port"] || 3000
   realm = node["crowbar"]["realm"]
   workers = node["crowbar"]["workers"] || 2
@@ -244,11 +252,19 @@ unless node["crowbar"].nil? or node["crowbar"]["users"].nil? or node["crowbar"][
   end
 
   users = {}
-  node["crowbar"]["users"].each do |k,h|
-    next if h["disabled"]
-    # Fix passwords into digests.
-    h["digest"] = Digest::MD5.hexdigest("#{k}:#{realm}:#{h["password"]}") if h["digest"].nil?
-    users[k] = h
+
+  begin
+    crowbarrc = IniFile.load("/etc/crowbarrc") || {}
+  rescue IniFile::Error
+    Chef::Log.warn("Could not parse config file /etc/crowbarrc")
+  else
+    crowbarrc_config = crowbarrc["default"]
+    admin_username = crowbarrc_config["username"]
+    admin_password = crowbarrc_config["password"]
+    unless admin_username.nil? || admin_password.nil?
+      admin_digest = Digest::MD5.hexdigest("#{admin_username}:#{realm}:#{admin_password}")
+      users[admin_username] = { "digest" => admin_digest }
+    end
   end
 
   template "/opt/dell/crowbar_framework/htdigest" do
@@ -257,6 +273,7 @@ unless node["crowbar"].nil? or node["crowbar"]["users"].nil? or node["crowbar"][
     owner "root"
     group node[:apache][:group]
     mode "0640"
+    not_if { users.empty? }
   end
 
   client_users = users.dup
