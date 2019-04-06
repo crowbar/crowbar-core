@@ -14,15 +14,6 @@
             "workers": { "type": "int", "required": true },
             "threads": { "type": "int", "required": true },
             "realm": { "type": "str", "required": false },
-            "users": { "type": "map", "required": true, "mapping": {
-                = : { "type": "map", "required": true, "mapping": {
-                    "password": { "type": "str" },
-                    "digest": { "type": "str" },
-                    "disabled": { "type": "bool" }
-                  }
-                }
-              }
-            },
             "client_user": { "type": "map", "required": true,
               "mapping": {
                 "username": { "type": "str"},

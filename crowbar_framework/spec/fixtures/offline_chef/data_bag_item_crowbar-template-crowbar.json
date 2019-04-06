@@ -15,9 +15,6 @@
       },
       "realm": "Crowbar - By selecting OK you are agreeing to the License Agreement",
       "web_port": 3000,
-      "users": {
-        "crowbar": { "password": "crowbar" }
-      },
       "simple_proposal_ui": true
     }
   },
