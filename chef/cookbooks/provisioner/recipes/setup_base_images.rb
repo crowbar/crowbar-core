@@ -28,6 +28,9 @@ append_line = node[:provisioner][:discovery][:append].dup # We'll modify it inli
 crowbar_node = node_search_with_cache("roles:crowbar").first
 crowbar_protocol = crowbar_node[:crowbar][:apache][:ssl] ? "https" : "http"
 crowbar_verify_ssl = !crowbar_node["crowbar"]["apache"]["insecure"]
+crowbar_client_username = crowbar_node["crowbar"]["client_user"]["username"]
+crowbar_client_password = crowbar_node["crowbar"]["client_user"]["password"]
+restricted_install_key = "#{crowbar_client_username}:#{crowbar_client_password}"
 
 tftproot = node[:provisioner][:root]
 
@@ -42,19 +45,11 @@ discovery_arches.select! do |arch|
   File.exist?("#{discovery_dir}/#{arch}/initrd0.img") && File.exist?("#{discovery_dir}/#{arch}/vmlinuz0")
 end
 
-if ::File.exists?("/etc/crowbar.install.key")
-  crowbar_key = ::File.read("/etc/crowbar.install.key").chomp.strip
-else
-  crowbar_key = ""
-end
-
 if node[:provisioner][:use_serial_console]
   append_line += " console=tty0 console=#{node[:provisioner][:serial_tty]}"
 end
 
-if crowbar_key != ""
-  append_line += " crowbar.install.key=#{crowbar_key}"
-end
+append_line += " crowbar.install.key=#{restricted_install_key}"
 append_line = append_line.split.join(" ")
 if node[:provisioner][:sledgehammer_append_line] != append_line
   node.set[:provisioner][:sledgehammer_append_line] = append_line
@@ -387,7 +382,7 @@ unless node[:provisioner][:supported_oses].keys.select{ |os| /^(hyperv|windows)/
     group "root"
     mode "0644"
     source "set_state.ps1.erb"
-    variables(crowbar_key: crowbar_key,
+    variables(crowbar_key: restricted_install_key,
               admin_ip: admin_ip)
   end
 
@@ -486,9 +481,7 @@ node[:provisioner][:supported_oses].each do |os, arches|
     end
 
     # Make sure we get a crowbar install key as well.
-    unless crowbar_key.empty?
-      append << " crowbar.install.key=#{crowbar_key}"
-    end
+    append << " crowbar.install.key=#{restricted_install_key}"
 
     # These should really be made libraries or something.
     case
@@ -529,11 +522,12 @@ node[:provisioner][:supported_oses].each do |os, arches|
                   admin_broadcast: admin_net.broadcast,
                   crowbar_protocol: crowbar_protocol,
                   crowbar_verify_ssl: crowbar_verify_ssl,
+                  crowbar_client_username: crowbar_client_username,
+                  crowbar_client_password: crowbar_client_password,
                   web_port: web_port,
                   ntp_servers_ips: ntp_servers,
                   os: os,
                   arch: arch,
-                  crowbar_key: crowbar_key,
                   domain: domain_name,
                   repos: repos,
                   packages: packages,
