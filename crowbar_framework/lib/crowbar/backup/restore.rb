@@ -222,6 +222,14 @@ module Crowbar
           "-L",
           "#{ENV["CROWBAR_LOG_DIR"]}/chef-client/#{Node.admin_node.name}.log"
         )
+        
+        Rails.logger.info("Updating admin node log file ownership")
+        system(
+          "sudo",
+          "chown",
+          "crowbar:crowbar",
+          "#{ENV["CROWBAR_LOG_DIR"]}/chef-client/#{Node.admin_node.name}.log"
+        )
       end
 
       def restore_files(source, destination)
