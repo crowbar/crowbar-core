@@ -537,7 +537,7 @@ end
 def check_user_password
   if @username.nil? or @password.nil?
     STDERR.puts "Incomplete credentials, will not be able to authenticate!"
-    STDERR.puts "Please a crowbarrc configuration file, " \
+    STDERR.puts "Please create a crowbarrc configuration file, " \
         "set CROWBAR_USERNAME and CROWBAR_PASSWORD, or use -U and -P"
     exit 1
   end

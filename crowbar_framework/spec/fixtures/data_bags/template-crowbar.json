@@ -17,10 +17,6 @@
       "web_port": 3000,
       "workers": 2,
       "threads": 16,
-      "users": {
-        "machine-install": { "password": "machine_password" },
-        "crowbar": { "password": "crowbar" }
-      },
       "client_user": {
         "username": "client",
         "password": "client_password"

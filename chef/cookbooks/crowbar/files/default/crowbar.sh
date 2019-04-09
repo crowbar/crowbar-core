@@ -22,8 +22,3 @@ if ! echo ${PATH} | /bin/grep -q /opt/dell/bin ; then
                 PATH=${PATH}:/opt/dell/bin
         fi
 fi
-
-if [ -f /etc/crowbar.install.key ] ; then
-    export CROWBAR_KEY=`cat /etc/crowbar.install.key`
-fi
-

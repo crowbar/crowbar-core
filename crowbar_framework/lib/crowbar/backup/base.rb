@@ -58,6 +58,10 @@ module Crowbar
               "/etc/crowbar"
             ],
             [
+              "configs/crowbarrc",
+              "/etc/crowbarrc"
+            ],
+            [
               "configs/hosts",
               "/etc/hosts"
             ],
@@ -86,10 +90,6 @@ module Crowbar
 
         def restore_files_after_install
           [
-            [
-              "keys/crowbar.install.key",
-              "/etc/crowbar.install.key"
-            ],
             [
               "keys/chef-client.pem",
               "/etc/chef/client.pem"
