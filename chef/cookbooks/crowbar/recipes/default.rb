@@ -268,6 +268,10 @@ if node["crowbar"] && node["crowbar"]["realm"]
   begin
     crowbarrc = IniFile.load("/etc/crowbarrc") || {}
   rescue IniFile::Error
+    # we only log a warning as we don't want chef to fail; else, the
+    # provisioner cookbook would not run, which could lead to the whole
+    # discovery/provisioning process failing (due to outdated dhcp/pxe config
+    # files)
     Chef::Log.warn("Could not parse config file /etc/crowbarrc")
   else
     crowbarrc_config = crowbarrc["default"]
