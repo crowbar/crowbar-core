@@ -226,7 +226,7 @@ module Crowbar
         system(
           "sudo",
           "chown",
-          "crowbar:crowbar",
+          "crowbar:",
           "#{ENV["CROWBAR_LOG_DIR"]}/chef-client/#{Node.admin_node.name}.log"
         )
       end
