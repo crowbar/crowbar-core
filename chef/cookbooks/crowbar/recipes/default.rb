@@ -231,7 +231,29 @@ directory "#{logdir}/chef-client" do
   action :create
 end
 
-if !node["crowbar"].nil? && !node["crowbar"]["realm"].nil?
+if node["crowbar"]
+  web_port = node["crowbar"]["web_port"] || 3000
+  workers = node["crowbar"]["workers"] || 2
+  threads = node["crowbar"]["threads"] || 16
+else
+  web_port = 3000
+  workers = 2
+  threads = 16
+end
+
+if node["crowbar"] && node["crowbar"]["chef"]
+  chef_solr_heap = node["crowbar"]["chef"]["solr_heap"] || 256
+  chef_solr_data = if node["crowbar"]["chef"]["solr_tmpfs"]
+    "/dev/shm/solr_data"
+  else
+    "/var/cache/chef/solr/data"
+  end
+else
+  chef_solr_heap = 256
+  chef_solr_data = "/var/cache/chef/solr/data"
+end
+
+if node["crowbar"] && node["crowbar"]["realm"]
   # After installation of a gem, we have a new path for the new gem, so we
   # need to reset the paths if we can't load the gem
   begin
@@ -240,17 +262,7 @@ if !node["crowbar"].nil? && !node["crowbar"]["realm"].nil?
     Gem.clear_paths
   end
 
-  web_port = node["crowbar"]["web_port"] || 3000
   realm = node["crowbar"]["realm"]
-  workers = node["crowbar"]["workers"] || 2
-  threads = node["crowbar"]["threads"] || 16
-  chef_solr_heap = node["crowbar"]["chef"]["solr_heap"] || 256
-  chef_solr_data = if node["crowbar"]["chef"]["solr_tmpfs"]
-    "/dev/shm/solr_data"
-  else
-    "/var/cache/chef/solr/data"
-  end
-
   users = {}
 
   begin
@@ -290,12 +302,7 @@ if !node["crowbar"].nil? && !node["crowbar"]["realm"].nil?
     mode "0640"
   end
 else
-  web_port = 3000
   realm = nil
-  workers = 2
-  threads = 16
-  chef_solr_heap = 256
-  chef_solr_data = "/var/cache/chef/solr/data"
 end
 
 # Remove rainbows configuration, dating from before the switch to puma
