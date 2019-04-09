@@ -215,20 +215,10 @@ module Crowbar
         self.class.disable_dns_path.delete if self.class.disable_dns_path.exist?
 
         Rails.logger.info("Re-running chef-client locally to apply changes from imported proposals")
-        system(
-          "sudo",
-          "-i",
-          "/usr/bin/chef-client",
-          "-L",
-          "#{ENV["CROWBAR_LOG_DIR"]}/chef-client/#{Node.admin_node.name}.log"
-        )
-        Rails.logger.info("Updating admin node log file ownership")
-        system(
-          "sudo",
-          "chown",
-          "crowbar:",
-          "#{ENV["CROWBAR_LOG_DIR"]}/chef-client/#{Node.admin_node.name}.log"
-        )
+        chef_cmd = ["sudo", "-i", "/usr/bin/chef-client"]
+        open("#{ENV["CROWBAR_LOG_DIR"]}/chef-client/#{Node.admin_node.name}.log", "a") do |f|
+          system(*chef_cmd, out: f, err: f)
+        end
       end
 
       def restore_files(source, destination)
