@@ -13,19 +13,207 @@
 * limitations under the License.
 **/
 
+.btn-default {
+  &:hover, &:focus, &:active {
+    color: $btn-default-hover-color;
+    background-color: $btn-default-hover-bg;
+    border-color: $btn-default-hover-border;
+  }
+  &:active {
+    &:hover,
+    &:focus {
+      color: $btn-default-active-color;
+      background-color: $btn-default-active-bg;
+      border-color: $btn-default-active-border;
+    }
+  }
+}
+
+.btn-primary {
+  &:hover, &:focus, &:active {
+    color: $btn-primary-hover-color;
+    background-color: $btn-primary-hover-bg;
+    border-color: $btn-primary-hover-border;
+  }
+  &:active {
+    &:hover,
+    &:focus {
+      color: $btn-primary-active-color;
+      background-color: $btn-primary-active-bg;
+      border-color: $btn-primary-active-border;
+      &.disabled {
+        color: $btn-primary-color;
+        background-color: $btn-primary-bg;
+        border-color: $btn-primary-border;
+      }
+    }
+  }
+}
+
+.btn-success {
+  &:hover, &:focus, &:active {
+    color: $btn-success-hover-color;
+    background-color: $btn-success-hover-bg;
+    border-color: $btn-success-hover-border;
+  }
+  &:active {
+    &:hover,
+    &:focus {
+      color: $btn-success-active-color;
+      background-color: $btn-success-active-bg;
+      border-color: $btn-success-active-border;
+      &.disabled {
+        color: $btn-success-color;
+        background-color: $btn-success-bg;
+        border-color: $btn-success-border;
+      }
+    }
+  }
+}
+
+.btn-info {
+  &:hover, &:focus, &:active {
+    color: $btn-info-hover-color;
+    background-color: $btn-info-hover-bg;
+    border-color: $btn-info-hover-border;
+  }
+  &:active {
+    &:hover,
+    &:focus {
+      color: $btn-info-active-color;
+      background-color: $btn-info-active-bg;
+      border-color: $btn-info-active-border;
+      &.disabled {
+        color: $btn-info-color;
+        background-color: $btn-info-bg;
+        border-color: $btn-info-border;
+      }
+    }
+  }
+}
+
+.btn-warning {
+  &:hover, &:focus, &:active {
+    color: $btn-warning-hover-color;
+    background-color: $btn-warning-hover-bg;
+    border-color: $btn-warning-hover-border;
+  }
+  &:active {
+    &:hover,
+    &:focus {
+      color: $btn-warning-active-color;
+      background-color: $btn-warning-active-bg;
+      border-color: $btn-warning-active-border;
+      &.disabled {
+        color: $btn-warning-color;
+        background-color: $btn-warning-bg;
+        border-color: $btn-warning-border;
+      }
+    }
+  }
+}
+
+.btn-danger {
+  &:hover, &:focus, &:active {
+    color: $btn-danger-hover-color;
+    background-color: $btn-danger-hover-bg;
+    border-color: $btn-danger-hover-border;
+  }
+  &:active {
+    &:hover,
+    &:focus {
+      color: $btn-danger-active-color;
+      background-color: $btn-danger-active-bg;
+      border-color: $btn-danger-active-border;
+      &.disabled {
+        color: $btn-danger-color;
+        background-color: $btn-danger-bg;
+        border-color: $btn-danger-border;
+      }
+    }
+  }
+}
+
+.btn:not(.input-sm) {
+  padding: 10px 16px 6px 16px;
+}
+
+.input-group > .input-group-btn > .btn {
+  padding: 6px 12px;
+}
+
 // scss-lint:disable QualifyingElement
-a.btn {
+a.btn,
+a.btn-default {
   // for some reason anchor tag buttons are slightly different in the eos
   // version of bootstrap. We want them all the be the same.
-  @extend .btn
+  @extend .btn;
+  @extend .btn-default;
+}
+
+.btn.btn-default.save {
+  @extend .btn-primary;
+}
+
+// scss-lint:disable QualifyingElement
+a.btn-primary {
+  @extend .btn-primary;
+}
+
+// scss-lint:disable QualifyingElement
+a.btn-warning {
+  @extend .btn-warning;
+}
+
+// scss-lint:disable QualifyingElement
+a.btn-danger {
+  @extend .btn-danger;
+}
+
+// scss-lint:disable QualifyingElement
+a.btn-info {
+  @extend .btn-info;
+}
+
+.navbar.navbar-inverse {
+  .navbar-brand .title {
+    color: $bc-green-500;
+    background-image: none;
+    background: none;
+    text-indent: unset;
+    width: auto;
+    padding-top: 14px
+  }
+  .nav.navbar-nav > li > a {
+    border-bottom: transparent solid 3px;
+  }
+  .nav.navbar-nav > li {
+    &.active > a {
+      border-bottom: 4px solid $bc-green-500;
+    }
+    &:not(.active) > a {
+      &:focus,
+      &:hover {
+        border-bottom: 4px solid $bc-gray-300;
+      }
+    }
+  }
+}
+
+.table thead {
+  background: linear-gradient(to bottom, #f4f4f4 0%, #e7e7e7 100%);
 }
 
 .table > tbody > tr > td {
   vertical-align: middle;
 }
 
-.input-group-btn .btn {
-  height: 28px;
+.fa, .glyphicon {
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.btn.btn-file > .glyphicon {
+  color: $bc-white;
 }
 
 // scss-lint:disable QualifyingElement, ImportantRule

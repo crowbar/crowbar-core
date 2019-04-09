@@ -22,30 +22,17 @@
         - else
           = icon_tag("exclamation-circle", nil, :title => t('.current_revision_not_applied'))
 
-        .btn-group.pull-right
-          - unless @proposal.pretty_deployment.crowbar_committing
-            = save_proposal_button(@proposal)
-            = apply_proposal_button(@proposal)
-            = dequeue_proposal_button(@proposal)
-            - if @active
-              = deactivate_proposal_button(@proposal)
-            - else
-              = delete_proposal_button(@proposal)
-
-          = cancel_barclamp_button(@proposal.barclamp)
-
     = render_barclamp_edit_attributes(@proposal)
     = render_barclamp_edit_deployment(@proposal)
 
     .panel-footer.text-right
-      .btn-group
-        - unless @proposal.pretty_deployment.crowbar_committing
-          = save_proposal_button(@proposal)
-          = apply_proposal_button(@proposal)
-          = dequeue_proposal_button(@proposal)
-          - if @active
-            = deactivate_proposal_button(@proposal)
-          - else
-            = delete_proposal_button(@proposal)
+      - unless @proposal.pretty_deployment.crowbar_committing
+        = save_proposal_button(@proposal)
+        = apply_proposal_button(@proposal)
+        = dequeue_proposal_button(@proposal)
+        - if @active
+          = deactivate_proposal_button(@proposal)
+        - else
+          = delete_proposal_button(@proposal)
 
-        = cancel_barclamp_button(@proposal.barclamp)
+      = cancel_barclamp_button(@proposal.barclamp)
