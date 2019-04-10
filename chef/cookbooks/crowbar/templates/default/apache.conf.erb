@@ -87,6 +87,16 @@
         <%- end %>
         <%- end %>
     </Location>
+
+    <%- unless @realm.nil? %>
+    <Location /restricted/>
+        AuthType Digest
+        AuthName "<%= @realm %>"
+        AuthDigestProvider file
+        AuthUserFile /opt/dell/crowbar_framework/htdigest-clients
+        Require valid-user
+    </Location>
+    <%- end %>
 </VirtualHost>
 
 </IfDefine>
