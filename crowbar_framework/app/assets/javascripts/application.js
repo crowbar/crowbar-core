@@ -255,13 +255,6 @@ jQuery(document).ready(function($) {
   $('#nodelist').nodeList();
   $('input[type=password]').hideShowPassword();
 
-  setInterval(
-    function() {
-      $('.led.failed, .led.pending, .led.waiting, led.red').toggleClass('blink');
-    },
-    500
-  );
-
   $('[data-toggle="tooltip"]').tooltip({html : true});
   $('[data-toggle="inline"]').popover({
     html : true,

@@ -38,16 +38,18 @@
     background: $bc-red-500;
   }
 
-  &.blink {
-    filter: unquote("progid:DXImageTransform.Microsoft.Alpha(Opacity=50)");
-    opacity: .50;
-  }
-
   &.unready,
   &.spin,
   &.in_process {
     background: $bc-green-500;
-    @include animation(in-progress 2.0s steps(8) infinite);
+    @include animation(in-progress 1.0s steps(2) infinite);
+  }
+
+  &.failed,
+  &.pending,
+  &.waiting,
+  &.red {
+    @include animation(in-progress 1.0s steps(2) infinite);
   }
 
   &.crowbar_upgrade,
@@ -58,6 +60,5 @@
 
 @include keyframes(in-progress) {
   0% { opacity: 1;}
-  50% { opacity: .5; }
-  100% { opacity: 1; }
+  100% { opacity: .1; }
 }
