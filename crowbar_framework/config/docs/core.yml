@@ -6,6 +6,11 @@ en:
       items:
         deployment_guide:
           text: 'Deployment Guide'
-          link: '/docs/deployment/'
-          pdf: '/docs/suse-openstack-cloud-deployment.en.pdf'
+          link: '/docs/crowbar-deployment/suse-openstack-cloud-crowbar-deployment.en.html'
+          pdf: '/docs/suse-openstack-cloud-crowbar-deployment.en.pdf'
           order: 100
+        operations_guide:
+          text: 'Operations Guide'
+          link: '/docs/crowbar-operations/suse-openstack-cloud-crowbar-operations.en.html'
+          pdf: '/docs/suse-openstack-cloud-crowbar-operations.en.pdf'
+          order: 200
