@@ -36,3 +36,7 @@ a.btn, button.btn, div.btn, input.btn, span.btn, .btn-default {
 .navbar-inverse .dropdown-toggle span.caret {
   color: $dropdown-caret-color;
 }
+
+.CodeMirror pre {
+  overflow: unset;
+}
