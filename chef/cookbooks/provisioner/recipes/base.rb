@@ -381,7 +381,7 @@ if is_admin && ::File.exist?("/etc/crowbarrc")
     crowbarrc_verify_ssl = crowbarrc_config["verify_ssl"].nil? ||
       ![false, 0, "0", "f", "F", "false", "FALSE"].include?(crowbarrc_config["verify_ssl"])
 
-    if protocol == "http" && !crowbarrc_config["verify_ssl"].nil?
+    if protocol == "http" && crowbarrc_config.key?("verify_ssl")
       crowbarrc_config.delete("verify_ssl")
       Chef::Log.info("Will remove \"verify_ssl\" option in /etc/crowbarrc")
       do_save = true
