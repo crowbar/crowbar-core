@@ -4,13 +4,6 @@
       %h2
         = @node.name
 
-        .btn-group.pull-right
-          = link_to t("cancel"), node_path(@node.handle), :class => "btn btn-default"
-          %input.btn.btn-default{ :type => "submit", :name => "submit", :value => t(".save") }
-
-          - unless @node.allocated? or @node.admin?
-            %input.btn.btn-default{ type: "submit", name: "submit", value: t(".allocate"), data: { confirm: t(".confirm_allocate"), title: t(".allocate_tooltip") } }
-
     .panel-body
       - if @node.allocated?
         .form-group
@@ -122,9 +115,14 @@
             = t('.availability_zone_hint')
 
     .panel-footer.text-right
-      .btn-group
-        = link_to t("cancel"), node_path(@node.handle), :class => "btn btn-default"
-        %input.btn.btn-default{ :type => "submit", :name => "submit", :value => t(".save") }
+      -# haml-lint:disable InstanceVariables
+      = link_to t("cancel"), node_path(@node.handle), :class => "btn btn-default"
+      %input.btn.btn-primary{ :type => "submit", :name => "submit", :value => t(".save") }
 
-        - unless @node.allocated? or @node.admin?
-          %input.btn.btn-default{ type: "submit", name: "submit", value: t(".allocate"), data: { confirm: t(".confirm_allocate"), title: t(".allocate_tooltip") } }
+      - unless @node.allocated? or @node.admin?
+        %input.btn.btn-default{
+          type: "submit",
+          name: "submit",
+          value: t(".allocate"),
+          data: { confirm: t(".confirm_allocate"), title: t(".allocate_tooltip") }
+        }
