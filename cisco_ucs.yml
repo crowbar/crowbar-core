@@ -30,9 +30,3 @@ crowbar:
   run_order: 20
   chef_order: 20
   proposal_schema_version: 3
-
-nav:
-  utils:
-    ucs:
-      order: 90
-      route: 'ucs_edit_path'
