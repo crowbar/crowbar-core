@@ -63,7 +63,7 @@ $font-family-serif:       Georgia, "Times New Roman", Times, serif !default;
 $font-family-monospace:   Menlo, Monaco, Consolas, "Courier New", monospace !default;
 $font-family-base:        $font-family-sans-serif !default;
 
-$font-size-base:          13px;
+$font-size-base:          14px;
 $font-size-large:         ceil(($font-size-base * 1.25)) !default; // ~18px
 $font-size-small:         ceil(($font-size-base * .85)) !default; // ~12px
 
@@ -75,7 +75,7 @@ $font-size-h5:            $font-size-base !default;
 $font-size-h6:            ceil(($font-size-base * .85)) !default; // ~12px
 
 //** Unit-less `line-height` for use in components like buttons.
-$line-height-base:        1.1;
+$line-height-base:        1.428571429;
 //** Computed "line-height" (`font-size` * `line-height`) for use with `margin`, `padding`, etc.
 $line-height-computed:    floor(($font-size-base * $line-height-base)); // ~20px
 
@@ -163,31 +163,74 @@ $table-border-color:            $gray-lighter;
 
 $btn-font-weight:                bold;
 
-$btn-default-color:              $bc-white;
-$btn-default-bg:                 $brand-primary;
-$btn-default-border:             $brand-success-border;
+$btn-default-color:              $bc-gray-900;
+$btn-default-bg:                 $bc-white;
+$btn-default-border:             $bc-gray-900;
+$btn-default-hover-color:        $bc-gray-600;
+$btn-default-hover-bg:           $bc-white;
+$btn-default-hover-border:       $bc-gray-600;
+$btn-default-active-color:        $bc-gray-600;
+$btn-default-active-bg:           $bc-white;
+$btn-default-active-border:       $bc-gray-600;
 
+// Default color to use for primary button
 $btn-primary-color:              $bc-white;
 $btn-primary-bg:                 $brand-primary;
-$btn-primary-border:             $brand-success-border;
+$btn-primary-border:             $brand-primary;
 
-$btn-success-color:              $bc-white;
-$btn-success-bg:                 $brand-success !default;
-$btn-success-border:             $brand-success-border;
+// Colors to use when button is focused (via keyboard), hovered (via mouse)
+//   or toggled on
+$btn-primary-hover-color:        $btn-primary-color;
+$btn-primary-hover-bg:           $bc-green-700;
+$btn-primary-hover-border:       $bc-green-700;
+
+// Color to use when button is actively being clicked
+$btn-primary-active-color:       $btn-primary-color;
+$btn-primary-active-bg:          $bc-green-900;
+$btn-primary-active-border:      $bc-green-900;
+
+// Success should be the same as primary
+$btn-success-color:              $btn-primary-color;
+$btn-success-bg:                 $btn-primary-bg;
+$btn-success-border:             $btn-primary-border;
+$btn-success-hover-color:        $btn-primary-hover-color;
+$btn-success-hover-bg:           $btn-primary-hover-bg;
+$btn-success-hover-border:       $btn-primary-hover-border;
+$btn-success-active-color:       $btn-primary-active-color;
+$btn-success-active-bg:          $btn-primary-active-bg;
+$btn-success-active-border:      $btn-primary-active-border;
 
 $btn-info-color:                 $bc-white;
 $btn-info-bg:                    $brand-info;
-$btn-info-border:                $brand-info-border;
+$btn-info-border:                $brand-info;
+$btn-info-hover-color:           $bc-white;
+$btn-info-hover-bg:              $bc-cerulean-700;
+$btn-info-hover-border:          $bc-cerulean-700;
+$btn-info-active-color:          $bc-white;
+$btn-info-active-bg:             $bc-cerulean-900;
+$btn-info-active-border:         $bc-cerulean-900;
 
 $btn-warning-color:              $bc-white;
-$btn-warning-bg:                 $brand-warning !default;
-$btn-warning-border:             $brand-warning-border;
+$btn-warning-bg:                 $brand-warning;
+$btn-warning-border:             $brand-warning;
+$btn-warning-hover-color:        $bc-white;
+$btn-warning-hover-bg:           $bc-yellow-800;
+$btn-warning-hover-border:       $bc-yellow-800;
+$btn-warning-active-color:       $bc-white;
+$btn-warning-active-bg:          $bc-yellow-900;
+$btn-warning-active-border:      $bc-yellow-900;
 
 $btn-danger-color:               $bc-white;
-$btn-danger-bg:                  $brand-danger !default;
-$btn-danger-border:              $brand-danger-border;
+$btn-danger-bg:                  $brand-danger;
+$btn-danger-border:              $brand-danger;
+$btn-danger-hover-color:         $bc-white;
+$btn-danger-hover-bg:            $bc-red-800;
+$btn-danger-hover-border:        $bc-red-800;
+$btn-danger-active-color:        $bc-white;
+$btn-danger-active-bg:           $bc-red-900;
+$btn-danger-active-border:       $bc-red-900;
 
-$btn-link-disabled-color:        $gray-light !default;
+$btn-link-disabled-color:        $gray-light;
 
 // Allows for customizing button radius independently from global border radius
 $btn-border-radius-base:         $border-radius-base !default;
@@ -408,16 +451,16 @@ $navbar-default-toggle-border-color:       $gray-lighter;
 
 //=== Inverted navbar
 // Reset inverted navbar basics
-$navbar-inverse-color:                      $gray-lighter-2;
-$navbar-inverse-bg:                         $bc-blue-500;
-$navbar-inverse-border:                     $bc-blue-900;
+$navbar-inverse-color:                      $text-color;
+$navbar-inverse-bg:                         $bc-white;
+$navbar-inverse-border:                     $bc-gray-100;
 
 // Inverted navbar links
-$navbar-inverse-link-color:                 $bc-gray-50;
-$navbar-inverse-link-hover-color:           $bc-white;
-$navbar-inverse-link-hover-bg:              $bc-blue-900;
-$navbar-inverse-link-active-color:          $brand-primary;
-$navbar-inverse-link-active-bg:             $bc-blue-900;
+$navbar-inverse-link-color:                 $text-color;
+$navbar-inverse-link-hover-color:           $text-color;
+$navbar-inverse-link-hover-bg:              $bc-white;
+$navbar-inverse-link-active-color:          $text-color;
+$navbar-inverse-link-active-bg:             $bc-white;
 $navbar-inverse-link-disabled-color:        $gray;
 $navbar-inverse-link-disabled-bg:           transparent !default;
 
@@ -646,9 +689,9 @@ $alert-success-bg:            $state-success-bg !default;
 $alert-success-text:          $state-success-text !default;
 $alert-success-border:        $state-success-border !default;
 
-$alert-info-bg:               $state-info-bg !default;
-$alert-info-text:             $state-info-text !default;
-$alert-info-border:           $state-info-border !default;
+$alert-info-bg:               #d1ecf1;
+$alert-info-text:             #0c5460;
+$alert-info-border:           #bee5eb;
 
 $alert-warning-bg:            $state-warning-bg !default;
 $alert-warning-text:          $state-warning-text !default;

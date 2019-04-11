@@ -1,7 +1,5 @@
 footer {
   bottom: 0;
-  color: #999;
-  font-size: 12px;
   position: absolute;
   text-align: center;
   width: 100%;
@@ -12,9 +10,6 @@ footer {
   }
 
   span {
-    a {
-      color: #00c081;
-    }
 
     &:before {
       content: " - ";
@@ -41,7 +36,7 @@ footer {
 }
 
 .bottom-line {
-  @include gradient-horizontal(#00c081, #02d35f, 0%, 90%);
+  background-color: $bc-green-500;
   bottom: 0;
   height: 7px;
   margin-top: 10px;
