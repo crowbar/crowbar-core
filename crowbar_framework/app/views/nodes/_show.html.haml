@@ -7,7 +7,8 @@
         = @node.alias
 
       .btn-group.pull-right
-        = link_to t("edit"), edit_node_path(@node.handle), :class => "btn btn-default"
+        -# haml-lint:disable InstanceVariables
+        = link_to t("edit"), edit_node_path(@node.handle), :class => "btn btn-primary"
 
   %table.table.table-hover.table-attributes
     %tbody
@@ -23,7 +24,6 @@
       .btn-group.pull-right
         = render :partial => "buttons_power"
 
-      .btn-group
-        = render :partial => "buttons_chef"
+      = render :partial => "buttons_chef"
 
 = render "node_groups"

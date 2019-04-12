@@ -19,9 +19,6 @@
         - else
           = t(".title_unallocated")
 
-        .btn-group.pull-right
-          %input.btn.btn-default{ :type => "submit", :name => "submit", :value => t(".save") }
-
     - if @nodes.count > 0
       %table.table.table-hover.table-middle
         %thead
@@ -101,4 +98,4 @@
 
     .panel-footer.text-right
       .btn-group
-        %input.btn.btn-default{ :type => "submit", :name => "submit", :value => t(".save") }
+        %input.btn.btn-primary{ :type => "submit", :name => "submit", :value => t(".save") }

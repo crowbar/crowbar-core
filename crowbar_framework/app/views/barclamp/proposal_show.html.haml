@@ -26,13 +26,14 @@
     = render_barclamp_edit_deployment(@proposal)
 
     .panel-footer.text-right
+      = cancel_barclamp_button(@proposal.barclamp)
       - unless @proposal.pretty_deployment.crowbar_committing
-        = save_proposal_button(@proposal)
-        = apply_proposal_button(@proposal)
         = dequeue_proposal_button(@proposal)
         - if @active
           = deactivate_proposal_button(@proposal)
         - else
           = delete_proposal_button(@proposal)
+        = apply_proposal_button(@proposal)
+        = save_proposal_button(@proposal)
 
-      = cancel_barclamp_button(@proposal.barclamp)
+
