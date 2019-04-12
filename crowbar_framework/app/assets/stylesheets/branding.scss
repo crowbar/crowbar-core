@@ -11,11 +11,6 @@
 
 $bootstrap-sass-asset-helper: true;
 
-.bottom-line {
-  @include gradient-horizontal(#2b9a9b, #40b178, 0%, 90%);
-  background: #1fad7a;
-}
-
 // We need to link to logo.png again for the asset compilation
 .navbar-inverse {
   .navbar-brand {
