@@ -120,9 +120,5 @@
       %input.btn.btn-primary{ :type => "submit", :name => "submit", :value => t(".save") }
 
       - unless @node.allocated? or @node.admin?
-        %input.btn.btn-default{
-          type: "submit",
-          name: "submit",
-          value: t(".allocate"),
-          data: { confirm: t(".confirm_allocate"), title: t(".allocate_tooltip") }
-        }
+        -# haml-lint:disable LineLength
+        %input.btn.btn-default{ type: "submit", name: "submit", value: t(".allocate"), data: { confirm: t(".confirm_allocate"), title: t(".allocate_tooltip") } }
