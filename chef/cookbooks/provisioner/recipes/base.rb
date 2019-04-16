@@ -355,48 +355,7 @@ verify_ssl = !crowbar_node["crowbar"]["apache"]["insecure"]
 
 package "ruby2.1-rubygem-crowbar-client"
 
-if is_admin && ::File.exist?("/etc/crowbarrc")
-  # On admin server, only make sure the address and verify_ssl options are
-  # correct; the admin is the one controlling the username & password
-
-  # After installation of a gem, we have a new path for the new gem, so we
-  # need to reset the paths if we can't load the gem
-  begin
-    require "inifile"
-  rescue LoadError
-    Gem.clear_paths
-  end
-
-  begin
-    crowbarrc = IniFile.load("/etc/crowbarrc")
-
-    crowbarrc_config = crowbarrc["default"]
-
-    if server != crowbarrc_config["server"]
-      crowbarrc_config["server"] = server
-      Chef::Log.info("Will update \"server\" option in /etc/crowbarrc to \"#{server}\"")
-      do_save = true
-    end
-
-    crowbarrc_verify_ssl = crowbarrc_config["verify_ssl"].nil? ||
-      ![false, 0, "0", "f", "F", "false", "FALSE"].include?(crowbarrc_config["verify_ssl"])
-
-    if protocol == "http" && crowbarrc_config.key?("verify_ssl")
-      crowbarrc_config.delete("verify_ssl")
-      Chef::Log.info("Will remove \"verify_ssl\" option in /etc/crowbarrc")
-      do_save = true
-    elsif protocol == "https" && verify_ssl != crowbarrc_verify_ssl
-      crowbarrc_config["verify_ssl"] = verify_ssl ? 1 : 0
-      Chef::Log.info("Will update \"verify_ssl\" option in /etc/crowbarrc to " \
-          "\"#{crowbarrc_config["verify_ssl"]}\"")
-      do_save = true
-    end
-
-    crowbarrc.save if do_save
-  rescue IniFile::Error
-    Chef::Log.warn("Could not parse/update config file /etc/crowbarrc")
-  end
-elsif !is_admin
+unless is_admin
   # On non-admin nodes, setup /etc/crowbarrc with the restricted client
   username = crowbar_node["crowbar"]["client_user"]["username"]
   password = crowbar_node["crowbar"]["client_user"]["password"]

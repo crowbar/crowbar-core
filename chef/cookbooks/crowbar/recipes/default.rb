@@ -253,7 +253,7 @@ else
   chef_solr_data = "/var/cache/chef/solr/data"
 end
 
-if node["crowbar"] && node["crowbar"]["realm"]
+if node["crowbar"]
   # After installation of a gem, we have a new path for the new gem, so we
   # need to reset the paths if we can't load the gem
   begin
@@ -261,9 +261,6 @@ if node["crowbar"] && node["crowbar"]["realm"]
   rescue LoadError
     Gem.clear_paths
   end
-
-  realm = node["crowbar"]["realm"]
-  users = {}
 
   begin
     crowbarrc = IniFile.load("/etc/crowbarrc") || {}
@@ -275,38 +272,74 @@ if node["crowbar"] && node["crowbar"]["realm"]
     Chef::Log.warn("Could not parse config file /etc/crowbarrc")
   else
     crowbarrc_config = crowbarrc["default"]
+    # On admin server, only make sure the address and verify_ssl options are
+    # correct; the admin is the one controlling the username & password.
+    # During initial install, server and ssl settings may not be there yet,
+    # don't worry about it
+    if node[:crowbar][:network].key?(:admin) && node[:crowbar].key?(:apache)
+      address = node[:crowbar][:network][:admin][:address]
+      protocol = node[:crowbar][:apache][:ssl] ? "https" : "http"
+      server = "#{protocol}://#{address}"
+      verify_ssl = !node[:crowbar][:apache][:insecure]
+    else
+      server = nil
+      verify_ssl = nil
+    end
+    if server != crowbarrc_config["server"]
+      crowbarrc_config["server"] = server
+      Chef::Log.info("Will update \"server\" option in /etc/crowbarrc to \"#{server}\"")
+      do_save = true
+    end
+    crowbarrc_verify_ssl = crowbarrc_config["verify_ssl"].nil? ||
+      ![false, 0, "0", "f", "F", "false", "FALSE"].include?(crowbarrc_config["verify_ssl"])
+
+    if protocol == "http" && crowbarrc_config.key?("verify_ssl")
+      crowbarrc_config.delete("verify_ssl")
+      Chef::Log.info("Will remove \"verify_ssl\" option in /etc/crowbarrc")
+      do_save = true
+    elsif protocol == "https" && verify_ssl != crowbarrc_verify_ssl
+      crowbarrc_config["verify_ssl"] = verify_ssl ? 1 : 0
+      Chef::Log.info("Will update \"verify_ssl\" option in /etc/crowbarrc to " \
+          "\"#{crowbarrc_config["verify_ssl"]}\"")
+      do_save = true
+    end
+    crowbarrc.save if do_save
+  end
+
+  if node["crowbar"]["realm"]
+    realm = node["crowbar"]["realm"]
+    users = {}
     admin_username = crowbarrc_config["username"]
     admin_password = crowbarrc_config["password"]
     unless admin_username.nil? || admin_password.nil?
       admin_digest = Digest::MD5.hexdigest("#{admin_username}:#{realm}:#{admin_password}")
       users[admin_username] = { "digest" => admin_digest }
     end
-  end
+    template "/opt/dell/crowbar_framework/htdigest" do
+      source "htdigest.erb"
+      variables(users: users, realm: realm)
+      owner "root"
+      group node[:apache][:group]
+      mode "0640"
+      not_if { users.empty? }
+    end
 
-  template "/opt/dell/crowbar_framework/htdigest" do
-    source "htdigest.erb"
-    variables(users: users, realm: realm)
-    owner "root"
-    group node[:apache][:group]
-    mode "0640"
-    not_if { users.empty? }
+    client_users = users.dup
+    client_username = node["crowbar"]["client_user"]["username"]
+    # Fix passwords into digests.
+    client_password = node["crowbar"]["client_user"]["password"]
+    client_digest = Digest::MD5.hexdigest("#{client_username}:#{realm}:#{client_password}")
+    client_users[client_username] = { "digest" => client_digest }
+    template "/opt/dell/crowbar_framework/htdigest-clients" do
+      source "htdigest.erb"
+      variables(users: client_users, realm: realm)
+      owner "root"
+      group node[:apache][:group]
+      mode "0640"
+    end
+  else
+    realm = nil
   end
-
-  client_users = users.dup
-  client_username = node["crowbar"]["client_user"]["username"]
-  # Fix passwords into digests.
-  client_password = node["crowbar"]["client_user"]["password"]
-  client_digest = Digest::MD5.hexdigest("#{client_username}:#{realm}:#{client_password}")
-  client_users[client_username] = { "digest" => client_digest }
-  template "/opt/dell/crowbar_framework/htdigest-clients" do
-    source "htdigest.erb"
-    variables(users: client_users, realm: realm)
-    owner "root"
-    group node[:apache][:group]
-    mode "0640"
-  end
-else
-  realm = nil
 end
 
 # Remove rainbows configuration, dating from before the switch to puma
