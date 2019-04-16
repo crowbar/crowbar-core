@@ -92,7 +92,8 @@ class CrowbarValidator < Kwalify::Validator
          end
       when "DomainName"
          # http://tools.ietf.org/html/rfc1034#section-3.5
-         label = /[a-z]([a-z0-9\-]{0,61}[a-z0-9])?/i
+         # https://tools.ietf.org/html/rfc1123#page-13
+         label = /[a-z0-9]([a-z0-9\-]{0,253}[a-z0-9])?/i
          regex = /\A#{label}(\.#{label})*\z/
          if value[regex].nil?
            msg = "Should be a Domain Name: #{value}"
@@ -120,4 +121,3 @@ class CrowbarValidator < Kwalify::Validator
       end
    end
 end
-
