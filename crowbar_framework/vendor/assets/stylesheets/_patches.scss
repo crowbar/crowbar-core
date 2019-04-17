@@ -135,7 +135,9 @@
 }
 
 .btn:not(.input-sm) {
-  padding: 8px 16px;
+  padding: 0 16px;
+  min-height: 38px;
+  line-height: 38px;
 }
 
 .input-group > .input-group-btn > .btn {
