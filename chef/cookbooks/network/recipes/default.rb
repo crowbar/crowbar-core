@@ -151,6 +151,7 @@ def kill_nic(nic)
 
   Chef::Log.info("Interface #{nic.name} is no longer being used, deconfiguring it.")
   nic.destroy
+  ::Kernel.system("wicked ifdown #{nic.name}")
 
   kill_nic_files(nic)
 end
