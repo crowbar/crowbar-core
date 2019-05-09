@@ -131,14 +131,15 @@ def kill_nic_files(nic)
     end
   when "suse"
     # SuSE also has lots of small files, but in slightly different locations.
-    if ::File.exist?("/etc/sysconfig/network/ifcfg-#{nic.name}")
-      ::File.delete("/etc/sysconfig/network/ifcfg-#{nic.name}")
-    end
-    if ::File.exist?("/etc/sysconfig/network/ifroute-#{nic.name}")
-      ::File.delete("/etc/sysconfig/network/ifroute-#{nic.name}")
-    end
-    if ::File.exist?("/etc/wicked/scripts/#{nic.name}-pre-up")
-      ::File.delete("/etc/wicked/scripts/#{nic.name}-pre-up")
+    [
+      "/etc/sysconfig/network/ifcfg-#{nic.name}",
+      "/etc/sysconfig/network/ifroute-#{nic.name}",
+      "/etc/wicked/scripts/#{nic.name}-pre-up"
+    ].each do |nicfile|
+      if ::File.exist?(nicfile)
+        ::File.delete(nicfile)
+        Chef::Log.info("Deleting #{nicfile}")
+      end
     end
   end
 end
