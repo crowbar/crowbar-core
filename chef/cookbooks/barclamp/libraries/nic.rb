@@ -811,12 +811,19 @@ class ::Nic
       nil
     end
 
-    def replug(slave)
+    def unplug(slave)
       slave = self.class.coerce(slave)
-      unless self.slaves.member?(slave)
-        raise ::ArgumentError.new("#{slave} is not a member of bridge #{@nic}")
+      unless slaves.member?(slave)
+        raise ::ArgumentError, "#{slave} is not a member of bridge #{@nic}"
       end
       ::Kernel.system("ovs-vsctl del-port #{@nic} #{slave}")
+    end
+
+    def plug(slave)
+      slave = self.class.coerce(slave)
+      if slaves.member?(slave)
+        raise ::ArgumentError, "#{slave} is already a member of bridge #{@nic}"
+      end
       ::Kernel.system("ovs-vsctl add-port #{@nic} #{slave}")
     end
 

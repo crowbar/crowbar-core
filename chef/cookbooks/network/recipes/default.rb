@@ -342,17 +342,25 @@ sorted_networks.each do |network|
     ifs[our_iface.name]["slave"] = true
     ifs[our_iface.name]["master"] = br.name
     unless our_iface.ovs_master && our_iface.ovs_master.name == br.name
-      br.add_slave our_iface
       # FIXME: Workaround for https://bugzilla.suse.com/show_bug.cgi?id=945219
       # Find vlan interface on top of 'our_iface' that are plugged into other
       # ovs bridges. Replug them.
-      our_kids = our_iface.children
+      our_kids = our_iface.children.find_all { |c| Nic.vlan?(c) }
+      replug_interface = {}
       our_kids.each do |k|
-        next unless Nic.vlan?(k)
         ovs_master = k.ovs_master
         unless ovs_master.nil?
-          Chef::Log.warn("Replugging #{k.name} to #{ovs_master.name} (workaround bnc#945219)")
-          ovs_master.replug(k.name)
+          Chef::Log.warn("removing #{k.name} from #{ovs_master.name} (workaround bnc#945219 start)")
+          ovs_master.unplug(k.name)
+          replug_interface[ovs_master.name] = k.name
+        end
+      end
+      br.add_slave our_iface
+      replug_interface.each do |bridgename, interface|
+        replug_br = Nic.new bridgename
+        unless replug_br.nil?
+          Chef::Log.warn("adding #{interface} to #{bridgename} (workaround bnc#945219 end)")
+          replug_br.plug(interface)
         end
       end
     end
