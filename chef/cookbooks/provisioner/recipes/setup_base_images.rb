@@ -24,6 +24,7 @@ domain_name = node[:dns].nil? ? node[:domain] : (node[:dns][:domain] || node[:do
 web_port = node[:provisioner][:web_port]
 provisioner_web="http://#{admin_ip}:#{web_port}"
 append_line = node[:provisioner][:discovery][:append].dup # We'll modify it inline
+enable_pxe = node[:provisioner][:enable_pxe]
 
 crowbar_node = node_search_with_cache("roles:crowbar").first
 crowbar_protocol = crowbar_node[:crowbar][:apache][:ssl] ? "https" : "http"
@@ -524,6 +525,7 @@ node[:provisioner][:supported_oses].each do |os, arches|
                   crowbar_verify_ssl: crowbar_verify_ssl,
                   crowbar_client_username: crowbar_client_username,
                   crowbar_client_password: crowbar_client_password,
+                  enable_pxe: enable_pxe,
                   web_port: web_port,
                   ntp_servers_ips: ntp_servers,
                   os: os,
