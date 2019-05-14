@@ -218,6 +218,25 @@ sorted_networks.each do |network|
       Chef::Log.info("Using bond #{bond.name} for network #{network.name}")
       bond.mode = team_mode if bond.mode != team_mode
     else
+      # Error out if any of the interfaces already used elsewhere.
+      # FIXME: Hitting this means that we'd need to reconfigure all the upper layers
+      # of the interface:
+      # - unconfigure existing VLANs on top of this
+      # - tear down any bond that this interface is currently enslaved in
+      # - unplug for any existing (ovs-)bridge (would likely involve destroying
+      #   that bridge as well)
+      # later steps in the recipe would bring back any of the upper layers
+      base_ifs.each do |i|
+        if i.children.any?
+          raise "Base interface '#{i.name}' is already used by VLAN(s) " \
+            "'#{i.children.map(&:name).inspect}' refusing to add it to a bond."
+        end
+        if i.master
+          raise "Base interface '#{i.name}' is already used by #{i.master.class} " \
+            "'#{i.master.name}' refusing to add it to a new bond."
+        end
+      end
+
       existing_bond_names = Nic.nics.select{ |i| Nic::bond?(i) }.map{ |i| i.name }
       bond_names = (0..existing_bond_names.length).to_a.map{ |i| "bond#{i}" }
       new_bond_name = (bond_names - existing_bond_names).first
