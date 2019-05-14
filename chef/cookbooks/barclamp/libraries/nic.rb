@@ -9,7 +9,8 @@ class ::Nic
   @nicdir = nil
   @addresses = ::Array.new
   @dependents = nil
-  BASEDIRS=["/sys/class/net","/sys/devices/virtual/net"]
+  VIRTUAL_BASEDIR = "/sys/devices/virtual/net".freeze
+  BASEDIRS = ["/sys/class/net", VIRTUAL_BASEDIR].freeze
 
   # Helper method for reading values from sysfs for a nic.
   def sysfs(file)
@@ -76,6 +77,21 @@ class ::Nic
   # we are looking at.
   def self.exists?(nic)
     nic.kind_of?(::Nic) or BASEDIRS.any?{ |d|::File.exists?("#{d}/#{nic}") }
+  end
+
+  def self.virtual_device?(nic)
+    name = if nic.is_a?(::Nic)
+      nic.name
+    else
+      nic
+    end
+    File.exist?("#{VIRTUAL_BASEDIR}/#{name}")
+  end
+
+  # Consider everything that is either a physical device or a VLAN or bond
+  # a base device
+  def self.base_interface?(nic)
+    !Nic.virtual_device?(nic) || Nic.vlan?(nic) || Nic.bond?(nic)
   end
 
   def self.coerce(nic)
