@@ -365,6 +365,33 @@ sorted_networks.each do |network|
     # This flag is used later to enable wicked-nanny (on SUSE platforms)
     ovs_bridge_created = true
 
+    if Nic.exists?(bridge) && Nic.ovs_bridge?(bridge)
+      ovs = Nic.new bridge
+      ovs_slaves = ovs.slaves
+
+      # Find out if the ovs bridge for the current network is already attached to
+      # any other physical, vlan or bond interface than what the current configuration
+      # requires. If it is, tear down the bridge and slave devices for reconfig to
+      # reduce possible risk creating network loops.
+      non_virtual_slaves = ovs_slaves.find_all do |slave|
+        slave.name != our_iface.name && Nic.base_interface?(slave)
+      end
+      unless non_virtual_slaves.nil? || non_virtual_slaves.empty?
+        Chef::Log.warn("Current conduit mapping for network '#{network.name}' requires " \
+                       "ovs-brige '#{bridge}' to be attached to device '#{our_iface.name}' " \
+                       "but the bridge is already attached to '[#{non_virtual_slaves.join " "}]'.")
+        Chef::Log.warn("Taking the bridge down for reconfiguration to reduce risk of " \
+                       "creating a network loop.")
+        Chef::Log.info("Deleting OVS bridge #{bridge}")
+        ::Kernel.system("wicked ifdown #{ovs.name}")
+        kill_nic_files ovs
+        non_virtual_slaves.each do |i|
+          ::Kernel.system("wicked ifdown #{i.name}")
+          kill_nic_files i
+        end
+      end
+    end
+
     br = if Nic.exists?(bridge) && Nic.ovs_bridge?(bridge)
       Chef::Log.info("Using OVS bridge #{bridge} for network #{network.name}")
       Nic.new bridge
