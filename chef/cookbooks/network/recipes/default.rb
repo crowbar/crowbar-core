@@ -323,6 +323,45 @@ sorted_networks.each do |network|
   if network.add_ovs_bridge
     bridge = network.bridge_name || "br-#{network.name}"
 
+    # Check if our current base interface (bond, vlan or physical) is already
+    # attached to another OVS bridge. Take care about that appropriately.
+    if our_iface.ovs_master && our_iface.ovs_master.name != bridge
+      old_ovs = our_iface.ovs_master
+
+      # We are already attached to an ovs bridge, check whether that attachment
+      # was already verified (or created) during this chef-client run, by looking
+      # through the list of interfaces that we already touched ('ifs'). If it is,
+      # find out which crowbar network requires that attachement and error out
+      # with a meaningful error message.
+      if ifs.key? old_ovs.name
+        other_net = sorted_networks.find do |n|
+          n.bridge_name == old_ovs.name
+        end
+        other_net ||= sorted_networks.find do |n|
+          old_ovs.name == "br-#{n.name}"
+        end
+        raise "The current conduit mapping for network '#{network.name}' requires " \
+          "interface '#{our_iface.name}' to be attached to ovs-brige '#{bridge}'. " \
+          "But network '#{other_net.name}' which was already set up, requires " \
+          "the same interface to be attached to ovs-bridge '#{old_ovs.name}'. " \
+          "Refusing to reconfigure. There seems to be a conflict in the conduit" \
+          "mappings for the networks '#{other_net.name}' and '#{network.name}'."
+      end
+
+      # We didn't create the attachement during the current run of chef-client.
+      # Tear down the attachement (and bridge configuration) to be able to attach
+      # the current interface to the new bridge.
+      Chef::Log.warn("Current conduit mapping for network '#{network.name}' requires " \
+                     "ovs-brige '#{bridge}' to be attached to device '#{our_iface.name}' " \
+                     "but the device is already attached to '#{old_ovs.name}'.")
+      Chef::Log.warn("Unplugging '#{our_iface.name}' from '#{old_ovs.name}' and " \
+                     "taking the bridge down for reconfiguration to reduce the " \
+                     "risk of creating a network loop.")
+      old_ovs.unplug(our_iface.name)
+      ::Kernel.system("wicked ifdown #{old_ovs.name}")
+      kill_nic_files old_ovs
+    end
+
     # This flag is used later to enable wicked-nanny (on SUSE platforms)
     ovs_bridge_created = true
 
