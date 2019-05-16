@@ -187,6 +187,7 @@ module Crowbar
 
         begin
           [:nodes, :roles, :clients, :databags].each do |type|
+            Rails.logger.debug("Restoring #{type}")
             Dir.glob(@data.join("knife", type.to_s, "**", "*")).each do |file|
               file = Pathname.new(file)
               next unless file.extname == ".json"
@@ -207,8 +208,8 @@ module Crowbar
           @status[:restore_chef] ||= { status: :ok, msg: "" }
         rescue Errno::ECONNREFUSED
           raise Crowbar::Error::ChefOffline.new
-        rescue Net::HTTPServerException
-          raise "Restore failed"
+        rescue Net::HTTPServerException => exception
+          raise "Restore failed: #{exception.message}"
         end
 
         # now that restore is done, dns server can answer requests from other nodes.
