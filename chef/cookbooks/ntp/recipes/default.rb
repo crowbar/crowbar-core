@@ -79,7 +79,7 @@ else
     variables(ntp_servers: ntp_servers,
               admin_interface: local_admin_address,
               admin_subnet: admin_net.subnet,
-              admin_netmask: admin_net.netmask,
+              admin_netmask: admin_net.cidr_to_netmask(),
               is_server: is_server,
               listen_interfaces: listen_network_addresses || [],
               fudgevalue: 10,
