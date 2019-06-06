@@ -443,6 +443,8 @@ module Api
         upgrade_nodes = ::Node.find("state:crowbar_upgrade")
         cinder_node = nil
         nova_node = nil
+        keystone_node = nil
+
         upgrade_nodes.each do |node|
           node.set_pre_upgrade_attribute
           if node.roles.include?("cinder-controller") &&
@@ -455,6 +457,32 @@ module Api
                   node["pacemaker"]["founder"] == node[:fqdn])
             nova_node = node
           end
+          if node.roles.include?("keystone-server") &&
+              (!node.roles.include?("pacemaker-cluster-member") ||
+                  node["pacemaker"]["founder"] == node[:fqdn])
+            keystone_node = node
+          end
+        end
+
+        begin
+          unless keystone_node.nil?
+            keystone_node.wait_for_script_to_finish(
+              "/usr/sbin/crowbar-delete-Member-role-before-upgrade.sh",
+              timeouts[:delete_member_role]
+            )
+            Rails.logger.info("Deleting Member role was successful.")
+          end
+        rescue StandardError => e
+          ::Crowbar::UpgradeStatus.new.end_step(
+            false,
+            services: {
+              data: "Problem while deleting Member role: " + e.message,
+              help: "Check /var/log/crowbar/production.log at admin server " \
+                "and /var/log/crowbar/node-upgrade.log at #{keystone_node.name}."
+            }
+          )
+          # Stop here and error out
+          return
         end
 
         begin
@@ -1023,6 +1051,7 @@ module Api
           "upgrade-os",
           "shutdown-services-before-upgrade",
           "delete-cinder-services-before-upgrade",
+          "delete-Member-role-before-upgrade",
           "evacuate-host",
           "pre-upgrade",
           "delete-pacemaker-resources",

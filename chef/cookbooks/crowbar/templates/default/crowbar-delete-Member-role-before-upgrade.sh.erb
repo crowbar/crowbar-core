@@ -1,0 +1,47 @@
+#!/bin/bash
+#
+# This script deletes the Member role as part of the upgrade from Cloud 8 to
+# Cloud 9. This is necessary because the "Member" role was renamed to "member"
+# in Cloud 9 and the attempt to create the "member" role will fail if "Member"
+# exists already (Keystone is case-insensitive).
+#
+# The script should be run only on the controller (first controller/cluster
+# founder in an HA cloud).
+
+LOGFILE=/var/log/crowbar/node-upgrade.log
+UPGRADEDIR=/var/lib/crowbar/upgrade
+STATEFILE=${UPGRADEDIR}/crowbar-delete-Member-role-before-upgrade-ok
+
+mkdir -p "`dirname "$LOGFILE"`"
+exec >>"$LOGFILE" 2>&1
+
+log()
+{
+    set +x
+    echo "[$(date --iso-8601=ns)] [$$] $@"
+    set -x
+}
+
+log "Executing $BASH_SOURCE"
+
+source /root/.openrc
+set -x
+
+mkdir -p $UPGRADEDIR
+
+if [[ -f $STATEFILE ]] ; then
+    log "Member role was already deleted"
+    exit 0
+fi
+
+if openstack role list | grep -q ' Member '; then
+  openstack role delete Member
+  ret=$?
+  if [ $ret != 0 ]; then
+    log "Failed to delete Member role."
+    exit $ret
+  fi
+fi
+
+touch $STATEFILE
+log "$BASH_SOURCE is finished."

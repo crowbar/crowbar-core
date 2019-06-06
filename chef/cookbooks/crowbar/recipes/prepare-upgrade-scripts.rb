@@ -105,6 +105,15 @@ template "/usr/sbin/crowbar-delete-cinder-services-before-upgrade.sh" do
   only_if { cinder_controller && (!use_ha || is_cluster_founder) }
 end
 
+template "/usr/sbin/crowbar-delete-Member-role-before-upgrade.sh" do
+  source "crowbar-delete-Member-role-before-upgrade.sh.erb"
+  mode "0775"
+  owner "root"
+  group "root"
+  action :create
+  only_if { roles.include?("keystone-server") && (!use_ha || is_cluster_founder) }
+end
+
 controller_nodes = search(:node, "run_list_map:nova-controller").map { |n| n["hostname"] }
 compute_nodes = search(:node, "run_list_map:nova-compute-*").map { |n| n["hostname"] }
 
