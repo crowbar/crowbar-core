@@ -133,4 +133,15 @@ class RestrictedController < ApplicationController
   def load_node
     @node = Node.find_node_by_name_or_alias(params[:id])
   end
+
+  def upgrade
+    respond_to do |format|
+      format.any(:json, :jsonapi) do
+        return
+      end
+      format.html do
+        render "errors/during_upgrade", status: :service_unavailable
+      end
+    end
+  end
 end
