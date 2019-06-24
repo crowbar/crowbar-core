@@ -156,17 +156,6 @@ def kill_nic(nic)
   kill_nic_files(nic)
 end
 
-require "securerandom"
-def get_datapath_id_for_ovsbridge(bridge)
-  node.set["network"]["ovs_datapath_ids"] = {} if node["network"]["ovs_datapath_ids"].nil?
-  unless node["network"]["ovs_datapath_ids"][bridge]
-    datapath_id = SecureRandom.hex(8)
-    node.set["network"]["ovs_datapath_ids"][bridge] = datapath_id
-    Chef::Log.info("Generated datapath_id #{datapath_id} for ovsbridge #{bridge}")
-  end
-  node["network"]["ovs_datapath_ids"][bridge]
-end
-
 sorted_networks = Barclamp::Inventory.list_networks(node).sort do |a, b|
   net_weight(a) <=> net_weight(b)
 end
@@ -335,10 +324,6 @@ sorted_networks.each do |network|
       Chef::Log.info("Creating OVS bridge #{bridge} for network #{network.name}")
       Nic::OvsBridge.create(bridge)
     end
-
-    datapath_id = get_datapath_id_for_ovsbridge(bridge)
-    br.datapath_id = datapath_id unless br.datapath_id == datapath_id
-
     ifs[br.name] ||= Hash.new
     ifs[br.name]["addresses"] ||= Array.new
     ifs[our_iface.name]["slave"] = true
@@ -597,7 +582,6 @@ when "suse"
       end
 
       pre_up_script = "/etc/wicked/scripts/#{nic.name}-pre-up"
-      datapath_id = get_datapath_id_for_ovsbridge nic.name
       is_admin_nwk = if_mapping.key?("admin") && if_mapping["admin"].include?(nic.name)
 
       template pre_up_script do
@@ -607,7 +591,6 @@ when "suse"
         source "ovs-pre-up.sh.erb"
         variables(
           bridgename: nic.name,
-          datapath_id: datapath_id,
           is_admin_nwk: is_admin_nwk
         )
       end
