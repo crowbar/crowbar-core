@@ -15,6 +15,11 @@
 #
 
 if CrowbarRoleRecipe.node_state_valid_for_role?(node, "network", "network")
-  include_recipe "network::default"
-  include_recipe "network::fast_nics_tune"
+  if node[:network][:config_frozen]
+    Chef::Log.info("Skipping network recipes because the network configuration " \
+                   "is marked frozen for this node.")
+  else
+    include_recipe "network::default"
+    include_recipe "network::fast_nics_tune"
+  end
 end
