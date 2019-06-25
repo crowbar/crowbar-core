@@ -8,6 +8,11 @@ env: SKIP_CHECKS=yes
 
 matrix:
   include:
+    - language: python
+      script:
+      - pip install gitlint
+      - wget https://raw.githubusercontent.com/SUSE-Cloud/automation/master/scripts/jenkins/gitlint.ini
+      - gitlint --commits master..HEAD -C gitlint.ini
     - gemfile: crowbar_framework/Gemfile
       script:
        - cd crowbar_framework
