@@ -127,7 +127,7 @@ module Api
     end
 
     def wait_for_ssh_state(desired_state, action)
-      Timeout.timeout(400) do
+      Timeout.timeout(800) do
         loop do
           ssh_status = @node.ssh_cmd("").first
           break if desired_state == :up ? ssh_status == 200 : ssh_status != 200
