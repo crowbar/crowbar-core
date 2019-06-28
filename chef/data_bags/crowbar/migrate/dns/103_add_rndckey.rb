@@ -4,7 +4,7 @@ def upgrade(template_attrs, template_deployment, attrs, deployment)
     @@dns_designate_rndc_key = service.random_password
   end
   attrs["designate_rndc_key"] = @@dns_designate_rndc_key
-  attrs["enable_designate"] = template_deployment["enable_designate"]
+  attrs["enable_designate"] = template_attrs["enable_designate"]
   return attrs, deployment
 end
 
