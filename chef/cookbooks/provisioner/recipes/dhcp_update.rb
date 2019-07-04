@@ -67,7 +67,7 @@ pool_opts = {
 if admin_ip_version == "6"
   pool_opts["dhcp"] = ipv6_dhcp_opts
   subnet_options = [
-    "option domain-name \"#{domain_name}\"",
+    "option dhcp6.domain-search \"#{domain_name}\"",
     "option dhcp6.name-servers #{dns_servers.join(", ")}"
   ]
 else

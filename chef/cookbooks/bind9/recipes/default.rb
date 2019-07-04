@@ -152,6 +152,10 @@ def make_zone(zone)
 
   zonefile_entries
 end
+def address_version(address)
+  'ip6addr' if IPAddr.new(address).ipv6?
+  'ip4addr' if IPAddr.new(address).ipv4?
+end
 
 # Create our basic zone infrastructure.
 zones = Mash.new
@@ -207,7 +211,7 @@ nodes.each do |n|
       alias_name = "#{net_name}-#{alias_name_no_net}" if alias_name_no_net
     end
     cluster_zone[:hosts][base_name] = Mash.new
-    cluster_zone[:hosts][base_name][:ip4addr] = network.address
+    cluster_zone[:hosts][base_name][address_version(network.address)] = network.address
     cluster_zone[:hosts][base_name][:alias] = alias_name if alias_name
   end
 
@@ -238,7 +242,7 @@ end
 temporary_dhcp.each_pair do |address, value|
   _, base_name, alias_name = value
   cluster_zone[:hosts][base_name] = Mash.new
-  cluster_zone[:hosts][base_name][:ip4addr] = address
+  cluster_zone[:hosts][base_name][address_version(address)] = address
   cluster_zone[:hosts][base_name][:alias] = alias_name if alias_name
 end
 
@@ -257,7 +261,8 @@ search(:crowbar, "id:*_network").each do |network|
       base_name="#{net_name}-#{base_name}"
     end
     cluster_zone[:hosts][base_name] = Mash.new
-    cluster_zone[:hosts][base_name][:ip4addr] = network[:allocated_by_name][host][:address]
+    address = network[:allocated_by_name][host][:address]
+    cluster_zone[:hosts][base_name][address_version(address)] = address
   end
 end
 
@@ -388,8 +393,7 @@ if node["crowbar"]["admin_node"] && ::File.exist?("/var/lib/crowbar/install/disa
   end
 end
 
-### FIXME Change to "any" once IPv6 support has been implemented
-admin_addr6 = "none"
+admin_addr6 = "any"
 if node[:dns][:enable_designate] && !node[:dns][:master]
   node[:dns][:forwarders].push master_ip
 end

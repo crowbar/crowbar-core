@@ -54,9 +54,10 @@ end
 states = node["provisioner"]["dhcp"]["state_machine"]
 tftproot = node["provisioner"]["root"]
 timezone = node["provisioner"]["timezone"]
-admin_ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
+admin_net = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin")
+admin_ip = admin_net.address
 web_port = node[:provisioner][:web_port]
-provisioner_web = "http://#{admin_ip}:#{web_port}"
+provisioner_web = "http://#{NetworkHelper.wrap_ip(admin_ip)}:#{web_port}"
 dhcp_hosts_dir = node["provisioner"]["dhcp_hosts"]
 virtual_intfs = ["tap", "qbr", "qvo", "qvb", "brq", "ovs", "vxl"]
 
@@ -153,6 +154,7 @@ node_search_with_cache("*:*").each do |mnode|
   admin_mac_addresses = find_node_boot_mac_addresses(mnode, admin_data_net)
   admin_ip_address = admin_data_net.nil? ? mnode[:ipaddress] : admin_data_net.address
   admin_prefix = admin_data_net.nil? ? "" : "#{admin_data_net.subnet}/#{admin_data_net.netmask}"
+  admin_ip_version = admin_data_net.nil? ? "4" : admin_data_net.ip_version
 
   ####
   # First deal with states that don't require PXE booting
@@ -222,7 +224,7 @@ node_search_with_cache("*:*").each do |mnode|
   ####
   # Everything below is for states that require PXE booting
 
-  if admin_data_net.ip_version == "6"
+  if admin_ip_version == "6"
     admin6_uri = "http://[#{admin_ip}]:#{web_port}/discovery"
     dchp_options = [
       "option dhcp6.vendor-class 0 10 \"HTTPClient\"",
@@ -275,7 +277,7 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
         ipaddress admin_ip_address
         options dchp_options
         prefix admin_prefix
-        ip_version admin_data_net.ip_version
+        ip_version admin_ip_version
       end
       action :add
     end
@@ -379,7 +381,7 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
       if node[:provisioner][:use_serial_console]
         append << "textmode=1"
       end
-      append << "ifcfg=dhcp4 netwait=60"
+      append << "ifcfg=dhcp#{admin_net.ip_version} netwait=60"
       append << "squash=0" # workaround bsc#962397
       append << "autoupgrade=1" if mnode[:state] == "os-upgrading"
 
