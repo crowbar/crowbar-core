@@ -418,6 +418,11 @@ class CrowbarService < ServiceObject
         node.set_state("crowbar_upgrade")
       end
     end
+
+    # save sync_mark attributes in config databag for the sync_mark provider to fetch
+    item = Crowbar::DataBagConfig.get_or_create_databag_item("crowbar-config", "sync_mark")
+    item.update(role.default_attributes["crowbar"]["sync_mark"])
+    item.save
   end
 
   def apply_role(role, inst, in_queue, bootstrap = false)
