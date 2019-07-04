@@ -14,10 +14,11 @@
 #
 
 action :add do
+  subnet_template = DhcpHelper.config_filename("subnet", new_resource.ip_version, ".conf.erb")
   filename = "/etc/dhcp3/subnets.d/#{new_resource.subnet}.conf"
   template filename do
     cookbook "dhcp"
-    source "subnet.conf.erb"
+    source subnet_template
     variables(
       network: new_resource.network,
       options: new_resource.options,
@@ -31,9 +32,10 @@ action :add do
       notifies :restart, resources(service: "dhcp3-server"), :delayed
     end
   end
+  subnet_file = DhcpHelper.config_filename("subnet_list", new_resource.ip_version)
   utils_line "include \"#{filename}\";" do
     action :add
-    file "/etc/dhcp3/subnets.d/subnet_list.conf"
+    file "/etc/dhcp3/subnets.d/#{subnet_file}"
     if node[:provisioner][:enable_pxe]
       notifies :restart, resources(service: "dhcp3-server"), :delayed
     end
@@ -52,11 +54,13 @@ action :remove do
     end
     new_resource.updated_by_last_action(true)
   end
-  utils_line "include \"#{filename}\";" do
-    action :remove
-    file "/etc/dhcp3/subnets.d/subnet_list.conf"
-    if node[:provisioner][:enable_pxe]
-      notifies :restart, resources(service: "dhcp3-server"), :delayed
+  ["subnet_list.conf", "subnet_list6.conf"].each do |subnet_list|
+    utils_line "include \"#{filename}\";" do
+      action :remove
+      file "/etc/dhcp3/subnets.d/#{subnet_list}"
+      if node[:provisioner][:enable_pxe]
+        notifies :restart, resources(service: "dhcp3-server"), :delayed
+      end
     end
   end
 end

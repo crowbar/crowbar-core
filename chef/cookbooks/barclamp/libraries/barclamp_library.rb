@@ -92,6 +92,7 @@ module BarclampLibrary
         attr_reader :vlan, :use_vlan
         attr_reader :add_bridge, :add_ovs_bridge, :bridge_name
         attr_reader :conduit
+        attr_reader :ip_version
 
         def initialize(node, net, data)
           @node = node
@@ -112,6 +113,13 @@ module BarclampLibrary
           # let's resolve this only if needed
           @interface = nil
           @interface_list = nil
+
+          require "ipaddr"
+          @ip_version = if IPAddr.new(@subnet).ipv6?
+            "6"
+          else
+            "4"
+          end
         end
 
         def interface
@@ -122,6 +130,30 @@ module BarclampLibrary
         def interface_list
           resolve_interface_info if @interface_list.nil?
           @interface_list
+        end
+
+        def cidr_to_netmask
+          if @ip_version == "6"
+            range = 128
+          else
+            range = 32
+          end
+
+          cidr = Integer(@netmask) rescue nil
+          if cidr && !(1..range).cover?(cidr)
+            Chef::Log.error("Invalid CIDR netmask '#{cidr}' > '#{range}'")
+            return @netmask
+          end
+
+          if cidr
+            if @ip_version == "6"
+              IPAddr.new('ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff').mask(cidr).to_s
+            else
+              IPAddr.new('255.255.255.255').mask(cidr).to_s
+            end
+          else
+            @netmask
+          end
         end
 
         protected

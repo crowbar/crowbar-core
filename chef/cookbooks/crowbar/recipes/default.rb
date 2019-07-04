@@ -279,7 +279,7 @@ if node["crowbar"]
     if node[:crowbar][:network].key?(:admin) && node[:crowbar].key?(:apache)
       address = node[:crowbar][:network][:admin][:address]
       protocol = node[:crowbar][:apache][:ssl] ? "https" : "http"
-      server = "#{protocol}://#{address}"
+      server = "#{protocol}://#{NetworkHelper.wrap_ip(address)}"
       verify_ssl = !node[:crowbar][:apache][:insecure]
     else
       server = nil

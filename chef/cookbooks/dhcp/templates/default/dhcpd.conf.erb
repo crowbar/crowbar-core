@@ -21,6 +21,12 @@ log-facility local7;
 # Fix for https://bugzilla.opensuse.org/show_bug.cgi?id=961536
 always-reply-rfc1048 true;
 
+<% if @ip_version == "6"  -%>
+include "/etc/dhcp3/groups.d/group_list6.conf";
+include "/etc/dhcp3/subnets.d/subnet_list6.conf";
+include "/etc/dhcp3/hosts.d/host_list6.conf";
+<% else -%>
 include "/etc/dhcp3/groups.d/group_list.conf";
 include "/etc/dhcp3/subnets.d/subnet_list.conf";
 include "/etc/dhcp3/hosts.d/host_list.conf";
+<% end -%>

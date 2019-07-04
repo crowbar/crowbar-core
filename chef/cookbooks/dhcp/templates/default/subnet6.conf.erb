@@ -1,0 +1,19 @@
+# File managed by Crowbar
+<% if node[:provisioner][:enable_pxe] -%>
+
+subnet6 <%= @network["subnet"] %>/<%= @network["netmask"]%> {
+  option subnet-mask <%= @network["netmask"] %>;
+<% @options.each do |option| -%>
+  <%= option %>;
+<%   end -%>
+<% @pools.each do |pool| -%>
+   pool6 {
+     range6 <%=@network["ranges"][pool]["start"]%> <%=@network["ranges"][pool]["end"]%>;
+     <% @pool_options[pool].each do |opt| -%>
+     <%=opt%><%=if opt[-1,1] != '}' then ';' else '' end%>
+     <% end if @pool_options[pool] -%>
+   }
+<% end -%>
+}
+
+<% end -%>

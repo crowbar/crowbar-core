@@ -2,7 +2,12 @@ host <%= @name %> {
   option host-name "<%= @hostname %>";
   hardware ethernet <%= @macaddress %>;
 <% if @ipaddress -%> 
+<%   if @ip_version == "6" -%>
+  fixed-address6 <%= @ipaddress %>;
+  fixed-prefix6 <%= @prefix %>;
+<%   else -%>
   fixed-address <%= @ipaddress %>;
+<%   end -%>
 <% else -%>
   deny booting;
 <% end -%> 

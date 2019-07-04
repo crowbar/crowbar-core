@@ -20,4 +20,5 @@ attribute :network, kind_of: Hash
 attribute :pools, kind_of: Array, default: ["dhcp"]
 attribute :pool_options, kind_of: Hash, default: { "dhcp" => ["allow unknown-hosts"] }
 attribute :options, kind_of: Array, default: []
+attribute :ip_version, kind_of: String, default: "4"
 

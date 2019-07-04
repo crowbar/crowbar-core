@@ -40,7 +40,7 @@ parse_node_data() {
     echo "ADMIN_ADDRESS=${ADMIN_ADDRESS}"
     echo "ALLOCATED=${ALLOCATED}"
     echo "Local IP addresses:"
-    ip a | awk '/127.0.0./ { next; } /inet / { print }'
+    ip a | awk '/127.0.0./ { next; } /inet / { print } /inet6 / { print }'
 }
 
 try_to() {
@@ -64,7 +64,7 @@ __post_state() {
   # $1 = hostname, $2 = target state
   USER="$(sed -e 's/:[^:]*$//' <<< $CROWBAR_KEY)"
   PASS="$(sed -e 's/^.*://' <<< $CROWBAR_KEY)"
-  crowbarctl restricted transition "$1" "$2" -s "http://$ADMIN_IP" -U $USER -P $PASS --no-verify-ssl
+  crowbarctl restricted transition "$1" "$2" -s "http://$ADMIN_IP_WRAPPED" -U $USER -P $PASS --no-verify-ssl
   local RET=$?
   __get_state "$1"
   return $RET
@@ -74,7 +74,7 @@ __get_state() {
   # $1 = hostname
   USER="$(sed -e 's/:[^:]*$//' <<< $CROWBAR_KEY)"
   PASS="$(sed -e 's/^.*://' <<< $CROWBAR_KEY)"
-  parse_node_data < <(crowbarctl restricted show $1 -s "http://$ADMIN_IP" -U $USER -P $PASS --no-verify-ssl --plain)
+  parse_node_data < <(crowbarctl restricted show $1 -s "http://$ADMIN_IP_WRAPPED" -U $USER -P $PASS --no-verify-ssl --plain)
 }
 
 post_state() { try_to "$MAXTRIES" 15 __post_state "$@"; }
@@ -141,7 +141,11 @@ wait_for_pxe() {
     # 22 is the curl exit code for HTTP status codes of 400 and above
 
     # convert ADMIN_ADDRESS from decimal to hex
-    MYHEXIP=`IFS="." ; for i in $ADMIN_ADDRESS; do printf '%02X' $i ; done`
+    if (( $IP_VERSION == 6 )); then
+        MYHEXIP=`IFS=":" ; for i in $ADMIN_ADDRESS; do printf '%s' $i ; done`
+    else
+        MYHEXIP=`IFS="." ; for i in $ADMIN_ADDRESS; do printf '%02X' $i ; done`
+    fi
 
     count=0
     done=0
@@ -156,10 +160,10 @@ wait_for_pxe() {
 
     until [ 1 = $done ] ; do
         if [ -n "$state" ]; then
-            curl --fail --silent --connect-timeout 5 "http://$ADMIN_IP:8091/discovery/$arch/bios/pxelinux.cfg/$MYHEXIP" | grep -q "^DEFAULT $state$"
+            curl --fail --silent --connect-timeout 5 "http://$ADMIN_IP_WRAPPED:8091/discovery/$arch/bios/pxelinux.cfg/$MYHEXIP" | grep -q "^DEFAULT $state$"
             ret=$?
         else
-            curl --fail --silent --head --connect-timeout 5 "http://$ADMIN_IP:8091/discovery/$arch/bios/pxelinux.cfg/$MYHEXIP" > /dev/null
+            curl --fail --silent --head --connect-timeout 5 "http://$ADMIN_IP_WRAPPED:8091/discovery/$arch/bios/pxelinux.cfg/$MYHEXIP" > /dev/null
             ret=$?
         fi
 

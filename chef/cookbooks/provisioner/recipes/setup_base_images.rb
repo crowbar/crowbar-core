@@ -22,7 +22,7 @@ admin_net = Barclamp::Inventory.get_network_by_type(node, "admin")
 admin_ip = admin_net.address
 domain_name = node[:dns].nil? ? node[:domain] : (node[:dns][:domain] || node[:domain])
 web_port = node[:provisioner][:web_port]
-provisioner_web="http://#{admin_ip}:#{web_port}"
+provisioner_web = "http://#{NetworkHelper.wrap_ip(admin_ip)}:#{web_port}"
 append_line = node[:provisioner][:discovery][:append].dup # We'll modify it inline
 enable_pxe = node[:provisioner][:enable_pxe]
 
@@ -80,7 +80,7 @@ discovery_arches.each do |arch|
     owner "root"
     group "root"
     source "default.erb"
-    variables(append_line: "#{append_line} crowbar.state=discovery",
+    variables(append_line: "#{append_line} crowbar.state=discovery adminip=#{admin_ip}",
               install_name: "discovery",
               initrd: "../initrd0.img",
               kernel: "../vmlinuz0")
@@ -151,7 +151,7 @@ discovery_arches.each do |arch|
     owner "root"
     group "root"
     source "grub.conf.erb"
-    variables(append_line: "#{append_line} crowbar.state=discovery",
+    variables(append_line: "#{append_line} crowbar.state=discovery adminip=#{admin_ip}",
               install_name: "Crowbar Discovery Image",
               admin_ip: admin_ip,
               efi_suffix: arch == "x86_64",
@@ -299,7 +299,7 @@ if node[:platform_family] == "suse"
       owner "root"
       group "root"
       mode "0644"
-      variables(tftproot: tftproot, admin_ip: admin_ip)
+      variables(tftproot: tftproot, admin_ip: NetworkHelper.wrap_ip(admin_ip))
     end
 
     service "tftp.service" do
@@ -505,7 +505,8 @@ node[:provisioner][:supported_oses].each do |os, arches|
                   web_port: web_port,
                   ntp_servers_ips: ntp_servers,
                   platform: target_platform_distro,
-                  target_platform_version: target_platform_version)
+                  target_platform_version: target_platform_version,
+                  ip_version: admin_net.ip_version)
       end
 
       repos = Provisioner::Repositories.get_repos(target_platform_distro,
@@ -534,7 +535,8 @@ node[:provisioner][:supported_oses].each do |os, arches|
                   repos: repos,
                   packages: packages,
                   platform: target_platform_distro,
-                  target_platform_version: target_platform_version)
+                  target_platform_version: target_platform_version,
+                  ip_version: admin_net.ip_version)
       end
 
       missing_files = !File.exist?("#{os_dir}/install/boot/#{arch}/common")

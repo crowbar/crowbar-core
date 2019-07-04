@@ -17,7 +17,7 @@
 #
 
 # We get the following variables from start-up.sh
-# MAC BOOTDEV ADMIN_IP DOMAIN HOSTNAME HOSTNAME_MAC MYIP
+# MAC BOOTDEV ADMIN_IP ADMIN_IP_WRAPPED DOMAIN HOSTNAME HOSTNAME_MAC MYIP IP_VERSION
 
 if [[ ! $IN_SCRIPT ]]; then
     export IN_SCRIPT=true
@@ -58,10 +58,21 @@ function is_suse() {
 # kernel variable (pre-install).
 #
 hostname_re='crowbar\.hostname=([^ ]+)'
-[[ $(cat /proc/cmdline) =~ $hostname_re ]] && \
-    HOSTNAME="${BASH_REMATCH[1]}" || \
-    HOSTNAME="d${MAC//:/-}.${DOMAIN}"
+if [[ $(cat /proc/cmdline) =~ $hostname_re ]]; then
+    HOSTNAME="${BASH_REMATCH[1]}"
+else
+    if [ -n "$DOMAIN" ]; then
+        HOSTNAME="d${MAC//:/-}.${DOMAIN}"
+    else
+        HOSTNAME="d${MAC//:/-}"
+    fi
+fi
 sed -i -e "s/\(127\.0\.0\.1.*\)/127.0.0.1 $HOSTNAME ${HOSTNAME%%.*} localhost.localdomain localhost/" /etc/hosts
+ADMIN_IP_WRAPPED="$ADMIN_IP"
+if (( $IP_VERSION == 6 )); then
+    sed -i -e "s/\(\:\:1.*\)/::1 $HOSTNAME ${HOSTNAME%%.*} localhost.localdomain localhost ipv6-localhost ipv6-loopback/" /etc/hosts
+    ADMIN_IP_WRAPPED="[$ADMIN_IP]"
+fi
 if is_suse; then
     echo "$HOSTNAME" > /etc/HOSTNAME
 else
@@ -88,7 +99,7 @@ is_suse && {
 # enable remote logging to our admin node.
 if ! grep -q "${ADMIN_IP}" /etc/rsyslog.conf; then
     echo "# Sledgehammer added to log to the admin node" >> /etc/rsyslog.conf
-    echo "*.* @@${ADMIN_IP}" >> /etc/rsyslog.conf
+    echo "*.* @@${ADMIN_IP_WRAPPED}" >> /etc/rsyslog.conf
     service $RSYSLOGSERVICE restart
 fi
 
@@ -96,7 +107,7 @@ fi
 (umask 077 ; mkdir -p /root/.ssh)
 curl -L -o /root/.ssh/authorized_keys \
      --connect-timeout 60 -s \
-     "http://$ADMIN_IP:8091/authorized_keys"
+     "http://$ADMIN_IP_WRAPPED:8091/authorized_keys"
 
 MYINDEX=${MYIP##*.}
 DHCP_STATE=$(grep -o -E 'crowbar\.state=[^ ]+' /proc/cmdline)
@@ -110,8 +121,8 @@ BMC_ADDRESS=""
 BMC_NETMASK=""
 BMC_ROUTER=""
 ALLOCATED=false
-export DHCP_STATE MYINDEX ADMIN_ADDRESS BMC_ADDRESS BMC_NETMASK BMC_ROUTER ADMIN_IP
-export ALLOCATED HOSTNAME CROWBAR_KEY CROWBAR_STATE
+export DHCP_STATE MYINDEX ADMIN_ADDRESS BMC_ADDRESS BMC_NETMASK BMC_ROUTER ADMIN_IP ADMIN_IP_WRAPPED
+export ALLOCATED HOSTNAME CROWBAR_KEY CROWBAR_STATE IP_VERSION
 
 # Make sure date is up-to-date
 until /usr/sbin/ntpdate $ADMIN_IP || [[ $DHCP_STATE = 'debug' ]]; do
@@ -139,7 +150,7 @@ then
   # Other gem dependency installs.
   cat > /etc/gemrc <<EOF
 :sources:
-- http://$ADMIN_IP:8091/gemsite/
+- http://$ADMIN_IP_WRAPPED:8091/gemsite/
 gem: --no-ri --no-rdoc --bindir /usr/local/bin
 EOF
   gem install rest-client
@@ -158,7 +169,7 @@ fi
 for retry in $(seq 1 30); do
     curl -f --retry 2 -o /etc/chef/validation.pem \
         --connect-timeout 60 -s -L \
-        "http://$ADMIN_IP:8091/validation.pem"
+        "http://$ADMIN_IP_WRAPPED:8091/validation.pem"
     [ -f /etc/chef/validation.pem ] && break
     sleep $retry
 done
@@ -248,7 +259,7 @@ renew_dhcp_after_hwinstalling () {
         echo "Forcing DHCP renewal after Admin IP allocation"
         ifup $BOOTDEV > /dev/null
         echo "New local IP Addresses:"
-        ip a | awk '/127.0.0./ { next; } /inet / { print }'
+        ip a | awk '/127.0.0./ { next; } /inet / { print } /inet6 / { print }'
     fi
     return 0
 }
@@ -263,7 +274,7 @@ walk_node_through () {
         post_state "$name" "$1" && \
             renew_dhcp_after_hwinstalling $1 && \
             run_hooks "$HOSTNAME" "$1" pre && \
-            chef-client -S http://$ADMIN_IP:4000/ -N "$name" && \
+            chef-client -S http://$ADMIN_IP_WRAPPED:4000/ -N "$name" && \
             run_hooks "$HOSTNAME" "$1" post || \
             { post_state "$name" problem; reboot_system; }
         shift
