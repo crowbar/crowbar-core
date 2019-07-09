@@ -176,7 +176,7 @@ suse-12.4:
       required: "optional"
       features: ["ceph"]
       repomd:
-        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP4:Update:Products:SES5/ses/5/POOL/x86_64"
+        tag: "obsproduct://build.suse.de/SUSE:SLE-12-SP3:Update:Products:SES5/ses/5/POOL/x86_64"
         fingerprint: "FEAB 5025 39D8 46DB 2C09 61CA 70AF 9E81 39DB 7C82"
       url:
       smt_path: "SUSE/Products/Storage/5/x86_64/product"
