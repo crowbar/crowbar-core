@@ -112,6 +112,13 @@ module BarclampLibrary
           # let's resolve this only if needed
           @interface = nil
           @interface_list = nil
+
+          require "ipaddr"
+          @ip_version = if IPAddr.new(@subnet).ipv6?
+            "6"
+          else
+            "4"
+          end
         end
 
         def interface
@@ -122,6 +129,35 @@ module BarclampLibrary
         def interface_list
           resolve_interface_info if @interface_list.nil?
           @interface_list
+        end
+
+        def cidr_to_netmask
+          range = if @ip_address == "6"
+            128
+          else
+            32
+          end
+
+          begin
+            cidr = Integer(@netmask)
+          rescue ArgumentError
+            return @netmask
+          end
+          if cidr && !(1..range).cover?(cidr)
+            Chef::Log.error("Invalid CIDR netmask '#{cidr}' > '#{range}'")
+            return @netmask
+          end
+
+          if cidr
+            mask = if @ip_version == "6"
+              "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"
+            else
+              "255.255.255.255"
+            end
+            IPAddr.new(mask).mask(cidr).to_s
+          else
+            @netmask
+          end
         end
 
         protected
