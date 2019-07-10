@@ -1028,7 +1028,7 @@ describe Api::Upgrade do
         stdout: "12345678"
       )
       allow(File).to receive(:exist?).with(
-        "/var/lib/crowbar/backup/7-to-8-openstack_dump.sql.gz"
+        "/var/lib/crowbar/backup/8-to-9-openstack_dump.sql.gz"
       ).and_return(false)
       allow(Api::Upgrade).to receive(:run_cmd).and_return(
         exit_code: 0,
@@ -1046,7 +1046,7 @@ describe Api::Upgrade do
         :start_step
       ).with(:backup_openstack).and_return(true)
       allow(File).to receive(:exist?).with(
-        "/var/lib/crowbar/backup/7-to-8-openstack_dump.sql.gz"
+        "/var/lib/crowbar/backup/8-to-9-openstack_dump.sql.gz"
       ).and_return(true)
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :end_step
@@ -1058,7 +1058,7 @@ describe Api::Upgrade do
 
   context "with a failed backup creation for OpenStack" do
     let(:crowbar_lib_dir) { "/var/lib/crowbar" }
-    let(:dump_path) { "#{crowbar_lib_dir}/backup/7-to-8-openstack_dump.sql.gz" }
+    let(:dump_path) { "#{crowbar_lib_dir}/backup/8-to-9-openstack_dump.sql.gz" }
     let(:size_query) { "SELECT SUM(data_length + index_length) FROM information_schema.tables ;" }
     let(:size_cmd) { "echo \"#{size_query}\" | mysql -N -u root -psecret" }
     let(:dump_cmd) do
