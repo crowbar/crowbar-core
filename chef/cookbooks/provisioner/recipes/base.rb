@@ -350,7 +350,7 @@ is_admin = CrowbarHelper.is_admin?(node)
 crowbar_node = node_search_with_cache("roles:crowbar").first
 address = crowbar_node["crowbar"]["network"]["admin"]["address"]
 protocol = crowbar_node["crowbar"]["apache"]["ssl"] ? "https" : "http"
-server = "#{protocol}://#{address}"
+server = "#{protocol}://#{NetworkHelper.wrap_ip(address)}"
 verify_ssl = !crowbar_node["crowbar"]["apache"]["insecure"]
 
 package "ruby2.1-rubygem-crowbar-client"
