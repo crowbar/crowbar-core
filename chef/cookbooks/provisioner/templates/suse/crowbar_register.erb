@@ -435,6 +435,7 @@ crowbarctl node transition $HOSTNAME "installed"
 # Wait for DHCP to update
 sleep 30
 
+<% if @enable_pxe -%>
 # Make sure we can always resolve our hostname; we use DHCP to find what's our
 # admin IP
 DHCP_VARS=$(mktemp)
@@ -445,5 +446,6 @@ if test $? -eq 0; then
     echo "$ADMIN_IP $HOSTNAME ${HOSTNAME%%.*}" >> /etc/hosts
 fi
 rm -f "$DHCP_VARS"
+<% end -%>
 
 /usr/sbin/crowbar_join --setup --verbose
