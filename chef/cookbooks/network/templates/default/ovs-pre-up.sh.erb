@@ -4,9 +4,12 @@ ovs-vsctl br-exists <%= @bridgename %> || exit 0
 <%
   # remove the "secure" fail-mode for bridges that share an interface
   # with the "admin" network, otherwise the admin network will be offline
-  # during boot and until the neutron OVS agent wakes up
+  # during boot and until the neutron OVS agent wakes up. Also delete any
+  # controller to prevent an outage when the agent starts and the bridge
+  # leaves fail open mode.
   if @is_admin_nwk
 -%>
+ovs-vsctl get-controller <%= @bridgename %> && ovs-vsctl del-controller <%= @bridgename %> || true
 ovs-vsctl del-fail-mode <%= @bridgename %>
 <%
   end
