@@ -226,6 +226,10 @@ end
 def get_proposal_json(barclamp, name)
   out, code = with_barclamp(barclamp) { get_json("/proposals/#{name}") }
 
+  unless out[:error].nil?
+    out = out[:error]
+  end
+
   if code == 404
     abort "No #{barclamp} proposal called '#{name}'"
   elsif code != 200
@@ -376,6 +380,10 @@ def commit_proposal(barclamp, name)
   elsif code == 402
     proposal_puts "#{name} already being applied"
   else
+    unless out[:error].nil?
+      out = out[:error]
+    end
+
     abort "Failed to talk to service proposal show: #{code}: #{out}"
   end
 
