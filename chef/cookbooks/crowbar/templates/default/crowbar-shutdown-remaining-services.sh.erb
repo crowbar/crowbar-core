@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 # This makes sure openstack related services are really shut down
-# We intend to do this by shutting down pacemaker resources, but if
-# clone_stateless_services is set to false, some services are not managed by pacemaker.
+# We used to do this by shutting down pacemaker resources, but now
+# some services are managed by systemd instead.
 
 LOGFILE=/var/log/crowbar/node-upgrade.log
 UPGRADEDIR=/var/lib/crowbar/upgrade

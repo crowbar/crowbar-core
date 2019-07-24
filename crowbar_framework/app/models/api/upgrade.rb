@@ -1072,15 +1072,6 @@ module Api
           upgrade_next_cluster_node node, founder
         end
 
-        # After the cluster was upgraded, remove the temporary attribute from
-        # the proposal role that was used for tracking the original (pre-upgrade)
-        # value of "clone_stateless_services"
-        pacemaker_proposal_role = RoleObject.find_roles_by_name(cluster).first
-        pacemaker_proposal_role.default_attributes["pacemaker"].delete(
-          "clone_stateless_services_orig"
-        )
-        pacemaker_proposal_role.save
-
         Rails.logger.info("Nodes in cluster #{cluster} successfully upgraded")
       end
 
@@ -1110,10 +1101,7 @@ module Api
         delete_pacemaker_resources other_node
         shutdown_all_services_in_cluster node
 
-        clone_stateless_pre_upgrade = node["pacemaker"]["clone_stateless_services_orig"].nil? ||
-          node["pacemaker"]["clone_stateless_services_orig"]
-
-        if !clone_stateless_pre_upgrade && node[:run_list_map].key?("keystone-server")
+        if node[:run_list_map].key?("keystone-server")
           # prevent first upgrade node to start keystone during the
           # crowbar join call
           node = ::Node.find_by_name(node.name)
@@ -1125,7 +1113,7 @@ module Api
         node_api.post_upgrade
         node_api.join_and_chef
 
-        if !clone_stateless_pre_upgrade && node[:run_list_map].key?("keystone-server")
+        if node[:run_list_map].key?("keystone-server")
           # stop keystone on non-upgraded nodes, run db migrations
           # and start on the upgrade node
           keystone_migrate_and_restart node
@@ -1176,9 +1164,9 @@ module Api
       end
 
       # Shutdown all remaining services on the nodes that are not being upgraded
-      # This would be solved by delete_pacemaker_resources, however if
-      # clone_stateless_services option is set to false, pacemaker does not manage
-      # all services so it's necessary to do an extra shutdown step
+      # This would be solved by delete_pacemaker_resources, however since pacemaker
+      # does not manage all services anymore, it's necessary to do an extra shutdown
+      # step
       #
       # As an argument there's a node that is currently being upgraded.
       # There's no need to care about this one, we only need to shut down services

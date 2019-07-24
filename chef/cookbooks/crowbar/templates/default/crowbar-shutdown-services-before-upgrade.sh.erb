@@ -70,8 +70,8 @@ done
 
 <% end %>
 
-# It's possible services are not managed by pacemaker (if clone_stateless_services was not set),
-# so to make sure that services are stopped, use additional systemctl commands.
+# Some services are not managed by pacemaker, so to make sure that services are stopped,
+# use additional systemctl commands.
 log "Stopping OpenStack services..."
 
 # We do not want to stop neutron services just yet, they are needed in later upgrade stage
