@@ -13,7 +13,8 @@ matrix:
       script:
       - pip install gitlint
       - wget https://raw.githubusercontent.com/SUSE-Cloud/automation/master/scripts/jenkins/gitlint.ini
-      - gitlint --commits master..HEAD -C gitlint.ini
+      # See: https://github.com/travis-ci/travis-ci/issues/4596 for details on TRAVIS_COMMIT_RANGE
+      - gitlint --commits ${TRAVIS_COMMIT_RANGE/.../..} -C gitlint.ini
     - name: "Validate Framework (RSpec) and Security Audit"
       gemfile: crowbar_framework/Gemfile
       script:
