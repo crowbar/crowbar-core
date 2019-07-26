@@ -1,0 +1,72 @@
+#!/bin/bash
+#
+# This script performs various Monasca cleanups required before
+# the Cloud 8 to Cloud 9 upgrade.
+#
+# The script should be run only on the monasca-server node.
+
+LOGFILE=/var/log/crowbar/node-upgrade.log
+UPGRADEDIR=/var/lib/crowbar/upgrade
+STATEFILE=${UPGRADEDIR}/crowbar-monasca-cleanups-ok
+
+mkdir -p "`dirname "$LOGFILE"`"
+exec >>"$LOGFILE" 2>&1
+
+log()
+{
+    set +x
+    echo "[$(date --iso-8601=ns)] [$$] $@"
+    set -x
+}
+
+install_new_persister()
+{
+    # Do nothing if java persister is not installed
+    rpm -q openstack-monasca-persister-java || return
+
+    zypper --non-interactive remove openstack-monasca-persister-java
+    local ret=$?
+
+    if [ $ret != 0 ]; then
+      log "Failed to remove Java based Monasca persister."
+      exit $ret
+    fi
+
+    zypper --non-interactive install openstack-monasca-persister
+    local ret=$?
+
+    if [ $ret != 0 ]; then
+      log "Failed to install Python based Monasca persister."
+      exit $ret
+    fi
+
+    # This is required because persister deinstallation will perform a userdel on
+    # the monasca-persister user which may then get recreated with a different user
+    # ID by the Python persister package.
+    chown monasca-persister /var/log/monasca-persister/monasca-persister.log
+}
+
+
+log "Executing $BASH_SOURCE"
+
+set -x
+
+mkdir -p $UPGRADEDIR
+
+if [[ -f $STATEFILE ]] ; then
+    log "Monasca cleanup already ran."
+    exit 0
+fi
+
+# Replace Java persister by Python persister
+
+install_new_persister
+
+# Clear old VHost definitions. Without this, apache2 will fail to start due to
+# duplicate VHost definitions for monasca{-log,}-api
+rm -vf /etc/apache2/vhosts.d/wsgi-monasca-*
+
+###
+
+touch $STATEFILE
+log "$BASH_SOURCE is finished."

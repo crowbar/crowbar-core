@@ -443,6 +443,8 @@ module Api
         upgrade_nodes = ::Node.find("state:crowbar_upgrade")
         cinder_node = nil
         nova_node = nil
+        monasca_node = nil
+
         upgrade_nodes.each do |node|
           node.set_pre_upgrade_attribute
           if node.roles.include?("cinder-controller") &&
@@ -455,6 +457,28 @@ module Api
                   node["pacemaker"]["founder"] == node[:fqdn])
             nova_node = node
           end
+          monasca_node = node if node.roles.include?("monasca-server")
+        end
+
+        begin
+          unless monasca_node.nil?
+            monasca_node.wait_for_script_to_finish(
+              "/usr/sbin/crowbar-monasca-cleanups.sh",
+              timeouts[:monasca_cleanups]
+            )
+            Rails.logger.info("Removing Java based Monasca persister was successful.")
+          end
+        rescue StandardError => e
+          ::Crowbar::UpgradeStatus.new.end_step(
+            false,
+            services: {
+              data: "Problem while removing Java based Monasca persister: " + e.message,
+              help: "Check /var/log/crowbar/production.log at admin server " \
+                "and /var/log/crowbar/node-upgrade.log at #{monasca_node.name}."
+            }
+          )
+          # Stop here and error out
+          return
         end
 
         begin
@@ -1023,6 +1047,7 @@ module Api
           "upgrade-os",
           "shutdown-services-before-upgrade",
           "delete-cinder-services-before-upgrade",
+          "monasca-cleanups",
           "evacuate-host",
           "pre-upgrade",
           "delete-pacemaker-resources",
