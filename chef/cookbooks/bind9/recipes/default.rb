@@ -293,7 +293,8 @@ when "suse"
   end
 end
 
-# We would like to bind service only to ip address from admin network
+# We would like to bind service only to ip address from admin network unless enable_designate is
+# enabled. In which case bind both the admin and public.
 admin_network = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin")
 admin_addr = admin_network.address
 
@@ -390,8 +391,18 @@ end
 
 ### FIXME Change to "any" once IPv6 support has been implemented
 admin_addr6 = "none"
+public_addr6 = "none"
 if node[:dns][:enable_designate] && !node[:dns][:master]
   node[:dns][:forwarders].push master_ip
+end
+
+ipaddresses = [admin_addr]
+ip6addresses = [admin_addr6]
+if node[:dns][:enable_designate]
+  public_addr = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "public").address
+  public_addr = nil if admin_addr == public_addr
+  ipaddresses << public_addr unless public_addr.nil?
+  ip6addresses << public_addr6 unless public_addr6 == "none"
 end
 
 # Rewrite our default configuration file
@@ -402,8 +413,8 @@ template "/etc/bind/named.conf" do
   group bindgroup
   variables(forwarders: node[:dns][:forwarders],
             allow_transfer: allow_transfer,
-            ipaddress: admin_addr,
-            ip6address: admin_addr6,
+            ipaddresses: ipaddresses,
+            ip6addresses: ip6addresses,
             enable_designate: node[:dns][:enable_designate] && node[:dns][:master]
            )
   notifies :restart, "service[bind9]", :immediately
