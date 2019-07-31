@@ -78,6 +78,12 @@ cookbook_file "modprobe-bridge.conf" do
   path "/etc/modprobe.d/10-bridge-netfilter.conf"
   mode "0644"
 end
+# Overrides 50-default.conf bsc#1115020
+cookbook_file "51-bridge-netfilter.conf" do
+  source "51-bridge-netfilter.conf"
+  path "/usr/lib/sysctl.d/51-bridge-netfilter.conf"
+  mode "0644"
+end
 
 # If the module is already loaded when we create the modprobe config file,
 # then we need to act and manually change the settings
