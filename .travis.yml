@@ -1,7 +1,6 @@
 language: ruby
-sudo: false
 cache: bundler
-dist: trusty
+dist: xenial
 
 rvm: 2.1.9
 
@@ -9,10 +8,15 @@ env: SKIP_CHECKS=yes
 
 matrix:
   include:
-    - gemfile: Gemfile
+    - name: "Validate Commit Message"
+      language: python
       script:
-      - bundle exec danger
-    - gemfile: crowbar_framework/Gemfile
+      - pip install gitlint
+      - wget https://raw.githubusercontent.com/SUSE-Cloud/automation/master/scripts/jenkins/gitlint.ini
+      # See: https://github.com/travis-ci/travis-ci/issues/4596 for details on TRAVIS_COMMIT_RANGE
+      - gitlint --commits ${TRAVIS_COMMIT_RANGE/.../..} -C gitlint.ini
+    - name: "Validate Framework (RSpec) and Security Audit"
+      gemfile: crowbar_framework/Gemfile
       script:
        - cd crowbar_framework
        - bin/bundle install
@@ -20,11 +24,13 @@ matrix:
        - bundle exec rake spec brakeman:run
        # ignore rest-client issues, chef 10 requires that
        - bin/bundle exec bundle-audit update
-       - bin/bundle exec bundle-audit check --ignore CVE-2015-1820 OSVDB-117461 CVE-2019-11068
-    - gemfile: chef/cookbooks/barclamp/Gemfile
+       - bin/bundle exec bundle-audit check --ignore CVE-2015-1820 CVE-2015-3448 OSVDB-117461 CVE-2019-11068
+    - name: "Validate Cookbooks (RSpec)"
+      gemfile: chef/cookbooks/barclamp/Gemfile
       script:
        - cd chef/cookbooks/barclamp && bundle exec rake
-    - gemfile: crowbar_framework/Gemfile
+    - name: "Validate Cookbooks (Knife)"
+      gemfile: crowbar_framework/Gemfile
       script:
        - crowbar_framework/bin/bundle exec knife cookbook test -c .knife-test.rb -a
 
