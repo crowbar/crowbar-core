@@ -225,11 +225,11 @@ end
 
 def get_proposal_json(barclamp, name)
   out, code = with_barclamp(barclamp) { get_json("/proposals/#{name}") }
-  out = JSON.parse(out)
 
   if code == 404
     abort "No #{barclamp} proposal called '#{name}'"
   elsif code != 200
+    out = JSON.parse(out)
     unless out["error"].nil?
       out = out["error"]
     end
