@@ -1372,7 +1372,15 @@ module Api
       # This has to be done before compute nodes upgrade, so the live migration
       # can use fully upgraded cinder stack.
       def upgrade_non_compute_nodes
-        ::Node.find("state:crowbar_upgrade AND NOT run_list_map:nova-compute-*").each do |node|
+        non_compute_nodes = ::Node.find("NOT run_list_map:nova-compute-*")
+
+        # this should also remove all controllers and crowbar node from the list
+        non_compute_nodes.reject!(&:upgraded?)
+
+        # if we started upgrade of some node before, let's continue with it
+        non_compute_nodes.sort! { |n| n.upgrading? ? -1 : 1 }
+
+        non_compute_nodes.each do |node|
           upgrade_one_node node.name
         end
         save_nodes_state([], "", "")
