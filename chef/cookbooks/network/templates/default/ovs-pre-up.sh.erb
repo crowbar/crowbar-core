@@ -6,9 +6,16 @@ ovs-vsctl set Bridge <%= @bridgename %> other-config:datapath-id=<%= @datapath_i
   # remove the "secure" fail-mode for bridges that share an interface
   # with the "admin" network, otherwise the admin network will be offline
   # during boot and until the neutron OVS agent wakes up
+  #
+  # also remove the OVS controller set up by the OVS neutron agent for the
+  # bridge, otherwise the default "standalone" fail-mode only has effect
+  # until the OVS agent starts up, instead of remaining in effect until the
+  # OVS agent actually reconfigures the bridge some time after startup
+  # (see SOC-10073 for details)
   if @is_admin_nwk
 -%>
 ovs-vsctl del-fail-mode <%= @bridgename %>
+ovs-vsctl del-controller <%= @bridgename %>
 <%
   end
 -%>
