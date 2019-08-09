@@ -228,6 +228,10 @@ def get_proposal_json(barclamp, name)
   if code == 404
     abort "No #{barclamp} proposal called '#{name}'"
   elsif code != 200
+    out = JSON.parse(out)
+    unless out["error"].nil?
+      out = out["error"]
+    end
     abort "Failed to talk to service proposal show: #{code}: #{out}"
   end
 
@@ -362,7 +366,7 @@ def prevent_password_lockout(attrs)
 end
 
 def commit_proposal(barclamp, name)
-  proposal_puts "Committing; please wait ..."
+  proposal_puts "Committing please wait..."
 
   out, code = with_barclamp(barclamp) {
     post_json("/proposals/commit/#{name}", @data)
@@ -375,6 +379,11 @@ def commit_proposal(barclamp, name)
   elsif code == 402
     proposal_puts "#{name} already being applied"
   else
+    out = JSON.parse(out)
+    unless out["error"].nil?
+      out = out["error"]
+    end
+
     abort "Failed to talk to service proposal show: #{code}: #{out}"
   end
 
