@@ -48,7 +48,7 @@ done
 
 # Delete all controller based nova services that are registered to a node
 # that does not have nova-controller crowbar role
-for s in cert conductor consoleauth scheduler; do
+for s in cert conductor scheduler; do
     for host in $(openstack compute service list --service "nova-$s" -f value -c Host | sort | uniq); do
         # @controller_nodes is comma separated string like "node1,node2,node3"
         if [[ ! ",<%=@controller_nodes%>," =~ ",$host," ]]; then
@@ -56,6 +56,13 @@ for s in cert conductor consoleauth scheduler; do
                 openstack compute service delete $service
             done
         fi
+    done
+done
+
+# Delete all nova-consoleauth entries, as in Rocky there is no consoleauth anymore
+for host in $(openstack compute service list --service "nova-consoleauth" -f value -c Host | sort | uniq); do
+    for service in $(openstack compute service list --service "nova-consoleauth" --host "$host" -f value -c ID); do
+        openstack compute service delete $service
     done
 done
 
