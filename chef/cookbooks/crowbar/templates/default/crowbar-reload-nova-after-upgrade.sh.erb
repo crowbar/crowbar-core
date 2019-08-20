@@ -31,7 +31,7 @@ fi
 for service in conductor scheduler novncproxy serialproxy api; do
     fullname="openstack-nova-$service"
     if systemctl --quiet is-active $fullname 2>/dev/null ; then
-        systemctl kill --signal HUP --kill-who main $fullname
+        systemctl restart $fullname
     fi
 done
 # Remove and unmanage openstack-nova-consoleauth
@@ -41,7 +41,7 @@ systemctl kill openstack-nova-consoleauth
 rpm -e openstack-nova-consoleauth
 
 <% else %>
-systemctl kill --signal HUP --kill-who main openstack-nova-compute
+systemctl restart openstack-nova-compute
 <% end %>
 
 touch $UPGRADEDIR/crowbar-reload-nova-after-upgrade-ok
