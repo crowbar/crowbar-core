@@ -65,7 +65,7 @@ unless node[:platform_family] == "windows"
     if node["languages"]["ruby"]["version"].to_f == 1.8
       pkg = "rubygem-cstruct"
     else
-      pkg = "ruby#{node["languages"]["ruby"]["version"].to_f}-rubygem-cstruct"
+      pkg = "ruby2.1-rubygem-cstruct"
     end
     package(pkg).run_action(:install)
 
