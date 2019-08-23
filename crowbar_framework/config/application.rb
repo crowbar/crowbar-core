@@ -22,6 +22,7 @@ module Crowbar
     # Explicitely eager load /lib/crowbar/lock so we can use SharedNonBlocking
     # with threading without hitting circular dependencies
     config.eager_load_paths += Dir["#{config.root}/lib/crowbar/lock"]
+    config.eager_load_paths += Dir["#{config.root}/../chef/cookbooks/network/libraries"]
 
     config.autoload_paths += %W(
       #{config.root}/lib
