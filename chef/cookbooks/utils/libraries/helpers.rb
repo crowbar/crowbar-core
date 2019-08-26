@@ -33,7 +33,8 @@ module CrowbarHelper
     end
   end
 
-  def self.get_host_for_public_url(node, use_ssl, use_cluster = false)
+  def self.get_host_for_public_url(node, use_ssl, use_cluster = false,
+                                   want_fqdn = false)
     if use_cluster && defined?(CrowbarPacemakerHelper)
       # loose dependency on the pacemaker cookbook
       cluster_vhostname = CrowbarPacemakerHelper.cluster_vhostname(node)
@@ -49,14 +50,15 @@ module CrowbarHelper
     end
 
     # For the public endpoint, we prefer the public name. If not set, then we
-    # use the IP address except for SSL, where we always prefer a hostname
-    # (for certificate validation).
+    # use hostname when approprate (i.e. for SSL certificate validation or
+    # WebSSO identification), otherwise we use the IP address.
     if public_name.nil? || public_name.empty?
-      if use_ssl
-        public_name = public_fqdn
-      else
-        public_name = public_ip
-      end
+      public_name =
+        if use_ssl || want_fqdn
+          public_fqdn
+        else
+          public_ip
+        end
     end
 
     public_name
