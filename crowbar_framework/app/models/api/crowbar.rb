@@ -278,6 +278,18 @@ module Api
           end
           ret[:controller_roles] = { node: node.name, roles: wrong_roles } if wrong_roles.any?
         end
+        # Make sure Aodh is not deployed
+        if Proposal.where(barclamp: "aodh").any?
+          ret[:aodh_proposal] = true
+        end
+        # Make sure Trove is not deployed
+        if Proposal.where(barclamp: "trove").any?
+          ret[:trove_proposal] = true
+        end
+        # Make sure Ceilometer is deployed with Monasca or not at all
+        if ::Node.find("roles:ceilometer-server").any? && ::Node.find("roles:monasca-server").none?
+          ret[:legacy_ceilometer] = true
+        end
         ret
       end
 

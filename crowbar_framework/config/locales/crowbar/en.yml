@@ -844,6 +844,12 @@ en:
         crowbar_ceph_present:
           error: 'There are nodes with ceph roles present. Remove all ceph roles deployed by crowbar and migrate to external Ceph cluster.'
           help: 'Refer to the SUSE Enterprise Storage documentation for the information about upgrading from Crowbar Deployment.'
+        deprecated_proposal:
+          error: '%{proposal} proposal has been detected. %{proposal} is deprecated and removed in SUSE OpenStack Cloud 9.'
+          help: 'Deactivate and delete %{proposal} proposal.'
+        legacy_ceilometer:
+          error: 'Ceilometer proposal has been detected but Monasca proposal is missing. Only Ceilosca deployments are supported in SUSE OpenStack Cloud 9.'
+          help: 'Deactivate and delete Ceilometer proposal and deploy Ceilosca after upgrade is completed.'
       prepare:
         help:
           default: 'Refer to the error message in the response'

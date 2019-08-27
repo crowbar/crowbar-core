@@ -1892,6 +1892,24 @@ module Api
             help: I18n.t("api.upgrade.prechecks.wrong_sql_engine.help")
           }
         end
+        if check[:aodh_proposal]
+          ret[:aodh_proposal] = {
+            data: I18n.t("api.upgrade.prechecks.deprecated_proposal.error", proposal: "Aodh"),
+            help: I18n.t("api.upgrade.prechecks.deprecated_proposal.help", proposal: "Aodh")
+          }
+        end
+        if check[:trove_proposal]
+          ret[:trove_proposal] = {
+            data: I18n.t("api.upgrade.prechecks.deprecated_proposal.error", proposal: "Trove"),
+            help: I18n.t("api.upgrade.prechecks.deprecated_proposal.help", proposal: "Trove")
+          }
+        end
+        if check[:legacy_ceilometer]
+          ret[:legacy_ceilometer] = {
+            data: I18n.t("api.upgrade.prechecks.legacy_ceilometer.error"),
+            help: I18n.t("api.upgrade.prechecks.legacy_ceilometer.help")
+          }
+        end
         ret
       end
 
