@@ -123,6 +123,7 @@ class DnsService < ServiceObject
       node.set[:dns] = {} if node[:dns].nil?
       unless node[:dns][:master]
         node.set[:dns][:master] = true
+        node.set[:dns][:master_ip] = node.get_network_by_type("admin")["address"]
         node.save
       end
     elsif nodes.length > 1
