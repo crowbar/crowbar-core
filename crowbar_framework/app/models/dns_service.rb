@@ -113,6 +113,13 @@ class DnsService < ServiceObject
     return if all_nodes.empty?
 
     tnodes = role.override_attributes["dns"]["elements"]["dns-server"]
+    # If designate is enabled, we need each DNS node to be attached to the public network.
+    net_svc = NetworkService.new @logger
+    tnodes.each do |node|
+      if role.default_attributes[:dns][:enable_designate]
+        net_svc.allocate_ip "default", "public", "host", node
+      end
+    end
     nodes = tnodes.map { |n| Node.find_by_name(n) }
 
     if nodes.length == 1
