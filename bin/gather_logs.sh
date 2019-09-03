@@ -16,10 +16,6 @@
 # limitations under the License.
 #
 
-if [[ -f /etc/crowbar.install.key ]]; then
-    export CROWBAR_KEY=$(cat /etc/crowbar.install.key)
-    export CROWBAR_PASS="$(sed -e 's/^machine-install://' <<< $CROWBAR_KEY)"
-fi
 mkdir -p /tmp/crowbar-logs
 tarname="${1-$(date '+%Y%m%d-%H%M%S')}"
 targetdir="/opt/dell/crowbar_framework/public/export"
@@ -48,11 +44,24 @@ sort_by_last() {
 	-o 'UserKnownHostsFile /dev/null')
     logs=(/var/log /etc)
     logs+=(/var/chef/cache /var/cache/chef /opt/dell/crowbar_framework/db)
-    crowbarctl node list -U machine-install -P $CROWBAR_PASS --no-verify-ssl
 
-    for to_get in proposals roles; do
-        crowbarctl $to_get proposal list crowbar -U machine-install -P $CROWBAR_PASS --no-verify-ssl
+    mkdir nodes
+    for node in $(crowbarctl node list --no-verify-ssl --no-meta --plain); do
+        crowbarctl node show $node --no-verify-ssl --json > nodes/$node.json
     done
+
+    mkdir proposals
+    for barclamp in $(crowbarctl barclamp list --no-verify-ssl --plain); do
+        for proposal in $(crowbarctl proposal list $barclamp --no-verify-ssl --plain); do
+            crowbarctl proposal show $barclamp $proposal --no-verify-ssl --json > proposals/$barclamp-$proposal.json
+        done
+    done
+
+    mkdir roles
+    for role in $(sudo -H knife role list | grep '\-config-'); do
+        knife role show -F json $role > roles/$role.json
+    done
+
     for node in $(sudo -H knife node list); do
 	tarfile="${node%%.*}-${tarname}.tar.gz"
 	(   sudo ssh "${sshopts[@]}" "${node}" \
