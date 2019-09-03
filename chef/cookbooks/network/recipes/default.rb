@@ -131,14 +131,15 @@ def kill_nic_files(nic)
     end
   when "suse"
     # SuSE also has lots of small files, but in slightly different locations.
-    if ::File.exist?("/etc/sysconfig/network/ifcfg-#{nic.name}")
-      ::File.delete("/etc/sysconfig/network/ifcfg-#{nic.name}")
-    end
-    if ::File.exist?("/etc/sysconfig/network/ifroute-#{nic.name}")
-      ::File.delete("/etc/sysconfig/network/ifroute-#{nic.name}")
-    end
-    if ::File.exist?("/etc/wicked/scripts/#{nic.name}-pre-up")
-      ::File.delete("/etc/wicked/scripts/#{nic.name}-pre-up")
+    [
+      "/etc/sysconfig/network/ifcfg-#{nic.name}",
+      "/etc/sysconfig/network/ifroute-#{nic.name}",
+      "/etc/wicked/scripts/#{nic.name}-pre-up"
+    ].each do |nicfile|
+      if ::File.exist?(nicfile)
+        ::File.delete(nicfile)
+        Chef::Log.info("Deleting #{nicfile}")
+      end
     end
   end
 end
@@ -217,6 +218,25 @@ sorted_networks.each do |network|
       Chef::Log.info("Using bond #{bond.name} for network #{network.name}")
       bond.mode = team_mode if bond.mode != team_mode
     else
+      # Error out if any of the interfaces already used elsewhere.
+      # FIXME: Hitting this means that we'd need to reconfigure all the upper layers
+      # of the interface:
+      # - unconfigure existing VLANs on top of this
+      # - tear down any bond that this interface is currently enslaved in
+      # - unplug for any existing (ovs-)bridge (would likely involve destroying
+      #   that bridge as well)
+      # later steps in the recipe would bring back any of the upper layers
+      base_ifs.each do |i|
+        if i.children.any?
+          raise "Base interface '#{i.name}' is already used by VLAN(s) " \
+            "'#{i.children.map(&:name).inspect}' refusing to add it to a bond."
+        end
+        if i.master
+          raise "Base interface '#{i.name}' is already used by #{i.master.class} " \
+            "'#{i.master.name}' refusing to add it to a new bond."
+        end
+      end
+
       existing_bond_names = Nic.nics.select{ |i| Nic::bond?(i) }.map{ |i| i.name }
       bond_names = (0..existing_bond_names.length).to_a.map{ |i| "bond#{i}" }
       new_bond_name = (bond_names - existing_bond_names).first
@@ -322,8 +342,74 @@ sorted_networks.each do |network|
   if network.add_ovs_bridge
     bridge = network.bridge_name || "br-#{network.name}"
 
+    # Check if our current base interface (bond, vlan or physical) is already
+    # attached to another OVS bridge. Take care about that appropriately.
+    if our_iface.ovs_master && our_iface.ovs_master.name != bridge
+      old_ovs = our_iface.ovs_master
+
+      # We are already attached to an ovs bridge, check whether that attachment
+      # was already verified (or created) during this chef-client run, by looking
+      # through the list of interfaces that we already touched ('ifs'). If it is,
+      # find out which crowbar network requires that attachement and error out
+      # with a meaningful error message.
+      if ifs.key? old_ovs.name
+        other_net = sorted_networks.find do |n|
+          n.bridge_name == old_ovs.name
+        end
+        other_net ||= sorted_networks.find do |n|
+          old_ovs.name == "br-#{n.name}"
+        end
+        raise "The current conduit mapping for network '#{network.name}' requires " \
+          "interface '#{our_iface.name}' to be attached to ovs-brige '#{bridge}'. " \
+          "But network '#{other_net.name}' which was already set up, requires " \
+          "the same interface to be attached to ovs-bridge '#{old_ovs.name}'. " \
+          "Refusing to reconfigure. There seems to be a conflict in the conduit" \
+          "mappings for the networks '#{other_net.name}' and '#{network.name}'."
+      end
+
+      # We didn't create the attachement during the current run of chef-client.
+      # Tear down the attachement (and bridge configuration) to be able to attach
+      # the current interface to the new bridge.
+      Chef::Log.warn("Current conduit mapping for network '#{network.name}' requires " \
+                     "ovs-brige '#{bridge}' to be attached to device '#{our_iface.name}' " \
+                     "but the device is already attached to '#{old_ovs.name}'.")
+      Chef::Log.warn("Unplugging '#{our_iface.name}' from '#{old_ovs.name}' and " \
+                     "taking the bridge down for reconfiguration to reduce the " \
+                     "risk of creating a network loop.")
+      old_ovs.unplug(our_iface.name)
+      ::Kernel.system("wicked ifdown #{old_ovs.name}")
+      kill_nic_files old_ovs
+    end
+
     # This flag is used later to enable wicked-nanny (on SUSE platforms)
     ovs_bridge_created = true
+
+    if Nic.exists?(bridge) && Nic.ovs_bridge?(bridge)
+      ovs = Nic.new bridge
+      ovs_slaves = ovs.slaves
+
+      # Find out if the ovs bridge for the current network is already attached to
+      # any other physical, vlan or bond interface than what the current configuration
+      # requires. If it is, tear down the bridge and slave devices for reconfig to
+      # reduce possible risk creating network loops.
+      non_virtual_slaves = ovs_slaves.find_all do |slave|
+        slave.name != our_iface.name && Nic.base_interface?(slave)
+      end
+      unless non_virtual_slaves.nil? || non_virtual_slaves.empty?
+        Chef::Log.warn("Current conduit mapping for network '#{network.name}' requires " \
+                       "ovs-brige '#{bridge}' to be attached to device '#{our_iface.name}' " \
+                       "but the bridge is already attached to '[#{non_virtual_slaves.join " "}]'.")
+        Chef::Log.warn("Taking the bridge down for reconfiguration to reduce risk of " \
+                       "creating a network loop.")
+        Chef::Log.info("Deleting OVS bridge #{bridge}")
+        ::Kernel.system("wicked ifdown #{ovs.name}")
+        kill_nic_files ovs
+        non_virtual_slaves.each do |i|
+          ::Kernel.system("wicked ifdown #{i.name}")
+          kill_nic_files i
+        end
+      end
+    end
 
     br = if Nic.exists?(bridge) && Nic.ovs_bridge?(bridge)
       Chef::Log.info("Using OVS bridge #{bridge} for network #{network.name}")
@@ -341,17 +427,25 @@ sorted_networks.each do |network|
     ifs[our_iface.name]["slave"] = true
     ifs[our_iface.name]["master"] = br.name
     unless our_iface.ovs_master && our_iface.ovs_master.name == br.name
-      br.add_slave our_iface
       # FIXME: Workaround for https://bugzilla.suse.com/show_bug.cgi?id=945219
       # Find vlan interface on top of 'our_iface' that are plugged into other
       # ovs bridges. Replug them.
-      our_kids = our_iface.children
+      our_kids = our_iface.children.find_all { |c| Nic.vlan?(c) }
+      replug_interface = {}
       our_kids.each do |k|
-        next unless Nic.vlan?(k)
         ovs_master = k.ovs_master
         unless ovs_master.nil?
-          Chef::Log.warn("Replugging #{k.name} to #{ovs_master.name} (workaround bnc#945219)")
-          ovs_master.replug(k.name)
+          Chef::Log.warn("removing #{k.name} from #{ovs_master.name} (workaround bnc#945219 start)")
+          ovs_master.unplug(k.name)
+          replug_interface[ovs_master.name] = k.name
+        end
+      end
+      br.add_slave our_iface
+      replug_interface.each do |bridgename, interface|
+        replug_br = Nic.new bridgename
+        unless replug_br.nil?
+          Chef::Log.warn("adding #{interface} to #{bridgename} (workaround bnc#945219 end)")
+          replug_br.plug(interface)
         end
       end
     end
