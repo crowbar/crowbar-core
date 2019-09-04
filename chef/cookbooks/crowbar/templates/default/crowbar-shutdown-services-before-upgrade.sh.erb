@@ -47,6 +47,30 @@ for id in `openstack --insecure compute service list --service nova-cert -f valu
 done
 <% end %>
 
+
+
+
+<% if @monasca_server %>
+# Stop and disable Monasca's dedicated MariaDB instance on the monasca-server
+# node: as of Cloud 9 it's no longer needed.
+systemctl stop mariadb
+systemctl disable mariadb
+<% end %>
+
+# This is relevant for Cloud 8 to Cloud 9 upgrade (shouldn't hurt to leave this
+# around for later ones though). We need to shut down grafana-server before
+# the upgrade: otherwise, an upgrade of the grafana-server package (happens
+# early on) will restart it, causing database migrations to run on the freshly
+# created grafana database in the main MariaDB instance. Restoring the Cloud 8
+# Grafana database on top of that will result in an undefined Grafana
+# database state. If grafana-server is not running, it will not run the
+# migrations it performs on startup, leaving us with an empty grafana database
+<% if @horizon_node && @monasca_enabled %>
+log "Stopping grafana-server..."
+systemctl stop grafana-server
+systemctl disable grafana-server
+<% end %>
+
 <% if @use_ha %>
 
 <% if @cluster_founder %>

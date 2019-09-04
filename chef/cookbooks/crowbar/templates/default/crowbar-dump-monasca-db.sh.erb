@@ -1,0 +1,56 @@
+#!/bin/bash
+#
+# This script will backup the Monasca and grafana databases
+# from the dedicated MariaDB instance on the monasca-server
+# node (where it resided up to Cloud 8) for later migration to
+# the OpenStack cloud's shared mariadb instance.
+
+LOGFILE=/var/log/crowbar/node-upgrade.log
+UPGRADEDIR=/var/lib/crowbar/upgrade
+STATEFILE=${UPGRADEDIR}/crowbar-dump-monasca-db-ok
+DBNAME=<%= @db_name %>
+
+DUMPFILE=${UPGRADEDIR}/monasca-${DBNAME}-database.dump.gz
+
+DB_USER="<%= @db_user %>"
+DB_PASSWORD="<%= @db_password %>"
+DB_HOST="<%= @db_host %>"
+DB_NAME="<%= @db_name %>"
+
+STOP_DB="<%= @stop_db %>"
+
+mkdir -p "$UPGRADEDIR"
+mkdir -p "`dirname "$LOGFILE"`"
+exec >>"$LOGFILE" 2>&1
+
+log()
+{
+    set +x
+    echo "[$(date --iso-8601=ns)] [$$] $@"
+    set -x
+}
+
+exitok()
+{
+touch $STATEFILE
+log "$BASH_SOURCE is finished."
+}
+
+log "Executing $BASH_SOURCE"
+
+set -x
+
+if [[ -f $STATEFILE ]] ; then
+    exitok
+fi
+
+set -e
+
+# Connect to the monasca-server node from the node where this script is running
+# so we can store the dump right where we will need it later. That may either
+# be the first database node (where the Grafana DB dump will go) or the
+# monasca-server node (where the Metrics DB dump will go).
+
+mysqldump -h ${DB_HOST} -u ${DB_USER} "-p${DB_PASSWORD}" --skip-add-locks "${DB_NAME}" | gzip > $DUMPFILE
+
+exitok

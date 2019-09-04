@@ -48,6 +48,9 @@ end
 
 new_alias = repo_alias.gsub("SP2", "SP3").gsub(node[:platform_version], target_platform_version)
 
+monasca_node = search(:node, "run_list_map:monasca-server").first
+monasca_enabled = !monasca_node.nil?
+
 template "/usr/sbin/crowbar-prepare-repositories.sh" do
   source "crowbar-prepare-repositories.sh.erb"
   mode "0755"
@@ -90,7 +93,10 @@ template "/usr/sbin/crowbar-shutdown-services-before-upgrade.sh" do
   variables(
     use_ha: use_ha || remote_node,
     cluster_founder: is_cluster_founder,
-    nova_controller: roles.include?("nova-controller")
+    nova_controller: roles.include?("nova-controller"),
+    monasca_server: roles.include?("monasca-server"),
+    monasca_enabled: monasca_enabled,
+    horizon_node: roles.include?("horizon-server")
   )
 end
 
@@ -317,4 +323,65 @@ template "/usr/sbin/crowbar-heat-migrations-after-upgrade.sh" do
   owner "root"
   group "root"
   only_if { roles.include?("heat-server") }
+end
+
+if monasca_enabled
+  monasca_node_fqdn = monasca_node[:fqdn]
+
+  if !monasca_node[:monasca].key?(:db_monapi)
+    # Pre proposal migrations: monasca proposal data structure looks the way it
+    # looks in Cloud 8.
+    metrics_db_user = "monapi" # hardwired in Cloud 8
+    metrics_db_password = monasca_node[:monasca][:master][:database_monapi_password]
+    metrics_db_name = "mon" # hardwired in Cloud 8
+    grafana_db_user = "grafana" # hardwired in Cloud 8
+    grafana_db_password = monasca_node[:monasca][:master][:database_grafana_password]
+    grafana_db_name = "grafana" # hardwired in Cloud 8
+  else
+    # Post proposal migrations: monasca proposal data structure looks the way
+    # it looks in Cloud 9. We need this if the "services" upgrade step is
+    # interrupted after proposals have been migrated to their Cloud 9 schema
+    # and resumed with the new proposal data structure.
+    metrics_db_user = monasca_node[:monasca][:db_monapi][:user]
+    metrics_db_password = monasca_node[:monasca][:db_monapi][:password]
+    metrics_db_name = monasca_node[:monasca][:db_monapi][:database]
+    grafana_db_user = monasca_node[:monasca][:db_grafana][:user]
+    grafana_db_password = monasca_node[:monasca][:db_grafana][:password]
+    grafana_db_name = monasca_node[:monasca][:db_grafana][:database]
+  end
+
+  stop_db = false
+
+  if roles.include?("horizon-server")
+    db_user = grafana_db_user
+    db_password = grafana_db_password
+    db_type = "grafana"
+    db_name = grafana_db_name
+  elsif roles.include?("monasca-server")
+    db_user = metrics_db_user
+    db_password = metrics_db_password
+    db_type = "metrics"
+    db_name = metrics_db_name
+    stop_db = true
+  end
+
+  template "/usr/sbin/crowbar-dump-monasca-db.sh" do
+    source "crowbar-dump-monasca-db.sh.erb"
+    mode "0755"
+    owner "root"
+    group "root"
+    action :create
+    only_if do
+      (roles.include?("horizon-server") || roles.include?("monasca-server")) &&
+        (!use_ha || is_cluster_founder)
+    end
+    variables(
+      db_user: db_user,
+      db_password: db_password,
+      db_host: monasca_node_fqdn,
+      db_type: db_type,
+      db_name: db_name,
+      stop_db: stop_db
+    )
+  end
 end

@@ -431,7 +431,7 @@ module Api
             false,
             services: {
               data: msg,
-              help: "Check /var/log/crowbar/production.log at admin server."
+              help: "Check /var/log/crowbar/production.log on admin server."
             }
           )
           return
@@ -442,6 +442,7 @@ module Api
         # For all nodes in cluster, set the pre-upgrade attribute
         upgrade_nodes = ::Node.find("state:crowbar_upgrade")
         cinder_node = nil
+        horizon_node = nil
         nova_node = nil
         monasca_node = nil
 
@@ -451,6 +452,11 @@ module Api
               (!node.roles.include?("pacemaker-cluster-member") ||
                   node["pacemaker"]["founder"] == node[:fqdn])
             cinder_node = node
+          end
+          if node.roles.include?("horizon-server") &&
+              (!node.roles.include?("pacemaker-cluster-member") ||
+                  node["pacemaker"]["founder"] == node[:fqdn])
+            horizon_node = node
           end
           if node.roles.include?("nova-controller") &&
               (!node.roles.include?("pacemaker-cluster-member") ||
@@ -473,8 +479,49 @@ module Api
             false,
             services: {
               data: "Problem while removing Java based Monasca persister: " + e.message,
-              help: "Check /var/log/crowbar/production.log at admin server " \
+              help: "Check /var/log/crowbar/production.log on admin server " \
                 "and /var/log/crowbar/node-upgrade.log at #{monasca_node.name}."
+            }
+          )
+          # Stop here and error out
+          return
+        end
+
+        begin
+          unless horizon_node.nil? || monasca_node.nil?
+            horizon_node.wait_for_script_to_finish(
+              "/usr/sbin/crowbar-dump-monasca-db.sh",
+              timeouts[:dump_grafana_db]
+            )
+          end
+        rescue StandardError => e
+          ::Crowbar::UpgradeStatus.new.end_step(
+            false,
+            services: {
+              data: "Problem while dumping Grafana database: " + e.message,
+              help: "Check /var/log/crowbar/production.log on admin server, " \
+                "and /var/log/crowbar/node-upgrade.log on #{horizon_node.name}."
+            }
+          )
+          # Stop here and error out
+          return
+        end
+
+        begin
+          unless monasca_node.nil?
+            monasca_node.wait_for_script_to_finish(
+              "/usr/sbin/crowbar-dump-monasca-db.sh",
+              timeouts[:dump_monasca_db]
+            )
+            Rails.logger.info("Dump and shutdown of Monasca database sucessful.")
+          end
+        rescue StandardError => e
+          ::Crowbar::UpgradeStatus.new.end_step(
+            false,
+            services: {
+              data: "Problem while dumping/shutting down monasca databases: " + e.message,
+              help: "Check /var/log/crowbar/production.log on admin server, " \
+                "and /var/log/crowbar/node-upgrade.log on #{monasca_node.name}."
             }
           )
           # Stop here and error out
@@ -494,7 +541,7 @@ module Api
             false,
             services: {
               data: "Problem while deleting unknown nova services: " + e.message,
-              help: "Check /var/log/crowbar/production.log at admin server " \
+              help: "Check /var/log/crowbar/production.log on admin server " \
                 "and /var/log/crowbar/node-upgrade.log at #{nova_node.name}."
             }
           )
@@ -523,7 +570,7 @@ module Api
             false,
             services: {
               data: "Problem while deleting cinder services: " + e.message,
-              help: "Check /var/log/crowbar/production.log at admin server. " \
+              help: "Check /var/log/crowbar/production.log on admin server. " \
                 "If the action failed at a specific node, " \
                 "check /var/log/crowbar/node-upgrade.log at the node."
             }
@@ -1047,6 +1094,7 @@ module Api
           "upgrade-os",
           "shutdown-services-before-upgrade",
           "delete-cinder-services-before-upgrade",
+          "dump-monasca-db",
           "monasca-cleanups",
           "evacuate-host",
           "pre-upgrade",
@@ -2064,7 +2112,7 @@ module Api
           false,
           prepare: {
             data: message,
-            help: "Check /var/log/crowbar/production.log at admin server."
+            help: "Check /var/log/crowbar/production.log on admin server."
           }
         )
         Rails.logger.error message
