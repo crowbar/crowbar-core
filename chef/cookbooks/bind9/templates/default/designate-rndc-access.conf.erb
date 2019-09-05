@@ -7,5 +7,5 @@ controls {
     # listen on the admin interface and
     # allow access via the designate-key
     # from ips of admin_network
-    inet <%= @master_ip -%> allow { <%= @admin_network -%>/<%= @admin_subnet -%>; } keys { designate-key; };
+    inet <%= @admin_ip -%> allow { <%= @admin_network -%>/<%= @admin_subnet -%>; } keys { designate-key; };
 };
