@@ -90,7 +90,7 @@ log "Upgrading packages needed for nova-compute node"
 
 zypper --non-interactive up openstack-nova-compute
 
-log "Restarting services for Pike"
+log "Restarting services for Rocky"
 
 <% unless @remote_node %>
 systemctl restart <%= @neutron_agent %>
