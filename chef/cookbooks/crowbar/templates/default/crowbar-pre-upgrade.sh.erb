@@ -86,6 +86,10 @@ log "No HA setup found..."
 
 <% if @compute_node %>
 
+log "Upgrading packages needed for nova-compute node"
+
+zypper --non-interactive up openstack-nova-compute
+
 log "Restarting services for Pike"
 
 <% unless @remote_node %>
