@@ -770,6 +770,8 @@ module Api
           upgrade_controller_clusters
           upgrade_non_compute_nodes
           prepare_all_compute_nodes
+          reload_nova_services
+
           ::Crowbar::UpgradeStatus.new.save_substep(substep, :finished)
         end
       end
@@ -839,10 +841,6 @@ module Api
         status = ::Crowbar::UpgradeStatus.new
         if status.progress[:remaining_nodes].zero?
           status.save_substep(substep, :finished)
-
-          status.save_substep(:reload_nova, :running)
-          reload_nova_services
-          status.save_substep(:reload_nova, :finished)
 
           status.save_substep(:run_online_migrations, :running)
           run_online_migrations
