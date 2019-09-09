@@ -25,8 +25,6 @@ suse-12.4:
       features: ["openstack"]
       repomd:
         tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP4:Update:Products:Cloud9/suse-openstack-cloud-crowbar/9/cd/aarch64",
-              "obsproduct://build.suse.de/Devel:Cloud:9:Rocky/suse-openstack-cloud-crowbar/9/cd/aarch64",
-              "obsproduct://build.suse.de/Devel:Cloud:9:Queens/suse-openstack-cloud-crowbar/9/cd/aarch64",
               "obsproduct://build.suse.de/Devel:Cloud:9:Staging/suse-openstack-cloud-crowbar/9/cd/aarch64",
               "obsproduct://build.suse.de/Devel:Cloud:9/suse-openstack-cloud-crowbar/9/cd/aarch64"]
         fingerprint: []
@@ -124,8 +122,6 @@ suse-12.4:
       features: ["openstack"]
       repomd:
         tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP4:Update:Products:Cloud9/suse-openstack-cloud-crowbar/9/cd/x86_64",
-              "obsproduct://build.suse.de/Devel:Cloud:9:Rocky/suse-openstack-cloud-crowbar/9/cd/x86_64",
-              "obsproduct://build.suse.de/Devel:Cloud:9:Queens/suse-openstack-cloud-crowbar/9/cd/x86_64",
               "obsproduct://build.suse.de/Devel:Cloud:9:Staging/suse-openstack-cloud-crowbar/9/cd/x86_64",
               "obsproduct://build.suse.de/Devel:Cloud:9/suse-openstack-cloud-crowbar/9/cd/x86_64"]
         fingerprint: []
@@ -222,8 +218,6 @@ suse-12.4:
       features: ["openstack"]
       repomd:
         tag: ["obsproduct://build.suse.de/SUSE:SLE-12-SP4:Update:Products:Cloud9/suse-openstack-cloud-crowbar/9/cd/s390x",
-              "obsproduct://build.suse.de/Devel:Cloud:9:Rocky/suse-openstack-cloud-crowbar/9/cd/s390x",
-              "obsproduct://build.suse.de/Devel:Cloud:9:Queens/suse-openstack-cloud-crowbar/9/cd/s390x",
               "obsproduct://build.suse.de/Devel:Cloud:9:Staging/suse-openstack-cloud-crowbar/9/cd/s390x",
               "obsproduct://build.suse.de/Devel:Cloud:9/suse-openstack-cloud-crowbar/9/cd/s390x"]
         fingerprint: []
