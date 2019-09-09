@@ -73,7 +73,7 @@ describe Api::Upgrade do
       receive(:all).and_return([Node.find_by_name("testing.crowbar.com")])
     )
     allow(Api::Upgrade).to(
-      receive(:target_platform).and_return("suse-12.3")
+      receive(:target_platform).and_return("suse-12.4")
     )
     allow(::Crowbar::Repository).to(
       receive(:provided_and_enabled?).and_return(true)
@@ -81,7 +81,7 @@ describe Api::Upgrade do
     ["os", "ceph", "ha", "openstack"].each do |feature|
       allow(::Crowbar::Repository).to(
         receive(:provided_and_enabled_with_repolist).with(
-          feature, "suse-12.3", "x86_64"
+          feature, "suse-12.4", "x86_64"
         ).and_return([true, {}])
       )
     end
