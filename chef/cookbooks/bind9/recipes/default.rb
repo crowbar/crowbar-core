@@ -355,7 +355,7 @@ template "/etc/bind/named.conf.crowbar" do
   notifies :reload, "service[bind9]"
 end
 
-if node[:dns][:enable_designate] && node[:dns][:master]
+if node[:dns][:enable_designate]
   template "/etc/named.d/designate-rndc-access.conf" do
     source "designate-rndc-access.conf.erb"
     mode 0o640
@@ -363,7 +363,7 @@ if node[:dns][:enable_designate] && node[:dns][:master]
     group bindgroup
     variables(
       rndc_key: node[:dns][:designate_rndc_key],
-      master_ip: admin_network.address,
+      admin_ip: admin_network.address,
       admin_subnet: IP::IP4.netmask_to_subnet(admin_network.netmask),
       admin_network: admin_network.subnet
     )
@@ -415,7 +415,7 @@ template "/etc/bind/named.conf" do
             allow_transfer: allow_transfer,
             ipaddresses: ipaddresses,
             ip6addresses: ip6addresses,
-            enable_designate: node[:dns][:enable_designate] && node[:dns][:master]
+            enable_designate: node[:dns][:enable_designate]
            )
   notifies :restart, "service[bind9]", :immediately
 end
