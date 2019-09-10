@@ -41,7 +41,6 @@ require "open3"
 require "tempfile"
 
 require "easy_diff"
-require "chef/mixin/deep_merge"
 require "pp"
 
 ALIAS_REGEXP = /(@@[^ @]+@@)/
@@ -344,11 +343,7 @@ def merge_attributes(new_json, barclamp, proposal)
 
   prevent_password_lockout(attrs) if barclamp == 'crowbar'
 
-  # easy_merge! seems to have problems with Arrays of Hashes :-/
-  #new_json.easy_merge! to_merge
-
-  #new_json.extend Chef::Mixin::DeepMerge
-  Chef::Mixin::DeepMerge.deep_merge!(to_merge, new_json)
+  new_json.easy_merge!(to_merge)
 end
 
 def prevent_password_lockout(attrs)
