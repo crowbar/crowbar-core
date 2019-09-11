@@ -392,6 +392,7 @@ describe Api::Crowbar do
     it "passes with nice compute nodes" do
       allow(NodeObject).to(receive(:find).with("roles:database-server").and_return([node]))
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:ceilometer-server").and_return([]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(
           ["nova-compute-kvm", "cinder-volume", "swift-storage"]
@@ -405,6 +406,7 @@ describe Api::Crowbar do
     it "passes with remote compute node" do
       allow(NodeObject).to(receive(:find).with("roles:database-server").and_return([node]))
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:ceilometer-server").and_return([]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(
           ["nova-compute-kvm", "pacemaker-remote"]
@@ -418,9 +420,25 @@ describe Api::Crowbar do
     it "passes with compute node together with nova-controller " do
       allow(NodeObject).to(receive(:find).with("roles:database-server").and_return([node]))
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:ceilometer-server").and_return([]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(
           ["nova-compute-kvm", "cinder-controller", "nova-controller"]
+        )
+      )
+      allow_any_instance_of(RoleObject).to(receive(:proposal?).and_return(false))
+
+      expect(subject.class.deployment_check).to be_empty
+    end
+
+    it "passes with ceilosca deployed" do
+      allow(NodeObject).to(receive(:find).with("roles:database-server").and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:ceilometer-server").and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:monasca-server").and_return([node]))
+      allow_any_instance_of(NodeObject).to(
+        receive(:roles).and_return(
+          ["nova-compute-kvm", "cinder-volume", "swift-storage"]
         )
       )
       allow_any_instance_of(RoleObject).to(receive(:proposal?).and_return(false))
@@ -433,6 +451,7 @@ describe Api::Crowbar do
     it "fails when cinder-controller is on compute node" do
       allow(NodeObject).to(receive(:find).with("roles:database-server").and_return([node]))
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:ceilometer-server").and_return([]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(
           ["nova-compute-kvm", "cinder-controller"]
@@ -456,6 +475,7 @@ describe Api::Crowbar do
     it "fails when postgresql is deployed as OpenStack DB" do
       allow(NodeObject).to(receive(:find).with("roles:database-server").and_return([drbd_node]))
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:ceilometer-server").and_return([]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(
           ["nova-compute-kvm", "cinder-volume", "swift-storage"]
@@ -465,6 +485,56 @@ describe Api::Crowbar do
 
       expect(subject.class.deployment_check).to eq(
         wrong_sql_engine: true
+      )
+    end
+    it "fails with ceilometer but no monasca deployed" do
+      allow(NodeObject).to(receive(:find).with("roles:database-server").and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:ceilometer-server").and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:monasca-server").and_return([]))
+      allow_any_instance_of(NodeObject).to(
+        receive(:roles).and_return(
+          ["nova-compute-kvm", "cinder-volume", "swift-storage"]
+        )
+      )
+      allow_any_instance_of(RoleObject).to(receive(:proposal?).and_return(false))
+
+      expect(subject.class.deployment_check).to eq(
+        legacy_ceilometer: true
+      )
+    end
+    it "fails with aodh proposal" do
+      allow(NodeObject).to(receive(:find).with("roles:database-server").and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:ceilometer-server").and_return([]))
+
+      allow(Proposal).to(receive(:where).and_return([]))
+      dummy_proposal = true # only any? check is used, no need for real Proposal object
+      allow(Proposal).to(
+        receive(:where).with(barclamp: "aodh").and_return(
+          [dummy_proposal]
+        )
+      )
+
+      expect(subject.class.deployment_check).to eq(
+        aodh_proposal: true
+      )
+    end
+    it "fails with trove proposal" do
+      allow(NodeObject).to(receive(:find).with("roles:database-server").and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:ceilometer-server").and_return([]))
+
+      allow(Proposal).to(receive(:where).and_return([]))
+      dummy_proposal = true # only any? check is used, no need for real Proposal object
+      allow(Proposal).to(
+        receive(:where).with(barclamp: "trove").and_return(
+          [dummy_proposal]
+        )
+      )
+
+      expect(subject.class.deployment_check).to eq(
+        trove_proposal: true
       )
     end
 
