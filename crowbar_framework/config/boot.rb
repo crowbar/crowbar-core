@@ -98,7 +98,7 @@ else
   gem "yaml_db", version: "~> 0.3.0"
   require "yaml_db"
 
-  gem "easy_diff", version: "~> 0.0.5"
+  gem "easy_diff", version: "~> 1.0.0"
   require "easy_diff"
 
   # chef related
