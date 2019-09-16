@@ -100,7 +100,8 @@ module Api
         # Not using Node.all here as we only need node names
         nodes = ChefObject.fetch_nodes_from_cdb.first.map(&:name)
         clusters = ServiceObject.available_clusters.keys
-        valid_elements = nodes + clusters
+        remotes = ServiceObject.available_remotes.keys
+        valid_elements = nodes + clusters + remotes
         bad_proposals = proposals.reject { |p| (p.elements.values.flatten - valid_elements).empty? }
         bad_elements = (proposals.map { |p| p.elements.values }.flatten - valid_elements).uniq
         ret[:unrecognized_elements] = {
