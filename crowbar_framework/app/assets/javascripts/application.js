@@ -74,7 +74,8 @@ jQuery(document).ready(function($) {
       '#0f0',
       '#f00',
       '#999',
-      '#ff0'
+      '#ff0',
+      '#39f'
     ]
   });
 
