@@ -142,6 +142,8 @@
 
 .input-group > .input-group-btn > .btn {
   padding: 6px 12px;
+  min-height: 34px;
+  line-height: unset;
 }
 
 // scss-lint:disable QualifyingElement
