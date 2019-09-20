@@ -331,18 +331,18 @@ def wipe_attribute(new_json, barclamp, attribute)
 end
 
 def merge_attributes(new_json, barclamp, proposal)
-  attrs = proposal["attributes"]
+  attributes = proposal["attributes"]
+  deployment = proposal["deployment"]
 
-  to_merge = {
-    "attributes" => {
-      barclamp => attrs
-    },
-    "deployment" => {
-      barclamp => proposal["deployment"]
-    }
-  }
+  to_merge = {}
+  unless attributes.nil?
+    to_merge.merge!(Hash["attributes", Hash[barclamp, attributes]])
+  end
+  unless deployment.nil?
+    to_merge.merge!(Hash["deployment", Hash[barclamp, deployment]])
+  end
 
-  prevent_password_lockout(attrs) if barclamp == 'crowbar'
+  prevent_password_lockout(attributes) if barclamp == 'crowbar'
 
   new_json.easy_merge!(to_merge)
 end
