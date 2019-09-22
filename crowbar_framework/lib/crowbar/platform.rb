@@ -19,6 +19,7 @@ module Crowbar
     class << self
       def pretty_target_platform(target_platform)
         return "openSUSE Leap 42.1" if target_platform == "opensuse-42.1"
+        return "SLES 12 SP4" if target_platform == "suse-12.4"
         return "SLES 12 SP3" if target_platform == "suse-12.3"
         return "SLES 12 SP2" if target_platform == "suse-12.2"
         return "SLES 12 SP1" if target_platform == "suse-12.1"
@@ -46,6 +47,7 @@ module Crowbar
       def support_software_raid
         [
           "opensuse-42.1",
+          "suse-12.4",
           "suse-12.3",
           "suse-12.2",
           "suse-12.1",
@@ -58,6 +60,7 @@ module Crowbar
       def support_default_fs
         [
           "opensuse-42.1",
+          "suse-12.4",
           "suse-12.3",
           "suse-12.2",
           "suse-12.1",
