@@ -128,19 +128,12 @@ template "/usr/sbin/crowbar-delete-unknown-nova-services.sh" do
   only_if { roles.include?("nova-controller") }
 end
 
-nova = search(:node, "run_list_map:nova-controller").first
-
 template "/usr/sbin/crowbar-evacuate-host.sh" do
   source "crowbar-evacuate-host.sh.erb"
   mode "0755"
   owner "root"
   group "root"
   action :create
-  variables(
-    lazy {
-      { needs_block_migrate: !nova[:nova][:use_shared_instance_storage] }
-    }
-  )
   only_if { roles.include? "nova-controller" }
 end
 
