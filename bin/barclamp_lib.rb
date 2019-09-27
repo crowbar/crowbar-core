@@ -33,7 +33,7 @@ require "getoptlong"
 }
 @data = ""
 @allow_zero_args = false
-@timeout = 500
+@timeout = 3600
 
 #
 # Parsing options can be added by adding to this list before calling opt_parse
