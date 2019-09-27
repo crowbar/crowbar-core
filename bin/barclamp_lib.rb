@@ -32,7 +32,7 @@ require "getoptlong"
 }
 @data = ""
 @allow_zero_args = false
-@timeout = 500
+@timeout = 3600
 @crowbar_key_file = "/etc/crowbar.install.key"
 
 #
