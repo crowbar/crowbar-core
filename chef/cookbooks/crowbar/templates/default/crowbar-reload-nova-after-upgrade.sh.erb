@@ -27,21 +27,43 @@ if [[ -f $UPGRADEDIR/crowbar-reload-nova-after-upgrade-ok ]] ; then
     exit 0
 fi
 
+# Check the python-nova package to make sure it is at the latest version with
+# no more recent versions in any zypper repositories (this package can be used
+# as a proxy for making sure all Nova service packages are up to date since
+# they are version locked to python-nova):
+
+if zypper lu -a | grep -w python-nova; then
+  echo "There are available update candidates for python-nova. This means that "
+  echo "the nova service packages on this node are not at the latest possible "
+  echo "version. Please update them and restart the upgrade."
+
+  exit 1
+fi
+
 <% if @nova_controller %>
 for service in conductor scheduler novncproxy serialproxy api; do
     fullname="openstack-nova-$service"
-    if systemctl --quiet is-active $fullname 2>/dev/null ; then
-        systemctl restart $fullname
+    if systemctl cat $fullname &>/dev/null; then
+      systemctl start $fullname
     fi
 done
-# Remove and unmanage openstack-nova-consoleauth
-systemctl disable openstack-nova-consoleauth
-systemctl stop openstack-nova-consoleauth
-systemctl kill openstack-nova-consoleauth
-rpm -e openstack-nova-consoleauth
+
+# Apache was also stopped by crowbar-stop-nova-services.sh
+systemctl start apache2
+
+  <% if @remotes_present and @is_cluster_founder %>
+# Start nova-compute on remote nodes:
+for remote in $(crm resource list | awk '$1 ~ /^remote-/  {print $1}'); do
+  crm resource start $remote
+done
+  <% end %>
 
 <% else %>
-systemctl restart openstack-nova-compute
+  # Only start on non-remote compute nodes - service on remote nodes will be started by
+  # the controller side code above.
+  <% unless @is_remote_node %>
+systemctl start openstack-nova-compute
+  <% end %>
 <% end %>
 
 touch $UPGRADEDIR/crowbar-reload-nova-after-upgrade-ok

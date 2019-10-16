@@ -81,8 +81,9 @@ end
 
 # Find out now if we have HA setup and pass that info to the script
 use_ha = roles.include? "pacemaker-cluster-member"
-remote_node = roles.include? "pacemaker-remote"
+is_remote_node = roles.include? "pacemaker-remote"
 is_cluster_founder = use_ha && node["pacemaker"]["founder"] == node[:fqdn]
+remote_nodes = CrowbarPacemakerHelper.remote_nodes(node)
 
 template "/usr/sbin/crowbar-shutdown-services-before-upgrade.sh" do
   source "crowbar-shutdown-services-before-upgrade.sh.erb"
@@ -91,7 +92,7 @@ template "/usr/sbin/crowbar-shutdown-services-before-upgrade.sh" do
   group "root"
   action :create
   variables(
-    use_ha: use_ha || remote_node,
+    use_ha: use_ha || is_remote_node,
     cluster_founder: is_cluster_founder,
     nova_controller: roles.include?("nova-controller"),
     monasca_server: roles.include?("monasca-server"),
@@ -177,7 +178,7 @@ template "/usr/sbin/crowbar-pre-upgrade.sh" do
   variables(
     use_ha: use_ha,
     compute_node: compute_node,
-    remote_node: remote_node,
+    is_remote_node: is_remote_node,
     swift_storage: swift_storage,
     cinder_volume: cinder_volume,
     neutron_agent: neutron_agent,
@@ -297,7 +298,24 @@ template "/usr/sbin/crowbar-reload-nova-after-upgrade.sh" do
   owner "root"
   group "root"
   variables(
-    nova_controller: roles.include?("nova-controller")
+    nova_controller: roles.include?("nova-controller"),
+    remotes_present: remote_nodes.any?,
+    is_remote_node: is_remote_node,
+    is_cluster_founder: is_cluster_founder
+  )
+  only_if { nova_node }
+end
+
+template "/usr/sbin/crowbar-stop-nova-services.sh" do
+  source "crowbar-stop-nova-services.sh.erb"
+  mode "0775"
+  owner "root"
+  group "root"
+  variables(
+    nova_controller: roles.include?("nova-controller"),
+    remotes_present: remote_nodes.any?,
+    is_remote_node: is_remote_node,
+    is_cluster_founder: is_cluster_founder
   )
   only_if { nova_node }
 end

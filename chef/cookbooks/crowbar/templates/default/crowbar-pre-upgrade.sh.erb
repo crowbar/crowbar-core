@@ -92,19 +92,19 @@ zypper --non-interactive up openstack-nova-compute
 
 log "Restarting services for Rocky"
 
-<% unless @remote_node %>
+<% unless @is_remote_node %>
 systemctl restart <%= @neutron_agent %>
 <% end %>
 
-<% if @l3_agent && !@remote_node %>
+<% if @l3_agent && !@is_remote_node %>
 systemctl restart <%= @l3_agent %>
 <% end %>
 
-<% if @metadata_agent && !@remote_node%>
+<% if @metadata_agent && !@is_remote_node%>
 systemctl restart <%= @metadata_agent %>
 <% end %>
 
-<% if @remote_node %>
+<% if @is_remote_node %>
 log "Leving nova-compute service to be restarted by cluster resources"
 <% else %>
 log "Starting nova-compute service"

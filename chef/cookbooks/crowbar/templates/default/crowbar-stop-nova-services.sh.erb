@@ -1,0 +1,88 @@
+#!/bin/bash
+#
+# After the upgrade of all compute services on all nodes is finished, it's
+# necessary to stop all nova services so that they start using the latest RPC
+# API version. All services must be stopped without exception: if any service
+# still uses the old RPC API version, it may cause other services to pick that
+# RPC API version as well.
+
+LOGFILE=/var/log/crowbar/node-upgrade.log
+UPGRADEDIR=/var/lib/crowbar/upgrade
+SCRIPTNAME=stop-nova-services
+mkdir -p "`dirname "$LOGFILE"`"
+exec >>"$LOGFILE" 2>&1
+
+log()
+{
+    set +x
+    echo "[$(date --iso-8601=ns)] [$$] $@"
+    set -x
+}
+
+log "Executing $BASH_SOURCE"
+
+set -x
+
+if [[ -f $UPGRADEDIR/crowbar-${SCRIPTNAME}-ok ]] ; then
+    log "Stop nova script was already successfully executed"
+    exit 0
+fi
+
+<% if @nova_controller %>
+for service in conductor scheduler novncproxy serialproxy api; do
+    fullname="openstack-nova-$service"
+    if systemctl --quiet is-active $fullname 2>/dev/null ; then
+        systemctl stop $fullname
+    fi
+done
+
+# This is needed to prevent the Nova Placement API from causing RPC version
+# trouble.
+if systemctl --quiet is-active apache2 2>/dev/null ; then
+    systemctl stop apache2
+fi
+
+  <% if @remotes_present and @is_cluster_founder %>
+# Stop nova-compute on remote nodes:
+for remote in $(crm resource list | awk '$1 ~ /^remote-/  {print $1}'); do
+  crm resource stop $remote
+done
+  <% end %>
+
+# Remove and unmanage openstack-nova-consoleauth
+systemctl disable openstack-nova-consoleauth
+systemctl stop openstack-nova-consoleauth
+systemctl kill openstack-nova-consoleauth
+rpm -e openstack-nova-consoleauth
+
+<% else %>
+  <% unless @is_remote_node %>
+# Only stop on non-remote compute nodes - service on remote nodes will be stopped by
+# the controller side code above.
+systemctl stop openstack-nova-compute
+  <% end %>
+<% end %>
+
+# This check can run on both remote and non-remote nodes: the `crm resource
+# stop` for the remote resources will have been run before this script runs on
+# the compute node it was intended for. This check needs to fail on the compute
+# node itself if it is going to fail. That way it will pinpoint the problematic
+# node.
+
+for wait in 10 20 40 0; do
+  if ps -U nova u | grep -e apache -e python; then
+    echo "Warning: there are still Nova processes running. These processes must be stopped before continuing the upgrade."
+    if [ $wait -eq 0 ]; then
+      echo "Error: Waited for 70s and Nova processes are still active."
+      echo "Please stop these processes manually and restart the upgrade's nodes step."
+      exit 1
+    fi
+    echo "Sleeping for $wait seconds until rechecking."
+    sleep $wait
+  else
+    break
+  fi
+done
+
+touch $UPGRADEDIR/crowbar-${SCRIPTNAME}-ok
+log "$BASH_SOURCE is finished."

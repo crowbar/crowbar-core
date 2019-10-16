@@ -817,6 +817,8 @@ module Api
           upgrade_controller_clusters
           upgrade_non_compute_nodes
           prepare_all_compute_nodes
+          # Stop nova services on all nodes to prevent any and all RPC API trouble
+          stop_nova_services
           reload_nova_services
 
           ::Crowbar::UpgradeStatus.new.save_substep(substep, :finished)
@@ -1020,10 +1022,33 @@ module Api
         node.ssh_cmd("systemctl start chef-client")
       end
 
-      # Once all nova services are upgraded to current version (that is Pike for current SOC)
-      # we need to tell services to start using latest RPC
-      # According to https://docs.openstack.org/nova/pike/user/upgrade.html this means
-      # sending SIG_HUP to all nova services
+      # After the controller upgrade we need to stop Nova services on all nodes
+      # to ensure that no old services remain running and cause restarted Nova
+      # services to autonegotiate the old RPC API version.
+      def stop_nova_services
+        all_nova_nodes = ::Node.find("roles:nova-*").sort do |n|
+          n.roles.include?("nova-controller") ? -1 : 1
+        end
+        all_nova_nodes.each do |node|
+          save_node_action("Stopping nova services at #{node.name}")
+          begin
+            node.wait_for_script_to_finish(
+              "/usr/sbin/crowbar-stop-nova-services.sh",
+              timeouts[:stop_nova_services]
+            )
+          rescue StandardError => e
+            raise_node_upgrade_error(
+              "Stopping of nova services has failed on node #{node.name}: " \
+              "#{e.message} Check /var/log/crowbar/node-upgrade.log for details."
+            )
+          end
+          Rails.logger.info("Nova services stopped on #{node.name}.")
+          save_node_action("Nova services stop finished.")
+        end
+      end
+
+      # Once all nova services are upgraded to current version (that is Rocky for current SOC)
+      # we need to tell services to start using latest RPC. To this end we restart all of them.
       def reload_nova_services
         all_nova_nodes = ::Node.find("roles:nova-*").sort do |n|
           n.roles.include?("nova-controller") ? -1 : 1
@@ -1041,8 +1066,12 @@ module Api
               "#{e.message} Check /var/log/crowbar/node-upgrade.log for details."
             )
           end
-          Rails.logger.info("Nova services reloaded at #{node.name}.")
+          Rails.logger.info("Nova services reloaded at #{node.name}. Sleeping for 10s.")
           save_node_action("Nova services reload finished.")
+          # This is needed to stagger the nova-compute reload across the whole
+          # cloud. If all compute nodes are restarted simultaneously, they will
+          # DDoS RabbitMQ with message queue chatter on large clouds.
+          sleep(10)
         end
       end
 
@@ -1109,7 +1138,9 @@ module Api
           "nova-migrations-after-upgrade",
           "set-network-agents-state",
           "shutdown-keystone",
-          "shutdown-remaining-services"
+          "shutdown-remaining-services",
+          "stop-nova-services",
+          "run-nova-online-migrations"
         ].map { |f| "/usr/sbin/crowbar-#{f}.sh" }.join(" ")
         scripts_to_delete << " /etc/neutron/lbaas-connection.conf"
         node.run_ssh_cmd("rm -f #{scripts_to_delete}")
