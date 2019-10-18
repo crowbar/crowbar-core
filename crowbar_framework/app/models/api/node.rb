@@ -242,6 +242,9 @@ module Api
           provisioner_service.enable_repository(platform, architecture, "ptf")
         end
 
+        # force-reload the repository configuration to refresh caches
+        ::Crowbar::Repository.load!
+
         {}.tap do |ret|
           ret[addon] = {
             "available" => true,
