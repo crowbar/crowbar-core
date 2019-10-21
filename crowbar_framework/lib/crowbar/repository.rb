@@ -137,6 +137,12 @@ module Crowbar
         provided_with_enabled(feature, platform, arch, true)
       end
 
+      # For upgrade related checks we need that Cloud repo is not needed
+      # so we explicitly exclude it from the list. See also comment in feature_repository_map
+      def provided_and_enabled_with_repolist_for_upgrade(feature, platform = nil, arch = nil)
+        provided_with_enabled(feature, platform, arch, true, true)
+      end
+
       def provided?(feature, platform = nil, arch = nil)
         provided_with_enabled(feature, platform, arch, false).first
       end
@@ -209,19 +215,20 @@ module Crowbar
                                 platform = nil,
                                 arch = nil,
                                 check_enabled = true,
+                                ignore_cloud = false,
                                 repos = {})
         answer = false
 
         if platform.nil?
           all_platforms.each do |p|
-            if provided_with_enabled(feature, p, arch, check_enabled, repos).first
+            if provided_with_enabled(feature, p, arch, check_enabled, ignore_cloud, repos).first
               answer = true
               break
             end
           end
         elsif arch.nil?
           arches(platform).each do |a|
-            if provided_with_enabled(feature, platform, a, check_enabled, repos).first
+            if provided_with_enabled(feature, platform, a, check_enabled, ignore_cloud, repos).first
               answer = true
               break
             end
@@ -237,6 +244,9 @@ module Crowbar
             found = true
 
             r = new(platform, arch, repo)
+
+            # ignore Cloud repo for upgrade related checks
+            next if ignore_cloud && r.name == "Cloud"
 
             answer &&= r.available?
             unless r.available?

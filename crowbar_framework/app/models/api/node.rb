@@ -257,9 +257,10 @@ module Api
                                                                    architecture)
                   ::Openstack::Upgrade.enable_repos_for_feature(feature, Rails.logger)
                 end
-                available, repolist = ::Crowbar::Repository.provided_and_enabled_with_repolist(
-                  feature, platform, architecture
-                )
+                available, repolist =
+                  ::Crowbar::Repository.provided_and_enabled_with_repolist_for_upgrade(
+                    feature, platform, architecture
+                  )
                 ret[addon]["available"] &&= available
                 ret[addon]["errors"].deep_merge!(repolist.deep_stringify_keys)
               end
