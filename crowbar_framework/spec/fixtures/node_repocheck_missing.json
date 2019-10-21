@@ -29,14 +29,12 @@
     "errors": {
       "missing": {
         "x86_64": [
-          "Cloud",
           "SUSE-OpenStack-Cloud-Crowbar-9-Pool",
           "SUSE-OpenStack-Cloud-Crowbar-9-Updates"
         ]
       },
       "inactive": {
         "x86_64": [
-          "Cloud",
           "SUSE-OpenStack-Cloud-Crowbar-9-Pool",
           "SUSE-OpenStack-Cloud-Crowbar-9-Updates"
         ]
