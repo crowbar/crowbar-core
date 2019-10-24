@@ -290,6 +290,9 @@ module Api
         if ::Node.find("roles:ceilometer-server").any? && ::Node.find("roles:monasca-server").none?
           ret[:legacy_ceilometer] = true
         end
+        # Make sure there are no xen compute nodes
+        xen_nodes = NodeObject.find("roles:nova-compute-xen")
+        ret[:xen_nodes_present] = xen_nodes.map(&:name) if xen_nodes.any?
         ret
       end
 

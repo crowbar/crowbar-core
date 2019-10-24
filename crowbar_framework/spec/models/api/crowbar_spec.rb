@@ -393,6 +393,7 @@ describe Api::Crowbar do
       allow(NodeObject).to(receive(:find).with("roles:database-server").and_return([node]))
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
       allow(NodeObject).to(receive(:find).with("roles:ceilometer-server").and_return([]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(
           ["nova-compute-kvm", "cinder-volume", "swift-storage"]
@@ -407,6 +408,7 @@ describe Api::Crowbar do
       allow(NodeObject).to(receive(:find).with("roles:database-server").and_return([node]))
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
       allow(NodeObject).to(receive(:find).with("roles:ceilometer-server").and_return([]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(
           ["nova-compute-kvm", "pacemaker-remote"]
@@ -421,6 +423,7 @@ describe Api::Crowbar do
       allow(NodeObject).to(receive(:find).with("roles:database-server").and_return([node]))
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
       allow(NodeObject).to(receive(:find).with("roles:ceilometer-server").and_return([]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(
           ["nova-compute-kvm", "cinder-controller", "nova-controller"]
@@ -436,6 +439,7 @@ describe Api::Crowbar do
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
       allow(NodeObject).to(receive(:find).with("roles:ceilometer-server").and_return([node]))
       allow(NodeObject).to(receive(:find).with("roles:monasca-server").and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(
           ["nova-compute-kvm", "cinder-volume", "swift-storage"]
@@ -452,6 +456,7 @@ describe Api::Crowbar do
       allow(NodeObject).to(receive(:find).with("roles:database-server").and_return([node]))
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
       allow(NodeObject).to(receive(:find).with("roles:ceilometer-server").and_return([]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(
           ["nova-compute-kvm", "cinder-controller"]
@@ -476,6 +481,7 @@ describe Api::Crowbar do
       allow(NodeObject).to(receive(:find).with("roles:database-server").and_return([drbd_node]))
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
       allow(NodeObject).to(receive(:find).with("roles:ceilometer-server").and_return([]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(
           ["nova-compute-kvm", "cinder-volume", "swift-storage"]
@@ -492,6 +498,7 @@ describe Api::Crowbar do
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
       allow(NodeObject).to(receive(:find).with("roles:ceilometer-server").and_return([node]))
       allow(NodeObject).to(receive(:find).with("roles:monasca-server").and_return([]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
       allow_any_instance_of(NodeObject).to(
         receive(:roles).and_return(
           ["nova-compute-kvm", "cinder-volume", "swift-storage"]
@@ -507,6 +514,7 @@ describe Api::Crowbar do
       allow(NodeObject).to(receive(:find).with("roles:database-server").and_return([node]))
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
       allow(NodeObject).to(receive(:find).with("roles:ceilometer-server").and_return([]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
 
       allow(Proposal).to(receive(:where).and_return([]))
       dummy_proposal = true # only any? check is used, no need for real Proposal object
@@ -524,6 +532,7 @@ describe Api::Crowbar do
       allow(NodeObject).to(receive(:find).with("roles:database-server").and_return([node]))
       allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
       allow(NodeObject).to(receive(:find).with("roles:ceilometer-server").and_return([]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([]))
 
       allow(Proposal).to(receive(:where).and_return([]))
       dummy_proposal = true # only any? check is used, no need for real Proposal object
@@ -535,6 +544,16 @@ describe Api::Crowbar do
 
       expect(subject.class.deployment_check).to eq(
         trove_proposal: true
+      )
+    end
+    it "fails when xen compute nodes are found" do
+      allow(NodeObject).to(receive(:find).with("roles:database-server").and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-*").and_return([node]))
+      allow(NodeObject).to(receive(:find).with("roles:ceilometer-server").and_return([]))
+      allow(NodeObject).to(receive(:find).with("roles:nova-compute-xen").and_return([node]))
+
+      expect(subject.class.deployment_check).to eq(
+        xen_nodes_present: ["testing.crowbar.com"]
       )
     end
 
