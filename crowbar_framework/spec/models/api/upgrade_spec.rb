@@ -569,6 +569,7 @@ describe Api::Upgrade do
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :progress
       ).and_return(remaining_nodes: 0)
+      allow(Api::Upgrade).to receive(:stop_nova_services).and_return(true)
       allow(Api::Upgrade).to receive(:reload_nova_services).and_return(true)
       allow(Api::Upgrade).to receive(:run_online_migrations).and_return(true)
       allow(Api::Upgrade).to receive(:finalize_nodes_upgrade).and_return(true)
@@ -589,6 +590,7 @@ describe Api::Upgrade do
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :progress
       ).and_return(remaining_nodes: 0)
+      allow(Api::Upgrade).to receive(:stop_nova_services).and_return(true)
       allow(Api::Upgrade).to receive(:reload_nova_services).and_return(true)
       allow(Api::Upgrade).to receive(:run_online_migrations).and_return(true)
       allow(Api::Upgrade).to receive(:finalize_nodes_upgrade).and_return(true)
@@ -644,6 +646,8 @@ describe Api::Upgrade do
     end
 
     it "during the upgrade of controller nodes, detect that they are upgraded" do
+      node1 = Node.find_by_name("testing.crowbar.com")
+
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :start_step
       ).with(:nodes).and_return(true)
@@ -658,7 +662,7 @@ describe Api::Upgrade do
       allow(Node).to(
         receive(:find).with(
           "run_list_map:pacemaker-cluster-member"
-        ).and_return([Node.find_by_name("testing.crowbar.com")])
+        ).and_return([node1])
       )
 
       allow(Node).to(
@@ -679,6 +683,17 @@ describe Api::Upgrade do
       allow_any_instance_of(Crowbar::UpgradeStatus).to receive(
         :progress
       ).and_return(remaining_nodes: 0)
+      # mock the node seach for stop_nova_services
+      allow(Node).to(
+        receive(:find).with("roles:nova-*").and_return([node1])
+      )
+      allow_any_instance_of(Node).to(
+        receive(
+          :wait_for_script_to_finish
+        ).with(
+          "/usr/sbin/crowbar-stop-nova-services.sh", 120
+        ).and_return(nil)
+      )
       allow(Api::Upgrade).to receive(:reload_nova_services).and_return(true)
       allow(Api::Upgrade).to receive(:run_online_migrations).and_return(true)
       allow(Api::Upgrade).to receive(:finalize_nodes_upgrade).and_return(true)
