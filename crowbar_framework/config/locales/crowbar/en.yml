@@ -850,6 +850,9 @@ en:
         legacy_ceilometer:
           error: 'Ceilometer proposal has been detected but Monasca proposal is missing. Only Ceilosca deployments are supported in SUSE OpenStack Cloud 9.'
           help: 'Deactivate and delete Ceilometer proposal and deploy Ceilosca after upgrade is completed.'
+        xen_nodes:
+          error: 'XEN compute nodes were found: %{nodes}.'
+          help: 'SUSE OpenStack Cloud 9 does not support XEN compute nodes. Stop all workloads running on these nodes and remove nova-compute-xen role from all nodes before proceeding with the upgrade.'
       prepare:
         help:
           default: 'Refer to the error message in the response'

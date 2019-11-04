@@ -1910,6 +1910,12 @@ module Api
             help: I18n.t("api.upgrade.prechecks.legacy_ceilometer.help")
           }
         end
+        if check[:xen_nodes_present]
+          ret[:xen_nodes_present] = {
+            data: I18n.t("api.upgrade.prechecks.xen_nodes.error"),
+            help: I18n.t("api.upgrade.prechecks.xen_nodes.help")
+          }
+        end
         ret
       end
 
