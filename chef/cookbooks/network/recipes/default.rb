@@ -448,6 +448,12 @@ sorted_networks.each do |network|
     our_iface = br
     net_ifs << our_iface.name
   end
+
+  unless network.ovs_forward_bpdu.nil?
+    Chef::Log.info("OVS BPDU forwarding set to #{network.ovs_forward_bpdu}.")
+    ifs[our_iface.name]["ovs_forward_bpdu"] = network.ovs_forward_bpdu
+  end
+
   if network.mtu
     Chef::Log.info("Using mtu #{network.mtu} for #{network.name} network on #{our_iface.name}")
     ifs[our_iface.name]["mtu"] = network.mtu
@@ -682,7 +688,10 @@ when "suse"
       end
 
       pre_up_script = "/etc/wicked/scripts/#{nic.name}-pre-up"
+      ovs_forward_bpdu = ifs[nic.name]["ovs_forward_bpdu"] || false
       is_admin_nwk = if_mapping.key?("admin") && if_mapping["admin"].include?(nic.name)
+
+      nic.ovs_forward_bpdu(ovs_forward_bpdu)
 
       template pre_up_script do
         owner "root"
@@ -691,6 +700,7 @@ when "suse"
         source "ovs-pre-up.sh.erb"
         variables(
           bridgename: nic.name,
+          ovs_forward_bpdu: ovs_forward_bpdu,
           is_admin_nwk: is_admin_nwk
         )
       end
