@@ -893,8 +893,8 @@ module Api
           run_online_migrations
           status.save_substep(:run_online_migrations, :finished)
 
-          finalize_nodes_upgrade
           unlock_crowbar_ui_package
+          finalize_nodes_upgrade
           status.end_step
         end
       rescue ::Crowbar::Error::Upgrade::NodeError => e
@@ -1102,7 +1102,14 @@ module Api
           "post-upgrade",
           "chef-upgraded",
           "reload-nova-after-upgrade",
-          "run-nova-online-migrations"
+          "run-nova-online-migrations",
+          "delete-unknown-nova-services",
+          "heat-migrations-after-upgrade",
+          "migrate-keystone-and-start",
+          "nova-migrations-after-upgrade",
+          "set-network-agents-state",
+          "shutdown-keystone",
+          "shutdown-remaining-services"
         ].map { |f| "/usr/sbin/crowbar-#{f}.sh" }.join(" ")
         scripts_to_delete << " /etc/neutron/lbaas-connection.conf"
         node.run_ssh_cmd("rm -f #{scripts_to_delete}")
