@@ -1935,6 +1935,14 @@ module Api
             help: I18n.t("api.upgrade.prechecks.failed_proposals.help")
           }
         end
+        if check[:unrecognized_elements]
+          ret[:unrecognized_elements] = {
+            data: I18n.t("api.upgrade.prechecks.unrecognized_elements.error",
+              proposals: check[:unrecognized_elements][:proposals].join(", "),
+              elements: check[:unrecognized_elements][:elements].join(", ")),
+            help: I18n.t("api.upgrade.prechecks.unrecognized_elements.help")
+          }
+        end
         ret
       end
 
