@@ -76,6 +76,14 @@ initiate_node_upgrade()
       sed -i s/django.utils.log.NullHandler/logging.NullHandler/g $horizon_custom_config
     fi
 
+    update_dashboard_theme_SUSE=0
+    if rpm -q openstack-dashboard-theme-SUSE; then
+      # Uninstall openstack-dashboard-theme-SUSE so that its postun script is called
+      # and post script of the new package does not complain about non existing files
+      zypper --no-color --non-interactive rm openstack-dashboard-theme-SUSE
+      update_dashboard_theme_SUSE=1
+    fi
+
     # Upgrade the distribution non-interactively
     log "Executing zypper ref"
     zypper --no-color --releasever <%= @target_platform_version %> ref -f
@@ -87,6 +95,11 @@ initiate_node_upgrade()
         log "zypper dist-upgrade has failed with $ret, check zypper logs"
         echo "$ret" > $UPGRADEDIR/crowbar-upgrade-os-failed
         exit $ret
+    fi
+
+    if [ $update_dashboard_theme_SUSE == 1 ]; then
+        # Install the package that could not be updated because it was explicitly removed
+        zypper --no-color --non-interactive install openstack-dashboard-theme-SUSE
     fi
 
     # move the openstack configurations after the upgrade. We want the default
