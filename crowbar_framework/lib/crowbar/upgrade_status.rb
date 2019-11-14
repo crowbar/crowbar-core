@@ -30,6 +30,7 @@ module Crowbar
     # We're keeping the information in the file so is accessible by
     # external applications and different crowbar versions.
     def initialize(logger = Rails.logger, yaml_file = nil)
+      @timeouts = ::Crowbar::UpgradeTimeouts.new
       yaml_file = current_status_file if yaml_file.nil? || yaml_file.empty?
 
       @running_file_location =
@@ -427,7 +428,7 @@ module Crowbar
         finish_time = File.mtime(finished_file).to_i
       end
       # here "recently" means within last 24hrs
-      (Time.now.to_i - finish_time) < 24 * 60 * 60
+      (Time.now.to_i - finish_time) < @timeouts.values[:delay_before_next_upgrade]
     end
 
     def current_status_file
