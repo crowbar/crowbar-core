@@ -92,6 +92,13 @@ when "crowbar_upgrade"
     end
   end
 
+  # Remove existing upgrade directory. If it exists, it would contain
+  # indications of upgrade scripts runs from previous upgrade.
+  # If they'd stay, script wouldn't be executed in current upgrade
+  directory "/var/lib/crowbar/upgrade" do
+    action :delete
+  end
+
 when "prepare-os-upgrade"
 
   include_recipe "crowbar::prepare-upgrade-scripts"
