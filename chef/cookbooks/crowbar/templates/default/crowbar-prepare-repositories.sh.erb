@@ -25,6 +25,9 @@ if [[ -f $UPGRADEDIR/crowbar-prepare-repositories-ok ]] ; then
     exit 0
 fi
 
+log "Disabling Repository Index Services (RIS)..."
+zypper services --show-enabled-only | tr -d ' ' | awk -F "|" '{ if ($7=="ris") print $1}' | xargs -i zypper modifyservice --disable {}
+
 
 log "Removing old repositories..."
 rm -f /etc/zypp/repos.d/*.repo
