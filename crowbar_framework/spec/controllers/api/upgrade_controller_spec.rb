@@ -217,7 +217,7 @@ describe Api::UpgradeController, type: :request do
       )
       ["os", "ceph", "ha", "openstack"].each do |feature|
         allow(::Crowbar::Repository).to(
-          receive(:provided_and_enabled_with_repolist).with(
+          receive(:provided_and_enabled_with_repolist_for_upgrade).with(
             feature, "suse-12.4", "x86_64"
           ).and_return([true, {}])
         )

@@ -17,7 +17,7 @@ describe Api::Node do
   end
   let!(:os_repo_missing) do
     allow(::Crowbar::Repository).to(
-      receive(:provided_and_enabled_with_repolist).with(
+      receive(:provided_and_enabled_with_repolist_for_upgrade).with(
         "os", "suse-12.4", "x86_64"
       ).and_return(
         [
@@ -42,7 +42,7 @@ describe Api::Node do
   end
   let!(:openstack_repo_missing) do
     allow(::Crowbar::Repository).to(
-      receive(:provided_and_enabled_with_repolist).with(
+      receive(:provided_and_enabled_with_repolist_for_upgrade).with(
         "openstack", "suse-12.4", "x86_64"
       ).and_return(
         [
@@ -50,14 +50,12 @@ describe Api::Node do
           {
             "missing" => {
               "x86_64" => [
-                "Cloud",
                 "SUSE-OpenStack-Cloud-Crowbar-9-Pool",
                 "SUSE-OpenStack-Cloud-Crowbar-9-Updates"
               ]
             },
             "inactive" => {
               "x86_64" => [
-                "Cloud",
                 "SUSE-OpenStack-Cloud-Crowbar-9-Pool",
                 "SUSE-OpenStack-Cloud-Crowbar-9-Updates"
               ]
@@ -88,7 +86,7 @@ describe Api::Node do
   context "with a successful nodes repocheck" do
     it "finds the os repositories required to upgrade the nodes" do
       allow(::Crowbar::Repository).to(
-        receive(:provided_and_enabled_with_repolist).with(
+        receive(:provided_and_enabled_with_repolist_for_upgrade).with(
           "os", "suse-12.4", "x86_64"
         ).and_return([true, {}])
       )
@@ -107,7 +105,7 @@ describe Api::Node do
       allow_any_instance_of(ProvisionerService).to receive(:enable_repository).and_return(true)
       ["os", "ceph", "ha", "openstack"].each do |feature|
         allow(::Crowbar::Repository).to(
-          receive(:provided_and_enabled_with_repolist).with(
+          receive(:provided_and_enabled_with_repolist_for_upgrade).with(
             feature, "suse-12.4", "x86_64"
           ).and_return([true, {}])
         )
@@ -140,7 +138,7 @@ describe Api::Node do
   context "with an addon installed but not deployed" do
     it "finds any node with the ceph addon deployed" do
       allow(::Crowbar::Repository).to(
-        receive(:provided_and_enabled_with_repolist).with(
+        receive(:provided_and_enabled_with_repolist_for_upgrade).with(
           "ceph", "suse-12.4", "x86_64"
         ).and_return([true, {}])
       )
