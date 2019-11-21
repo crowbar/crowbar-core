@@ -105,6 +105,15 @@ for i in $(systemctl list-units openstack-* --no-legend | cut -d" " -f1 | grep -
     systemctl disable $i
 done
 
+# It is possible that despite general HA setup, cinder-volume is running on controllers,
+# is not managed by pacemaker while clone_stateless_services is still true.
+# Stop such service now
+if systemctl --quiet is-active openstack-cinder-volume; then
+    log "Stopping cinder-volume service"
+    systemctl stop openstack-cinder-volume
+    systemctl disable openstack-cinder-volume
+fi
+
 <% else %>
 
 # Stop openstack services on this node.
