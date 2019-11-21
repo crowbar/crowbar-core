@@ -30,23 +30,9 @@ new_repos = Provisioner::Repositories.get_repos(
   target_platform, target_platform_version, arch
 )
 
-# Find out the location of the base system repository
 provisioner_config = Barclamp::Config.load("core", "provisioner")
 
-web_path = "#{provisioner_config['root_url']}/#{node[:platform]}-#{node[:platform_version]}/#{arch}"
-old_install_url = "#{web_path}/install"
-
 web_path = "#{provisioner_config['root_url']}/#{node[:target_platform]}/#{arch}"
-new_install_url = "#{web_path}/install"
-
-# try to create an alias for new base repo from the original base repo
-repo_alias = "SLES12-SP2-12.2-0"
-doc = REXML::Document.new(`zypper --xmlout lr --details`)
-doc.elements.each("stream/repo-list/repo") do |repo|
-  repo_alias = repo.attributes["alias"] if repo.elements["url"].text == old_install_url
-end
-
-new_alias = repo_alias.gsub("SP2", "SP3").gsub(node[:platform_version], target_platform_version)
 
 monasca_node = search(:node, "run_list_map:monasca-server").first
 monasca_enabled = !monasca_node.nil?
@@ -58,9 +44,7 @@ template "/usr/sbin/crowbar-prepare-repositories.sh" do
   group "root"
   action :create
   variables(
-    new_repos: new_repos,
-    new_base_repo: new_install_url,
-    new_alias: new_alias
+    new_repos: new_repos
   )
 end
 
