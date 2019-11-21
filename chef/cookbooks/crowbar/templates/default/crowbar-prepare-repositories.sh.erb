@@ -40,7 +40,6 @@ zypper --non-interactive addrepo -f <%= attrs[:url] %> <%= name %>
 zypper --non-interactive addrepo <%= attrs[:url] %> <%= name %>
     <% end -%>
 <% end %>
-zypper --non-interactive addrepo <%= @new_base_repo %> <%= @new_alias %>
 
 touch $UPGRADEDIR/crowbar-prepare-repositories-ok
 log "$BASH_SOURCE is finished."
