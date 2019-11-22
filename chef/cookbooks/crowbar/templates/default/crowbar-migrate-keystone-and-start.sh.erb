@@ -44,5 +44,25 @@ done
 log "Reloading apache2 service to start keystone vhosts"
 systemctl reload apache2
 
+set +x
+source /root/.openrc
+set -x
+
+# Check if keystone is already up and responding
+i=0
+while [[ $i -lt 12 ]] && ! openstack --insecure service show keystone; do
+    log "Keystone still not responding, next check in 10 seconds..."
+    sleep 10
+    i=$(($i + 1))
+done
+
+openstack --insecure service show keystone
+ret=$?
+if [ $ret != 0 ]; then
+    log "Keystone not responding after 2 minutes, exiting with failure"
+    echo "$ret" > $UPGRADEDIR/crowbar-migrate-keystone-and-start-failed
+    exit $ret
+fi
+
 touch $UPGRADEDIR/crowbar-migrate-keystone-and-start-ok
 log "$BASH_SOURCE is finished."
