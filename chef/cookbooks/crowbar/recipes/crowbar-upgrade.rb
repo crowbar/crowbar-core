@@ -51,13 +51,23 @@ when "crowbar_upgrade"
 
   bash "disable_openstack_services" do
     code <<-EOF
-      for i in $(systemctl list-units openstack* --no-legend | cut -d" " -f1) \
-               drbd.service \
-               pacemaker.service;
+      for i in $(systemctl list-units openstack* --no-legend | cut -d" " -f1);
       do
         systemctl disable $i
       done
     EOF
+  end
+
+  ha = node["run_list_map"].key? "pacemaker-cluster-member"
+
+  service "drbd" do
+    action :disable
+    only_if { ha && node["drbd"] && node["drbd"]["rsc"] && node["drbd"]["rsc"].any? }
+  end
+
+  service "pacemaker" do
+    action :disable
+    only_if { ha }
   end
 
   # Disable crowbar-join
@@ -74,7 +84,7 @@ when "crowbar_upgrade"
   # Remove current pre-upgrade constraints from locations,
   # they will be added again in the later stage of an upgrade to control
   # which nodes should not start services.
-  if CrowbarPacemakerHelper.is_cluster_founder?(node)
+  if ha && node[:pacemaker][:founder] == node[:fqdn]
     cmd = "crm --display=plain conf show type:location"
     locations = Mixlib::ShellOut.new(cmd).run_command.stdout
     locations.split("location").each do |l|
