@@ -325,31 +325,6 @@ class CrowbarService < ServiceObject
       node.save
     end
 
-    # change rabbitmq/drbd setting to native queues setup (new default)
-    prop = Proposal.find_by(barclamp: "rabbitmq", name: "default")
-    role = prop.role
-    if role.default_attributes["rabbitmq"]["ha"]["storage"]["mode"] == "drbd"
-      role.default_attributes["rabbitmq"]["cluster"] = true
-      role.default_attributes["rabbitmq"]["erlang_cookie"] = random_password
-      role.save
-
-      prop.raw_data["attributes"]["rabbitmq"]["cluster"] = true
-      prop.raw_data["attributes"]["erlang_cookie"] =
-        role.default_attributes["rabbitmq"]["erlang_cookie"]
-
-      prop.save
-    end
-
-    # Turn off possible DRBD enablement.
-    pacemaker_proposals = Proposal.all.where(barclamp: "pacemaker")
-    pacemaker_proposals.each do |proposal|
-      role = proposal.role
-      proposal.raw_data["attributes"]["pacemaker"]["drbd"]["enabled"] = false
-      role.default_attributes["pacemaker"]["drbd"]["enabled"] = false
-      role.save
-      proposal.save
-    end
-
     # unset `db_synced` flag for OpenStack components
     ::Openstack::Upgrade.unset_db_synced
 
