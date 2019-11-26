@@ -25,6 +25,9 @@ if [[ -f $UPGRADEDIR/crowbar-prepare-repositories-ok ]] ; then
     exit 0
 fi
 
+log "Disabling Repository Index Services (RIS)..."
+zypper services --show-enabled-only | tr -d ' ' | awk -F "|" '{ if ($7=="ris") print $1}' | xargs -i zypper modifyservice --disable {}
+
 
 log "Removing old repositories..."
 rm -f /etc/zypp/repos.d/*.repo
@@ -37,7 +40,6 @@ zypper --non-interactive addrepo -f <%= attrs[:url] %> <%= name %>
 zypper --non-interactive addrepo <%= attrs[:url] %> <%= name %>
     <% end -%>
 <% end %>
-zypper --non-interactive addrepo <%= @new_base_repo %> <%= @new_alias %>
 
 touch $UPGRADEDIR/crowbar-prepare-repositories-ok
 log "$BASH_SOURCE is finished."
