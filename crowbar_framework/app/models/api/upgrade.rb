@@ -1918,7 +1918,7 @@ module Api
         end
         if check[:xen_nodes_present]
           ret[:xen_nodes_present] = {
-            data: I18n.t("api.upgrade.prechecks.xen_nodes.error"),
+            data: I18n.t("api.upgrade.prechecks.xen_nodes.error", nodes: check[:xen_nodes_present]),
             help: I18n.t("api.upgrade.prechecks.xen_nodes.help")
           }
         end
