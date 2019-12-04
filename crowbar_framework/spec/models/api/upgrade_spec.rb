@@ -163,6 +163,9 @@ describe Api::Upgrade do
       allow_any_instance_of(CrowbarService).to receive(
         :prepare_nodes_for_os_upgrade
       ).and_return(true)
+      allow(Api::Upgrade).to(
+        receive(:check_schema_migrations).and_return(true)
+      )
       allow(Node).to(
         receive(:find).with("state:crowbar_upgrade").and_return(
           [Node.find_by_name("testing.crowbar.com")]
