@@ -1025,7 +1025,9 @@ module Api
       # After the controller upgrade we need to stop Nova services on all nodes
       # to ensure that no old services remain running and cause restarted Nova
       # services to autonegotiate the old RPC API version.
+      # This is not related to 'normal' mode where nodes are fully upgraded and rebooted.
       def stop_nova_services
+        return if upgrade_mode == :normal
         all_nova_nodes = ::Node.find("roles:nova-*").sort do |n|
           n.roles.include?("nova-controller") ? -1 : 1
         end
@@ -1049,7 +1051,9 @@ module Api
 
       # Once all nova services are upgraded to current version (that is Rocky for current SOC)
       # we need to tell services to start using latest RPC. To this end we restart all of them.
+      # This is not related to 'normal' mode where nodes are fully upgraded and rebooted.
       def reload_nova_services
+        return if upgrade_mode == :normal
         all_nova_nodes = ::Node.find("roles:nova-*").sort do |n|
           n.roles.include?("nova-controller") ? -1 : 1
         end
