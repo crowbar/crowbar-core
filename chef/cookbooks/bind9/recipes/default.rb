@@ -209,6 +209,15 @@ nodes.each do |n|
     cluster_zone[:hosts][base_name] = Mash.new
     cluster_zone[:hosts][base_name][:ip4addr] = network.address
     cluster_zone[:hosts][base_name][:alias] = alias_name if alias_name
+
+    # add legacy entry for network.domain (in addition to network-domain)
+    unless network.name == "admin"
+      base_name = "#{net_name}.#{base_name_no_net}"
+      alias_name = "#{net_name}.#{alias_name_no_net}" if alias_name_no_net
+      cluster_zone[:hosts][base_name] = Mash.new
+      cluster_zone[:hosts][base_name][:ip4addr] = network.address
+      cluster_zone[:hosts][base_name][:alias] = alias_name if alias_name
+    end
   end
 
   # Also set DNS name with temporary DHCP address for discovered nodes
@@ -258,6 +267,14 @@ search(:crowbar, "id:*_network").each do |network|
     end
     cluster_zone[:hosts][base_name] = Mash.new
     cluster_zone[:hosts][base_name][:ip4addr] = network[:allocated_by_name][host][:address]
+
+    # add legacy entry for network.domain (in addition to network-domain)
+    unless net_name == "admin"
+      base_name = host.chomp(".#{node[:dns][:domain]}")
+      base_name = "#{net_name}.#{base_name}"
+      cluster_zone[:hosts][base_name] = Mash.new
+      cluster_zone[:hosts][base_name][:ip4addr] = network[:allocated_by_name][host][:address]
+    end
   end
 end
 
