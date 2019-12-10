@@ -416,10 +416,29 @@ module Api
         )
       end
 
+      # Do another pacemaker cluster health check at the start of services step
+      # If the cluster is unhealthy, it could lead to errors during upgrade.
+      # At this point all services are still running so it should be possible to
+      # fix the problems.
+      def cluster_health_check
+        return true unless Api::Crowbar.addons.include?("ha")
+
+        clusters_health = Api::Pacemaker.health_report
+        return true if clusters_health.empty?
+
+        Rails.logger.error "Pacemaker cluster is not healthy."
+        ::Crowbar::UpgradeStatus.new.end_step(
+          false,
+          clusters_health_report_errors(clusters_health)
+        )
+        false
+      end
+
       #
       # service shutdown
       #
       def services
+        return unless cluster_health_check
         begin
           # prepare the scripts for various actions necessary for the upgrade
           service_object = CrowbarService.new
