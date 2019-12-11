@@ -61,7 +61,7 @@ if [ $ret != 0 ] ; then
 fi
 
 # Make sure services are shut down - they may not have to be managed by pacemaker
-for i in $(systemctl list-units openstack-* --no-legend | cut -d" " -f1) ; do
+for i in $(systemctl list-units 'openstack-*' --no-legend | cut -d" " -f1) ; do
     log "Stopping service $i"
     systemctl stop $i
     systemctl disable $i

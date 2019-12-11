@@ -29,7 +29,7 @@ if [[ -f $UPGRADEDIR/crowbar-shutdown-remaining-services-ok ]] ; then
 fi
 
 # Make sure all services are shut down
-for i in $(systemctl list-units openstack* --no-legend | cut -d" " -f1) ; do
+for i in $(systemctl list-units 'openstack*' --no-legend | cut -d" " -f1) ; do
     log "Stopping service $i"
     systemctl stop $i
     systemctl disable $i
