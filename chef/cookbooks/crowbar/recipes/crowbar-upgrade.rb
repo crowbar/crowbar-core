@@ -60,11 +60,6 @@ when "crowbar_upgrade"
 
   ha = node["run_list_map"].key? "pacemaker-cluster-member"
 
-  service "drbd" do
-    action :disable
-    only_if { ha && node["drbd"] && node["drbd"]["rsc"] && node["drbd"]["rsc"].any? }
-  end
-
   service "pacemaker" do
     action :disable
     only_if { ha }
