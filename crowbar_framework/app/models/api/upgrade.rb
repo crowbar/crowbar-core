@@ -434,11 +434,38 @@ module Api
         false
       end
 
+      # Make sure the crowbar migrations are OK
+      #
+      # They were executed at the end of admin upgrade step and if there was a failure,
+      # there's a big chance services step would fail (because chef templates might not be rendered)
+      # We have to do the check here at the start of 'services' step and not during admin upgrade,
+      # because admin upgrade step is not repeatable.
+      def check_schema_migrations
+        schema_migrate = run_cmd(
+          "cd /opt/dell/crowbar_framework/; " \
+          "sudo -u crowbar RAILS_ENV=production bin/rake crowbar:schema_migrate_prod"
+        )
+        return true if schema_migrate[:exit_code].zero?
+        msg = "There was an error during crowbar schema migrations."
+        Rails.logger.error msg
+        ::Crowbar::UpgradeStatus.new.end_step(
+          false,
+          services: {
+            data: msg,
+            help: "Check the admin server upgrade log /var/log/crowbar/admin-server-upgrade.log " \
+              "and /var/log/crowbar/component_install.log for possible hints. " \
+              "After fixing the problem, run the crowbar migrations manually and repeat this step."
+          }
+        )
+        false
+      end
+
       #
       # service shutdown
       #
       def services
         return unless cluster_health_check
+        return unless check_schema_migrations
         begin
           # prepare the scripts for various actions necessary for the upgrade
           service_object = CrowbarService.new
