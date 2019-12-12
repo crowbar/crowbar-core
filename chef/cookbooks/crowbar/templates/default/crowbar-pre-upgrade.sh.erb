@@ -105,7 +105,7 @@ systemctl restart <%= @metadata_agent %>
 <% end %>
 
 <% if @is_remote_node %>
-log "Leving nova-compute service to be restarted by cluster resources"
+log "Leaving nova-compute service to be restarted by cluster resources"
 <% else %>
 log "Starting nova-compute service"
 systemctl restart openstack-nova-compute.service
