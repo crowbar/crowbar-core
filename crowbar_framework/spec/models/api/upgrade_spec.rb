@@ -166,6 +166,9 @@ describe Api::Upgrade do
       allow(Api::Upgrade).to(
         receive(:check_schema_migrations).and_return(true)
       )
+      allow(Api::Upgrade).to(
+        receive(:check_product_version).and_return(true)
+      )
       allow(Node).to(
         receive(:find).with("state:crowbar_upgrade").and_return(
           [Node.find_by_name("testing.crowbar.com")]

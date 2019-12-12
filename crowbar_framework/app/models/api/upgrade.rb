@@ -460,12 +460,39 @@ module Api
         false
       end
 
+      # Check the version of installed SLES to verify admin upgrade went well.
+      # We have to do the check here at the start of 'services' step and not during admin upgrade,
+      # because admin upgrade step is not repeatable.
+      def check_product_version
+        zypper_stream = Hash.from_xml(
+          `sudo /usr/bin/zypper-retry --xmlout products -i`
+        )["stream"]
+        products = zypper_stream["product_list"]["product"]
+        return true if products.any? do |product|
+          product["name"] == "SLES" && product["version"] == "12.4"
+        end
+        Rails.logger.error "Incorrect SLES version present"
+        ::Crowbar::UpgradeStatus.new.end_step(
+          false,
+          services: {
+            data: "It appears that incorrect version of SLES product is installed.",
+            help: "Check the admin server upgrade log /var/log/crowbar/admin-server-upgrade.log " \
+              "for possible hints of what went wrong during admin server upgrade. " \
+              "For fixing the problem, it might be needed to check the state of admin server " \
+              "repositories, upgrade the admin server manually (using 'zypper dup' command) and " \
+              "rebooting it. Once done, repeat this upgrade step."
+          }
+        )
+        false
+      end
+
       #
       # service shutdown
       #
       def services
         return unless cluster_health_check
         return unless check_schema_migrations
+        return unless check_product_version
         begin
           # prepare the scripts for various actions necessary for the upgrade
           service_object = CrowbarService.new
