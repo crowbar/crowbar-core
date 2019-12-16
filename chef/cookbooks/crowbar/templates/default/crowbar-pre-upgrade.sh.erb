@@ -90,6 +90,13 @@ log "Upgrading packages needed for nova-compute node"
 
 zypper --non-interactive up openstack-nova-compute
 
+ret=$?
+if [ $ret != 0 ] ; then
+    log "Error occured during nova-compute packages upgrade"
+    echo $ret > $UPGRADEDIR/crowbar-pre-upgrade-failed
+    exit $ret
+fi
+
 log "Restarting services for Rocky"
 
 <% unless @is_remote_node %>
@@ -105,7 +112,7 @@ systemctl restart <%= @metadata_agent %>
 <% end %>
 
 <% if @is_remote_node %>
-log "Leving nova-compute service to be restarted by cluster resources"
+log "Leaving nova-compute service to be restarted by cluster resources"
 <% else %>
 log "Starting nova-compute service"
 systemctl restart openstack-nova-compute.service
