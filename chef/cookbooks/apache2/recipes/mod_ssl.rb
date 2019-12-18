@@ -32,6 +32,12 @@ end
 if node[:platform_family] == "suse"
   execute "/usr/sbin/a2enflag SSL" do
     command "/usr/sbin/a2enflag SSL"
+    # apache needs to be hard-restarted or -DSSL will not be added to the main process
+    # this would result in some config files with <IfDefine SSL> not being picked up by
+    # following reloads
+    notifies :restart, resources(service: "apache2"), :immediately
+    not_if "grep '^[[:space:]]*APACHE_SERVER_FLAGS=' /etc/sysconfig/apache2 |"\
+           "sed -r 's/[\"=]|$/ /g' | grep -q ' SSL '"
   end
   apache_module "version"
 end
