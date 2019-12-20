@@ -34,18 +34,12 @@ set -x
 
 nova --insecure service-disable "$host" nova-compute
 
-<% if @needs_block_migrate %>
-blockmigrate="--block-migrate"
-<% else %>
-blockmigrate=""
-<% end %>
-
 ORIGINAL_INSTANCES=$UPGRADEDIR/original_instances
 
 # List active instances on host before the live-migration starts
 openstack server list --insecure --all-projects --status active --host $host -f value -c ID > $ORIGINAL_INSTANCES
 
-if ! nova --insecure host-evacuate-live "$host" $blockmigrate; then
+if ! nova --insecure host-evacuate-live "$host"; then
     log "Live migration of instances from host $host has failed!"
     echo 2 > $UPGRADEDIR/crowbar-evacuate-host-failed
     exit 2
