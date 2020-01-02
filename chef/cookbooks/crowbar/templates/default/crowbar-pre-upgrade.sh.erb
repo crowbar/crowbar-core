@@ -97,7 +97,7 @@ if [ $ret != 0 ] ; then
     exit $ret
 fi
 
-log "Restarting services for Rocky"
+zypper --non-interactive up <%= @neutron_agent %>
 
 <% unless @is_remote_node %>
 systemctl restart <%= @neutron_agent %>
