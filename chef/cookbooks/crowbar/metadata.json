@@ -9,6 +9,7 @@
       "apache2": [],
       "barclamp": [],
       "bluepill": [],
+      "crowbar-pacemaker": [],
       "utils": []
     },
     "groupings": {
