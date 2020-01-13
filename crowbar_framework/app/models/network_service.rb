@@ -419,7 +419,7 @@ class NetworkService < ServiceObject
     # If we already have on allocated, return success
     net_info = node.get_network_by_type(network)
     unless net_info.nil?
-      Rails.logger.error("Network enable_interface: node already has address: #{name} #{network}")
+      Rails.logger.info("Network enable_interface: node already has address: #{name} #{network}")
       return [200, net_info]
     end
 
