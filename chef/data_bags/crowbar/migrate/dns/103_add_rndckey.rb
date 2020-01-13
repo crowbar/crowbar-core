@@ -3,8 +3,8 @@ def upgrade(template_attrs, template_deployment, attrs, deployment)
     service = ServiceObject.new "fake-logger"
     @@dns_designate_rndc_key = service.random_password
   end
-  attrs["designate_rndc_key"] = @@dns_designate_rndc_key
-  attrs["enable_designate"] = template_attrs["enable_designate"]
+  attrs["designate_rndc_key"] = @@dns_designate_rndc_key unless attrs.key?("designate_rndc_key")
+  attrs["enable_designate"] = template_attrs["enable_designate"] unless attrs.key?("enable_designate")
   return attrs, deployment
 end
 
