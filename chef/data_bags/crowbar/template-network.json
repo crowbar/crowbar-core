@@ -179,7 +179,7 @@
         },
         "nova_fixed": {
           "conduit": "intf1",
-          "vlan": 500,
+          "vlan": 700,
           "use_vlan": true,
           "add_bridge": false,
           "add_ovs_bridge": false,
@@ -205,6 +205,21 @@
           "broadcast": "192.168.126.255",
           "ranges": {
             "host": { "start": "192.168.126.129", "end": "192.168.126.254" }
+          }
+        },
+        "octavia": {
+          "conduit": "intf1",
+          "vlan": 500,
+          "use_vlan": true,
+          "add_bridge": false,
+          "add_ovs_bridge": false,
+          "mtu": 1500,
+          "subnet": "192.168.131.0",
+          "netmask": "255.255.255.0",
+          "router": "192.168.131.1",
+          "broadcast": "192.168.131.255",
+          "ranges": {
+            "host": { "start": "192.168.131.10", "end": "192.168.131.239" }
           }
         },
         "bmc": {
