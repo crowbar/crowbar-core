@@ -53,6 +53,27 @@ if node[:network][:needs_openvswitch]
     end
     s.run_action :disable
   end
+
+  directory "/etc/systemd/system/openvswitch.service.d" do
+    owner "root"
+    group "root"
+    mode 0o755
+    action :create
+  end
+
+  template "/etc/systemd/system/openvswitch.service.d/99-wickedd.conf" do
+    source "openvswitch.service-wickedd.conf.erb"
+    owner "root"
+    group "root"
+    mode 0o644
+  end
+
+  bash "reload systemd for openvswitch.service extension" do
+    code "systemctl daemon-reload"
+    action :nothing
+    subscribes :run, "template[/etc/systemd/system/openvswitch.service.d/99-wickedd.conf]", :immediate
+  end
+
 end
 
 require "fileutils"
