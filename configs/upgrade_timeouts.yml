@@ -6,6 +6,7 @@
 :shutdown_remaining_services: 600
 :evacuate_host: 300
 :chef_upgraded: 1200
+:dhcp_migration: 1200
 :router_migration: 600
 :lbaas_evacuation: 600
 :set_network_agents_state: 300
