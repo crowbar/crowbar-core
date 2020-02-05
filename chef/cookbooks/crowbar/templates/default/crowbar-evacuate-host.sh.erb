@@ -60,7 +60,7 @@ fi
 
 while nova --insecure list --all-tenants --host "$host" --fields host,status 2>/dev/null | grep -e ACTIVE -e MIGRATING | grep "$host"; do
     log "There is still some VM running at $host..."
-    sleep 10
+    sleep 30
 done
 
 # check the potential error state of instances that were running before

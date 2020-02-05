@@ -4,7 +4,7 @@
 :post_upgrade: 600
 :shutdown_services: 600
 :shutdown_remaining_services: 600
-:evacuate_host: 300
+:evacuate_host: 600
 :chef_upgraded: 1200
 :router_migration: 600
 :lbaas_evacuation: 600
