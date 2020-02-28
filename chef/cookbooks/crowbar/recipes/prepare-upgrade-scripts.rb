@@ -205,6 +205,14 @@ template "/usr/sbin/crowbar-router-migration.sh" do
   action :create
 end
 
+template "/usr/sbin/crowbar-dhcp-migration.sh" do
+  source "crowbar-dhcp-migration.sh.erb"
+  mode "0755"
+  owner "root"
+  group "root"
+  action :create
+end
+
 template "/usr/sbin/crowbar-set-network-agents-state.sh" do
   source "crowbar-set-network-agents-state.sh.erb"
   mode "0755"

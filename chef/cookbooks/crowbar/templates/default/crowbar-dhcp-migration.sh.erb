@@ -1,0 +1,46 @@
+#!/bin/bash
+#
+# This script migrates all neutron dhcps from the node passed as argument.
+
+LOGFILE=/var/log/crowbar/node-upgrade.log
+UPGRADEDIR=/var/lib/crowbar/upgrade
+mkdir -p "`dirname "$LOGFILE"`"
+exec >>"$LOGFILE" 2>&1
+
+hostname=$1
+
+log()
+{
+    set +x
+    echo "[$(date --iso-8601=ns)] [$$] $@"
+    set -x
+}
+
+log "Executing $BASH_SOURCE"
+
+set -x
+
+mkdir -p $UPGRADEDIR
+rm -f $UPGRADEDIR/crowbar-dhcp-migration-failed
+
+set +x
+source /root/.openrc
+set -x
+
+
+zypper --non-interactive install openstack-neutron-ha-tool
+
+/usr/bin/neutron-ha-tool --dhcp-agent-evacuate $hostname \
+                         --wait-for-dhcp-network \
+                         --exit-on-first-failure \
+                         --insecure
+ret=$?
+if [ $ret != 0 ] ; then
+    echo "Failed to evacuate dhcp agent on host: $hostname"
+    echo $ret > $UPGRADEDIR/crowbar-dhcp-migration-failed
+    exit $ret
+fi
+
+
+touch $UPGRADEDIR/crowbar-dhcp-migration-ok
+log "$BASH_SOURCE is finished."

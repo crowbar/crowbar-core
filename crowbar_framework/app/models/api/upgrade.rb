@@ -1203,6 +1203,7 @@ module Api
           "evacuate-host",
           "pre-upgrade",
           "delete-pacemaker-resources",
+          "dhcp-migration",
           "router-migration",
           "lbaas-evacuation",
           "post-upgrade",
@@ -1422,11 +1423,11 @@ module Api
         end
       end
 
-      # Evacuate all routers and loadbalancers away from the specified network
-      # node to other available network nodes. The evacuation procedure is
+      # Evacuate all dhcp networks, routers and loadbalancers away from the specified
+      # network node to other available network nodes. The evacuation procedure is
       # started on the specified controller node
       def evacuate_network_node(controller, network_node, delete_namespaces = false)
-        save_node_action("evacuating routers")
+        save_node_action("evacuating dhcp networks")
         hostname = network_node["hostname"]
         migrated_file = "/var/lib/crowbar/upgrade/crowbar-network-evacuated"
         if network_node.file_exist? migrated_file
@@ -1439,6 +1440,15 @@ module Api
           )
           return
         end
+        args = [hostname]
+        controller.wait_for_script_to_finish(
+          "/usr/sbin/crowbar-dhcp-migration.sh",
+          timeouts[:dhcp_migration],
+          args
+        )
+        Rails.logger.info("Migrating dhcp networks away from #{hostname} was successful.")
+
+        save_node_action("evacuating routers")
         args = [hostname]
         args << "delete-ns" if delete_namespaces
         controller.wait_for_script_to_finish(
@@ -1468,6 +1478,7 @@ module Api
         network_node.run_ssh_cmd("mkdir -p /var/lib/crowbar/upgrade; touch #{migrated_file}")
         # Cleanup up the ok/failed state files, as we likely need to
         # run the script again on this node (to evacuate other nodes)
+        controller.delete_script_exit_files("/usr/sbin/crowbar-dhcp-migration.sh")
         controller.delete_script_exit_files("/usr/sbin/crowbar-router-migration.sh")
         controller.delete_script_exit_files("/usr/sbin/crowbar-lbaas-evacuation.sh")
         controller.delete_script_exit_files("/usr/sbin/crowbar-set-network-agents-state.sh")
