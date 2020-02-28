@@ -24,7 +24,7 @@ matrix:
        - bundle exec rake spec brakeman:run
        # ignore rest-client issues, chef 10 requires that
        - bin/bundle exec bundle-audit update
-       - bin/bundle exec bundle-audit check --ignore CVE-2015-1820 CVE-2015-3448 OSVDB-117461 CVE-2019-11068 CVE-2019-5477 CVE-2017-1002201 CVE-2019-13117 CVE-2019-16770
+       - bin/bundle exec bundle-audit check --ignore CVE-2015-1820 CVE-2015-3448 OSVDB-117461 CVE-2019-11068 CVE-2019-5477 CVE-2017-1002201 CVE-2019-13117 CVE-2019-16770 CVE-2020-7595
     - name: "Validate Cookbooks (RSpec)"
       gemfile: chef/cookbooks/barclamp/Gemfile
       script:
