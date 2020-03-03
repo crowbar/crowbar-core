@@ -3,7 +3,8 @@ action :create do
 end
 
 def supported_services
-  ["glance", "cinder", "nova"]
+  # OpenStack services mapped to SES config sections
+  { "glance" => "glance", "cinder" => "cinder", "nova" => "cinder" }
 end
 
 # TODO: do we need some service restarting/reloading logic here? maybe some
@@ -41,7 +42,7 @@ def create_configs(ses_service)
   # supported services on current node
   local_services = supported_services.select { |service| node.key? service }
   # ses configs matching local services
-  local_ses_services = ses_config.select { |key| local_services.include?(key) }
+  local_ses_services = ses_config.select { |key| local_services.values.include?(key) }
 
   # First create a unique clients list, so we don't have dupes in
   # the ceph.conf file. This could happen if multiple services use one user.
