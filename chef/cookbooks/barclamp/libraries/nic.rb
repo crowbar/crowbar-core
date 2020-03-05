@@ -43,6 +43,11 @@ class ::Nic
     ::Kernel.system("ethtool", *args)
   end
 
+  # Helper for running arping commands.
+  def run_arping(arg)
+    ::Kernel.system("arping #{arg}")
+  end
+
   # Return an unsorted array of all visible nics on the system.
   # This will skip virtual nics that OVS creates.
   def self.__nics
@@ -171,11 +176,17 @@ class ::Nic
   def add_address(addr)
     addr = ::IP.coerce(addr).dup.freeze
     return self if @addresses.include?(addr)
-    if run_ip("addr add #{addr.to_s} dev #{@nic}")
-      @addresses << addr
-      self
+    # Send Duplicate Address Detection ARP request first
+    if run_arping("-D -q -c2 -I #{@nic} #{addr.addr}")
+      if run_ip("addr add #{addr.to_s} dev #{@nic}")
+        @addresses << addr
+        self
+      else
+        raise ::RuntimeError.new("Could not add #{addr.to_s} to #{@nic}")
+        false
+      end
     else
-      raise ::RuntimeError.new("Could not add #{addr.to_s} to #{@nic}")
+      raise ::RuntimeError.new("#{addr.to_s}: Duplicate IP address detected on #{@nic}")
       false
     end
   end
