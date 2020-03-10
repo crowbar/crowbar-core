@@ -15,12 +15,12 @@
     - @ses_settings.each do |group_name, group_values|
       %fieldset
         %legend
-          = t(".parameters.#{group_name}_info")
+          = t(".parameters.#{group_name}_info", default: "#{group_name}")
         - if group_values.kind_of?(Hash)
           - group_values.each do |name, value|
             .form-group
               %label{ :for => name }
-                = t(".#{group_name}.#{name}")
+                = t(".#{group_name}.#{name}", default: "#{name}")
               - if name == 'key'
                 = password_field_tag name, value, :class => "form-control", :readonly => true
               - else
