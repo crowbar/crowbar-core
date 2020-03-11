@@ -1,0 +1,66 @@
+.row
+  .col-xs-12
+    %h2.page-header
+      = t(".title")
+      .btn-group.pull-right
+        .btn.btn-default{ data: { toggle: "modal", target: "#upload_ses_config_modal" } }
+          = t(".upload_config")
+        - if @ses_settings.empty?
+          .btn.btn-danger{ disabled: true }
+            = t(".delete_config")
+        - else
+          .btn.btn-danger{ data: { toggle: "modal", target: "#delete_ses_config_modal" } }
+            = t(".delete_config")
+
+    - @ses_settings.each do |group_name, group_values|
+      %fieldset
+        %legend
+          = t(".parameters.#{group_name}_info", default: "#{group_name}")
+        - if group_values.kind_of?(Hash)
+          - group_values.each do |name, value|
+            .form-group
+              %label{ :for => name }
+                = t(".#{group_name}.#{name}", default: "#{name}")
+              - if name == 'key'
+                = password_field_tag name, value, :class => "form-control", :readonly => true
+              - else
+                = text_field_tag name, value, :class => "form-control", :readonly => true
+        - if group_values.kind_of?(Array)
+          - group_values.each do |value|
+            .form-group
+              = text_field_tag :url, value, :class => "form-control", :readonly => true
+
+    - if @ses_settings.empty?
+      .alert.alert-info
+        = t(".no_config")
+
+.modal.fade{ id: "upload_ses_config_modal" }
+  .modal-dialog
+    .modal-content
+      .modal-header
+        .btn.close{ data: { dismiss: "modal" } }
+          &times
+        %h2
+          = t(".upload_config")
+      .modal-body
+        %input{ name: "sesconfig[file]", type: "file" }
+      .modal-footer
+        .btn.btn-default{ data: { dismiss: "modal" } }
+          = t("cancel")
+
+.modal.fade{ id: "delete_ses_config_modal" }
+  .modal-dialog
+    .modal-content
+      .modal-header
+        .btn.close{ data: { dismiss: "modal" } }
+          &times
+        %h2
+          = t(".delete_config")
+      = form_for :delete, url: ses_settings_delete_path do |f|
+        .modal-body
+          = t(".confirm_delete")
+        .modal-footer
+          .row
+            .btn.btn-default{ data: { dismiss: "modal" } }
+              = t("cancel")
+            = f.submit(t("delete"), class: "btn btn-danger")
