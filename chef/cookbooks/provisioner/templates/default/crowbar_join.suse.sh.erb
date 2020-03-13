@@ -173,9 +173,6 @@ do_ensure_chef_configuration() {
     # Disable reporting, which only works with Enterprise Chef
     grep -q enable_reporting /etc/chef/client.rb || echo "enable_reporting false" >> /etc/chef/client.rb
 
-    # FIXME: there is a cleaner way of adding handlers:
-    # http://wiki.opscode.com/display/chef/Opscode+LWRP+Resources#OpscodeLWRPResources-chefhandler
-
     mkdir -p /var/chef/handlers
     # create reboot handler
     read -d '' reboot_handler_content <<"EOF"
