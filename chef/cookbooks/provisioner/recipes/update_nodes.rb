@@ -361,10 +361,6 @@ filename = \"discovery/x86_64/bios/pxelinux.0\";
         target_platform_version,
         arch
       )
-      # FIXME: We are just ignoring old repos after the upgrade here
-      # this needs to be improved for the next upgrade by actively removing
-      # the repositories after the upgrade (and on repo deactivation)
-      repos.reject! { |k, _v| k =~ /Cloud-7/ } if mnode[:state] == "os-upgrading"
       Chef::Log.info("repos: #{repos.inspect}")
 
       if node[:provisioner][:suse] &&
