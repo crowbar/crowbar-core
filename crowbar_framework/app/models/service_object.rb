@@ -932,22 +932,6 @@ class ServiceObject
   end
 
   #
-  # This is a role output function
-  # Can take either a RoleObject or a Role.
-  #
-  # FIXME: check if it is ever used except for controller
-  def self.role_to_proposal(role, bc_name)
-    proposal = {}
-
-    proposal["id"] = role.name.gsub("#{bc_name}-config-", "#{bc_name}-")
-    proposal["description"] = role.description
-    proposal["attributes"] = role.default_attributes
-    proposal["deployment"] = role.override_attributes
-
-    proposal
-  end
-
-  #
   # From a proposal json
   #
   def self.proposal_to_role(proposal, bc_name)
