@@ -835,10 +835,15 @@ module Api
         compute_nodes = {}
         nova_prop = proposals["nova"] || nil
         unless nova_prop.nil?
-          nova_prop["deployment"]["nova"]["elements"].each do |role, nodes|
-            # FIXME: enahnce the check for compute-ha setups
+          nova_prop["deployment"]["nova"]["elements"].each do |role, elements|
             next unless role.start_with?("nova-compute")
-            nodes.each { |node| compute_nodes[node] = 1 }
+            elements.each do |el|
+              if ServiceObject.is_remotes?(el)
+                PacemakerServiceObject.expand_remote_nodes(el).each { |n| compute_nodes[n] = 1 }
+              else
+                compute_nodes[el] = 1
+              end
+            end
           end
         end
 
