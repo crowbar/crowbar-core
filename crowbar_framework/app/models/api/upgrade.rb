@@ -970,6 +970,7 @@ module Api
 
           unlock_crowbar_ui_package
           finalize_nodes_upgrade
+          cleanup_crowbar_proposal
           status.end_step
         end
       rescue ::Crowbar::Error::Upgrade::NodeError => e
@@ -1229,6 +1230,14 @@ module Api
           finalize_node_upgrade node
           delete_upgrade_scripts node
         end
+      end
+
+      # Remove the assignement of crowbar-upgrade role to the nodes in crowbar barclamp
+      def cleanup_crowbar_proposal
+        proposal = Proposal.find_by(barclamp: "crowbar", name: "default")
+        # remove the nodes from upgrade role
+        proposal["deployment"]["crowbar"]["elements"]["crowbar-upgrade"] = []
+        proposal.save
       end
 
       #
