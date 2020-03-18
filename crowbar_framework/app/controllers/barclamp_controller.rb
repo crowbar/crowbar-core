@@ -233,12 +233,12 @@ class BarclampController < ApplicationController
       }
       format.xml  {
         return render text: @role, status: ret[0] if ret[0] != 200
-        render xml: ServiceObject.role_to_proposal(@role, @bc_name)
+        render xml: role_to_proposal(@role, @bc_name)
       }
       # FIXME: this json endpoint can only be accessed when explicitly sending a json header
       format.json {
         return render text: @role, status: ret[0] if ret[0] != 200
-        render json: ServiceObject.role_to_proposal(@role, @bc_name)
+        render json: role_to_proposal(@role, @bc_name)
       }
     end
   end
@@ -1144,6 +1144,19 @@ class BarclampController < ApplicationController
       flash[:alert] = t(common % failure)
       flash[:alert] += ": " + answer[1].to_s unless answer[1].to_s.empty?
     end
+  end
+
+  #
+  # This is a role output function
+  # Can take either a RoleObject or a Role.
+  #
+  def role_to_proposal(role, bc_name)
+    proposal = {}
+    proposal["id"] = role.name.gsub("#{bc_name}-config-", "#{bc_name}-")
+    proposal["description"] = role.description
+    proposal["attributes"] = role.default_attributes
+    proposal["deployment"] = role.override_attributes
+    proposal
   end
 
   protected

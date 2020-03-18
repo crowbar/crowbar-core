@@ -265,10 +265,10 @@ class ServiceObject
   def process_queue
     Crowbar::DeploymentQueue.new(logger: Rails.logger).process_queue
   end
-#
-# update proposal status information
-#
-  # FIXME: refactor into Proposal#status=()
+
+  #
+  # update proposal status information
+  #
   def update_proposal_status(inst, status, message, bc = @bc_name)
     Rails.logger.debug("update_proposal_status: enter #{inst} #{bc} #{status} #{message}")
 
@@ -314,7 +314,6 @@ class ServiceObject
     end
   end
 
-  # FIXME: Move into proposal before_save filter
   def clean_proposal(proposal)
     Rails.logger.debug "clean_proposal"
     proposal.delete("controller")
@@ -352,9 +351,6 @@ class ServiceObject
     end
   end
 
-  # FIXME: these methods operate on a proposal and the controller has access o
-  # bc_name/inst anyway. So it might be better to not pollute the inheritance
-  # chain.
   def elements
     [200, Proposal.new(barclamp: @bc_name).all_elements]
   end
@@ -367,9 +363,6 @@ class ServiceObject
     valid_roles = Proposal.new(barclamp: @bc_name).all_elements
     return [404, "No role #{role} found for #{@bc_name}."] unless valid_roles.include?(role)
 
-    # FIXME: we could try adding each node in turn to existing proposal's 'elements' and removing it
-    # from the nodes list in the case the new proposal would not be valid, so
-    # nodes that can't be added at all would not be returned.
     nodes.reject! do |node|
       node_is_invalid_for_role(node, role.to_s)
     end
@@ -415,7 +408,6 @@ class ServiceObject
   #
   # Utility method to find instances for barclamps we depend on
   #
-  # FIXME: a registry that could be queried for active barclamps
   def find_dep_proposal(bc, optional=false)
     begin
       const_service = self.class.get_service(bc)
@@ -478,14 +470,12 @@ class ServiceObject
   #
   # This can be overridden to provide a better creation proposal
   #
-  # FIXME: check if it is overridden and move to caller
   def create_proposal
     prop = Proposal.new(barclamp: @bc_name)
     raise(I18n.t("model.service.template_missing", name: @bc_name )) if prop.nil?
     prop.raw_data
   end
 
-  # FIXME: looks like purely controller methods
   def proposal_create(params)
     base_id = params["id"]
     params["id"] = "#{@bc_name}-#{params["id"]}"
@@ -541,7 +531,7 @@ class ServiceObject
     end
   end
 
-  # FIXME: most of these can be validations on the model itself,
+  # most of these can be validations on the model itself,
   # preferrably refactored into Validator classes.
   def save_proposal!(prop, options = {})
     options.reverse_merge!(validate: true, validate_after_save: true)
@@ -553,7 +543,7 @@ class ServiceObject
     validate_proposal_after_save(prop.raw_data) if options[:validate_after_save]
   end
 
-  # XXX: this is where proposal gets copied into a role, scheduling / ops order
+  # This is where proposal gets copied into a role, scheduling / ops order
   # is computed (in apply_role) and chef client gets called on the nodes.
   # Hopefully, this will get moved into a background job.
   def proposal_commit(inst, options = {})
@@ -619,7 +609,6 @@ class ServiceObject
   #
   # This can be overridden.  Specific to node validation.
   #
-  # FIXME: move into validator classes
   def validate_proposal_elements proposal_elements
     proposal_elements.each do |role_and_elements|
       role, elements = role_and_elements
@@ -940,22 +929,6 @@ class ServiceObject
       Rails.logger.error(([e2.message] + e2.backtrace).join("\n"))
       [400, "Failed to validate proposal: #{e2.message}"]
     end
-  end
-
-  #
-  # This is a role output function
-  # Can take either a RoleObject or a Role.
-  #
-  # FIXME: check if it is ever used except for controller
-  def self.role_to_proposal(role, bc_name)
-    proposal = {}
-
-    proposal["id"] = role.name.gsub("#{bc_name}-config-", "#{bc_name}-")
-    proposal["description"] = role.description
-    proposal["attributes"] = role.default_attributes
-    proposal["deployment"] = role.override_attributes
-
-    proposal
   end
 
   #
