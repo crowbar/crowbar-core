@@ -34,7 +34,7 @@ if systemctl --quiet is-active  openstack-neutron-lbaasv2-agent.service; then
     /usr/bin/neutron-evacuate-lbaasv2-agent $delete_ns \
         --host $hostname \
         --config-file /etc/neutron/lbaas-connection.conf \
-        --config-file /etc/neutron/neutron.conf
+        --config-dir /etc/neutron/neutron.conf.d
 
     ret=$?
     if [ $ret != 0 ] ; then
