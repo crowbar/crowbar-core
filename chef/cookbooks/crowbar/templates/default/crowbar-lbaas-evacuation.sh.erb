@@ -31,11 +31,10 @@ rm -f $UPGRADEDIR/crowbar-lbaas-evacuation-failed
 
 if systemctl --quiet is-active  openstack-neutron-lbaasv2-agent.service; then
     log "Evacuating neutron-lbaasv2-agent on $hostname"
-    use_crm=<%= @use_ha ? "--use_crm" : "" %>
-    /usr/bin/neutron-evacuate-lbaasv2-agent $use_crm $delete_ns \
+    /usr/bin/neutron-evacuate-lbaasv2-agent $delete_ns \
         --host $hostname \
         --config-file /etc/neutron/lbaas-connection.conf \
-        --config-file /etc/neutron/neutron.conf
+        --config-dir /etc/neutron/neutron.conf.d
 
     ret=$?
     if [ $ret != 0 ] ; then
