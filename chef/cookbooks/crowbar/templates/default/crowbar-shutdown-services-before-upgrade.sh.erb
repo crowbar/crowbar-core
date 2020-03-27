@@ -63,7 +63,7 @@ done
 log "Stopping OpenStack services..."
 
 # We do not want to stop neutron services just yet, they are needed in later upgrade stage
-for i in $(systemctl list-units openstack-* --no-legend | cut -d" " -f1 | grep -v neutron) ; do
+for i in $(systemctl list-units 'openstack-*' --no-legend | cut -d" " -f1 | grep -v neutron) ; do
     log "Stopping service $i"
     systemctl stop $i
     systemctl disable $i
