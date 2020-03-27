@@ -51,6 +51,7 @@ en:
       bmc_vlan: 'Mgmt Connect'
       nova_fixed: 'Nova Fixed'
       nova_floating: 'Nova Floating'
+      octavia: 'Octavia Management Network'
       public: 'Public'
       private: 'Private'
       storage: 'Storage'
