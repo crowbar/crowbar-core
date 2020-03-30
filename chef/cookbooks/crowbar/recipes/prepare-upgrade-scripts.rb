@@ -231,9 +231,6 @@ template "/usr/sbin/crowbar-lbaas-evacuation.sh" do
   owner "root"
   group "root"
   action :create
-  variables(
-    use_ha: use_ha
-  )
   only_if { roles.include? "neutron-network" }
 end
 
