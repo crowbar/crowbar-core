@@ -14,6 +14,7 @@
 #
 
 require_relative "conduit_resolver.rb"
+require "chef/role"
 
 module BarclampLibrary
   class Barclamp
@@ -419,21 +420,104 @@ module BarclampLibrary
       end
     end
 
+    # this class holds the recipe_depedencies object
+    # the object is added as the class level
+    class DependsOn
+      class << self
+        # api to add recipe dependency
+        def add(dependency)
+          @recipe_depedencies ||= Mash.new
+          @recipe_depedencies.merge!(dependency)
+        end
+
+        def get(recipe)
+          @recipe_depedencies.fetch(recipe, [])
+        end
+      end
+    end
+
     class Config
       class << self
         attr_accessor :node
 
-        def load(group, barclamp, instance = nil)
-          # If no instance is specified, see if this node uses an instance of
-          # this barclamp and use it
+        def last_two_configs(group, barclamp, instance)
+          prev_cfg = load(group, barclamp, instance)
+          instance = infer_instance_from_cached_databag(group, barclamp, instance)
+          cur_cfg = Chef::Role.load "#{barclamp}-config-#{instance}"
+          return prev_cfg, cur_cfg.default_attributes[barclamp]
+        end
+
+		# a attrlist is ['api','bind_port'] (array)
+		# and collection is assumed to be a hash like object
+		# this method will return collection['api']['bind_port']
+		# 
+		# - abort and return nil , if any key not found
+		# - log accordingly
+        def loadattr(collection, attrlist)
+          begin
+            attrlist.each do |item|
+              unless collection.key?(item)
+                Chef::Log.info("[smart] #{item} is missing from collection")
+                return nil
+              end
+              collection = collection[item]
+            end
+          rescue NoMethodError
+            msg = "[smart] collection variable did not " \
+                   "respond to []/key? while looking for #{item}"
+            Chef::Log.info(msg)
+            return nil
+          end
+          collection
+        end
+
+        def guess_instance(barclamp, instance)
           if instance.nil? && @node[barclamp] && @node[barclamp][:config]
             instance = @node[barclamp][:config][:environment]
           end
 
-          # Accept environments passed as instances
           if instance =~ /^#{barclamp}-config-(.*)/
             instance = $1
           end
+          instance
+        end
+
+        def infer_instance_from_cached_databag(group, barclamp, instance)
+          if instance.nil?
+            # try the "default" instance, and fallback on any existing instance
+            instance = "default"
+            unless @cache["groups"][group].fetch(instance, {}).key?(barclamp)
+              # sort to guarantee a consistent order
+              @cache["groups"][group].keys.sort.each do |key|
+                # ignore the id attribute from the data bag item, which is not
+                # an instance
+                next if key == "id"
+                if @cache["groups"][group][key].key?(barclamp)
+                  instance = key
+                  break
+                end
+              end
+            end
+          end
+          instance
+        end
+
+        def changes_to_apply?(depedency, group = "openstack", instance = nil)
+          barclamp = depedency.shift
+          instance = guess_instance(barclamp, instance)
+          prev_cfg, curr_cfg = last_two_configs(group, barclamp, instance)
+          old = loadattr(prev_cfg, depedency)
+          new = loadattr(curr_cfg, depedency)
+          # Chef::Log.info("[smart] loadattr prev #{depedency}, #{prev_cfg}")
+          # Chef::Log.info("[smart] loadattr curr #{depedency}, #{curr_cfg.inspect}")
+          # Chef::Log.info("[smart] comparision #{old}, #{new}")
+          old != new
+        end
+
+        def load(group, barclamp, instance = nil)
+          # If no instance is specified, see if this node uses an instance of
+          # this barclamp and use it
+          instance = guess_instance(barclamp, instance)
 
           # Cache the config we load from data bag items.
           # This cache needs to be invalidated for each chef-client run from
@@ -455,23 +539,7 @@ module BarclampLibrary
             {}
           end
 
-          if instance.nil?
-            # try the "default" instance, and fallback on any existing instance
-            instance = "default"
-            unless @cache["groups"][group].fetch(instance, {}).key?(barclamp)
-              # sort to guarantee a consistent order
-              @cache["groups"][group].keys.sort.each do |key|
-                # ignore the id attribute from the data bag item, which is not
-                # an instance
-                next if key == "id"
-                if @cache["groups"][group][key].key?(barclamp)
-                  instance = key
-                  break
-                end
-              end
-            end
-          end
-
+          instance = infer_instance_from_cached_databag(group, barclamp, instance)
           @cache["groups"][group].fetch(instance, {}).fetch(barclamp, {})
         end
       end
