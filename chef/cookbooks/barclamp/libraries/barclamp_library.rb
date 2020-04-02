@@ -14,6 +14,7 @@
 #
 
 require_relative "conduit_resolver.rb"
+require_relative "ssh_key_parser.rb"
 
 module BarclampLibrary
   class Barclamp
@@ -473,6 +474,10 @@ module BarclampLibrary
           @cache["groups"][group].fetch(instance, {}).fetch(barclamp, {})
         end
       end
+    end
+
+    class SSHKeyParser
+      include Crowbar::SSHKeyParser
     end
   end
 end
