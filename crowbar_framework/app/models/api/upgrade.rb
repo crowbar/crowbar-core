@@ -895,9 +895,10 @@ module Api
           upgrade_non_compute_nodes
           prepare_all_compute_nodes
           # Stop nova services on all nodes to prevent any and all RPC API trouble
-          stop_nova_services
-          reload_nova_services
-
+          if upgrade_mode != :normal
+            stop_nova_services
+            reload_nova_services
+          end
           ::Crowbar::UpgradeStatus.new.save_substep(substep, :finished)
         end
       end
@@ -967,6 +968,13 @@ module Api
         status = ::Crowbar::UpgradeStatus.new
         if status.progress[:remaining_nodes].zero?
           status.save_substep(substep, :finished)
+
+          if upgrade_mode == :normal
+            status.save_substep(:reload_nova_services, :running)
+            stop_nova_services
+            reload_nova_services
+            status.save_substep(:reload_nova_services, :finished)
+          end
 
           status.save_substep(:run_online_migrations, :running)
           run_online_migrations
@@ -1103,13 +1111,18 @@ module Api
       # After the controller upgrade we need to stop Nova services on all nodes
       # to ensure that no old services remain running and cause restarted Nova
       # services to autonegotiate the old RPC API version.
-      # This is not related to 'normal' mode where nodes are fully upgraded and rebooted.
+      # However, if this is executed in 'normal' mode, compute nodes are fully
+      # upgraded and rebooted and this action is only required for controller ones.
       def stop_nova_services
-        return if upgrade_mode == :normal
-        all_nova_nodes = ::Node.find("roles:nova-*").sort do |n|
-          n.roles.include?("nova-controller") ? -1 : 1
+        nova_nodes = if upgrade_mode == :normal
+          ::Node.find("roles:nova-controller")
+        else
+          ::Node.find("roles:nova-*").sort do |n|
+            n.roles.include?("nova-controller") ? -1 : 1
+          end
         end
-        all_nova_nodes.each do |node|
+
+        nova_nodes.each do |node|
           save_node_action("Stopping nova services at #{node.name}")
           begin
             node.wait_for_script_to_finish(
@@ -1129,13 +1142,17 @@ module Api
 
       # Once all nova services are upgraded to current version (that is Rocky for current SOC)
       # we need to tell services to start using latest RPC. To this end we restart all of them.
-      # This is not related to 'normal' mode where nodes are fully upgraded and rebooted.
+      # However, if this is executed in 'normal' mode, compute nodes are fully
+      # upgraded and rebooted and this action is only required for controller ones.
       def reload_nova_services
-        return if upgrade_mode == :normal
-        all_nova_nodes = ::Node.find("roles:nova-*").sort do |n|
-          n.roles.include?("nova-controller") ? -1 : 1
+        nova_nodes = if upgrade_mode == :normal
+          ::Node.find("roles:nova-controller")
+        else
+          ::Node.find("roles:nova-*").sort do |n|
+            n.roles.include?("nova-controller") ? -1 : 1
+          end
         end
-        all_nova_nodes.each do |node|
+        nova_nodes.each do |node|
           save_node_action("Reloading nova services at #{node.name}")
           begin
             node.wait_for_script_to_finish(
