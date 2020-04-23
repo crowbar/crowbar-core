@@ -76,12 +76,19 @@ initiate_node_upgrade()
       sed -i s/django.utils.log.NullHandler/logging.NullHandler/g $horizon_custom_config
     fi
 
+    # SOC-11203: record old setting and disable lsof check for running
+    # processes since it may hang indefinitely
+    zypper --non-interactive install crudini
+    zypper_upgrade_conf=/tmp/zypper.conf.upgrade
+    cp /etc/zypp/zypper.conf $zypper_upgrade_conf
+    crudini --set $zypper_upgrade_conf commit psCheckAccessDeleted no
+
     # Upgrade the distribution non-interactively
     log "Executing zypper ref"
-    zypper --no-color --releasever <%= @target_platform_version %> ref -f
+    zypper --config $zypper_upgrade_conf --no-color --releasever <%= @target_platform_version %> ref -f
 
     log "Executing zypper dist-upgrade"
-    zypper --no-color --non-interactive dist-upgrade -l --recommends --replacefiles
+    zypper --config $zypper_upgrade_conf --no-color --non-interactive dist-upgrade -l --recommends --replacefiles
     ret=$?
     if [ $ret != 0 ]; then
         log "zypper dist-upgrade has failed with $ret, check zypper logs"
