@@ -37,12 +37,14 @@ root_pub_key = `cat /root/.ssh/id_rsa.pub`.chomp
 access_keys[node.name] = root_pub_key
 
 # Add additional keys
+nullnodecounter = 0
+key_parser = BarclampLibrary::Barclamp::SSHKeyParser.new
 node["provisioner"]["access_keys"].strip.split("\n").each do |key|
   key.strip!
-  unless key.empty?
-    nodename = key.split(" ")[2]
-    access_keys[nodename] = key
-  end
+  next if key.empty? || key[0] == "#"
+  _, _, _, comment = key_parser.split_key_line(key)
+  nodename = comment || "hostless-key-#{nullnodecounter += 1}"
+  access_keys[nodename] = key
 end
 
 # Find provisioner servers and include them.

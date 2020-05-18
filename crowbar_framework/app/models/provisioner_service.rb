@@ -16,6 +16,8 @@
 #
 
 class ProvisionerService < ServiceObject
+  include Crowbar::SSHKeyParser
+
   def initialize(thelogger = nil)
     super
     @bc_name = "provisioner"
@@ -57,11 +59,11 @@ class ProvisionerService < ServiceObject
     proposal["attributes"]["provisioner"]["access_keys"].strip.split("\n").each do |key|
       key.strip!
 
-      next if key.empty?
+      next if key.empty? || key[0] == "#"
 
-      method, public_key, comment = key.split(" ")
-      unless ["ssh-rsa", "ssh-ed25519", "ssh-dss"].include? method
-        validation_error("SSH key \"#{key}\" should start with a supported \"ssh-*\" method.")
+      _, method, public_key, comment = split_key_line(key)
+      unless valid_key_types.include? method
+        validation_error("SSH key \"#{key}\" should contain a supported \"ssh-*\" method.")
       end
       if public_key.nil? || public_key.length < 64
         validation_error("SSH key \"#{key}\" has missing public key part or is too short.")
