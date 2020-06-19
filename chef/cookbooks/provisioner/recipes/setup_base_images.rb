@@ -299,7 +299,8 @@ if node[:platform_family] == "suse"
       owner "root"
       group "root"
       mode "0644"
-      variables(tftproot: tftproot, admin_ip: admin_ip)
+      variables(tftproot: tftproot, admin_ip: admin_ip,
+                admin_subnet: admin_net.subnet, admin_netmask: admin_net.netmask)
     end
 
     service "tftp.service" do
