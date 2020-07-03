@@ -122,7 +122,7 @@ class BarclampController < ApplicationController
       name = node.name # replace the alias with the real name
     end
 
-    if valid_transition_states.include?(state)
+    if Crowbar::State.valid_transition_state?(state)
       status, response = @service_object.transition(id, name, state)
       if status != 200
         render text: response, status: status
@@ -1144,17 +1144,6 @@ class BarclampController < ApplicationController
       flash[:alert] = t(common % failure)
       flash[:alert] += ": " + answer[1].to_s unless answer[1].to_s.empty?
     end
-  end
-
-  def valid_transition_states
-    [
-      "applying", "discovered", "discovering", "hardware-installed",
-      "hardware-installing", "hardware-updated", "hardware-updating",
-      "installed", "installing", "ready", "readying", "recovering",
-      "crowbar_upgrade", "os-upgrading", "os-upgraded",
-      # used by sledgehammer / crowbar_join
-      "debug", "problem", "reboot", "shutdown"
-    ]
   end
 
   protected

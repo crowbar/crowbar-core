@@ -59,6 +59,16 @@ Rails.application.routes.draw do
 
   end
 
+  # restricted client access
+  scope :restricted,
+    controller: :restricted,
+    constraints: { id: /[^\/]+/ } do
+    get "ping", action: :ping
+    get "show/:id", action: :show
+    post "allocate/:id", action: :allocate
+    post "transition/:id", action: :transition
+  end
+
   resources :dashboard,
     only: [:index],
     param: :name,

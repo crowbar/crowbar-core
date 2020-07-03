@@ -155,9 +155,6 @@ if [ -e /updates/full_data.sh ] ; then
   /tmp/full_data.sh
 fi
 
-# Get stuff out of nfs.
-cp /updates/parse_node_data /tmp
-
 for retry in $(seq 1 30); do
     curl -f --retry 2 -o /etc/chef/validation.pem \
         --connect-timeout 60 -s -L \
