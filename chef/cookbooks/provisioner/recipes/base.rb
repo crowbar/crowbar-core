@@ -357,8 +357,17 @@ package "ruby2.1-rubygem-crowbar-client"
 
 unless is_admin
   # On non-admin nodes, setup /etc/crowbarrc with the restricted client
-  username = crowbar_node["crowbar"]["client_user"]["username"]
-  password = crowbar_node["crowbar"]["client_user"]["password"]
+  # SOC-11389: this check bridges the gap between proposal being saved and
+  # proposal being applied/first chef-client run on admin node having passed.
+  # Until that time, the data won't be available to chef clients running on any
+  # node other than the Crowbar admin node.
+  if crowbar_node["crowbar"]["client_user"].nil?
+    username = "crowbar"
+    password = crowbar_node["crowbar"]["users"][username]["password"]
+  else
+    username = crowbar_node["crowbar"]["client_user"]["username"]
+    password = crowbar_node["crowbar"]["client_user"]["password"]
+  end
 
   template "/etc/crowbarrc" do
     source "crowbarrc.erb"
