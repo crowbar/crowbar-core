@@ -351,7 +351,11 @@ address = crowbar_node["crowbar"]["network"]["admin"]["address"]
 protocol = crowbar_node["crowbar"]["apache"]["ssl"] ? "https" : "http"
 server = "#{protocol}://#{address}"
 is_admin = CrowbarHelper.is_admin?(node)
-if is_admin
+# SOC-11389: or condition bridges the gap between proposal being saved and
+# proposal being applied/first chef-client run on admin node having passed.
+# Until that time, the data won't be available to chef clients running on any
+# node other than the Crowbar admin node.
+if is_admin || crowbar_node["crowbar"]["client_user"].nil?
   username = "crowbar"
   password = crowbar_node["crowbar"]["users"][username]["password"]
 else
