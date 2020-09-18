@@ -82,8 +82,8 @@ module Crowbar
           "recovering" => ["readying", "reboot", "shutdown", "problem"],
           "problem" => ["readying", "reboot", "shutdown"],
           ## other states that can be set by rails app
-          # upgrade is controlled by rails app
-          "crowbar_upgrade" => [],
+          # upgrade is entered by rails app but left by crowbar_join/reboot
+          "crowbar_upgrade" => ["reboot"],
           "confupdate" => ["hardware-updating"],
           "update" => ["hardware-updating"],
           # noupdate is when we have no up-to-date data from chef; in theory
