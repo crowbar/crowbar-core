@@ -350,7 +350,18 @@ crowbar_node = node_search_with_cache("roles:crowbar").first
 address = crowbar_node["crowbar"]["network"]["admin"]["address"]
 protocol = crowbar_node["crowbar"]["apache"]["ssl"] ? "https" : "http"
 server = "#{protocol}://#{address}"
-password = crowbar_node["crowbar"]["users"]["crowbar"]["password"]
+is_admin = CrowbarHelper.is_admin?(node)
+# SOC-11389: or condition bridges the gap between proposal being saved and
+# proposal being applied/first chef-client run on admin node having passed.
+# Until that time, the data won't be available to chef clients running on any
+# node other than the Crowbar admin node.
+if is_admin || crowbar_node["crowbar"]["client_user"].nil?
+  username = "crowbar"
+  password = crowbar_node["crowbar"]["users"][username]["password"]
+else
+  username = crowbar_node["crowbar"]["client_user"]["username"]
+  password = crowbar_node["crowbar"]["client_user"]["password"]
+end
 verify_ssl = !crowbar_node["crowbar"]["apache"]["insecure"]
 
 package "ruby2.1-rubygem-crowbar-client"
@@ -359,6 +370,7 @@ template "/etc/crowbarrc" do
   source "crowbarrc.erb"
   variables(
     server: server,
+    username: username,
     password: password,
     verify_ssl: verify_ssl
   )

@@ -65,12 +65,9 @@ log_to() {
 
 get_state() {
   local output
-  # we expect something like "status": "Ready"
-  output=$(crowbarctl node status --json --filter $1 | grep status | \
-      tr '[:upper:]' '[:lower:]' | tr -d "\"'[:space:][:cntrl:]")
-  # note that we removed all quotes, whitespaces and control characters, so
-  # it's safe to use the variable if quoted
-  state="${output##status:}"
+  # we expect something like "state ready"
+  output=$(crowbarctl restricted show --plain --filter state $1)
+  state="${output##state }"
   if [ "$state" != "$output" ]; then
       echo "$state"
   else
@@ -287,7 +284,7 @@ do_chef_client() {
     # we didn't succeed with chef-client, so let's try running it again with a
     # state where some roles will not be active
     echo_debug "Failed to run chef-client, trying with state \"recovering\""
-    crowbarctl node transition  $HOSTNAME "recovering"
+    crowbarctl restricted transition $HOSTNAME "recovering"
 
     echo_debug "Syncing Time"
     sync_time
@@ -297,7 +294,7 @@ do_chef_client() {
     echo_verbose "Running Chef Client (try 2, pass 1) - cache cleanup"
     if log_to chef chef-client $CHEF_CLIENT_OPTIONS; then
 	# it worked, cool, let's try again with "readying" state
-        crowbarctl node transition  $HOSTNAME "readying"
+        crowbarctl restricted transition $HOSTNAME "readying"
         echo_verbose "Running Chef Client (try 2, pass 2) - cache cleanup"
         if log_to chef chef-client $CHEF_CLIENT_OPTIONS; then
             return
@@ -402,10 +399,6 @@ HTTP_SERVER="<%= @admin_ip %>:<%= @web_port %>"
 NTP_SERVERS="<%= @ntp_servers_ips.join(" ") %>"
 VALID_NTP_SERVERS=""
 
-if [[ -f /etc/crowbar.install.key ]]; then
-    export CROWBAR_KEY="$(cat /etc/crowbar.install.key)"
-fi
-
 CHEF_CLIENT_OPTIONS=
 if [ "$DEBUG" -ne 0 ]; then
     CHEF_CLIENT_OPTIONS="-l debug"
@@ -465,7 +458,7 @@ if [ "$MODE" == "setup" -o "$MODE" == "start" ]; then
     sync_time
 
     # Mark us as readying, and get our cert.
-    crowbarctl node transition  $HOSTNAME "readying"
+    crowbarctl restricted transition $HOSTNAME "readying"
     final_state="ready"
 
     [ "$MODE" == "setup" ] && do_setup
@@ -480,7 +473,7 @@ if [ "$MODE" == "setup" -o "$MODE" == "start" ]; then
     do_chef_client
 
     # Transition to our final state
-    crowbarctl node transition  $HOSTNAME "$final_state"
+    crowbarctl restricted transition $HOSTNAME "$final_state"
 
     # make sure to keep hostname
     [ "$MODE" == "setup" ] && echo $HOSTNAME > /etc/HOSTNAME
@@ -504,7 +497,7 @@ elif [ "$MODE" == "stop" ]; then
             else
                 final_state="shutdown"
             fi
-            crowbarctl node transition  $HOSTNAME "$final_state"
+            crowbarctl restricted transition $HOSTNAME "$final_state"
             ;;
      esac
 
