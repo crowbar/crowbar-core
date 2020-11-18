@@ -43,9 +43,9 @@ restrict -6 default ignore
 restrict <%= @admin_subnet %> mask <%= @admin_netmask %> notrap nomodify nopeer noquery
 
 # Exchange time with external NTP servers, but don't allow configuration
-# and use rate-limiting.
+# Do not use rate-limiting, because that can block crowbar_join. (bsc#1179161)
 <% @ntp_servers.each do |ntp_server| -%>
-restrict <%= ntp_server %> kod limited notrap nomodify nopeer noquery
+restrict <%= ntp_server %> kod notrap nomodify nopeer noquery
 <% end -%>
 
 <% else -%>
