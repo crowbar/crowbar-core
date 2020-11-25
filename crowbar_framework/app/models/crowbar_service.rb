@@ -180,6 +180,14 @@ class CrowbarService < ServiceObject
         xs <=> ys
       end
 
+      # Make sure pacemaker is the first to execute on node delete
+      if state == "delete"
+        # As nodes cannot be part of multiple Pacemaker proposals, there
+        # should only be one occurence here
+        index = roles.index { |role| role.name.include? "pacemaker-config-" }
+        roles.unshift(roles.delete_at(index)) unless index.nil?
+      end
+
       roles.each do |role|
         role.override_attributes.each do |bc, data|
           rname = role.name.gsub("#{bc}-config-","")
