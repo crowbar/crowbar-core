@@ -132,7 +132,33 @@ class DeployerService < ServiceObject
     end
 
     if state == "delete"
-      # Do more work here - one day.
+      # Remove node from all applied proposals
+      RoleObject.all.select(&:proposal?).each do |applied_proposal|
+        save = false
+        attributes = applied_proposal.override_attributes[applied_proposal.barclamp]
+        ["elements", "elements_expanded"].each do |element_key|
+          next unless attributes.key?(element_key)
+          attributes[element_key].each do |role_name, elements|
+            next unless elements.include?(name)
+            elements.delete(name)
+            attributes[element_key][role_name] = elements
+            save = true
+          end
+        end
+        applied_proposal.save if save
+      end
+
+      # Remove node from all proposals
+      Proposal.all.each do |proposal|
+        save = false
+        proposal.elements.each do |role_name, elements|
+          next unless elements.include?(name)
+          elements.delete(name)
+          proposal.elements[role_name] = elements
+          save = true
+        end
+        proposal.save if save
+      end
     end
 
     Rails.logger.debug("Deployer transition: exiting: #{name} for #{state}")
