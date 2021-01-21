@@ -23,6 +23,7 @@ gem "haml-rails", "~> 0.9.0"
 gem "sass-rails", "~> 5.0.3"
 gem "puma", "~> 2.16.0"
 gem "puma_worker_killer", "~> 0.0.7"
+#
 gem "active_model_serializers", "~> 0.9.0"
 gem "uglifier", "~> 2.7.2"
 gem "dotenv", "~> 1.0.2"
@@ -38,7 +39,7 @@ gem "syslogger", "~> 1.6.0"
 gem "yaml_db", "~> 0.3.0"
 gem "apipie-rails", "~> 0.3.6"
 gem "pg", "~> 0.17.1"
-gem "delayed_job_active_record", "~> 4.1.1"
+#gem "delayed_job_active_record", "~> 4.1.1"
 gem "daemons", "~> 1.2.3"
 gem "rails-observers", "<= 0.1.2"
 
@@ -88,3 +89,12 @@ unless ENV["PACKAGING"] && ENV["PACKAGING"] == "yes"
     end
   end
 end
+
+#gem "tzinfo", "1.2.8"
+#gem "loofah", "2.7.0"
+#gem "active_model_serializers", "0.9.7"
+#gem "backports", "3.18.2"
+#gem "benchmark-ips", "2.8.3"
+#gem "crack", "0.4.4"
+#gem "delayed_job", "4.1.8"
+gem "delayed_job_active_record", "4.1.4"
