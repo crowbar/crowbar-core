@@ -38,7 +38,7 @@ gem "syslogger", "~> 1.6.0"
 gem "yaml_db", "~> 0.3.0"
 gem "apipie-rails", "~> 0.3.6"
 gem "pg", "~> 0.17.1"
-gem "delayed_job_active_record", "~> 4.1.1"
+gem "delayed_job_active_record", "~> 4.1.1", "!= 4.1.5"
 gem "daemons", "~> 1.2.3"
 gem "rails-observers", "<= 0.1.2"
 
