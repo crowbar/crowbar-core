@@ -30,7 +30,7 @@ jQuery(document).ready(function($) {
       $('#group-invalid').html()
     );
 
-    if ($input.val().match(/^[a-zA-Z][a-zA-Z0-9._:-]+$/)) {
+    if ($input.val().match(/^[a-zA-Z][a-zA-Z0-9_:-]+$/)) {
       $('#nodegroups').append(
         groupTemplate({
           group: $input.val()
