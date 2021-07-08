@@ -79,6 +79,14 @@
       ],
       "conduit_map": [
         {
+          "pattern" : "team/4/ceph.*",
+          "conduit_list" : {
+            "intf2" : { "if_list" : [ "?1g1", "?1g3" ] },
+            "intf1" : { "if_list" : [ "?1g2", "?1g4" ] },
+            "intf0" : { "if_list" : [ "?1g1", "?1g3" ] }
+          }
+        },
+        {
           "pattern": "team/.*/.*",
           "conduit_list": {
             "intf0": {
