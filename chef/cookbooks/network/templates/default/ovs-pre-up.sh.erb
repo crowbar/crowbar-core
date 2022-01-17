@@ -1,6 +1,7 @@
 #! /bin/bash
 
 ovs-vsctl br-exists <%= @bridgename %> || exit 0
+ovs-vsctl set bridge <%= @bridgename %> other-config:forward-bpdu=<%= @ovs_forward_bpdu %>
 <%
   # remove the "secure" fail-mode for bridges that share an interface
   # with the "admin" network, otherwise the admin network will be offline

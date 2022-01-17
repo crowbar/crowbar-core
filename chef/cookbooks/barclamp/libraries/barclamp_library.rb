@@ -93,6 +93,7 @@ module BarclampLibrary
         attr_reader :vlan, :use_vlan
         attr_reader :add_bridge, :add_ovs_bridge, :bridge_name
         attr_reader :conduit
+        attr_reader :ovs_forward_bpdu
 
         def initialize(node, net, data)
           @node = node
@@ -110,6 +111,7 @@ module BarclampLibrary
           @add_bridge = data["add_bridge"]
           @add_ovs_bridge = data["add_ovs_bridge"]
           @bridge_name = data["bridge_name"]
+          @ovs_forward_bpdu = data["ovs_forward_bpdu"]
           # let's resolve this only if needed
           @interface = nil
           @interface_list = nil
