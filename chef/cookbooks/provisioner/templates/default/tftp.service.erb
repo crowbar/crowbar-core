@@ -3,5 +3,7 @@ Description=Tftp Server
 
 [Service]
 Type=simple
+ExecStartPre=/usr/sbin/iptables -A INPUT -d <%= @admin_ip %> ! -s <%= @admin_subnet %>/<%= @admin_netmask %> -p udp -m udp --dport 69 -j DROP
 ExecStart=/usr/sbin/in.tftpd -u tftp -s <%= @tftproot %> -m /etc/tftpd.conf -L -a <%= @admin_ip %> -B 1024 -v
+ExecStopPost=/usr/sbin/iptables -D INPUT -d <%= @admin_ip %> ! -s <%= @admin_subnet %>/<%= @admin_netmask %> -p udp -m udp --dport 69 -j DROP
 Restart=on-failure
