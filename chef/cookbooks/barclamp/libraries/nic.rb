@@ -107,7 +107,8 @@ class ::Nic
   def self.ovs_bridge?(nic)
     nic.kind_of?(::Nic::OvsBridge) or
       # If no ovs tools are installed there's no ovs switch
-      if ::Kernel.system("which ovs-vsctl > /dev/null 2>&1")
+      if ::Kernel.system("which ovs-vsctl > /dev/null 2>&1 && " \
+                         "systemctl -q is-active openvswitch.service")
         ::Kernel.system("ovs-vsctl br-exists #{nic}")
       end
   end
