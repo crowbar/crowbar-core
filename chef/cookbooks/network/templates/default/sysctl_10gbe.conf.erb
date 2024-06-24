@@ -6,6 +6,14 @@
 net.ipv4.ip_local_reserved_ports = 35357
 # Increase system IP port range to allow for more concurrent connections
 net.ipv4.ip_local_port_range = 27018 64999
+# ensure STALE neighbor entries expire from the cache, otherwise
+# VIPs of an OpenStack service or the floating IP of a VM
+# might not become reachable
+# gc_thresh1 is the lower threshold that needs to be reached before
+# stale entries are getting garbage collected. The default of 128 means
+# small clouds never get garbage collection and consequently suffer
+# from reachability issues
+net.ipv4.neigh.default.gc_thresh1 = 0
 
 #- from https://fasterdata.es.net/host-tuning/linux/
 # allow testing with buffers up to 128MB
